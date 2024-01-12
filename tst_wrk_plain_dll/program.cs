@@ -2,25 +2,21 @@
 
 class Program
 {
-    static void Log(string str)
-    {
-        Console.WriteLine(str);
-    }
-
     static void Main(string[] args)
     {
-        Console.WriteLine("Hello, World!");
+        CRwrapper.Log($"Hello, World!");
         try
         { 
-            //c++ /home/ustas/projects/c2
-            Log($"tst_astra_beg\n");
+            CRwrapper.Log($"tst_astra.begin");
             CRwrapper rw = new CRwrapper();
             long nRes = rw.call_test();
-            Log($"tst_astra_end. get[{nRes}]\n");
+            CRwrapper.Log($"tst_astra.end. get[{nRes}]");
         }
         catch (Exception ex) 
         {
-            Log($"catch exception: {ex}");
+            CRwrapper.Log($"catch exception: {ex}");
         }
+        CRwrapper.Log($"That's all folks! Press a key to exit.");
+        Console.ReadKey();
     }
 }

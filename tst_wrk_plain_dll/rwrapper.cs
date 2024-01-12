@@ -25,7 +25,14 @@ public class CRwrapper
     [DllImport(str_path_dll_, CharSet = CharSet.Ansi)]
     private static extern System.Int32 GetValInt( System.Int32 idRastr, string pch_table, string pch_col, System.Int32 n_row, ref System.Int32 n_val_out );
     [DllImport(str_path_dll_, CharSet = CharSet.Ansi)]
+    private static extern System.Int32 SetValDbl( System.Int32 idRastr, string pch_table, string pch_col, System.Int32 n_row, double d_val );
+    [DllImport(str_path_dll_, CharSet = CharSet.Ansi)]
     private static extern System.Int32 GetValDbl( System.Int32 idRastr, string pch_table, string pch_col, System.Int32 n_row, ref double d_val_out );
+
+    public static void Log(string str)
+    {
+        Console.WriteLine(str);
+    }
 
     public long call_test()
     {
@@ -39,21 +46,46 @@ public class CRwrapper
             str_path_file_load = @"C:\Users\ustas\Documents\RastrWin3\test-rastr\cx195.rg2";
             str_path_file_save = @"C:\Users\ustas\Documents\RastrWin3\test-rastr\cx195_222.rg2";
         }
+        Log($"dll : {str_path_dll_}");
+        Log($"Load: {str_path_file_load}");
+        Log($"Save: {str_path_file_save}");
+
         nRes = (int)test();
+        Log($"{nRes} = test()");
+
         System.Int32 idRastr = -1;
         idRastr = RastrCreate();
+        Log($"{idRastr} = idRastr = RastrCreate()");
+
         nRes = Load( idRastr, str_path_file_load, "" );
+        Log($"{nRes} = Load( {idRastr}, {str_path_file_load}, \"\" )");
+
         nRes = Rgm( idRastr, "p1" );
+        Log($"{nRes} = Rgm( {idRastr}, \"p1\" )");
+
         System.Int32 nTable_node_NumRows = 0;
         nRes = GetTableNumRows( idRastr, "node", ref nTable_node_NumRows );
+        Log($"{nRes} = GetTableNumRows( {idRastr}, \"node\", ref {nTable_node_NumRows} )");
+
         nRes = SetValInt( idRastr, "node", "na", 0, 1 );
+        Log($"{nRes} = SetValInt( {idRastr}, \"node\", \"na\", 0, 1 )");
+
         System.Int32 ll = 0;
         nRes = GetValInt( idRastr, "node", "na", 0, ref  ll );
+        Log($"{nRes} = GetValInt( {idRastr}, \"node\", \"na\", 0, ref  {ll} )");
+
         double dd = 0;
         nRes = GetValDbl( idRastr, "node", "pg", 0, ref dd );
+        Log($"{nRes} = GetValDbl( {idRastr}, \"node\", \"pg\", 0, ref {dd} )");
+
+        nRes = SetValDbl( idRastr, "node", "pn", 0,  100500.5 );
+        Log($"{nRes} = SetValDbl( {idRastr}, \"node\", \"pn\", 0,  100500.5 )");
+
         nRes = Save( idRastr, str_path_file_save, "" );
+        Log($"{nRes} = Save( {idRastr}, {str_path_file_save}, \"\" )");
 
         return nRes;
     }
-
 }
+
+
