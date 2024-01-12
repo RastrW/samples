@@ -10,44 +10,48 @@ public class CRwrapper
     [DllImport(str_path_dll_)]
     private static extern int test(); 
     [DllImport(str_path_dll_)]
-    private static extern System.Int32 RastrCreate(); // !! must be int32 instead of long!!
-    [DllImport(str_path_dll_, CharSet = CharSet.Ansi)]
+    private static extern System.Int32 RastrCreate();  //!!! must be int32 instead of long!
+    [DllImport(str_path_dll_, CharSet = CharSet.Ansi)] //!!! must be CharSet.Ansi!
     //private static extern long Load( long idRastr, string pch_fpath, string  pch_tpath );
     private static extern System.Int32 Load( System.Int32 idRastr, string pch_fpath, string  pch_tpath );
     [DllImport(str_path_dll_, CharSet = CharSet.Ansi)]
-    private static extern long Save( long idRastr, string pch_fpath, string pch_tpath );
+    private static extern System.Int32 Save( System.Int32 idRastr, string pch_fpath, string pch_tpath );
     [DllImport(str_path_dll_, CharSet = CharSet.Ansi)]
-    private static extern long Rgm( long idRastr, string pch_parameters );
+    private static extern System.Int32 Rgm( System.Int32 idRastr, string pch_parameters );
     [DllImport(str_path_dll_, CharSet = CharSet.Ansi)]
-    private static extern long GetTableNumRows( long idRastr, string pch_table, ref long n_rows_out );
+    private static extern System.Int32 GetTableNumRows( System.Int32 idRastr, string pch_table, ref System.Int32 n_rows_out );
     [DllImport(str_path_dll_, CharSet = CharSet.Ansi)]
-    private static extern long SetValInt( long idRastr, string pch_table, string pch_col, long n_row, long n_val );
+    private static extern System.Int32 SetValInt( System.Int32 idRastr, string pch_table, string pch_col, System.Int32 n_row, System.Int32 n_val );
     [DllImport(str_path_dll_, CharSet = CharSet.Ansi)]
-    private static extern long GetValInt( long idRastr, string pch_table, string pch_col, long n_row, ref long n_val_out );
+    private static extern System.Int32 GetValInt( System.Int32 idRastr, string pch_table, string pch_col, System.Int32 n_row, ref System.Int32 n_val_out );
     [DllImport(str_path_dll_, CharSet = CharSet.Ansi)]
-    private static extern long GetValDbl( long idRastr, string pch_table, string pch_col, long n_row, ref double d_val_out );
+    private static extern System.Int32 GetValDbl( System.Int32 idRastr, string pch_table, string pch_col, System.Int32 n_row, ref double d_val_out );
 
     public long call_test()
     {
-        long nRes =0 ;
-
-        if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
-        { }
-        
+        System.Int32 nRes = 0;
+        string str_path_file_load ="";
+        string str_path_file_save ="";
+        if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux)){ 
+            str_path_file_load = "/home/ustas/projects/test-rastr/Metro/2023_06_28/d1";
+            str_path_file_save = "/home/ustas/projects/test-rastr/Metro/2023_06_28/d1_222";
+        }else{ 
+            str_path_file_load = @"C:\Users\ustas\Documents\RastrWin3\test-rastr\cx195.rg2";
+            str_path_file_save = @"C:\Users\ustas\Documents\RastrWin3\test-rastr\cx195_222.rg2";
+        }
         nRes = (int)test();
-
-        int idRastr = -1;
+        System.Int32 idRastr = -1;
         idRastr = RastrCreate();
-        nRes = Load( idRastr, "/home/ustas/projects/test-rastr/Metro/2023_06_28/d1", "" );
+        nRes = Load( idRastr, str_path_file_load, "" );
         nRes = Rgm( idRastr, "p1" );
-        long nTable_node_NumRows = 0;
+        System.Int32 nTable_node_NumRows = 0;
         nRes = GetTableNumRows( idRastr, "node", ref nTable_node_NumRows );
         nRes = SetValInt( idRastr, "node", "na", 0, 1 );
-        long ll = 0;
+        System.Int32 ll = 0;
         nRes = GetValInt( idRastr, "node", "na", 0, ref  ll );
         double dd = 0;
         nRes = GetValDbl( idRastr, "node", "pg", 0, ref dd );
-        nRes = Save( idRastr, "/home/ustas/projects/test-rastr/Metro/2023_06_28/d1_222", "" );
+        nRes = Save( idRastr, str_path_file_save, "" );
 
         return nRes;
     }
