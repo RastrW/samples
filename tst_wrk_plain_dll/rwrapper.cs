@@ -10,9 +10,10 @@ public class CRwrapper
     [DllImport(str_path_dll_)]
     private static extern int test(); 
     [DllImport(str_path_dll_)]
-    private static extern long RastrCreate();
+    private static extern System.Int32 RastrCreate(); // !! must be int32 instead of long!!
     [DllImport(str_path_dll_, CharSet = CharSet.Ansi)]
-    private static extern long Load( long idRastr, string pch_fpath, string  pch_tpath );
+    //private static extern long Load( long idRastr, string pch_fpath, string  pch_tpath );
+    private static extern System.Int32 Load( System.Int32 idRastr, string pch_fpath, string  pch_tpath );
     [DllImport(str_path_dll_, CharSet = CharSet.Ansi)]
     private static extern long Save( long idRastr, string pch_fpath, string pch_tpath );
     [DllImport(str_path_dll_, CharSet = CharSet.Ansi)]
@@ -35,7 +36,7 @@ public class CRwrapper
         
         nRes = (int)test();
 
-        long idRastr = -1;
+        int idRastr = -1;
         idRastr = RastrCreate();
         nRes = Load( idRastr, "/home/ustas/projects/test-rastr/Metro/2023_06_28/d1", "" );
         nRes = Rgm( idRastr, "p1" );
