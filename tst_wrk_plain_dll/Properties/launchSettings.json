@@ -1,0 +1,8 @@
+{
+  "profiles": {
+    "tst_wrk_plain_dll": {
+      "commandName": "Project",
+      "nativeDebugging": true
+    }
+  }
+}
