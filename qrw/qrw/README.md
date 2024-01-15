@@ -8,6 +8,5 @@ sudo apt update
 sudo apt install qt5-default
 sudo apt install qtbase5-dev
 sudo apt install qtcreator
-
 Потребуется заменить диск на установочный, после этого снова на диск со средствами разработки.
-also install libqt5webkit5-dev
+Also install libqt5webkit5-dev
