@@ -11,7 +11,8 @@ public class CRwrapper
 #if OS_WIN // must be added in .csproj !
     public const string str_path_dll_ = "C:\\projects\\rastr\\RastrWin\\astra\\build\\Debug\\astra_shrd.dll";
 #else
-    public const string str_path_dll_ = "/home/ustas/projects/git_r/rastr/RastrWin/astra/build/libastra_shrd.so";
+    //public const string str_path_dll_ = "/home/ustas/projects/git_r/rastr/RastrWin/astra/build/libastra_shrd.so";
+    public const string str_path_dll_ = "/home/ustas/projects/git_r/rastr/RastrWin/astra/build/libastra_shrd.so"; // not use "~"!
 #endif
     [DllImport(str_path_dll_)]
     private static extern int test(); 
@@ -51,8 +52,10 @@ public class CRwrapper
         string str_path_file_load ="";
         string str_path_file_save ="";
         if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux)){ 
-            str_path_file_load = "/home/ustas/projects/test-rastr/Metro/2023_06_28/d1";
-            str_path_file_save = "/home/ustas/projects/test-rastr/Metro/2023_06_28/d1_222";
+            //str_path_file_load = "/home/ustas/projects/test-rastr/Metro/2023_06_28/d1";
+            //str_path_file_save = "/home/ustas/projects/test-rastr/Metro/2023_06_28/d1_222";
+            str_path_file_load = "/home/ustas/Документы/RastrWin3/test-rastr/cx195.rg2"; // al_1_7_4
+            str_path_file_save = "/home/ustas/Документы/RastrWin3/test-rastr/cx195___al_17_4.rg2";
         }else{ 
             str_path_file_load = @"C:\Users\ustas\Documents\RastrWin3\test-rastr\cx195.rg2";
             str_path_file_save = @"C:\Users\ustas\Documents\RastrWin3\test-rastr\cx195_222.rg2";
