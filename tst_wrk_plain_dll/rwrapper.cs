@@ -1,4 +1,10 @@
+using System;
+using System.Dynamic;
+using System.Globalization;
 using System.Runtime.InteropServices;
+using System.Text;
+using System.Text.Json;
+using System.Text.Json.Nodes;
 
 public class CRwrapper
 {
@@ -28,6 +34,11 @@ public class CRwrapper
     private static extern System.Int32 SetValDbl( System.Int32 idRastr, string pch_table, string pch_col, System.Int32 n_row, double d_val );
     [DllImport(str_path_dll_, CharSet = CharSet.Ansi)]
     private static extern System.Int32 GetValDbl( System.Int32 idRastr, string pch_table, string pch_col, System.Int32 n_row, ref double d_val_out );
+
+    //https://stackoverflow.com/questions/32991274/return-string-from-c-dll-export-function-called-from-c-sharp
+   // [DllImport(str_path_dll_, CharSet = CharSet.Ansi)]
+    [DllImport(str_path_dll_, CharSet = CharSet.Ansi)]
+    private static extern System.Int32 GetJSON( System.Int32 idRastr, string pch_table, string pch_cols, string pch_params, StringBuilder str, int strlen );
 
     public static void Log(string str)
     {
@@ -81,8 +92,48 @@ public class CRwrapper
         nRes = SetValDbl( idRastr, "node", "pn", 0,  100500.5 );
         Log($"{nRes} = SetValDbl( {idRastr}, \"node\", \"pn\", 0,  100500.5 )");
 
-        nRes = Save( idRastr, str_path_file_save, "" );
+//        nRes = Save( idRastr, str_path_file_save, "" );
         Log($"{nRes} = Save( {idRastr}, {str_path_file_save}, \"\" )");
+
+        var newArr = new JsonArray();
+        for(int i = 0 ; i < 10_000 ;i++)
+        {
+            var coder = new JsonArray();
+            coder.Add(JsonValue.Create(i));
+	        coder.Add(JsonValue.Create( $"привед_name_{i}")) ;
+            //var jsonNode = JsonNode.Parse("[0,\"\"]");    
+            //jsonNode[0] = i;
+            //jsonNode[1] = $"_name_{i}";
+            //newArr.Add(jsonNode.);
+            newArr.Add(coder);
+        }
+
+        string str_new_j_array = newArr.ToString();
+
+        const int STRING_MAX_LENGTH = 1_000_000_000;
+        StringBuilder str = new StringBuilder(STRING_MAX_LENGTH);
+        //nRes = GetJSON( idRastr, "node", "ny,name,vras", "paramas", str, STRING_MAX_LENGTH );
+        nRes = GetJSON( idRastr, str_new_j_array, "ny,name,vras", "paramas", str, STRING_MAX_LENGTH );
+
+        Console.OutputEncoding = Encoding.UTF8;
+        Log(str.ToString());
+     
+        byte[] bytes = Encoding.Default.GetBytes(str.ToString());
+        //string myString = Encoding.UTF8.GetString(bytes);
+        //string myString = Decoding.UTF8.GetString(bytes);
+
+        string str_tmp = newArr.ToString();
+
+        //var converter = new ExpandoObjectConverter();
+        //dynamic obj = JsonConvert.DeserializeObject<ExpandoObject>(json, converter);
+        JsonArray j_arr_get = JsonNode.Parse(str.ToString()).AsArray();
+        string str_get_j_arr = j_arr_get.ToString();
+        
+        CultureInfo currentCulture = Thread.CurrentThread.CurrentCulture;
+        byte[] encodedBytes = Encoding.UTF8.GetBytes(str.ToString());
+Encoding.Convert(Encoding.UTF8, Encoding.Unicode, encodedBytes);
+
+        //var data = JsonSerializer.Deserialize<Dictionary<string,string>>(str.ToString());
 
         return nRes;
     }
