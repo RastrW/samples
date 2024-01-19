@@ -116,6 +116,7 @@ public class CRwrapper
         const int STRING_MAX_LENGTH = 1_000_000_000;
         StringBuilder str = new StringBuilder(STRING_MAX_LENGTH);
         nRes = GetJSON( idRastr, "node", "ny,name,vras", "paramas", str, STRING_MAX_LENGTH );
+        //nRes = GetJSON( idRastr, "vetv", "ny,name,vras", "paramas", str, STRING_MAX_LENGTH );
        // nRes = GetJSON( idRastr, str_new_j_array, "ny,name,vras", "paramas", str, STRING_MAX_LENGTH );
 
         Console.OutputEncoding = Encoding.UTF8;
