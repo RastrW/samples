@@ -1,4 +1,5 @@
 using System;
+using System.Diagnostics;
 using System.Dynamic;
 using System.Globalization;
 using System.Runtime.InteropServices;
@@ -58,6 +59,7 @@ public class CRwrapper
             str_path_file_save = "/home/ustas/Р”РѕРєСѓРјРµРЅС‚С‹/RastrWin3/test-rastr/cx195___al_17_4.rg2";
         }else{ 
             str_path_file_load = @"C:\Users\ustas\Documents\RastrWin3\test-rastr\cx195.rg2";
+            //str_path_file_load = @"D:\Vms\SHARA\huge_schems\197136.rg2";
             str_path_file_save = @"C:\Users\ustas\Documents\RastrWin3\test-rastr\cx195_222.rg2";
         }
         Log($"dll : {str_path_dll_}");
@@ -98,46 +100,35 @@ public class CRwrapper
 //        nRes = Save( idRastr, str_path_file_save, "" );
         Log($"{nRes} = Save( {idRastr}, {str_path_file_save}, \"\" )");
 
-        var newArr = new JsonArray();
-        for(int i = 0 ; i < 10_000 ;i++)
-        {
-            var coder = new JsonArray();
-            coder.Add(JsonValue.Create(i));
-	        coder.Add(JsonValue.Create( $"привед_name_{i}")) ;
+        //var newArr = new JsonArray();
+        //for(int i = 0 ; i < 10_000 ;i++)   {
+        //    var coder = new JsonArray();
+        //    coder.Add(JsonValue.Create(i));
+	          //coder.Add(JsonValue.Create( $"привед_name_{i}")) ;
             //var jsonNode = JsonNode.Parse("[0,\"\"]");    
             //jsonNode[0] = i;
             //jsonNode[1] = $"_name_{i}";
             //newArr.Add(jsonNode.);
-            newArr.Add(coder);
-        }
+            //newArr.Add(coder);
+        //}
+        //string str_new_j_array = newArr.ToString();
 
-        string str_new_j_array = newArr.ToString();
-
+        int n = IntPtr.Size;
+        Debug.Assert(n==8);//8=x84
         const int STRING_MAX_LENGTH = 1_000_000_000;
         StringBuilder str = new StringBuilder(STRING_MAX_LENGTH);
-        nRes = GetJSON( idRastr, "node", "ny,name,vras", "paramas", str, STRING_MAX_LENGTH );
-        //nRes = GetJSON( idRastr, "vetv", "ny,name,vras", "paramas", str, STRING_MAX_LENGTH );
+        //nRes = GetJSON( idRastr, "node", "ny,name,vras", "paramas", str, STRING_MAX_LENGTH );
+        nRes = GetJSON( idRastr, "vetv", "sta,ip,iq,np,name,pl_ip,ib", "paramas", str, STRING_MAX_LENGTH );
        // nRes = GetJSON( idRastr, str_new_j_array, "ny,name,vras", "paramas", str, STRING_MAX_LENGTH );
-
         Console.OutputEncoding = Encoding.UTF8;
+        CultureInfo currentCulture = Thread.CurrentThread.CurrentCulture;
         Log(str.ToString());
      
         byte[] bytes = Encoding.Default.GetBytes(str.ToString());
         //string myString = Encoding.UTF8.GetString(bytes);
         //string myString = Decoding.UTF8.GetString(bytes);
-
-        string str_tmp = newArr.ToString();
-
-        //var converter = new ExpandoObjectConverter();
-        //dynamic obj = JsonConvert.DeserializeObject<ExpandoObject>(json, converter);
         JsonArray j_arr_get = JsonNode.Parse(str.ToString()).AsArray();
         string str_get_j_arr = j_arr_get.ToString();
-        
-        CultureInfo currentCulture = Thread.CurrentThread.CurrentCulture;
-        byte[] encodedBytes = Encoding.UTF8.GetBytes(str.ToString());
-Encoding.Convert(Encoding.UTF8, Encoding.Unicode, encodedBytes);
-
-        //var data = JsonSerializer.Deserialize<Dictionary<string,string>>(str.ToString());
 
         return nRes;
     }
