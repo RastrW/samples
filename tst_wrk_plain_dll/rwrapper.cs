@@ -16,31 +16,31 @@ public class CRwrapper
     public const string str_path_dll_ = "/home/ustas/projects/git_r/rastr/RastrWin/astra/build/libastra_shrd.so"; // not use "~"!
 #endif
     [DllImport(str_path_dll_)]
-    private static extern int test(); 
+    public static extern int test(); 
     [DllImport(str_path_dll_)]
-    private static extern System.Int32 RastrCreate();  //!!! must be int32 instead of long!
+    public static extern System.Int32 RastrCreate();  //!!! must be int32 instead of long!
     [DllImport(str_path_dll_, CharSet = CharSet.Ansi)] //!!! must be CharSet.Ansi!
-    //private static extern long Load( long idRastr, string pch_fpath, string  pch_tpath );
-    private static extern System.Int32 Load( System.Int32 idRastr, string pch_fpath, string  pch_tpath );
+    //public static extern long Load( long idRastr, string pch_fpath, string  pch_tpath );
+    public static extern System.Int32 Load( System.Int32 idRastr, string pch_fpath, string  pch_tpath );
     [DllImport(str_path_dll_, CharSet = CharSet.Ansi)]
-    private static extern System.Int32 Save( System.Int32 idRastr, string pch_fpath, string pch_tpath );
+    public static extern System.Int32 Save( System.Int32 idRastr, string pch_fpath, string pch_tpath );
     [DllImport(str_path_dll_, CharSet = CharSet.Ansi)]
-    private static extern System.Int32 Rgm( System.Int32 idRastr, string pch_parameters );
+    public static extern System.Int32 Rgm( System.Int32 idRastr, string pch_parameters );
     [DllImport(str_path_dll_, CharSet = CharSet.Ansi)]
-    private static extern System.Int32 GetTableNumRows( System.Int32 idRastr, string pch_table, ref System.Int32 n_rows_out );
+    public static extern System.Int32 GetTableNumRows( System.Int32 idRastr, string pch_table, ref System.Int32 n_rows_out );
     [DllImport(str_path_dll_, CharSet = CharSet.Ansi)]
-    private static extern System.Int32 SetValInt( System.Int32 idRastr, string pch_table, string pch_col, System.Int32 n_row, System.Int32 n_val );
+    public static extern System.Int32 SetValInt( System.Int32 idRastr, string pch_table, string pch_col, System.Int32 n_row, System.Int32 n_val );
     [DllImport(str_path_dll_, CharSet = CharSet.Ansi)]
-    private static extern System.Int32 GetValInt( System.Int32 idRastr, string pch_table, string pch_col, System.Int32 n_row, ref System.Int32 n_val_out );
+    public static extern System.Int32 GetValInt( System.Int32 idRastr, string pch_table, string pch_col, System.Int32 n_row, ref System.Int32 n_val_out );
     [DllImport(str_path_dll_, CharSet = CharSet.Ansi)]
-    private static extern System.Int32 SetValDbl( System.Int32 idRastr, string pch_table, string pch_col, System.Int32 n_row, double d_val );
+    public static extern System.Int32 SetValDbl( System.Int32 idRastr, string pch_table, string pch_col, System.Int32 n_row, double d_val );
     [DllImport(str_path_dll_, CharSet = CharSet.Ansi)]
-    private static extern System.Int32 GetValDbl( System.Int32 idRastr, string pch_table, string pch_col, System.Int32 n_row, ref double d_val_out );
+    public static extern System.Int32 GetValDbl( System.Int32 idRastr, string pch_table, string pch_col, System.Int32 n_row, ref double d_val_out );
     //https://stackoverflow.com/questions/32991274/return-string-from-c-dll-export-function-called-from-c-sharp
     [DllImport(str_path_dll_, CharSet = CharSet.Ansi)]
-    private static extern System.Int32 GetForms( string pch_params, StringBuilder str, int strlen );
+    public static extern System.Int32 GetForms( string pch_params, StringBuilder str, int strlen );
     [DllImport(str_path_dll_, CharSet = CharSet.Ansi)]
-    private static extern System.Int32 GetJSON( System.Int32 idRastr, string pch_table, string pch_cols, string pch_params, StringBuilder str, int strlen );
+    public static extern System.Int32 GetJSON( System.Int32 idRastr, string pch_table, string pch_cols, string pch_params, StringBuilder str, int strlen );
 
     public static void Log(string str)
     {
