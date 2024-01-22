@@ -36,9 +36,9 @@ public class CRwrapper
     private static extern System.Int32 SetValDbl( System.Int32 idRastr, string pch_table, string pch_col, System.Int32 n_row, double d_val );
     [DllImport(str_path_dll_, CharSet = CharSet.Ansi)]
     private static extern System.Int32 GetValDbl( System.Int32 idRastr, string pch_table, string pch_col, System.Int32 n_row, ref double d_val_out );
-
     //https://stackoverflow.com/questions/32991274/return-string-from-c-dll-export-function-called-from-c-sharp
-   // [DllImport(str_path_dll_, CharSet = CharSet.Ansi)]
+    [DllImport(str_path_dll_, CharSet = CharSet.Ansi)]
+    private static extern System.Int32 GetForms( string pch_params, StringBuilder str, int strlen );
     [DllImport(str_path_dll_, CharSet = CharSet.Ansi)]
     private static extern System.Int32 GetJSON( System.Int32 idRastr, string pch_table, string pch_cols, string pch_params, StringBuilder str, int strlen );
 
@@ -115,19 +115,26 @@ public class CRwrapper
 
         int n = IntPtr.Size;
         Debug.Assert(n==8);//8=x84
-        const int STRING_MAX_LENGTH = 1_000_000_000;
-        StringBuilder str = new StringBuilder(STRING_MAX_LENGTH);
-        //nRes = GetJSON( idRastr, "node", "ny,name,vras", "paramas", str, STRING_MAX_LENGTH );
-        nRes = GetJSON( idRastr, "vetv", "sta,ip,iq,np,name,pl_ip,ib", "paramas", str, STRING_MAX_LENGTH );
-       // nRes = GetJSON( idRastr, str_new_j_array, "ny,name,vras", "paramas", str, STRING_MAX_LENGTH );
         Console.OutputEncoding = Encoding.UTF8;
         CultureInfo currentCulture = Thread.CurrentThread.CurrentCulture;
-        Log(str.ToString());
+
+        const int STRING_MAX_LENGTH = 1_000_000_000;
+        StringBuilder str_bldr = new StringBuilder(STRING_MAX_LENGTH);
+
+        nRes = GetForms("for params", str_bldr, STRING_MAX_LENGTH );
+        JsonArray j_arr_forms = JsonNode.Parse(str_bldr.ToString()).AsArray();
+        string str_get_j_arr_forms = j_arr_forms.ToString();
+        Log(str_bldr.ToString());
+
+        //nRes = GetJSON( idRastr, "node", "ny,name,vras", "paramas", str, STRING_MAX_LENGTH );
+        nRes = GetJSON( idRastr, "vetv", "sta,ip,iq,np,name,pl_ip,ib", "paramas", str_bldr, STRING_MAX_LENGTH );
+       // nRes = GetJSON( idRastr, str_new_j_array, "ny,name,vras", "paramas", str, STRING_MAX_LENGTH );
+        Log(str_bldr.ToString());
      
-        byte[] bytes = Encoding.Default.GetBytes(str.ToString());
+        byte[] bytes = Encoding.Default.GetBytes(str_bldr.ToString());
         //string myString = Encoding.UTF8.GetString(bytes);
         //string myString = Decoding.UTF8.GetString(bytes);
-        JsonArray j_arr_get = JsonNode.Parse(str.ToString()).AsArray();
+        JsonArray j_arr_get = JsonNode.Parse(str_bldr.ToString()).AsArray();
         string str_get_j_arr = j_arr_get.ToString();
 
         return nRes;
