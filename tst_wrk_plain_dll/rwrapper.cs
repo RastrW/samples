@@ -6,6 +6,7 @@ using System.Runtime.InteropServices;
 using System.Text;
 using System.Text.Json;
 using System.Text.Json.Nodes;
+using System.Xml.Linq;
 
 public class CRwrapper
 {
@@ -40,6 +41,8 @@ public class CRwrapper
     [DllImport(str_path_dll_, CharSet = CharSet.Ansi)]
     public static extern System.Int32 GetForms( string pch_params, StringBuilder str, int strlen );
     [DllImport(str_path_dll_, CharSet = CharSet.Ansi)]
+    public static extern System.Int32 GetMeta( System.Int32 idRastr, string pch_table, string pch_params, StringBuilder str, int strlen );
+    [DllImport(str_path_dll_, CharSet = CharSet.Ansi)]
     public static extern System.Int32 GetJSON( System.Int32 idRastr, string pch_table, string pch_cols, string pch_params, StringBuilder str, int strlen );
 
     public static void Log(string str)
@@ -58,7 +61,9 @@ public class CRwrapper
             str_path_file_load = "/home/ustas/Документы/RastrWin3/test-rastr/cx195.rg2"; // al_1_7_4
             str_path_file_save = "/home/ustas/Документы/RastrWin3/test-rastr/cx195___al_17_4.rg2";
         }else{ 
-            str_path_file_load = @"C:\Users\ustas\Documents\RastrWin3\test-rastr\cx195.rg2";
+            //str_path_file_load = @"C:\Users\ustas\Documents\RastrWin3\test-rastr\cx195.rg2";
+            str_path_file_load = @"C:\Users\ustas\Documents\RastrWin3\test-rastr\MDP\cx195.os";
+            //str_path_file_load = @"D:\Vms\SHARA\crosses\ODU_CT\2023_12_11#1257966_new_sechs\13_59_59\mdp_debug_1____11111_PAR";
             //str_path_file_load = @"D:\Vms\SHARA\huge_schems\197136.rg2";
             str_path_file_save = @"C:\Users\ustas\Documents\RastrWin3\test-rastr\cx195_222.rg2";
         }
@@ -118,24 +123,28 @@ public class CRwrapper
         Console.OutputEncoding = Encoding.UTF8;
         CultureInfo currentCulture = Thread.CurrentThread.CurrentCulture;
 
-        const int STRING_MAX_LENGTH = 1_000_000_000;
+        const int STRING_MAX_LENGTH = 500_000_000;
         StringBuilder str_bldr = new StringBuilder(STRING_MAX_LENGTH);
 
-        nRes = GetForms("for params", str_bldr, STRING_MAX_LENGTH );
+        nRes = GetForms("for params", str_bldr, STRING_MAX_LENGTH ); Debug.Assert(nRes>0);
+        Debug.Assert(str_bldr.ToString().Length>100);
         JsonArray j_arr_forms = JsonNode.Parse(str_bldr.ToString()).AsArray();
         string str_get_j_arr_forms = j_arr_forms.ToString();
         Log(str_bldr.ToString());
 
-        //nRes = GetJSON( idRastr, "node", "ny,name,vras", "paramas", str, STRING_MAX_LENGTH );
-        nRes = GetJSON( idRastr, "vetv", "sta,ip,iq,np,name,pl_ip,ib", "paramas", str_bldr, STRING_MAX_LENGTH );
-       // nRes = GetJSON( idRastr, str_new_j_array, "ny,name,vras", "paramas", str, STRING_MAX_LENGTH );
+        nRes = GetMeta( idRastr, "vetv", "paramas", str_bldr, STRING_MAX_LENGTH ); Debug.Assert(nRes>0);
+        Debug.Assert(str_bldr.ToString().Length>100);
+        JsonArray j_arr_meta = JsonNode.Parse(str_bldr.ToString()).AsArray();
+        string str_get_j_arr_meta = j_arr_meta.ToString();
         Log(str_bldr.ToString());
-     
-        byte[] bytes = Encoding.Default.GetBytes(str_bldr.ToString());
-        //string myString = Encoding.UTF8.GetString(bytes);
-        //string myString = Decoding.UTF8.GetString(bytes);
-        JsonArray j_arr_get = JsonNode.Parse(str_bldr.ToString()).AsArray();
-        string str_get_j_arr = j_arr_get.ToString();
+
+        //nRes = GetJSON( idRastr, "node", "ny,name,vras", "paramas", str, STRING_MAX_LENGTH );
+        //nRes = GetJSON( idRastr, str_new_j_array, "ny,name,vras", "paramas", str, STRING_MAX_LENGTH );
+        nRes = GetJSON( idRastr, "vetv", "sta,ip,iq,np,name,pl_ip,ib", "paramas", str_bldr, STRING_MAX_LENGTH ); Debug.Assert(nRes>0);
+        Debug.Assert(str_bldr.ToString().Length>100);
+        string str_data = str_bldr.ToString();
+        JsonArray j_arr_data = JsonNode.Parse(str_data).AsArray();
+        Log(str_bldr.ToString());
 
         return nRes;
     }
