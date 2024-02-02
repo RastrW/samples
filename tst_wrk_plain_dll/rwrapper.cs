@@ -11,7 +11,9 @@ using System.Xml.Linq;
 public class CRwrapper
 {
 #if OS_WIN // must be added in .csproj !
-    public const string str_path_dll_ = "C:\\projects\\rastr\\RastrWin\\astra\\build\\Debug\\astra_shrd.dll";
+    //public const string str_path_dll_ = "C:\\projects\\rastr\\RastrWin\\astra\\build\\Debug\\astra_shrd.dll";
+    //public const string str_path_dll_ = @"C:\projects\astra\Debug\astra_shrd.dll";
+    public const string str_path_dll_ = "C:\\projects\\rastr\\RastrWin\\astra\\build\\Release\\astra_shrd.dll";
 #else
     //public const string str_path_dll_ = "/home/ustas/projects/git_r/rastr/RastrWin/astra/build/libastra_shrd.so";
     public const string str_path_dll_ = "/home/ustas/projects/git_r/rastr/RastrWin/astra/build/libastra_shrd.so"; // not use "~"!
@@ -20,6 +22,8 @@ public class CRwrapper
     public static extern int test(); 
     [DllImport(str_path_dll_)]
     public static extern System.Int32 RastrCreate();  //!!! must be int32 instead of long!
+    [DllImport(str_path_dll_)]
+    public static extern System.Int32 RastrExterminate( System.Int32 idRastr);  
     [DllImport(str_path_dll_, CharSet = CharSet.Ansi)] //!!! must be CharSet.Ansi!
     //public static extern long Load( long idRastr, string pch_fpath, string  pch_tpath );
     public static extern System.Int32 Load( System.Int32 idRastr, string pch_fpath, string  pch_tpath );
@@ -61,8 +65,8 @@ public class CRwrapper
             str_path_file_load = "/home/ustas/Документы/RastrWin3/test-rastr/cx195.rg2"; // al_1_7_4
             str_path_file_save = "/home/ustas/Документы/RastrWin3/test-rastr/cx195___al_17_4.rg2";
         }else{ 
-            //str_path_file_load = @"C:\Users\ustas\Documents\RastrWin3\test-rastr\cx195.rg2";
-            str_path_file_load = @"C:\Users\ustas\Documents\RastrWin3\test-rastr\MDP\cx195.os";
+            str_path_file_load = @"C:\Users\ustas\Documents\RastrWin3\test-rastr\cx195.rg2";
+            //str_path_file_load = @"C:\Users\ustas\Documents\RastrWin3\test-rastr\MDP\cx195.os";
             //str_path_file_load = @"D:\Vms\SHARA\crosses\ODU_CT\2023_12_11#1257966_new_sechs\13_59_59\mdp_debug_1____11111_PAR";
             //str_path_file_load = @"D:\Vms\SHARA\huge_schems\197136.rg2";
             str_path_file_save = @"C:\Users\ustas\Documents\RastrWin3\test-rastr\cx195_222.rg2";
@@ -145,6 +149,12 @@ public class CRwrapper
         string str_data = str_bldr.ToString();
         JsonArray j_arr_data = JsonNode.Parse(str_data).AsArray();
         Log(str_bldr.ToString());
+
+        nRes = RastrExterminate(idRastr);
+        Log($"{nRes} = RastrExterminate( {idRastr})");
+
+        nRes = RastrExterminate(idRastr);
+        Log($"{nRes} = RastrExterminate( {idRastr})");
 
         return nRes;
     }
