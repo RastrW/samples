@@ -51,12 +51,13 @@
 #include <QApplication>
 #include <QCommandLineParser>
 #include <QCommandLineOption>
+#include <QTranslator>
 
 #include "mainwindow.h"
 
 int main(int argc, char *argv[])
 {
-//    Q_INIT_RESOURCE(mdi);
+    //Q_INIT_RESOURCE(mdi);
 
     QApplication app(argc, argv);
     QCoreApplication::setApplicationName("MDI Example");
@@ -68,6 +69,26 @@ int main(int argc, char *argv[])
     parser.addVersionOption();
     parser.addPositionalArgument("file", "The file to open.");
     parser.process(app);
+
+    QTranslator translator;
+
+    const QString baseName = "tst_lng_ru_RU.qm";
+    //if(translator.load(":/i18n/" + baseName)){
+    if(translator.load("/home/ustas/projects/git_web/samples/qtr/qtr/i18n/tst_lng_ru_RU.qm")){ //  must be compiled befor".ts"->"tst_lng_ru_RU.qm"
+
+        app.installTranslator(&translator);
+     }
+
+    /*
+    QTranslator translator;
+    const QStringList uiLanguages = QLocale::system().uiLanguages();
+    for (const QString &locale : uiLanguages) {
+        const QString baseName = "tst_lng_" + QLocale(locale).name();
+        if (translator.load(":/i18n/" + baseName)) {
+            app.installTranslator(&translator);
+            break;
+        }
+    }*/
 
     MainWindow mainWin;
     const QStringList posArgs = parser.positionalArguments();
