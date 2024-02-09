@@ -107,9 +107,7 @@ void MainWindow::paste()
 
 void MainWindow::about()
 {
-   QMessageBox::about(this, tr("About MDI QicsTable"),
-            tr("The <b>MDI-QicsTable</b> example demonstrates how to use QicsTable in multiple "
-               "document interface applications."));
+   QMessageBox::about( this, tr("About QRastr"), tr("About the <b>QRastr</b>." ));
 }
 
 void MainWindow::updateMenus()

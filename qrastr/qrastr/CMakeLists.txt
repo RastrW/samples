@@ -36,6 +36,7 @@ set(PROJECT_SOURCES
         mdiChildTable.h
         mdiChildTable.cpp
         ${TS_FILES}
+        qrastr.qrc
 )
 
 if(${QT_VERSION_MAJOR} GREATER_EQUAL 6)
@@ -71,6 +72,8 @@ target_link_libraries( qrastr PRIVATE libqicstable.so )
 target_include_directories(qrastr PRIVATE
   ${INCLUDES}
 )
+
+#add_executable(myexe main.cpp resource_file.qrc)
 
 #target_link_libraries( qrastr libmk4.so     )
 
