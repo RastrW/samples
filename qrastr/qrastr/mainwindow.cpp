@@ -16,7 +16,7 @@
 #include "mdiChildTable.h"
 
 #include <iostream>
-
+#include "astra_exp.h"
 
 
 MainWindow::MainWindow()
@@ -37,7 +37,9 @@ MainWindow::MainWindow()
 
     readSettings();
 
-    setWindowTitle(tr("MDI-QicsTable"));
+    setWindowTitle(tr("~qrastr~"));
+    //int nRes = test();
+
 }
 
 void MainWindow::closeEvent(QCloseEvent *event)
