@@ -10,7 +10,10 @@ MdiChild::MdiChild()
 {
     setAttribute(Qt::WA_DeleteOnClose);
     dm = new QicsDataModelDefault(10,10);
-    //dm = new RastrDataModel();
+
+    dm = new RastrDataModel();
+    this->setDataModel(dm);
+
 
     ///////////////////////////////example.begin
     // create the data model
@@ -31,7 +34,8 @@ MdiChild::MdiChild()
     dm->setVolume(1, 997323);
     ///////////////////////////////example.end.
 
-    this->setDataModel(dm);
+    //this->setDataModel(dm);
+
 
     isUntitled = true;
 }
