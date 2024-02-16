@@ -21,7 +21,8 @@ int main(int argc, char *argv[])
     const int SIZE_STR_BUF = 100'000;
     std::string str_json;
     str_json.resize(SIZE_STR_BUF);
-    nRes = GetForms( "", const_cast<char*>( str_json.c_str()), str_json.size() );
+    //nRes = GetForms( R"(/home/ustas/Документы/RastrWin3/form/poisk.fm)", "", const_cast<char*>( str_json.c_str()), str_json.size() );
+    nRes = GetForms( R"(/home/ustas/Документы/RastrWin3/form/Общие.fm)", "", const_cast<char*>( str_json.c_str()), str_json.size() );
     nlohmann::json j_forms = nlohmann::json::parse(str_json);
     //sqDebug() << str_json.c_str();
     typedef std::vector<std::string> _vstr;
@@ -44,6 +45,10 @@ int main(int argc, char *argv[])
         qDebug() << "Table  : " << str_TableName.c_str() << "|" << QString::fromUtf8( str_Name.c_str()) << "|" <<  str_Collection.c_str() << "|" << str_MenuPath.c_str() << "|" << str_Query.c_str();
         qDebug() << "Fields : " << str_tmp.c_str();
         nRes = GetMeta( id_rastr, str_TableName.c_str(), "", const_cast<char*>(str_json.c_str()), str_json.length() );
+        if(nRes<0){
+             qDebug() << "GetMeta(...)  return error" << nRes;
+             continue;
+        }
         //qDebug() << "Meta   : " << str_json.c_str();
         nlohmann::json j_metas = nlohmann::json::parse(str_json);
         _vstr vstr_fields_meta;

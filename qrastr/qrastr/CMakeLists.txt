@@ -36,6 +36,8 @@ set(PROJECT_SOURCES
         mainwindow.ui
         mdiChildTable.h
         mdiChildTable.cpp
+        rastrdatamodel.h
+        rastrdatamodel.cpp
         ${TS_FILES}
         qrastr.qrc
 )

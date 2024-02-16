@@ -4,12 +4,35 @@
 
 #include "mdiChildTable.h"
 #include <QicsDataModelDefault.h>
+#include "rastrdatamodel.h"
 
 MdiChild::MdiChild()
 {
     setAttribute(Qt::WA_DeleteOnClose);
     dm = new QicsDataModelDefault(10,10);
+    //dm = new RastrDataModel();
+
+    ///////////////////////////////example.begin
+    // create the data model
+    StockDataModel *dm = new StockDataModel();
+    // fill the data model with some values
+    dm->insertStock(-1);
+    dm->setSymbol(0, "ATT");
+    dm->setClose(0, 37.73);
+    dm->setHigh(0, 38.0);
+    dm->setLow(0, 37.55);
+    dm->setVolume(0, 503333);
+
+    dm->insertStock(-1);
+    dm->setSymbol(1, "RJR");
+    dm->setClose(1, 67.05);
+    dm->setHigh(1, 67.05);
+    dm->setLow(1, 64.89);
+    dm->setVolume(1, 997323);
+    ///////////////////////////////example.end.
+
     this->setDataModel(dm);
+
     isUntitled = true;
 }
 
