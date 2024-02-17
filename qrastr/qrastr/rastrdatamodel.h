@@ -8,6 +8,8 @@ void loggg( int eCod, std::string_view sv_format, Args&&... args ) {
     //const std::string str_log{fmt::format(sv_format, args...)};
 }
 
+
+
 typedef std::vector
         < std::variant< int, double, std::string > > _col_data ;
 
@@ -15,6 +17,12 @@ class RCol
     : public _col_data
 {
 public:
+    enum _en_data{ // in _col_data
+        DATA_INT = 0,
+        DATA_DBL = 1,
+        DATA_STR = 2
+    };
+
     std::string str_name_;
     template <typename... Args>
     RCol(Args&&... args)
@@ -67,10 +75,19 @@ public:
     const QicsDataItem* item(int row, int col) const
     {
          RastrDataModel* self = const_cast<RastrDataModel *>(this);
-         if (pditem_)
-             delete pditem_;
-
-         self->pditem_ = new QicsDataString( "dfffd df" );
+         if (self->pditem_){
+            delete self->pditem_;
+            self->pditem_ = nullptr;
+         }
+         RData::const_iterator iter_col = rdata_.begin() + col;
+         _col_data::const_iterator iter_data = (*iter_col).begin() + row;
+         switch((*iter_data).index()){
+            case RCol::_en_data::DATA_INT: self->pditem_ = new QicsDataInt    ( std::get<int>(*iter_data) );                 break;
+            case RCol::_en_data::DATA_STR: self->pditem_ = new QicsDataString ( std::get<std::string>(*iter_data).c_str() ); break;
+            case RCol::_en_data::DATA_DBL: self->pditem_ = new QicsDataDouble ( std::get<double>(*iter_data) );              break;
+            default :                      self->pditem_ = new QicsDataString ( "type_unknown" );                            break;
+         }
+         //  self->pditem_ = new QicsDataString( "dfffd df" );
          return self->pditem_;
 
         // we need to modify the internal _item data member inside
