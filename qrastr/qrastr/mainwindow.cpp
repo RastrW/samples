@@ -55,8 +55,9 @@ void MainWindow::closeEvent(QCloseEvent *event)
 
 void MainWindow::newFile()
 {
-    MdiChild *child = createMdiChild();
+    MdiChild *child = createMdiChild(  j_forms_[0] );
     child->newFile();
+
     child->show();
 }
 
@@ -69,7 +70,6 @@ void MainWindow::open()
             m_workspace->setActiveSubWindow(existing);
             return;
         }
-
         MdiChild *child = createMdiChild();
         if (child->loadFile(fileName)) {
             statusBar()->showMessage(tr("File loaded"), 2000);
@@ -163,9 +163,9 @@ void MainWindow::updateWindowMenu()
     }
 }
 
-MdiChild *MainWindow::createMdiChild()
+MdiChild *MainWindow::createMdiChild( nlohmann::json j_form)
 {
-    MdiChild *child = new MdiChild;
+    MdiChild *child = new MdiChild(id_rastr_, j_form);
     m_workspace->addSubWindow(child);
     return child;
 }
@@ -257,6 +257,12 @@ void MainWindow::createActions()
     m_aboutAct = new QAction(tr("&About"), this);
     m_aboutAct->setStatusTip(tr("Show the application's About box"));
     connect(m_aboutAct, SIGNAL(triggered()), this, SLOT(about()));
+
+    ////////////////////////////// RASTR //////////////////////////
+    long nRes = 0;
+    id_rastr_ = RastrCreate();
+    nRes = Load(id_rastr_, R"(/home/ustas/projects/test-rastr/cx195.rg2)", "");
+    nRes = Rgm(id_rastr_,"");
 }
 
 void MainWindow::createMenus()

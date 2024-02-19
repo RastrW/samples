@@ -21,8 +21,8 @@ int main(int argc, char *argv[])
     const int SIZE_STR_BUF = 100'000;
     std::string str_json;
     str_json.resize(SIZE_STR_BUF);
-    //nRes = GetForms( R"(/home/ustas/Документы/RastrWin3/form/poisk.fm)", "", const_cast<char*>( str_json.c_str()), str_json.size() );
-    nRes = GetForms( R"(/home/ustas/Документы/RastrWin3/form/Общие.fm)", "", const_cast<char*>( str_json.c_str()), str_json.size() );
+    //nRes = GetForms( R"(/home/ustas/Документы/RastrWin3/form/poisk.fm)", "", const_cast<char*>(str_json.c_str()), str_json.size() );
+    nRes = GetForms( R"(/home/ustas/Документы/RastrWin3/form/Общие.fm)", "", const_cast<char*>(str_json.c_str()), str_json.size() );
     nlohmann::json j_forms = nlohmann::json::parse(str_json);
     //sqDebug() << str_json.c_str();
     typedef std::vector<std::string> _vstr;
@@ -111,6 +111,7 @@ int main(int argc, char *argv[])
         }
     }
     MainWindow w;
+    w.setForms(j_forms);
     w.resize(500,500);
     w.show();
     return a.exec();

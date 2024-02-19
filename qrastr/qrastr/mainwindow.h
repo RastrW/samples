@@ -2,7 +2,8 @@
 #define MAINWINDOW_H
 
 #include <QMainWindow>
-
+#include "astra_exp.h"
+#include "License2/json.hpp"
 
 class QAction;
 class QMenu;
@@ -16,10 +17,9 @@ class MainWindow : public QMainWindow
     Q_OBJECT
 public:
     MainWindow();
-
+    void setForms(nlohmann::json& j_forms_in){ j_forms_ = j_forms_in; }
 protected:
     void closeEvent(QCloseEvent *event);
-
 private slots:
     void newFile();
     void open();
@@ -31,9 +31,8 @@ private slots:
     void about();
     void updateMenus();
     void updateWindowMenu();
-    MdiChild *createMdiChild();
+    MdiChild *createMdiChild(nlohmann::json j_form = "");
     void setActiveSubWindow(QWidget *window);
-
 private:
     void createActions();
     void createMenus();
@@ -43,10 +42,8 @@ private:
     void writeSettings();
     MdiChild *activeMdiChild();
     QMdiSubWindow *findMdiChild(const QString &fileName);
-
     QMdiArea* m_workspace;
     QSignalMapper *m_windowMapper;
-
     QMenu *m_fileMenu;
     QMenu *m_editMenu;
     QMenu *m_windowMenu;
@@ -70,6 +67,9 @@ private:
     QAction *m_previousAct;
     QAction *m_separatorAct;
     QAction *m_aboutAct;
+
+    nlohmann::json j_forms_;
+    _idRastr       id_rastr_;
 };
 
 

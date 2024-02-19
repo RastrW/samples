@@ -2,13 +2,13 @@
 #define RASTRDATAMODEL_H
 
 #include <QicsDataModel.h>
+#include "astra_exp.h"
+#include"License2/json.hpp"
 
 template <typename... Args>
 void loggg( int eCod, std::string_view sv_format, Args&&... args ) {
     //const std::string str_log{fmt::format(sv_format, args...)};
 }
-
-
 
 typedef std::vector
         < std::variant< int, double, std::string > > _col_data ;
@@ -32,20 +32,24 @@ public:
 };// class RCol
 
 class RData
-    : public std::vector <RCol> {
+    : public std::vector<RCol> {
 public:
     void SetNumRows(long n_new_num_rows){
         n_num_rows_ = n_new_num_rows;
     }
     int AddCol(const RCol& rcol){
-        if(rcol.size()!=n_num_rows_)
-            return -1;
+  //      if(rcol.size()!=n_num_rows_)
+  //          return -1;
         emplace_back(rcol);
         return size();
     }
 private:
     long n_num_rows_ = 0;
 };// class RData
+
+
+
+
 
 class RastrDataModel
         //: public QObject
@@ -54,7 +58,6 @@ class RastrDataModel
     Q_OBJECT
     RData rdata_;
     QicsDataItem* pditem_ = nullptr;
-
 public:
     RastrDataModel(){
        RCol rc_int  {1,3,5,45,6};
