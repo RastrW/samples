@@ -92,12 +92,6 @@ MdiChild::MdiChild( const _idRastr id_rastr, const nlohmann::json& j_form_in )
         vstr_fields_meta.emplace_back(str_Name);
         str_tmp += str_Name;
         str_tmp += " # ";
-        /*
-        RCol rc;
-        rc.str_name_ = str_field;
-        rc.resize(sz_num_rows);
-        nRes = rdata.AddCol(rc); Q_ASSERT(nRes>=0);
-*/
     }
     qDebug() << "FieldsBd:  " << str_tmp.c_str();
     _vstr vstr_fields_distilled;
@@ -130,10 +124,7 @@ MdiChild::MdiChild( const _idRastr id_rastr, const nlohmann::json& j_form_in )
             i = 1;
             for(RCol& col: *p_rdata){
                 //qDebug() << "D: " << j_data_row[i].dump().c_str();
-                //_col_data::iterator iter_data = rdata.operator[](i).begin() + n_row;
-               //RData::iterator iter_rdata = rdata.begin() + i-1;
                 RCol::iterator iter_col = col.begin() + n_row;
-               // switch((*iter_rdata).)
                 qDebug() << "dump: " << j_data_row[i].dump().c_str();
                 switch(col.en_data_){
                     case RCol::_en_data::DATA_INT:
@@ -157,48 +148,31 @@ MdiChild::MdiChild( const _idRastr id_rastr, const nlohmann::json& j_form_in )
             n_row++;
         }//for(j_data_arr)
     }
-
     p_rdata->Trace();
     qDebug()<< "hello";
 
-/*
-    int i = 0;
-    int n_col_num = 0;
-    int n_row = 0;
-    for(nlohmann::json j_data_row: j_data_arr) {
-        for( i=1 ; i < sz_num_cols ; i++) {
-            qDebug() << "Data: "<< i<< " :" << j_data_row[i].dump().c_str();
-            _col_data::iterator iter_data = rdata.operator[](i).begin() + n_row;
-
-           // j_data_row[i].dump();
-           // (*iter_data).index();
-
-            switch((*iter_data).index()){
-               case RCol::_en_data::DATA_INT: (*iter_data) =  std::stoi(j_data_row[i].dump().c_str()) ; break; // std::stoi(j_data_row[i].dump().c_str())
-               case RCol::_en_data::DATA_STR: (*iter_data) = j_data_row[i].dump(); break;
-               case RCol::_en_data::DATA_DBL: (*iter_data) = std::stod(j_data_row[i].dump().c_str()); break;
-               default :                                    break;
-            }//
-
-        }
-        n_row++;
-    }
-   */
-    /*
-    for(const nlohmann::json& j_row_arr : j_data_arr){
-        n_col_num = 0;
-        for(const nlohmann::json& j_data : j_row_arr){
-            n_col_num++;
-        }
-
-    }
-*/
-    //rdata_.SetNumRows(rc_int.size());
-    //nRes = rdata_.AddCol(rc_int); Q_ASSERT(nRes>=0);
-
-
     dm = new RastrDataModel(*p_rdata);
     this->setDataModel(dm);
+
+
+    /* // from consultant
+    //Format the billable rate column with a dollar sign, decimal point,
+    //and the appropriate cents digits.
+    QicsDataItemSprintfFormatter *brFormatter = new QicsDataItemSprintfFormatter();
+    brFormatter->addFormatString(QicsDataItem_Float, "$%.2f");
+    brFormatter->addFormatString(QicsDataItem_Int, "$%d.00");
+    m_table->columnRef(6).setFormatter(brFormatter);
+    m_table->columnRef(6).setValidator(new QDoubleValidator(m_table));
+
+*/
+
+    columnHeaderRef().setAlignment(Qt::AlignCenter);
+    i = 0;
+    for(RCol& col: *p_rdata){
+        columnHeaderRef().cellRef(0,i).setLabel(col.str_name_.c_str());
+        //columnRef(i).setWidthInChars(10);
+        i++;
+    }
 
     isUntitled = true;
 }

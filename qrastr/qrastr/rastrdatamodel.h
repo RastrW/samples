@@ -137,6 +137,9 @@ public:
        setNumColumns(rdata_.size());
        //setNumRows(rc_int.size());
        setNumRows(rdata_.begin()->size());
+
+       //self->setColumnItems()
+       //setColumnItems()
     }
     virtual ~RastrDataModel(){
     }
@@ -157,6 +160,12 @@ public:
          }
          //  self->pditem_ = new QicsDataString( "dfffd df" );
          return self->pditem_;
+
+
+
+
+
+
 
         // we need to modify the internal _item data member inside
         // this const method.  This modification is not externally
@@ -244,6 +253,9 @@ public:
         */
     }
     void setColumnItems(int col, const QicsDataModelColumn &v){
+        qDebug () << "eerr";
+        Q_ASSERT(0);
+
         /*
         QicsDataModelColumn::const_iterator iter;
         int row = 0;

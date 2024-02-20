@@ -57,7 +57,6 @@ void MainWindow::newFile()
 {
     MdiChild *child = createMdiChild(  j_forms_[0] );
     child->newFile();
-
     child->show();
 }
 
@@ -163,9 +162,9 @@ void MainWindow::updateWindowMenu()
     }
 }
 
-MdiChild *MainWindow::createMdiChild( nlohmann::json j_form)
+MdiChild *MainWindow::createMdiChild( nlohmann::json j_form )
 {
-    MdiChild *child = new MdiChild(id_rastr_, j_form);
+    MdiChild *child = new MdiChild( id_rastr_, j_form );
     m_workspace->addSubWindow(child);
     return child;
 }
