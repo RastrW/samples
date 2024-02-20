@@ -68,11 +68,23 @@ MdiChild::MdiChild( const _idRastr id_rastr, const nlohmann::json& j_form_in )
     nRes = GetMeta( id_rastr, str_TableName.c_str(), "", const_cast<char*>(str_json.c_str()), str_json.length() );
     if(nRes<0){
          qDebug() << "GetMeta(...)  return error" << nRes;
-
     }
-    RData rdata;
     //qDebug() << "Meta   : " << str_json.c_str();
     nlohmann::json j_metas = nlohmann::json::parse(str_json);
+
+    RData*  p_rdata = new RData();
+    for(const nlohmann::json& j_field : j_Fields){
+        for(const nlohmann::json& j_meta : j_metas ){
+            const std::string str_Name = j_meta["Name"];
+            if(j_field == str_Name){ // for make same order like in a form
+                RCol rc;
+                rc.str_name_ = str_Name;
+                rc.setMeta( j_meta );
+                nRes = p_rdata->AddCol(rc); Q_ASSERT(nRes>=0);
+                break;
+            }
+        }
+    }
     _vstr vstr_fields_meta;
     str_tmp.clear();
     for(const nlohmann::json& j_meta : j_metas ){
@@ -80,12 +92,14 @@ MdiChild::MdiChild( const _idRastr id_rastr, const nlohmann::json& j_form_in )
         vstr_fields_meta.emplace_back(str_Name);
         str_tmp += str_Name;
         str_tmp += " # ";
-
+        /*
         RCol rc;
-        rc.str_name_ = str_Name;
+        rc.str_name_ = str_field;
+        rc.resize(sz_num_rows);
         nRes = rdata.AddCol(rc); Q_ASSERT(nRes>=0);
+*/
     }
-    qDebug() << "FieldsBd: " << str_tmp.c_str();
+    qDebug() << "FieldsBd:  " << str_tmp.c_str();
     _vstr vstr_fields_distilled;
     str_tmp.clear();
     for(std::string& str_field_form : vstr_fields_form){
@@ -97,25 +111,79 @@ MdiChild::MdiChild( const _idRastr id_rastr, const nlohmann::json& j_form_in )
             str_tmp += ",";
         }
     }
+    int i = 0;
+    std::string str_tmp2 = p_rdata->getCommaSeparatedFieldNames();
+    qDebug() << "Fields:  " << str_tmp.c_str();
+    qDebug() << "Fields2: " << str_tmp2.c_str();
     if(str_tmp.length()>0){
         str_tmp.erase(str_tmp.length()-1);
         nRes = GetJSON( id_rastr, str_TableName.c_str(), str_tmp.c_str(), "", const_cast<char*>(str_json.c_str()), str_json.length() );
         qDebug() << "Data: " << str_json.c_str();
+        nlohmann::json j_data_arr = nlohmann::json::parse(str_json);
+        size_t sz_num_cols = p_rdata->size();
+        size_t sz_num_rows = j_data_arr.size();
+        for( RCol& rcol : *p_rdata ){
+            rcol.resize(sz_num_rows);
+        }
+        int n_row = 0;
+        for(nlohmann::json j_data_row : j_data_arr) {
+            i = 1;
+            for(RCol& col: *p_rdata){
+                //qDebug() << "D: " << j_data_row[i].dump().c_str();
+                //_col_data::iterator iter_data = rdata.operator[](i).begin() + n_row;
+               //RData::iterator iter_rdata = rdata.begin() + i-1;
+                RCol::iterator iter_col = col.begin() + n_row;
+               // switch((*iter_rdata).)
+                qDebug() << "dump: " << j_data_row[i].dump().c_str();
+                switch(col.en_data_){
+                    case RCol::_en_data::DATA_INT:
+                        (*iter_col).emplace<int>(  j_data_row[i] );
+                        qDebug() << "int: " << std::get<int>(*iter_col);
+                    break;
+                    case RCol::_en_data::DATA_DBL:
+                        (*iter_col).emplace<double>( j_data_row[i] );
+                        qDebug() << "dbl: " << std::get<double>(*iter_col);
+                    break;
+                    case RCol::_en_data::DATA_STR:
+                        (*iter_col).emplace<std::string>(j_data_row[i]);
+                        qDebug() << "str: " << std::get<std::string>(*iter_col).c_str();
+                    break;
+                    default:
+                        Q_ASSERT(!"unknown type");
+                    break;
+                }//switch
+                i++;
+            }//for(col)
+            n_row++;
+        }//for(j_data_arr)
     }
 
-    nlohmann::json j_data_arr = nlohmann::json::parse(str_json);
+    p_rdata->Trace();
+    qDebug()<< "hello";
 
-    size_t sz_num_cols = vstr_fields_distilled.size();
-    size_t sz_num_rows = j_data_arr.size();
+/*
+    int i = 0;
     int n_col_num = 0;
-    for(const nlohmann::json& j_meta : j_metas ){
-        std::string str_Name       = j_meta["Name"];
+    int n_row = 0;
+    for(nlohmann::json j_data_row: j_data_arr) {
+        for( i=1 ; i < sz_num_cols ; i++) {
+            qDebug() << "Data: "<< i<< " :" << j_data_row[i].dump().c_str();
+            _col_data::iterator iter_data = rdata.operator[](i).begin() + n_row;
 
-        RCol rc;
-        rc.str_name_ = str_Name;
-        nRes = rdata.AddCol(rc); Q_ASSERT(nRes>=0);
-        n_col_num++;
+           // j_data_row[i].dump();
+           // (*iter_data).index();
+
+            switch((*iter_data).index()){
+               case RCol::_en_data::DATA_INT: (*iter_data) =  std::stoi(j_data_row[i].dump().c_str()) ; break; // std::stoi(j_data_row[i].dump().c_str())
+               case RCol::_en_data::DATA_STR: (*iter_data) = j_data_row[i].dump(); break;
+               case RCol::_en_data::DATA_DBL: (*iter_data) = std::stod(j_data_row[i].dump().c_str()); break;
+               default :                                    break;
+            }//
+
+        }
+        n_row++;
     }
+   */
     /*
     for(const nlohmann::json& j_row_arr : j_data_arr){
         n_col_num = 0;
@@ -129,7 +197,7 @@ MdiChild::MdiChild( const _idRastr id_rastr, const nlohmann::json& j_form_in )
     //nRes = rdata_.AddCol(rc_int); Q_ASSERT(nRes>=0);
 
 
-    dm = new RastrDataModel();
+    dm = new RastrDataModel(*p_rdata);
     this->setDataModel(dm);
 
     isUntitled = true;

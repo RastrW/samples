@@ -38,6 +38,7 @@ set(PROJECT_SOURCES
         mdiChildTable.cpp
         rastrdatamodel.h
         rastrdatamodel.cpp
+        astra_shared.h
         ${TS_FILES}
         qrastr.qrc
 )

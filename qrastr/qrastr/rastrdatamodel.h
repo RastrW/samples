@@ -3,7 +3,8 @@
 
 #include <QicsDataModel.h>
 #include "astra_exp.h"
-#include"License2/json.hpp"
+#include "License2/json.hpp"
+#include "astra_shared.h"
 
 template <typename... Args>
 void loggg( int eCod, std::string_view sv_format, Args&&... args ) {
@@ -18,17 +19,45 @@ class RCol
 {
 public:
     enum _en_data{ // in _col_data
-        DATA_INT = 0,
-        DATA_DBL = 1,
-        DATA_STR = 2
+        DATA_ERR =  -1,
+        DATA_INT =   0,
+        DATA_DBL =   1,
+        DATA_STR =   2
     };
-
-    std::string str_name_;
     template <typename... Args>
     RCol(Args&&... args)
         : _col_data{args...} {
     }
     virtual ~RCol() = default;
+    void setMeta(const nlohmann::json& j_meta_in){
+        j_meta_ = j_meta_in;
+        en_data_ = _en_data::DATA_ERR;
+        const std::string str_Type = j_meta_["Type"];
+        int n_type = std::stoi(str_Type);
+        enComPropTT com_prop_tt = static_cast<enComPropTT>(n_type);
+        switch(com_prop_tt){
+            case enComPropTT::COM_PR_INT	   : //= 0,
+            case enComPropTT::COM_PR_BOOL	   : //= 3,
+            case enComPropTT::COM_PR_ENUM	   : //= 4,
+            case enComPropTT::COM_PR_ENPIC	   : //= 5,
+            case enComPropTT::COM_PR_COLOR	   : //= 6,
+            case enComPropTT::COM_PR_SUPERENUM : //= 7,
+            case enComPropTT::COM_PR_TIME	   : //= 8,
+            case enComPropTT::COM_PR_HEX	   : //= 9
+                en_data_ = _en_data::DATA_INT;
+            break;
+            case enComPropTT::COM_PR_REAL	   : //= 1,
+                en_data_ = _en_data::DATA_DBL;
+            break;
+            case enComPropTT::COM_PR_STRING	   : //= 2,
+                en_data_ = _en_data::DATA_STR;
+            break;
+        }
+    }
+    std::string    str_name_;
+    _en_data       en_data_;
+private:
+    nlohmann::json j_meta_;
 };// class RCol
 
 class RData
@@ -43,6 +72,39 @@ public:
         emplace_back(rcol);
         return size();
     }
+    std::string getCommaSeparatedFieldNames(){
+        std::string str_tmp;
+        for( const RCol& col_data : *this ) {
+            str_tmp += col_data.str_name_;
+            str_tmp += ",";
+        }
+        if(str_tmp.length()>0){
+            str_tmp.erase(str_tmp.length()-1);
+        }
+        return str_tmp;
+    }
+    void Trace() const {
+        for(const RCol& col : *this){
+            qDebug() << " col: " << col.str_name_.c_str();
+            for(const _col_data::value_type& cdata : col ){
+                switch(col.en_data_){
+                    case RCol::_en_data::DATA_INT :
+                        qDebug()<<"cdata : "<< std::get<int>(cdata);
+                    break;
+                    case RCol::_en_data::DATA_DBL :
+                        qDebug()<<"cdata : "<< std::get<double>(cdata);
+                    break;
+                    case RCol::_en_data::DATA_STR :
+                        qDebug()<<"cdata : "<< std::get<std::string>(cdata).c_str();
+                    break;
+                    default:
+                        qDebug()<<"cdata : unknown!! ";
+                    break;
+                }
+                //qDebug()<<"cdata : "<< std::to_string(cdata).c_str();
+            }
+        }
+    }
 private:
     long n_num_rows_ = 0;
 };// class RData
@@ -56,10 +118,12 @@ class RastrDataModel
         : public QicsDataModel
 {
     Q_OBJECT
-    RData rdata_;
+    const RData& rdata_;
     QicsDataItem* pditem_ = nullptr;
 public:
-    RastrDataModel(){
+    RastrDataModel(const RData& rdata_in) :
+        rdata_(rdata_in){
+        /*
        RCol rc_int  {1,3,5,45,6};
        RCol rc_str  {"good","very good", "the best ","excelent","привет медвед"};
        RCol rc_dbl  {12.13, 13.12, 55.05, 66.123, 12.1232323};
@@ -69,9 +133,10 @@ public:
        nRes = rdata_.AddCol(rc_str); Q_ASSERT(nRes>0);
        nRes = rdata_.AddCol(rc_dbl); Q_ASSERT(nRes>0);
        nRes = rdata_.AddCol(rc_int); Q_ASSERT(nRes>0);
-
+*/
        setNumColumns(rdata_.size());
-       setNumRows(rc_int.size());
+       //setNumRows(rc_int.size());
+       setNumRows(rdata_.begin()->size());
     }
     virtual ~RastrDataModel(){
     }
