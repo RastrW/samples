@@ -17,7 +17,7 @@ class MainWindow : public QMainWindow
     Q_OBJECT
 public:
     MainWindow();
-    void setForms(nlohmann::json& j_forms_in){ j_forms_ = j_forms_in; }
+    void setForms(nlohmann::json& j_forms_in);
 protected:
     void closeEvent(QCloseEvent *event);
 private slots:
@@ -46,6 +46,7 @@ private:
     QSignalMapper *m_windowMapper;
     QMenu *m_fileMenu;
     QMenu *m_editMenu;
+    QMenu *m_openMenu;
     QMenu *m_windowMenu;
     QMenu *m_helpMenu;
     QToolBar *m_fileToolBar;

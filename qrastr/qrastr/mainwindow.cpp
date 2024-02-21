@@ -55,6 +55,7 @@ void MainWindow::closeEvent(QCloseEvent *event)
 
 void MainWindow::newFile()
 {
+    //MdiChild *child = createMdiChild(  j_forms_[0] );
     MdiChild *child = createMdiChild(  j_forms_[0] );
     child->newFile();
     child->show();
@@ -279,6 +280,17 @@ void MainWindow::createMenus()
     m_editMenu->addAction(m_copyAct);
     m_editMenu->addAction(m_pasteAct);
 
+    m_openMenu = menuBar()->addMenu(tr("&Open") );
+
+/*
+    m_editMenu = menuBar()->addMenu(tr("&Open") );
+    for(nlohmann::json j_form : j_forms_){
+
+        std::string str_Name = j_form["Name"];
+        QAction* pa = new QAction(this);
+        m_editMenu->addAction(str_Name.c_str());
+    }
+*/
     m_windowMenu = menuBar()->addMenu(tr("&Window"));
     updateWindowMenu();
     connect(m_windowMenu, SIGNAL(aboutToShow()), this, SLOT(updateWindowMenu()));
@@ -342,6 +354,20 @@ QMdiSubWindow *MainWindow::findMdiChild(const QString &fileName)
     }
 
     return 0;
+}
+
+void MainWindow::setForms(nlohmann::json& j_forms_in){
+    j_forms_ = j_forms_in;
+    for(nlohmann::json j_form : j_forms_){
+        //std::string str_Name = j_form["Name"];
+        std::string str_Name = j_form["TableName"];
+/*
+        QAction* pa = new QAction(this);
+        QActionGroup
+        pa->actionGroup()*/
+        m_openMenu->addAction(str_Name.c_str());
+    }
+
 }
 
 
