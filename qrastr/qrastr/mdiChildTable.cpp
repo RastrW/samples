@@ -149,11 +149,9 @@ MdiChild::MdiChild( const _idRastr id_rastr, const nlohmann::json& j_form_in )
         }//for(j_data_arr)
     }
     p_rdata->Trace();
-    qDebug()<< "hello";
-
+    //qDebug()<< "hello";
     dm = new RastrDataModel(*p_rdata);
     this->setDataModel(dm);
-
 
     /* // from consultant
     //Format the billable rate column with a dollar sign, decimal point,

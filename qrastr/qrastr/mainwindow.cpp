@@ -14,6 +14,7 @@
 #include "mdiChildTable.h"
 #include <iostream>
 #include "astra_exp.h"
+#include "fmt/format.h"
 
 MainWindow::MainWindow()
 {
@@ -60,6 +61,19 @@ void MainWindow::open()
             m_workspace->setActiveSubWindow(existing);
             return;
         }
+        int nRes = 0;
+        nRes = Load( id_rastr_, fileName.toStdString().c_str(), "");
+        if(nRes>0){
+            std::string str_msg = fmt::format( "{}: {}", tr("File loaded").toStdString(), fileName.toStdString());
+            statusBar()->showMessage( str_msg.c_str(), 2000 );
+        } else {
+            std::string str_msg = fmt::format( "{}: {}", tr("File not loaded").toStdString(), fileName.toStdString());
+            QMessageBox msgBox;
+            msgBox.critical( this, tr("File not loaded"), str_msg.c_str() );
+
+        }
+
+        /* // ustas
         MdiChild *child = createMdiChild();
         if (child->loadFile(fileName)) {
             statusBar()->showMessage(tr("File loaded"), 2000);
@@ -67,6 +81,7 @@ void MainWindow::open()
         } else {
             child->close();
         }
+        */
     }
 }
 
