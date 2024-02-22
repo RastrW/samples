@@ -41,7 +41,7 @@ MdiChild::MdiChild( const _idRastr id_rastr, const nlohmann::json& j_form_in )
     //this->setDataModel(new QicsDataModelDefault);
 
     int nRes = 0;
-    const int SIZE_STR_BUF = 100'000;
+    const int SIZE_STR_BUF = 500'000'000;
     std::string str_json;
     str_json.resize(SIZE_STR_BUF);
     //nRes = GetForms( R"(/home/ustas/Документы/RastrWin3/form/poisk.fm)", "", const_cast<char*>(str_json.c_str()), str_json.size() );
@@ -113,6 +113,8 @@ MdiChild::MdiChild( const _idRastr id_rastr, const nlohmann::json& j_form_in )
         str_tmp.erase(str_tmp.length()-1);
         nRes = GetJSON( id_rastr, str_TableName.c_str(), str_tmp.c_str(), "", const_cast<char*>(str_json.c_str()), str_json.length() );
         qDebug() << "Data: " << str_json.c_str();
+        size_t nLength = str_json.size();
+        //nlohmann::json j_data_arr = nlohmann::json::parse(str_json, nullptr,false);
         nlohmann::json j_data_arr = nlohmann::json::parse(str_json);
         size_t sz_num_cols = p_rdata->size();
         size_t sz_num_rows = j_data_arr.size();

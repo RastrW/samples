@@ -295,12 +295,12 @@
 <context>
     <name>MdiChild</name>
     <message>
-        <location filename="mdiChildTable.cpp" line="185"/>
+        <location filename="mdiChildTable.cpp" line="187"/>
         <source>qicstable%1.dat</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="mdiChildTable.cpp" line="218"/>
+        <location filename="mdiChildTable.cpp" line="220"/>
         <source>Save As</source>
         <translation type="unfinished"></translation>
     </message>
