@@ -169,11 +169,14 @@ MdiChild::MdiChild( const _idRastr id_rastr, const nlohmann::json& j_form_in )
     columnHeaderRef().setAlignment(Qt::AlignCenter);
     i = 0;
     for(RCol& col: *p_rdata){
-        columnHeaderRef().cellRef(0,i).setLabel(col.str_name_.c_str());
+        //columnHeaderRef().cellRef(0,i).setLabel(col.str_name_.c_str());
+        columnHeaderRef().cellRef(0,i).setLabel(col.title().c_str());
         //columnRef(i).setWidthInChars(10);
         i++;
     }
-
+    // from void MdiChild::newFile()
+    setWindowTitle(str_Name.c_str());
+    setWindowIcon(QIcon(":/images/new.png"));
     isUntitled = true;
 }
 

@@ -54,6 +54,10 @@ public:
             break;
         }
     }
+    std::string title() const{
+        const std::string str_title = j_meta_["Title"];
+        return str_title;
+    }
     std::string    str_name_;
     _en_data       en_data_;
 private:
@@ -136,7 +140,8 @@ public:
 */
        setNumColumns(rdata_.size());
        //setNumRows(rc_int.size());
-       setNumRows(rdata_.begin()->size());
+       if(rdata_.size()>0)
+            setNumRows(rdata_.begin()->size());
 
        //self->setColumnItems()
        //setColumnItems()
