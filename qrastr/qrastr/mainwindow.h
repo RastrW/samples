@@ -29,6 +29,8 @@ private slots:
     void copy();
     void paste();
     void about();
+    void onOpenForm(QAction* p_actn);
+///slots.end.
     void updateMenus();
     void updateWindowMenu();
     MdiChild *createMdiChild(nlohmann::json j_form = "");
