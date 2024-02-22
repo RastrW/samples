@@ -103,18 +103,22 @@ void MainWindow::about()
 }
 
 void MainWindow::onOpenForm( QAction* p_actn ){
-    QString str =  p_actn->data().toString();
-   //qDebug() << "Selected - " << str;
-    QMessageBox::about( this, "FormOpene", str );
+    int n_indx = p_actn->data().toInt();
+    const nlohmann::json j_form = j_forms_[n_indx];
+    MdiChild *child = createMdiChild( j_form );
+    child->newFile();
+    child->show();
 }
 
 void MainWindow::setForms(nlohmann::json& j_forms_in){ // https://stackoverflow.com/questions/14151443/how-to-pass-a-qstring-to-a-qt-slot-from-a-qmenu-via-qsignalmapper-or-otherwise
     j_forms_ = j_forms_in;
-    for(nlohmann::json j_form : j_forms_){
+    int i = 0;
+    for(const nlohmann::json& j_form : j_forms_){
         //std::string str_Name = j_form["Name"];
         std::string str_Name = j_form["TableName"];
         QAction* p_actn = m_openMenu->addAction(str_Name.c_str());
-        p_actn->setData(str_Name.c_str());
+        p_actn->setData(i);
+        i++;
     }
     connect( m_openMenu, SIGNAL(triggered(QAction *)),
             this, SLOT(onOpenForm(QAction *)), Qt::UniqueConnection);
