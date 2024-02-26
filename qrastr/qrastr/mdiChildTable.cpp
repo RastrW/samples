@@ -46,6 +46,11 @@ MdiChild::MdiChild( const _idRastr id_rastr, const nlohmann::json& j_form_in )
     str_json.resize(SIZE_STR_BUF);
     //nRes = GetForms( R"(/home/ustas/Документы/RastrWin3/form/poisk.fm)", "", const_cast<char*>(str_json.c_str()), str_json.size() );
     nRes = GetForms( R"(/home/ustas/Документы/RastrWin3/form/Общие.fm)", "", const_cast<char*>(str_json.c_str()), str_json.size() );
+
+    size_t sz = str_json.size();
+    size_t ln = str_json.length();
+    size_t ln1 = std::strlen(str_json.c_str());
+    str_json.resize(std::strlen(str_json.c_str())+1);
     nlohmann::json j_forms = nlohmann::json::parse(str_json);
     //sqDebug() << str_json.c_str();
     typedef std::vector<std::string> _vstr;
@@ -65,11 +70,13 @@ MdiChild::MdiChild( const _idRastr id_rastr, const nlohmann::json& j_form_in )
     }
     qDebug() << "Table  : " << str_TableName.c_str() << "|" << QString::fromUtf8( str_Name.c_str()) << "|" <<  str_Collection.c_str() << "|" << str_MenuPath.c_str() << "|" << str_Query.c_str();
     qDebug() << "Fields : " << str_tmp.c_str();
-    nRes = GetMeta( id_rastr, str_TableName.c_str(), "", const_cast<char*>(str_json.c_str()), str_json.length() );
+    str_json.resize(SIZE_STR_BUF);
+    nRes = GetMeta( id_rastr, str_TableName.c_str(), "", const_cast<char*>(str_json.c_str()), str_json.size() );
     if(nRes<0){
          qDebug() << "GetMeta(...)  return error" << nRes;
     }
-    //qDebug() << "Meta   : " << str_json.c_str();
+    qDebug() << "Meta   : " << str_json.c_str();
+    str_json.resize(std::strlen(str_json.c_str())+1);
     nlohmann::json j_metas = nlohmann::json::parse(str_json);
 
     RData*  p_rdata = new RData();
@@ -111,8 +118,10 @@ MdiChild::MdiChild( const _idRastr id_rastr, const nlohmann::json& j_form_in )
     qDebug() << "Fields2: " << str_tmp2.c_str();
     if(str_tmp.length()>0){
         str_tmp.erase(str_tmp.length()-1);
+        str_json.resize(SIZE_STR_BUF);
         nRes = GetJSON( id_rastr, str_TableName.c_str(), str_tmp.c_str(), "", const_cast<char*>(str_json.c_str()), str_json.length() );
-        qDebug() << "Data: " << str_json.c_str();
+        str_json.resize(std::strlen(str_json.c_str())+1);
+        //qDebug() << "Data: " << str_json.c_str();
         size_t nLength = str_json.size();
         //nlohmann::json j_data_arr = nlohmann::json::parse(str_json, nullptr,false);
         nlohmann::json j_data_arr = nlohmann::json::parse(str_json);
@@ -127,19 +136,19 @@ MdiChild::MdiChild( const _idRastr id_rastr, const nlohmann::json& j_form_in )
             for(RCol& col: *p_rdata){
                 //qDebug() << "D: " << j_data_row[i].dump().c_str();
                 RCol::iterator iter_col = col.begin() + n_row;
-                qDebug() << "dump: " << j_data_row[i].dump().c_str();
+                //qDebug() << "dump: " << j_data_row[i].dump().c_str();
                 switch(col.en_data_){
                     case RCol::_en_data::DATA_INT:
                         (*iter_col).emplace<int>(  j_data_row[i] );
-                        qDebug() << "int: " << std::get<int>(*iter_col);
+                        //qDebug() << "int: " << std::get<int>(*iter_col);
                     break;
                     case RCol::_en_data::DATA_DBL:
                         (*iter_col).emplace<double>( j_data_row[i] );
-                        qDebug() << "dbl: " << std::get<double>(*iter_col);
+                        //qDebug() << "dbl: " << std::get<double>(*iter_col);
                     break;
                     case RCol::_en_data::DATA_STR:
                         (*iter_col).emplace<std::string>(j_data_row[i]);
-                        qDebug() << "str: " << std::get<std::string>(*iter_col).c_str();
+                        //qDebug() << "str: " << std::get<std::string>(*iter_col).c_str();
                     break;
                     default:
                         Q_ASSERT(!"unknown type");
@@ -150,7 +159,7 @@ MdiChild::MdiChild( const _idRastr id_rastr, const nlohmann::json& j_form_in )
             n_row++;
         }//for(j_data_arr)
     }
-    p_rdata->Trace();
+//    p_rdata->Trace();
     //qDebug()<< "hello";
     dm = new RastrDataModel(*p_rdata);
     this->setDataModel(dm);
