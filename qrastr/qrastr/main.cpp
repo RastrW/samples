@@ -3,8 +3,8 @@
 #include <QApplication>
 #include <QLocale>
 #include <QTranslator>
-
-#include<QDebug>
+#include <QDebug>
+#include <QWindow>
 
 #include "astra_exp.h"
 #include "License2/json.hpp"
@@ -110,9 +110,19 @@ int main(int argc, char *argv[])
             break;
         }
     }
+
+    //int screenCount = QApplication::desktop()->screenCount();
+    /*QWidget * widget = new QWidget();
+    widget->show();
+    widget->windowHandle()->setScreen(qApp->screens().last());
+    widget->showFullScreen();
+    */
+
     MainWindow w;
     w.setForms(j_forms);
     w.resize(500,500);
     w.show();
+    //w.windowHandle()->setScreen(qApp->screens().last());
+    //w.showNormal();
     return a.exec();
 }
