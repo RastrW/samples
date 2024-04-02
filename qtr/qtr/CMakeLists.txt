@@ -64,8 +64,10 @@ if(MSVC)
 endif()
 
 
-find_package(QT NAMES Qt6 Qt5 COMPONENTS Widgets REQUIRED)
-find_package(Qt${QT_VERSION_MAJOR} COMPONENTS Widgets REQUIRED)
+find_package(QT NAMES Qt6 Qt5 COMPONENTS Widgets LinguistTools REQUIRED)
+find_package(Qt${QT_VERSION_MAJOR} COMPONENTS Widgets LinguistTools REQUIRED)
+
+set(TS_FILES tst_lng_ru_RU.ts)
 
 set(PROJECT_SOURCES
         main.cpp
@@ -74,6 +76,7 @@ set(PROJECT_SOURCES
         mainwindow.ui
         mdichild.h
         mdichild.cpp
+        ${TS_FILES}
 )
 
 if(${QT_VERSION_MAJOR} GREATER_EQUAL 6)
@@ -97,6 +100,7 @@ else()
             ${PROJECT_SOURCES}
         )
     endif()
+    qt5_create_translation(QM_FILES ${CMAKE_SOURCE_DIR} ${TS_FILES})
 endif()
 
 if(MSVC)
