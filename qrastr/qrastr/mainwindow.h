@@ -2,6 +2,10 @@
 #define MAINWINDOW_H
 
 #include <QMainWindow>
+#include <QWidget>
+#include <QHBoxLayout>
+#include <QPushButton>
+#include <QicsTable.h>
 #include "astra_exp.h"
 #include "License2/json.hpp"
 
@@ -12,14 +16,22 @@ class QMdiSubWindow;
 class MdiChild;
 class QSignalMapper;
 
+
 class MainWindow : public QMainWindow
 {
     Q_OBJECT
 public:
     MainWindow();
+    void SetIdrastr(_idRastr id_rastr_in);
     void setForms(nlohmann::json& j_forms_in);
+
+    // Returns pointer to the table that is active, otherwise returns NULL
+    QicsTable* activeTable();
+signals:
+    void rgm_signal();
 protected:
     void closeEvent(QCloseEvent *event);
+
 private slots:
     void newFile();
     void open();
@@ -29,6 +41,9 @@ private slots:
     void copy();
     void paste();
     void about();
+    void rgm_wrap();
+    void sortAscending();
+    void sortDescending();
     void onOpenForm(QAction* p_actn);
 ///slots.end.
     void updateMenus();
@@ -39,6 +54,7 @@ private:
     void createActions();
     void createMenus();
     void createToolBars();
+    void createCalcLayout();
     void createStatusBar();
     void readSettings();
     void writeSettings();
@@ -48,11 +64,15 @@ private:
     QSignalMapper *m_windowMapper;
     QMenu *m_fileMenu;
     QMenu *m_editMenu;
+    QMenu *m_CalcMenu;
     QMenu *m_openMenu;
     QMenu *m_windowMenu;
     QMenu *m_helpMenu;
+    QHBoxLayout *m_ActionsLayout;   // actions: rgm,opf,...
     QToolBar *m_fileToolBar;
     QToolBar *m_editToolBar;
+    QToolBar *m_viewToolBar;
+    QToolBar *m_calcToolBar;
     QAction *m_newAct;
     QAction *m_openAct;
     QAction *m_saveAct;
@@ -70,6 +90,10 @@ private:
     QAction *m_previousAct;
     QAction *m_separatorAct;
     QAction *m_aboutAct;
+
+    QAction *m_SortAscAct;
+    QAction *m_SortDescAct;
+    QAction *m_RGMAct;
 
     nlohmann::json j_forms_;
     _idRastr       id_rastr_;

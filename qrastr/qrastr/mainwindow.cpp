@@ -15,6 +15,12 @@
 #include <iostream>
 #include "astra_exp.h"
 #include "fmt/format.h"
+#include <QSet>
+#include <QListView>
+#include <QTableView>
+
+
+
 
 MainWindow::MainWindow()
 {
@@ -112,6 +118,20 @@ void MainWindow::paste()
     activeMdiChild()->paste();
 }
 
+void MainWindow::rgm_wrap()
+{
+    long res = Rgm(id_rastr_,"");
+
+    //qDebug() << "rgm return  " << res;
+    std::string str_msg = "";
+    if (res == 0)
+        str_msg = "Расчет режима выполнен успешно";
+    else
+        str_msg = "Расчет режима завершился аварийно!";
+    statusBar()->showMessage( str_msg.c_str(), 0 );
+
+    emit rgm_signal();
+}
 void MainWindow::about()
 {
    QMessageBox::about( this, tr("About QRastr"), tr("About the <b>QRastr</b>.") );
@@ -125,16 +145,45 @@ void MainWindow::onOpenForm( QAction* p_actn ){
     child->show();
 }
 
+void MainWindow::SetIdrastr(_idRastr id_rastr_in)
+{
+    id_rastr_ = id_rastr_in;
+}
+
 void MainWindow::setForms(nlohmann::json& j_forms_in){ // https://stackoverflow.com/questions/14151443/how-to-pass-a-qstring-to-a-qt-slot-from-a-qmenu-via-qsignalmapper-or-otherwise
     j_forms_ = j_forms_in;
     int i = 0;
+
+    QMap<QString,QMenu *> map_menu;
+    //QMap<QString, QMenu>::iterator it ;
+    for(const nlohmann::json& j_form : j_forms_){
+        //std::string str_Collection = j_form["Collection"];
+        std::string str_MenuPath = j_form["MenuPath"];
+        if (!str_MenuPath.empty() && str_MenuPath.at(0) == '_')
+            continue;
+
+        QString qstr_MenuPath = str_MenuPath.c_str();
+        if (!str_MenuPath.empty() && !map_menu.contains(qstr_MenuPath))
+            map_menu.insert(qstr_MenuPath,m_openMenu->addMenu(str_MenuPath.c_str()));
+    }
+
+
     for(const nlohmann::json& j_form : j_forms_){
         std::string str_Name = j_form["Name"];
-        //std::string str_Name = j_form["TableName"];
-        QAction* p_actn = m_openMenu->addAction(str_Name.c_str());
-        p_actn->setData(i);
+        std::string str_TableName = j_form["TableName"];
+        std::string str_MenuPath = j_form["MenuPath"];
+        QString qstr_MenuPath = str_MenuPath.c_str();
+        QMenu* cur_menu = m_openMenu;
+        if (map_menu.contains(qstr_MenuPath))
+            cur_menu = map_menu[qstr_MenuPath];
+        if (!str_Name.empty() && str_Name.at(0) != '_')
+        {
+            QAction* p_actn = cur_menu->addAction(str_Name.c_str());
+            p_actn->setData(i);
+        }
         i++;
     }
+
     connect( m_openMenu, SIGNAL(triggered(QAction *)),
             this, SLOT(onOpenForm(QAction *)), Qt::UniqueConnection);
 }
@@ -190,6 +239,8 @@ void MainWindow::updateWindowMenu()
 MdiChild *MainWindow::createMdiChild( nlohmann::json j_form )
 {
     MdiChild *child = new MdiChild( id_rastr_, j_form );
+
+    QObject::connect(this, SIGNAL(rgm_signal()), child, SLOT(update_data()));
     m_workspace->addSubWindow(child);
     return child;
 }
@@ -267,6 +318,23 @@ void MainWindow::createActions()
     m_aboutAct->setStatusTip(tr("Show the application's About box"));
     connect(m_aboutAct, SIGNAL(triggered()), this, SLOT(about()));
 
+    m_SortAscAct = new QAction(QIcon(":/images/sortasc.png"),tr("&SortAsc"), this);
+    m_SortAscAct->setShortcut(tr("Ctrl+Up"));
+    m_SortAscAct->setStatusTip(tr("Sort Ascending (Ctrl+Up)"));
+    connect(m_SortAscAct, SIGNAL(triggered()), this, SLOT(sortAscending()));
+
+    m_SortDescAct = new QAction(QIcon(":/images/sortdesc.png"),tr("&SortDesc"), this);
+    m_SortDescAct->setShortcut(tr("Ctrl+Down"));
+    m_SortDescAct->setStatusTip(tr("Sort Descending (Ctrl+Down)"));
+    connect(m_SortDescAct, SIGNAL(triggered()), this, SLOT(sortDescending()));
+
+
+    m_RGMAct = new QAction(QIcon(":/images/Rastr3_rgm_16x16.png"),tr("&rgm"), this);
+    m_RGMAct->setShortcut(tr("F5"));
+    m_RGMAct->setStatusTip(tr("Calc rgm"));
+    //connect(m_RGMAct, SIGNAL(triggered()), this, SLOT(Rgm(id_rastr_,"")));
+    connect(m_RGMAct, SIGNAL(triggered()), this, SLOT(rgm_wrap()));
+
     ////////////////////////////// RASTR //////////////////////////
     long nRes = 0;
     id_rastr_ = RastrCreate();
@@ -287,6 +355,12 @@ void MainWindow::createMenus()
     m_editMenu->addAction(m_cutAct);
     m_editMenu->addAction(m_copyAct);
     m_editMenu->addAction(m_pasteAct);
+   // m_viewMenu = menuBar()->addMenu(tr("&View"));
+    //m_editMenu->addAction(m_SortAscAct);
+
+    m_CalcMenu = menuBar()->addMenu(tr("&Calc"));
+    m_CalcMenu->addAction(m_RGMAct);
+
     m_openMenu = menuBar()->addMenu(tr("&Open") );
     m_windowMenu = menuBar()->addMenu(tr("&Window"));
     updateWindowMenu();
@@ -306,6 +380,92 @@ void MainWindow::createToolBars()
     m_editToolBar->addAction(m_cutAct);
     m_editToolBar->addAction(m_copyAct);
     m_editToolBar->addAction(m_pasteAct);
+    m_viewToolBar = addToolBar(tr("View"));
+    m_viewToolBar->addAction(m_SortAscAct);
+    m_viewToolBar->addAction(m_SortDescAct);
+    m_calcToolBar = addToolBar(tr("Calc"));
+    m_calcToolBar->addAction(m_RGMAct);
+
+    createCalcLayout();
+}
+
+
+void MainWindow::createCalcLayout()
+{
+    void Btn1_onClick();
+    // набор вложенных виджетов - кнопок
+    QPushButton *btn1 = new QPushButton("Button 1");
+    QPushButton *btn2 = new QPushButton("Button 2");
+    //QPushButton *btn3 = new QPushButton("Button 3");
+    //QPushButton *btn4 = new QPushButton("Button 4");
+
+    connect(btn1,&QPushButton::clicked,Btn1_onClick);
+
+    QWidget* widget = new QWidget;
+       widget -> setWindowTitle("Functions");
+    m_ActionsLayout = new QHBoxLayout(widget);
+    m_ActionsLayout->addWidget(btn1);
+    m_ActionsLayout->addWidget(btn2);
+    //m_ActionsLayout->addWidget(btn3);
+   // m_ActionsLayout->addWidget(btn4);
+    m_calcToolBar->addWidget(widget);
+
+
+    // TEST add grid view
+    QWidget* widget2 = new QWidget;
+    widget2->setWindowTitle("Test Data Viewer");
+    widget2->setMinimumHeight(150);
+    widget2->setMinimumWidth(250);
+    //m_calcToolBar->addWidget(widget2);
+
+    // определяем данные для модели
+    /*
+    QStringList list = {"C++","C#","VB"}    ;
+    QStringListModel *model = new QStringListModel(list);
+
+    QListView *view = new QListView(widget2);
+    view->setModel(model);
+    */
+
+    //   TaableView
+    QStandardItemModel* model = new QStandardItemModel(3, 2); // 3 строки, 2 столбца
+    model->setItem(0, 0, new QStandardItem("Tom"));
+    model->setItem(0, 1, new QStandardItem(39));
+    model->setItem(1, 0, new QStandardItem("Bob"));
+    model->setItem(1, 1, new QStandardItem(43));
+    model->setItem(2, 0, new QStandardItem("Sam"));
+    model->setItem(2, 1, new QStandardItem(28));
+
+    auto item = model->item(0,0);
+    //item->data
+
+    QModelIndex indexC = model->index(2, 1, QModelIndex());
+
+    // установка заголовков таблицы
+    model->setHeaderData(0, Qt::Horizontal, "Name");
+    model->setHeaderData(1, Qt::Horizontal, "Age");
+
+    // определяем представление
+    QTableView *view = new QTableView(widget2);
+    // устанавливаем модель для представления
+    view->setModel(model);
+    view->viewport()->installEventFilter(this);
+
+
+
+    //widget2->show();
+    widget->show();  // отображаем виджет
+}
+
+
+
+void Btn1_onClick()
+{
+
+    //Rgm(id_rastr_in,"");
+    QMessageBox msgBox;
+    msgBox.setText("Btn1 Clicked !");
+    msgBox.exec();
 }
 
 void MainWindow::createStatusBar()
@@ -317,7 +477,7 @@ void MainWindow::readSettings()
 {
     QSettings settings("MDI Example");
     QPoint pos = settings.value("pos", QPoint(200, 200)).toPoint();
-    QSize size = settings.value("size", QSize(400, 400)).toSize();
+    QSize size = settings.value("size", QSize(600, 800)).toSize();
     move(pos);
     resize(size);
 }
@@ -336,6 +496,17 @@ MdiChild *MainWindow::activeMdiChild()
     return 0;
 }
 
+QicsTable* MainWindow::activeTable()
+{
+    QMdiSubWindow* activeWindow = m_workspace->activeSubWindow();
+    if(!activeWindow)
+        return 0;
+
+    QicsTable *table = static_cast<QicsTable*>(activeMdiChild());
+    return table;
+}
+
+
 QMdiSubWindow *MainWindow::findMdiChild(const QString &fileName)
 {
     QString canonicalFilePath = QFileInfo(fileName).canonicalFilePath();
@@ -345,6 +516,42 @@ QMdiSubWindow *MainWindow::findMdiChild(const QString &fileName)
             return subWindow;
     }
     return 0;
+}
+
+void MainWindow::sortAscending()
+{
+    QicsTable *table = activeTable();
+    if (table) {
+        QicsSelectionList *list = table->selectionList(true);
+        if (!list)
+            return;
+
+        QVector<int> selectedCols = list->columns().toVector();
+        if (selectedCols.size() <= 0) selectedCols << 0;
+
+        //QicsRegion reg = list->region();
+        //table->sortRows(selectedCols, Qics::Ascending, reg.startRow(), reg.endRow());
+
+        table->sortRows(selectedCols, Qics::Ascending);
+    }
+}
+
+void MainWindow::sortDescending()
+{
+    QicsTable *table = activeTable();
+    if (table) {
+        QicsSelectionList *list = table->selectionList(true);
+        if (!list)
+            return;
+
+        QVector<int> selectedCols = list->columns().toVector();
+        if (selectedCols.size() <= 0) selectedCols << 0;
+
+        //QicsRegion reg = list->region();
+        //table->sortRows(selectedCols, Qics::Ascending, reg.startRow(), reg.endRow());
+
+        table->sortRows(selectedCols, Qics::Descending);
+    }
 }
 
 /*

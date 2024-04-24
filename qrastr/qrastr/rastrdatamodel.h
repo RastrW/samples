@@ -10,7 +10,7 @@ template <typename... Args>
 void loggg( int eCod, std::string_view sv_format, Args&&... args ) {
     //const std::string str_log{fmt::format(sv_format, args...)};
 }
-
+typedef std::vector<std::string> _vstr;
 typedef std::vector
         < std::variant< int, double, std::string > > _col_data ;
 
@@ -67,6 +67,14 @@ private:
 class RData
     : public std::vector<RCol> {
 public:
+    RData()
+    {
+    }
+    RData(const _idRastr _id_rastr, std::string _t_name)
+    {
+        id_rastr_ = _id_rastr;
+        t_name_ = _t_name;
+    }
     void SetNumRows(long n_new_num_rows){
         n_num_rows_ = n_new_num_rows;
     }
@@ -76,6 +84,11 @@ public:
         emplace_back(rcol);
         return size();
     }
+
+    void Initialize(nlohmann::json _j_Fields , nlohmann::json _j_metas,_vstr _vstr_fields_form);
+    void populate(nlohmann::json _j_Fields , nlohmann::json _j_metas,_vstr _vstr_fields_form);  // Заполнить данными
+    void clear_data();                                                                          // Удалить данные (стуктура остается)
+
     std::string getCommaSeparatedFieldNames(){
         std::string str_tmp;
         for( const RCol& col_data : *this ) {
@@ -109,8 +122,13 @@ public:
             }
         }
     }
+
+    _idRastr id_rastr_ = 0;
+    std::string t_name_ = "";
 private:
+    const int SIZE_STR_BUF = 500'000'000;
     long n_num_rows_ = 0;
+
 };// class RData
 
 
@@ -122,10 +140,12 @@ class RastrDataModel
         : public QicsDataModel
 {
     Q_OBJECT
-    const RData& rdata_;
+    //const RData& rdata_;
+    RData& rdata_;
     QicsDataItem* pditem_ = nullptr;
 public:
-    RastrDataModel(const RData& rdata_in) :
+    //RastrDataModel(const RData& rdata_in) :
+    RastrDataModel(RData& rdata_in) :
         rdata_(rdata_in){
         /*
        RCol rc_int  {1,3,5,45,6};
@@ -242,8 +262,8 @@ public:
         int col = 0;
         // Temporarily turn signal emitting off, so setItem() doesn't emit
         // a signal for each cell that is changed.
-        bool old_emit = emitSignals();
-        setEmitSignals(false);
+        bool old_emit = emit();
+        setEmit(false);
         // Iterate through each value in the row vector and use setItem()
         // to do the actual "setting".
         for (iter = v.begin(); iter != v.end(); ++iter) {
@@ -252,8 +272,8 @@ public:
             setItem(row, col++, **iter);
         }
         // Restore previous signal emitting setting.
-        setEmitSignals(old_emit);
-        if (emitSignals())
+        setEmit(old_emit);
+        if (emit())
             emit modelChanged(QicsRegion(row, 0, row, col-1));
         */
     }
@@ -266,8 +286,8 @@ public:
         int row = 0;
         // Temporarily turn signal emitting off, so setItem() doesn't emit
         // a signal for each cell that is changed.
-        bool old_emit = emitSignals();
-        setEmitSignals(false);
+        bool old_emit = emit();
+        setEmit(false);
         // Iterate through each value in the column vector and use setItem()
         // to do the actual "setting".
         for (iter = v.begin(); iter != v.end(); ++iter) {
@@ -276,8 +296,8 @@ public:
             setItem(row++, col, **iter);
         }
         // Restore previous signal emitting setting.
-        setEmitSignals(old_emit);
-        if (emitSignals())
+        setEmit(old_emit);
+        if (emit())
             emit modelChanged(QicsRegion(0, col, row-1, col));
         */
     }
@@ -286,7 +306,7 @@ public:
         // We call appropriate StockDataSet method here to actually store
         // the value, and then we emit the required signal.
         StockDataSet::setSymbol(idx, sym);
-        if (emitSignals())
+        if (emit())
             emit modelChanged(QicsRegion(idx, SDM_Symbol, idx, SDM_Symbol));
          */
     }
@@ -294,7 +314,7 @@ public:
         // We call appropriate StockDataSet method here to actually store
         // the value, and then we emit the required signal.
         StockDataSet::setHigh(idx, val);
-        if (emitSignals())
+        if (emit())
             emit modelChanged(QicsRegion(idx, SDM_High, idx, SDM_High));*/
     }
     void setLow(unsigned int idx, double val) { /*
@@ -345,7 +365,37 @@ public:
 
     public slots:
 
-    void setItem(int row, int col, const QicsDataItem &item) { /*
+    void setItem(int row, int col, const QicsDataItem &item) {
+
+        long ret = -1;
+        //RData::const_iterator iter_col = rdata_.begin() + col;
+        RData::iterator iter_col = rdata_.begin() + col;
+        //_col_data::const_iterator iter_data = (*iter_col).begin() + row;
+        _col_data::iterator iter_data = (*iter_col).begin() + row;
+        switch((*iter_data).index()){
+           case RCol::_en_data::DATA_INT:
+            qDebug() << "int: " << item.number();
+            (*iter_data).emplace<int> (item.number());
+            SetValInt(rdata_.id_rastr_,rdata_.t_name_.c_str(),(*iter_col).str_name_.c_str(),row,item.number());
+            break;
+           case RCol::_en_data::DATA_STR:
+            qDebug() << "str: " << item.string();
+            (*iter_data).emplace<std::string>(item.string().toStdString());
+            break;
+           case RCol::_en_data::DATA_DBL:
+            qDebug() << "double: " << item.number();
+            (*iter_data).emplace<double> (item.number());
+
+            ret = SetValDbl(rdata_.id_rastr_,rdata_.t_name_.c_str(),(*iter_col).str_name_.c_str(),row,item.number());
+            qDebug() << "set double: id_rastr=" << rdata_.id_rastr_ << "TName:"  << rdata_.t_name_.c_str() << "ColName:"  << (*iter_col).str_name_.c_str() << "RowNumber:" << row << "SetVal:" << item.number() <<"Return:"<<ret;
+            break;
+           default :                                               break;
+        }
+
+       //item.number();
+
+
+        /*
         if (row < static_cast<int> (numStocks())) {
             // Here, we determine which stock attribute we should be setting
             // by looking at the column attribute.
