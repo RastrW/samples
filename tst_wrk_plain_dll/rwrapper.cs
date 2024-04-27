@@ -11,13 +11,14 @@ using System.Xml.Linq;
 public class CRwrapper
 {
 #if OS_WIN // must be added in .csproj !
-    //public const string str_path_dll_ = "C:\\projects\\rastr\\RastrWin\\astra\\build\\Debug\\astra_shrd.dll";
+    public const string str_path_dll_ = "C:\\projects\\rastr\\RastrWin\\astra\\build\\Debug\\astra_shrd.dll";
     //public const string str_path_dll_ = @"C:\projects\astra\Debug\astra_shrd.dll";
-    public const string str_path_dll_ = "C:\\projects\\rastr\\RastrWin\\astra\\build\\Release\\astra_shrd.dll";
+    //public const string str_path_dll_ = "C:\\projects\\rastr\\RastrWin\\astra\\build\\Release\\astra_shrd.dll";
 #else
     //public const string str_path_dll_ = "/home/ustas/projects/git_r/rastr/RastrWin/astra/build/libastra_shrd.so";
     public const string str_path_dll_ = "/home/ustas/projects/git_r/rastr/RastrWin/astra/build/libastra_shrd.so"; // not use "~"!
 #endif
+    string str_path2forms_    = "";
     [DllImport(str_path_dll_)]
     public static extern int test(); 
     [DllImport(str_path_dll_)]
@@ -42,13 +43,22 @@ public class CRwrapper
     [DllImport(str_path_dll_, CharSet = CharSet.Ansi)]
     public static extern System.Int32 GetValDbl( System.Int32 idRastr, string pch_table, string pch_col, System.Int32 n_row, ref double d_val_out );
     //https://stackoverflow.com/questions/32991274/return-string-from-c-dll-export-function-called-from-c-sharp
+    [DllImport(str_path_dll_, CharSet = CharSet.Ansi, CallingConvention = CallingConvention.Cdecl) ]
+    public static extern System.Int32 GetForms( [MarshalAs( UnmanagedType.LPStr )] string pch_path2forms, [MarshalAs( UnmanagedType.LPStr )] string pch_params, [MarshalAs( UnmanagedType.LPStr )] StringBuilder str, int strlen );//[MarshalAs( UnmanagedType.LPStr )]
+    [DllImport(str_path_dll_, CharSet = CharSet.Ansi, CallingConvention = CallingConvention.Cdecl)]
+    public static extern System.Int32 GetMeta( System.Int32 idRastr, [MarshalAs( UnmanagedType.LPStr )] string pch_table, [MarshalAs( UnmanagedType.LPStr )] string pch_params, [MarshalAs( UnmanagedType.LPStr )] StringBuilder str, int strlen );
+    [DllImport(str_path_dll_, CharSet = CharSet.Ansi, CallingConvention = CallingConvention.Cdecl)]
+    public static extern System.Int32 GetJSON( System.Int32 idRastr, [MarshalAs( UnmanagedType.LPStr )] string pch_table, [MarshalAs( UnmanagedType.LPStr )] string pch_cols, [MarshalAs( UnmanagedType.LPStr )] string pch_params, [MarshalAs( UnmanagedType.LPStr )] StringBuilder str, int strlen );
+
+/*
+    //https://stackoverflow.com/questions/32991274/return-string-from-c-dll-export-function-called-from-c-sharp
     [DllImport(str_path_dll_, CharSet = CharSet.Ansi)]
     public static extern System.Int32 GetForms( string pch_params, StringBuilder str, int strlen );
     [DllImport(str_path_dll_, CharSet = CharSet.Ansi)]
     public static extern System.Int32 GetMeta( System.Int32 idRastr, string pch_table, string pch_params, StringBuilder str, int strlen );
     [DllImport(str_path_dll_, CharSet = CharSet.Ansi)]
     public static extern System.Int32 GetJSON( System.Int32 idRastr, string pch_table, string pch_cols, string pch_params, StringBuilder str, int strlen );
-
+*/
     public static void Log(string str)
     {
         Console.WriteLine(str);
@@ -59,6 +69,7 @@ public class CRwrapper
         System.Int32 nRes = 0;
         string str_path_file_load ="";
         string str_path_file_save ="";
+        
         if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux)){ 
             //str_path_file_load = "/home/ustas/projects/test-rastr/Metro/2023_06_28/d1";
             //str_path_file_save = "/home/ustas/projects/test-rastr/Metro/2023_06_28/d1_222";
@@ -70,6 +81,7 @@ public class CRwrapper
             //str_path_file_load = @"D:\Vms\SHARA\crosses\ODU_CT\2023_12_11#1257966_new_sechs\13_59_59\mdp_debug_1____11111_PAR";
             //str_path_file_load = @"D:\Vms\SHARA\huge_schems\197136.rg2";
             str_path_file_save = @"C:\Users\ustas\Documents\RastrWin3\test-rastr\cx195_222.rg2";
+            str_path2forms_= @"C:\Users\ustas\Documents\RastrWin3\form\Общие.fm";
         }
         Log($"dll : {str_path_dll_}");
         Log($"Load: {str_path_file_load}");
@@ -130,7 +142,7 @@ public class CRwrapper
         const int STRING_MAX_LENGTH = 500_000_000;
         StringBuilder str_bldr = new StringBuilder(STRING_MAX_LENGTH);
 
-        nRes = GetForms("for params", str_bldr, STRING_MAX_LENGTH ); Debug.Assert(nRes>0);
+        nRes = GetForms( str_path2forms_, "for params", str_bldr, STRING_MAX_LENGTH ); Debug.Assert(nRes>0);
         Debug.Assert(str_bldr.ToString().Length>100);
         JsonArray j_arr_forms = JsonNode.Parse(str_bldr.ToString()).AsArray();
         string str_get_j_arr_forms = j_arr_forms.ToString();
