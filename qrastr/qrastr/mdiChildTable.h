@@ -13,6 +13,8 @@ class MdiChild : public QicsTable
     Q_OBJECT
 public:
     MdiChild( const _idRastr id_rastr, const nlohmann::json& j_form_in );
+    MdiChild( const _idRastr id_rastr, const nlohmann::json& j_form_in,  QicsTableGrid::Foundry tf,QicsHeaderGrid::Foundry hf,QWidget* parent = 0);
+
     void newFile();
     bool loadFile(const QString &fileName);
     bool save();
@@ -22,11 +24,19 @@ public:
     QString userFriendlyCurrentFile();
     QString currentFile() { return curFile; }
     void mousePressEvent(QMouseEvent *event) override ;
+    int ind_col_clicked = -1;                               // ИИндекс кликнутого столбца
+protected:
+    //virtual void handleMousePressEvent(const QicsICell &cell, QMouseEvent *m);
+
 
 
 public slots:
     void update_data();
     void insertRows();
+    void sort(int col_ind = -1,Qics::QicsSortOrder sort_type = Qics::Ascending);
+    void sortAscending();
+    void sortDescending();
+    void sort_by_col(int col_ind);
 
 protected:
     bool eventFilter(QObject *obj, QEvent *ev) override;
@@ -39,12 +49,13 @@ private:
     QString curFile;
     bool isUntitled;
 
+    int ind_col_sortedby = -1;                              // Индекс стобца по которому была отсортирована таблица
+    Qics::QicsSortOrder col_sort_type= Qics::Ascending;     // Тип сортировки столбца по которому была отсортирована таблица
+
     RData*  p_rdata;
     _vstr vstr_fields_form_;
     nlohmann::json j_Fields_;
     nlohmann::json j_metas_;
-
-
     nlohmann::json j_form_;
 };
 

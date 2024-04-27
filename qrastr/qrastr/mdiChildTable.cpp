@@ -10,7 +10,9 @@
 #include <QicsRegionalAttributeController.h>
 
 
-MdiChild::MdiChild( const _idRastr id_rastr, const nlohmann::json& j_form_in )
+//MdiChild::MdiChild( const _idRastr id_rastr, const nlohmann::json& j_form_in )
+MdiChild::MdiChild( const _idRastr id_rastr, const nlohmann::json& j_form_in,  QicsTableGrid::Foundry tf,QicsHeaderGrid::Foundry hf,QWidget* parent)
+    : QicsTable(0,0,tf,hf,0,parent)
 {
     setAttribute(Qt::WA_DeleteOnClose);
     /*
@@ -120,6 +122,8 @@ MdiChild::MdiChild( const _idRastr id_rastr, const nlohmann::json& j_form_in )
     dm = new RastrDataModel(*p_rdata);
     this->setDataModel(dm);
 
+
+
     // Некоторые настройки отображения
     columnHeaderRef().setFrameStyle(QFrame::Panel);
     rowHeaderRef().setFrameStyle(QFrame::Panel);
@@ -166,6 +170,7 @@ MdiChild::MdiChild( const _idRastr id_rastr, const nlohmann::json& j_form_in )
     setWindowIcon(QIcon(":/images/new.png"));
     isUntitled = true;
 }
+
 
 void MdiChild::newFile()
 {
@@ -241,7 +246,8 @@ QString MdiChild::userFriendlyCurrentFile()
 
 bool MdiChild::eventFilter(QObject *obj, QEvent *event)
 {
-    if (obj == dm->children().value(0)) {
+    return false;
+    /*if (obj == dm->children().value(0)) {
         if (event->type() == QEvent::KeyPress) {
             QKeyEvent *keyEvent = static_cast<QKeyEvent*>(event);
             qDebug() << "Ate key press" << keyEvent->key();
@@ -255,6 +261,7 @@ bool MdiChild::eventFilter(QObject *obj, QEvent *event)
         //return MdiChild::eventFilter(obj, event);
         return false;
     }
+    */
 }
 void MdiChild::closeEvent(QCloseEvent *event)
 {
@@ -321,6 +328,53 @@ void MdiChild::insertRows()
     }
 }
 
+
+void MdiChild::sort(int col_ind,Qics::QicsSortOrder sort_type )
+{
+    QicsTable *table = this;
+    if (table) {
+        QicsSelectionList *list = table->selectionList(true);
+        if (!list)
+        {
+            if (col_ind > -1)
+                table->sortRows(col_ind, sort_type);
+            return;
+        }
+
+        QVector<int> selectedCols = list->columns().toVector();
+        if (selectedCols.size() <= 0) selectedCols << col_ind;
+
+        //QicsRegion reg = list->region();
+        //table->sortRows(selectedCols, Qics::Ascending, reg.startRow(), reg.endRow());
+
+        table->sortRows(selectedCols, sort_type);
+    }
+}
+void MdiChild::sortAscending()
+{
+    sort(ind_col_clicked,Qics::Ascending);
+}
+void MdiChild::sortDescending()
+{
+    sort(ind_col_clicked,Qics::Descending);
+}
+
+
+void MdiChild::sort_by_col(int col_ind)
+{
+    QicsTable *table = this;
+
+    if (col_ind == ind_col_sortedby)
+    {
+        if (col_sort_type == Qics::Ascending)
+            col_sort_type = Qics::Descending;
+        else
+            col_sort_type = Qics::Ascending;
+    }
+
+    table->sortRows(col_ind,col_sort_type);
+    ind_col_sortedby = col_ind;
+}
 
 
 

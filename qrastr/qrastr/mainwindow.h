@@ -90,13 +90,16 @@ private:
     QAction *m_previousAct;
     QAction *m_separatorAct;
     QAction *m_aboutAct;
+    //QAction *m_SortAscAct;
+    //QAction *m_SortDescAct;
 
-    QAction *m_SortAscAct;
-    QAction *m_SortDescAct;
     QAction *m_RGMAct;
 
     nlohmann::json j_forms_;
     _idRastr       id_rastr_;
+public:
+    QAction *m_SortAscAct;
+    QAction *m_SortDescAct;
 };
 
 

@@ -36,10 +36,12 @@ set(PROJECT_SOURCES
         mainwindow.ui
         mdiChildTable.h
         mdiChildTable.cpp
+        mdiChildGrid.h
+        mdiChildGrid.cpp
+        mdiChildHeaderGrid.h
+        mdiChildHeaderGrid.cpp
         rastrdatamodel.h
         rastrdatamodel.cpp
-        custommodel.h
-        custommodel.cpp
         astra_shared.h
         ${TS_FILES}
         qrastr.qrc

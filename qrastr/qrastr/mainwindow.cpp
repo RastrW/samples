@@ -12,6 +12,8 @@
 #include <QMessageBox>
 #include <QDebug>
 #include "mdiChildTable.h"
+#include "mdiChildGrid.h"
+#include "mdiChildHeaderGrid.h"
 #include <iostream>
 #include "astra_exp.h"
 #include "fmt/format.h"
@@ -238,7 +240,8 @@ void MainWindow::updateWindowMenu()
 
 MdiChild *MainWindow::createMdiChild( nlohmann::json j_form )
 {
-    MdiChild *child = new MdiChild( id_rastr_, j_form );
+    //MdiChild *child = new MdiChild( id_rastr_, j_form );
+    MdiChild* child = new MdiChild(id_rastr_, j_form ,mdiChildGrid::createGrid,mdiChildHeaderGrid::createHeaderGrid,this);
 
     QObject::connect(this, SIGNAL(rgm_signal()), child, SLOT(update_data()));
     m_workspace->addSubWindow(child);
