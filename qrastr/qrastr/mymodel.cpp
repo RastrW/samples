@@ -2,6 +2,7 @@
 #include <QFont>
 #include <QBrush>
 #include <QTime>
+#include <QDebug>
 
 
 MyModel::MyModel(QObject *parent)
@@ -24,7 +25,7 @@ int MyModel::columnCount(const QModelIndex & /*parent*/) const{
 void MyModel::timerHit(){
     QModelIndex topLeft = createIndex(n_timer_row_,n_timer_col_);
     //emit a signal to make the view reread identified data
-    QList<int>* pl = new QList<int>{ Qt::DisplayRole};
+    QVector<int>* pl = new QVector<int>{ Qt::DisplayRole};
     emit dataChanged(topLeft, topLeft, *pl);  //!!! emit dataChanged(topLeft, topLeft, {Qt::DisplayRole}); //ustas!!! not working!!
 }
 QVariant MyModel::data(const QModelIndex &index, int role) const

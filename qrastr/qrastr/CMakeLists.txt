@@ -45,24 +45,25 @@ endif()
 
 
 set(PROJECT_SOURCES
-        main.cpp
-        mainwindow.cpp
-        mainwindow.h
-        mainwindow.ui
-        mdiChildTable.h
-        mdiChildTable.cpp
-        mdiChildGrid.h
-        mdiChildGrid.cpp
-        mdiChildHeaderGrid.h
-        mdiChildHeaderGrid.cpp
-        rastrdatamodel.h
-        rastrdatamodel.cpp
-        astra_shared.h
-        ${TS_FILES}
-        qrastr.qrc
-
-        ${DEPENDENCIES_LOCATION}/fmt/src/format.cc
-        ${DEPENDENCIES_LOCATION}/fmt/src/os.cc
+    main.cpp
+    mainwindow.cpp
+    mainwindow.h
+    mainwindow.ui
+    mdiChildTable.h
+    mdiChildTable.cpp
+    mdiChildGrid.h
+    mdiChildGrid.cpp
+    mdiChildHeaderGrid.h
+    mdiChildHeaderGrid.cpp
+    rastrdatamodel.h
+    rastrdatamodel.cpp
+    astra_shared.h
+    ${TS_FILES}
+    qrastr.qrc
+    ${DEPENDENCIES_LOCATION}/fmt/src/format.cc
+    ${DEPENDENCIES_LOCATION}/fmt/src/os.cc
+    mymodel.cpp
+    mymodel.h
 )
 
 if(${QT_VERSION_MAJOR} GREATER_EQUAL 6)

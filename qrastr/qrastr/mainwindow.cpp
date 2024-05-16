@@ -477,15 +477,30 @@ void MainWindow::createCalcLayout()
     widget->show();  // отображаем виджет
 }
 
-
+#include "mymodel.h"
 
 void Btn1_onClick()
 {
+    QTableView* ptv = new QTableView();
+    MyModel* pmm = new MyModel();
+    ptv->setSortingEnabled(true);
+    ptv->setModel(pmm);
 
+    ptv->show();
+
+/*
+    QTableView tableView;
+    MyModel myModel;
+    tableView.setSortingEnabled(true);
+    tableView.setModel(&myModel);
+
+    tableView.show();
+*/
+/*
     //Rgm(id_rastr_in,"");
     QMessageBox msgBox;
     msgBox.setText("Btn1 Clicked !");
-    msgBox.exec();
+    msgBox.exec();*/
 }
 
 void MainWindow::createStatusBar()
