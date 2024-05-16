@@ -17,9 +17,14 @@ find_package(Qt${QT_VERSION_MAJOR} COMPONENTS Widgets LinguistTools PrintSupport
 
 set(TS_FILES qrastr_ru_RU.ts)
 
+if(MSVC)
+    set(DEPENDENCIES_LOCATION "c:/projects/compile/")
+    set(ASTRA_LOCATION        "c:/projects/rastr/RastrWin/astra/")
+else()
+    set(DEPENDENCIES_LOCATION "/home/ustas/projects/compile/")
+    set(ASTRA_LOCATION "/home/ustas/projects/git_r/rastr/RastrWin/astra/")
+endif()
 
-set(DEPENDENCIES_LOCATION "/home/ustas/projects/compile/")
-set(ASTRA_LOCATION "/home/ustas/projects/git_r/rastr/RastrWin/astra/")
 set(INCLUDES
         "${DEPENDENCIES_LOCATION}/fmt/include"
         "${DEPENDENCIES_LOCATION}/qicstable/include"
@@ -70,7 +75,7 @@ else()
     qt5_create_translation(QM_FILES ${CMAKE_SOURCE_DIR} ${TS_FILES})
 endif()
 
-target_link_libraries( qrastr PRIVATE Qt${QT_VERSION_MAJOR}::Widgets Qt5::PrintSupport Qt5::Xml ) #Qt5::PrintSupport
+target_link_libraries( qrastr PRIVATE Qt${QT_VERSION_MAJOR}::Widgets Qt${QT_VERSION_MAJOR}::PrintSupport Qt${QT_VERSION_MAJOR}::Xml ) #Qt5::PrintSupport
 target_link_libraries( qrastr PRIVATE libqicstable.so )
 target_link_libraries( qrastr PRIVATE libastra_shrd.so )
 
