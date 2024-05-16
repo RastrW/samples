@@ -115,12 +115,13 @@ int main(int argc, char *argv[])
     /*QWidget * widget = new QWidget();
     widget->show();
     widget->windowHandle()->setScreen(qApp->screens().last());
-    widget->showFullScreen();
-    */
+    widget->showFullScreen();*/
+
 
     MainWindow w;
+    w.SetIdrastr(id_rastr);
     w.setForms(j_forms);
-    w.resize(500,500);
+    w.resize(800,500);
     w.show();
     //w.windowHandle()->setScreen(qApp->screens().last());
     //w.showNormal();
