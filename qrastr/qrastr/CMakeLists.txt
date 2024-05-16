@@ -41,6 +41,10 @@ set(PROJECT_SOURCES
         mainwindow.ui
         mdiChildTable.h
         mdiChildTable.cpp
+        mdiChildGrid.h
+        mdiChildGrid.cpp
+        mdiChildHeaderGrid.h
+        mdiChildHeaderGrid.cpp
         rastrdatamodel.h
         rastrdatamodel.cpp
         astra_shared.h

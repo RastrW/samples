@@ -5,8 +5,14 @@
 #include "mdiChildTable.h"
 #include <QicsDataModelDefault.h>
 #include "rastrdatamodel.h"
+#include <QToolButton>
+#include <QicsNavigator.h>
+#include <QicsRegionalAttributeController.h>
 
-MdiChild::MdiChild( const _idRastr id_rastr, const nlohmann::json& j_form_in )
+
+//MdiChild::MdiChild( const _idRastr id_rastr, const nlohmann::json& j_form_in )
+MdiChild::MdiChild( const _idRastr id_rastr, const nlohmann::json& j_form_in,  QicsTableGrid::Foundry tf,QicsHeaderGrid::Foundry hf,QWidget* parent)
+    : QicsTable(0,0,tf,hf,0,parent)
 {
     setAttribute(Qt::WA_DeleteOnClose);
     /*
@@ -40,6 +46,7 @@ MdiChild::MdiChild( const _idRastr id_rastr, const nlohmann::json& j_form_in )
 
     //this->setDataModel(new QicsDataModelDefault);
 
+
     int nRes = 0;
     const int SIZE_STR_BUF = 500'000'000;
     std::string str_json;
@@ -53,18 +60,19 @@ MdiChild::MdiChild( const _idRastr id_rastr, const nlohmann::json& j_form_in )
     str_json.resize(std::strlen(str_json.c_str())+1);
     nlohmann::json j_forms = nlohmann::json::parse(str_json);
     //sqDebug() << str_json.c_str();
-    typedef std::vector<std::string> _vstr;
+    //typedef std::vector<std::string> _vstr;
     std::string str_TableName  = j_form_in["TableName"];
     std::string str_Name       = j_form_in["Name"];
     std::string str_Collection = j_form_in["Collection"];
     std::string str_MenuPath   = j_form_in["MenuPath"];
     std::string str_Query      = j_form_in["Query"];
 
-    nlohmann::json j_Fields = j_form_in["Fields"];
-    _vstr vstr_fields_form;
+    //nlohmann::json j_Fields = j_form_in["Fields"];
+    j_Fields_ = j_form_in["Fields"];
+    //_vstr vstr_fields_form;
     std::string str_tmp;
-    for(const nlohmann::json& j_field : j_Fields){
-        vstr_fields_form.emplace_back(j_field);
+    for(const nlohmann::json& j_field : j_Fields_){
+        vstr_fields_form_.emplace_back(j_field);
         str_tmp += j_field;
         str_tmp += " # ";
     }
@@ -77,92 +85,61 @@ MdiChild::MdiChild( const _idRastr id_rastr, const nlohmann::json& j_form_in )
     }
     qDebug() << "Meta   : " << str_json.c_str();
     str_json.resize(std::strlen(str_json.c_str())+1);
-    nlohmann::json j_metas = nlohmann::json::parse(str_json);
+    //nlohmann::json j_metas = nlohmann::json::parse(str_json);
+    j_metas_ = nlohmann::json::parse(str_json);
 
-    RData*  p_rdata = new RData();
-    for(const nlohmann::json& j_field : j_Fields){
-        for(const nlohmann::json& j_meta : j_metas ){
-            const std::string str_Name = j_meta["Name"];
-            if(j_field == str_Name){ // for make same order like in a form
-                RCol rc;
-                rc.str_name_ = str_Name;
-                rc.setMeta( j_meta );
-                nRes = p_rdata->AddCol(rc); Q_ASSERT(nRes>=0);
-                break;
-            }
-        }
-    }
-    _vstr vstr_fields_meta;
-    str_tmp.clear();
-    for(const nlohmann::json& j_meta : j_metas ){
-        std::string str_Name       = j_meta["Name"];
-        vstr_fields_meta.emplace_back(str_Name);
-        str_tmp += str_Name;
-        str_tmp += " # ";
-    }
-    qDebug() << "FieldsBd:  " << str_tmp.c_str();
-    _vstr vstr_fields_distilled;
-    str_tmp.clear();
-    for(std::string& str_field_form : vstr_fields_form){
-        _vstr::const_iterator iter_vstr_fields_meta =
-            std::find(vstr_fields_meta.begin(), vstr_fields_meta.end(), str_field_form );
-        if(iter_vstr_fields_meta != vstr_fields_meta.end()){
-            vstr_fields_distilled.emplace_back(str_field_form);
-            str_tmp += str_field_form;
-            str_tmp += ",";
-        }
-    }
-    int i = 0;
-    std::string str_tmp2 = p_rdata->getCommaSeparatedFieldNames();
-    qDebug() << "Fields:  " << str_tmp.c_str();
-    qDebug() << "Fields2: " << str_tmp2.c_str();
-    if(str_tmp.length()>0){
-        str_tmp.erase(str_tmp.length()-1);
-        str_json.resize(SIZE_STR_BUF);
-        nRes = GetJSON( id_rastr, str_TableName.c_str(), str_tmp.c_str(), "", const_cast<char*>(str_json.c_str()), str_json.length() );
-        str_json.resize(std::strlen(str_json.c_str())+1);
-        //qDebug() << "Data: " << str_json.c_str();
-        size_t nLength = str_json.size();
-        //nlohmann::json j_data_arr = nlohmann::json::parse(str_json, nullptr,false);
-        nlohmann::json j_data_arr = nlohmann::json::parse(str_json);
-        size_t sz_num_cols = p_rdata->size();
-        size_t sz_num_rows = j_data_arr.size();
-        for( RCol& rcol : *p_rdata ){
-            rcol.resize(sz_num_rows);
-        }
-        int n_row = 0;
-        for(nlohmann::json j_data_row : j_data_arr) {
-            i = 1;
-            for(RCol& col: *p_rdata){
-                //qDebug() << "D: " << j_data_row[i].dump().c_str();
-                RCol::iterator iter_col = col.begin() + n_row;
-                //qDebug() << "dump: " << j_data_row[i].dump().c_str();
-                switch(col.en_data_){
-                    case RCol::_en_data::DATA_INT:
-                        (*iter_col).emplace<int>(  j_data_row[i] );
-                        //qDebug() << "int: " << std::get<int>(*iter_col);
-                    break;
-                    case RCol::_en_data::DATA_DBL:
-                        (*iter_col).emplace<double>( j_data_row[i] );
-                        //qDebug() << "dbl: " << std::get<double>(*iter_col);
-                    break;
-                    case RCol::_en_data::DATA_STR:
-                        (*iter_col).emplace<std::string>(j_data_row[i]);
-                        //qDebug() << "str: " << std::get<std::string>(*iter_col).c_str();
-                    break;
-                    default:
-                        Q_ASSERT(!"unknown type");
-                    break;
-                }//switch
-                i++;
-            }//for(col)
-            n_row++;
-        }//for(j_data_arr)
-    }
-//    p_rdata->Trace();
-    //qDebug()<< "hello";
+    //RData*  p_rdata = new RData(id_rastr,str_TableName);
+    p_rdata = new RData(id_rastr,str_TableName);
+
+    p_rdata->Initialize(j_Fields_,j_metas_,vstr_fields_form_);
+    p_rdata->populate(j_Fields_,j_metas_,vstr_fields_form_);
+
+    //mainGridRef().setDisplayer(new SpreadsheetCellDisplay(this));
+
+    setSelectionStyle(Qics::Exclusive);
+    setCellWidthMode(Qics::ChangeHeightWidth);
+
+    //Навигатор данных Grid -> кнопка справа снизу
+    setNavigatorAllowed(true);
+    navigator()->setText("#");
+    navigator()->setToolTip("Press and hold to navigate throungh the grid");
+
+    QicsRegionalAttributeController controller;
+    setExternalAttributeController(controller);
+
+    setWideKeyActions();
+
+    //Выбрать все ячейки таблицы -> кнопка слева сверху
+    QToolButton *bSelectAll = new QToolButton(this);
+    bSelectAll->setText("*");
+    bSelectAll->setToolTip("Select all cells");
+    bSelectAll->setFixedSize(18,18);
+    connect(bSelectAll, SIGNAL(clicked()), this, SLOT(selectAll()));
+    setTopLeftCornerWidget(bSelectAll);
+
+
+
     dm = new RastrDataModel(*p_rdata);
     this->setDataModel(dm);
+
+
+
+    // Некоторые настройки отображения
+    columnHeaderRef().setFrameStyle(QFrame::Panel);
+    rowHeaderRef().setFrameStyle(QFrame::Panel);
+    mainGridRef().setSelectedBackgroundColor(QColor(0x92a2b9));
+    rowHeaderRef().setSelectedBackgroundColor(QColor(0x92a2d9));
+    rowHeaderRef().setSelectedForegroundColor(Qt::white);
+    columnHeaderRef().setSelectedBackgroundColor(QColor(0x92a2d9));
+    columnHeaderRef().setSelectedForegroundColor(Qt::white);
+    setExclusiveSelectionDragBackColor(QColor(Qt::transparent));
+
+    setCellOverflowBehavior(Qics::ToolTip);
+      //mainGridRef().setCursor(QCursor(QPixmap(":/images/cursor.png")));
+      setCurrentCellStyle(Qics::Spreadsheet);
+
+
+    this->installEventFilter(this);
 
     /* // from consultant
     //Format the billable rate column with a dollar sign, decimal point,
@@ -176,18 +153,24 @@ MdiChild::MdiChild( const _idRastr id_rastr, const nlohmann::json& j_form_in )
 */
 
     columnHeaderRef().setAlignment(Qt::AlignCenter);
-    i = 0;
+    int i = 0;
     for(RCol& col: *p_rdata){
         //columnHeaderRef().cellRef(0,i).setLabel(col.str_name_.c_str());
         columnHeaderRef().cellRef(0,i).setLabel(col.title().c_str());
         //columnRef(i).setWidthInChars(10);
         i++;
     }
+
+    //this->sortRows(3);  // work ok!
+
+    //columnHeaderRef().cellRef(0,0).event(
+
     // from void MdiChild::newFile()
     setWindowTitle(str_Name.c_str());
     setWindowIcon(QIcon(":/images/new.png"));
     isUntitled = true;
 }
+
 
 void MdiChild::newFile()
 {
@@ -261,6 +244,25 @@ QString MdiChild::userFriendlyCurrentFile()
     return strippedName(curFile);
 }
 
+bool MdiChild::eventFilter(QObject *obj, QEvent *event)
+{
+    return false;
+    /*if (obj == dm->children().value(0)) {
+        if (event->type() == QEvent::KeyPress) {
+            QKeyEvent *keyEvent = static_cast<QKeyEvent*>(event);
+            qDebug() << "Ate key press" << keyEvent->key();
+            return true;
+        } else {
+            return false;
+        }
+    }
+    else {
+        // pass the event on to the parent class
+        //return MdiChild::eventFilter(obj, event);
+        return false;
+    }
+    */
+}
 void MdiChild::closeEvent(QCloseEvent *event)
 {
     event = event;
@@ -270,6 +272,19 @@ void MdiChild::closeEvent(QCloseEvent *event)
         event->ignore();
     }*/
 }
+
+void MdiChild::mousePressEvent(QMouseEvent *event)
+{
+    //QMessageBox msgBox;
+    //msgBox.setText("Btn1 Clicked !");
+    int x = event->x();
+    int y = event->y();
+
+
+}
+
+
+
 
 void MdiChild::setCurrentFile(const QString &fileName)
 {
@@ -283,6 +298,84 @@ QString MdiChild::strippedName(const QString &fullFileName)
 {
     return QFileInfo(fullFileName).fileName();
 }
+
+
+void MdiChild::update_data()
+{
+    p_rdata->populate(j_Fields_,j_metas_,vstr_fields_form_);
+    this->update();
+    this->repaint();
+}
+
+void MdiChild::insertRows()
+{
+    QicsCell* cur_cell = currentCell();
+    QicsICell cell(cur_cell->rowIndex(),cur_cell->columnIndex());
+
+    if(!cell.isValid())
+        return;
+    else {
+        setRepaintBehavior(Qics::RepaintOff);
+
+        QList<int> v = selectionList(true)->rows();
+        if (v.isEmpty())
+            insertRow(cell.row());
+        else
+            for (int i = 0; i < v.count(); ++i)
+                insertRow(cell.row());
+
+        setRepaintBehavior(Qics::RepaintOn);
+    }
+}
+
+
+void MdiChild::sort(int col_ind,Qics::QicsSortOrder sort_type )
+{
+    QicsTable *table = this;
+    if (table) {
+        QicsSelectionList *list = table->selectionList(true);
+        if (!list)
+        {
+            if (col_ind > -1)
+                table->sortRows(col_ind, sort_type);
+            return;
+        }
+
+        QVector<int> selectedCols = list->columns().toVector();
+        if (selectedCols.size() <= 0) selectedCols << col_ind;
+
+        //QicsRegion reg = list->region();
+        //table->sortRows(selectedCols, Qics::Ascending, reg.startRow(), reg.endRow());
+
+        table->sortRows(selectedCols, sort_type);
+    }
+}
+void MdiChild::sortAscending()
+{
+    sort(ind_col_clicked,Qics::Ascending);
+}
+void MdiChild::sortDescending()
+{
+    sort(ind_col_clicked,Qics::Descending);
+}
+
+
+void MdiChild::sort_by_col(int col_ind)
+{
+    QicsTable *table = this;
+
+    if (col_ind == ind_col_sortedby)
+    {
+        if (col_sort_type == Qics::Ascending)
+            col_sort_type = Qics::Descending;
+        else
+            col_sort_type = Qics::Ascending;
+    }
+
+    table->sortRows(col_ind,col_sort_type);
+    ind_col_sortedby = col_ind;
+}
+
 
 
 
