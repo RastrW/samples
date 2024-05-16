@@ -376,7 +376,7 @@ public:
            case RCol::_en_data::DATA_INT:
             qDebug() << "int: " << item.number();
             (*iter_data).emplace<int> (item.number());
-            SetValInt(rdata_.id_rastr_,rdata_.t_name_.c_str(),(*iter_col).str_name_.c_str(),row,item.number());
+            ValSetInt(rdata_.id_rastr_,rdata_.t_name_.c_str(),(*iter_col).str_name_.c_str(),row,item.number());
             break;
            case RCol::_en_data::DATA_STR:
             qDebug() << "str: " << item.string();
@@ -386,7 +386,7 @@ public:
             qDebug() << "double: " << item.number();
             (*iter_data).emplace<double> (item.number());
 
-            ret = SetValDbl(rdata_.id_rastr_,rdata_.t_name_.c_str(),(*iter_col).str_name_.c_str(),row,item.number());
+            ret = ValSetDbl(rdata_.id_rastr_,rdata_.t_name_.c_str(),(*iter_col).str_name_.c_str(),row,item.number());
             qDebug() << "set double: id_rastr=" << rdata_.id_rastr_ << "TName:"  << rdata_.t_name_.c_str() << "ColName:"  << (*iter_col).str_name_.c_str() << "RowNumber:" << row << "SetVal:" << item.number() <<"Return:"<<ret;
             break;
            default :                                               break;
