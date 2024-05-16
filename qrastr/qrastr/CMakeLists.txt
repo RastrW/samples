@@ -12,9 +12,9 @@ set(CMAKE_AUTORCC ON)
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
-add_compile_definitions(QICSGRID_NO)
 if(MSVC)
     add_compile_definitions(COMPILE_WIN)
+    add_compile_definitions(QICSGRID_NO)
 endif()
 
 find_package(QT NAMES Qt6 Qt5 COMPONENTS Widgets LinguistTools   REQUIRED)
