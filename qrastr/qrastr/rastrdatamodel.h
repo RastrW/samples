@@ -1,6 +1,8 @@
 #ifndef RASTRDATAMODEL_H
 #define RASTRDATAMODEL_H
 
+#if(!defined(QICSGRID_NO))
+
 #include <QicsDataModel.h>
 #include "astra_exp.h"
 #include "License2/json.hpp"
@@ -1032,5 +1034,7 @@ public:
         // of data points).  So we just return without emitting any signals
     }
 };
+
+#endif //#if(!defined(QICSGRID_NO))
 
 #endif // RASTRDATAMODEL_H

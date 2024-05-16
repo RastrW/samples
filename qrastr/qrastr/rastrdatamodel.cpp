@@ -1,5 +1,6 @@
 #include "rastrdatamodel.h"
 
+#if(!defined(QICSGRID_NO))
 
 void RData::Initialize(nlohmann::json _j_Fields , nlohmann::json _j_metas,_vstr _vstr_fields_form)
 {
@@ -111,3 +112,5 @@ void RData::clear_data()
         col.clear();
       }
 }
+
+#endif// #if(!defined(QICSGRID_NO))

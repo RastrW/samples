@@ -1,6 +1,6 @@
 #include "mdiChildHeaderGrid.h"
 
-
+#if(!defined(QICSGRID_NO))
 
 #include "mdiChildGrid.h"
 
@@ -69,3 +69,5 @@ void mdiChildHeaderGrid::handleMousePressEvent(const QicsICell &cell, QMouseEven
 
 
 }
+
+#endif //#if(!defined(QICSGRID_NO))

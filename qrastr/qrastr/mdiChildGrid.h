@@ -1,6 +1,8 @@
 #ifndef MDICHILDGRID_H
 #define MDICHILDGRID_H
 
+#if(!defined(QICSGRID_NO))
+
 #include <QicsTableGrid.h>
 
 /*
@@ -28,5 +30,7 @@ public:
         QMenu *m_menu;
 
 };
+
+#endif// #if(!defined(QICSGRID_NO))
 
 #endif // MDICHILDGRID_H

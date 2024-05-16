@@ -1,6 +1,8 @@
 #ifndef MDICHILDHEADERGRID_H
 #define MDICHILDHEADERGRID_H
 
+#if(!defined(QICSGRID_NO))
+
 #include <QicsHeaderGrid.h>
 
 class QMenu;
@@ -17,13 +19,13 @@ public:
         static QicsHeaderGrid *createHeaderGrid(QWidget *w, QicsGridInfo &info,
             Qics::QicsHeaderType type);
 
-    protected:
+protected:
         virtual void handleMousePressEvent(const QicsICell &cell, QMouseEvent *m);
 
-    private:
+private:
         QMenu *m_menu;
-
 };
 
+#endif //#if(!defined(QICSGRID_NO))
 
 #endif // MDICHILDHEADERGRID_H

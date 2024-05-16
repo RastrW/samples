@@ -12,6 +12,11 @@ set(CMAKE_AUTORCC ON)
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
+add_compile_definitions(QICSGRID_NO)
+if(MSVC)
+    add_compile_definitions(COMPILE_WIN)
+endif()
+
 find_package(QT NAMES Qt6 Qt5 COMPONENTS Widgets LinguistTools   REQUIRED)
 find_package(Qt${QT_VERSION_MAJOR} COMPONENTS Widgets LinguistTools PrintSupport Xml  REQUIRED)
 
@@ -31,8 +36,13 @@ set(INCLUDES
         "${ASTRA_LOCATION}/"
 )
 
-link_directories("${DEPENDENCIES_LOCATION}/qicstable/lib/")
-link_directories("${ASTRA_LOCATION}/build/")
+if(MSVC)
+    link_directories("${ASTRA_LOCATION}/build/Debug/")
+else()
+    link_directories("${DEPENDENCIES_LOCATION}/qicstable/lib/")
+    link_directories("${ASTRA_LOCATION}/build/")
+endif()
+
 
 set(PROJECT_SOURCES
         main.cpp
@@ -50,6 +60,9 @@ set(PROJECT_SOURCES
         astra_shared.h
         ${TS_FILES}
         qrastr.qrc
+
+        ${DEPENDENCIES_LOCATION}/fmt/src/format.cc
+        ${DEPENDENCIES_LOCATION}/fmt/src/os.cc
 )
 
 if(${QT_VERSION_MAJOR} GREATER_EQUAL 6)
@@ -80,8 +93,13 @@ else()
 endif()
 
 target_link_libraries( qrastr PRIVATE Qt${QT_VERSION_MAJOR}::Widgets Qt${QT_VERSION_MAJOR}::PrintSupport Qt${QT_VERSION_MAJOR}::Xml ) #Qt5::PrintSupport
-target_link_libraries( qrastr PRIVATE libqicstable.so )
-target_link_libraries( qrastr PRIVATE libastra_shrd.so )
+
+if(MSVC)
+    target_link_libraries( qrastr PRIVATE astra_shrd.lib )
+else()
+    target_link_libraries( qrastr PRIVATE libqicstable.so )
+    target_link_libraries( qrastr PRIVATE libastra_shrd.so )
+endif()
 
 target_include_directories(qrastr PRIVATE
   ${INCLUDES}
