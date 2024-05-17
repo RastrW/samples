@@ -23,7 +23,7 @@ void ppl( _err_code eCod, std::string sv_format, Args&&... args )
 template <typename... Args>
 static void plog( _err_code eCod, std::string_view sv_format, Args&&... args ){
     const std::string str_log{fmt::format(sv_format, args...)};
-    qDebug() << str_log;
+    qDebug() << str_log.c_str();
 };
 
 

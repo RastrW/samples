@@ -15,9 +15,6 @@
 #include "params.h"
 
 
-constexpr char param_json_[] {  "on_start_load_file_rastr"};
-
-
 int main(int argc, char *argv[])
 {
     long nRes = 0;
