@@ -6,9 +6,17 @@
 #include <QDebug>
 #include <QWindow>
 #include <QMessageBox>
+#include <QDir>
 
+#include <iostream>
+#include <fstream>
 #include "astra_exp.h"
-#include "License2/json.hpp" 
+#include "License2/json.hpp"
+#include "params.h"
+
+
+constexpr char param_json_[] {  "on_start_load_file_rastr"};
+
 
 int main(int argc, char *argv[])
 {
@@ -17,6 +25,17 @@ int main(int argc, char *argv[])
 
     //nRes = test();
     _idRastr id_rastr = RastrCreate();
+
+    QString str_curr_path = QDir::currentPath();
+
+    std::string str_path_2_conf {R"(C:\projects\git_web\samples\qrastr\qrastr\appsettings.json)"};
+
+    Params pars;
+    nRes = pars.ReadJsonFile(str_path_2_conf);
+
+    //on_start_load_file_rastr
+
+
 
 #if(defined(COMPILE_WIN))
 

@@ -64,12 +64,20 @@ set(PROJECT_SOURCES
     ${DEPENDENCIES_LOCATION}/fmt/src/os.cc
     mymodel.cpp
     mymodel.h
+    params.h
+    params.cpp
+    common.h
+    common.cpp
 )
 
 if(${QT_VERSION_MAJOR} GREATER_EQUAL 6)
     qt_add_executable(qrastr
         MANUAL_FINALIZATION
         ${PROJECT_SOURCES}
+        appsettings.json
+        params.h params.cpp
+        common.h
+        common.cpp
     )
 # Define target properties for Android with Qt 6 as:
 #    set_property(TARGET qrastr APPEND PROPERTY QT_ANDROID_PACKAGE_SOURCE_DIR

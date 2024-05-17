@@ -4,6 +4,15 @@
 #include <QTime>
 #include <QDebug>
 
+#include "fmt/format.h"
+template <typename... Args>
+void plog1( int eCod, std::string_view sv_format, Args&&... args ) {
+    fmt::format(sv_format, args...);
+    std::string str_log{  };
+    int nsdsd = 9;
+    qDebug() << "catch exception ";
+}
+
 
 MyModel::MyModel(QObject *parent)
     : QAbstractTableModel(parent)
