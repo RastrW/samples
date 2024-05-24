@@ -8,6 +8,12 @@
 #include <QToolButton>
 #include <QicsNavigator.h>
 #include <QicsRegionalAttributeController.h>
+#include "ColPropForm.h"
+
+
+
+
+
 
 
 //MdiChild::MdiChild( const _idRastr id_rastr, const nlohmann::json& j_form_in )
@@ -90,9 +96,11 @@ MdiChild::MdiChild( const _idRastr id_rastr, const nlohmann::json& j_form_in,  Q
 
     //RData*  p_rdata = new RData(id_rastr,str_TableName);
     p_rdata = new RData(id_rastr,str_TableName);
+    p_rdata->t_title_ = str_Name;
 
     p_rdata->Initialize(j_Fields_,j_metas_,vstr_fields_form_);
     p_rdata->populate(j_Fields_,j_metas_,vstr_fields_form_);
+
 
     //mainGridRef().setDisplayer(new SpreadsheetCellDisplay(this));
 
@@ -122,6 +130,36 @@ MdiChild::MdiChild( const _idRastr id_rastr, const nlohmann::json& j_form_in,  Q
     dm = new RastrDataModel(*p_rdata);
     this->setDataModel(dm);
 
+    // TEST
+
+    QicsDataItem* p_new_2_3  = new QicsDataInt(100500);
+    QicsDataItem* p_new_3_3  = new QicsDataInt(100501);
+
+    //dm->setItem(2,3,*p_new_2_3);
+
+    // Замена значения в модели по строке
+    QicsDataModelRow row2_items =  dm->rowItems(2);
+    QicsDataItem* pitem_2_3 = row2_items.at(3)->clone();
+    int el_2_3 = row2_items.at(3)->number();     // ny = 4 (ИРТ)
+    row2_items.replace(3,p_new_2_3);
+    dm->setRowItems(2,row2_items);
+
+    // Замена значения в модели по столбцу
+    QicsDataModelColumn col3_items =  dm->columnItems(3);
+    QicsDataItem* pitem_3_3 = col3_items.at(3)->clone();
+    int el_3_3 = col3_items.at(3)->number();     // ny = 11 (CГPЭC-2)
+    col3_items.replace(3,p_new_3_3);
+    dm->setColumnItems(3,col3_items);
+
+   // dm->addRows(2);
+
+
+
+
+
+
+
+
 
 
     // Некоторые настройки отображения
@@ -133,6 +171,7 @@ MdiChild::MdiChild( const _idRastr id_rastr, const nlohmann::json& j_form_in,  Q
     columnHeaderRef().setSelectedBackgroundColor(QColor(0x92a2d9));
     columnHeaderRef().setSelectedForegroundColor(Qt::white);
     setExclusiveSelectionDragBackColor(QColor(Qt::transparent));
+    rowHeaderRef().
 
     setCellOverflowBehavior(Qics::ToolTip);
       //mainGridRef().setCursor(QCursor(QPixmap(":/images/cursor.png")));
@@ -152,18 +191,77 @@ MdiChild::MdiChild( const _idRastr id_rastr, const nlohmann::json& j_form_in,  Q
 
 */
 
+    const int sizeColHeader = 4;
+    const int sizeRowHeader = 2;
+
+    QicsColumnHeader *cHeader = columnHeader();
+    QicsRowHeader *rHeader = rowHeader();
+    cHeader->setNumRows(sizeColHeader);
+    rHeader->setNumColumns(sizeRowHeader);
+    CustomQicsPushButtonCellDisplay *btnDisplayer = 0;
+    CustomQicsTextCellDisplay *textDisplayer = 0;
+
+
+
     columnHeaderRef().setAlignment(Qt::AlignCenter);
     int i = 0;
-    for(RCol& col: *p_rdata){
-        //columnHeaderRef().cellRef(0,i).setLabel(col.str_name_.c_str());
-        columnHeaderRef().cellRef(0,i).setLabel(col.title().c_str());
-        //columnRef(i).setWidthInChars(10);
+    const int rows = dm->numRows();
+    const int cols = dm->numColumns();
+
+    //Cols Header
+    for(RCol& col: *p_rdata)
+    {
+        for(int hi = 0; hi < sizeColHeader; ++hi)
+        {
+            QicsCell &cell = cHeader->cellRef(hi,i);
+            switch(hi)
+            {
+                case 0:
+                    //columnHeaderRef().cellRef(0,i).setLabel(col.title().c_str());
+                    cell.setLabel(col.title().c_str());
+                break;
+                case 1:
+                    cell.setDisplayer(new QicsCheckCellDisplay(this));
+                    cell.setAlignment(Qt::AlignCenter);
+                break;
+                case 2:
+                    btnDisplayer = new CustomQicsPushButtonCellDisplay(this);
+                    cell.setDisplayer(btnDisplayer);
+                    cell.setLabel("Hide");
+                    cell.setToolTipText(tr("Hide current column"));
+                    connect(btnDisplayer, SIGNAL(clicked()), SLOT(clickColBtnHideCol()));
+                break;
+            case 3:
+                cell.setLabel("Text edit");
+                //textDisplayer = new CustomQicsTextCellDisplay(this);
+
+               // cell.setDisplayer(textDisplayer);
+
+                //cell.setLabel("Hide");
+                //cell.setToolTipText(tr("Filter"));
+                //connect(textDisplayer, SIGNAL(clicked()), SLOT(clickColBtnFilterCol()));
+            break;
+            }
+         }
         i++;
     }
 
-    //this->sortRows(3);  // work ok!
+    //Rows Header
+    for (int row = 0; row < rows; ++row)
+    {
+           QicsCell &cell = rHeader->cellRef(row, 1);
 
-    //columnHeaderRef().cellRef(0,0).event(
+           btnDisplayer = new CustomQicsPushButtonCellDisplay(this);
+           cell.setDisplayer(btnDisplayer);
+           cell.setLabel("D");
+           cell.setToolTipText(tr("Delete current row"));
+           connect(btnDisplayer, SIGNAL(clicked()), SLOT(clickColBtnDeleteRow()));
+    }
+
+
+
+
+
 
     // from void MdiChild::newFile()
     setWindowTitle(str_Name.c_str());
@@ -332,6 +430,7 @@ void MdiChild::insertRows()
 void MdiChild::sort(int col_ind,Qics::QicsSortOrder sort_type )
 {
     QicsTable *table = this;
+
     if (table) {
         QicsSelectionList *list = table->selectionList(true);
         if (!list)
@@ -344,9 +443,6 @@ void MdiChild::sort(int col_ind,Qics::QicsSortOrder sort_type )
         QVector<int> selectedCols = list->columns().toVector();
         if (selectedCols.size() <= 0) selectedCols << col_ind;
 
-        //QicsRegion reg = list->region();
-        //table->sortRows(selectedCols, Qics::Ascending, reg.startRow(), reg.endRow());
-
         table->sortRows(selectedCols, sort_type);
     }
 }
@@ -354,11 +450,11 @@ void MdiChild::sortAscending()
 {
     sort(ind_col_clicked,Qics::Ascending);
 }
+
 void MdiChild::sortDescending()
 {
     sort(ind_col_clicked,Qics::Descending);
 }
-
 
 void MdiChild::sort_by_col(int col_ind)
 {
@@ -375,6 +471,40 @@ void MdiChild::sort_by_col(int col_ind)
     table->sortRows(col_ind,col_sort_type);
     ind_col_sortedby = col_ind;
 }
+
+RCol* MdiChild::GetCol(int ColInd)
+{
+    ColInd = (ColInd < 0)? ind_col_clicked:ColInd;
+    return &p_rdata->at(ColInd);
+}
+
+void MdiChild::OpenColPropForm()
+{
+    RCol* prc = &p_rdata->at(ind_col_clicked);
+    ColPropForm* PropForm = new ColPropForm(p_rdata,prc);
+    PropForm->show();
+}
+void MdiChild::clickColBtnHideCol()
+{
+    CustomQicsPushButtonCellDisplay *btnDisplayer = qobject_cast<CustomQicsPushButtonCellDisplay *>(sender());
+    columnRef(btnDisplayer->cell()->columnIndex()).hide();
+}
+void MdiChild::clickColBtnFilterCol()
+{
+    CustomQicsTextCellDisplay *textDisplayer = qobject_cast<CustomQicsTextCellDisplay *>(sender());
+    QString text = textDisplayer->cell()->dataString();
+    int a= 1;
+
+}
+
+void MdiChild::clickColBtnDeleteRow()
+{
+    // DO NOT WORK... WHY ?
+    CustomQicsPushButtonCellDisplay *btnDisplayer = qobject_cast<CustomQicsPushButtonCellDisplay *>(sender());
+    deleteRow(btnDisplayer->cell()->rowIndex());
+}
+
+
 
 
 

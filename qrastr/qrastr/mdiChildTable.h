@@ -4,7 +4,12 @@
 #include <QicsTable.h>
 #include "License2/json.hpp"
 #include "astra_exp.h"
+#include <QicsDataModel.h>
 #include "rastrdatamodel.h"
+#include <QicsPushButtonCellDisplay.h>
+#include <QicsCheckCellDisplay.h>
+#include <QicsTextCellDisplay.h>
+#include <QicsTextCellDisplayHelpers.h>
 
 class MdiChild : public QicsTable
 {
@@ -24,7 +29,8 @@ public:
     QString userFriendlyCurrentFile();
     QString currentFile() { return curFile; }
     void mousePressEvent(QMouseEvent *event) override ;
-    int ind_col_clicked = -1;                               // ИИндекс кликнутого столбца
+    int ind_col_clicked = -1;                               // Индекс кликнутого столбца
+    RCol* GetCol(int ColInd = -1);                          // Если -1 берем ind_col_clicked
 protected:
     //virtual void handleMousePressEvent(const QicsICell &cell, QMouseEvent *m);
 
@@ -37,6 +43,11 @@ public slots:
     void sortAscending();
     void sortDescending();
     void sort_by_col(int col_ind);
+    void OpenColPropForm();
+
+    void clickColBtnHideCol();
+    void clickColBtnFilterCol();
+    void clickColBtnDeleteRow();
 
 protected:
     bool eventFilter(QObject *obj, QEvent *ev) override;
@@ -58,6 +69,37 @@ private:
     nlohmann::json j_metas_;
     nlohmann::json j_form_;
 };
+
+class CustomQicsPushButtonCellDisplay : public QicsPushButtonCellDisplay
+{
+    Q_OBJECT
+public:
+    CustomQicsPushButtonCellDisplay(QWidget *parent = 0)
+        : QicsPushButtonCellDisplay(parent)	{}
+
+    inline QicsCell *cell() const {return myCell;}
+};
+
+class CustomQicsTextCellDisplay : public QicsTextCellDisplay
+{
+    Q_OBJECT
+public:
+    CustomQicsTextCellDisplay(QWidget *parent = 0)
+        : QicsTextCellDisplay(parent)	{}
+
+    inline QicsCell *cell() const {return myEditCell;}
+};
+
+class CustomQicsTextCellDisplayHelpers : public QicsTextCellDisplay
+{
+    Q_OBJECT
+public:
+    CustomQicsTextCellDisplayHelpers(QWidget *parent = 0)
+        : QicsTextCellDisplay(parent)	{}
+
+    inline QicsCell *cell() const {return myCell;}
+};
+
 
 /*
 class MdiChild

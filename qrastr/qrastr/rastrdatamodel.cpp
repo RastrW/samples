@@ -111,3 +111,35 @@ void RData::clear_data()
         col.clear();
       }
 }
+
+int RData::AddRow(int index )
+{
+    //index default = -1
+    // TO DO: make same action on astra (server)
+
+    _vt val;
+    if ( (index < 0) || (index > (*this)[0].size() )) // add at end
+    {
+        for( RCol& col : *this )
+        {
+            col.push_back(val);
+        }
+    }
+    else
+    {
+        for( RCol& col : *this )
+        {
+            col.insert(col.begin()+index,val);
+        }
+    }
+}
+
+int RData::RemoveRDMRow(int index )
+{
+    // TO DO: make same action on astra (server)
+
+    for( RCol& col : *this )
+    {
+        col.erase(col.begin()+index);
+    }
+}

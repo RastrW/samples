@@ -43,6 +43,9 @@ set(PROJECT_SOURCES
         rastrdatamodel.h
         rastrdatamodel.cpp
         astra_shared.h
+        ColPropForm.h
+        ColPropForm.cpp
+        ColPropForm.ui
         ${TS_FILES}
         qrastr.qrc
 )

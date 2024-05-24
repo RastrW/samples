@@ -40,6 +40,10 @@ private slots:
     void cut();
     void copy();
     void paste();
+    void insertRow();
+    void deleteRow();
+    void insertCol();
+    void deleteCol();
     void about();
     void rgm_wrap();
     void sortAscending();
@@ -81,6 +85,10 @@ private:
     QAction *m_cutAct;
     QAction *m_copyAct;
     QAction *m_pasteAct;
+    QAction *m_insertRowAct;
+    QAction *m_deleteRowAct;
+    QAction *m_insertColAct;
+    QAction *m_deleteColAct;
     QAction *m_closeAct;
     QAction *m_closeAllAct;
     QAction *m_tileAct;

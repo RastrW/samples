@@ -1,7 +1,7 @@
 #ifndef RASTRDATAMODEL_H
 #define RASTRDATAMODEL_H
 
-#include <QicsDataModel.h>
+#include "QicsDataModel.h"
 #include "astra_exp.h"
 #include "License2/json.hpp"
 #include "astra_shared.h"
@@ -11,8 +11,8 @@ void loggg( int eCod, std::string_view sv_format, Args&&... args ) {
     //const std::string str_log{fmt::format(sv_format, args...)};
 }
 typedef std::vector<std::string> _vstr;
-typedef std::vector
-        < std::variant< int, double, std::string > > _col_data ;
+typedef std::variant< int, double, std::string >  _vt ;
+typedef std::vector< _vt > _col_data ;
 
 class RCol
     : public _col_data
@@ -58,6 +58,32 @@ public:
         const std::string str_title = j_meta_["Title"];
         return str_title;
     }
+    std::string name() const{
+        const std::string str_name = j_meta_["Name"];
+        return str_name;
+    }
+    std::string desc() const{
+        const std::string str_desc = j_meta_["Description"];
+        return str_desc;
+    }
+    std::string width() const{
+        const std::string str_width = j_meta_["Width"];
+        return str_width;
+    }
+    std::string prec() const{
+        const std::string str_prec = j_meta_["Precision"];
+        return str_prec;
+    }
+    std::string unit() const{
+        const std::string str_unit = j_meta_["Unit"];
+        return str_unit;
+    }
+    std::string expr() const{
+        const std::string str_expr = j_meta_["Expression"];
+        return str_expr;
+    }
+
+
     std::string    str_name_;
     _en_data       en_data_;
 private:
@@ -84,6 +110,12 @@ public:
         emplace_back(rcol);
         return size();
     }
+
+    int AddRow(int index = -1);
+    int RemoveRDMRow(int index = -1);
+
+
+
 
     void Initialize(nlohmann::json _j_Fields , nlohmann::json _j_metas,_vstr _vstr_fields_form);
     void populate(nlohmann::json _j_Fields , nlohmann::json _j_metas,_vstr _vstr_fields_form);  // Заполнить данными
@@ -125,6 +157,7 @@ public:
 
     _idRastr id_rastr_ = 0;
     std::string t_name_ = "";
+    std::string t_title_ = "";
 private:
     const int SIZE_STR_BUF = 500'000'000;
     long n_num_rows_ = 0;
@@ -188,10 +221,6 @@ public:
 
 
 
-
-
-
-
         // we need to modify the internal _item data member inside
         // this const method.  This modification is not externally
         // visible, so this const_cast is ok.
@@ -232,7 +261,7 @@ public:
     }
     QicsDataModelRow rowItems(int row, int first_col, int last_col) const  {
         QicsDataModelRow rv;
-       /*
+
         if ((last_col < 0) || (last_col > lastColumn()))
             last_col = lastColumn();
         // Go through each column in the row and add the data item
@@ -240,12 +269,12 @@ public:
         for (int i = first_col; i <= last_col; ++i) {
             const QicsDataItem *itm = item(row, i);
             rv.push_back(itm->clone());
-        }*/
+        }
         return rv;
     }
     QicsDataModelColumn columnItems(int col, int first_row, int last_row) const  {
         QicsDataModelColumn cv;
-        /*
+
         if ((last_row < 0) || (last_row > lastRow()))
             last_row = lastRow();
         // Go through each row in the column and add the data item
@@ -253,41 +282,39 @@ public:
         for (int i = first_row; i <= last_row; ++i) {
             const QicsDataItem *itm = item(i, col);
             cv.push_back(itm->clone());
-        }*/
+        }
         return cv;
     }
     void setRowItems(int row, const QicsDataModelRow &v)  {
-        /*
+
         QicsDataModelRow::const_iterator iter;
         int col = 0;
         // Temporarily turn signal emitting off, so setItem() doesn't emit
         // a signal for each cell that is changed.
-        bool old_emit = emit();
-        setEmit(false);
+        bool old_emit = QicsDataModel::emitSignals();
+        QicsDataModel::setEmitSignals(false);
         // Iterate through each value in the row vector and use setItem()
         // to do the actual "setting".
+
         for (iter = v.begin(); iter != v.end(); ++iter) {
-            if (col > (SDM_NumDataItems - 1))
-                break;
+            //if (col > (SDM_NumDataItems - 1))
+              //  break;
             setItem(row, col++, **iter);
         }
         // Restore previous signal emitting setting.
-        setEmit(old_emit);
-        if (emit())
+        QicsDataModel::setEmitSignals(old_emit);
+        if (emitSignals())
             emit modelChanged(QicsRegion(row, 0, row, col-1));
-        */
+
+
     }
     void setColumnItems(int col, const QicsDataModelColumn &v){
-        qDebug () << "eerr";
-        Q_ASSERT(0);
-
-        /*
         QicsDataModelColumn::const_iterator iter;
         int row = 0;
         // Temporarily turn signal emitting off, so setItem() doesn't emit
         // a signal for each cell that is changed.
-        bool old_emit = emit();
-        setEmit(false);
+        bool old_emit = QicsDataModel::emitSignals();
+         QicsDataModel::setEmitSignals(false);
         // Iterate through each value in the column vector and use setItem()
         // to do the actual "setting".
         for (iter = v.begin(); iter != v.end(); ++iter) {
@@ -296,10 +323,10 @@ public:
             setItem(row++, col, **iter);
         }
         // Restore previous signal emitting setting.
-        setEmit(old_emit);
-        if (emit())
+         QicsDataModel::setEmitSignals(old_emit);
+         if (emitSignals())
             emit modelChanged(QicsRegion(0, col, row-1, col));
-        */
+
     }
     void setSymbol(unsigned int idx, QString sym){
         /*
@@ -362,6 +389,32 @@ public:
             emit modelSizeChanged(numRows(), numColumns());
         }*/
     }
+    void insertRow(int position) {
+        // We call appropriate StockDataSet method here to actually insert
+        // the row, and then we emit the required signal.
+        //StockDataSet::insertStock(position);
+        rdata_.AddRow(position);
+        setNumRows(numRows() + 1);
+        if (emitSignals()) {
+            if (position == -1)
+                emit rowsAdded(1);
+            else
+                emit rowsInserted(1, position);
+
+            emit modelSizeChanged(numRows(), numColumns());
+        }
+    }
+    void removeRow(unsigned int idx) {
+        // We call appropriate StockDataSet method here to actually remove
+        // the row, and then we emit the required signal.
+        //StockDataSet::removeStock(idx);
+        rdata_.RemoveRDMRow(idx);
+        setNumRows(numRows() - 1);
+        if (emitSignals()) {
+            emit rowsDeleted(1, idx);
+            emit modelSizeChanged(numRows(), numColumns());
+        }
+    }
 
     public slots:
 
@@ -391,6 +444,9 @@ public:
             break;
            default :                                               break;
         }
+        if (emitSignals())
+            emit modelChanged(QicsRegion(row, col, row, col)); // TO DO: handle signal ?
+
 
        //item.number();
 
@@ -477,7 +533,7 @@ public:
         if (emitSignals())
             emit modelSizeChanged(numRows(), numColumns()); */
     }
-    void addRows(int number_of_rows) { /*
+    void addRows(int number_of_rows) {
         // We use the existing insertStock() call to do the add, but we
         // have to emit the required signal so all views will update
         // Temporarily turn signal emitting off, so insertStock() doesn't emit
@@ -485,19 +541,19 @@ public:
         bool old_emit = emitSignals();
         setEmitSignals(false);
         for (int i = 0; i < number_of_rows; ++i)
-            insertStock(-1);
+            insertRow(-1);
         // Restore previous signal emitting setting.
         setEmitSignals(old_emit);
         if (emitSignals()) {
             emit rowsAdded(number_of_rows);
             emit modelSizeChanged(numRows(), numColumns());
-        }*/
+        }
     }
     void addColumns(int) {
         // We don't allow adding columns (each stock has a fixed number
         // of data points).  So we just return without emitting any signals
     }
-    void insertRows(int number_of_rows, int starting_position) { /*
+    void insertRows(int number_of_rows, int starting_position) {
         // We use the existing insertStock() call to do the insert, but we
         // have to emit the required signal so all views will update
         // Temporarily turn signal emitting off, so setItem() doesn't emit
@@ -505,13 +561,13 @@ public:
         bool old_emit = emitSignals();
         setEmitSignals(false);
         for (int i = 0; i < number_of_rows; ++i)
-            insertStock(starting_position);
+            insertRow(starting_position);
         // Restore previous signal emitting setting.
         setEmitSignals(old_emit);
         if (emitSignals()) {
             emit rowsInserted(number_of_rows, starting_position);
             emit modelSizeChanged(numRows(), numColumns());
-        }  */
+        }
     }
     void insertColumns(int, int) {
         // We don't allow inserting columns (each stock has a fixed number
@@ -522,8 +578,9 @@ public:
         // also emit the required signal.
         if (row < static_cast<int> (numStocks()))
             removeStock(row); */
+        int a = 1;
     }
-    void deleteRows(int num_rows, int start_row){ /*
+    void deleteRows(int num_rows, int start_row){
         // We use the existing removeStock() call to do the delete, but we
         // have to emit the required signal so all views will update
         // Temporarily turn signal emitting off, so setItem() doesn't emit
@@ -532,8 +589,10 @@ public:
         setEmitSignals(false);
         int num_deleted = 0;
         for (int i = 0; i < num_rows; ++i) {
-            if (start_row < static_cast<int> (numStocks())) {
-                removeStock(start_row);
+            //if (start_row < static_cast<int> (numStocks())) {
+                //removeStock(start_row);
+            if (start_row < static_cast<int> ((*this).rdata_.size())) {
+                removeRow(start_row);
                 ++num_deleted;
             }
         }
@@ -542,7 +601,7 @@ public:
         if (num_deleted > 0 && emitSignals()) {
             emit rowsDeleted(1, num_deleted);
             emit modelSizeChanged(numRows(), numColumns());
-        }*/
+        }
     }
     void deleteColumn(int) {
         // We don't allow deleting columns (each stock has a fixed number
