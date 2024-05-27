@@ -5,16 +5,47 @@
 #include <QTranslator>
 #include <QDebug>
 #include <QWindow>
+#include <QMessageBox>
+#include <QDir>
 
+#include <iostream>
+#include <fstream>
 #include "astra_exp.h"
-#include "License2/json.hpp" 
+#include "License2/json.hpp"
+#include "params.h"
+
 
 int main(int argc, char *argv[])
 {
+    long nRes = 0;
+    QApplication a(argc, argv);
+
     //nRes = test();
     _idRastr id_rastr = RastrCreate();
 
-    long nRes = 0;
+    QString str_curr_path = QDir::currentPath();
+
+    std::string str_path_2_conf {R"(C:\projects\git_web\samples\qrastr\qrastr\appsettings.json)"};
+
+    Params pars;
+    nRes = pars.ReadJsonFile(str_path_2_conf);
+
+    //on_start_load_file_rastr
+
+
+
+#if(defined(COMPILE_WIN))
+
+    MainWindow w;
+    w.SetIdrastr(id_rastr);
+//    w.setForms(j_forms);
+    w.resize(800,500);
+    w.show();
+    //w.windowHandle()->setScreen(qApp->screens().last());
+    //w.showNormal();
+    return a.exec();
+
+#else    //#if(defined(COMPILE_WIN))
     nRes = Load(id_rastr, R"(/home/ustas/projects/test-rastr/cx195.rg2)", "");
     nRes = Rgm(id_rastr,"");
 
@@ -23,6 +54,12 @@ int main(int argc, char *argv[])
     str_json.resize(SIZE_STR_BUF);
     //nRes = GetForms( R"(/home/ustas/Документы/RastrWin3/form/poisk.fm)", "", const_cast<char*>(str_json.c_str()), str_json.size() );
     nRes = GetForms( R"(/home/ustas/Документы/RastrWin3/form/Общие.fm)", "", const_cast<char*>(str_json.c_str()), str_json.size() );
+    if(nRes<0){
+        QMessageBox mb;
+        mb.setText("forms not loaded!");
+        mb.exec();
+        return 13;
+    }
     nlohmann::json j_forms = nlohmann::json::parse(str_json);
     //sqDebug() << str_json.c_str();
     typedef std::vector<std::string> _vstr;
@@ -99,7 +136,7 @@ int main(int argc, char *argv[])
 
     //return 13;
 
-    QApplication a(argc, argv);
+
 
     QTranslator translator;
     const QStringList uiLanguages = QLocale::system().uiLanguages();
@@ -117,7 +154,6 @@ int main(int argc, char *argv[])
     widget->windowHandle()->setScreen(qApp->screens().last());
     widget->showFullScreen();*/
 
-
     MainWindow w;
     w.SetIdrastr(id_rastr);
     w.setForms(j_forms);
@@ -126,4 +162,8 @@ int main(int argc, char *argv[])
     //w.windowHandle()->setScreen(qApp->screens().last());
     //w.showNormal();
     return a.exec();
+
+#endif// #if(!defined(COMPILE_WIN))
+
+
 }

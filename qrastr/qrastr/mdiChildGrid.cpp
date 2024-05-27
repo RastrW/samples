@@ -1,13 +1,12 @@
-#include "mdiChildGrid.h"
+#if(!defined(QICSGRID_NO))
 
+#include "mdiChildGrid.h"
 #include <QMouseEvent>
 #include <QMenu>
-
 #include <QicsCell.h>
 #include <QicsSelection.h>
 #include <QicsRow.h>
 #include <QicsColumn.h>
-
 #include "mdiChildTable.h"
 
 mdiChildGrid::mdiChildGrid(QWidget *w, QicsGridInfo &info,
@@ -59,6 +58,4 @@ void mdiChildGrid::handleMousePressEvent(const QicsICell &cell, QMouseEvent *m)
         QicsTableGrid::handleMousePressEvent(cell, m);
 }
 
-
-
-
+#endif //#if(!defined(QICSGRID_NO))

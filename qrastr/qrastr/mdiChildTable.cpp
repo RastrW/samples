@@ -1,3 +1,4 @@
+#if(!defined(QICSGRID_NO))
 
 #include <QtGui>
 #include <QFileDialog>
@@ -509,9 +510,4 @@ void MdiChild::clickColBtnDeleteRow()
 
 
 
-/*#include "mdiChildTable.h"
-
-MdiChild::MdiChild()
-{
-
-}*/
+#endif //#if(!defined(QICSGRID_NO))

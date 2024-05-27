@@ -5,7 +5,11 @@
 #include <QWidget>
 #include <QHBoxLayout>
 #include <QPushButton>
-#include <QicsTable.h>
+
+#if(!defined(QICSGRID_NO))
+    #include <QicsTable.h>
+#endif //#if(!defined(QICSGRID_NO))
+
 #include "astra_exp.h"
 #include "License2/json.hpp"
 
@@ -25,8 +29,11 @@ public:
     void SetIdrastr(_idRastr id_rastr_in);
     void setForms(nlohmann::json& j_forms_in);
 
+#if(!defined(QICSGRID_NO))
     // Returns pointer to the table that is active, otherwise returns NULL
     QicsTable* activeTable();
+#endif//#if(!defined(QICSGRID_NO))
+
 signals:
     void rgm_signal();
 protected:
@@ -46,13 +53,20 @@ private slots:
     void deleteCol();
     void about();
     void rgm_wrap();
+    void onOpenForm(QAction* p_actn);
+#if(!defined(QICSGRID_NO))
     void sortAscending();
     void sortDescending();
-    void onOpenForm(QAction* p_actn);
+#endif//#if(!defined(QICSGRID_NO))
 ///slots.end.
+
     void updateMenus();
     void updateWindowMenu();
+
+#if(!defined(QICSGRID_NO))
     MdiChild *createMdiChild(nlohmann::json j_form = "");
+#endif//#if(!defined(QICSGRID_NO))
+
     void setActiveSubWindow(QWidget *window);
 private:
     void createActions();
@@ -62,8 +76,10 @@ private:
     void createStatusBar();
     void readSettings();
     void writeSettings();
+#if(!defined(QICSGRID_NO))
     MdiChild *activeMdiChild();
     QMdiSubWindow *findMdiChild(const QString &fileName);
+#endif
     QMdiArea* m_workspace;
     QSignalMapper *m_windowMapper;
     QMenu *m_fileMenu;

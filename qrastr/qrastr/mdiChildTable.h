@@ -1,6 +1,8 @@
 #ifndef MDICHILD_H
 #define MDICHILD_H
 
+#if(!defined(QICSGRID_NO))
+
 #include <QicsTable.h>
 #include "License2/json.hpp"
 #include "astra_exp.h"
@@ -101,12 +103,6 @@ public:
 };
 
 
-/*
-class MdiChild
-{
-public:
-    MdiChild();
-};
-*/
+#endif// #if(!defined(QICSGRID_NO))
 
 #endif // MDICHILD_H

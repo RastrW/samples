@@ -43,6 +43,7 @@ MainWindow::MainWindow()
 
 void MainWindow::closeEvent(QCloseEvent *event)
 {
+#if(!defined(QICSGRID_NO))
     m_workspace->closeAllSubWindows();
     if (activeMdiChild()) {
         event->ignore();
@@ -50,25 +51,30 @@ void MainWindow::closeEvent(QCloseEvent *event)
         writeSettings();
         event->accept();
     }
+#endif// #if(!defined(QICSGRID_NO))
 }
 
 void MainWindow::newFile()
 {
+#if(!defined(QICSGRID_NO))
     //MdiChild *child = createMdiChild(  j_forms_[0] );
     MdiChild *child = createMdiChild(  j_forms_[0] );
     child->newFile();
     child->show();
+#endif
 }
 
 void MainWindow::open()
 {
     QString fileName = QFileDialog::getOpenFileName(this);
     if (!fileName.isEmpty()) {
+#if(!defined(QICSGRID_NO))
         QMdiSubWindow *existing = findMdiChild(fileName);
         if (existing) {
             m_workspace->setActiveSubWindow(existing);
             return;
         }
+#endif//#if(!defined(QICSGRID_NO))
         int nRes = 0;
         nRes = Load( id_rastr_, fileName.toStdString().c_str(), "");
         if(nRes>0){
@@ -95,29 +101,39 @@ void MainWindow::open()
 
 void MainWindow::save()
 {
+#if(!defined(QICSGRID_NO))
     if (activeMdiChild()->save())
         statusBar()->showMessage(tr("File saved"), 2000);
+#endif//#if(!defined(QICSGRID_NO))
 }
 
 void MainWindow::saveAs()
 {
+#if(!defined(QICSGRID_NO))
     if (activeMdiChild()->saveAs())
         statusBar()->showMessage(tr("File saved"), 2000);
+#endif
 }
 
 void MainWindow::cut()
 {
+#if(!defined(QICSGRID_NO))
     activeMdiChild()->cut();
+#endif//#if(!defined(QICSGRID_NO))
 }
 
 void MainWindow::copy()
 {
+#if(!defined(QICSGRID_NO))
     activeMdiChild()->copy();
+#endif//#if(!defined(QICSGRID_NO))
 }
 
 void MainWindow::paste()
 {
+#if(!defined(QICSGRID_NO))
     activeMdiChild()->paste();
+#endif// #if(!defined(QICSGRID_NO))
 }
 void MainWindow::insertRow()
 {
@@ -172,9 +188,13 @@ void MainWindow::about()
 void MainWindow::onOpenForm( QAction* p_actn ){
     int n_indx = p_actn->data().toInt();
     const nlohmann::json j_form = j_forms_[n_indx];
+
+#if(!defined(QICSGRID_NO))
     MdiChild *child = createMdiChild( j_form );
     //child->newFile();
     child->show();
+#endif // #if(!defined(QICSGRID_NO))
+
 }
 
 void MainWindow::SetIdrastr(_idRastr id_rastr_in)
@@ -222,6 +242,7 @@ void MainWindow::setForms(nlohmann::json& j_forms_in){ // https://stackoverflow.
 
 void MainWindow::updateMenus()
 {
+#if(!defined(QICSGRID_NO))
     bool hasMdiChild = (activeMdiChild() != 0);
     m_saveAct->setEnabled(hasMdiChild);
     m_saveAsAct->setEnabled(hasMdiChild);
@@ -233,6 +254,7 @@ void MainWindow::updateMenus()
     m_nextAct->setEnabled(hasMdiChild);
     m_previousAct->setEnabled(hasMdiChild);
     m_separatorAct->setVisible(hasMdiChild);
+#endif //#if(!defined(QICSGRID_NO))
 }
 
 void MainWindow::updateWindowMenu()
@@ -249,6 +271,8 @@ void MainWindow::updateWindowMenu()
     m_windowMenu->addAction(m_separatorAct);
     QList<QMdiSubWindow *> windows = m_workspace->subWindowList();
     m_separatorAct->setVisible(!windows.isEmpty());
+
+#if(!defined(QICSGRID_NO))
     for (int i = 0; i < windows.size(); ++i) {
         MdiChild *child = qobject_cast<MdiChild *>(windows.at(i)->widget());
         if ( !child ) printf("uh oh!\n");
@@ -266,18 +290,11 @@ void MainWindow::updateWindowMenu()
         connect(action, SIGNAL(triggered()), m_windowMapper, SLOT(map()));
         m_windowMapper->setMapping(action, windows.at(i));
     }
+#endif
 }
 
-MdiChild *MainWindow::createMdiChild( nlohmann::json j_form )
-{
-    //MdiChild *child = new MdiChild( id_rastr_, j_form );
     //QicsHeaderGrid::Foundry hf = mdiChildHeaderGrid::createHeaderGrid();
-    MdiChild* child = new MdiChild(id_rastr_, j_form ,mdiChildGrid::createGrid,mdiChildHeaderGrid::createHeaderGrid,this);
 
-    QObject::connect(this, SIGNAL(rgm_signal()), child, SLOT(update_data()));
-    m_workspace->addSubWindow(child);
-    return child;
-}
 
 void MainWindow::setActiveSubWindow(QWidget *window)
 {
@@ -512,15 +529,30 @@ void MainWindow::createCalcLayout()
     widget->show();  // отображаем виджет
 }
 
-
+#include "mymodel.h"
 
 void Btn1_onClick()
 {
+    QTableView* ptv = new QTableView();
+    MyModel* pmm = new MyModel();
+    ptv->setSortingEnabled(true);
+    ptv->setModel(pmm);
 
+    ptv->show();
+
+/*
+    QTableView tableView;
+    MyModel myModel;
+    tableView.setSortingEnabled(true);
+    tableView.setModel(&myModel);
+
+    tableView.show();
+*/
+/*
     //Rgm(id_rastr_in,"");
     QMessageBox msgBox;
     msgBox.setText("Btn1 Clicked !");
-    msgBox.exec();
+    msgBox.exec();*/
 }
 
 void MainWindow::createStatusBar()
@@ -544,6 +576,18 @@ void MainWindow::writeSettings()
     settings.setValue("size", size());
 }
 
+#if(!defined(QICSGRID_NO))
+
+MdiChild *MainWindow::createMdiChild( nlohmann::json j_form )
+{
+    //MdiChild *child = new MdiChild( id_rastr_, j_form );
+    MdiChild* child = new MdiChild(id_rastr_, j_form ,mdiChildGrid::createGrid,mdiChildHeaderGrid::createHeaderGrid,this);
+
+    QObject::connect(this, SIGNAL(rgm_signal()), child, SLOT(update_data()));
+    m_workspace->addSubWindow(child);
+    return child;
+}
+
 MdiChild *MainWindow::activeMdiChild()
 {
     if (m_workspace->activeSubWindow())
@@ -560,7 +604,6 @@ QicsTable* MainWindow::activeTable()
     QicsTable *table = static_cast<QicsTable*>(activeMdiChild());
     return table;
 }
-
 
 QMdiSubWindow *MainWindow::findMdiChild(const QString &fileName)
 {
@@ -608,6 +651,8 @@ void MainWindow::sortDescending()
         table->sortRows(selectedCols, Qics::Descending);
     }
 }
+
+#endif //#if(!defined(QICSGRID_NO))
 
 /*
 MainWindow::MainWindow(QWidget *parent)
