@@ -48,6 +48,7 @@ set(PROJECT_SOURCES
         ColPropForm.ui
         ${TS_FILES}
         qrastr.qrc
+
 )
 
 if(${QT_VERSION_MAJOR} GREATER_EQUAL 6)
