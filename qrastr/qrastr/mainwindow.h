@@ -112,7 +112,7 @@ private:
     QAction *m_RGMAct;
 
     nlohmann::json j_forms_;
-    _idRastr       id_rastr_;
+    _idRastr       id_rastr_ = -1;
 public:
     QAction *m_SortAscAct;
     QAction *m_SortDescAct;

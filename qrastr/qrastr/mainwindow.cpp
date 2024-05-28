@@ -356,10 +356,10 @@ void MainWindow::createActions()
     connect(m_RGMAct, SIGNAL(triggered()), this, SLOT(rgm_wrap()));
 
     ////////////////////////////// RASTR //////////////////////////
-    long nRes = 0;
-    id_rastr_ = RastrCreate();
-    nRes = Load(id_rastr_, R"(/home/ustas/projects/test-rastr/cx195.rg2)", "");
-    nRes = Rgm(id_rastr_,"");
+//    long nRes = 0;
+//    id_rastr_ = RastrCreate();
+//    nRes = Load(id_rastr_, R"(/home/ustas/projects/test-rastr/cx195.rg2)", "");
+//    nRes = Rgm(id_rastr_,"");
 }
 
 void MainWindow::createMenus()

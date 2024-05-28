@@ -1,5 +1,6 @@
 #include "mainwindow.h"
 
+#include <QObject>
 #include <QApplication>
 #include <QLocale>
 #include <QTranslator>
@@ -7,34 +8,56 @@
 #include <QWindow>
 #include <QMessageBox>
 #include <QDir>
-
 #include <iostream>
 #include <fstream>
 #include "astra_exp.h"
 #include "License2/json.hpp"
 #include "params.h"
+#include "common.h"
+#include "Windows.h"
 
 
 int main(int argc, char *argv[])
 {
+#ifdef _WIN32
+    if (AttachConsole(ATTACH_PARENT_PROCESS)) {
+        freopen("CONOUT$", "w", stdout);
+        freopen("CONOUT$", "w", stderr);
+    }
+#endif
     long nRes = 0;
     QApplication a(argc, argv);
-
     //nRes = test();
     _idRastr id_rastr = RastrCreate();
 
+    /*
+    QTranslator translator;
+    const QStringList uiLanguages = QLocale::system().uiLanguages();
+    for (const QString &locale : uiLanguages) {
+        const QString baseName = "qrastr_" + QLocale(locale).name();
+        if (translator.load(":/i18n/" + baseName)) {
+            a.installTranslator(&translator);
+            break;
+        }
+    }
+*/
     QString str_curr_path = QDir::currentPath();
-
     std::string str_path_2_conf {R"(C:\projects\git_web\samples\qrastr\qrastr\appsettings.json)"};
-
     Params pars;
     nRes = pars.ReadJsonFile(str_path_2_conf);
-
-    //on_start_load_file_rastr
-
-
-
 #if(defined(COMPILE_WIN))
+    nRes = Load(id_rastr, pars.Get_on_start_load_file_rastr().c_str(), "");
+    if(nRes<0){
+        QMessageBox mb;
+        QString qstr = QObject::tr("Can't load on_start_file: ");
+        std::string qstr_fmt = qstr.toUtf8().constData(); //  qstr.toStdString(); !!not worked!!
+        std::string ss = fmt::format( "{}{} ", qstr_fmt.c_str(), pars.Get_on_start_load_file_rastr());
+        QString str = QString::fromUtf8(ss);
+        mb.setText(str);
+        mb.exec();
+        return 13;
+    }
+    nRes = Rgm(id_rastr,"");
 
     MainWindow w;
     w.SetIdrastr(id_rastr);
@@ -136,7 +159,7 @@ int main(int argc, char *argv[])
 
     //return 13;
 
-
+/*
 
     QTranslator translator;
     const QStringList uiLanguages = QLocale::system().uiLanguages();
@@ -146,7 +169,7 @@ int main(int argc, char *argv[])
             a.installTranslator(&translator);
             break;
         }
-    }
+    }*/
 
     //int screenCount = QApplication::desktop()->screenCount();
     /*QWidget * widget = new QWidget();
