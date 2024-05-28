@@ -14,7 +14,9 @@ class ColPropForm : public QWidget
     Q_OBJECT
 
 public:
+#if(!defined(QICSGRID_NO))
     explicit ColPropForm(RData* prdata,RCol* prcol, QWidget *parent = nullptr);
+#endif//#if(!defined(QICSGRID_NO))
     ~ColPropForm();
 
     void setName(const QString& name);

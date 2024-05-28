@@ -137,33 +137,39 @@ void MainWindow::paste()
 }
 void MainWindow::insertRow()
 {
+#if(!defined(QICSGRID_NO))
     int rowIndex = activeMdiChild()->currentCell()->rowIndex();
     if (rowIndex < 0)
         return;
-
     activeMdiChild()->insertRow( rowIndex );
+#endif//#if(!defined(QICSGRID_NO))
 }
 
 void MainWindow::deleteRow()
 {
+#if(!defined(QICSGRID_NO))
      // DO NOT WORK... WHY ?
     const QicsCell * cell = activeMdiChild()->currentCell();
     activeMdiChild()->deleteRow( cell->rowIndex() );
+#endif
 }
 
 void MainWindow::insertCol()
 {
+#if(!defined(QICSGRID_NO))
     int colIndex = activeMdiChild()->currentCell() ->columnIndex();
     if (colIndex < 0)
         return;
-
     activeMdiChild()->insertColumn( colIndex );
+#endif //#if(!defined(QICSGRID_NO))
 }
 
 void MainWindow::deleteCol()
 {
+#if(!defined(QICSGRID_NO))
     const QicsCell * cell = activeMdiChild()->currentCell();
     activeMdiChild()->deleteColumn( cell->columnIndex() );
+#endif // #if(!defined(QICSGRID_NO))
 }
 
 void MainWindow::rgm_wrap()

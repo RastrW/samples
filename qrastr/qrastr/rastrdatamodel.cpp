@@ -113,7 +113,6 @@ void RData::clear_data()
       }
 }
 
-#endif// #if(!defined(QICSGRID_NO))
 int RData::AddRow(int index )
 {
     //index default = -1
@@ -145,4 +144,5 @@ int RData::RemoveRDMRow(int index )
         col.erase(col.begin()+index);
     }
 }
+#endif// #if(!defined(QICSGRID_NO))
 
