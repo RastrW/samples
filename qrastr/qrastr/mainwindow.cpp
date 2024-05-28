@@ -135,6 +135,36 @@ void MainWindow::paste()
     activeMdiChild()->paste();
 #endif// #if(!defined(QICSGRID_NO))
 }
+void MainWindow::insertRow()
+{
+    int rowIndex = activeMdiChild()->currentCell()->rowIndex();
+    if (rowIndex < 0)
+        return;
+
+    activeMdiChild()->insertRow( rowIndex );
+}
+
+void MainWindow::deleteRow()
+{
+     // DO NOT WORK... WHY ?
+    const QicsCell * cell = activeMdiChild()->currentCell();
+    activeMdiChild()->deleteRow( cell->rowIndex() );
+}
+
+void MainWindow::insertCol()
+{
+    int colIndex = activeMdiChild()->currentCell() ->columnIndex();
+    if (colIndex < 0)
+        return;
+
+    activeMdiChild()->insertColumn( colIndex );
+}
+
+void MainWindow::deleteCol()
+{
+    const QicsCell * cell = activeMdiChild()->currentCell();
+    activeMdiChild()->deleteColumn( cell->columnIndex() );
+}
 
 void MainWindow::rgm_wrap()
 {
@@ -263,6 +293,7 @@ void MainWindow::updateWindowMenu()
 #endif
 }
 
+    //QicsHeaderGrid::Foundry hf = mdiChildHeaderGrid::createHeaderGrid();
 
 
 void MainWindow::setActiveSubWindow(QWidget *window)
@@ -306,6 +337,23 @@ void MainWindow::createActions()
     m_pasteAct->setStatusTip(tr("Paste the clipboard's contents into the current "
                               "selection"));
     connect(m_pasteAct, SIGNAL(triggered()), this, SLOT(paste()));
+
+    m_insertRowAct = new QAction( tr( "&Insert Row" ), this );
+    m_insertRowAct->setShortcut( tr( "Ctrl+I" ) );
+    connect( m_insertRowAct, SIGNAL( triggered() ), this, SLOT( insertRow() ) );
+
+    m_deleteRowAct = new QAction( tr( "&Delete Row" ), this );
+    m_deleteRowAct->setShortcut( tr( "Ctrl+D" ) );
+    connect( m_deleteRowAct, SIGNAL( triggered() ), this, SLOT( deleteRow() ) );
+
+    m_insertColAct = new QAction( tr( "&Insert Column" ), this );
+    m_insertColAct->setShortcut( tr( "Ctrl+K" ) );
+    connect( m_insertColAct, SIGNAL( triggered() ), this, SLOT( insertCol() ) );
+
+    m_deleteColAct = new QAction( tr( "&Delete Column" ), this );
+    m_deleteColAct->setShortcut( tr( "Ctrl+L" ) );
+    connect( m_deleteColAct, SIGNAL( triggered() ), this, SLOT( deleteCol() ) );
+
     m_closeAct = new QAction(tr("Cl&ose"), this);
     m_closeAct->setShortcut(tr("Ctrl+F4"));
     m_closeAct->setStatusTip(tr("Close the active window"));
@@ -375,6 +423,10 @@ void MainWindow::createMenus()
     m_editMenu->addAction(m_cutAct);
     m_editMenu->addAction(m_copyAct);
     m_editMenu->addAction(m_pasteAct);
+    m_editMenu->addAction( m_insertRowAct );
+    m_editMenu->addAction( m_deleteRowAct );
+    m_editMenu->addAction( m_insertColAct );
+    m_editMenu->addAction( m_deleteColAct );
    // m_viewMenu = menuBar()->addMenu(tr("&View"));
     //m_editMenu->addAction(m_SortAscAct);
 
