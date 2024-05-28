@@ -143,14 +143,14 @@ MdiChild::MdiChild( const _idRastr id_rastr, const nlohmann::json& j_form_in,  Q
     QicsDataItem* pitem_2_3 = row2_items.at(3)->clone();
     int el_2_3 = row2_items.at(3)->number();     // ny = 4 (ИРТ)
     row2_items.replace(3,p_new_2_3);
-    dm->setRowItems(2,row2_items);
+    //dm->setRowItems(2,row2_items);
 
     // Замена значения в модели по столбцу
     QicsDataModelColumn col3_items =  dm->columnItems(3);
     QicsDataItem* pitem_3_3 = col3_items.at(3)->clone();
     int el_3_3 = col3_items.at(3)->number();     // ny = 11 (CГPЭC-2)
     col3_items.replace(3,p_new_3_3);
-    dm->setColumnItems(3,col3_items);
+    //dm->setColumnItems(3,col3_items);
 
    // dm->addRows(2);
 
