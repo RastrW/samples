@@ -14,17 +14,9 @@
 #include "License2/json.hpp"
 #include "params.h"
 #include "common.h"
-#include "Windows.h"
-
 
 int main(int argc, char *argv[])
 {
-#ifdef _WIN32
-    if (AttachConsole(ATTACH_PARENT_PROCESS)) {
-        freopen("CONOUT$", "w", stdout);
-        freopen("CONOUT$", "w", stderr);
-    }
-#endif
     long nRes = 0;
     QApplication a(argc, argv);
     //nRes = test();
