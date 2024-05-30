@@ -14,6 +14,7 @@
 #include "License2/json.hpp"
 #include "params.h"
 #include "common.h"
+#include "rastrhlp.h"
 
 int main(int argc, char *argv[])
 {
@@ -49,7 +50,22 @@ int main(int argc, char *argv[])
         mb.exec();
         return 13;
     }
-    nRes = Rgm(id_rastr,"");
+    //nRes = Rgm(id_rastr,"");
+
+    CRastrHlp rhlp;
+    nRes = rhlp.CreateRastr();
+    nRes = rhlp.ReadForms(pars.Get_on_start_load_file_forms());
+    if(nRes<0){
+        QMessageBox mb( QMessageBox::Icon::Critical,
+                        QObject::tr("Error"),
+                        QString("error: %1 wheh read file : %2").arg(nRes).arg(pars.Get_on_start_load_file_forms().c_str())
+        );
+        mb.exec();
+        return 15;
+    }
+
+
+
 
     MainWindow w;
     w.SetIdrastr(id_rastr);

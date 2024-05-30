@@ -1,9 +1,9 @@
 #ifndef COMMON_H
 #define COMMON_H
 
+#include <exception>
 #include <QDebug>
 #include "fmt/format.h"
-
 
 enum class _err_code{
     norm = 1,
@@ -11,20 +11,18 @@ enum class _err_code{
 };
 
 template <typename... Args>
-//void ppl( _err_code eCod, std::string_view sv_format, Args&&... args )
-void ppl( _err_code eCod, std::string sv_format, Args&&... args )
-{
-    //
-    fmt::format(sv_format, args...) ;
-    //qDebug() << str_log;
-}
-
-
-template <typename... Args>
 static void plog( _err_code eCod, std::string_view sv_format, Args&&... args ){
     const std::string str_log{fmt::format(sv_format, args...)};
     qDebug() << str_log.c_str();
 };
+
+static void exclog(const std::exception& ex){
+    plog(_err_code::fail, "got exception [{}]\n", ex.what());
+}
+
+static void exclog(){
+    plog(_err_code::fail, "got unknown exception \n");
+}
 
 
 #endif // COMMON_H

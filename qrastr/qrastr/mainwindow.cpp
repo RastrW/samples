@@ -487,52 +487,6 @@ void MainWindow::createCalcLayout()
     //m_ActionsLayout->addWidget(btn3);
    // m_ActionsLayout->addWidget(btn4);
     m_calcToolBar->addWidget(widget);
-
-
-    // TEST add grid view
-    QWidget* widget2 = new QWidget;
-    widget2->setWindowTitle("Test Data Viewer");
-    widget2->setMinimumHeight(150);
-    widget2->setMinimumWidth(250);
-    //m_calcToolBar->addWidget(widget2);
-
-    // определяем данные для модели
-    /*
-    QStringList list = {"C++","C#","VB"}    ;
-    QStringListModel *model = new QStringListModel(list);
-
-    QListView *view = new QListView(widget2);
-    view->setModel(model);
-    */
-
-    //   TaableView
-    QStandardItemModel* model = new QStandardItemModel(3, 2); // 3 строки, 2 столбца
-    model->setItem(0, 0, new QStandardItem("Tom"));
-    model->setItem(0, 1, new QStandardItem(39));
-    model->setItem(1, 0, new QStandardItem("Bob"));
-    model->setItem(1, 1, new QStandardItem(43));
-    model->setItem(2, 0, new QStandardItem("Sam"));
-    model->setItem(2, 1, new QStandardItem(28));
-
-    auto item = model->item(0,0);
-    //item->data
-
-    QModelIndex indexC = model->index(2, 1, QModelIndex());
-
-    // установка заголовков таблицы
-    model->setHeaderData(0, Qt::Horizontal, "Name");
-    model->setHeaderData(1, Qt::Horizontal, "Age");
-
-    // определяем представление
-    QTableView *view = new QTableView(widget2);
-    // устанавливаем модель для представления
-    view->setModel(model);
-    view->viewport()->installEventFilter(this);
-
-
-
-    //widget2->show();
-    widget->show();  // отображаем виджет
 }
 
 #include "mymodel.h"
@@ -543,22 +497,7 @@ void Btn1_onClick()
     MyModel* pmm = new MyModel();
     ptv->setSortingEnabled(true);
     ptv->setModel(pmm);
-
     ptv->show();
-
-/*
-    QTableView tableView;
-    MyModel myModel;
-    tableView.setSortingEnabled(true);
-    tableView.setModel(&myModel);
-
-    tableView.show();
-*/
-/*
-    //Rgm(id_rastr_in,"");
-    QMessageBox msgBox;
-    msgBox.setText("Btn1 Clicked !");
-    msgBox.exec();*/
 }
 
 void MainWindow::createStatusBar()
