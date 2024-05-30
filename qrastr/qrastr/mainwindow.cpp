@@ -467,10 +467,20 @@ void MainWindow::createToolBars()
     createCalcLayout();
 }
 
+//void Btn1_onClick();
+#include "mymodel.h"
+
+void Btn1_onClick()
+{
+    QTableView* ptv = new QTableView();
+    MyModel* pmm = new MyModel();
+    ptv->setSortingEnabled(true);
+    ptv->setModel(pmm);
+    ptv->show();
+}
 
 void MainWindow::createCalcLayout()
 {
-    void Btn1_onClick();
     // набор вложенных виджетов - кнопок
     QPushButton *btn1 = new QPushButton("Button 1");
     QPushButton *btn2 = new QPushButton("Button 2");
@@ -487,17 +497,6 @@ void MainWindow::createCalcLayout()
     //m_ActionsLayout->addWidget(btn3);
    // m_ActionsLayout->addWidget(btn4);
     m_calcToolBar->addWidget(widget);
-}
-
-#include "mymodel.h"
-
-void Btn1_onClick()
-{
-    QTableView* ptv = new QTableView();
-    MyModel* pmm = new MyModel();
-    ptv->setSortingEnabled(true);
-    ptv->setModel(pmm);
-    ptv->show();
 }
 
 void MainWindow::createStatusBar()

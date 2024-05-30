@@ -157,6 +157,8 @@ int CRastrHlp::ReadForms(std::string str_path_to_file_forms){
     return 1;
 }
 
+auto CRastrHlp::GetForms() const {};
+
 
 /*
 
