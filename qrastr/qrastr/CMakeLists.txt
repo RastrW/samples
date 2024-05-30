@@ -15,6 +15,11 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 if(MSVC)
     add_compile_definitions(COMPILE_WIN)
     add_compile_definitions(QICSGRID_NO)
+    add_compile_definitions(ASTRA_NIX)
+    add_compile_definitions(
+            $<$<CONFIG:Debug>:q4_INLINE=0>
+            $<$<CONFIG:Debug>:YYDEBUG>
+    )
 endif()
 
 find_package(QT NAMES Qt6 Qt5 COMPONENTS Widgets LinguistTools   REQUIRED)
@@ -31,13 +36,18 @@ else()
 endif()
 
 set(INCLUDES
+        "${ASTRA_LOCATION}/"
         "${DEPENDENCIES_LOCATION}/fmt/include"
         "${DEPENDENCIES_LOCATION}/qicstable/include"
-        "${ASTRA_LOCATION}/"
+        "${DEPENDENCIES_LOCATION}/metakit/include"
+         "${DEPENDENCIES_LOCATION}/eigen-eigen"
+         "${DEPENDENCIES_LOCATION}/boost/boost_1_76_0" # in_nix
+         "${DEPENDENCIES_LOCATION}/boost/boost_1_80_0" # in_win
 )
 
 if(MSVC)
     link_directories("${ASTRA_LOCATION}/build/Debug/")
+    link_directories("${DEPENDENCIES_LOCATION}/metakit/builds/")
 else()
     link_directories("${DEPENDENCIES_LOCATION}/qicstable/lib/")
     link_directories("${ASTRA_LOCATION}/build/")
@@ -58,9 +68,9 @@ set(PROJECT_SOURCES
     rastrdatamodel.h
     rastrdatamodel.cpp
     astra_shared.h
-        ColPropForm.h
-        ColPropForm.cpp
-        ColPropForm.ui
+    ColPropForm.h
+    ColPropForm.cpp
+    ColPropForm.ui
     ${TS_FILES}
     qrastr.qrc
     ${DEPENDENCIES_LOCATION}/fmt/src/format.cc
@@ -71,6 +81,8 @@ set(PROJECT_SOURCES
     params.cpp
     common.h
     common.cpp
+
+    ${ASTRA_LOCATION}/ResourceManager.cpp
 )
 
 if(${QT_VERSION_MAJOR} GREATER_EQUAL 6)
@@ -110,8 +122,9 @@ target_link_libraries( qrastr PRIVATE Qt${QT_VERSION_MAJOR}::Widgets Qt${QT_VERS
 
 if(MSVC)
     target_link_libraries( qrastr PRIVATE astra_shrd.lib )
+    target_link_libraries( qrastr PRIVATE mk4vc22x64     ) # libmk4.so
 else()
-    target_link_libraries( qrastr PRIVATE libqicstable.so )
+    target_link_libraries( qrastr PRIVATE libqicstable.so  )
     target_link_libraries( qrastr PRIVATE libastra_shrd.so )
 endif()
 

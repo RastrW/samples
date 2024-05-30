@@ -54,6 +54,7 @@ int main(int argc, char *argv[])
 
     CRastrHlp rhlp;
     nRes = rhlp.CreateRastr();
+    nRes = rhlp.Load(pars.Get_on_start_load_file_rastr());
     nRes = rhlp.ReadForms(pars.Get_on_start_load_file_forms());
     if(nRes<0){
         QMessageBox mb( QMessageBox::Icon::Critical,

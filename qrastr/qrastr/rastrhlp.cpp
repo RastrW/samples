@@ -24,12 +24,73 @@ int CRastrHlp::CreateRastr(){
     return id_rastr_;
 }
 
+int CRastrHlp::Load(std::string str_path_to_file){
+    try{
+        int nRes = 0;
+        nRes = ::Load(id_rastr_, str_path_to_file.c_str(), "");
+        if(nRes<0){
+            throw std::exception(fmt::format("can't read Rastr file: {}", str_path_to_file).c_str());
+        }
+    }catch(const std::exception& ex){
+        exclog(ex);
+        return -1;
+    }catch(...){
+        exclog();
+        return -2;
+    }
+    return 1;
+}
+
 int CRastrHlp::ReadForms(std::string str_path_to_file_forms){
     try{
+
+        std::filesystem::path path_forms_load;
+
+#if(defined(_MSC_VER))
+        //str_path_forms_load = R"(C:\Users\ustas\Documents\RastrWin3\form\poisk.fm)";
+        //str_path_forms_load = R"(C:\Users\ustas\Documents\RastrWin3\form\Общие.fm)";
+        //str_path_forms_load = R"(C:\projects\astra\Общие.fm)";
+
+        //on Windows, you MUST use 8bit ANSI (and it must match the user's locale) or UTF-16 !! Unicode!
+        //!!! https://stackoverflow.com/questions/30829364/open-utf8-encoded-filename-in-c-windows  !!!
+        path_forms_load = stringutils::utf8_decode(str_path_to_file_forms);
+#else
+        path_forms_load = pch_path2forms;
+        //path_forms_load =  R"(/home/ustas/Документы/RastrWin3/form/poisk.fm)";
+#endif
+        qDebug() << "read form from file : " << path_forms_load.wstring();
+        upCUIFormsCollection_ = std::make_unique<CUIFormsCollection>(CUIFormCollectionSerializerBinary(path_forms_load).Deserialize());
+        //upCUIFormsCollection_->
+        for(const  CUIForm& uiform : upCUIFormsCollection_->Forms() ){
+            qDebug() << "form : " << uiform.TableName().c_str();
+        }
+        qDebug() << "Thats all forms.\n" ;
+
+/*
+        nlohmann::json j_forms;
+        //CUIFormsCollection uifc{CUIFormCollectionSerializerBinary(path_forms_load).Deserialize()};
+        for(const  CUIForm& uiform : uifc.Forms() ){
+            nlohmann::json j_form;
+            j_form["TableName"]  = uiform.TableName();
+            j_form["Name"]       = stringutils::cp1251ToUtf8( uiform.Name() );// acp_decode
+            j_form["Collection"] = stringutils::cp1251ToUtf8( uiform.Collection() );
+            j_form["MenuPath"]   = stringutils::cp1251ToUtf8( uiform.MenuPath() );
+            j_form["Query"]      = uiform.Query();
+            nlohmann::json j_fields;
+            for( const CUIFormField &iter_l_uiform_fields : uiform.Fields() ){
+                j_fields.emplace_back( iter_l_uiform_fields.Name() );
+            }
+            j_form["Fields"] = j_fields;
+            j_forms.emplace_back(j_form);
+        }
+        std::string str_data = j_forms.dump( 1,' ', true, nlohmann::json::error_handler_t::ignore ); // nlohmann::json::error_handler_t::ignore
+*/
+/*
+
         int nRes = 0;
         std::string str_json;
         str_json.resize(SIZE_STR_BUF_);
-        nRes = GetForms( str_path_to_file_forms.c_str(), "", const_cast<char*>(str_json.c_str()), str_json.size() );
+        nRes = ::GetForms( str_path_to_file_forms.c_str(), "", const_cast<char*>(str_json.c_str()), str_json.size() );
         if(nRes<0){
             throw std::exception(fmt::format("can't read file: {}", str_path_to_file_forms).c_str());
         }
@@ -52,7 +113,7 @@ int CRastrHlp::ReadForms(std::string str_path_to_file_forms){
             }
             qDebug() << "Table  : " << str_TableName.c_str() << "|" << QString::fromUtf8( str_Name.c_str()) << "|" <<  str_Collection.c_str() << "|" << str_MenuPath.c_str() << "|" << str_Query.c_str();
             qDebug() << "Fields : " << str_tmp.c_str();
-            nRes = GetMeta( id_rastr_, str_TableName.c_str(), "", const_cast<char*>(str_json.c_str()), str_json.length() );
+            nRes = ::GetMeta( id_rastr_, str_TableName.c_str(), "", const_cast<char*>(str_json.c_str()), str_json.length() );
             if(nRes<0){
                 qDebug() << "GetMeta(...)  return error" << nRes;
                 continue;
@@ -81,10 +142,11 @@ int CRastrHlp::ReadForms(std::string str_path_to_file_forms){
             }
             if(str_tmp.length()>0){
                 str_tmp.erase(str_tmp.length()-1);
-                nRes = GetJSON( id_rastr_, str_TableName.c_str(), str_tmp.c_str(), "", const_cast<char*>(str_json.c_str()), str_json.length() );
+                nRes = ::GetJSON( id_rastr_, str_TableName.c_str(), str_tmp.c_str(), "", const_cast<char*>(str_json.c_str()), str_json.length() );
                 qDebug() << "Data: " << str_json.c_str();
             }
         }
+*/
     }catch(const std::exception& ex){
         exclog(ex);
         return -1;
