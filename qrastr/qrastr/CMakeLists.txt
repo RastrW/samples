@@ -12,14 +12,15 @@ set(CMAKE_AUTORCC ON)
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
+add_compile_definitions(ASTRA_NIX)
+add_compile_definitions(
+        $<$<CONFIG:Debug>:q4_INLINE=0>
+        $<$<CONFIG:Debug>:YYDEBUG>
+)
+
 if(MSVC)
     add_compile_definitions(COMPILE_WIN)
     add_compile_definitions(QICSGRID_NO)
-    add_compile_definitions(ASTRA_NIX)
-    add_compile_definitions(
-            $<$<CONFIG:Debug>:q4_INLINE=0>
-            $<$<CONFIG:Debug>:YYDEBUG>
-    )
 endif()
 
 find_package(QT NAMES Qt6 Qt5 COMPONENTS Widgets LinguistTools   REQUIRED)
@@ -33,16 +34,18 @@ if(MSVC)
 else()
     set(DEPENDENCIES_LOCATION "/home/ustas/projects/compile/")
     set(ASTRA_LOCATION "/home/ustas/projects/git_r/rastr/RastrWin/astra/")
+    set(DEPENDENCIES_GIT      "/home/ustas/projects/git_r/")
 endif()
 
 set(INCLUDES
-        "${ASTRA_LOCATION}/"
-        "${DEPENDENCIES_LOCATION}/fmt/include"
-        "${DEPENDENCIES_LOCATION}/qicstable/include"
-        "${DEPENDENCIES_LOCATION}/metakit/include"
-         "${DEPENDENCIES_LOCATION}/eigen-eigen"
-         "${DEPENDENCIES_LOCATION}/boost/boost_1_76_0" # in_nix
-         "${DEPENDENCIES_LOCATION}/boost/boost_1_80_0" # in_win
+    "${ASTRA_LOCATION}/"
+    "${DEPENDENCIES_LOCATION}/fmt/include"
+    "${DEPENDENCIES_LOCATION}/qicstable/include"
+    "${DEPENDENCIES_LOCATION}/metakit/include" #-win
+    "${DEPENDENCIES_GIT}/metakit/include"      #-lin
+    "${DEPENDENCIES_LOCATION}/eigen-eigen"
+     "${DEPENDENCIES_LOCATION}/boost/boost_1_76_0" # in_nix
+     "${DEPENDENCIES_LOCATION}/boost/boost_1_80_0" # in_win
 )
 
 if(MSVC)

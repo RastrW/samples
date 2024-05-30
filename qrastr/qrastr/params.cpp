@@ -5,10 +5,6 @@
 #include "common.h"
 #include "License2/json.hpp"
 
-#include <windows.h>
-#include "comip.h"
-#include <stringapiset.h>
-#include <codecvt>
 
 Params::Params(){
 }
