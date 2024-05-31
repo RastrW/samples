@@ -20,6 +20,7 @@ add_compile_definitions(
 
 if(MSVC)
     add_compile_definitions(COMPILE_WIN)
+    add_compile_definitions( _SILENCE_ALL_MS_EXT_DEPRECATION_WARNINGS )
     add_compile_definitions(QICSGRID_NO)
 endif()
 

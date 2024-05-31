@@ -12,7 +12,7 @@ public:
     int CreateRastr();
     int ReadForms(std::string str_path_to_file_forms);
     int Load(std::string str_path_to_file); //
-    auto GetForms() const;
+    std::list<CUIForm> GetForms() const;
     static bool IsIdValid(_idRastr id);
     static constexpr long SIZE_STR_BUF_ = 100'000;
 private:
