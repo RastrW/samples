@@ -13,11 +13,14 @@ public:
     int ReadForms(std::string str_path_to_file_forms);
     int Load(std::string str_path_to_file); //
     std::list<CUIForm> GetForms() const;
+    int GetFormData(int n_form_indx);
+    const std::string& GetJForms() {return str_jforms_;};
     static bool IsIdValid(_idRastr id);
     static constexpr long SIZE_STR_BUF_ = 100'000;
 private:
     _idRastr id_rastr_ = -1;
     std::unique_ptr<CUIFormsCollection> upCUIFormsCollection_;
+    std::string str_jforms_;
 };
 
 #endif // CRASTRHLP_H

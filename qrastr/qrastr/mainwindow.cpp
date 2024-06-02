@@ -20,7 +20,7 @@
 #include <QSet>
 #include <QListView>
 #include <QTableView>
-
+#include "mymodel.h"
 
 
 
@@ -172,8 +172,7 @@ void MainWindow::deleteCol()
 #endif // #if(!defined(QICSGRID_NO))
 }
 
-void MainWindow::rgm_wrap()
-{
+void MainWindow::rgm_wrap(){
     long res = Rgm(id_rastr_,"");
 
     //qDebug() << "rgm return  " << res;
@@ -186,15 +185,32 @@ void MainWindow::rgm_wrap()
 
     emit rgm_signal();
 }
-void MainWindow::about()
-{
+void MainWindow::about(){
    QMessageBox::about( this, tr("About QRastr"), tr("About the <b>QRastr</b>.") );
 }
 
 void MainWindow::onOpenForm( QAction* p_actn ){
     int n_indx = p_actn->data().toInt();
-    const nlohmann::json j_form = j_forms_[n_indx];
+    //typedef std::list<CUIForm> _lstUiForms;
+    auto forms = up_rastr_->GetForms();
+    auto it = forms.begin();
+    std::advance(it,n_indx);
+    auto form  =*it;
+    //qDebug() << form.
 
+    QTableView* ptv = new QTableView();
+    MyModel* pmm = new MyModel(nullptr, *up_rastr_.get() );
+    pmm->setFormIndx(n_indx);
+    int nRes = pmm->populateDataFromRastr();
+    ptv->setSortingEnabled(true);
+    ptv->setModel(pmm);
+    ptv->show();
+
+    // return;
+
+    // const nlohmann::json j_form = j_forms_[n_indx];
+    //for Dima
+    const nlohmann::json j_form = up_rastr_->GetJForms().operator[](n_indx);
 #if(!defined(QICSGRID_NO))
     MdiChild *child = createMdiChild( j_form );
     //child->newFile();
@@ -467,13 +483,11 @@ void MainWindow::createToolBars()
     createCalcLayout();
 }
 
-//void Btn1_onClick();
-#include "mymodel.h"
-
 void Btn1_onClick()
 {
     QTableView* ptv = new QTableView();
-    MyModel* pmm = new MyModel();
+    CRastrHlp rhlp;
+    MyModel* pmm = new MyModel(nullptr,rhlp);
     ptv->setSortingEnabled(true);
     ptv->setModel(pmm);
     ptv->show();

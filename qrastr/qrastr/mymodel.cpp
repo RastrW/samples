@@ -5,22 +5,22 @@
 #include <QDebug>
 
 #include "fmt/format.h"
-template <typename... Args>
-void plog1( int eCod, std::string_view sv_format, Args&&... args ) {
-    fmt::format(sv_format, args...);
-    std::string str_log{  };
-    int nsdsd = 9;
-    qDebug() << "catch exception ";
-}
 
-
-MyModel::MyModel(QObject *parent)
+MyModel::MyModel(QObject *parent, CRastrHlp& rastr)
     : QAbstractTableModel(parent)
+        , rastr_(rastr)
     , timer_(new QTimer(this)){
     timer_->setInterval(1000);
     connect(timer_, &QTimer::timeout , this, &MyModel::timerHit);
     timer_->start();
 }
+int MyModel::populateDataFromRastr(){
+
+    rastr_.GetFormData(n_form_indx_);
+
+
+    return 1;
+};
 int MyModel::rowCount(const QModelIndex & /*parent*/) const{
     return n_rows_;
     //return 2'0'0;

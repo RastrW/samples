@@ -87,15 +87,32 @@ public:
         //QMap<QString, QMenu>::iterator it ;
         auto forms = up_rastr_->GetForms();
         for(const auto& j_form : forms){
-            std::string str_MenuPath = j_form.MenuPath();
+            std::string str_MenuPath = stringutils::cp1251ToUtf8(j_form.MenuPath());
             if (!str_MenuPath.empty() && str_MenuPath.at(0) == '_')
                 continue;
-
             QString qstr_MenuPath = str_MenuPath.c_str();
             if (!str_MenuPath.empty() && !map_menu.contains(qstr_MenuPath))
                 map_menu.insert(qstr_MenuPath,m_openMenu->addMenu(str_MenuPath.c_str()));
-
         }
+        //for(const nlohmann::json& j_form : j_forms_){
+        for(const auto& j_form : forms){
+            std::string str_Name = stringutils::cp1251ToUtf8(j_form.Name());
+            std::string str_TableName = j_form.TableName();
+            std::string str_MenuPath = stringutils::cp1251ToUtf8(j_form.MenuPath());
+            QString qstr_MenuPath = str_MenuPath.c_str();
+            QMenu* cur_menu = m_openMenu;
+            if (map_menu.contains(qstr_MenuPath))
+                cur_menu = map_menu[qstr_MenuPath];
+            if (!str_Name.empty() && str_Name.at(0) != '_'){
+                QAction* p_actn = cur_menu->addAction(str_Name.c_str());
+                p_actn->setData(i);
+            }
+            i++;
+        }
+
+        connect( m_openMenu, SIGNAL(triggered(QAction *)),
+                this, SLOT(onOpenForm(QAction *)), Qt::UniqueConnection);
+
 /*
         //for(const nlohmann::json& j_form : j_forms_){
             //std::string str_Collection = j_form["Collection"];
@@ -107,7 +124,6 @@ public:
             if (!str_MenuPath.empty() && !map_menu.contains(qstr_MenuPath))
                 map_menu.insert(qstr_MenuPath,m_openMenu->addMenu(str_MenuPath.c_str()));
         }
-
 
         for(const nlohmann::json& j_form : j_forms_){
             std::string str_Name = j_form["Name"];
