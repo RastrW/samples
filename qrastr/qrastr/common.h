@@ -4,6 +4,7 @@
 #include <exception>
 #include <QDebug>
 #include "fmt/format.h"
+#include "Exceptions.h"
 
 enum class _err_code{
     norm = 1,
@@ -24,5 +25,8 @@ static void exclog(){
     plog(_err_code::fail, "got unknown exception \n");
 }
 
+static void exclog(const CException& ex){
+    plog(_err_code::fail, "got exception [{}]\n", ex.what());
+}
 
 #endif // COMMON_H

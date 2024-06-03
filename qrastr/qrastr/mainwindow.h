@@ -44,17 +44,18 @@ public:
 #if(defined(COMPILE_WIN))
             str_path_2_conf = R"(C:\projects\git_web\samples\qrastr\qrastr\appsettings.json)";
 #else
-            QMessageBox mb( QMessageBox::Icon::Critical, QObject::tr("Error"), QString("In lin not implemented!") );
-            mb.exec();
+            str_path_2_conf = R"(/home/ustas/projects/git_web/samples/qrastr/qrastr/appsettings.json)";
+            //QMessageBox mb( QMessageBox::Icon::Critical, QObject::tr("Error"), QString("In lin not implemented!") );      mb.exec();
 #endif
             Params pars;
             nRes = pars.ReadJsonFile(str_path_2_conf);
             if(nRes<0){
                 QMessageBox mb;
+                // так лучше не делать ,смешение строк qt и std это боль.
                 QString qstr = QObject::tr("Can't load on_start_file: ");
                 std::string qstr_fmt = qstr.toUtf8().constData(); //  qstr.toStdString(); !!not worked!!
                 std::string ss = fmt::format( "{}{} ", qstr_fmt.c_str(), pars.Get_on_start_load_file_rastr());
-                QString str = QString::fromUtf8(ss);
+                QString str = QString::fromUtf8(ss.c_str());
                 mb.setText(str);
                 mb.exec();
                 return ;
@@ -64,9 +65,8 @@ public:
             nRes = up_rastr_->Load(pars.Get_on_start_load_file_rastr());
             nRes = up_rastr_->ReadForms(pars.Get_on_start_load_file_forms());
             if(nRes<0){
-                QMessageBox mb( QMessageBox::Icon::Critical,
-                               QObject::tr("Error"),
-                               QString("error: %1 wheh read file : %2").arg(nRes).arg(pars.Get_on_start_load_file_forms().c_str())
+                QMessageBox mb( QMessageBox::Icon::Critical, QObject::tr("Error"),
+                                QString("error: %1 wheh read file : %2").arg(nRes).arg(pars.Get_on_start_load_file_forms().c_str())
                                );
                 mb.exec();
                 return ;
@@ -146,8 +146,8 @@ public:
 */
     }
 
-    void SetIdrastr(_idRastr id_rastr_in);
-    void setForms(nlohmann::json& j_forms_in);
+    //void SetIdrastr(_idRastr id_rastr_in);
+    //void setForms(nlohmann::json& j_forms_in);
 
 #if(!defined(QICSGRID_NO))
     // Returns pointer to the table that is active, otherwise returns NULL

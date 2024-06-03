@@ -30,11 +30,14 @@ int Params::ReadJsonFile(std::filesystem::path path_2_json){
             ifs.close();
         }else{
             plog(_err_code::fail, "can't open file [{}]\n", path_2_json.string());
+            return -3;
         }
     }catch(const std::exception& ex){
         plog(_err_code::fail, "got exception [{}]\n", ex.what());
+        return -1;
     }catch(...){
         plog(_err_code::fail, "got unknown exception. \n" );
+        return -2;
     }
     return 1;
 };

@@ -10,17 +10,18 @@ public:
     CRastrHlp();
     virtual ~CRastrHlp();
     int CreateRastr();
+    _idRastr GetRastrId() const { return id_rastr_; };
     int ReadForms(std::string str_path_to_file_forms);
     int Load(std::string str_path_to_file); //
     std::list<CUIForm> GetForms() const;
     int GetFormData(int n_form_indx);
-    const std::string& GetJForms() {return str_jforms_;};
+    const nlohmann::json& GetJForms() {return jforms_;};
     static bool IsIdValid(_idRastr id);
-    static constexpr long SIZE_STR_BUF_ = 100'000;
+    static constexpr long SIZE_STR_BUF_ = 100000;
 private:
     _idRastr id_rastr_ = -1;
     std::unique_ptr<CUIFormsCollection> upCUIFormsCollection_;
-    std::string str_jforms_;
+    nlohmann::json jforms_; // for Dima reverse ccompatibility
 };
 
 #endif // CRASTRHLP_H

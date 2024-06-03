@@ -20,9 +20,6 @@ int main(int argc, char *argv[])
 {
     long nRes = 0;
     QApplication a(argc, argv);
-    //nRes = test();
-    _idRastr id_rastr = RastrCreate();
-
     /*
     QTranslator translator;
     const QStringList uiLanguages = QLocale::system().uiLanguages();
@@ -34,10 +31,8 @@ int main(int argc, char *argv[])
         }
     }
 */
-    QString str_curr_path = QDir::currentPath();
-    std::string str_path_2_conf {R"(C:\projects\git_web\samples\qrastr\qrastr\appsettings.json)"};
-    Params pars;
-    nRes = pars.ReadJsonFile(str_path_2_conf);
+
+/*
 #if(defined(COMPILE_WIN))
     nRes = Load(id_rastr, pars.Get_on_start_load_file_rastr().c_str(), "");
     if(nRes<0){
@@ -65,9 +60,6 @@ int main(int argc, char *argv[])
         return 15;
     }
 
-
-
-
     MainWindow w;
     w.SetIdrastr(id_rastr);
 //    w.setForms(j_forms);
@@ -78,13 +70,15 @@ int main(int argc, char *argv[])
     return a.exec();
 
 #else    //#if(defined(COMPILE_WIN))
+
+    //nRes = test();
+    _idRastr id_rastr = RastrCreate();
     nRes = Load(id_rastr, R"(/home/ustas/projects/test-rastr/cx195.rg2)", "");
     nRes = Rgm(id_rastr,"");
 
-    const int SIZE_STR_BUF = 100'000;
+    const int SIZE_STR_BUF = 100000;
     std::string str_json;
     str_json.resize(SIZE_STR_BUF);
-    //nRes = GetForms( R"(/home/ustas/Документы/RastrWin3/form/poisk.fm)", "", const_cast<char*>(str_json.c_str()), str_json.size() );
     nRes = GetForms( R"(/home/ustas/Документы/RastrWin3/form/Общие.fm)", "", const_cast<char*>(str_json.c_str()), str_json.size() );
     if(nRes<0){
         QMessageBox mb;
@@ -145,50 +139,10 @@ int main(int argc, char *argv[])
             nRes = GetJSON( id_rastr, str_TableName.c_str(), str_tmp.c_str(), "", const_cast<char*>(str_json.c_str()), str_json.length() );
             qDebug() << "Data: " << str_json.c_str();
         }
-
-
     }
-
-    /*
-        for(const  CUIForm& uiform : uifc.Forms() ){
-            nlohmann::json j_form;
-            j_form["TableName"]  = uiform.TableName();
-            j_form["Name"]       = stringutils::acp_decode( uiform.Name());
-            j_form["Collection"] = stringutils::acp_decode( uiform.Collection() );
-            j_form["MenuPath"]   = stringutils::acp_decode( uiform.MenuPath() );
-            j_form["Query"]      = uiform.Query();
-            nlohmann::json j_fields;
-            for( const CUIFormField &iter_l_uiform_fields : uiform.Fields() ){
-                j_fields.emplace_back( iter_l_uiform_fields.Name() );
-            }
-            j_form["Fields"] = j_fields;
-            j_forms.emplace_back(j_form);
-        }
-*/
-
-    //return 13;
-
-/*
-
-    QTranslator translator;
-    const QStringList uiLanguages = QLocale::system().uiLanguages();
-    for (const QString &locale : uiLanguages) {
-        const QString baseName = "qrastr_" + QLocale(locale).name();
-        if (translator.load(":/i18n/" + baseName)) {
-            a.installTranslator(&translator);
-            break;
-        }
-    }*/
-
-    //int screenCount = QApplication::desktop()->screenCount();
-    /*QWidget * widget = new QWidget();
-    widget->show();
-    widget->windowHandle()->setScreen(qApp->screens().last());
-    widget->showFullScreen();*/
-
     MainWindow w;
-    w.SetIdrastr(id_rastr);
-    w.setForms(j_forms);
+    //w.SetIdrastr(id_rastr);
+    //w.setForms(j_forms);
     w.resize(800,500);
     w.show();
     //w.windowHandle()->setScreen(qApp->screens().last());
@@ -196,6 +150,11 @@ int main(int argc, char *argv[])
     return a.exec();
 
 #endif// #if(!defined(COMPILE_WIN))
-
-
+*/
+    MainWindow w;
+    w.resize(800,500);
+    w.show();
+    //w.windowHandle()->setScreen(qApp->screens().last());
+    //w.showNormal();
+    return a.exec();
 }

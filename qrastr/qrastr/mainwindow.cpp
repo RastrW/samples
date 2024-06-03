@@ -210,7 +210,8 @@ void MainWindow::onOpenForm( QAction* p_actn ){
 
     // const nlohmann::json j_form = j_forms_[n_indx];
     //for Dima
-    const nlohmann::json j_form = up_rastr_->GetJForms().operator[](n_indx);
+    //const nlohmann::json j_form = up_rastr_->GetJForms().operator[](n_indx);
+    const nlohmann::json j_form = up_rastr_->GetJForms()[n_indx];
 #if(!defined(QICSGRID_NO))
     MdiChild *child = createMdiChild( j_form );
     //child->newFile();
@@ -219,29 +220,22 @@ void MainWindow::onOpenForm( QAction* p_actn ){
 
 }
 
-void MainWindow::SetIdrastr(_idRastr id_rastr_in)
-{
-    id_rastr_ = id_rastr_in;
-}
+//void MainWindow::SetIdrastr(_idRastr id_rastr_in){    id_rastr_ = id_rastr_in;}
 
+/*
 void MainWindow::setForms(nlohmann::json& j_forms_in){ // https://stackoverflow.com/questions/14151443/how-to-pass-a-qstring-to-a-qt-slot-from-a-qmenu-via-qsignalmapper-or-otherwise
     j_forms_ = j_forms_in;
     int i = 0;
-
     QMap<QString,QMenu *> map_menu;
-    //QMap<QString, QMenu>::iterator it ;
     for(const nlohmann::json& j_form : j_forms_){
         //std::string str_Collection = j_form["Collection"];
         std::string str_MenuPath = j_form["MenuPath"];
         if (!str_MenuPath.empty() && str_MenuPath.at(0) == '_')
             continue;
-
         QString qstr_MenuPath = str_MenuPath.c_str();
         if (!str_MenuPath.empty() && !map_menu.contains(qstr_MenuPath))
             map_menu.insert(qstr_MenuPath,m_openMenu->addMenu(str_MenuPath.c_str()));
     }
-
-
     for(const nlohmann::json& j_form : j_forms_){
         std::string str_Name = j_form["Name"];
         std::string str_TableName = j_form["TableName"];
@@ -257,10 +251,10 @@ void MainWindow::setForms(nlohmann::json& j_forms_in){ // https://stackoverflow.
         }
         i++;
     }
-
     connect( m_openMenu, SIGNAL(triggered(QAction *)),
             this, SLOT(onOpenForm(QAction *)), Qt::UniqueConnection);
 }
+*/
 
 void MainWindow::updateMenus()
 {
@@ -538,8 +532,8 @@ void MainWindow::writeSettings()
 
 MdiChild *MainWindow::createMdiChild( nlohmann::json j_form )
 {
-    //MdiChild *child = new MdiChild( id_rastr_, j_form );
-    MdiChild* child = new MdiChild(id_rastr_, j_form ,mdiChildGrid::createGrid,mdiChildHeaderGrid::createHeaderGrid,this);
+    //MdiChild* child = new MdiChild(id_rastr_, j_form ,mdiChildGrid::createGrid,mdiChildHeaderGrid::createHeaderGrid,this);
+    MdiChild* child = new MdiChild( up_rastr_->GetRastrId(), j_form, mdiChildGrid::createGrid,mdiChildHeaderGrid::createHeaderGrid,this);
 
     QObject::connect(this, SIGNAL(rgm_signal()), child, SLOT(update_data()));
     m_workspace->addSubWindow(child);

@@ -67,6 +67,8 @@ MdiChild::MdiChild( const _idRastr id_rastr, const nlohmann::json& j_form_in,  Q
     str_json.resize(std::strlen(str_json.c_str())+1);
     nlohmann::json j_forms = nlohmann::json::parse(str_json);
     //sqDebug() << str_json.c_str();
+    //qDebug() << j_forms.dump(-1, ' ').c_str();
+    //qDebug() << j_form_in.dump(-1, ' ').c_str();
     //typedef std::vector<std::string> _vstr;
     std::string str_TableName  = j_form_in["TableName"];
     std::string str_Name       = j_form_in["Name"];

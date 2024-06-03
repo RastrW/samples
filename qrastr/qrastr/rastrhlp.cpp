@@ -6,11 +6,6 @@ CRastrHlp::CRastrHlp(){
 
 }
 
-CRastrHlp::~CRastrHlp(){
-    RastrExterminate(id_rastr_);
-
-}
-
 bool CRastrHlp::IsIdValid( _idRastr id ){
     if(id<0)
         return false;
@@ -20,8 +15,13 @@ bool CRastrHlp::IsIdValid( _idRastr id ){
 int CRastrHlp::CreateRastr(){
     id_rastr_ = RastrCreate();
     if(!IsIdValid(id_rastr_))
-        throw std::exception(fmt::format("invalid rastr id: {}",id_rastr_).c_str());
+        throw CException("invalid rastr id: {}",id_rastr_);
     return id_rastr_;
+}
+
+CRastrHlp::~CRastrHlp(){
+    if(IsIdValid(id_rastr_))
+        ::RastrExterminate(id_rastr_);
 }
 
 int CRastrHlp::Load(std::string str_path_to_file){
@@ -29,7 +29,7 @@ int CRastrHlp::Load(std::string str_path_to_file){
         int nRes = 0;
         nRes = ::Load(id_rastr_, str_path_to_file.c_str(), "");
         if(nRes<0){
-            throw std::exception(fmt::format("can't read Rastr file: {}", str_path_to_file).c_str());
+            throw CException("can't read Rastr file: {}", str_path_to_file);
         }
     }catch(const std::exception& ex){
         exclog(ex);
@@ -43,9 +43,7 @@ int CRastrHlp::Load(std::string str_path_to_file){
 
 int CRastrHlp::ReadForms(std::string str_path_to_file_forms){
     try{
-
         std::filesystem::path path_forms_load;
-
 #if(defined(_MSC_VER))
         //str_path_forms_load = R"(C:\Users\ustas\Documents\RastrWin3\form\poisk.fm)";
         //str_path_forms_load = R"(C:\Users\ustas\Documents\RastrWin3\form\Общие.fm)";
@@ -54,20 +52,20 @@ int CRastrHlp::ReadForms(std::string str_path_to_file_forms){
         //on Windows, you MUST use 8bit ANSI (and it must match the user's locale) or UTF-16 !! Unicode!
         //!!! https://stackoverflow.com/questions/30829364/open-utf8-encoded-filename-in-c-windows  !!!
         path_forms_load = stringutils::utf8_decode(str_path_to_file_forms);
-#else
-        path_forms_load = pch_path2forms;
-        //path_forms_load =  R"(/home/ustas/Документы/RastrWin3/form/poisk.fm)";
-#endif
         qDebug() << "read form from file : " << path_forms_load.wstring();
+#else
+        path_forms_load = str_path_to_file_forms;
+        qDebug() << "read form from file : " << path_forms_load.c_str();
+#endif
         upCUIFormsCollection_ = std::make_unique<CUIFormsCollection>(CUIFormCollectionSerializerBinary(path_forms_load).Deserialize());
-        //upCUIFormsCollection_->
-        for(const  CUIForm& uiform : upCUIFormsCollection_->Forms() ){
+        for(const  CUIForm& uiform : upCUIFormsCollection_->Forms()){
             qDebug() << "form : " << uiform.TableName().c_str();
         }
         std::string str_json;
         str_json.resize(SIZE_STR_BUF_);
         int  nRes = ::GetForms( reinterpret_cast<const char*>(str_path_to_file_forms.c_str()), "", const_cast<char*>(str_json.c_str()), str_json.size() );
-        str_jforms_ = str_json;
+        //str_jforms_ = str_json;
+        jforms_ = nlohmann::json::parse(str_json);
         qDebug() << "Thats all forms.\n" ;
 
 /*

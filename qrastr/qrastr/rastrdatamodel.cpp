@@ -133,6 +133,7 @@ int RData::AddRow(int index )
             col.insert(col.begin()+index,val);
         }
     }
+    return 1;
 }
 
 int RData::RemoveRDMRow(int index )
@@ -143,6 +144,7 @@ int RData::RemoveRDMRow(int index )
     {
         col.erase(col.begin()+index);
     }
+    return 1;
 }
 #endif// #if(!defined(QICSGRID_NO))
 
