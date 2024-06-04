@@ -9,5 +9,7 @@
         <file>images/Rastr3_rgm_16x16.png</file>
         <file>images/sortasc.png</file>
         <file>images/sortdesc.png</file>
+        <file>images/Rastr3_grid_insrow_16x16.png</file>
+        <file>images/Rastr3_grid_delrow_16x16.png</file>
     </qresource>
 </RCC>

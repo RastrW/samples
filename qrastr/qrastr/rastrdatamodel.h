@@ -575,12 +575,14 @@ public:
         // We don't allow inserting columns (each stock has a fixed number
         // of data points).  So we just return without emitting any signals
     }
-    void deleteRow(int row) { /*
+    void deleteRow(int row) {
         // We use the existing removeStock() call to do the delete, which will
         // also emit the required signal.
-        if (row < static_cast<int> (numStocks()))
-            removeStock(row); */
-        int a = 1;
+          if (row < static_cast<int> ((*this).rdata_.size()))
+          {
+            //removeStock(row);
+             removeRow(row);
+          }
     }
     void deleteRows(int num_rows, int start_row){
         // We use the existing removeStock() call to do the delete, but we

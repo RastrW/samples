@@ -24,9 +24,12 @@ QicsTableGrid *mdiChildGrid::createGrid(QWidget *w, QicsGridInfo &info,
 
 void mdiChildGrid::handleMousePressEvent(const QicsICell &cell, QMouseEvent *m)
 {
+    MdiChild *table = qobject_cast<MdiChild*>(parentWidget());
+    table->ind_col_clicked = cell.column();
+
     if (m->button() == Qt::RightButton) {
     if (!m_menu) {
-            MdiChild *table = qobject_cast<MdiChild*>(parentWidget());
+            //MdiChild *table = qobject_cast<MdiChild*>(parentWidget());
 
             m_menu = new QMenu(this);
             m_menu->addAction(QIcon(":/images/cut.png"),tr("Cut"), table, SLOT(cut()));

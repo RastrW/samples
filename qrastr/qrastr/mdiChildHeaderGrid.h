@@ -21,9 +21,13 @@ public:
 
 protected:
         virtual void handleMousePressEvent(const QicsICell &cell, QMouseEvent *m);
+        virtual void handleMouseDoubleClickEvent(const QicsICell &cell, QMouseEvent *m);
 
 private:
         QMenu *m_menu;
+
+public slots:
+    void AutoWidthColumns();
 };
 
 #endif //#if(!defined(QICSGRID_NO))

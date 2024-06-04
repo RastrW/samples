@@ -15,13 +15,12 @@
 
 
 
-
-
 //MdiChild::MdiChild( const _idRastr id_rastr, const nlohmann::json& j_form_in )
 MdiChild::MdiChild( const _idRastr id_rastr, const nlohmann::json& j_form_in,  QicsTableGrid::Foundry tf,QicsHeaderGrid::Foundry hf,QWidget* parent)
     : QicsTable(0,0,tf,hf,0,parent)
 {
     setAttribute(Qt::WA_DeleteOnClose);
+
     /*
     dm = new QicsDataModelDefault(10,10);
 
@@ -133,6 +132,8 @@ MdiChild::MdiChild( const _idRastr id_rastr, const nlohmann::json& j_form_in,  Q
     dm = new RastrDataModel(*p_rdata);
     this->setDataModel(dm);
 
+    MakeHeaders();
+
     // TEST
 
     QicsDataItem* p_new_2_3  = new QicsDataInt(100500);
@@ -154,14 +155,8 @@ MdiChild::MdiChild( const _idRastr id_rastr, const nlohmann::json& j_form_in,  Q
     col3_items.replace(3,p_new_3_3);
     //dm->setColumnItems(3,col3_items);
 
-   // dm->addRows(2);
-
-
-
-
-
-
-
+    //dm->addRows(2);
+   // dm->deleteRow();
 
 
 
@@ -183,6 +178,7 @@ MdiChild::MdiChild( const _idRastr id_rastr, const nlohmann::json& j_form_in,  Q
 
     this->installEventFilter(this);
 
+
     /* // from consultant
     //Format the billable rate column with a dollar sign, decimal point,
     //and the appropriate cents digits.
@@ -193,74 +189,6 @@ MdiChild::MdiChild( const _idRastr id_rastr, const nlohmann::json& j_form_in,  Q
     m_table->columnRef(6).setValidator(new QDoubleValidator(m_table));
 
 */
-
-    const int sizeColHeader = 4;
-    const int sizeRowHeader = 2;
-
-    QicsColumnHeader *cHeader = columnHeader();
-    QicsRowHeader *rHeader = rowHeader();
-    cHeader->setNumRows(sizeColHeader);
-    rHeader->setNumColumns(sizeRowHeader);
-    CustomQicsPushButtonCellDisplay *btnDisplayer = 0;
-    CustomQicsTextCellDisplay *textDisplayer = 0;
-
-
-
-    columnHeaderRef().setAlignment(Qt::AlignCenter);
-    int i = 0;
-    const int rows = dm->numRows();
-    const int cols = dm->numColumns();
-
-    //Cols Header
-    for(RCol& col: *p_rdata)
-    {
-        for(int hi = 0; hi < sizeColHeader; ++hi)
-        {
-            QicsCell &cell = cHeader->cellRef(hi,i);
-            switch(hi)
-            {
-                case 0:
-                    //columnHeaderRef().cellRef(0,i).setLabel(col.title().c_str());
-                    cell.setLabel(col.title().c_str());
-                break;
-                case 1:
-                    cell.setDisplayer(new QicsCheckCellDisplay(this));
-                    cell.setAlignment(Qt::AlignCenter);
-                break;
-                case 2:
-                    btnDisplayer = new CustomQicsPushButtonCellDisplay(this);
-                    cell.setDisplayer(btnDisplayer);
-                    cell.setLabel("Hide");
-                    cell.setToolTipText(tr("Hide current column"));
-                    connect(btnDisplayer, SIGNAL(clicked()), SLOT(clickColBtnHideCol()));
-                break;
-            case 3:
-                cell.setLabel("Text edit");
-                //textDisplayer = new CustomQicsTextCellDisplay(this);
-
-               // cell.setDisplayer(textDisplayer);
-
-                //cell.setLabel("Hide");
-                //cell.setToolTipText(tr("Filter"));
-                //connect(textDisplayer, SIGNAL(clicked()), SLOT(clickColBtnFilterCol()));
-            break;
-            }
-         }
-        i++;
-    }
-
-    //Rows Header
-    for (int row = 0; row < rows; ++row)
-    {
-           QicsCell &cell = rHeader->cellRef(row, 1);
-
-           btnDisplayer = new CustomQicsPushButtonCellDisplay(this);
-           cell.setDisplayer(btnDisplayer);
-           cell.setLabel("D");
-           cell.setToolTipText(tr("Delete current row"));
-           connect(btnDisplayer, SIGNAL(clicked()), SLOT(clickColBtnDeleteRow()));
-    }
-
 
 
 
@@ -394,6 +322,83 @@ void MdiChild::setCurrentFile(const QString &fileName)
     setWindowModified(false);
     setWindowTitle(userFriendlyCurrentFile() + "[*]");
 }
+void MdiChild::MakeHeaders()
+{
+
+    const int sizeColHeader = 1;    // max 4
+    const int sizeRowHeader = 1;    // max 2
+
+    QicsColumnHeader *cHeader = columnHeader();
+    QicsRowHeader *rHeader = rowHeader();
+    cHeader->setNumRows(sizeColHeader);
+    rHeader->setNumColumns(sizeRowHeader);
+    CustomQicsPushButtonCellDisplay *btnDisplayer = 0;
+    CustomQicsTextCellDisplay *textDisplayer = 0;
+
+
+
+    columnHeaderRef().setAlignment(Qt::AlignCenter);
+    int i = 0;
+    const int rows = dm->numRows();
+    const int cols = dm->numColumns();
+
+    //Cols Header
+    for(RCol& col: *p_rdata)
+    {
+        for(int hi = 0; hi < sizeColHeader; ++hi)
+        {
+            QicsCell &cell = cHeader->cellRef(hi,i);
+            switch(hi)
+            {
+                case 0:
+                    //columnHeaderRef().cellRef(0,i).setLabel(col.title().c_str());
+                    cell.setLabel(col.title().c_str());
+                break;
+                case 1:
+                    cell.setDisplayer(new QicsCheckCellDisplay(this));
+                    cell.setAlignment(Qt::AlignCenter);
+                break;
+                case 2:
+                    btnDisplayer = new CustomQicsPushButtonCellDisplay(this);
+                    cell.setDisplayer(btnDisplayer);
+                    cell.setLabel("Hide");
+                    cell.setToolTipText(tr("Hide current column"));
+                    connect(btnDisplayer, SIGNAL(clicked()), SLOT(clickColBtnHideCol()));
+                break;
+            case 3:
+                cell.setLabel("Text edit");
+                //textDisplayer = new CustomQicsTextCellDisplay(this);
+                //cell.setDisplayer(textDisplayer);
+                //cell.setLabel("Hide");
+                //cell.setToolTipText(tr("Filter"));
+                //connect(textDisplayer, SIGNAL(clicked()), SLOT(clickColBtnFilterCol()));
+            break;
+            }
+         }
+        i++;
+    }
+
+    //Rows Header
+    for (int row = 0; row < rows; ++row)
+    {
+        for(int ri = 0; ri < sizeRowHeader; ++ri)
+        {
+            switch (ri)
+            {
+                case 1:
+                   QicsCell &cell = rHeader->cellRef(row, 1);
+                   rHeader[0].allowHeaderResize();
+
+                   btnDisplayer = new CustomQicsPushButtonCellDisplay(this);
+                   cell.setDisplayer(btnDisplayer);
+                   cell.setLabel("D");
+                   cell.setToolTipText(tr("Delete current row"));
+                   connect(btnDisplayer, SIGNAL(clicked()), SLOT(clickColBtnDeleteRow()));
+                break;
+            }
+        }
+    }
+}
 
 QString MdiChild::strippedName(const QString &fullFileName)
 {
@@ -429,6 +434,30 @@ void MdiChild::insertRows()
     }
 }
 
+void MdiChild::deleteRows()
+{
+    QicsCell* cur_cell = currentCell();
+    QicsICell cell(cur_cell->rowIndex(),cur_cell->columnIndex());
+
+    if(!cell.isValid())
+        return;
+    else {
+        setRepaintBehavior(Qics::RepaintOff);
+
+        QList<int> v = selectionList(true)->rows();
+        if (v.isEmpty())
+            deleteRow(cell.row());
+        else
+            for (int i = 0; i < v.count(); ++i)
+                //deleteRow(cell.row());
+                deleteRow(v.at(0));                 //  Нужен первый индекс всегда, так как строки в astra удаляются по одной и индексы перестраиваются, считаем что selection сплошной
+                //deleteRows(1,2);
+
+
+        setRepaintBehavior(Qics::RepaintOn);
+    }
+}
+
 
 void MdiChild::sort(int col_ind,Qics::QicsSortOrder sort_type )
 {
@@ -449,9 +478,21 @@ void MdiChild::sort(int col_ind,Qics::QicsSortOrder sort_type )
         table->sortRows(selectedCols, sort_type);
     }
 }
+
 void MdiChild::sortAscending()
 {
     sort(ind_col_clicked,Qics::Ascending);
+}
+
+void MdiChild::hideColumns()
+{
+    //QicsICell cell(cur_cell->rowIndex(),cur_cell->columnIndex());
+    //QicsCell* cur_cell = currentCell();
+    //int index = cur_cell->columnIndex();
+    //if(index < 0)
+    //    index = ind_col_clicked;
+
+    columnRef(ind_col_clicked).hide();
 }
 
 void MdiChild::sortDescending()

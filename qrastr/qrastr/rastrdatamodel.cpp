@@ -21,6 +21,7 @@ void RData::Initialize(nlohmann::json _j_Fields , nlohmann::json _j_metas,_vstr 
             }
         }
     }
+
 }
 
 void RData::populate(nlohmann::json _j_Fields , nlohmann::json _j_metas,_vstr _vstr_fields_form)
@@ -117,6 +118,7 @@ int RData::AddRow(int index )
 {
     //index default = -1
     // TO DO: make same action on astra (server)
+    TableInsRow(id_rastr_,t_name_.c_str(),index);
 
     _vt val;
     if ( (index < 0) || (index > (*this)[0].size() )) // add at end
@@ -139,6 +141,7 @@ int RData::AddRow(int index )
 int RData::RemoveRDMRow(int index )
 {
     // TO DO: make same action on astra (server)
+    TableDelRow(id_rastr_,t_name_.c_str(),index);
 
     for( RCol& col : *this )
     {

@@ -430,7 +430,7 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="mainwindow.cpp" line="512"/>
+        <location filename="mainwindow.cpp" line="513"/>
         <source>Ready</source>
         <translation type="unfinished"></translation>
     </message>
@@ -438,22 +438,22 @@
 <context>
     <name>MdiChild</name>
     <message>
-        <location filename="mdiChildTable.cpp" line="234"/>
+        <location filename="mdiChildTable.cpp" line="365"/>
         <source>Hide current column</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="mdiChildTable.cpp" line="260"/>
+        <location filename="mdiChildTable.cpp" line="395"/>
         <source>Delete current row</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="mdiChildTable.cpp" line="280"/>
+        <location filename="mdiChildTable.cpp" line="208"/>
         <source>qicstable%1.dat</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="mdiChildTable.cpp" line="313"/>
+        <location filename="mdiChildTable.cpp" line="241"/>
         <source>Save As</source>
         <translation type="unfinished"></translation>
     </message>
@@ -474,67 +474,67 @@
 <context>
     <name>mdiChildGrid</name>
     <message>
-        <location filename="mdiChildGrid.cpp" line="32"/>
+        <location filename="mdiChildGrid.cpp" line="35"/>
         <source>Cut</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="mdiChildGrid.cpp" line="33"/>
+        <location filename="mdiChildGrid.cpp" line="36"/>
         <source>Copy</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="mdiChildGrid.cpp" line="34"/>
+        <location filename="mdiChildGrid.cpp" line="37"/>
         <source>Paste</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="mdiChildGrid.cpp" line="36"/>
+        <location filename="mdiChildGrid.cpp" line="39"/>
         <source>Clear Contents</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="mdiChildGrid.cpp" line="38"/>
+        <location filename="mdiChildGrid.cpp" line="41"/>
         <source>Insert Rows</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="mdiChildGrid.cpp" line="39"/>
+        <location filename="mdiChildGrid.cpp" line="42"/>
         <source>Delete Rows</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="mdiChildGrid.cpp" line="40"/>
+        <location filename="mdiChildGrid.cpp" line="43"/>
         <source>Hide Rows</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="mdiChildGrid.cpp" line="41"/>
+        <location filename="mdiChildGrid.cpp" line="44"/>
         <source>Unhide Rows</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="mdiChildGrid.cpp" line="43"/>
+        <location filename="mdiChildGrid.cpp" line="46"/>
         <source>Insert Columns</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="mdiChildGrid.cpp" line="44"/>
+        <location filename="mdiChildGrid.cpp" line="47"/>
         <source>Delete Columns</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="mdiChildGrid.cpp" line="45"/>
+        <location filename="mdiChildGrid.cpp" line="48"/>
         <source>Hide Columns</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="mdiChildGrid.cpp" line="46"/>
+        <location filename="mdiChildGrid.cpp" line="49"/>
         <source>Unhide Columns</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="mdiChildGrid.cpp" line="48"/>
+        <location filename="mdiChildGrid.cpp" line="51"/>
         <source>Format</source>
         <translation type="unfinished"></translation>
     </message>
@@ -542,32 +542,37 @@
 <context>
     <name>mdiChildHeaderGrid</name>
     <message>
-        <location filename="mdiChildHeaderGrid.cpp" line="56"/>
+        <location filename="mdiChildHeaderGrid.cpp" line="61"/>
         <source>sortAscending</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="mdiChildHeaderGrid.cpp" line="57"/>
+        <location filename="mdiChildHeaderGrid.cpp" line="62"/>
         <source>sortDescending</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="mdiChildHeaderGrid.cpp" line="59"/>
+        <location filename="mdiChildHeaderGrid.cpp" line="64"/>
         <source>Clear Contents</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="mdiChildHeaderGrid.cpp" line="61"/>
+        <location filename="mdiChildHeaderGrid.cpp" line="66"/>
         <source>Hide Columns</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="mdiChildHeaderGrid.cpp" line="62"/>
+        <location filename="mdiChildHeaderGrid.cpp" line="67"/>
         <source>Unhide Columns</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="mdiChildHeaderGrid.cpp" line="64"/>
+        <location filename="mdiChildHeaderGrid.cpp" line="49"/>
+        <source>Подбор ширины все колонки</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="mdiChildHeaderGrid.cpp" line="71"/>
         <source>Format</source>
         <translation type="unfinished"></translation>
     </message>
