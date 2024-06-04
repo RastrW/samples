@@ -45,6 +45,11 @@ void mdiChildHeaderGrid::handleMousePressEvent(const QicsICell &cell, QMouseEven
     table->ind_col_clicked = cell.column();
     RCol* prcol = table->GetCol();
 
+    QAction *Act_AutoWidthColumns = new QAction();
+    Act_AutoWidthColumns->setStatusTip(tr("Подбор ширины все колонки"));
+    Act_AutoWidthColumns->setIconText("Подбор ширины все колонки");
+    connect(Act_AutoWidthColumns, SIGNAL(triggered()), this, SLOT(AutoWidthColumns()));
+
     std::string str_col_prop = prcol->desc() + " |"+ prcol->title() + "| " + prcol->name() + ", [" +prcol->unit() + "]";
     QString qstr_col_props = str_col_prop.c_str();
 
@@ -60,6 +65,8 @@ void mdiChildHeaderGrid::handleMousePressEvent(const QicsICell &cell, QMouseEven
             m_menu->addSeparator();
             m_menu->addAction(tr("Hide Columns"),table,SLOT(hideColumns()));
             m_menu->addAction(tr("Unhide Columns"),table,SLOT(unhideColumns()));
+            //m_menu->addAction(tr("Подбор ширины все колонки"),this,SLOT(AutoWidthColumns())); // thats  not work
+            m_menu->addAction(Act_AutoWidthColumns);
             m_menu->addSeparator();
             m_menu->addAction(tr("Format"));
     //    }
@@ -71,18 +78,51 @@ void mdiChildHeaderGrid::handleMousePressEvent(const QicsICell &cell, QMouseEven
 #endif
         m->accept();
     }
-    else if (m->button() == Qt::LeftButton)
+    /*else if (m->button() == Qt::LeftButton)
     {
         MdiChild *table = qobject_cast<MdiChild*>(parentWidget());
         int col_ind = cell.column();
         int h_row = cell.row();
         if (h_row == 0)
             table->sort_by_col(col_ind);
-    }
+    }*/
     else
         QicsHeaderGrid::handleMousePressEvent(cell, m);
+}
+
+void mdiChildHeaderGrid::handleMouseDoubleClickEvent(const QicsICell &cell, QMouseEvent *m)
+{
+     QicsHeader hdr(&(gridInfo()));
+
+    bool bch_size = isWithinResizeThreshold(m->x(), m->y());
+    if (!bch_size)
+    {
+        if (!cell.isValid())
+               return;
+
+           const int row = cell.row();
+           const int col = cell.column();
+           MdiChild *table = qobject_cast<MdiChild*>(parentWidget());
+
+           if (row == 0)
+               table->sort_by_col(col);
+    }
+    else
+        QicsHeaderGrid::handleMouseDoubleClickEvent(cell, m);
+}
 
 
+
+
+void mdiChildHeaderGrid::AutoWidthColumns()
+{
+    MdiChild *table = qobject_cast<MdiChild*>(parentWidget());
+    //table->autoFitMode();
+    int num_cols= table->dataModel()->numColumns();
+    for(int i = 0 ; i < num_cols; i++)
+    {
+        emit gripDoubleClicked(i,0,Qics::QicsHeaderType::ColumnHeader);
+    }
 }
 
 #endif //#if(!defined(QICSGRID_NO))

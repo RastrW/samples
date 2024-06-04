@@ -41,11 +41,16 @@ protected:
 public slots:
     void update_data();
     void insertRows();
+    void deleteRows();
+    void hideColumns();
+    //void AutoWidthColumns();
+
     void sort(int col_ind = -1,Qics::QicsSortOrder sort_type = Qics::Ascending);
     void sortAscending();
     void sortDescending();
     void sort_by_col(int col_ind);
     void OpenColPropForm();
+
 
     void clickColBtnHideCol();
     void clickColBtnFilterCol();
@@ -58,6 +63,7 @@ protected:
     QicsDataModel *dm;
 private:
     void setCurrentFile(const QString &fileName);
+    void MakeHeaders();                                     // Создать заголовки по колонкам и строкам
     QString strippedName(const QString &fullFileName);
     QString curFile;
     bool isUntitled;

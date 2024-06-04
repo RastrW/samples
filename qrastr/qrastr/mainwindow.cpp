@@ -338,11 +338,11 @@ void MainWindow::createActions()
                               "selection"));
     connect(m_pasteAct, SIGNAL(triggered()), this, SLOT(paste()));
 
-    m_insertRowAct = new QAction( tr( "&Insert Row" ), this );
+    m_insertRowAct = new QAction( QIcon(":/images/Rastr3_grid_insrow_16x16.png"),tr( "&Insert Row" ), this );
     m_insertRowAct->setShortcut( tr( "Ctrl+I" ) );
     connect( m_insertRowAct, SIGNAL( triggered() ), this, SLOT( insertRow() ) );
 
-    m_deleteRowAct = new QAction( tr( "&Delete Row" ), this );
+    m_deleteRowAct = new QAction( QIcon(":/images/Rastr3_grid_delrow_16x16.png"), tr("&Delete Row" ), this );
     m_deleteRowAct->setShortcut( tr( "Ctrl+D" ) );
     connect( m_deleteRowAct, SIGNAL( triggered() ), this, SLOT( deleteRow() ) );
 
@@ -521,6 +521,7 @@ void MainWindow::createCalcLayout()
     QTableView *view = new QTableView(widget2);
     // устанавливаем модель для представления
     view->setModel(model);
+    view->setSortingEnabled(true);
     view->viewport()->installEventFilter(this);
 
 
@@ -584,6 +585,10 @@ MdiChild *MainWindow::createMdiChild( nlohmann::json j_form )
     MdiChild* child = new MdiChild(id_rastr_, j_form ,mdiChildGrid::createGrid,mdiChildHeaderGrid::createHeaderGrid,this);
 
     QObject::connect(this, SIGNAL(rgm_signal()), child, SLOT(update_data()));
+
+    //QObject::connect(child, SIGNAL(rowsDeleted()), child, SLOT(update_data()));
+
+
     m_workspace->addSubWindow(child);
     return child;
 }
