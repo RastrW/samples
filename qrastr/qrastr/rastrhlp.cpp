@@ -63,7 +63,8 @@ int CRastrHlp::ReadForms(std::string str_path_to_file_forms){
         }
         std::string str_json;
         str_json.resize(SIZE_STR_BUF_);
-        int  nRes = ::GetForms( reinterpret_cast<const char*>(str_path_to_file_forms.c_str()), "", const_cast<char*>(str_json.c_str()), str_json.size() );
+        //int  nRes = ::GetForms( reinterpret_cast<const char*>(str_path_to_file_forms.c_str()), "", const_cast<char*>(str_json.c_str()), str_json.size() );
+        int  nRes = ::GetForms( path_forms_load.wstring().c_str(), L"", const_cast<char*>(str_json.c_str()), str_json.size() );
         //str_jforms_ = str_json;
         jforms_ = nlohmann::json::parse(str_json);
         qDebug() << "Thats all forms.\n" ;
@@ -164,11 +165,73 @@ std::list<CUIForm> CRastrHlp::GetForms() const {
 };
 
 int CRastrHlp::GetFormData(int n_form_indx){
-    if(n_form_indx<0)
+    if(upCUIFormsCollection_==nullptr)
         return -1;
+    if( (n_form_indx < 0) ||
+        (n_form_indx > upCUIFormsCollection_->Forms().size())
+    )
+        return -2;
+    std::int32_t n_res = 0;
     auto it = upCUIFormsCollection_->Forms().begin();
     std::advance(it,n_form_indx);
     auto form  =*it;
+    using _vstr = std::vector<std::string>;
+    _vstr vstr_fields_form;
+    for(const auto& field : form.Fields()){
+        vstr_fields_form.emplace_back(field.Name());
+    }
+    std::string str_json;
+    str_json.resize(SIZE_STR_BUF_);
+    n_res = GetMeta( id_rastr_, form.TableName().c_str(), "", const_cast<char*>(str_json.c_str()), str_json.length() );
+    if(n_res<0){
+        qDebug() << "GetMeta(...)  return error" << n_res;
+        return -2;
+    }
+    //qDebug() << "Meta   : " << str_json.c_str();
+    const nlohmann::json j_metas = nlohmann::json::parse(str_json);
+    using _sstr = std::set<std::string>;
+    _sstr sstr_fields_meta;
+    std::string str_tmp;
+    for(const nlohmann::json& j_meta : j_metas ){
+        const std::string str_Name = j_meta["Name"];
+        sstr_fields_meta.emplace(str_Name);
+        str_tmp += str_Name;
+        str_tmp += " # ";
+    }
+    qDebug() << "FieldsBd: " << str_tmp.c_str();
+    _vstr vstr_fields_distilled;
+    str_tmp.clear();
+    for(const std::string& str_field_form : vstr_fields_form){
+        _sstr::const_iterator iter_sstr_fields_meta = sstr_fields_meta.find(str_field_form);
+        if(iter_sstr_fields_meta != sstr_fields_meta.end()){
+            vstr_fields_distilled.emplace_back(str_field_form);
+            str_tmp += str_field_form;
+            str_tmp += ",";
+        }
+    }
+    if(str_tmp.length()>0){
+        str_tmp.pop_back();
+        n_res = GetJSON( id_rastr_, form.TableName().c_str(), str_tmp.c_str(), "1", "", const_cast<char*>(str_json.c_str()), str_json.length() );
+        qDebug() << "Data: " << str_json.c_str();
+    }
+
+    /*
+    form.Name();
+    std::string str_fields;
+    for(auto field : form.Fields()){
+        str_fields += field.Name();
+        str_fields += ",";
+    }
+    if(str_fields.length()>0){
+        str_fields.pop_back();
+    }
+*/
+
+    /*
+     *             str_tmp.erase(str_tmp.length()-1);
+            nRes = GetJSON( id_rastr, str_TableName.c_str(), str_tmp.c_str(), "", const_cast<char*>(str_json.c_str()), str_json.length() );
+*/
+
 
     return 1;
 /*
