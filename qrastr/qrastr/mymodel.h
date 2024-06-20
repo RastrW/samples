@@ -30,21 +30,15 @@ public:
     inline bool emitSignals() const { return m_emitSignals; }
     inline void setEmitSignals(bool b)  { m_emitSignals = b; }
 
-    //"2.3 A Clock inside a Table Cell"
-    static constexpr int n_timer_row_ = 3; // 3
-    static constexpr int n_timer_col_ = 1; // 1
     void timerHit(); // from example of time change in cell
 
     //"2.4 Setting up Headers for Columns and Rows"
     QVariant headerData(int section, Qt::Orientation orientation, int role) const override;
 
     //"2.5 The Minimal Editing Example"
-    static constexpr int n_rows_ = 300; // 3
-    static constexpr int n_cols_ = 10; // 1
     bool setData(const QModelIndex &index, const QVariant &value, int role = Qt::EditRole) override;
     Qt::ItemFlags flags(const QModelIndex &index) const override;
 private:
-    //QString m_gridData[n_rows_][n_cols_];  //holds text entered into QTableVi
     bool m_emitSignals;
 signals:
     void editCompleted(const QString &);

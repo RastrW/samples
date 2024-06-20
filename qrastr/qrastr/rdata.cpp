@@ -71,7 +71,6 @@ void RData::populate()
     qDebug() << "Data: " << str_json.c_str();
     //size_t nLength = str_json.size();
     nlohmann::json j_data_arr = nlohmann::json::parse(str_json);
-    //size_t sz_num_cols = this->size();
     size_t sz_num_rows = j_data_arr.size();
     for( RCol& rcol : *this ){
         rcol.resize(sz_num_rows);
@@ -108,9 +107,6 @@ void RData::populate()
         }//for(col)
         n_row++;
     }//for(j_data_arr)
-
-
-
 }
 
 void RData::populate(nlohmann::json _j_Fields , nlohmann::json _j_metas,_vstr _vstr_fields_form)

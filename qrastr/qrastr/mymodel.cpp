@@ -24,9 +24,8 @@ int MyModel::populateDataFromRastr(){
     up_rdata->Initialize(form);
     up_rdata->populate();
 
-    for (CUIFormField &f : form.Fields())
-        vqcols_.push_back(f.Name().c_str());
-
+    for (RCol &rcol : *up_rdata)
+        vqcols_.push_back(rcol.title().c_str());
 
     return 1;
 };
@@ -43,7 +42,7 @@ int MyModel::columnCount(const QModelIndex & /*parent*/) const{
     //return 3'0;
 }
 void MyModel::timerHit(){
-    QModelIndex topLeft = createIndex(n_timer_row_,n_timer_col_);
+    QModelIndex topLeft = createIndex(1,1);
     //emit a signal to make the view reread identified data
     QVector<int>* pl = new QVector<int>{ Qt::DisplayRole};
     emit dataChanged(topLeft, topLeft, *pl);  //!!! emit dataChanged(topLeft, topLeft, {Qt::DisplayRole}); //ustas!!! not working!!
@@ -57,13 +56,18 @@ QVariant MyModel::data(const QModelIndex &index, int role) const
 
     RData::const_iterator iter_col = up_rdata->begin() + col;
     _col_data::const_iterator iter_data = (*iter_col).begin() + row;
-    switch((*iter_data).index()){
-        case RCol::_en_data::DATA_INT: item =  std::get<int>(*iter_data) ;                 break;
-        case RCol::_en_data::DATA_STR: item =  std::get<std::string>(*iter_data).c_str() ; break;
-        case RCol::_en_data::DATA_DBL: item =  std::get<double>(*iter_data);               break;
-        default :                      item =  ( "type_unknown" );                         break;
+    switch (role) {
+        case Qt::DisplayRole:
+        case Qt::EditRole:
+        switch((*iter_data).index()){
+            case RCol::_en_data::DATA_INT: item =  std::get<int>(*iter_data) ;                 break;
+            case RCol::_en_data::DATA_STR: item =  std::get<std::string>(*iter_data).c_str() ; break;
+            case RCol::_en_data::DATA_DBL: item =  std::get<double>(*iter_data);               break;
+            default :                      item =  ( "type_unknown" );                         break;
+        }
+
+        return item;
     }
-    return item;
 
     // generate a log message when this method gets called
     qDebug() << QString("row %1, col%2, role %3").arg(row).arg(col).arg(role);
@@ -84,7 +88,7 @@ QVariant MyModel::data(const QModelIndex &index, int role) const
         case Qt::DisplayRole:
             if(row == 0 && col == 1) return QString("<--left");
             if(row == 1 && col == 1) return QString("right-->");
-            if(row == n_timer_row_ && col == n_timer_col_ ) return QTime::currentTime().toString();
+            if(row == 1 && col == 1 ) return QTime::currentTime().toString();
         return QString("Row%1, Column%2")
             .arg(row + 1)
             .arg(col +1);
@@ -128,15 +132,10 @@ QVariant MyModel::headerData(int section, Qt::Orientation orientation, int role)
 
         if (section < vqcols_.size() )
             return vqcols_[section];
+    }
+    if (role == Qt::DisplayRole && orientation == Qt::Vertical) {
 
-        switch (section) {
-        case 0:
-            return QString("col_first");
-        case 1:
-            return QString("col_second");
-        case 2:
-            return QString("col_third");
-        }
+        return section;
     }
     return QVariant();
 }
