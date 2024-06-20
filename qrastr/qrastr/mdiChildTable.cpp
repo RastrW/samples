@@ -57,14 +57,16 @@ MdiChild::MdiChild( const _idRastr id_rastr, const nlohmann::json& j_form_in,  Q
     const int SIZE_STR_BUF = 500'000'000;
     std::string str_json;
     str_json.resize(SIZE_STR_BUF);
+   /*
     //nRes = GetForms( R"(/home/ustas/Документы/RastrWin3/form/poisk.fm)", "", const_cast<char*>(str_json.c_str()), str_json.size() );
-    nRes = GetForms( R"(/home/ustas/Документы/RastrWin3/form/Общие.fm)", "", const_cast<char*>(str_json.c_str()), str_json.size() );
+    nRes = GetForms( L"(/home/ustas/Документы/RastrWin3/form/Общие.fm)", L"", const_cast<char*>(str_json.c_str()), str_json.size() );
 
     size_t sz = str_json.size();
     size_t ln = str_json.length();
     size_t ln1 = std::strlen(str_json.c_str());
     str_json.resize(std::strlen(str_json.c_str())+1);
     nlohmann::json j_forms = nlohmann::json::parse(str_json);
+    */
     //sqDebug() << str_json.c_str();
     //qDebug() << j_forms.dump(-1, ' ').c_str();
     //qDebug() << j_form_in.dump(-1, ' ').c_str();
