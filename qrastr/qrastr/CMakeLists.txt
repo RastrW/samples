@@ -20,6 +20,8 @@ if(MSVC)
     add_compile_definitions(QICSGRID_NO)
 endif()
 
+set(CMAKE_PREFIX_PATH "C:/Projects/compile/qt/qt6-install")
+
 find_package(QT NAMES Qt6 Qt5 COMPONENTS Widgets LinguistTools   REQUIRED)
 find_package(Qt${QT_VERSION_MAJOR} COMPONENTS Widgets LinguistTools PrintSupport Xml  REQUIRED)
 
@@ -27,7 +29,7 @@ set(TS_FILES qrastr_ru_RU.ts)
 
 if(MSVC)
     set(DEPENDENCIES_LOCATION "c:/projects/compile/")
-    set(ASTRA_LOCATION        "c:/projects/rastr/RastrWin/astra/")
+    set(ASTRA_LOCATION        "c:/projects/tfs/rastr/RastrWin/astra/")
 else()
     set(DEPENDENCIES_LOCATION "/home/ustas/projects/compile/")
     set(ASTRA_LOCATION "/home/ustas/projects/git_r/rastr/RastrWin/astra/")
@@ -92,6 +94,7 @@ if(${QT_VERSION_MAJOR} GREATER_EQUAL 6)
     qt_add_executable(qrastr
         MANUAL_FINALIZATION
         ${PROJECT_SOURCES}
+        rdata.h rdata.cpp
     )
 # Define target properties for Android with Qt 6 as:
 #    set_property(TARGET qrastr APPEND PROPERTY QT_ANDROID_PACKAGE_SOURCE_DIR

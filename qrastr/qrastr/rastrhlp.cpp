@@ -61,11 +61,12 @@ int CRastrHlp::ReadForms(std::string str_path_to_file_forms){
         for(const  CUIForm& uiform : upCUIFormsCollection_->Forms()){
             qDebug() << "form : " << uiform.TableName().c_str();
         }
-        std::string str_json;
-        str_json.resize(SIZE_STR_BUF_);
-        int  nRes = ::GetForms( reinterpret_cast<const char*>(str_path_to_file_forms.c_str()), "", const_cast<char*>(str_json.c_str()), str_json.size() );
+        //std::string str_json;
+        //str_json.resize(SIZE_STR_BUF_);
+       // int  nRes = ::GetForms( reinterpret_cast<const char*>(str_path_to_file_forms.c_str()), "", const_cast<char*>(str_json.c_str()), str_json.size() );
+       // int  nRes = ::GetForms( reinterpret_cast<const wchar_t*>(str_path_to_file_forms.c_str()), reinterpret_cast<const wchar_t*>(""), const_cast<char*>(str_json.c_str()), str_json.size() );
         //str_jforms_ = str_json;
-        jforms_ = nlohmann::json::parse(str_json);
+        //jforms_ = nlohmann::json::parse(str_json);
         qDebug() << "Thats all forms.\n" ;
 
 /*
@@ -162,6 +163,14 @@ int CRastrHlp::ReadForms(std::string str_path_to_file_forms){
 std::list<CUIForm> CRastrHlp::GetForms() const {
     return upCUIFormsCollection_->Forms();
 };
+
+CUIForm CRastrHlp::GetUIForm(size_t n_form_indx){
+    auto it = upCUIFormsCollection_->Forms().begin();
+    std::advance(it,n_form_indx);
+    auto form  =*it;
+
+    return form;
+}
 
 int CRastrHlp::GetFormData(int n_form_indx){
     if(n_form_indx<0)

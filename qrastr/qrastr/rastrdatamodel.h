@@ -1,10 +1,8 @@
 #ifndef RASTRDATAMODEL_H
 #define RASTRDATAMODEL_H
 
-#if(!defined(QICSGRID_NO))
-#include "QicsDataModel.h"
 
-#include "astra_exp.h"
+//#include "astra_exp.h"
 #include "License2/json.hpp"
 #include "astra_shared.h"
 
@@ -13,8 +11,16 @@ void loggg( int eCod, std::string_view sv_format, Args&&... args ) {
     //const std::string str_log{fmt::format(sv_format, args...)};
 }
 typedef std::vector<std::string> _vstr;
+
+
+#if(!defined(QICSGRID_NO))
 typedef std::variant< int, double, std::string >  _vt ;
 typedef std::vector< _vt > _col_data ;
+#include "QicsDataModel.h"
+
+
+
+
 
 class RCol
     : public _col_data

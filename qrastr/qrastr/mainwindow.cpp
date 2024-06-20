@@ -196,7 +196,7 @@ void MainWindow::onOpenForm( QAction* p_actn ){
     auto it = forms.begin();
     std::advance(it,n_indx);
     auto form  =*it;
-    //qDebug() << form.
+    qDebug() << "Open form:" + form.Name();
 
     QTableView* ptv = new QTableView();
     MyModel* pmm = new MyModel(nullptr, *up_rastr_.get() );
@@ -211,8 +211,9 @@ void MainWindow::onOpenForm( QAction* p_actn ){
     // const nlohmann::json j_form = j_forms_[n_indx];
     //for Dima
     //const nlohmann::json j_form = up_rastr_->GetJForms().operator[](n_indx);
-    const nlohmann::json j_form = up_rastr_->GetJForms()[n_indx];
+
 #if(!defined(QICSGRID_NO))
+    const nlohmann::json j_form = up_rastr_->GetJForms()[n_indx];
     MdiChild *child = createMdiChild( j_form );
     //child->newFile();
     child->show();
