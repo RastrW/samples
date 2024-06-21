@@ -200,10 +200,13 @@ void MainWindow::onOpenForm( QAction* p_actn ){
 
     QTableView* ptv = new QTableView();
     MyModel* pmm = new MyModel(nullptr, *up_rastr_.get() );
+    QSortFilterProxyModel *proxyModel = new QSortFilterProxyModel(pmm); // create proxy
+     proxyModel->setSourceModel(pmm);
     pmm->setFormIndx(n_indx);
     pmm->populateDataFromRastr();
     ptv->setSortingEnabled(true);
-    ptv->setModel(pmm);
+    //ptv->setModel(pmm);
+    ptv->setModel(proxyModel);
     ptv->resize(1000,500);
     SetTableView(*ptv,*pmm);
     ptv->show();
