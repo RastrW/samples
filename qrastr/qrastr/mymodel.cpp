@@ -30,13 +30,13 @@ int MyModel::populateDataFromRastr(){
     return 1;
 };
 int MyModel::rowCount(const QModelIndex & /*parent*/) const{
-    return up_rdata->at(0).size();
+    return static_cast<int>(up_rdata->at(0).size());
     //return n_rows_;
     //return 2'0'0;
     //return 200'000;
 }
 int MyModel::columnCount(const QModelIndex & /*parent*/) const{
-    return up_rdata->size();
+    return static_cast<int>(up_rdata->size());
     //return n_cols_;
     //return 3'000;
     //return 3'0;
@@ -57,20 +57,31 @@ QVariant MyModel::data(const QModelIndex &index, int role) const
     RData::const_iterator iter_col = up_rdata->begin() + col;
     _col_data::const_iterator iter_data = (*iter_col).begin() + row;
     switch (role) {
+        /*case Qt::CheckStateRole:
+            if (row == 1 && col == 0) //add a checkbox to cell(1,0)
+                return Qt::Checked;*/
         case Qt::DisplayRole:
         case Qt::EditRole:
+
         switch((*iter_data).index()){
             case RCol::_en_data::DATA_INT: item =  std::get<int>(*iter_data) ;                 break;
             case RCol::_en_data::DATA_STR: item =  std::get<std::string>(*iter_data).c_str() ; break;
             case RCol::_en_data::DATA_DBL: item =  std::get<double>(*iter_data);               break;
             default :                      item =  ( "type_unknown" );                         break;
         }
-
         return item;
+
+        case Qt::ToolTipRole:
+            return QString("Row %1, Column %2")
+                .arg(index.row() + 1)
+                .arg(index.column() +1);
+
+        default:
+            return QVariant();
     }
 
     // generate a log message when this method gets called
-    qDebug() << QString("row %1, col%2, role %3").arg(row).arg(col).arg(role);
+    //qDebug() << QString("row %1, col%2, role %3").arg(row).arg(col).arg(role);
 
     //"2.5 The Minimal Editing Example"
    // if(role==Qt::DisplayRole) // else will see a checkboxes near string!!
@@ -135,7 +146,7 @@ QVariant MyModel::headerData(int section, Qt::Orientation orientation, int role)
     }
     if (role == Qt::DisplayRole && orientation == Qt::Vertical) {
 
-        return section;
+        return section + 1;
     }
     return QVariant();
 }
@@ -159,16 +170,18 @@ bool MyModel::setData(const QModelIndex &index, const QVariant &value, int role)
         qDebug() << "int: " << value.toInt();
         (*iter_data).emplace<int> (value.toInt());
         ValSetInt(up_rdata->id_rastr_,up_rdata->t_name_.c_str(),(*iter_col).str_name_.c_str(),row,value.toInt());
+        qDebug() << "set: "<<up_rdata->t_name_.c_str()<<"."<< (*iter_col).str_name_.c_str() << "(" << row << ")=" <<value.toInt();
         break;
     case RCol::_en_data::DATA_STR:
         qDebug() << "str: " << value.toString();
-        (*iter_data).emplace<std::string>(value.toString().toStdString());
+        (*iter_data).emplace<std::string>(value.toString().toStdString().c_str());
+        qDebug() << "set: "<<up_rdata->t_name_.c_str()<<"."<< (*iter_col).str_name_.c_str() << "(" << row << ")=" <<value.toString().toStdString().c_str();
         break;
     case RCol::_en_data::DATA_DBL:
-        qDebug() << "double: " << value.toDouble();
+        //qDebug() << "double: " << value.toDouble();
         (*iter_data).emplace<double> (value.toDouble());
         ret = ValSetDbl(up_rdata->id_rastr_,up_rdata->t_name_.c_str(),(*iter_col).str_name_.c_str(),row,value.toDouble());
-        qDebug() << "set double: << "<<up_rdata->t_name_.c_str()<< "ColName:"  << (*iter_col).str_name_.c_str() << "RowNumber:" << row << "SetVal:" <<value.toDouble() <<"Return:"<<ret;
+        qDebug() << "set: "<<up_rdata->t_name_.c_str()<<"."<< (*iter_col).str_name_.c_str() << "(" << row << ")=" <<value.toDouble();
         break;
     default :                                               break;
     }
@@ -196,4 +209,13 @@ bool MyModel::setData(const QModelIndex &index, const QVariant &value, int role)
         return true;
     }
     return false;
+}
+std::vector<std::tuple<int,int>>  MyModel::ColumnsWidth()
+{
+    std::vector<std::tuple<int,int>> cw;
+
+    int i = 0;
+    for(RCol& col : *up_rdata)
+        cw.emplace_back(i++,std::stoi(col.width()));
+    return cw;
 }

@@ -19,8 +19,8 @@
 #include "fmt/format.h"
 #include <QSet>
 #include <QListView>
-#include <QTableView>
-#include "mymodel.h"
+//#include <QTableView>
+//#include "mymodel.h"
 
 
 
@@ -196,14 +196,16 @@ void MainWindow::onOpenForm( QAction* p_actn ){
     auto it = forms.begin();
     std::advance(it,n_indx);
     auto form  =*it;
-    qDebug() << "Open form:" + form.Name();
+    qDebug() << "\n Open form:" + form.Name();
 
     QTableView* ptv = new QTableView();
     MyModel* pmm = new MyModel(nullptr, *up_rastr_.get() );
     pmm->setFormIndx(n_indx);
-    int nRes = pmm->populateDataFromRastr();
+    pmm->populateDataFromRastr();
     ptv->setSortingEnabled(true);
     ptv->setModel(pmm);
+    ptv->resize(1000,500);
+    SetTableView(*ptv,*pmm);
     ptv->show();
 
     // return;
@@ -220,6 +222,14 @@ void MainWindow::onOpenForm( QAction* p_actn ){
 #endif // #if(!defined(QICSGRID_NO))
 
 }
+void MainWindow::SetTableView(QTableView& tv, MyModel& mm)
+{
+    // Ширина колонок
+    int myltiplier = 15;
+    for (auto cw : mm.ColumnsWidth())
+        tv.setColumnWidth(std::get<0>(cw),std::get<1>(cw)*myltiplier);
+}
+
 
 //void MainWindow::SetIdrastr(_idRastr id_rastr_in){    id_rastr_ = id_rastr_in;}
 

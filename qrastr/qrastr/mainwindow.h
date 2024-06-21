@@ -17,6 +17,9 @@
 #include "params.h"
 #include "rastrhlp.h"
 
+#include <QTableView>
+#include "mymodel.h"
+
 #include <QMenu>
 
 class QAction;
@@ -175,6 +178,7 @@ private slots:
     void about();
     void rgm_wrap();
     void onOpenForm(QAction* p_actn);
+    void SetTableView(QTableView& tv, MyModel& mm);
 #if(!defined(QICSGRID_NO))
     void sortAscending();
     void sortDescending();

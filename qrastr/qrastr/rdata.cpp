@@ -9,7 +9,7 @@ void RData::Initialize(CUIForm _form)
     if(nRes<0){
         qDebug() << "GetMeta(...)  return error" << nRes;
     }
-    qDebug() << "Meta   : " << str_json.c_str();
+    //qDebug() << "Meta   : " << str_json.c_str();
     str_json.resize(std::strlen(str_json.c_str())+1);
     j_metas_ = nlohmann::json::parse(str_json);
     reserve(_form.Fields().size()+5);               // Без reserve RCol данные обнуляются видимио при reallocation  If a reallocation happens, all contained elements are modified.
@@ -34,7 +34,7 @@ void RData::Initialize(CUIForm _form)
 
     if(str_cols_.length()>0)
         str_cols_.pop_back();
-    qDebug() << "Table : " << t_name_.c_str();
+    qDebug() << "Open Table : " << t_name_.c_str();
     qDebug() << "Fields : " << str_cols_.c_str();
 
 }
@@ -68,7 +68,7 @@ void RData::populate()
     GetJSON(id_rastr_,t_name_.c_str(), str_cols_.c_str(),"","",const_cast<char*>(str_json.c_str()), static_cast<long>(str_json.length()));
 
     str_json.resize(std::strlen(str_json.c_str())+1);
-    qDebug() << "Data: " << str_json.c_str();
+    //qDebug() << "Data: " << str_json.c_str();
     //size_t nLength = str_json.size();
     nlohmann::json j_data_arr = nlohmann::json::parse(str_json);
     size_t sz_num_rows = j_data_arr.size();
@@ -85,7 +85,7 @@ void RData::populate()
         for(RCol& col: *this){
             //qDebug() << "D: " << j_data_row[i].dump().c_str();
             RCol::iterator iter_col = col.begin() + n_row;
-            qDebug() << "dump: " << j_data_row[i].dump().c_str();
+            //qDebug() << "dump: " << j_data_row[i].dump().c_str();
             switch(col.en_data_){
             case RCol::_en_data::DATA_INT:
                 (*iter_col).emplace<int>(  j_data_row[i] );

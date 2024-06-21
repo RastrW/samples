@@ -26,7 +26,7 @@ public:
     QVariant data(const QModelIndex &index, int role = Qt::DisplayRole) const override;
     void setFormIndx(int n_form_indx) { n_form_indx_ = n_form_indx; };
     int populateDataFromRastr();
-
+    std::vector<std::tuple<int,int>>  ColumnsWidth ();
     inline bool emitSignals() const { return m_emitSignals; }
     inline void setEmitSignals(bool b)  { m_emitSignals = b; }
 
