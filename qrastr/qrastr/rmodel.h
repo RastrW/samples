@@ -1,5 +1,5 @@
-#ifndef MYMODEL_H
-#define MYMODEL_H
+#ifndef RMODEL_H
+#define RMODEL_H
 
 #include <QAbstractTableModel>
 #include <QTimer>
@@ -10,7 +10,7 @@
 
 
 
-class MyModel : public QAbstractTableModel
+class RModel : public QAbstractTableModel
 {
     Q_OBJECT
     QTimer* timer_;
@@ -20,13 +20,15 @@ class MyModel : public QAbstractTableModel
     int n_form_indx_ = -1;
     std::vector<QString> vqcols_;                                 // Заголовки столбцов
 public:
-    MyModel(QObject *parent, CRastrHlp& rastr);
+    RModel(QObject *parent, CRastrHlp& rastr);
     int rowCount(const QModelIndex &parent = QModelIndex()) const override;
     int columnCount(const QModelIndex &parent = QModelIndex()) const override;
     QVariant data(const QModelIndex &index, int role = Qt::DisplayRole) const override;
     void setFormIndx(int n_form_indx) { n_form_indx_ = n_form_indx; };
     int populateDataFromRastr();
     std::vector<std::tuple<int,int>>  ColumnsWidth ();
+    RCol* getRCol(int n_col);
+    RData* getRdata();
     inline bool emitSignals() const { return m_emitSignals; }
     inline void setEmitSignals(bool b)  { m_emitSignals = b; }
 
@@ -38,10 +40,18 @@ public:
     //"2.5 The Minimal Editing Example"
     bool setData(const QModelIndex &index, const QVariant &value, int role = Qt::EditRole) override;
     Qt::ItemFlags flags(const QModelIndex &index) const override;
+
+    // Add data:
+    bool insertRows(int row, int count, const QModelIndex &parent = QModelIndex()) override;
+    bool insertColumns(int column, int count, const QModelIndex &parent = QModelIndex()) override;
+
+    // Remove data:
+    bool removeRows(int row, int count, const QModelIndex &parent = QModelIndex()) override;
+    bool removeColumns(int column, int count, const QModelIndex &parent = QModelIndex()) override;
 private:
     bool m_emitSignals;
 signals:
     void editCompleted(const QString &);
 };
 
-#endif // MYMODEL_H
+#endif // RMODEL_H

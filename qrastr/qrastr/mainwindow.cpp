@@ -19,6 +19,9 @@
 #include "fmt/format.h"
 #include <QSet>
 #include <QListView>
+#include <QDockWidget>
+#include <rtabwidget.h>>
+
 //#include <QTableView>
 //#include "mymodel.h"
 
@@ -28,6 +31,9 @@ MainWindow::MainWindow()
 {
     m_workspace = new QMdiArea;
     setCentralWidget(m_workspace);
+
+
+
     connect(m_workspace, SIGNAL(subWindowActivated(QMdiSubWindow *)), this, SLOT(updateMenus()));
     m_windowMapper = new QSignalMapper(this);
     connect(m_windowMapper, SIGNAL(mappedWidget(QWidget *)), SLOT(setActiveSubWindow(QWidget *)));
@@ -143,6 +149,11 @@ void MainWindow::insertRow()
         return;
     activeMdiChild()->insertRow( rowIndex );
 #endif//#if(!defined(QICSGRID_NO))
+#if(defined(QICSGRID_NO))
+    int a = 1;
+    int b = a +1;
+#endif//#if(defined(QICSGRID_NO))
+
 }
 
 void MainWindow::deleteRow()
@@ -152,6 +163,8 @@ void MainWindow::deleteRow()
     const QicsCell * cell = activeMdiChild()->currentCell();
     activeMdiChild()->deleteRow( cell->rowIndex() );
 #endif
+    int a = 1;
+    int b = a +1;
 }
 
 void MainWindow::insertCol()
@@ -198,18 +211,16 @@ void MainWindow::onOpenForm( QAction* p_actn ){
     auto form  =*it;
     qDebug() << "\n Open form:" + form.Name();
 
-    QTableView* ptv = new QTableView();
-    MyModel* pmm = new MyModel(nullptr, *up_rastr_.get() );
-    QSortFilterProxyModel *proxyModel = new QSortFilterProxyModel(pmm); // create proxy
-     proxyModel->setSourceModel(pmm);
-    pmm->setFormIndx(n_indx);
-    pmm->populateDataFromRastr();
-    ptv->setSortingEnabled(true);
-    //ptv->setModel(pmm);
-    ptv->setModel(proxyModel);
-    ptv->resize(1000,500);
-    SetTableView(*ptv,*pmm);
-    ptv->show();
+    RtabWidget *prtw = new RtabWidget(*up_rastr_.get(),n_indx);
+    //up_rtw = prtw;
+
+    // Docking
+    QDockWidget *dock = new QDockWidget( stringutils::cp1251ToUtf8(form.Name()).c_str(), this);
+    dock->setWidget(prtw);
+    dock->setAllowedAreas(Qt::LeftDockWidgetArea | Qt::RightDockWidgetArea | Qt::TopDockWidgetArea | Qt::BottomDockWidgetArea | Qt::AllDockWidgetAreas);
+    addDockWidget(Qt::TopDockWidgetArea, dock);
+
+    prtw->show();
 
     // return;
 
@@ -225,14 +236,15 @@ void MainWindow::onOpenForm( QAction* p_actn ){
 #endif // #if(!defined(QICSGRID_NO))
 
 }
-void MainWindow::SetTableView(QTableView& tv, MyModel& mm)
-{
-    // Ширина колонок
-    int myltiplier = 15;
-    for (auto cw : mm.ColumnsWidth())
-        tv.setColumnWidth(std::get<0>(cw),std::get<1>(cw)*myltiplier);
-}
 
+void MainWindow::onItemPressed(const QModelIndex &index)
+{
+    //prtw_current = qobject_cast<RtabWidget*>(index.);
+    int row = index.row();
+    int column = index.column();
+    //QTableView* t = index.parent();
+    qDebug()<<"Pressed:" <<row<< ","<<column;
+}
 
 //void MainWindow::SetIdrastr(_idRastr id_rastr_in){    id_rastr_ = id_rastr_in;}
 
@@ -495,7 +507,7 @@ void Btn1_onClick()
 {
     QTableView* ptv = new QTableView();
     CRastrHlp rhlp;
-    MyModel* pmm = new MyModel(nullptr,rhlp);
+    RModel* pmm = new RModel(nullptr,rhlp);
     ptv->setSortingEnabled(true);
     ptv->setModel(pmm);
     ptv->show();

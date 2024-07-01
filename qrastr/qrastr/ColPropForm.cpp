@@ -1,7 +1,7 @@
 #include "ColPropForm.h"
 #include "ui_ColPropForm.h"
 
-#if(!defined(QICSGRID_NO))
+
 ColPropForm::ColPropForm(RData* prdata,RCol* prcol,QWidget *parent) :
     QWidget(parent),
     ui(new Ui::ColPropForm)
@@ -17,7 +17,7 @@ ColPropForm::ColPropForm(RData* prdata,RCol* prcol,QWidget *parent) :
     setPrec(prcol->prec().c_str());
     setExpr(prcol->expr().c_str());
 }
-#endif //#if(!defined(QICSGRID_NO))
+
 
 ColPropForm::~ColPropForm()
 {

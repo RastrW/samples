@@ -1,4 +1,4 @@
-#include "mymodel.h"
+#include "rmodel.h"
 #include <QFont>
 #include <QBrush>
 #include <QTime>
@@ -6,16 +6,16 @@
 
 #include "fmt/format.h"
 
-MyModel::MyModel(QObject *parent, CRastrHlp& rastr)
+RModel::RModel(QObject *parent, CRastrHlp& rastr)
     : QAbstractTableModel(parent)
         , rastr_(rastr)
     , timer_(new QTimer(this)){
     setEmitSignals(true);
     timer_->setInterval(1000);
-    connect(timer_, &QTimer::timeout , this, &MyModel::timerHit);
+    connect(timer_, &QTimer::timeout , this, &RModel::timerHit);
     timer_->start();
 }
-int MyModel::populateDataFromRastr(){
+int RModel::populateDataFromRastr(){
 
     rastr_.GetFormData(n_form_indx_);
     CUIForm form = rastr_.GetUIForm(n_form_indx_);
@@ -29,25 +29,25 @@ int MyModel::populateDataFromRastr(){
 
     return 1;
 };
-int MyModel::rowCount(const QModelIndex & /*parent*/) const{
+int RModel::rowCount(const QModelIndex & /*parent*/) const{
     return static_cast<int>(up_rdata->at(0).size());
     //return n_rows_;
     //return 2'0'0;
     //return 200'000;
 }
-int MyModel::columnCount(const QModelIndex & /*parent*/) const{
+int RModel::columnCount(const QModelIndex & /*parent*/) const{
     return static_cast<int>(up_rdata->size());
     //return n_cols_;
     //return 3'000;
     //return 3'0;
 }
-void MyModel::timerHit(){
+void RModel::timerHit(){
     QModelIndex topLeft = createIndex(1,1);
     //emit a signal to make the view reread identified data
     QVector<int>* pl = new QVector<int>{ Qt::DisplayRole};
     emit dataChanged(topLeft, topLeft, *pl);  //!!! emit dataChanged(topLeft, topLeft, {Qt::DisplayRole}); //ustas!!! not working!!
 }
-QVariant MyModel::data(const QModelIndex &index, int role) const
+QVariant RModel::data(const QModelIndex &index, int role) const
 {
     int row = index.row();
     int col = index.column();
@@ -132,7 +132,7 @@ QVariant MyModel::data(const QModelIndex &index, int role) const
 */
 }
 
-QVariant MyModel::headerData(int section, Qt::Orientation orientation, int role) const
+QVariant RModel::headerData(int section, Qt::Orientation orientation, int role) const
 {
     //auto field = std::advance( this->rastr_.GetUIForm(section).Fields().begin(),section);
     //auto it_field =  this->rastr_.GetUIForm(section).Fields().begin();
@@ -151,13 +151,13 @@ QVariant MyModel::headerData(int section, Qt::Orientation orientation, int role)
     return QVariant();
 }
 
-Qt::ItemFlags MyModel::flags(const QModelIndex &index) const
+Qt::ItemFlags RModel::flags(const QModelIndex &index) const
 {
     return Qt::ItemIsEditable | QAbstractTableModel::flags(index) ;
 }
 
 
-bool MyModel::setData(const QModelIndex &index, const QVariant &value, int role)
+bool RModel::setData(const QModelIndex &index, const QVariant &value, int role)
 {
     int col = index.column();
     int row = index.row();
@@ -210,7 +210,7 @@ bool MyModel::setData(const QModelIndex &index, const QVariant &value, int role)
     }
     return false;
 }
-std::vector<std::tuple<int,int>>  MyModel::ColumnsWidth()
+std::vector<std::tuple<int,int>>  RModel::ColumnsWidth()
 {
     std::vector<std::tuple<int,int>> cw;
 
@@ -218,4 +218,46 @@ std::vector<std::tuple<int,int>>  MyModel::ColumnsWidth()
     for(RCol& col : *up_rdata)
         cw.emplace_back(i++,std::stoi(col.width()));
     return cw;
+}
+RCol* RModel::getRCol(int col)
+{
+    RData::iterator iter_col = up_rdata->begin() + col;
+    return &(*iter_col);
+}
+RData* RModel::getRdata()
+{
+    return up_rdata.get();
+}
+bool RModel::insertRows(int row, int count, const QModelIndex &parent)
+{
+    beginInsertRows(parent, row, row + count - 1);
+    // FIXME: Implement me!
+    getRdata()->AddRow(row);
+    endInsertRows();
+    return true;
+}
+
+bool RModel::insertColumns(int column, int count, const QModelIndex &parent)
+{
+    beginInsertColumns(parent, column, column + count - 1);
+    // FIXME: Implement me!
+    endInsertColumns();
+    return true;
+}
+
+bool RModel::removeRows(int row, int count, const QModelIndex &parent)
+{
+    beginRemoveRows(parent, row, row + count - 1);
+    getRdata()->RemoveRDMRow(row);
+    // FIXME: Implement me!
+    endRemoveRows();
+    return true;
+}
+
+bool RModel::removeColumns(int column, int count, const QModelIndex &parent)
+{
+    beginRemoveColumns(parent, column, column + count - 1);
+    // FIXME: Implement me!
+    endRemoveColumns();
+    return true;
 }

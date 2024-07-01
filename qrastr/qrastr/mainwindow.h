@@ -7,6 +7,7 @@
 #include <QPushButton>
 #include <QDir>
 #include <QMessageBox>
+#include <QDockWidget>
 
 #if(!defined(QICSGRID_NO))
     #include <QicsTable.h>
@@ -18,7 +19,8 @@
 #include "rastrhlp.h"
 
 #include <QTableView>
-#include "mymodel.h"
+#include "rmodel.h"
+#include "rtabwidget.h"
 
 #include <QMenu>
 
@@ -29,7 +31,7 @@ class QMdiSubWindow;
 class MdiChild;
 class QSignalMapper;
 
-
+class rmodel;
 class MainWindow : public QMainWindow
 {
     Q_OBJECT
@@ -178,11 +180,14 @@ private slots:
     void about();
     void rgm_wrap();
     void onOpenForm(QAction* p_actn);
-    void SetTableView(QTableView& tv, MyModel& mm);
+    //void SetTableView(QTableView& tv, RModel& mm);
 #if(!defined(QICSGRID_NO))
     void sortAscending();
     void sortDescending();
 #endif//#if(!defined(QICSGRID_NO))
+    void onItemPressed(const QModelIndex &index);
+public slots:
+
 ///slots.end.
 
     void updateMenus();
@@ -247,9 +252,16 @@ private:
     nlohmann::json             j_forms_;
     _idRastr                   id_rastr_ = -1;
     std::unique_ptr<CRastrHlp> up_rastr_;
+    RtabWidget *prtw_current;                        // current table
+
+
 public:
     QAction *m_SortAscAct;
     QAction *m_SortDescAct;
+    QDockWidget *m_dock;
+    //QTableView *table;
+    rmodel *model;
+
 };
 
 

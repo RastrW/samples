@@ -4,6 +4,7 @@
 #include <QWidget>
 #include <QString>
 #include "rastrdatamodel.h"
+#include "rmodel.h"
 
 namespace Ui {
 class ColPropForm;
@@ -14,9 +15,9 @@ class ColPropForm : public QWidget
     Q_OBJECT
 
 public:
-#if(!defined(QICSGRID_NO))
+//#if(!defined(QICSGRID_NO))
     explicit ColPropForm(RData* prdata,RCol* prcol, QWidget *parent = nullptr);
-#endif//#if(!defined(QICSGRID_NO))
+//#endif//#if(!defined(QICSGRID_NO))
     ~ColPropForm();
 
     void setName(const QString& name);

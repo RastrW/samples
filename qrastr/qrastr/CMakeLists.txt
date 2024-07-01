@@ -76,8 +76,8 @@ set(PROJECT_SOURCES
     qrastr.qrc
     ${DEPENDENCIES_LOCATION}/fmt/src/format.cc
     ${DEPENDENCIES_LOCATION}/fmt/src/os.cc
-    mymodel.cpp
-    mymodel.h
+    rmodel.cpp
+    rmodel.h
     params.h
     params.cpp
     common.h
@@ -95,6 +95,10 @@ if(${QT_VERSION_MAJOR} GREATER_EQUAL 6)
         MANUAL_FINALIZATION
         ${PROJECT_SOURCES}
         rdata.h rdata.cpp
+        testmodel.h testmodel.cpp
+
+
+        rtabwidget.h rtabwidget.cpp
     )
 # Define target properties for Android with Qt 6 as:
 #    set_property(TARGET qrastr APPEND PROPERTY QT_ANDROID_PACKAGE_SOURCE_DIR

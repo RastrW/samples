@@ -36,14 +36,12 @@ void RData::Initialize(CUIForm _form)
         str_cols_.pop_back();
     qDebug() << "Open Table : " << t_name_.c_str();
     qDebug() << "Fields : " << str_cols_.c_str();
-
 }
 
 void RData::Initialize(nlohmann::json _j_Fields , nlohmann::json _j_metas,_vstr _vstr_fields_form)
 {
     std::string str_tmp;
     std::string str_json;
-
 
     for(const nlohmann::json& j_field : _j_Fields){
         for(const nlohmann::json& j_meta : _j_metas ){
@@ -58,7 +56,6 @@ void RData::Initialize(nlohmann::json _j_Fields , nlohmann::json _j_metas,_vstr 
             }
         }
     }
-
 }
 
 void RData::populate()
@@ -192,6 +189,7 @@ void RData::populate(nlohmann::json _j_Fields , nlohmann::json _j_metas,_vstr _v
         }//for(j_data_arr)
     }
 }
+
 void RData::clear_data()
 {
     for(RCol& col: *this){
