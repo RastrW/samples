@@ -27,16 +27,20 @@ public slots:
     void insertRow();
     void deleteRow();
     void OpenColPropForm();
+    void sortAscending();
+    void sortDescending();
+    void onUpdate(std::string _t_name);
 
-
+public:
+    RModel *prm;
 private:
     QTableView* ptv ;
-    RModel *prm;
-
+    QSortFilterProxyModel *proxyModel;
     QModelIndex index;              // current index (Cell clicked)
     int column;                     // for header
 
 signals:
+
 };
 
 #endif // RTABWIDGET_H

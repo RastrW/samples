@@ -203,7 +203,7 @@ int RData::AddRow(int index )
     // TO DO: make same action on astra (server)
     TableInsRow(id_rastr_,t_name_.c_str(),index);
 
-    _vt val;
+   /* _vt val;
     if ( (index < 0) || (index > (*this)[0].size() )) // add at end
     {
         for( RCol& col : *this )
@@ -217,7 +217,7 @@ int RData::AddRow(int index )
         {
             col.insert(col.begin()+index,val);
         }
-    }
+    }*/
     return 1;
 }
 
@@ -226,9 +226,10 @@ int RData::RemoveRDMRow(int index )
     // TO DO: make same action on astra (server)
     TableDelRow(id_rastr_,t_name_.c_str(),index);
 
-    for( RCol& col : *this )
+   /* for( RCol& col : *this )
     {
         col.erase(col.begin()+index);
     }
+    */
     return 1;
 }

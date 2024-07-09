@@ -162,6 +162,12 @@ public:
 
 signals:
     void rgm_signal();
+
+    void rm_change(std::string _t_name, QModelIndex index, QVariant value);
+    void rm_change(std::string _t_name, std::string _col_name, int _row, QVariant _value);
+    void rm_RowInserted(std::string _t_name, int _row);
+    void rm_RowDeleted(std::string _t_name, int _row);
+    void rm_update(std::string _t_name);
 protected:
     void closeEvent(QCloseEvent *event);
 
@@ -180,6 +186,12 @@ private slots:
     void about();
     void rgm_wrap();
     void onOpenForm(QAction* p_actn);
+
+    void ondataChanged(std::string _t_name, QModelIndex index, QVariant value);
+    void ondataChanged(std::string _t_name, std::string _col_name, int _row, QVariant _value);
+    void onRowInserted(std::string _t_name, int _row);
+    void onRowDeleted(std::string _t_name, int _row);
+
     //void SetTableView(QTableView& tv, RModel& mm);
 #if(!defined(QICSGRID_NO))
     void sortAscending();

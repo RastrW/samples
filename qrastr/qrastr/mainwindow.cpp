@@ -20,7 +20,8 @@
 #include <QSet>
 #include <QListView>
 #include <QDockWidget>
-#include <rtabwidget.h>>
+#include <rtabwidget.h>
+#include <QAbstractTableModel>
 
 //#include <QTableView>
 //#include "mymodel.h"
@@ -150,8 +151,6 @@ void MainWindow::insertRow()
     activeMdiChild()->insertRow( rowIndex );
 #endif//#if(!defined(QICSGRID_NO))
 #if(defined(QICSGRID_NO))
-    int a = 1;
-    int b = a +1;
 #endif//#if(defined(QICSGRID_NO))
 
 }
@@ -163,8 +162,6 @@ void MainWindow::deleteRow()
     const QicsCell * cell = activeMdiChild()->currentCell();
     activeMdiChild()->deleteRow( cell->rowIndex() );
 #endif
-    int a = 1;
-    int b = a +1;
 }
 
 void MainWindow::insertCol()
@@ -212,6 +209,33 @@ void MainWindow::onOpenForm( QAction* p_actn ){
     qDebug() << "\n Open form:" + form.Name();
 
     RtabWidget *prtw = new RtabWidget(*up_rastr_.get(),n_indx);
+    //connect(sender, &MyClass::signalName, this, &MyClass::slotName);
+
+    //Connect(prtw->prm, &RModel::dataChanged2(std::string, QModelIndex , QVariant),this,MainWindow::ondataChanged(std::string, QModelIndex , QVariant));
+    //connect(prtw->prm, SIGNAL(dataChanged2(std::string)),this,SLOT(ondataChanged(std::string)));
+
+    //RModel вызывает изменение Data: Запомнить изменение Data в MainWindow b из MainWindow вызывть изменение RModel во всех сущьностях
+    connect(prtw->prm, SIGNAL(dataChanged(std::string,std::string,int,QVariant)),
+                  this,SLOT(ondataChanged(std::string,std::string,int,QVariant)));
+    connect(this,      SIGNAL(rm_change(std::string,std::string,int,QVariant)),
+       prtw->prm,      SLOT(onRModelchange(std::string,std::string,int,QVariant)));
+
+    //MainWindow: вызывть изменение RModel во всех сущьностях
+    connect(prtw->prm, SIGNAL(RowInserted(std::string,int)),
+                  this,SLOT(onRowInserted(std::string,int)));
+    connect(this,      SIGNAL(rm_RowInserted(std::string,int)),
+       prtw->prm,      SLOT(onrm_RowInserted(std::string,int)));
+
+
+    connect(prtw->prm, SIGNAL(RowDeleted(std::string,int)),
+                  this,SLOT(onRowInserted(std::string,int)));
+    connect(this,      SIGNAL(rm_RowDeleted(std::string,int)),
+       prtw->prm,      SLOT(onrm_RowDeleted(std::string,int)));
+
+    connect(this,      SIGNAL(rm_update(std::string)),
+            prtw,      SLOT(onUpdate(std::string)));
+
+
     //up_rtw = prtw;
 
     // Docking
@@ -244,6 +268,27 @@ void MainWindow::onItemPressed(const QModelIndex &index)
     int column = index.column();
     //QTableView* t = index.parent();
     qDebug()<<"Pressed:" <<row<< ","<<column;
+}
+
+//void MainWindow::ondataChanged(std::string _t_name)
+void MainWindow::ondataChanged(std::string _t_name, QModelIndex index, QVariant value )
+{
+    std::string tname = _t_name;
+    emit rm_change(_t_name,index,value);
+}
+void MainWindow::ondataChanged(std::string _t_name, std::string _col_name, int _row, QVariant _value)
+{
+    emit rm_change(_t_name,_col_name,_row,_value);
+}
+void MainWindow::onRowInserted(std::string _t_name, int _row)
+{
+    emit rm_RowInserted(_t_name,_row);
+    emit rm_update(_t_name);
+}
+void MainWindow::onRowDeleted(std::string _t_name, int _row)
+{
+    emit rm_RowDeleted(_t_name,_row);
+    emit rm_update(_t_name);
 }
 
 //void MainWindow::SetIdrastr(_idRastr id_rastr_in){    id_rastr_ = id_rastr_in;}

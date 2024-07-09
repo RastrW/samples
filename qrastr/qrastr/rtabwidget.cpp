@@ -25,7 +25,7 @@ RtabWidget::RtabWidget(CRastrHlp& rh,int n_indx, QWidget *parent)
 
     prm = new RModel(nullptr, rh );
 
-    QSortFilterProxyModel *proxyModel = new QSortFilterProxyModel(prm); // used for sorting: create proxy //https://doc.qt.io/qt-5/qsortfilterproxymodel.html#details
+    proxyModel = new QSortFilterProxyModel(prm); // used for sorting: create proxy //https://doc.qt.io/qt-5/qsortfilterproxymodel.html#details
     // proxyModel->setDynamicSortFilter(true);
     proxyModel->setSourceModel(prm);
     prm->setFormIndx(n_indx);
@@ -79,7 +79,7 @@ void RtabWidget::customHeaderMenuRequested(QPoint pos){
     column=ptv->horizontalHeader()->logicalIndexAt(pos);
 
     RCol* prcol = prm->getRCol(column);
-    std::string str_col_prop = prcol->desc() + " |"+ prcol->title() + "| " + prcol->name() + ", [" +prcol->unit() + "]";
+    std::string str_col_prop = prcol->desc() + " |"+ prcol->title() + "| -(" + prcol->name() + "), [" +prcol->unit() + "]";
     QString qstr_col_props = str_col_prop.c_str();
 
     QMenu *menu=new QMenu(this);
@@ -118,7 +118,6 @@ void RtabWidget::insertRow()
     prm->insertRows(index.row(),1,index);
 
 #endif//#if(defined(QICSGRID_NO))
-
 }
 void RtabWidget::deleteRow()
 {
@@ -127,7 +126,26 @@ void RtabWidget::deleteRow()
 
 void RtabWidget::OpenColPropForm()
 {
-    RCol* prcol = prm->getRCol(index.column());
+    //RCol* prcol = prm->getRCol(index.column());
+    RCol* prcol = prm->getRCol(column);
     ColPropForm* PropForm = new ColPropForm(prm->getRdata(),prcol);
     PropForm->show();
 }
+
+void RtabWidget::sortAscending()
+{
+    proxyModel->sort(column,Qt::AscendingOrder);
+}
+void RtabWidget::sortDescending()
+{
+    proxyModel->sort(column,Qt::DescendingOrder);
+}
+void RtabWidget::onUpdate(std::string _t_name)
+{
+    if (prm->getRdata()->t_name_ == _t_name)
+    {
+        this->update();
+        this->repaint();
+    }
+}
+

@@ -28,6 +28,7 @@ public:
     int populateDataFromRastr();
     std::vector<std::tuple<int,int>>  ColumnsWidth ();
     RCol* getRCol(int n_col);
+    int getIndexCol(std::string _col);
     RData* getRdata();
     inline bool emitSignals() const { return m_emitSignals; }
     inline void setEmitSignals(bool b)  { m_emitSignals = b; }
@@ -51,7 +52,20 @@ public:
 private:
     bool m_emitSignals;
 signals:
+
     void editCompleted(const QString &);
+     //QModelIndex &index, const QVariant &value
+
+    //void dataChanged2(std::string _t_name);
+    void dataChanged(std::string _t_name, QModelIndex index, QVariant value);
+    void dataChanged(std::string _t_name, std::string _col_name, int _row, QVariant _value);
+    void RowInserted(std::string _t_name, int _row);
+    void RowDeleted(std::string _t_name, int _row);
+private slots:
+    //void onRModelchange(std::string _t_name, QModelIndex index, QVariant value);
+    void onRModelchange(std::string _t_name, std::string _col_name, int _row, QVariant _value);
+    void onrm_RowInserted(std::string _t_name, int _row);
+    void onrm_RowDeleted(std::string _t_name, int _row);
 };
 
 #endif // RMODEL_H
