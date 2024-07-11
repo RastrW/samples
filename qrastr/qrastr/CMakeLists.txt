@@ -1,6 +1,9 @@
 cmake_minimum_required(VERSION 3.5)
 project(qrastr VERSION 0.1 LANGUAGES CXX)
 
+set(CMAKE_GENERATOR "Ninja")
+message("generator is set to ${CMAKE_GENERATOR}")
+
 set(CMAKE_INCLUDE_CURRENT_DIR ON)
 set(CMAKE_AUTOUIC ON)
 set(CMAKE_AUTOMOC ON)
@@ -30,9 +33,10 @@ set(TS_FILES qrastr_ru_RU.ts)
 if(MSVC)
     set(DEPENDENCIES_LOCATION "c:/projects/compile/")
     set(ASTRA_LOCATION        "c:/projects/tfs/rastr/RastrWin/astra/")
+    #set(ASTRA_LOCATION        "c:/projects/rastr/RastrWin/astra")
 else()
     set(DEPENDENCIES_LOCATION "/home/ustas/projects/compile/")
-    set(ASTRA_LOCATION "/home/ustas/projects/git_r/rastr/RastrWin/astra/")
+    set(ASTRA_LOCATION        "/home/ustas/projects/git_r/rastr/RastrWin/astra/")
     set(DEPENDENCIES_GIT      "/home/ustas/projects/git_r/")
 endif()
 
@@ -84,10 +88,14 @@ set(PROJECT_SOURCES
     common.cpp
     ${ASTRA_LOCATION}/ResourceManager.cpp
     appsettings.json
-    params.h params.cpp
+    params.h     params.cpp
     common.h
     common.cpp
-    rastrhlp.h rastrhlp.cpp
+    rastrhlp.h   rastrhlp.cpp
+    rdata.h      rdata.cpp
+    testmodel.h  testmodel.cpp
+    rtabwidget.h rtabwidget.cpp
+
 )
 
 if(${QT_VERSION_MAJOR} GREATER_EQUAL 6)
@@ -127,6 +135,7 @@ target_link_libraries( qrastr PRIVATE Qt${QT_VERSION_MAJOR}::Widgets Qt${QT_VERS
 
 if(MSVC)
     target_link_libraries( qrastr PRIVATE astra_shrd.lib )
+    #target_link_libraries( qrastr PRIVATE astra ) # when build with pybind11
     target_link_libraries( qrastr PRIVATE mk4vc22x64     )
 else()
     target_link_libraries( qrastr PRIVATE libqicstable.so  )

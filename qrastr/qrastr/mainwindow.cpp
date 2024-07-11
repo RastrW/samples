@@ -291,6 +291,16 @@ void MainWindow::onRowDeleted(std::string _t_name, int _row)
     emit rm_update(_t_name);
 }
 
+
+#include "astra_exp.h"
+
+void MainWindow::onButton2Click(){
+    const long num_chars = 10000;
+    char* pch_JSON_out = new char[num_chars];
+    long n_res = PyRunMacro( L"", L"", pch_JSON_out, num_chars );
+
+};
+
 //void MainWindow::SetIdrastr(_idRastr id_rastr_in){    id_rastr_ = id_rastr_in;}
 
 /*
@@ -567,9 +577,10 @@ void MainWindow::createCalcLayout()
     //QPushButton *btn4 = new QPushButton("Button 4");
 
     connect(btn1,&QPushButton::clicked,Btn1_onClick);
+    connect(btn2,&QPushButton::clicked,this, &MainWindow::onButton2Click);
 
     QWidget* widget = new QWidget;
-       widget -> setWindowTitle("Functions");
+    widget -> setWindowTitle("Functions");
     m_ActionsLayout = new QHBoxLayout(widget);
     m_ActionsLayout->addWidget(btn1);
     m_ActionsLayout->addWidget(btn2);
