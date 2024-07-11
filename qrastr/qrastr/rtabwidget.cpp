@@ -1,6 +1,7 @@
 #include "rtabwidget.h"
 #include <QVBoxLayout>
-
+#include <QRegularExpression>
+#include <QLineEdit>
 //#include "tableview.h"
 
 
@@ -12,7 +13,8 @@ RtabWidget::RtabWidget(QWidget *parent)
 RtabWidget::RtabWidget(CRastrHlp& rh,int n_indx, QWidget *parent)
     : QWidget{parent}
 {
-    ptv = new QTableView();
+    ptv = new RTableView();
+
     ptv->setContextMenuPolicy(Qt::CustomContextMenu);                   //https://forum.qt.io/topic/31233/how-to-create-a-custom-context-menu-for-qtableview/6
     ptv->horizontalHeader()->setContextMenuPolicy(Qt::CustomContextMenu);
     connect(ptv, SIGNAL(customContextMenuRequested(QPoint)),
@@ -26,6 +28,14 @@ RtabWidget::RtabWidget(CRastrHlp& rh,int n_indx, QWidget *parent)
     prm = new RModel(nullptr, rh );
 
     proxyModel = new QSortFilterProxyModel(prm); // used for sorting: create proxy //https://doc.qt.io/qt-5/qsortfilterproxymodel.html#details
+
+
+    //proxyModel->setFilterRegularExpression(QRegularExpression("ГPЭC"));
+    //proxyModel->setFilterKeyColumn(4);
+   // QLineEdit* l = new QLineEdit();
+   // l->setPlaceholderText(tr("Filter"));
+   // l->show();
+                                                              //Qt::MatchFixedString));
     // proxyModel->setDynamicSortFilter(true);
     proxyModel->setSourceModel(prm);
     prm->setFormIndx(n_indx);
@@ -38,6 +48,8 @@ RtabWidget::RtabWidget(CRastrHlp& rh,int n_indx, QWidget *parent)
     ptv->setParent(this);
 
     ptv->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
+
+
     QVBoxLayout *layout = new QVBoxLayout(this);
     layout->addWidget(ptv);
     setLayout(layout);

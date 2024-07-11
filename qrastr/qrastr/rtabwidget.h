@@ -11,6 +11,7 @@
 #include <QSortFilterProxyModel>
 #include "ColPropForm.h"
 #include "rmodel.h"
+#include "RtableView.h"
 
 class RtabWidget : public QWidget
 {
@@ -34,7 +35,8 @@ public slots:
 public:
     RModel *prm;
 private:
-    QTableView* ptv ;
+    //QTableView* ptv ;
+    RTableView* ptv ;
     QSortFilterProxyModel *proxyModel;
     QModelIndex index;              // current index (Cell clicked)
     int column;                     // for header

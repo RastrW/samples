@@ -220,13 +220,13 @@ void MainWindow::onOpenForm( QAction* p_actn ){
     connect(this,      SIGNAL(rm_change(std::string,std::string,int,QVariant)),
        prtw->prm,      SLOT(onRModelchange(std::string,std::string,int,QVariant)));
 
-    //MainWindow: вызывть изменение RModel во всех сущьностях
+    //Вставка строки
     connect(prtw->prm, SIGNAL(RowInserted(std::string,int)),
                   this,SLOT(onRowInserted(std::string,int)));
     connect(this,      SIGNAL(rm_RowInserted(std::string,int)),
        prtw->prm,      SLOT(onrm_RowInserted(std::string,int)));
 
-
+    //Удаление строки
     connect(prtw->prm, SIGNAL(RowDeleted(std::string,int)),
                   this,SLOT(onRowInserted(std::string,int)));
     connect(this,      SIGNAL(rm_RowDeleted(std::string,int)),
