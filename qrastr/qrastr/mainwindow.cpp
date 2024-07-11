@@ -291,14 +291,13 @@ void MainWindow::onRowDeleted(std::string _t_name, int _row)
     emit rm_update(_t_name);
 }
 
-
 #include "astra_exp.h"
 
 void MainWindow::onButton2Click(){
     const long num_chars = 10000;
     char* pch_JSON_out = new char[num_chars];
-    long n_res = PyRunMacro( L"", L"", pch_JSON_out, num_chars );
-
+    long n_res = PyRunMacro( up_rastr_->GetRastrId(), L"", L"", pch_JSON_out, num_chars );
+    qDebug() << "macro acompished.kod= " << n_res <<"\n";
 };
 
 //void MainWindow::SetIdrastr(_idRastr id_rastr_in){    id_rastr_ = id_rastr_in;}
