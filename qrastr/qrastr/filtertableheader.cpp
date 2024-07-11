@@ -1,11 +1,28 @@
 #include "filtertableheader.h"
 #include "FilterLineEdit.h"
 #include <QTableView>
+#include <QScrollBar>
 
 FilterTableHeader::FilterTableHeader(QTableView* parent) :
     QHeaderView(Qt::Horizontal, parent)
 {
+    // Activate the click signals to allow sorting
+    setSectionsClickable(true);
 
+    // But use our own indicators allowing multi-column sorting
+    //setSortIndicatorShown(false);
+
+    // Make sure to not automatically resize the columns according to the contents
+    setSectionResizeMode(QHeaderView::Interactive);
+
+    // Highlight column headers of selected cells to emulate spreadsheet behaviour
+    setHighlightSections(true);
+
+    // Do some connects: Basically just resize and reposition the input widgets whenever anything changes
+    connect(this, &FilterTableHeader::sectionResized, this, &FilterTableHeader::adjustPositions);
+    connect(this, &FilterTableHeader::sectionClicked, this, &FilterTableHeader::adjustPositions);
+    connect(parent->horizontalScrollBar(), &QScrollBar::valueChanged, this, &FilterTableHeader::adjustPositions);
+    connect(parent->verticalScrollBar(), &QScrollBar::valueChanged, this, &FilterTableHeader::adjustPositions);
 }
 
 QSize FilterTableHeader::sizeHint() const
@@ -24,7 +41,7 @@ void FilterTableHeader::generateFilters(size_t number, size_t number_of_hidden_f
     filterWidgets.clear();
 
     // And generate a bunch of new ones
-    for(size_t i=0; i < number; ++i)
+    for(size_t i=0; i <= number; ++i)
     {
         FilterLineEdit* l = new FilterLineEdit(this, &filterWidgets, i);
         l->setVisible(i >= number_of_hidden_filters);
@@ -56,13 +73,19 @@ void FilterTableHeader::adjustPositions()
     // The two adds some extra space between the header label and the input widget
     const int y = QHeaderView::sizeHint().height() + 2;
     // Loop through all widgets
+
     for(int i=0;i < static_cast<int>(filterWidgets.size()); ++i)
     {
+
         // Get the current widget, move it and resize it
         QWidget* w = filterWidgets.at(static_cast<size_t>(i));
+
+
        // if (QApplication::layoutDirection() == Qt::RightToLeft)
        //     w->move(width() - (sectionPosition(i) + sectionSize(i) - offset()), y);
       //  else
+        int pos= sectionPosition(i);
+        int ofs = offset();
             w->move(sectionPosition(i) - offset(), y);
         w->resize(sectionSize(i), w->sizeHint().height());
     }

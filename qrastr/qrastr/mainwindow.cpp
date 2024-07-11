@@ -297,7 +297,7 @@ void MainWindow::onRowDeleted(std::string _t_name, int _row)
 void MainWindow::onButton2Click(){
     const long num_chars = 10000;
     char* pch_JSON_out = new char[num_chars];
-    long n_res = PyRunMacro( L"", L"", pch_JSON_out, num_chars );
+    //long n_res = PyRunMacro( L"", L"", pch_JSON_out, num_chars );
 
 };
 

@@ -103,10 +103,6 @@ if(${QT_VERSION_MAJOR} GREATER_EQUAL 6)
         MANUAL_FINALIZATION
         ${PROJECT_SOURCES}
         rdata.h rdata.cpp
-        testmodel.h testmodel.cpp
-
-
-        rtabwidget.h rtabwidget.cpp
         rtableview.h rtableview.cpp
         filtertableheader.h filtertableheader.cpp
         filterlineedit.h filterlineedit.cpp

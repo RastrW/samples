@@ -31,6 +31,8 @@ public slots:
     void sortAscending();
     void sortDescending();
     void onUpdate(std::string _t_name);
+//private slots:
+
 
 public:
     RModel *prm;

@@ -15,7 +15,7 @@ private:
     size_t columnNumber;
 public slots:
     void generateFilters(size_t number, size_t number_of_hidden_filters = 1);
-     void adjustPositions();
+    void adjustPositions();
 protected:
     void updateGeometries() override;
 };

@@ -2,6 +2,7 @@
 #include <QVBoxLayout>
 #include <QRegularExpression>
 #include <QLineEdit>
+#include <QScrollBar>
 //#include "tableview.h"
 
 
@@ -25,6 +26,8 @@ RtabWidget::RtabWidget(CRastrHlp& rh,int n_indx, QWidget *parent)
             SIGNAL(customContextMenuRequested(QPoint)),
             SLOT(customHeaderMenuRequested(QPoint)));
 
+
+
     prm = new RModel(nullptr, rh );
 
     proxyModel = new QSortFilterProxyModel(prm); // used for sorting: create proxy //https://doc.qt.io/qt-5/qsortfilterproxymodel.html#details
@@ -44,8 +47,15 @@ RtabWidget::RtabWidget(CRastrHlp& rh,int n_indx, QWidget *parent)
     ptv->setSortingEnabled(true);
     ptv->setModel(proxyModel);
     ptv->resize(1000,500);
-    SetTableView(*ptv,*prm);
+
+    SetTableView(*ptv,*prm);                // ширина по шаблону
+    ptv->resizeColumnsToContents();         // ширина по контенту
+
     ptv->setParent(this);
+
+    int ncols = prm->columnCount();
+    ptv->generateFilters(ncols);
+
 
     ptv->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
 
@@ -160,4 +170,6 @@ void RtabWidget::onUpdate(std::string _t_name)
         this->repaint();
     }
 }
+
+
 
