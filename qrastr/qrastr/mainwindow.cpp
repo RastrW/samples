@@ -83,9 +83,19 @@ void MainWindow::open()
         }
 #endif//#if(!defined(QICSGRID_NO))
         int nRes = 0;
-        nRes = Load( id_rastr_, fileName.toStdString().c_str(), "");
+        //nRes = Load( id_rastr_, fileName.toStdString().c_str(), "");
+        //std::string f = fileName.toStdString();
+        //std::filesystem::path fpath = fileName.toStdString();
+        //std::filesystem::path fpath = f;
+        //f = fpath.filename().generic_string();
+         //nRes = up_rastr_->Load( fileName.toStdString().c_str());
+
+        std::string f = "mdp_debug_1";
+        nRes = up_rastr_->Load( f);
+
         if(nRes>0){
-            std::string str_msg = fmt::format( "{}: {}", tr("File loaded").toStdString(), fileName.toStdString());
+            //std::string str_msg = fmt::format( "{}: {}", tr("File loaded").toStdString(), fileName.toStdString());
+            std::string str_msg = fmt::format( "{}: {}", "File loaded", f);
             statusBar()->showMessage( str_msg.c_str(), 2000 );
         } else {
             std::string str_msg = fmt::format( "{}: {}", tr("File not loaded").toStdString(), fileName.toStdString());

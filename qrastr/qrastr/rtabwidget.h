@@ -31,6 +31,7 @@ public slots:
     void sortAscending();
     void sortDescending();
     void onUpdate(std::string _t_name);
+    void updateFilter(size_t column, QString value);
 //private slots:
 
 

@@ -22,6 +22,7 @@ public:
 private:
     _idRastr id_rastr_ = -1;
     std::unique_ptr<CUIFormsCollection> upCUIFormsCollection_;
+    std::vector<std::unique_ptr<CUIFormsCollection>> vupCUIFormsCollection_;
     nlohmann::json jforms_; // for Dima reverse ccompatibility
 };
 

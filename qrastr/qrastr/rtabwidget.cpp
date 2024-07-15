@@ -3,6 +3,7 @@
 #include <QRegularExpression>
 #include <QLineEdit>
 #include <QScrollBar>
+#include "FilterTableHeader.h"
 //#include "tableview.h"
 
 
@@ -25,6 +26,11 @@ RtabWidget::RtabWidget(CRastrHlp& rh,int n_indx, QWidget *parent)
     connect(ptv->horizontalHeader(),
             SIGNAL(customContextMenuRequested(QPoint)),
             SLOT(customHeaderMenuRequested(QPoint)));
+
+
+
+    //connect(ptv->horizontalHeader(), &FilterTableHeader::filterChanged, this, &RtabWidget::updateFilter);
+    connect(ptv->horizontalHeader(), SIGNAL(filterChanged(size_t , QString )), this, SLOT(updateFilter(size_t , QString) ));
 
 
 
@@ -170,6 +176,12 @@ void RtabWidget::onUpdate(std::string _t_name)
         this->repaint();
     }
 }
+void RtabWidget::updateFilter(size_t column, QString value)
+{
+    proxyModel->setFilterRegularExpression(QRegularExpression(value));
+    proxyModel->setFilterKeyColumn(column);
+}
+
 
 
 

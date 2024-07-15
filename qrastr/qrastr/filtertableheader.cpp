@@ -23,6 +23,9 @@ FilterTableHeader::FilterTableHeader(QTableView* parent) :
     connect(this, &FilterTableHeader::sectionClicked, this, &FilterTableHeader::adjustPositions);
     connect(parent->horizontalScrollBar(), &QScrollBar::valueChanged, this, &FilterTableHeader::adjustPositions);
     connect(parent->verticalScrollBar(), &QScrollBar::valueChanged, this, &FilterTableHeader::adjustPositions);
+
+    // Set custom context menu handling
+    //setContextMenuPolicy(Qt::CustomContextMenu);
 }
 
 QSize FilterTableHeader::sizeHint() const
@@ -49,6 +52,8 @@ void FilterTableHeader::generateFilters(size_t number, size_t number_of_hidden_f
         // Set as focus proxy the first non-row-id visible filter-line.
         if(i!=0 && l->isVisible() && !focusProxy())
             setFocusProxy(l);
+
+        connect(l, &FilterLineEdit::textChanged, this, &FilterTableHeader::inputChanged);
 
         filterWidgets.push_back(l);
     }
@@ -89,4 +94,52 @@ void FilterTableHeader::adjustPositions()
             w->move(sectionPosition(i) - offset(), y);
         w->resize(sectionSize(i), w->sizeHint().height());
     }
+}
+
+void FilterTableHeader::inputChanged(const QString& new_value)
+{
+    adjustPositions();
+    // Just get the column number and the new value and send them to anybody interested in filter changes
+    emit filterChanged(sender()->property("column").toUInt(), new_value);
+}
+
+void FilterTableHeader::addFilterAsCondFormat(const QString& filter)
+{
+    // Just get the column number and the new value and send them to anybody interested in new conditional formatting
+    emit addCondFormat(sender()->property("column").toUInt(), filter);
+}
+
+void FilterTableHeader::clearAllCondFormats()
+{
+    // Just get the column number and send it to anybody responsible or interested in clearing conditional formatting
+    emit allCondFormatsCleared(sender()->property("column").toUInt());
+}
+
+void FilterTableHeader::editCondFormats()
+{
+    // Just get the column number and the new value and send them to anybody interested in editing conditional formatting
+    emit condFormatsEdited(sender()->property("column").toUInt());
+}
+
+void FilterTableHeader::clearFilters()
+{
+    for(FilterLineEdit* filterLineEdit : filterWidgets)
+        filterLineEdit->clear();
+}
+
+void FilterTableHeader::setFilter(size_t column, const QString& value)
+{
+    if(column < filterWidgets.size())
+        filterWidgets.at(column)->setText(value);
+}
+
+QString FilterTableHeader::filterValue(size_t column) const
+{
+    return filterWidgets[column]->text();
+}
+
+void FilterTableHeader::setFocusColumn(size_t column)
+{
+    if(column < filterWidgets.size())
+        filterWidgets.at(column)->setFocus();
 }

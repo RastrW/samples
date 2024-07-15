@@ -1,5 +1,6 @@
 #include "rastrhlp.h"
 #include "common.h"
+#include "utils.h"
 #include "License2/json.hpp"
 
 CRastrHlp::CRastrHlp(){
@@ -45,9 +46,15 @@ int CRastrHlp::Load(std::string str_path_to_file){
     return 1;
 }
 
-int CRastrHlp::ReadForms(std::string str_path_to_file_forms){
+// form files are deployed in form catalog near qrastr.exe
+int CRastrHlp::ReadForms(std::string str_path_forms){
     try{
-        std::filesystem::path path_forms_load;
+        std::vector<std::string> forms = split(str_path_forms, ',');
+
+        std::filesystem::path path_forms ("form");
+        //std::filesystem::path path_forms ("");
+        //std::filesystem::path path_forms_load;
+        std::filesystem::path path_form_load;
 #if(defined(_MSC_VER))
         //str_path_forms_load = R"(C:\Users\ustas\Documents\RastrWin3\form\poisk.fm)";
         //str_path_forms_load = R"(C:\Users\ustas\Documents\RastrWin3\form\Общие.fm)";
@@ -55,22 +62,36 @@ int CRastrHlp::ReadForms(std::string str_path_to_file_forms){
 
         //on Windows, you MUST use 8bit ANSI (and it must match the user's locale) or UTF-16 !! Unicode!
         //!!! https://stackoverflow.com/questions/30829364/open-utf8-encoded-filename-in-c-windows  !!!
-        path_forms_load = stringutils::utf8_decode(str_path_to_file_forms);
-        qDebug() << "read form from file : " << path_forms_load.wstring();
-#else
-        path_forms_load = str_path_to_file_forms;
-        qDebug() << "read form from file : " << path_forms_load.c_str();
-#endif
-        upCUIFormsCollection_ = std::make_unique<CUIFormsCollection>(CUIFormCollectionSerializerBinary(path_forms_load).Deserialize());
-        for(const  CUIForm& uiform : upCUIFormsCollection_->Forms()){
-            qDebug() << "form : " << uiform.TableName().c_str();
+        // path_forms_load = stringutils::utf8_decode(str_path_to_file_forms);
+
+        //upCUIFormsCollection_ = std::make_unique<CUIFormsCollection>(CUIFormCollectionSerializerBinary(path_form_load).Deserialize());
+        upCUIFormsCollection_ = std::make_unique<CUIFormsCollection>();
+        for (std::string &form : forms)
+        {
+            std::filesystem::path path_file_form = stringutils::utf8_decode(form);
+            path_form_load =  path_forms / path_file_form;
+
+            qDebug() << "read form from file : " << path_form_load.wstring();
+    #else
+            path_forms_load = str_path_to_file_forms;
+            qDebug() << "read form from file : " << path_forms_load.c_str();
+    #endif
+            CUIFormsCollection CUIFormsCollection_ = CUIFormCollectionSerializerBinary(path_form_load).Deserialize();
+            for(const  CUIForm& uiform : CUIFormsCollection_.Forms()){
+
+                qDebug() << "form : " << uiform.TableName().c_str();
+                upCUIFormsCollection_->Forms().emplace_back(uiform);
+
+            }
+          //  vupCUIFormsCollection_.push_back(upCUIFormsCollection_);
+
+            //std::string str_json;
+            //str_json.resize(SIZE_STR_BUF_);
+           // int  nRes = ::GetForms( reinterpret_cast<const char*>(str_path_to_file_forms.c_str()), "", const_cast<char*>(str_json.c_str()), str_json.size() );
+           // int  nRes = ::GetForms( reinterpret_cast<const wchar_t*>(str_path_to_file_forms.c_str()), reinterpret_cast<const wchar_t*>(""), const_cast<char*>(str_json.c_str()), str_json.size() );
+            //str_jforms_ = str_json;
+            //jforms_ = nlohmann::json::parse(str_json);
         }
-        //std::string str_json;
-        //str_json.resize(SIZE_STR_BUF_);
-       // int  nRes = ::GetForms( reinterpret_cast<const char*>(str_path_to_file_forms.c_str()), "", const_cast<char*>(str_json.c_str()), str_json.size() );
-       // int  nRes = ::GetForms( reinterpret_cast<const wchar_t*>(str_path_to_file_forms.c_str()), reinterpret_cast<const wchar_t*>(""), const_cast<char*>(str_json.c_str()), str_json.size() );
-        //str_jforms_ = str_json;
-        //jforms_ = nlohmann::json::parse(str_json);
         qDebug() << "Thats all forms.\n" ;
 
 /*
