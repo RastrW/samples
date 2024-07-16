@@ -32,9 +32,6 @@ MainWindow::MainWindow()
 {
     m_workspace = new QMdiArea;
     setCentralWidget(m_workspace);
-
-
-
     connect(m_workspace, SIGNAL(subWindowActivated(QMdiSubWindow *)), this, SLOT(updateMenus()));
     m_windowMapper = new QSignalMapper(this);
     connect(m_windowMapper, SIGNAL(mappedWidget(QWidget *)), SLOT(setActiveSubWindow(QWidget *)));
@@ -83,25 +80,19 @@ void MainWindow::open()
         }
 #endif//#if(!defined(QICSGRID_NO))
         int nRes = 0;
-        //nRes = Load( id_rastr_, fileName.toStdString().c_str(), "");
-        //std::string f = fileName.toStdString();
-        //std::filesystem::path fpath = fileName.toStdString();
-        //std::filesystem::path fpath = f;
-        //f = fpath.filename().generic_string();
-         //nRes = up_rastr_->Load( fileName.toStdString().c_str());
-
-        std::string f = "mdp_debug_1";
+        std::string f = fileName.toUtf8().constData(); //  it works!!!
         nRes = up_rastr_->Load( f);
 
         if(nRes>0){
             //std::string str_msg = fmt::format( "{}: {}", tr("File loaded").toStdString(), fileName.toStdString());
             std::string str_msg = fmt::format( "{}: {}", "File loaded", f);
             statusBar()->showMessage( str_msg.c_str(), 2000 );
+            cur_file = f;
+            emit file_loaded(*up_rastr_.get());
         } else {
-            std::string str_msg = fmt::format( "{}: {}", tr("File not loaded").toStdString(), fileName.toStdString());
+            std::string str_msg = fmt::format( "{}: {}", "File not loaded", f);
             QMessageBox msgBox;
             msgBox.critical( this, tr("File not loaded"), str_msg.c_str() );
-
         }
 
         /* // ustas
@@ -122,6 +113,19 @@ void MainWindow::save()
     if (activeMdiChild()->save())
         statusBar()->showMessage(tr("File saved"), 2000);
 #endif//#if(!defined(QICSGRID_NO))
+    if (!cur_file.empty()) {
+        int nRes = 0;
+        std::string f = cur_file;
+        nRes = up_rastr_->Save( f);
+        if(nRes>0){
+            std::string str_msg = fmt::format( "{}: {}", "File saved", f);
+            statusBar()->showMessage( str_msg.c_str(), 2000 );
+        } else {
+            std::string str_msg = fmt::format( "{}: {}", "File not saved", f);
+            QMessageBox msgBox;
+            msgBox.critical( this, tr("File not saved"), str_msg.c_str() );
+        }
+    }
 }
 
 void MainWindow::saveAs()
@@ -130,6 +134,20 @@ void MainWindow::saveAs()
     if (activeMdiChild()->saveAs())
         statusBar()->showMessage(tr("File saved"), 2000);
 #endif
+    QString fileName = QFileDialog::getSaveFileName(this);
+    if (!fileName.isEmpty()) {
+        int nRes = 0;
+        std::string f = fileName.toUtf8().constData(); //  it works!!!
+        nRes = up_rastr_->Save( f);
+        if(nRes>0){
+            std::string str_msg = fmt::format( "{}: {}", "File saved", f);
+            statusBar()->showMessage( str_msg.c_str(), 2000 );
+        } else {
+            std::string str_msg = fmt::format( "{}: {}", "File not saved", f);
+            QMessageBox msgBox;
+            msgBox.critical( this, tr("File not saved"), str_msg.c_str() );
+        }
+    }
 }
 
 void MainWindow::cut()
@@ -219,12 +237,15 @@ void MainWindow::onOpenForm( QAction* p_actn ){
     qDebug() << "\n Open form:" + form.Name();
 
     RtabWidget *prtw = new RtabWidget(*up_rastr_.get(),n_indx);
+
     //connect(sender, &MyClass::signalName, this, &MyClass::slotName);
+    connect(this, &MainWindow::file_loaded,  prtw, &RtabWidget::onFileLoad);
+    //connect(this, SIGNAL(file_loaded()),  prtw, SLOT(onFileLoad()));
 
     //Connect(prtw->prm, &RModel::dataChanged2(std::string, QModelIndex , QVariant),this,MainWindow::ondataChanged(std::string, QModelIndex , QVariant));
     //connect(prtw->prm, SIGNAL(dataChanged2(std::string)),this,SLOT(ondataChanged(std::string)));
 
-    //RModel вызывает изменение Data: Запомнить изменение Data в MainWindow b из MainWindow вызывть изменение RModel во всех сущьностях
+    //RModel вызывает изменение Data: Запомнить изменение Data в MainWindow и из MainWindow вызывть изменение RModel во всех сущьностях
     connect(prtw->prm, SIGNAL(dataChanged(std::string,std::string,int,QVariant)),
                   this,SLOT(ondataChanged(std::string,std::string,int,QVariant)));
     connect(this,      SIGNAL(rm_change(std::string,std::string,int,QVariant)),

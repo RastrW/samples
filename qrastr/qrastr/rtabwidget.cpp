@@ -15,6 +15,8 @@ RtabWidget::RtabWidget(QWidget *parent)
 RtabWidget::RtabWidget(CRastrHlp& rh,int n_indx, QWidget *parent)
     : QWidget{parent}
 {
+   // rh = _rh;
+    form_indx = n_indx;
     ptv = new RTableView();
 
     ptv->setContextMenuPolicy(Qt::CustomContextMenu);                   //https://forum.qt.io/topic/31233/how-to-create-a-custom-context-menu-for-qtableview/6
@@ -38,16 +40,9 @@ RtabWidget::RtabWidget(CRastrHlp& rh,int n_indx, QWidget *parent)
 
     proxyModel = new QSortFilterProxyModel(prm); // used for sorting: create proxy //https://doc.qt.io/qt-5/qsortfilterproxymodel.html#details
 
-
-    //proxyModel->setFilterRegularExpression(QRegularExpression("ГPЭC"));
-    //proxyModel->setFilterKeyColumn(4);
-   // QLineEdit* l = new QLineEdit();
-   // l->setPlaceholderText(tr("Filter"));
-   // l->show();
-                                                              //Qt::MatchFixedString));
     // proxyModel->setDynamicSortFilter(true);
     proxyModel->setSourceModel(prm);
-    prm->setFormIndx(n_indx);
+    prm->setFormIndx(form_indx);
     prm->populateDataFromRastr();
 
     ptv->setSortingEnabled(true);
@@ -151,7 +146,6 @@ void RtabWidget::deleteRow()
 {
     prm->removeRows(index.row(),1,index);
 }
-
 void RtabWidget::OpenColPropForm()
 {
     //RCol* prcol = prm->getRCol(index.column());
@@ -159,7 +153,6 @@ void RtabWidget::OpenColPropForm()
     ColPropForm* PropForm = new ColPropForm(prm->getRdata(),prcol);
     PropForm->show();
 }
-
 void RtabWidget::sortAscending()
 {
     proxyModel->sort(column,Qt::AscendingOrder);
@@ -180,6 +173,19 @@ void RtabWidget::updateFilter(size_t column, QString value)
 {
     proxyModel->setFilterRegularExpression(QRegularExpression(value));
     proxyModel->setFilterKeyColumn(column);
+}
+void RtabWidget::onFileLoad(CRastrHlp& _rh)
+{
+    //prm->populateDataFromRastr();     // нужно делть новую модель так как меняются размерности
+    prm = new RModel(nullptr, _rh );
+    proxyModel = new QSortFilterProxyModel(prm); // used for sorting: create proxy //https://doc.qt.io/qt-5/qsortfilterproxymodel.html#details
+    proxyModel->setSourceModel(prm);
+    prm->setFormIndx(form_indx);
+    prm->populateDataFromRastr();
+    ptv->setModel(proxyModel);
+
+    this->update();
+    this->repaint();
 }
 
 

@@ -61,6 +61,7 @@ signals:
     void dataChanged(std::string _t_name, std::string _col_name, int _row, QVariant _value);
     void RowInserted(std::string _t_name, int _row);
     void RowDeleted(std::string _t_name, int _row);
+
 private slots:
     //void onRModelchange(std::string _t_name, QModelIndex index, QVariant value);
     void onRModelchange(std::string _t_name, std::string _col_name, int _row, QVariant _value);

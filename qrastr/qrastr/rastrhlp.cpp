@@ -45,6 +45,26 @@ int CRastrHlp::Load(std::string str_path_to_file){
     }
     return 1;
 }
+int CRastrHlp::Save(std::string str_path_to_file){
+    try{
+        int nRes = 0;
+        std::filesystem::path path_file_save;
+        //on Windows, you MUST use 8bit ANSI (and it must match the user's locale) or UTF-16 !! Unicode!
+        //!!! https://stackoverflow.com/questions/30829364/open-utf8-encoded-filename-in-c-windows  !!!
+        path_file_save = stringutils::utf8_decode(str_path_to_file);
+        nRes = ::Save(id_rastr_, str_path_to_file.c_str(), "");
+        if(nRes<0){
+            throw CException("can't save Rastr file: {}", str_path_to_file);
+        }
+    }catch(const std::exception& ex){
+        exclog(ex);
+        return -1;
+    }catch(...){
+        exclog();
+        return -2;
+    }
+    return 1;
+}
 
 // form files are deployed in form catalog near qrastr.exe
 int CRastrHlp::ReadForms(std::string str_path_forms){
@@ -52,7 +72,6 @@ int CRastrHlp::ReadForms(std::string str_path_forms){
         std::vector<std::string> forms = split(str_path_forms, ',');
 
         std::filesystem::path path_forms ("form");
-        //std::filesystem::path path_forms ("");
         //std::filesystem::path path_forms_load;
         std::filesystem::path path_form_load;
 #if(defined(_MSC_VER))
@@ -63,8 +82,8 @@ int CRastrHlp::ReadForms(std::string str_path_forms){
         //on Windows, you MUST use 8bit ANSI (and it must match the user's locale) or UTF-16 !! Unicode!
         //!!! https://stackoverflow.com/questions/30829364/open-utf8-encoded-filename-in-c-windows  !!!
         // path_forms_load = stringutils::utf8_decode(str_path_to_file_forms);
-
         //upCUIFormsCollection_ = std::make_unique<CUIFormsCollection>(CUIFormCollectionSerializerBinary(path_form_load).Deserialize());
+
         upCUIFormsCollection_ = std::make_unique<CUIFormsCollection>();
         for (std::string &form : forms)
         {

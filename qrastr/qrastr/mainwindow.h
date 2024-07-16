@@ -161,6 +161,8 @@ public:
 #endif//#if(!defined(QICSGRID_NO))
 
 signals:
+    void file_loaded(CRastrHlp& _rh);                                                                     // загружен файл
+
     void rgm_signal();
 
     void rm_change(std::string _t_name, QModelIndex index, QVariant value);
@@ -266,6 +268,7 @@ private:
     _idRastr                   id_rastr_ = -1;
     std::unique_ptr<CRastrHlp> up_rastr_;
     RtabWidget *prtw_current;                        // current table
+    std::string cur_file;                            // current file
 
 
 public:

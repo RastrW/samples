@@ -13,6 +13,7 @@ public:
     _idRastr GetRastrId() const { return id_rastr_; };
     int ReadForms(std::string str_path_to_file_forms);
     int Load(std::string str_path_to_file); //
+    int Save(std::string str_path_to_file);
     std::list<CUIForm> GetForms() const;
     CUIForm GetUIForm(size_t n_form_indx);
     int GetFormData(int n_form_indx);

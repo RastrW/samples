@@ -89,8 +89,8 @@ void FilterTableHeader::adjustPositions()
        // if (QApplication::layoutDirection() == Qt::RightToLeft)
        //     w->move(width() - (sectionPosition(i) + sectionSize(i) - offset()), y);
       //  else
-        int pos= sectionPosition(i);
-        int ofs = offset();
+        //int pos= sectionPosition(i);
+       // int ofs = offset();
             w->move(sectionPosition(i) - offset(), y);
         w->resize(sectionSize(i), w->sizeHint().height());
     }

@@ -7,6 +7,7 @@ RTableView::RTableView()
 {
     // Set up filter row
     m_tableHeader = new FilterTableHeader(this);
+    m_tableHeader->setFilter(4,tr("<100"));
     setHorizontalHeader(m_tableHeader);             // слетает сортировка по клику на заголовке столбца
 
     //connect(verticalScrollBar(), &QScrollBar::valueChanged,  dynamic_cast<RtabWidget*>(this->parentWidget()), &RtabWidget::vscrollbarChanged);

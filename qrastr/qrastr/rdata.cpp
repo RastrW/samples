@@ -76,7 +76,6 @@ void RData::populate()
     int n_row = 0;
     int i = 0;
 
-
     for(nlohmann::json j_data_row : j_data_arr) {
         i = 1;
         for(RCol& col: *this){
