@@ -13,13 +13,18 @@
 #include "rmodel.h"
 #include "RtableView.h"
 
+class QMimeData;
+
 class RtabWidget : public QWidget
 {
     Q_OBJECT
 public:
     explicit RtabWidget(QWidget *parent = nullptr);
     explicit RtabWidget(CRastrHlp& _rh,int n_indx,QWidget *parent = nullptr);
-    void SetTableView(QTableView& tv, RModel& mm);
+    void SetTableView(QTableView& tv, RModel& mm, int myltiplier = 15);
+private:
+    void copyMimeData(const QModelIndexList& fromIndices, QMimeData* mimeData, const bool withHeaders, const bool inSQL);
+    void copy(const bool withHeaders, const bool inSQL);
 
 public slots:
     void customMenuRequested(QPoint pos);
@@ -27,14 +32,18 @@ public slots:
     void onItemPressed(const QModelIndex &index);
     void insertRow();
     void deleteRow();
+    void widebyshabl();
+    void widebydata();
     void OpenColPropForm();
     void sortAscending();
     void sortDescending();
     void onUpdate(std::string _t_name);
     void updateFilter(size_t column, QString value);
     void onFileLoad(CRastrHlp& _rh);
+    void update_data();
 
-//private slots:
+private slots:
+    void CreateModel(CRastrHlp& _rh);
 
 
 public:

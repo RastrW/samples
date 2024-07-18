@@ -239,7 +239,8 @@ void MainWindow::onOpenForm( QAction* p_actn ){
     RtabWidget *prtw = new RtabWidget(*up_rastr_.get(),n_indx);
 
     //connect(sender, &MyClass::signalName, this, &MyClass::slotName);
-    connect(this, &MainWindow::file_loaded,  prtw, &RtabWidget::onFileLoad);
+    connect(this, &MainWindow::file_loaded,  prtw, &RtabWidget::onFileLoad);    //Загрузка файла
+    connect(this, &MainWindow::rgm_signal, prtw, &RtabWidget::update_data);     //Расчет УР
     //connect(this, SIGNAL(file_loaded()),  prtw, SLOT(onFileLoad()));
 
     //Connect(prtw->prm, &RModel::dataChanged2(std::string, QModelIndex , QVariant),this,MainWindow::ondataChanged(std::string, QModelIndex , QVariant));
@@ -259,7 +260,7 @@ void MainWindow::onOpenForm( QAction* p_actn ){
 
     //Удаление строки
     connect(prtw->prm, SIGNAL(RowDeleted(std::string,int)),
-                  this,SLOT(onRowInserted(std::string,int)));
+                  this,SLOT(onRowDeleted(std::string,int)));
     connect(this,      SIGNAL(rm_RowDeleted(std::string,int)),
        prtw->prm,      SLOT(onrm_RowDeleted(std::string,int)));
 
@@ -267,9 +268,9 @@ void MainWindow::onOpenForm( QAction* p_actn ){
             prtw,      SLOT(onUpdate(std::string)));
 
 
-    //up_rtw = prtw;
-
     // Docking
+    //TO DO: try to use
+    //https://github.com/githubuser0xFFFF/Qt-Advanced-Docking-System?tab=readme-ov-file
     QDockWidget *dock = new QDockWidget( stringutils::cp1251ToUtf8(form.Name()).c_str(), this);
     dock->setWidget(prtw);
     dock->setAllowedAreas(Qt::LeftDockWidgetArea | Qt::RightDockWidgetArea | Qt::TopDockWidgetArea | Qt::BottomDockWidgetArea | Qt::AllDockWidgetAreas);

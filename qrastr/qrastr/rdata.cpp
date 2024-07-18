@@ -143,7 +143,7 @@ void RData::populate(nlohmann::json _j_Fields , nlohmann::json _j_metas,_vstr _v
         str_tmp.erase(str_tmp.length()-1);
         str_json.resize(SIZE_STR_BUF);
         //nRes = GetJSON( id_rastr_, str_TableName.c_str(), str_tmp.c_str(), "", const_cast<char*>(str_json.c_str()), str_json.length() );
-        nRes = GetJSON( id_rastr_, t_name_.c_str(), str_tmp.c_str(), "","", const_cast<char*>(str_json.c_str()), str_json.length() );
+        nRes = GetJSON( id_rastr_, t_name_.c_str(), str_tmp.c_str(), "","", const_cast<char*>(str_json.c_str()), static_cast<long>(str_json.length()) );
         str_json.resize(std::strlen(str_json.c_str())+1);
         //qDebug() << "Data: " << str_json.c_str();
         size_t nLength = str_json.size();

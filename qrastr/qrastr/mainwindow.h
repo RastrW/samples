@@ -48,7 +48,7 @@ public:
             std::string str_path_2_conf = "undef";
 #if(defined(COMPILE_WIN))
             //str_path_2_conf = R"(C:\projects\git_web\samples\qrastr\qrastr\appsettings.json)";
-            str_path_2_conf = R"(..\..\appsettings.json)";
+            str_path_2_conf = R"(appsettings.json)";
 #else
             str_path_2_conf = R"(/home/ustas/projects/git_web/samples/qrastr/qrastr/appsettings.json)";
             //QMessageBox mb( QMessageBox::Icon::Critical, QObject::tr("Error"), QString("In lin not implemented!") );      mb.exec();
@@ -67,7 +67,7 @@ public:
                 return ;
             }
             up_rastr_ = std::make_unique<CRastrHlp>();
-            nRes = up_rastr_->CreateRastr();
+            id_rastr_ = up_rastr_->CreateRastr();
             nRes = up_rastr_->Load(pars.Get_on_start_load_file_rastr());
             nRes = up_rastr_->ReadForms(pars.Get_on_start_load_file_forms());
             if(nRes<0){
