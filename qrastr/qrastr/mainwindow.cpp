@@ -195,6 +195,29 @@ void MainWindow::rgm_wrap(){
 
     emit rgm_signal();
 }
+void MainWindow::ActMacroDlg(){
+    //long res = Rgm(id_rastr_,"");
+    long n_res = 0;
+
+    std::string str_msg = "";
+    if (n_res < 0)
+        str_msg = "Макрос выполнен успешно";
+    else
+        str_msg = "Макрос завершился аварийно!";
+    statusBar()->showMessage( str_msg.c_str(), 0 );
+
+/*
+    //qDebug() << "rgm return  " << res;
+    std::string str_msg = "";
+    if (res == 0)
+        str_msg = "Расчет режима выполнен успешно";
+    else
+        str_msg = "Расчет режима завершился аварийно!";
+    statusBar()->showMessage( str_msg.c_str(), 0 );
+
+    emit rgm_signal();
+    */
+}
 void MainWindow::about(){
    QMessageBox::about( this, tr("About QRastr"), tr("About the <b>QRastr</b>.") );
 }
@@ -499,6 +522,11 @@ void MainWindow::createActions()
     //connect(m_RGMAct, SIGNAL(triggered()), this, SLOT(Rgm(id_rastr_,"")));
     connect(m_RGMAct, SIGNAL(triggered()), this, SLOT(rgm_wrap()));
 
+    m_ActMacro = new QAction(QIcon(":/images/cut.png"),tr("&macro"), this);
+    m_ActMacro->setShortcut(tr("F11"));
+    m_ActMacro->setStatusTip(tr("Run macro"));
+    connect(m_ActMacro, SIGNAL(triggered()), this, SLOT(ActMacroDlg()));
+
     ////////////////////////////// RASTR //////////////////////////
 //    long nRes = 0;
 //    id_rastr_ = RastrCreate();
@@ -528,6 +556,9 @@ void MainWindow::createMenus()
 
     m_CalcMenu = menuBar()->addMenu(tr("&Calc"));
     m_CalcMenu->addAction(m_RGMAct);
+
+    m_CalcMenu = menuBar()->addMenu(tr("&Macro"));
+    m_CalcMenu->addAction(m_ActMacro);
 
     m_openMenu = menuBar()->addMenu(tr("&Open") );
     m_windowMenu = menuBar()->addMenu(tr("&Window"));

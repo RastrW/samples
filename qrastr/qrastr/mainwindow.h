@@ -47,8 +47,8 @@ public:
             QString str_curr_path = QDir::currentPath();
             std::string str_path_2_conf = "undef";
 #if(defined(COMPILE_WIN))
-            //str_path_2_conf = R"(C:\projects\git_web\samples\qrastr\qrastr\appsettings.json)";
-            str_path_2_conf = R"(..\..\appsettings.json)";
+            str_path_2_conf = R"(C:\projects\git_web\samples\qrastr\qrastr\appsettings.json)";
+            //str_path_2_conf = R"(..\..\appsettings.json)";
 #else
             str_path_2_conf = R"(/home/ustas/projects/git_web/samples/qrastr/qrastr/appsettings.json)";
             //QMessageBox mb( QMessageBox::Icon::Critical, QObject::tr("Error"), QString("In lin not implemented!") );      mb.exec();
@@ -185,6 +185,7 @@ private slots:
     void deleteCol();
     void about();
     void rgm_wrap();
+    void ActMacroDlg();
     void onOpenForm(QAction* p_actn);
     void onButton2Click();
 
@@ -260,7 +261,8 @@ private:
     //QAction *m_SortAscAct;
     //QAction *m_SortDescAct;
 
-    QAction *m_RGMAct;
+    QAction* m_RGMAct;
+    QAction* m_ActMacro;
 
     nlohmann::json             j_forms_;
     _idRastr                   id_rastr_ = -1;
