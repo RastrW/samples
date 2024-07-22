@@ -448,6 +448,8 @@ const Language *Buffer::language() const {
 }
 
 #include "ILexer.h"
+#include "Lexilla.h"
+#include <QLibrary>
 
 void Buffer::setLanguage(const Language *language) {
     if (m_language != language) {
@@ -456,11 +458,23 @@ void Buffer::setLanguage(const Language *language) {
         if (language) {
 
             //!ustas setLexerLanguage(language->lexer().toLocal8Bit());
-            assert(!"ustas");
+            //assert(!"ustas");
 
-            Scintilla::ILexer5 *pLexer = Lexilla::CreateLexer("<name>");
+            //Scintilla::ILexer5 *pLexer = LEXILLA_CREATELEXER("<name>");
             //SCI_SETILEXER(pLexer)
-            setILexer(pLexer);
+            //setILexer(pLexer);
+
+#if _WIN32
+            typedef void *(__stdcall *CreateLexerFn)(const char *name);
+#else
+            typedef void *(*CreateLexerFn)(const char *name);
+#endif
+            QFunctionPointer fn = QLibrary::resolve("lexilla5", "CreateLexer");
+            void *lexCpp = ((CreateLexerFn)fn)("cpp");
+            //   Call(SCI_SETILEXER, 0, (sptr_t)(void *)lexCpp);
+            //setILexer((sptr_t)(void *)lexCpp);
+            setILexer( reinterpret_cast<sptr_t>(lexCpp));
+
 
             for (int i = 0; i < language->keywords().size(); ++i) {
                 setKeyWords(i, language->keywords().at(i).toLatin1());

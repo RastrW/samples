@@ -1,19 +1,24 @@
 cmake_minimum_required(VERSION 3.9)
-
+#https://github.com/mavroprovato/qt-scintilla-editor
 project(qt-scintilla-editor LANGUAGES CXX)
 
 #set(SCINTILLA_CODE ../scintilla-code)
 set(SCINTILLA_CODE C:/Qt/Examples/qt_6/scintilla550/scintilla)
 
+#set(LEXILLA_CODE C:/Qt/Examples/qt_6/lexilla532/lexilla)
+set(LEXILLA_CODE C:/Qt/Examples/qt_6/lexilla532/lexilla/)
+
 include_directories(
         ${SCINTILLA_CODE}/include
         ${SCINTILLA_CODE}/src #ustas
+        ${LEXILLA_CODE}/include
         ${SCINTILLA_CODE}/qt/ScintillaEditBase
         ${SCINTILLA_CODE}/qt/ScintillaEdit
         include
 )
 
 link_directories(${SCINTILLA_CODE}/bin)
+#link_directories(${LEXILLA_CODE}/bin) //ustas moved to ${SCINTILLA_CODE}
 
 set(CMAKE_INCLUDE_CURRENT_DIR ON)
 
@@ -69,5 +74,5 @@ add_executable(
 )
 
 #target_link_libraries(qt-scintilla-editor PRIVATE Qt5::Widgets ScintillaEdit)
-target_link_libraries(qt-scintilla-editor PRIVATE Qt6::Widgets ScintillaEdit5 Qt6::Core5Compat)
+target_link_libraries(qt-scintilla-editor PRIVATE Qt6::Widgets ScintillaEdit5 Qt6::Core5Compat lexilla5)
 
