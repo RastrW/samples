@@ -450,49 +450,54 @@ const Language *Buffer::language() const {
 #include "ILexer.h"
 #include "Lexilla.h"
 #include <QLibrary>
+#include <QMessageBox>
+#include <string>
 
 void Buffer::setLanguage(const Language *language) {
     if (m_language != language) {
         m_language = language;
-
         if (language) {
-
             //!ustas setLexerLanguage(language->lexer().toLocal8Bit());
-            //assert(!"ustas");
-
-            //Scintilla::ILexer5 *pLexer = LEXILLA_CREATELEXER("<name>");
-            //SCI_SETILEXER(pLexer)
-            //setILexer(pLexer);
-
+            std::string strLanguageName = language->lexer().toStdString();
+//https://www.scintilla.org/LexillaDoc.html
 #if _WIN32
             typedef void *(__stdcall *CreateLexerFn)(const char *name);
 #else
             typedef void *(*CreateLexerFn)(const char *name);
 #endif
-            QFunctionPointer fn = QLibrary::resolve("lexilla5", "CreateLexer");
-            void *lexCpp = ((CreateLexerFn)fn)("cpp");
-            //   Call(SCI_SETILEXER, 0, (sptr_t)(void *)lexCpp);
-            //setILexer((sptr_t)(void *)lexCpp);
-            setILexer( reinterpret_cast<sptr_t>(lexCpp));
-
-
+            QFunctionPointer pfn = QLibrary::resolve("lexilla5", "CreateLexer");
+            //void *lexCpp = ((CreateLexerFn)fn)("cpp");
+            //setILexer( reinterpret_cast<sptr_t>(lexCpp)); //setILexer((sptr_t)(void *)lexCpp);
+            if(pfn == nullptr){
+                QMessageBox mb( QMessageBox::Icon::Critical, QObject::tr("Error"),
+                                QString("error: invalid get function lexilla5.CreateLexer")
+                               );
+                mb.exec();
+                return;
+            }
+            //void *lexPy = ((CreateLexerFn)fn)("python");
+            void* plex = ( reinterpret_cast<CreateLexerFn>(pfn) )( strLanguageName.c_str() );
+            if(plex == nullptr){
+                QMessageBox mb( QMessageBox::Icon::Critical, QObject::tr("Error"),
+                                QString("error: invalid lexx [%1] pointer").arg(strLanguageName.c_str())
+                               );
+                mb.exec();
+                return;
+            }
+            setILexer( reinterpret_cast<sptr_t>(plex) );
             for (int i = 0; i < language->keywords().size(); ++i) {
                 setKeyWords(i, language->keywords().at(i).toLatin1());
             }
             setProperty("fold", "1");
             setProperty("fold.compact", "0");
-        } else {
-
+        }else{
             //setLexer(SCLEX_NULL);
             assert(!"ustas");
-
             setKeyWords(0, "");
             setProperty("fold", "0");
         }
-
         Configuration *config = Configuration::instance();
         setColorScheme(ColorScheme::getColorScheme(config->colorScheme()));
-
         emit languageChanged(language);
     }
 }
