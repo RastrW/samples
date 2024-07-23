@@ -373,6 +373,8 @@ private slots:
      */
     void onUrlsDropped(const QList<QUrl>& uls);
 
+    void on_actionTstPy_triggered();
+
 private:
     /**
      * Sets up the actions for the window.

@@ -713,3 +713,10 @@ void QScintillaEditor::closeEvent(QCloseEvent *event) {
         event->ignore();
     }
 }
+
+#include "py_fun.h"
+void QScintillaEditor::on_actionTstPy_triggered()
+{
+    long n_res = EmbPyRunMacro();
+}
+
