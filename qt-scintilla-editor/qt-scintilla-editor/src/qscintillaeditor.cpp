@@ -49,6 +49,22 @@ QScintillaEditor::~QScintillaEditor() {
     delete ui;
 }
 
+//!ustas
+void QScintillaEditor::showEvent( QShowEvent* pShowEvent ) {
+
+    QWidget::showEvent( pShowEvent );
+    const Language *language = Language::fromLanguageId("python");
+    edit->setLanguage(language);
+    edit->setText(R"(
+import sys as sy
+def():
+    print('hello wrold')
+    for i in range(0,10,3):
+        print(i)
+)");
+
+};
+
 void QScintillaEditor::openFile(const QString& fileName) {
     if (checkModifiedAndSave()) {
         QString openFileName;

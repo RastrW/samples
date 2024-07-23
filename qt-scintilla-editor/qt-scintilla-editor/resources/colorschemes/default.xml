@@ -9,13 +9,13 @@
         <color type="whitespace">#C0C0C0</color>
     </colors>
     <styles>
-        <style name="Comment" foreground="#008000" italic="true" />
+        <style name="Comment"    foreground="#03c03c" italic="true" />
         <style name="DocComment" foreground="#008000" />
         <style name="DocKeyword" foreground="#008000" bold="true" />
-        <style name="Number" foreground="#8080FF" />
-        <style name="String" foreground="#800000" />
-        <style name="Character" foreground="#800080" />
-        <style name="Keyword" foreground="#000080" bold="true" />
+        <style name="Number"     foreground="#e2062c" />
+        <style name="String"     foreground="#e2062c" />
+        <style name="Character"  foreground="#e2062c" />
+        <style name="Keyword"    foreground="#318ce7" bold="true" />
     </styles>
     <languages>
         <language id="cpp">

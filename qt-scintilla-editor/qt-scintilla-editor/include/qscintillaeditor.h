@@ -47,6 +47,9 @@ public:
      */
     ~QScintillaEditor();
 
+    //!ustas
+    void showEvent( QShowEvent* pShowEvent )override;
+
     /**
      * Open a file with the provided file name.
      *
