@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.9)
 #https://github.com/mavroprovato/qt-scintilla-editor
-project(qt-scintilla-editor LANGUAGES CXX)
+project(qt-scintilla-editor LANGUAGES C CXX)
 
 #set(SCINTILLA_CODE ../scintilla-code)
 set(SCINTILLA_CODE C:/Qt/Examples/qt_6/scintilla550/scintilla)

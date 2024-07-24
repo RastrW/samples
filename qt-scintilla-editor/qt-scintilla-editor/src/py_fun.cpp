@@ -84,20 +84,27 @@ struct Pet {
     std::string name_;
 };
 
-template< class _T >
-void add_Pet_Func( _T& m_in ){
+template< typename _Class >
+void add_Pet_Func( _Class&& m_in ){
+//py::module_
+//void add_Pet_Func( py::module_&& m_in ){
     m_in.def( "setName", &Pet::setName );
     m_in.def( "getName", &Pet::getName );
     m_in.def( "bark",    &Pet::bark    );
 };
 
 safe_PYBIND11_EMBEDDED_MODULE(PetsTst, m) {
+    add_Pet_Func(
+        py::class_< Pet, std::shared_ptr<Pet> >(m, "Pet") //use existed Pet object
+    );
+/*    pybind11::detail::generic_type d = py::class_< Pet, std::shared_ptr<Pet> >(m, "Pet");
     py::class_< Pet, std::shared_ptr<Pet> >(m, "Pet")
             .def( "setName", &Pet::setName )
             .def( "getName", &Pet::getName )
             .def( "bark",    &Pet::bark    ); //use existed Pet object
-  //  add_Pet_Func( m
-  //  );
+*/
+  //  add_Pet_Func(
+    //);
 }
 
 long EmbPyRunMacro( ){
