@@ -107,13 +107,181 @@ safe_PYBIND11_EMBEDDED_MODULE(PetsTst, m) {
     //);
 }
 
+PYBIND11_CONSTINIT static py::gil_safe_call_once_and_store<py::object> exc_storage;
+
+#include <frameobject.h>
+
+typedef std::vector<std::string> wxArrayString;
+wxArrayString PyArrayStringToWx( PyObject* aArrayString )
+{
+    wxArrayString   ret;
+
+    if( !aArrayString )
+        return ret;
+
+    int list_size = PyList_Size( aArrayString );
+
+    for( int n = 0; n < list_size; n++ )
+    {
+        PyObject* element = PyList_GetItem( aArrayString, n );
+
+        if( element )
+        {
+            const char* str_res = nullptr;
+            PyObject* temp_bytes = PyUnicode_AsEncodedString( element, "UTF-8", "strict" );
+
+            if( temp_bytes != nullptr )
+            {
+                str_res = PyBytes_AS_STRING( temp_bytes );
+                //ret.Add( From_UTF8( str_res ), 1 );
+                ret.emplace_back(str_res );
+                Py_DECREF( temp_bytes );
+            }
+            else
+            {
+                assert(!"xz");
+                //wxLogMessage( wxS( "cannot encode Unicode python string" ) );
+            }
+        }
+    }
+
+    return ret;
+}
+
+
+
 long EmbPyRunMacro( ){
-    py::scoped_interpreter guard{}; // start the interpreter and keep it alive
-    std::shared_ptr<Pet> pet = std::make_shared<Pet>("TestttPet");
-    auto pets_mod = py::module::import("PetsTst");
-    py::globals()["pet"] = py::cast(pet);
-    py::exec("pet.setName('testPet')");
-    py::exec("pet.bark()");
+     py::scoped_interpreter guard{};
+    try{
+        //py::scoped_interpreter guard{}; // start the interpreter and keep it alive
+
+
+        //py::exec("import pdb");
+        //py::exec("pdb.set_trace()");
+        //py::exec("breakpoint()");
+        std::shared_ptr<Pet> pet = std::make_shared<Pet>("TestttPet");
+        auto pets_mod = py::module::import("PetsTst");
+        py::globals()["pet"] = py::cast(pet);
+        py::exec(R"(
+print('hello wold')
+print('hello wold2')
+pet.setName1('testPet'))");
+        py::exec("pet.bark()");
+    }catch( py::error_already_set &e){
+        e.restore();
+        PyObject *ptype = NULL, *pvalue = NULL, *ptraceback = NULL;
+        PyErr_Fetch(&ptype,&pvalue,&ptraceback);
+        //PyErr_Fetch(&ptype,&pvalue,&ptraceback);
+        PyErr_NormalizeException(&ptype,&pvalue,&ptraceback);
+//PyUnicode_FromString
+        //char *pStrErrorMessage = PyString_AsString(pvalue);
+        PyObject* str_exc_type = PyObject_Repr(ptype); //Now a unicode        object
+        PyObject* pyStr = PyUnicode_AsEncodedString(str_exc_type, "utf-8", "Error ~");
+        const char *strExcType = PyBytes_AS_STRING(pyStr);
+
+        PyTracebackObject* traceback = reinterpret_cast<PyTracebackObject*>(ptraceback); //get_the_traceback();
+
+         int line0 = traceback->tb_lineno;
+     //   const char* filename = PyString_AsString(traceback->tb_frame->f_code->co_filename);
+
+        {
+             //https://gitlab.com/kicad/code/kicad/-/blob/master/scripting/python_scripting.cpp
+             PyObject*   type = ptype;
+              PyObject*   value = pvalue;
+              PyObject*   traceback = ptraceback;
+
+              //PyErr_Fetch( &type, &value, &traceback );
+
+              //PyErr_NormalizeException( &type, &value, &traceback );
+
+              if( traceback == nullptr )
+              {
+                  traceback = Py_None;
+                  Py_INCREF( traceback );
+              }
+
+              PyException_SetTraceback( value, traceback );
+
+              PyObject* tracebackModuleString = PyUnicode_FromString( "traceback" );
+              PyObject* tracebackModule = PyImport_Import( tracebackModuleString );
+              Py_DECREF( tracebackModuleString );
+
+              PyObject* formatException = PyObject_GetAttrString( tracebackModule,
+                                                                  "format_exception" );
+
+
+              Py_DECREF( tracebackModule );
+
+               PyObject* args = Py_BuildValue( "(O,O,O)", type, value, traceback );
+               PyObject* result = PyObject_CallObject( formatException, args );
+               Py_XDECREF( formatException );
+               Py_XDECREF( args );
+               Py_XDECREF( type );
+               Py_XDECREF( value );
+               Py_XDECREF( traceback );
+
+               wxArrayString res = PyArrayStringToWx( result );
+
+               PyErr_Clear();
+
+
+
+         }
+
+/*
+        PyThreadState *tstate = PyThreadState_GET();
+        if (NULL != tstate && NULL != tstate ->cframe) {
+            //PyFrameObject *frame = tstate->cframe;
+            _PyCFrame *frame = tstate->cframe;
+
+            printf("Python stack trace:\n");
+            while (NULL != frame) {
+                // int line = frame->f_lineno;
+
+                 //frame->f_lineno will not always return the correct line number
+                 //you need to call PyCode_Addr2Line().
+
+                int line = PyCode_Addr2Line(frame->f_code, frame->f_lasti);
+                const char *filename = PyString_AsString(frame->f_code->co_filename);
+                const char *funcname = PyString_AsString(frame->f_code->co_name);
+                printf("    %s(%d): %s\n", filename, line, funcname);
+                frame = frame->f_back;
+            }
+        }
+
+*/
+        char *msg;
+        char *file;
+        int line;
+        int offset;
+        char *text;
+
+        int res = PyArg_ParseTuple(pvalue,"s(siis)",&msg,&file,&line,&offset,&text);
+
+        PyObject* file_name = PyObject_GetAttrString(pvalue,"filename");
+        PyObject* file_name_str = PyObject_Str(file_name);
+        PyObject* file_name_unicode = PyUnicode_AsEncodedString(file_name_str,"utf-8", "Error");
+        char *actual_file_name = PyBytes_AsString(file_name_unicode);
+
+        PyObject* line_no = PyObject_GetAttrString(pvalue,"lineno");
+        PyObject* line_no_str = PyObject_Str(line_no);
+        PyObject* line_no_unicode = PyUnicode_AsEncodedString(line_no_str,"utf-8", "Error");
+        char *actual_line_no = PyBytes_AsString(line_no_unicode);
+
+        printf("done");
+
+        if (e.matches(PyExc_FileNotFoundError)) {
+            py::print("missing.txt not found");
+        } else if (e.matches(PyExc_PermissionError)) {
+            py::print("missing.txt found but not accessible");
+        }else if(e.matches( PyExc_SyntaxError)){
+            py::print("syntax error");
+        } else {
+            throw;
+        }
+    }catch(const std::exception& ex){
+        printf("%s",ex.what());    }
+    //}catch(const std::exception& ex){        printf("%s",ex.what());    }
     return 1;
 };
 
