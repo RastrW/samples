@@ -154,8 +154,6 @@ long EmbPyRunMacro( ){
      py::scoped_interpreter guard{};
     try{
         //py::scoped_interpreter guard{}; // start the interpreter and keep it alive
-
-
         //py::exec("import pdb");
         //py::exec("pdb.set_trace()");
         //py::exec("breakpoint()");
@@ -167,7 +165,33 @@ print('hello wold')
 print('hello wold2')
 pet.setName1('testPet'))");
         py::exec("pet.bark()");
-    }catch( py::error_already_set &e){
+    }catch( const py::error_already_set& e ){
+        //https://gitlab.com/kicad/code/kicad/-/blob/master/scripting/python_scripting.cpp
+        //PyException_SetTraceback( &(e.value()), e.trace() );//!ustas not understend for what this, disable
+
+        PyObject* tracebackModuleString = PyUnicode_FromString( "traceback" );
+        PyObject* tracebackModule = PyImport_Import( tracebackModuleString );
+        Py_DECREF( tracebackModuleString );
+
+        PyObject* formatException = PyObject_GetAttrString( tracebackModule,
+                                                      "format_exception" );
+
+
+        Py_DECREF( tracebackModule );
+
+        PyObject* args = Py_BuildValue( "(O,O,O)", e.type(), e.value(), e.trace() );
+        PyObject* result = PyObject_CallObject( formatException, args );
+        Py_XDECREF( formatException );
+        Py_XDECREF( args );
+        wxArrayString res = PyArrayStringToWx( result );
+        PyErr_Clear();
+
+        return -1;
+
+       // PyErr_Clear();
+
+
+/*
         e.restore();
         PyObject *ptype = NULL, *pvalue = NULL, *ptraceback = NULL;
         PyErr_Fetch(&ptype,&pvalue,&ptraceback);
@@ -199,19 +223,13 @@ pet.setName1('testPet'))");
                   traceback = Py_None;
                   Py_INCREF( traceback );
               }
-
               PyException_SetTraceback( value, traceback );
-
               PyObject* tracebackModuleString = PyUnicode_FromString( "traceback" );
               PyObject* tracebackModule = PyImport_Import( tracebackModuleString );
               Py_DECREF( tracebackModuleString );
-
               PyObject* formatException = PyObject_GetAttrString( tracebackModule,
                                                                   "format_exception" );
-
-
               Py_DECREF( tracebackModule );
-
                PyObject* args = Py_BuildValue( "(O,O,O)", type, value, traceback );
                PyObject* result = PyObject_CallObject( formatException, args );
                Py_XDECREF( formatException );
@@ -220,13 +238,11 @@ pet.setName1('testPet'))");
                Py_XDECREF( value );
                Py_XDECREF( traceback );
 
-               wxArrayString res = PyArrayStringToWx( result );
+               wxArrayString res2 = PyArrayStringToWx( result );
 
                PyErr_Clear();
-
-
-
          }
+*/
 
 /*
         PyThreadState *tstate = PyThreadState_GET();
@@ -248,15 +264,15 @@ pet.setName1('testPet'))");
                 frame = frame->f_back;
             }
         }
-
 */
+/*
         char *msg;
         char *file;
         int line;
         int offset;
         char *text;
 
-        int res = PyArg_ParseTuple(pvalue,"s(siis)",&msg,&file,&line,&offset,&text);
+        int res4 = PyArg_ParseTuple(pvalue,"s(siis)",&msg,&file,&line,&offset,&text);
 
         PyObject* file_name = PyObject_GetAttrString(pvalue,"filename");
         PyObject* file_name_str = PyObject_Str(file_name);
@@ -279,8 +295,12 @@ pet.setName1('testPet'))");
         } else {
             throw;
         }
+*/
     }catch(const std::exception& ex){
-        printf("%s",ex.what());    }
+        printf("%s",ex.what());
+        assert(!"unknown exception");
+        return -10;
+    }
     //}catch(const std::exception& ex){        printf("%s",ex.what());    }
     return 1;
 };
