@@ -148,7 +148,7 @@ wxArrayString PyArrayStringToWx( PyObject* aArrayString )
     return ret;
 }
 
-
+#include <regex>
 
 long EmbPyRunMacro( ){
      py::scoped_interpreter guard{};
@@ -157,17 +157,47 @@ long EmbPyRunMacro( ){
         //py::exec("import pdb");
         //py::exec("pdb.set_trace()");
         //py::exec("breakpoint()");
+        py::exec("import sys");
         std::shared_ptr<Pet> pet = std::make_shared<Pet>("TestttPet");
         auto pets_mod = py::module::import("PetsTst");
         py::globals()["pet"] = py::cast(pet);
         py::exec(R"(
 print('hello wold')
 print('hello wold2')
+sys.os
 pet.setName1('testPet'))");
         py::exec("pet.bark()");
     }catch( const py::error_already_set& e ){
+        const char* pch = e.what();
+        if(nullptr != pch){
+            const std::string str_excp{pch};
+            const char* pch_start  {"<string>("};
+            const char* pch_finish {")"};
+            const std::string::size_type st_start = str_excp.find(pch_start);
+            if(std::string::npos != st_start){
+                const std::string::size_type st_line_num_start  = st_start+std::strlen(pch_start);
+                const std::string::size_type st_line_num_finish = str_excp.find(pch_finish, st_line_num_start);
+                if(std::string::npos != st_line_num_finish){
+                    if(st_line_num_finish > st_line_num_start){
+                        const std::string str_line_num {str_excp.substr(st_line_num_start, st_line_num_finish-st_line_num_start)};
+                        const long n_line_num = std::stol(str_line_num);
+                    }
+                }
+            }
+printf("dfdf");
+
+        }
+        return -1;
+
+        /*
         //https://gitlab.com/kicad/code/kicad/-/blob/master/scripting/python_scripting.cpp
-        //PyException_SetTraceback( &(e.value()), e.trace() );//!ustas not understend for what this, disable
+        PyException_SetTraceback( e.value().ptr(), e.trace().ptr() );//!ustas not understend for what this, disable
+
+        //PyObject* objectsRepresentation = PyObject_Repr(e.trace().ptr());
+        PyObject* objectsRepresentation = PyObject_Repr(e.value().ptr());
+        PyObject* pyStr = PyUnicode_AsEncodedString(objectsRepresentation, "utf-8", "Error ~");
+        const char *strEx = PyBytes_AS_STRING(pyStr);
+         //const char* s = PyString_AsString(objectsRepresentation);
 
         PyObject* tracebackModuleString = PyUnicode_FromString( "traceback" );
         PyObject* tracebackModule = PyImport_Import( tracebackModuleString );
@@ -175,21 +205,22 @@ pet.setName1('testPet'))");
 
         PyObject* formatException = PyObject_GetAttrString( tracebackModule,
                                                       "format_exception" );
-
-
         Py_DECREF( tracebackModule );
-
+        //PyObject* args = Py_BuildValue( "(O,O,O)", e.type(), e.value(), e.trace() );
+        //PyObject* args = Py_BuildValue( "(O,O,O)", e.value(), e.trace(), e.type() );
         PyObject* args = Py_BuildValue( "(O,O,O)", e.type(), e.value(), e.trace() );
+
+       // wxArrayString res1 = PyArrayStringToWx( args );
         PyObject* result = PyObject_CallObject( formatException, args );
         Py_XDECREF( formatException );
         Py_XDECREF( args );
         wxArrayString res = PyArrayStringToWx( result );
+        Py_XDECREF( result );
         PyErr_Clear();
 
         return -1;
 
-       // PyErr_Clear();
-
+*/
 
 /*
         e.restore();
