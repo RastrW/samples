@@ -57,8 +57,10 @@ void QScintillaEditor::showEvent( QShowEvent* pShowEvent ) {
     edit->setLanguage(language);
     edit->setText(R"(
 import sys as sy
-def():
-    print('hello wrold')
+pet.bark()
+sy.wwww()
+def funname():
+    p3rint('hello wrold')
     for i in range(0,10,3):
         print(i)
 )");
@@ -715,8 +717,10 @@ void QScintillaEditor::closeEvent(QCloseEvent *event) {
 }
 
 #include "py_fun.h"
-void QScintillaEditor::on_actionTstPy_triggered()
-{
-    long n_res = EmbPyRunMacro();
+void QScintillaEditor::on_actionTstPy_triggered(){
+    sptr_t sp_length = edit->textLength();
+    QByteArray byteArray = edit->getText(sp_length);
+    const std::string str_py_macro{byteArray.constData()};
+    long n_res = EmbPyRunMacro(str_py_macro);
 }
 

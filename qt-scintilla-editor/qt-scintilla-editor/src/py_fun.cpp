@@ -150,23 +150,27 @@ wxArrayString PyArrayStringToWx( PyObject* aArrayString )
 
 #include <regex>
 
-long EmbPyRunMacro( ){
-     py::scoped_interpreter guard{};
+long EmbPyRunMacro( const std::string& str_py_macro ){
+    py::scoped_interpreter guard{};
     try{
         //py::scoped_interpreter guard{}; // start the interpreter and keep it alive
         //py::exec("import pdb");
         //py::exec("pdb.set_trace()");
         //py::exec("breakpoint()");
-        py::exec("import sys");
+     //   py::exec("import sys");
         std::shared_ptr<Pet> pet = std::make_shared<Pet>("TestttPet");
         auto pets_mod = py::module::import("PetsTst");
         py::globals()["pet"] = py::cast(pet);
+        py::exec(str_py_macro);
+
+        /*
         py::exec(R"(
 print('hello wold')
 print('hello wold2')
 sys.os
 pet.setName1('testPet'))");
         py::exec("pet.bark()");
+        */
     }catch( const py::error_already_set& e ){
         const char* pch = e.what();
         if(nullptr != pch){
