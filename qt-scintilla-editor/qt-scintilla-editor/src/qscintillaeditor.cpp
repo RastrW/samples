@@ -23,12 +23,70 @@
 #include "ui_qscintillaeditor.h"
 #include "util.h"
 
+#include <QSplitter>
+#include <QVBoxLayout>
+
+void ShowSplittedWnd(){
+    QWidget* pWndWithSplitter = new QWidget();
+    QSplitter * splitter = new QSplitter(pWndWithSplitter);
+    Buffer* edit1 = new Buffer();
+    Buffer* edit2 = new Buffer();
+    QVBoxLayout *layout = new QVBoxLayout();
+    QVBoxLayout *container_layout = new QVBoxLayout;
+    splitter->addWidget(edit1);
+    splitter->setOrientation(Qt::Orientation::Vertical);
+    splitter->addWidget(edit2);
+    container_layout->addWidget(splitter);
+    pWndWithSplitter->setLayout(container_layout);
+    pWndWithSplitter->show();
+}
+
 QScintillaEditor::QScintillaEditor(QWidget *parent) :
         QMainWindow(parent), ui(new Ui::QScintillaEditor), workingDir(QDir::home()), wasMaximized(false), findDlg(0),
         aboutDlg(0), encodingDlg(0), languageDlg(0) {
     ui->setupUi(this);
+
+    //!ustas
+    //edit = new Buffer(parent);
+    //setCentralWidget(edit);
+
+    QWidget* pWndWithSplitter = new QWidget(parent);
+    QSplitter * splitter = new QSplitter(pWndWithSplitter);
     edit = new Buffer(parent);
-    setCentralWidget(edit);
+    Buffer* edit2 = new Buffer();
+    QVBoxLayout *layout = new QVBoxLayout();
+    QVBoxLayout *container_layout = new QVBoxLayout;
+    splitter->addWidget(edit);
+    splitter->setOrientation(Qt::Orientation::Vertical);
+    splitter->addWidget(edit2);
+    container_layout->addWidget(splitter);
+    pWndWithSplitter->setLayout(container_layout);
+    setCentralWidget(pWndWithSplitter);
+
+    //test
+    ShowSplittedWnd();
+
+    /*
+    QWidget* pWndWithSplitter = new QWidget();
+    QSplitter * splitter = new QSplitter(pWndWithSplitter);
+    Buffer* edit1 = new Buffer();
+    Buffer* edit2 = new Buffer();
+    QVBoxLayout *layout = new QVBoxLayout();
+    QVBoxLayout *container_layout = new QVBoxLayout;
+    splitter->addWidget(edit1);
+    splitter->setOrientation(Qt::Orientation::Vertical);
+    splitter->addWidget(edit2);
+    container_layout->addWidget(splitter);
+    pWndWithSplitter->setLayout(container_layout);
+    pWndWithSplitter->show();
+    */
+    /*
+    splitter->addWidget(edit1);
+    pWndWithSplitter->setAutoFillBackground(true);
+    splitter->setOrientation(Qt::Orientation::Vertical);
+    splitter->addWidget(edit2);*/
+    //setCentralWidget(pWndWithSplitter);
+    //pWndWithSplitter->show();
 
     IconDb* iconDb = IconDb::instance();
     setWindowIcon(iconDb->getIcon(IconDb::Application));
