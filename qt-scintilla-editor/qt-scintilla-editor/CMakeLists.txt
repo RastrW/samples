@@ -156,7 +156,7 @@ if(MSVC)
         target_link_libraries(qt-scintilla-editor PRIVATE Qt::Widgets ScintillaEdit5  lexilla5)
     endif()
 else()
-    target_link_libraries(qt-scintilla-editor PRIVATE Qt::Widgets libScintillaEdit.so.5 libLexilla.so.5)
+    target_link_libraries(qt-scintilla-editor PRIVATE Qt::Widgets libScintillaEdit.so libLexilla.so)
 endif()
 
 if(BUILD_WITH_EXP_PY)

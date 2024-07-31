@@ -462,11 +462,12 @@ void Buffer::setLanguage(const Language *language) {
 //https://www.scintilla.org/LexillaDoc.html
 #if _WIN32
             typedef void *(__stdcall *CreateLexerFn)(const char *name);
+            QFunctionPointer pfn = QLibrary::resolve("lexilla5", "CreateLexer");
 #else
             typedef void *(*CreateLexerFn)(const char *name);
+            QFunctionPointer pfn = QLibrary::resolve("libLexilla.so.5", "CreateLexer");
 #endif
-            QFunctionPointer pfn = QLibrary::resolve("lexilla5", "CreateLexer");
-            //void *lexCpp = ((CreateLexerFn)fn)("cpp");
+           //void *lexCpp = ((CreateLexerFn)fn)("cpp");
             //setILexer( reinterpret_cast<sptr_t>(lexCpp)); //setILexer((sptr_t)(void *)lexCpp);
             if(pfn == nullptr){
                 QMessageBox mb( QMessageBox::Icon::Critical, QObject::tr("Error"),
