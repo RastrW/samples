@@ -67,10 +67,11 @@ set(CMAKE_AUTOUIC_SEARCH_PATHS forms)
 find_package(QT NAMES Qt5 Qt6 COMPONENTS Widgets REQUIRED)
 
 if(${QT_VERSION_MAJOR} GREATER_EQUAL 6)
-    find_package(Qt${QT_VERSION_MAJOR} REQUIRED COMPONENTS Core5Compat)
+    find_package(Qt${QT_VERSION_MAJOR} REQUIRED COMPONENTS Core5Compat)    
 endif()
 
-find_package(Qt5 COMPONENTS Widgets REQUIRED)
+#find_package(Qt5 COMPONENTS Widgets REQUIRED)
+find_package(Qt${QT_VERSION_MAJOR} REQUIRED COMPONENTS Widgets)
 
 set(QT_USE_QTGUI TRUE)
 
@@ -127,8 +128,11 @@ set(SOURCES
     src/py_fun.cpp
 )
 
-#list (APPEND SOURCES resources/qtscintillaeditor.qrc)
-qt5_add_resources ( SOURCES resources/qtscitntillaeditor.qrc )
+if(${QT_VERSION_MAJOR} GREATER_EQUAL 6)
+else()
+    #list (APPEND SOURCES resources/qtscintillaeditor.qrc)
+    qt5_add_resources ( SOURCES resources/qtscitntillaeditor.qrc )
+endif()
 
 add_executable( qt-scintilla-editor
     ${SOURCES}
