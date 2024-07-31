@@ -107,7 +107,7 @@ safe_PYBIND11_EMBEDDED_MODULE(PetsTst, m) {
     //);
 }
 
-PYBIND11_CONSTINIT static py::gil_safe_call_once_and_store<py::object> exc_storage;
+//no in lin! PYBIND11_CONSTINIT static py::gil_safe_call_once_and_store<py::object> exc_storage;
 
 #include <frameobject.h>
 

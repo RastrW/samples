@@ -6,6 +6,7 @@
 #include <QDebug>
 #include <QDir>
 #include <QXmlStreamReader>
+#include <QtGlobal>
 #include <algorithm>
 
 QStringList ColorScheme::allColorSchemes() {
@@ -99,6 +100,82 @@ void ColorScheme::processColorSchemeXml(QXmlStreamReader &xml,
     QHash<QString, StyleInfo> definedStyles;
 
     QString langId;
+
+#if QT_VERSION < QT_VERSION_CHECK(6, 0, 0)
+    while (!xml.atEnd() && !xml.hasError()) {
+        QXmlStreamReader::TokenType token = xml.readNext();
+        if (token == QXmlStreamReader::StartElement) {
+            if (xml.name() == "colorscheme") {
+            //if (0 == xml.name().compare("colorscheme")) {
+                QString name = xml.attributes().value("name").toString();
+                colorSchemes[name] = colorScheme;
+            } else if (xml.name()==("color")) {
+            //} else if (0==xml.name().compare("color")) {
+                QString type = xml.attributes().value("type").toString();
+                QString text = xml.readElementText(
+                            QXmlStreamReader::ErrorOnUnexpectedElement);
+                if (type == "foreground") {
+                    colorScheme->m_foreground = convertColor(text);
+                } else if (type == "background") {
+                    colorScheme->m_background = convertColor(text);
+                } else if (type == "caret") {
+                    colorScheme->m_caret = convertColor(text);
+                } else if (type == "caretLine") {
+                    colorScheme->m_caretLine = convertColor(text);
+                } else if (type == "selection") {
+                    colorScheme->m_selection = convertColor(text);
+                } else if (type == "whitespace") {
+                    colorScheme->m_whitespaceForeground = convertColor(text);
+                }
+            } else if (xml.name() == ("style")) {
+            //} else if (0==xml.name().compare("style")) {
+                StyleInfo styleInfo;
+                QXmlStreamAttributes attrs = xml.attributes();
+                QString name = attrs.value("name").toString();
+                if (attrs.hasAttribute("foreground")) {
+                    styleInfo.setForegroundColor(
+                            convertColor(attrs.value("foreground").toString()));
+                }
+                if (attrs.hasAttribute("background")) {
+                    styleInfo.setBackgroundColor(
+                            convertColor(attrs.value("background").toString()));
+                }
+                if (attrs.hasAttribute("bold")) {
+                    styleInfo.setBold(attrs.value("bold").toString() == "true");
+                }
+                if (attrs.hasAttribute("italic")) {
+                    styleInfo.setItalic(
+                            attrs.value("italic").toString() == "true");
+                }
+                if (attrs.hasAttribute("underline")) {
+                    styleInfo.setUnderline(
+                            attrs.value("underline").toString() == "true");
+                }
+                if (attrs.hasAttribute("eolFilled")) {
+                    styleInfo.setEolFilled(
+                            attrs.value("eolFilled").toString() == "true");
+                }
+                definedStyles[name] = styleInfo;
+            } else if (xml.name() == ("language")) {
+            //} else if (0==xml.name().compare("language")) {
+                langId = xml.attributes().value("id").toString();
+                colorScheme->m_languagesStyles[langId] = QHash<int, StyleInfo>();
+            } else if (xml.name() == ("styleInfo")) {
+            //} else if (0==xml.name().compare("styleInfo")) {
+                QString idStr = xml.attributes().value("id").toString();
+                bool ok;
+                int id = idStr.toInt(&ok);
+                if (ok) {
+                    QXmlStreamAttributes attrs = xml.attributes();
+                    if (attrs.hasAttribute("styleRef")) {
+                        QString styleRef = attrs.value("styleRef").toString();
+                        colorScheme->m_languagesStyles[langId][id] = definedStyles[styleRef];
+                    }
+                }
+            }
+        }
+    }
+#else
     while (!xml.atEnd() && !xml.hasError()) {
         QXmlStreamReader::TokenType token = xml.readNext();
         if (token == QXmlStreamReader::StartElement) {
@@ -168,4 +245,5 @@ void ColorScheme::processColorSchemeXml(QXmlStreamReader &xml,
             }
         }
     }
+#endif
 }

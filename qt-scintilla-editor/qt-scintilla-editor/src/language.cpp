@@ -5,6 +5,7 @@
 #include <QStringList>
 #include <QXmlStreamReader>
 #include <QRegExp>
+#include <QtGlobal>
 #include <SciLexer.h>
 
 QString Language::filterString() {
@@ -70,6 +71,63 @@ QList<Language*> Language::intializeLangs() {
         Language *currentLang = NULL;
         QStringList keywords;
         QList<StyleDescription> styles;
+#if QT_VERSION < QT_VERSION_CHECK(6, 0, 0)
+        while (!xml.atEnd() && !xml.hasError()) {
+            QXmlStreamReader::TokenType token = xml.readNext();
+            if (token == QXmlStreamReader::StartElement) {
+                if (xml.name() == ("language")) {
+                    QXmlStreamAttributes attrs = xml.attributes();
+                    currentLang = new Language;
+                    currentLang->m_langId = attrs.value("id").toString();
+                    currentLang->m_name = attrs.value("name").toString();
+                    currentLang->m_lexer = attrs.value("lexer").toString();
+                } else if (xml.name() == ("patterns")) {
+                    currentLang->m_patterns = xml.readElementText(
+                                QXmlStreamReader::ErrorOnUnexpectedElement);
+                } else if (xml.name() == ("keywordSet")) {
+                    bool ok;
+                    int id = xml.attributes().value("id").toString().toInt(&ok);
+                    if (ok) {
+                        while (id != keywords.size()) {
+                            keywords.append("");
+                        }
+                        keywords << xml.readElementText(
+                            QXmlStreamReader::ErrorOnUnexpectedElement);
+                    } else {
+                        qWarning("id attribute of keywordSet element is "
+                                 "invalid");
+                    }
+                } else if (xml.name() == ("styleDescription")) {
+                    QXmlStreamAttributes attrs = xml.attributes();
+                    QString description = attrs.value("description").toString();
+                    bool ok;
+                    uint style = attrs.value("style").toString().toUInt(&ok);
+                    if (ok && style <= UCHAR_MAX) {
+                        styles << StyleDescription((uchar) style, description);
+                    } else {
+                        qWarning("id attribute of styleDescription element is "
+                                 "invalid");
+                    }
+                }
+            } else if (token == QXmlStreamReader::EndElement) {
+                if (xml.name() == ( "keywordSets")) {
+/* //!ustas
+                    currentLang->m_keywords = keywords.replaceInStrings(
+                            QRegExp("\\s+"), " ");;
+*/
+                    //assert(!"ustas");
+                    currentLang->m_keywords = keywords;
+
+                    keywords.clear();
+                } else if (xml.name() == ( "styleDescriptions")) {
+                    currentLang->m_styles = styles;
+                    styles.clear();
+                } else if (xml.name() == ("language")) {
+                    langs << currentLang;
+                }
+            }
+        }
+#else
         while (!xml.atEnd() && !xml.hasError()) {
             QXmlStreamReader::TokenType token = xml.readNext();
             if (token == QXmlStreamReader::StartElement) {
@@ -125,6 +183,7 @@ QList<Language*> Language::intializeLangs() {
                 }
             }
         }
+#endif
         if (xml.hasError()) {
             qFatal("Error while parsing the languages configuration file: %s.",
                 qPrintable(xml.errorString()));

@@ -3,6 +3,7 @@
 #include <QDebug>
 #include <QFile>
 #include <QXmlStreamReader>
+#include <QtGlobal>
 
 QListIterator<Encoding*> Encoding::allEncodings() {
     return QListIterator<Encoding*>(availableEncodings);
@@ -46,8 +47,11 @@ QList<Encoding*> Encoding::intializeEncodings(){
         while (!xml.atEnd() && !xml.hasError()) {
             QXmlStreamReader::TokenType token = xml.readNext();
             if (token == QXmlStreamReader::StartElement) {
-                //if (xml.name() == "category") {
+#if QT_VERSION < QT_VERSION_CHECK(6, 0, 0)
+                if (xml.name() == "category") {
+#else
                 if(0 ==xml.name().compare("category")) {
+#endif
                     // New category element, get the id
                     bool ok;
                     int id = xml.attributes().value("id").toString().toInt(&ok);
@@ -56,8 +60,11 @@ QList<Encoding*> Encoding::intializeEncodings(){
                     } else {
                         qWarning("id attribute of category element is invalid");
                     }
-                //} else if (xml.name() == "encoding") {
+#if QT_VERSION < QT_VERSION_CHECK(6, 0, 0)
+                } else if (xml.name() == "encoding") {
+#else
                 } else if (0==xml.name().compare("encoding")) {
+#endif
                     // New encoding element, add it to the list
                     QString language = xml.attributes().value("language").toString();
                     QString displayName = xml.attributes().value("displayName").toString();
