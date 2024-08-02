@@ -150,6 +150,9 @@ wxArrayString PyArrayStringToWx( PyObject* aArrayString )
 
 #include <regex>
 
+std::shared_ptr<Pet> pet = std::make_shared<Pet>("TestttPet");
+int g_n_num_imp = 0;
+
 long EmbPyRunMacro( const std::string& str_py_macro ){
     py::scoped_interpreter guard{};
     try{
@@ -158,9 +161,15 @@ long EmbPyRunMacro( const std::string& str_py_macro ){
         //py::exec("pdb.set_trace()");
         //py::exec("breakpoint()");
      //   py::exec("import sys");
+        /*
         std::shared_ptr<Pet> pet = std::make_shared<Pet>("TestttPet");
-        auto pets_mod = py::module::import("PetsTst");
-        py::globals()["pet"] = py::cast(pet);
+
+*/
+        //if(g_n_num_imp == 0){
+            g_n_num_imp++;
+            auto pets_mod = py::module::import("PetsTst");
+            py::globals()["pet"] = py::cast(pet);
+        //}
         py::exec(str_py_macro);
 
         /*

@@ -114,6 +114,49 @@ void QScintillaEditor::showEvent( QShowEvent* pShowEvent ) {
     const Language *language = Language::fromLanguageId("python");
     edit->setLanguage(language);
     edit->setText(R"(
+from datetime import datetime
+import pytz
+
+new_york_tz = pytz.timezone('America/New_York')
+current_time = datetime.now(new_york_tz)
+print(current_time)
+
+pet.bark()
+
+
+    )");
+/*
+    edit->setText(R"(
+#import PyQt5
+from PyQt5.QtWidgets import QApplication, QWidget
+
+# Only needed for access to command line arguments
+import sys
+
+# You need one (and only one) QApplication instance per application.
+# Pass in sys.argv to allow command line arguments for your app.
+# If you know you won't use command line arguments QApplication([]) works too.
+app = QApplication(sys.argv)
+
+# Create a Qt widget, which will be our window.
+window = QWidget()
+window.show()  # IMPORTANT!!!!! Windows are hidden by default.
+
+pet.bark()
+# Start the event loop.
+app.exec_()
+)");
+        */
+    /*
+    edit->setText(R"(
+import numpy
+a = numpy.arange(15).reshape(3, 5)
+numpy.save('/home/ustas/projects/tst1.txt', a)
+pet.bark()
+)");
+    */
+/*
+    edit->setText(R"(
 import sys as sy
 pet.bark()
 sy.wwww()
@@ -122,7 +165,7 @@ def funname():
     for i in range(0,10,3):
         print(i)
 )");
-
+*/
 };
 
 void QScintillaEditor::openFile(const QString& fileName) {
