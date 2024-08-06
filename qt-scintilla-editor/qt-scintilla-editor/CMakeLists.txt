@@ -2,21 +2,23 @@ cmake_minimum_required(VERSION 3.16)
 #https://github.com/mavroprovato/qt-scintilla-editor
 project(qt-scintilla-editor LANGUAGES C CXX)
 
-#set(SCINTILLA_CODE ../scintilla-code)
+
 if(MSVC)
-    set(SCINTILLA_CODE C:/Qt/Examples/qt_6/scintilla550/scintilla)
+    #set(SCINTILLA_CODE C:/Qt/Examples/qt_6/scintilla550/scintilla)
+    #set(SCINTILLA_CODE C:/projects/compile/sci/bin)
+    set(SCI_DIR C:/projects/compile/sci/)
 else()
-    set(SCINTILLA_CODE /home/ustas/projects/compile/scintilla/scintilla551/)
+    #set(SCINTILLA_CODE /home/ustas/projects/compile/scintilla/scintilla551/)
+    set(SCI_DIR C:/projects/compile/sci/)
 endif()
 
-#it nt use CMake include(cmake/scintilla.cmake)
+#it not use CMake include(cmake/scintilla.cmake)
 
-#set(LEXILLA_CODE C:/Qt/Examples/qt_6/lexilla532/lexilla)
-if(MSVC)
-    set(LEXILLA_CODE C:/Qt/Examples/qt_6/lexilla532/lexilla/)
-else()
-    set(LEXILLA_CODE /home/ustas/projects/compile/scintilla/lexilla533)
-endif()
+#if(MSVC)
+#    set(LEXILLA_CODE C:/Qt/Examples/qt_6/lexilla532/lexilla/)
+#else()
+#    set(LEXILLA_CODE /home/ustas/projects/compile/scintilla/lexilla533)
+#endif()
 
 option( BUILD_WITH_EXP_PY    "Build with Python"    ON )
 
@@ -41,17 +43,17 @@ if(BUILD_WITH_EXP_PY)
 endif()
 
 include_directories(
-        ${SCINTILLA_CODE}/include
-        ${SCINTILLA_CODE}/src #ustas
-        ${LEXILLA_CODE}/include
-        ${SCINTILLA_CODE}/qt/ScintillaEditBase
-        ${SCINTILLA_CODE}/qt/ScintillaEdit
+        ${SCI_DIR}/scintilla/include
+        ${SCI_DIR}/scintilla/src #ustas
+        ${SCI_DIR}/scintilla/qt/ScintillaEditBase
+        ${SCI_DIR}/scintilla/qt/ScintillaEdit
+        ${SCI_DIR}/lexilla/include
         include
 )
 
-link_directories(${SCINTILLA_CODE}/bin)
+link_directories(${SCI_DIR}/bin)
 #link_directories(${LEXILLA_CODE}/bin) //ustas moved to ${SCINTILLA_CODE}
-link_directories(${LEXILLA_CODE}/bin)
+#link_directories(${LEXILLA_CODE}/bin)
 
 set(CMAKE_INCLUDE_CURRENT_DIR ON)
 

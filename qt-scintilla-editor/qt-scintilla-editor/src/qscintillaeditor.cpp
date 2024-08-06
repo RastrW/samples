@@ -10,6 +10,9 @@
 #include <QLabel>
 #include <QMessageBox>
 #include <QSettings>
+#include <QSplitter>
+#include <QVBoxLayout>
+
 
 #include "aboutdialog.h"
 #include "buffer.h"
@@ -23,8 +26,6 @@
 #include "ui_qscintillaeditor.h"
 #include "util.h"
 
-#include <QSplitter>
-#include <QVBoxLayout>
 
 void ShowSplittedWnd(){
     QWidget* pWndWithSplitter = new QWidget();
