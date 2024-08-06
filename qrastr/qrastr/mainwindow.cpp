@@ -195,9 +195,14 @@ void MainWindow::rgm_wrap(){
 
     emit rgm_signal();
 }
+#include "qmcr/mcrwnd.h"
 void MainWindow::ActMacroDlg(){
     //long res = Rgm(id_rastr_,"");
     long n_res = 0;
+
+    McrWnd* pMcrWnd = new McrWnd(this) ;
+    pMcrWnd->show();
+
 
     std::string str_msg = "";
     if (n_res < 0)

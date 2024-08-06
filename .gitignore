@@ -1,1 +1,4 @@
+*.user*
+build*
+.vscode
 qrastr/qrastr/CMakeLists.txt.user
