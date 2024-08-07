@@ -478,6 +478,9 @@ void Buffer::setLanguage(const Language *language) {
             }
             //void *lexPy = ((CreateLexerFn)fn)("python");
             void* plex = ( reinterpret_cast<CreateLexerFn>(pfn) )( strLanguageName.c_str() );
+
+            //ILexer5* plex = CreateLexer(strLanguageName.c_str());
+            //ILexer5* plex = CreateLexer("python");
             if(plex == nullptr){
                 QMessageBox mb( QMessageBox::Icon::Critical, QObject::tr("Error"),
                                 QString("error: invalid lexx [%1] pointer").arg(strLanguageName.c_str())

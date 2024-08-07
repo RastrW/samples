@@ -148,17 +148,34 @@ if(BUILD_WITH_EXP_PY)
   message(STATUS " pybind11_LIBRARIES    = ${pybind11_LIBRARIES}")
 endif(BUILD_WITH_EXP_PY)
 
-#target_link_libraries(qt-scintilla-editor PRIVATE Qt5::Widgets ScintillaEdit)
-#target_link_libraries(qt-scintilla-editor PRIVATE Qt6::Widgets ScintillaEdit5 Qt6::Core5Compat lexilla5)
-#target_link_libraries(qt-scintilla-editor PRIVATE Qt::Widgets ScintillaEdit5 Qt::Core5Compat lexilla5)
+target_link_libraries(qt-scintilla-editor PRIVATE Qt::Widgets )
+if(${QT_VERSION_MAJOR} GREATER_EQUAL 6)
+    target_link_libraries(qt-scintilla-editor PRIVATE  Qt::Core5Compat )
+endif()
+
+# from https://github.com/Vatsinator/vatsinator-legacy/blob/develop/CMakeLists.txt
+# set configuration types (msvc/xcode)
+if (CMAKE_CONFIGURATION_TYPES)
+    set (CMAKE_CONFIGURATION_TYPES Debug Release)
+    set (CMAKE_CONFIGURATION_TYPES "${CMAKE_CONFIGURATION_TYPES}" CACHE STRING
+        "Reset the configurations to what we actually need" FORCE
+)
+endif()
+
+if (CMAKE_BUILD_TYPE MATCHES Debug)
+    set (CMAKE_BUILD_TYPE Debug)
+else ()
+    set (CMAKE_BUILD_TYPE Release)
+endif ()
+
 if(MSVC)
-    if(${QT_VERSION_MAJOR} GREATER_EQUAL 6)
-        target_link_libraries(qt-scintilla-editor PRIVATE Qt::Widgets ScintillaEdit5 Qt::Core5Compat lexilla5)
+    if (CMAKE_BUILD_TYPE MATCHES Debug)
+        target_link_libraries(qt-scintilla-editor PRIVATE ScintillaEdit_d5 Lexilla_d5 )
     else()
-        target_link_libraries(qt-scintilla-editor PRIVATE Qt::Widgets ScintillaEdit5  lexilla5)
+        target_link_libraries(qt-scintilla-editor PRIVATE ScintillaEdit5   Lexilla5   )
     endif()
 else()
-    target_link_libraries(qt-scintilla-editor PRIVATE Qt::Widgets libScintillaEdit.so libLexilla.so)
+    target_link_libraries(qt-scintilla-editor libScintillaEdit.so libLexilla.so)
 endif()
 
 if(BUILD_WITH_EXP_PY)
