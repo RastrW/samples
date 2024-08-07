@@ -9,14 +9,42 @@ set(CMAKE_AUTORCC ON)
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
+# from https://github.com/Vatsinator/vatsinator-legacy/blob/develop/CMakeLists.txt
+# set configuration types (msvc/xcode)
+if (CMAKE_CONFIGURATION_TYPES)
+    set (CMAKE_CONFIGURATION_TYPES Debug Release)
+    set (CMAKE_CONFIGURATION_TYPES "${CMAKE_CONFIGURATION_TYPES}" CACHE STRING
+        "Reset the configurations to what we actually need" FORCE
+)
+endif()
+
+if(MSVC)
+    set(SCI_DIR C:/projects/compile/sci/)
+else()
+    set(SCI_DIR C:/projects/compile/sci/)
+endif()
+
+
 set(CMAKE_WINDOWS_EXPORT_ALL_SYMBOLS ON)#visual studio not generate .lib without exported from .dll!
 
 find_package(QT NAMES Qt6 Qt5 REQUIRED COMPONENTS Widgets LinguistTools)
 find_package(Qt${QT_VERSION_MAJOR} REQUIRED COMPONENTS Widgets LinguistTools)
 
+include_directories(
+        ${SCI_DIR}/scintilla/include
+        ${SCI_DIR}/scintilla/src #ustas
+        ${SCI_DIR}/scintilla/qt/ScintillaEditBase
+        ${SCI_DIR}/scintilla/qt/ScintillaEdit
+        ${SCI_DIR}/lexilla/include
+        include
+)
+
+link_directories(${SCI_DIR}/bin)
+
 set(TS_FILES qmcr_ru_RU.ts)
 set(PROJECT_SOURCES)
 list (APPEND PROJECT_SOURCES
+        scihlp.h scihlp.cpp
         mcrwnd.h mcrwnd.cpp
         ${TS_FILES}
 )
@@ -55,7 +83,17 @@ else()
     endif()
 endif()
 
-target_link_libraries(qmcr PRIVATE Qt${QT_VERSION_MAJOR}::Widgets)
+target_link_libraries( qmcr PRIVATE Qt${QT_VERSION_MAJOR}::Widgets)
+
+if(MSVC)
+    if (CMAKE_BUILD_TYPE MATCHES Debug)
+        target_link_libraries( qmcr PRIVATE ScintillaEdit_d5 Lexilla_d5 )
+    else()
+        target_link_libraries( qmcr PRIVATE ScintillaEdit5   Lexilla5   )
+    endif()
+else()
+    target_link_libraries( qmcr libScintillaEdit.so libLexilla.so)
+endif()
 
 # Qt for iOS sets MACOSX_BUNDLE_GUI_IDENTIFIER automatically since Qt 6.1.
 # If you are developing for iOS or macOS you should consider setting an

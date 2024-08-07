@@ -2,6 +2,8 @@
 #include <QVBoxLayout>
 #include <QTextEdit>
 #include "mcrwnd.h"
+//#include "ScintillaEdit.h"
+#include "scihlp.h"
 
 McrWnd::McrWnd(QWidget *parent)
     //: QWidget{parent}{
@@ -13,8 +15,12 @@ void McrWnd::showEvent(QShowEvent *event) {
     QWidget::showEvent( event );
     setWindowTitle(tr("Macro Python"));
     QSplitter * splitter = new QSplitter(this);
-    QTextEdit* edit1 = new QTextEdit();
-    QTextEdit* edit2 = new QTextEdit();
+  // QTextEdit* edit1 = new QTextEdit();
+  //  ScintillaEdit* edit1 = new ScintillaEdit;
+    SciHlp* edit1 = new SciHlp;
+    //QTextEdit* edit2 = new QTextEdit();
+    //ScintillaEdit* edit2 = new ScintillaEdit;
+    SciHlp* edit2 = new SciHlp;
     QVBoxLayout *layout = new QVBoxLayout();
     QVBoxLayout *container_layout = new QVBoxLayout;
     splitter->addWidget(edit1);
