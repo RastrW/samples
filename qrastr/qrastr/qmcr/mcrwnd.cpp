@@ -17,10 +17,20 @@ void McrWnd::showEvent(QShowEvent *event) {
     QSplitter * splitter = new QSplitter(this);
   // QTextEdit* edit1 = new QTextEdit();
   //  ScintillaEdit* edit1 = new ScintillaEdit;
-    SciHlp* edit1 = new SciHlp;
+    SciHlp* edit1 = new SciHlp(nullptr, SciHlp::_en_role::editor_python);
+    edit1->setContent(R"(
+import os
+#print(os.get_exec_path())
+print(os.getcwd())
+import astra
+p = astra.Pet('Rastr')
+print(p.getName())
+print('that\'s all folks!')
+
+                   )");
     //QTextEdit* edit2 = new QTextEdit();
     //ScintillaEdit* edit2 = new ScintillaEdit;
-    SciHlp* edit2 = new SciHlp;
+    SciHlp* edit2 = new SciHlp(nullptr, SciHlp::_en_role::prot_macro);
     QVBoxLayout *layout = new QVBoxLayout();
     QVBoxLayout *container_layout = new QVBoxLayout;
     splitter->addWidget(edit1);

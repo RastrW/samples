@@ -12,6 +12,7 @@ public:
     virtual ~McrWnd();
     void showEvent(QShowEvent *event) override;
 
+
 signals:
 
 };
