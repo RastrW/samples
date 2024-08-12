@@ -3,6 +3,7 @@
 
 #include <QWidget>
 #include <QDialog>
+#include <QToolBar>
 
 //class McrWnd : public QWidget{
 class McrWnd : public QDialog{
@@ -11,9 +12,13 @@ public:
     explicit McrWnd(QWidget *parent = nullptr);
     virtual ~McrWnd();
     void showEvent(QShowEvent *event) override;
+    QToolBar* pToolBar_ = nullptr;
+    QAction* pActNew_ = nullptr;
 
 
 signals:
+private slots:
+    void newFile();
 
 };
 

@@ -49,6 +49,9 @@ public:
         //setSavePoint();
         return _ret_vals::ok;
     };
+private slots:
+    void onMarginClicked(Scintilla::Position position, Scintilla::KeyMod modifiers, int margin);
+public:
     const _en_role role_;
 };//class SciHlp{
 

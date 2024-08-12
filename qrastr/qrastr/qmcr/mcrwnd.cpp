@@ -1,13 +1,32 @@
 #include <QSplitter>
 #include <QVBoxLayout>
+#include <QApplication>
+#include <QStyle>
 #include <QTextEdit>
 #include "mcrwnd.h"
 //#include "ScintillaEdit.h"
 #include "scihlp.h"
 
+
 McrWnd::McrWnd(QWidget *parent)
     //: QWidget{parent}{
-    : QDialog{parent}{
+    : QDialog(parent,
+              Qt::WindowMinimizeButtonHint |
+              Qt::WindowMaximizeButtonHint |
+              Qt::WindowCloseButtonHint){
+    const int nWidth = 600;
+    const int nHeight = 800;
+    resize(nWidth, nHeight);
+
+  //  pActNew_ = new QAction(QIcon(":/images/new.png"), tr("&New"), this);
+     //action->setIcon( QIcon(QApplication::style()->standardIcon(QStyle::SP_FileIcon)) );
+    //  pActNew_ = new QAction( QIcon(QApplication::style()->standardIcon(QStyle::SP_FileIcon)),tr("&New"), this);
+    pActNew_ = new QAction( QIcon(QApplication::style()->standardIcon(QStyle::SP_FileDialogStart )),tr("&New"), this);
+    pActNew_->setShortcut(tr("Ctrl+N")); //SP_DialogSaveButton, SP_MediaPlay,SP_FileDialogContentsView
+    //action->setShortcut(QKeySequence(Qt::CTRL + Qt::Key_P));
+    pActNew_->setStatusTip(tr("Create a new file"));
+    connect( pActNew_, SIGNAL(triggered()), this, SLOT(newFile()));
+
 }
 McrWnd::~McrWnd(){
 }
@@ -54,11 +73,31 @@ else:
     SciHlp* edit2 = new SciHlp(nullptr, SciHlp::_en_role::prot_macro);
     QVBoxLayout *layout = new QVBoxLayout();
     QVBoxLayout *container_layout = new QVBoxLayout;
+//    toolbar = new QToolBar;
+  //  toolLayout->addWidget(toolbar);
+    pToolBar_  = new QToolBar;
+    pToolBar_->addAction(pActNew_);
+    container_layout->addWidget(pToolBar_);
+
     splitter->addWidget(edit1);
     splitter->setOrientation(Qt::Orientation::Vertical);
     splitter->addWidget(edit2);
     container_layout->addWidget(splitter);
     setLayout(container_layout);
+/*
+    toolLayout = new QBoxLayout(QBoxLayout::TopToBottom, this);
+    //set margins to zero so the toolbar touches the widget's edges
+    toolLayout->setContentsMargins(0, 0, 0, 0);
+
+    toolbar = new QToolBar;
+    toolLayout->addWidget(toolbar);
+
+    //use a different layout for the contents so it has normal margins
+    contentsLayout = new ...
+    toolLayout->addLayout(contentsLayout);
+
+*/
+
 /*
     QWidget* pWndWithSplitter = new QWidget();
     QSplitter * splitter = new QSplitter(pWndWithSplitter);
@@ -74,4 +113,8 @@ else:
     pWndWithSplitter->show();
     */
 
+}
+void McrWnd::newFile(){
+    printf("sddfdf");
+    qDebug("new File");
 }

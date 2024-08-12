@@ -67,6 +67,7 @@ if(${QT_VERSION_MAJOR} GREATER_EQUAL 6)
         qt_add_executable(qmcr
             MANUAL_FINALIZATION
             ${PROJECT_SOURCES}
+            tst_toolbox.h tst_toolbox.cpp tst_toolbox.ui
         )
     endif()
     qt_create_translation(QM_FILES ${CMAKE_SOURCE_DIR} ${TS_FILES})
