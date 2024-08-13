@@ -4,6 +4,10 @@
 #include "SciLexer.h"
 #include "scihlp.h"
 
+//all of wrapped shit can be found in -> ScintillaEdit.cpp <-
+//interesting scintilla use https://github.com/SolarAquarion/wxglterm/tree/master/src/external_plugins
+//https://github.com/mneuroth/SciTEQt
+
 const char *MonospaceFont(){
     static char fontNameDefault[200] = "";
     if (!fontNameDefault[0]) {
@@ -17,69 +21,86 @@ SciHlp::SciHlp(QWidget *parent, _en_role role)
     : ScintillaEdit(parent)
     , role_(role){
 
-    /*
-By default, margin 0 is set to display line numbers, but is given a width of 0, so it is hidden.
-Margin 1 is set to display non-folding symbols and is given a width of 16 pixels, so it is visible.
-Margin 2 is set to display the folding symbols, but is given a width of 0, so it is hidden.
- Of course, you can set the margins to be whatever you wish.
-*/
+    //By default,
+    //margin 0 is set to display line numbers, but is given a width of 0, so it is hidden.
+    //Margin 1 is set to display non-folding symbols and is given a width of 16 pixels, so it is visible.
+    //Margin 2 is set to display the folding symbols, but is given a width of 0, so it is hidden.
+    //Of course, you can set the margins to be whatever you wish.
+
     //https://www.scintilla.org/ScintillaDoc.html#SCI_GETMARGINTYPEN
     //https://stackoverflow.com/questions/78522506/scintilla-will-not-highlight-or-codefold-in-my-c
     //https://www.purebasic.fr/english/viewtopic.php?t=68691
-    /*
-    constexpr sptr_t margin_line_num = 0;
-    constexpr sptr_t margin_non_fold = 1;
-    constexpr sptr_t margin_fold     = 2;
- setMarginWidthN(margin_line_num,30);
- setMarginWidthN(1,30);
-  setMarginWidthN(2,30);
-  setMarginWidthN(3,30);
-   setMarginWidthN(4,30);
-setMarginTypeN(2, SC_MARGIN_SYMBOL);
-setMarginMaskN(2,SC_MASK_FOLDERS);
-toggleFold(5);
-  //fold symbols
-  markerDefine(SC_MARKNUM_FOLDEROPEN,    SC_MARK_MINUS);
-  markerDefine(SC_MARKNUM_FOLDER,        SC_MARK_PLUS);
-  markerDefine(SC_MARKNUM_FOLDEROPENMID, SC_MARK_MINUS);
-  markerDefine(SC_MARKNUM_FOLDEREND,     SC_MARK_PLUS);
-  */
-
+    //https://github.com/jacobslusser/ScintillaNET/issues/307
     styleSetFont(STYLE_DEFAULT, MonospaceFont());
-
-    setProperty("fold", "1");
-    setProperty("fold.compact", "0");
-    setProperty("fold.comment", "1");
-    setProperty("fold.preprocessor", "1");
-    //editor->setWrapMode(true);
-    setMarginWidthN(0, 40); // Line number
-    setMarginWidthN(1, 20); // Foldemargin
-
-    setMarginMaskN(1, SC_MASK_FOLDERS);
-    setMarginTypeN(1, SC_MARGIN_SYMBOL);
-
-    setMarginSensitiveN(1, true);
-    markerDefine(SC_MARKNUM_FOLDER, SC_MARK_BOXPLUS);
-    markerDefine(SC_MARKNUM_FOLDEROPEN, SC_MARK_BOXMINUS);
-    markerDefine(SC_MARKNUM_FOLDERSUB, SC_MARK_VLINE);
-    markerDefine(SC_MARKNUM_FOLDERTAIL, SC_MARK_LCORNER);
-    markerDefine(SC_MARKNUM_FOLDEREND, SC_MARK_BOXPLUSCONNECTED);
+    setMarginWidthN(margin_line_num_, 40);
+    setMarginWidthN(margin_fold_,     20);
+    setMarginMaskN(margin_fold_, SC_MASK_FOLDERS);
+    setMarginTypeN(margin_fold_, SC_MARGIN_SYMBOL);
+    setMarginSensitiveN(margin_fold_, true);
+    markerDefine(SC_MARKNUM_FOLDER,        SC_MARK_BOXPLUS);
+    markerDefine(SC_MARKNUM_FOLDEROPEN,    SC_MARK_BOXMINUS);
+    markerDefine(SC_MARKNUM_FOLDERSUB,     SC_MARK_VLINE);
+    markerDefine(SC_MARKNUM_FOLDERTAIL,    SC_MARK_LCORNER);
+    markerDefine(SC_MARKNUM_FOLDEREND,     SC_MARK_BOXPLUSCONNECTED);
     markerDefine(SC_MARKNUM_FOLDEROPENMID, SC_MARK_BOXMINUSCONNECTED);
     markerDefine(SC_MARKNUM_FOLDERMIDTAIL, SC_MARK_TCORNER);
-    setFoldFlags(16);
-
-
-   // setAutomaticFold(true);
+    //setFoldFlags(SC_FOLDFLAG_LINEAFTER_CONTRACTED); // SC_FOLDFLAG_LINEAFTER_CONTRACTED- line after folded row
+    //setAutomaticFold(true);
+    setUseTabs(false); // translate TAB to spaces
+    setTabIndents(true);
+    setTabWidth(4); // set TAB size in spaces
+    //setWrapIndentMode(SC_WRAPINDENT_DEEPINDENT);
+    setWrapIndentMode(SC_WRAPINDENT_INDENT );
 
     markerSetBack(0,1);
     markerSetBack(1,1);
-    //setLexer(SCLEX_PYTHON);
 
-    connect(this, SIGNAL(marginClicked(Scintilla::Position , Scintilla::KeyMod , int) ), this, SLOT(onMarginClicked(Scintilla::Position , Scintilla::KeyMod , int)));
+    connect(this, SIGNAL(marginClicked( Scintilla::Position, Scintilla::KeyMod, int ) ) , this, SLOT(onMarginClicked( Scintilla::Position, Scintilla::KeyMod, int )));
+    connect(this, SIGNAL(notify(Scintilla::NotificationData* ))                         , this, SLOT(onNotify( Scintilla::NotificationData* )) );
 }
 void SciHlp::onMarginClicked(Scintilla::Position position, Scintilla::KeyMod modifiers, int margin) {
     if(margin == 1) {
         toggleFold(lineFromPosition(position));
+    }
+}
+void SciHlp::onNotify(Scintilla::NotificationData* pnd ){
+    switch (pnd->nmhdr.code) {
+        case Scintilla::Notification::CharAdded:   {
+            if( (pnd->ch == '\r') || (pnd->ch == '\n') ) {
+                char linebuf[1000];
+                const sptr_t n_curr_pos  = currentPos();
+                const sptr_t n_curr_line = lineFromPosition(n_curr_pos);
+                const sptr_t n_line_len  = lineLength(n_curr_line);
+                if( (n_curr_line > 0) && (n_line_len <= 2) )  {
+                    const sptr_t n_prev_line_len = lineLength(n_curr_line-1);
+                    if(n_prev_line_len < sizeof(linebuf)){
+                        const std::size_t buflen = sizeof(linebuf);
+                        //???  memcpy(linebuf, &buflen, sizeof(buflen));// it in example of Scintilla and not understend! why to do so
+                        QByteArray qbaLinePrev = getLine(n_curr_line-1);
+                        //linebuf[n_prev_line_len]  =  '\0';
+                        QByteArray::iterator iter_qbaLinePrev;
+                        int pos = 0;
+                        // I try https://www.scintilla.org/ScintillaUsage.html - "Implementing Auto-Indent" - but it's not work properly and I remake to:
+                        for(iter_qbaLinePrev = qbaLinePrev.begin() ; iter_qbaLinePrev != qbaLinePrev.end() ; iter_qbaLinePrev++ ){
+                            if( ((*iter_qbaLinePrev) == ' ') ){
+                                linebuf[pos] = ' ';
+                                pos++;
+                            } else {
+                                break;
+                            }
+                        }
+                        linebuf[pos] = '\0';
+                        setSelection(n_curr_pos,n_curr_pos);
+                        replaceSel(linebuf);
+
+                        //sptr_t spTxtLen = textLength();
+                        //QByteArray qbaTxt =  getText(spTxtLen);
+                        //qDebug("\n");
+                    }
+                }
+            }
+        }//case Scintilla::Notification::CharAdded:
+        break;
     }
 }
 void SciHlp::setStyleHlp(sptr_t style, sptr_t fore, bool bold, bool italic, sptr_t back, bool underline, bool eolfilled){
@@ -116,50 +137,23 @@ void SciHlp::showEvent(QShowEvent *event){
     }
     setILexer( reinterpret_cast<sptr_t>(plex) );
     setCodePage(SC_CP_UTF8);
-
     setKeyWords(0,R"(
-False None True and as assert break class continue def del elif else
-except finally for from global if import in is lambda nonlocal not
-or pass raise return try while with yield
+        False None True and as assert break class continue def del elif else
+        except finally for from global if import in is lambda nonlocal not
+        or pass raise return try while with yield
 
-abs aiter all anext any ascii bin bool breakpoint
-bytearray bytes callable chr classmethod compile
-complex delattr dict dir divmod enumerate eval
-exec filter float format frozenset getattr globals
-hasattr hash help hex id input int isinstance
-issubclass iter len list locals map max memoryview
-min next object oct open ord pow print property
-range repr reversed round set setattr slice sorted
-staticmethod str sum super tuple type vars zip _
-__import__
-)");
-
-
-/*
-#define SCE_P_DEFAULT 0
-#define SCE_P_COMMENTLINE 1
-#define SCE_P_NUMBER 2
-#define SCE_P_STRING 3
-#define SCE_P_CHARACTER 4
-#define SCE_P_WORD 5
-#define SCE_P_TRIPLE 6
-#define SCE_P_TRIPLEDOUBLE 7
-#define SCE_P_CLASSNAME 8
-#define SCE_P_DEFNAME 9
-#define SCE_P_OPERATOR 10
-#define SCE_P_IDENTIFIER 11
-#define SCE_P_COMMENTBLOCK 12
-#define SCE_P_STRINGEOL 13
-#define SCE_P_WORD2 14
-#define SCE_P_DECORATOR 15
-#define SCE_P_FSTRING 16
-#define SCE_P_FCHARACTER 17
-#define SCE_P_FTRIPLE 18
-#define SCE_P_FTRIPLEDOUBLE 19
-#define SCE_P_ATTRIBUTE 20
-*/
+        abs aiter all anext any ascii bin bool breakpoint
+        bytearray bytes callable chr classmethod compile
+        complex delattr dict dir divmod enumerate eval
+        exec filter float format frozenset getattr globals
+        hasattr hash help hex id input int isinstance
+        issubclass iter len list locals map max memoryview
+        min next object oct open ord pow print property
+        range repr reversed round set setattr slice sorted
+        staticmethod str sum super tuple type vars zip _
+        __import__
+    )");
     //setStyleHlp( SCE_P_DEFAULT, _colors::blue, true );
-
     setStyleHlp( SCE_P_COMMENTLINE ,  _colors::green   );      // #xxx
     setStyleHlp( SCE_P_NUMBER ,       _colors::red,    true);   // 13
     setStyleHlp( SCE_P_STRING ,       _colors::teal    );      // ""xxx""
@@ -183,49 +177,5 @@ __import__
 
     setProperty("fold", "1"); // show Folders!!
     setProperty("fold.compact", "0");
-    return;
-
-
-
-
-
-    typedef const int COLORREF;
-    const COLORREF red = getRGBA(0xFF, 0, 0, 0);
-    const COLORREF offWhite   = getRGBA(0xFF, 0xFB, 0xF0, 0);
-    const COLORREF darkGreen = getRGBA(0, 0x80, 0, 0);
-    const COLORREF darkBlue  = getRGBA (0x00, 0x00, 0x80, 0);
-
-    //const COLORREF xz = getRGB( 0x31, 0x8c, 0xe7, 0xff); // const QString str_keyword_color = "#31 8c e7";
-    //const COLORREF xz = getRGB( 0xFF, 0x00, 0x00, 0x0); // const QString str_keyword_color = "#31 8c e7";
-    const COLORREF xz = offWhite;
-
-    setProperty("fold", "1");
-    setProperty("fold.compact", "0");
-
-    const int styleNumber = SCE_C_WORD; // keyword
-    const QString str_keyword_color = "#318ce7";
-
-    const int n_color = xz;
-
-    styleSetFore      (styleNumber, getRGBA( 0x31, 0x8c, 0xe7));
-    styleSetBack      (styleNumber, _colors::white);
-    styleSetBold      (styleNumber, true);
-    styleSetItalic    (styleNumber, false);
-    styleSetUnderline (styleNumber, false);
-    styleSetEOLFilled (styleNumber, true);
-    /*
-    SetAStyle(SCE_C_COMMENT, ini.GetColor(_T("comment")));
-    SetAStyle(SCE_C_COMMENTLINE, ini.GetColor(_T("comment")));
-    SetAStyle(SCE_C_COMMENTDOC, ini.GetColor(_T("comment")));
-    SetAStyle(SCE_C_NUMBER, ini.GetColor(_T("number")));
-    SetAStyle(SCE_C_STRING, ini.GetColor(_T("string")));
-    SetAStyle(SCE_C_CHARACTER, ini.GetColor(_T("string")));
-    SetAStyle(SCE_C_UUID, ini.GetColor(_T("uuid")));
-    SetAStyle(SCE_C_OPERATOR, ini.GetColor(_T("operators")));
-    SetAStyle(SCE_C_PREPROCESSOR, ini.GetColor(_T("preprocessor")));
-    SetAStyle(SCE_C_WORD, ini.GetColor(_T("keywords")));
-    //SetAStyle(SCE_C_WORD2, ini.GetColor(_T("keywords")));
-*/
-    //dockeyword = #008000
-
+    setAutomaticFold(true);
 };

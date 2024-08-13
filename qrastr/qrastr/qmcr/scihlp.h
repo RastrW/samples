@@ -3,6 +3,8 @@
 
 #include "ScintillaEdit.h"
 
+//#if defined(Q_OS_WIN)
+
 class SciHlp
     : public ScintillaEdit {
     Q_OBJECT
@@ -51,8 +53,11 @@ public:
     };
 private slots:
     void onMarginClicked(Scintilla::Position position, Scintilla::KeyMod modifiers, int margin);
+    void onNotify(Scintilla::NotificationData* );
 public:
     const _en_role role_;
+    const sptr_t margin_line_num_ = 0;
+    const sptr_t margin_fold_     = 1;
 };//class SciHlp{
 
 #endif // SCIHLP_H

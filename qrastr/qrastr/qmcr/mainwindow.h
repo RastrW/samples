@@ -11,6 +11,6 @@ public:
     MainWindow(QWidget *parent = nullptr);
     virtual ~MainWindow();
     void showEvent(QShowEvent *event) override;
-    McrWnd* pMcrWnd_;
+    McrWnd* pMcrWnd_ = nullptr;
 };
 #endif // MAINWINDOW_H
