@@ -16,7 +16,6 @@ const char *MonospaceFont(){
     }
     return fontNameDefault;
 }
-
 SciHlp::SciHlp(QWidget *parent, _en_role role)
     : ScintillaEdit(parent)
     , role_(role){
@@ -55,8 +54,8 @@ SciHlp::SciHlp(QWidget *parent, _en_role role)
     markerSetBack(0,1);
     markerSetBack(1,1);
 
-    connect(this, SIGNAL(marginClicked( Scintilla::Position, Scintilla::KeyMod, int ) ) , this, SLOT(onMarginClicked( Scintilla::Position, Scintilla::KeyMod, int )));
-    connect(this, SIGNAL(notify(Scintilla::NotificationData* ))                         , this, SLOT(onNotify( Scintilla::NotificationData* )) );
+    connect(this, SIGNAL(marginClicked( Scintilla::Position, Scintilla::KeyMod, int ) ), this, SLOT(onMarginClicked( Scintilla::Position, Scintilla::KeyMod, int )));
+    connect(this, SIGNAL(notify       (Scintilla::NotificationData* ))                 , this, SLOT(onNotify       ( Scintilla::NotificationData* )) );
 }
 void SciHlp::onMarginClicked(Scintilla::Position position, Scintilla::KeyMod modifiers, int margin) {
     if(margin == 1) {
@@ -65,7 +64,7 @@ void SciHlp::onMarginClicked(Scintilla::Position position, Scintilla::KeyMod mod
 }
 void SciHlp::onNotify(Scintilla::NotificationData* pnd ){
     switch (pnd->nmhdr.code) {
-        case Scintilla::Notification::CharAdded:   {
+        case Scintilla::Notification::CharAdded:   { // I try https://www.scintilla.org/ScintillaUsage.html - "Implementing Auto-Indent" - but it's not work properly and I remake:
             if( (pnd->ch == '\r') || (pnd->ch == '\n') ) {
                 char linebuf[1000];
                 const sptr_t n_curr_pos  = currentPos();
@@ -75,14 +74,12 @@ void SciHlp::onNotify(Scintilla::NotificationData* pnd ){
                     const sptr_t n_prev_line_len = lineLength(n_curr_line-1);
                     if(n_prev_line_len < sizeof(linebuf)){
                         const std::size_t buflen = sizeof(linebuf);
-                        //???  memcpy(linebuf, &buflen, sizeof(buflen));// it in example of Scintilla and not understend! why to do so
                         QByteArray qbaLinePrev = getLine(n_curr_line-1);
-                        //linebuf[n_prev_line_len]  =  '\0';
                         QByteArray::iterator iter_qbaLinePrev;
                         int pos = 0;
-                        // I try https://www.scintilla.org/ScintillaUsage.html - "Implementing Auto-Indent" - but it's not work properly and I remake to:
                         for(iter_qbaLinePrev = qbaLinePrev.begin() ; iter_qbaLinePrev != qbaLinePrev.end() ; iter_qbaLinePrev++ ){
-                            if( ((*iter_qbaLinePrev) == ' ') ){
+                            assert((*iter_qbaLinePrev) != '\t');
+                            if( (*iter_qbaLinePrev) == ' ' ){
                                 linebuf[pos] = ' ';
                                 pos++;
                             } else {
@@ -111,6 +108,12 @@ void SciHlp::setStyleHlp(sptr_t style, sptr_t fore, bool bold, bool italic, sptr
     styleSetUnderline ( style, underline );
     styleSetEOLFilled ( style, eolfilled );
 }
+SciHlp::_ret_vals SciHlp::setContent(const std::string& str_text){
+    setText(str_text.c_str());
+    //emptyUndoBuffer();
+    //setSavePoint();
+    return _ret_vals::ok;
+};
 void SciHlp::showEvent(QShowEvent *event){
     #if _WIN32 //https://www.scintilla.org/LexillaDoc.html
         typedef void *(__stdcall *CreateLexerFn)(const char *name);
@@ -121,7 +124,7 @@ void SciHlp::showEvent(QShowEvent *event){
     #endif
     if(pfn == nullptr){
         QMessageBox mb( QMessageBox::Icon::Critical, QObject::tr("Error"),
-                        QString("error: invalid get function lexilla5.CreateLexer")
+                        QString(tr("error: invalid get function lexilla5.CreateLexer"))
                        );
         mb.exec();
         return;
@@ -130,7 +133,7 @@ void SciHlp::showEvent(QShowEvent *event){
     const void* plex = ( reinterpret_cast<CreateLexerFn>(pfn) )( strLanguageName.c_str() );
     if(plex == nullptr){
         QMessageBox mb( QMessageBox::Icon::Critical, QObject::tr("Error"),
-                        QString("error: invalid lexx [%1] pointer").arg(strLanguageName.c_str())
+                        QString(tr("error: invalid lexx [%1] pointer").arg(strLanguageName.c_str()))
                        );
         mb.exec();
         return;
@@ -155,26 +158,25 @@ void SciHlp::showEvent(QShowEvent *event){
     )");
     //setStyleHlp( SCE_P_DEFAULT, _colors::blue, true );
     setStyleHlp( SCE_P_COMMENTLINE ,  _colors::green   );      // #xxx
-    setStyleHlp( SCE_P_NUMBER ,       _colors::red,    true);   // 13
+    setStyleHlp( SCE_P_NUMBER ,       _colors::red,    true);  // 13
     setStyleHlp( SCE_P_STRING ,       _colors::teal    );      // ""xxx""
     setStyleHlp( SCE_P_CHARACTER ,    _colors::teal    );      // 'xxx'
     setStyleHlp( SCE_P_WORD ,         _colors::maroon, true ); // for xxx in :
-    setStyleHlp( SCE_P_TRIPLE ,       _colors::fuchsia );    // ?
-    setStyleHlp( SCE_P_TRIPLEDOUBLE , _colors::green   );      // """
-    setStyleHlp( SCE_P_CLASSNAME ,    _colors::blue,   true );
+    setStyleHlp( SCE_P_TRIPLE ,       _colors::green );        // ''' '''  - multiline comment
+    setStyleHlp( SCE_P_TRIPLEDOUBLE , _colors::green   );      // """ """  - multiline comment
+    setStyleHlp( SCE_P_CLASSNAME ,    _colors::blue,   true ); // class xxx:
     setStyleHlp( SCE_P_DEFNAME ,      _colors::navy,   true ); // def xxx():
     setStyleHlp( SCE_P_OPERATOR ,     _colors::black   );       // xxx =
     setStyleHlp( SCE_P_IDENTIFIER ,   _colors::black   );       // xxx =
     setStyleHlp( SCE_P_COMMENTBLOCK , _colors::green   );       // #
-    setStyleHlp( SCE_P_STRINGEOL ,    _colors::maroon  );        // ?
-    setStyleHlp( SCE_P_WORD2 ,        _colors::navy    );        // ?
+    setStyleHlp( SCE_P_STRINGEOL ,    _colors::maroon  );       // ?
+    setStyleHlp( SCE_P_WORD2 ,        _colors::navy    );       // ?
     setStyleHlp( SCE_P_DECORATOR ,    _colors::olive,  true );  // @gfg_decorator
-    setStyleHlp( SCE_P_FSTRING ,      _colors::teal,   true );
+    setStyleHlp( SCE_P_FSTRING ,      _colors::teal,   true );  // f""
     setStyleHlp( SCE_P_FCHARACTER ,   _colors::teal    );
-    setStyleHlp( SCE_P_FTRIPLE ,      _colors::green   );   // f''' '''
-    setStyleHlp( SCE_P_FTRIPLEDOUBLE, _colors::green   );   // f""" """
-    setStyleHlp( SCE_P_ATTRIBUTE ,    _colors::purple  );
-
+    setStyleHlp( SCE_P_FTRIPLE ,      _colors::green   );       // f''' '''
+    setStyleHlp( SCE_P_FTRIPLEDOUBLE, _colors::green   );       // f""" """
+    setStyleHlp( SCE_P_ATTRIBUTE ,    _colors::fuchsia );
     setProperty("fold", "1"); // show Folders!!
     setProperty("fold.compact", "0");
     setAutomaticFold(true);

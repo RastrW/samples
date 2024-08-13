@@ -45,12 +45,7 @@ public:
     virtual ~SciHlp() = default;
     void setStyleHlp( sptr_t style, sptr_t fore, bool bold=false, bool italic=false, sptr_t back=_colors::white, bool underline=false, bool eolfilled=false );
     void showEvent(QShowEvent *event) override;
-    _ret_vals setContent(const std::string& str_text){
-        setText(str_text.c_str());
-        //emptyUndoBuffer();
-        //setSavePoint();
-        return _ret_vals::ok;
-    };
+    _ret_vals setContent(const std::string& str_text);
 private slots:
     void onMarginClicked(Scintilla::Position position, Scintilla::KeyMod modifiers, int margin);
     void onNotify(Scintilla::NotificationData* );

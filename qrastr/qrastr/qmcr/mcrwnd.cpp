@@ -18,17 +18,10 @@ McrWnd::McrWnd(QWidget *parent)
     const int nHeight = 800;
     resize(nWidth, nHeight);
 
+    setWindowIcon( QIcon(QApplication::style()->standardIcon(QStyle::SP_ComputerIcon) ));
 
-
-}
-McrWnd::~McrWnd(){
-}
-void McrWnd::showEvent(QShowEvent *event) {
-    QWidget::showEvent( event );
     setWindowTitle(tr("Macro Python"));
     QSplitter * splitter = new QSplitter(this);
-  // QTextEdit* edit1 = new QTextEdit();
-  //  ScintillaEdit* edit1 = new ScintillaEdit;
     SciHlp* edit1 = new SciHlp(nullptr, SciHlp::_en_role::editor_python);
     edit1->setContent(R"(
 import os
@@ -61,32 +54,39 @@ else:
   print("Finally finished!")
 """
                    )");
-    //QTextEdit* edit2 = new QTextEdit();
-    //ScintillaEdit* edit2 = new ScintillaEdit;
     SciHlp* edit2 = new SciHlp(nullptr, SciHlp::_en_role::prot_macro);
     QVBoxLayout *layout = new QVBoxLayout();
     QVBoxLayout *container_layout = new QVBoxLayout;
 
-    //SP_DialogSaveButton, SP_MediaPlay,SP_FileDialogContentsView
-    pActNew_ = new QAction( QIcon(QApplication::style()->standardIcon(QStyle::SP_FileDialogStart )),tr("&New"), this);
+    QAction* pActNew_ = new QAction( QIcon(QApplication::style()->standardIcon(QStyle::SP_FileIcon )),tr("&New"), this);
     pActNew_->setShortcut(QKeySequence(Qt::CTRL + Qt::Key_N));
     pActNew_->setStatusTip(tr("Create a new file"));
     connect( pActNew_, SIGNAL(triggered()), this, SLOT(onNewFile()) );
-    pActSave_ = new QAction( QIcon(QApplication::style()->standardIcon(QStyle::SP_DialogSaveButton )),tr("&Save"), this);
+
+    QAction* pActOpen_ = new QAction( QIcon(QApplication::style()->standardIcon(QStyle::SP_FileDialogStart )),tr("&Open"), this);
+    pActOpen_->setShortcut(QKeySequence(Qt::CTRL + Qt::Key_O));
+    pActOpen_->setStatusTip(tr("Open file"));
+    connect( pActOpen_, SIGNAL(triggered()), this, SLOT(onOpenFile()) );
+
+    QAction* pActSave_ = new QAction( QIcon(QApplication::style()->standardIcon(QStyle::SP_DialogSaveButton )),tr("&Save"), this);
     pActSave_->setShortcut(QKeySequence(Qt::CTRL + Qt::Key_S));
     pActSave_->setStatusTip(tr("Save file"));
     connect( pActSave_, SIGNAL(triggered()), this, SLOT(onSave()) );
-    pActPlay_ = new QAction( QIcon(QApplication::style()->standardIcon(QStyle::SP_MediaPlay )),tr("&Run"), this);
+
+    QAction* pActPlay_ = new QAction( QIcon(QApplication::style()->standardIcon(QStyle::SP_MediaPlay )),tr("&Run"), this);
     pActPlay_->setShortcut(QKeySequence(Qt::CTRL + Qt::Key_R));
     pActPlay_->setStatusTip(tr("Run!"));
     connect( pActPlay_, SIGNAL(triggered()), this, SLOT(onRun()) );
-    pActFindRepl_ = new QAction( QIcon(QApplication::style()->standardIcon(QStyle::SP_FileDialogContentsView )),tr("&FindRepl"), this);
+
+    QAction* pActFindRepl_ = new QAction( QIcon(QApplication::style()->standardIcon(QStyle::SP_FileDialogContentsView )),tr("&FindRepl"), this);
     pActFindRepl_->setShortcut(QKeySequence(Qt::CTRL + Qt::Key_F));
     pActFindRepl_->setStatusTip(tr("Find or replace"));
     connect( pActFindRepl_, SIGNAL(triggered()), this, SLOT(onFindRepl()) );
 
+    QToolBar* pToolBar_ = nullptr;
     pToolBar_  = new QToolBar;
     pToolBar_->addAction(pActNew_);
+    pToolBar_->addAction(pActOpen_);
     pToolBar_->addAction(pActSave_);
     pToolBar_->addAction(pActPlay_);
     pToolBar_->addAction(pActFindRepl_);
@@ -125,11 +125,19 @@ else:
     pWndWithSplitter->setLayout(container_layout);
     pWndWithSplitter->show();
     */
+}
+McrWnd::~McrWnd(){
+}
+void McrWnd::showEvent(QShowEvent *event) {
+    QWidget::showEvent( event );
 
 }
 void McrWnd::onNewFile(){
     qDebug("McrWnd::onNewFile()");
 }
+void McrWnd::onOpenFile(){
+    qDebug("McrWnd::onOpenFile()");
+};
 void McrWnd::onSave(){
     qDebug("McrWnd::onSave()");
 }
