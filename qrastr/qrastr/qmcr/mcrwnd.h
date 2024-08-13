@@ -14,11 +14,16 @@ public:
     void showEvent(QShowEvent *event) override;
     QToolBar* pToolBar_ = nullptr;
     QAction* pActNew_ = nullptr;
-
-
+    QAction* pActSave_ = nullptr;
+    QAction* pActPlay_ = nullptr;
+    QAction* pActFindRepl_ = nullptr;
 signals:
 private slots:
-    void newFile();
+    void onNewFile();
+    void onSave();
+    void onRun();
+    void onFindRepl();
+private:
 
 };
 

@@ -18,14 +18,7 @@ McrWnd::McrWnd(QWidget *parent)
     const int nHeight = 800;
     resize(nWidth, nHeight);
 
-  //  pActNew_ = new QAction(QIcon(":/images/new.png"), tr("&New"), this);
-     //action->setIcon( QIcon(QApplication::style()->standardIcon(QStyle::SP_FileIcon)) );
-    //  pActNew_ = new QAction( QIcon(QApplication::style()->standardIcon(QStyle::SP_FileIcon)),tr("&New"), this);
-    pActNew_ = new QAction( QIcon(QApplication::style()->standardIcon(QStyle::SP_FileDialogStart )),tr("&New"), this);
-    pActNew_->setShortcut(tr("Ctrl+N")); //SP_DialogSaveButton, SP_MediaPlay,SP_FileDialogContentsView
-    //action->setShortcut(QKeySequence(Qt::CTRL + Qt::Key_P));
-    pActNew_->setStatusTip(tr("Create a new file"));
-    connect( pActNew_, SIGNAL(triggered()), this, SLOT(newFile()));
+
 
 }
 McrWnd::~McrWnd(){
@@ -73,10 +66,30 @@ else:
     SciHlp* edit2 = new SciHlp(nullptr, SciHlp::_en_role::prot_macro);
     QVBoxLayout *layout = new QVBoxLayout();
     QVBoxLayout *container_layout = new QVBoxLayout;
-//    toolbar = new QToolBar;
-  //  toolLayout->addWidget(toolbar);
+
+    //SP_DialogSaveButton, SP_MediaPlay,SP_FileDialogContentsView
+    pActNew_ = new QAction( QIcon(QApplication::style()->standardIcon(QStyle::SP_FileDialogStart )),tr("&New"), this);
+    pActNew_->setShortcut(QKeySequence(Qt::CTRL + Qt::Key_N));
+    pActNew_->setStatusTip(tr("Create a new file"));
+    connect( pActNew_, SIGNAL(triggered()), this, SLOT(onNewFile()) );
+    pActSave_ = new QAction( QIcon(QApplication::style()->standardIcon(QStyle::SP_DialogSaveButton )),tr("&Save"), this);
+    pActSave_->setShortcut(QKeySequence(Qt::CTRL + Qt::Key_S));
+    pActSave_->setStatusTip(tr("Save file"));
+    connect( pActSave_, SIGNAL(triggered()), this, SLOT(onSave()) );
+    pActPlay_ = new QAction( QIcon(QApplication::style()->standardIcon(QStyle::SP_MediaPlay )),tr("&Run"), this);
+    pActPlay_->setShortcut(QKeySequence(Qt::CTRL + Qt::Key_R));
+    pActPlay_->setStatusTip(tr("Run!"));
+    connect( pActPlay_, SIGNAL(triggered()), this, SLOT(onRun()) );
+    pActFindRepl_ = new QAction( QIcon(QApplication::style()->standardIcon(QStyle::SP_FileDialogContentsView )),tr("&FindRepl"), this);
+    pActFindRepl_->setShortcut(QKeySequence(Qt::CTRL + Qt::Key_F));
+    pActFindRepl_->setStatusTip(tr("Find or replace"));
+    connect( pActFindRepl_, SIGNAL(triggered()), this, SLOT(onFindRepl()) );
+
     pToolBar_  = new QToolBar;
     pToolBar_->addAction(pActNew_);
+    pToolBar_->addAction(pActSave_);
+    pToolBar_->addAction(pActPlay_);
+    pToolBar_->addAction(pActFindRepl_);
     container_layout->addWidget(pToolBar_);
 
     splitter->addWidget(edit1);
@@ -114,7 +127,15 @@ else:
     */
 
 }
-void McrWnd::newFile(){
-    printf("sddfdf");
-    qDebug("new File");
+void McrWnd::onNewFile(){
+    qDebug("McrWnd::onNewFile()");
+}
+void McrWnd::onSave(){
+    qDebug("McrWnd::onSave()");
+}
+void McrWnd::onRun(){
+    qDebug("McrWnd::onRun()");
+}
+void McrWnd::onFindRepl(){
+    qDebug("McrWnd::onFindRepl()");
 }
