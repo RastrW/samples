@@ -23,8 +23,10 @@ public:
     explicit RtabWidget(CRastrHlp& _rh,int n_indx,QWidget *parent = nullptr);
     void SetTableView(QTableView& tv, RModel& mm, int myltiplier = 15);
 private:
+    void test(const QModelIndexList& fromIndices);
     void copyMimeData(const QModelIndexList& fromIndices, QMimeData* mimeData, const bool withHeaders, const bool inSQL);
     void copy(const bool withHeaders, const bool inSQL);
+    void copy();
 
 public slots:
     void customMenuRequested(QPoint pos);
@@ -51,6 +53,11 @@ public:
 private:
     //QTableView* ptv ;
    // CRastrHlp& rh;
+    using BufferRow = std::vector<QByteArray>;
+    //static std::vector<std::vector<QByteArray>> m_buffer;
+    std::vector<std::vector<QByteArray>> m_buffer;
+    //static QString m_generatorStamp;
+    QString m_generatorStamp;
     RTableView* ptv ;
     QSortFilterProxyModel *proxyModel;
     QModelIndex index;              // current index (Cell clicked)

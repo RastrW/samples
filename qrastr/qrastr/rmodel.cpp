@@ -327,3 +327,38 @@ void RModel::onrm_RowDeleted(std::string _t_name, int _row)
     }
 }
 
+bool RModel::isBinary(const QModelIndex& index) const
+{
+   /* std::lock_guard<std::mutex> lock(m_mutexDataCache);
+
+    const size_t row = static_cast<size_t>(index.row());
+    if(!m_cache.count(row))
+        return false;
+
+    const auto & cached_row = m_cache.at(row);
+    return isBinary(cached_row.at(static_cast<size_t>(index.column())));
+    */
+    switch (this->up_rdata->at(index.column()).en_data_)
+   {
+       case RCol::_en_data::DATA_INT:
+        return true;
+           break;
+       case RCol::_en_data::DATA_DBL:
+           return true;
+           break;
+       case RCol::_en_data::DATA_STR:
+           return false;
+           break;
+       default:
+           Q_ASSERT(!"unknown type");
+           return true;
+           break;
+   }
+}
+
+bool RModel::isBinary(const QByteArray& data) const
+{
+    //return !isTextOnly(data, m_encoding, true);
+    return true;
+}
+

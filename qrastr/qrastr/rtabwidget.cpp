@@ -7,6 +7,10 @@
 #include <QMimeData>
 #include <QApplication>
 #include <QClipboard>
+#include <QBuffer>
+#include <QDateTime>
+#include <QProgressDialog>
+#include "CondFormat.h"
 //#include "tableview.h"
 
 
@@ -92,6 +96,9 @@ void RtabWidget::customMenuRequested(QPoint pos){
     connect(copyAction, &QAction::triggered, this, [&]() {
         copy(false, false);
     });
+
+    //connect(copyAction, &QAction::triggered, this, &RtabWidget::copy);
+
     //connect(cutAction, &QAction::triggered, this, &ExtendedTableWidget::cut);
     connect(copyWithHeadersAction, &QAction::triggered, this, [&]() {
         copy(true, false);
@@ -203,17 +210,23 @@ void RtabWidget::CreateModel(CRastrHlp& _rh)
     this->repaint();
 }
 
-
+void RtabWidget::test(const QModelIndexList& fromIndices)
+{
+    size_t sz = fromIndices.count();
+    return;
+}
 void RtabWidget::copyMimeData(const QModelIndexList& fromIndices, QMimeData* mimeData, const bool withHeaders, const bool inSQL)
 {
+    mimeData->setText("test res");
+    //return;
     QModelIndexList indices = fromIndices;
-    /*
+//return;
     // Remove all indices from hidden columns, because if we don't, we might copy data from hidden columns as well which is very
     // unintuitive; especially copying the rowid column when selecting all columns of a table is a problem because pasting the data
     // won't work as expected.
     QMutableListIterator<QModelIndex> it(indices);
     while (it.hasNext()) {
-        if (isColumnHidden(it.next().column()))
+        if ( this->ptv->isColumnHidden(it.next().column()))
             it.remove();
     }
 
@@ -221,7 +234,9 @@ void RtabWidget::copyMimeData(const QModelIndexList& fromIndices, QMimeData* mim
     if (indices.isEmpty())
         return;
 
-    SqliteTableModel* m = qobject_cast<SqliteTableModel*>(model());
+    //RModel* m = qobject_cast<RModel*>( this->ptv->model());
+    RModel* m =  this->prm;
+
 
     // Clear internal copy-paste buffer
     m_buffer.clear();
@@ -289,17 +304,20 @@ void RtabWidget::copyMimeData(const QModelIndexList& fromIndices, QMimeData* mim
     const QString rowSepText = "\n";
 #endif
 
+
     int firstColumn = *colsInIndexes.begin();
+
     QString sqlInsertStatement;
     // Table headers
     if (withHeaders || inSQL) {
         if (inSQL)
-            sqlInsertStatement = QString("INSERT INTO %1 (").arg(QString::fromStdString(m->currentTableName().toString()));
+            sqlInsertStatement = QString("INSERT INTO %1 (").arg(QString::fromStdString(m->getRdata()->t_name_));
         else
             htmlResult.append("<tr><th>");
 
         for(int col : colsInIndexes) {
-            QByteArray headerText = model()->headerData(col, Qt::Horizontal, Qt::EditRole).toByteArray();
+            QByteArray headerText_ = ptv->model()->headerData(col, Qt::Horizontal, Qt::DisplayRole).toByteArray();
+            std::string headerText = ptv->model()->headerData(col, Qt::Horizontal, Qt::DisplayRole).toString().toUtf8().constData();
             if (col != firstColumn) {
                 if (inSQL)
                     sqlInsertStatement.append(", ");
@@ -309,7 +327,9 @@ void RtabWidget::copyMimeData(const QModelIndexList& fromIndices, QMimeData* mim
                 }
             }
             if (inSQL)
-                sqlInsertStatement.append(sqlb::escapeIdentifier(headerText));
+            {
+                //sqlInsertStatement.append(sqlb::escapeIdentifier(headerText));
+            }
             else {
                 result.append(headerText);
                 htmlResult.append(headerText);
@@ -323,21 +343,28 @@ void RtabWidget::copyMimeData(const QModelIndexList& fromIndices, QMimeData* mim
         }
     }
 
-    QProgressDialog progress(this);
+
+ /*   QProgressDialog progress(this);
     progress.setWindowModality(Qt::ApplicationModal);
     // Disable context help button on Windows
     progress.setWindowFlags(progress.windowFlags()
                             & ~Qt::WindowContextHelpButtonHint);
     progress.setRange(*rowsInIndexes.begin(), *rowsInIndexes.end());
     progress.setMinimumDuration(2000);
+*/
 
     // Iterate over rows x cols checking if the index actually exists when needed, in order
     // to support non-rectangular selections.
+
+
+
     for(const int row : rowsInIndexes) {
 
         // Beginning of row
         if (inSQL)
-            result.append(sqlInsertStatement);
+        {
+            //result.append(sqlInsertStatement);
+        }
         else
             htmlResult.append("<tr>");
 
@@ -355,6 +382,7 @@ void RtabWidget::copyMimeData(const QModelIndexList& fromIndices, QMimeData* mim
             }
 
             if(isContained) {
+                /*
                 QFont font;
                 font.fromString(index.data(Qt::FontRole).toString());
 
@@ -370,6 +398,7 @@ void RtabWidget::copyMimeData(const QModelIndexList& fromIndices, QMimeData* mim
                                           index.data(Qt::BackgroundRole).toString(), // background-color
                                           index.data(Qt::ForegroundRole).toString(), // color
                                           textAlign));
+                    */
             } else {
                 htmlResult.append("<td>");
             }
@@ -384,7 +413,9 @@ void RtabWidget::copyMimeData(const QModelIndexList& fromIndices, QMimeData* mim
                 QByteArray text = bArrdata.toByteArray();
 
                 if (inSQL)
-                    result.append(sqlb::escapeString(text));
+                {
+                    //result.append(sqlb::escapeString(text));
+                }
                 else {
                     result.append(text);
                     // Table cell data: text
@@ -408,6 +439,19 @@ void RtabWidget::copyMimeData(const QModelIndexList& fromIndices, QMimeData* mim
                                       .arg(QString(ba.toBase64())));
                 result.append(index.data(Qt::DisplayRole).toByteArray());
             }
+            else {
+                //result.append(QString("%1").arg(QString(bArrdata.toByteArray().toHex())));
+                //result.append(QString("%1").arg(QString(bArrdata.toString())));
+
+                QByteArray text = bArrdata.toByteArray();
+                result.append(text);
+                // Table cell data: text
+                if (text.contains('\n') || text.contains('\t'))
+                    htmlResult.append(QString("<pre>%1</pre>").arg(QString(text).toHtmlEscaped()));
+                else
+                    htmlResult.append(QString(text).toHtmlEscaped());
+            }
+
 
             // End of column
             // Add HTML cell terminator
@@ -421,25 +465,55 @@ void RtabWidget::copyMimeData(const QModelIndexList& fromIndices, QMimeData* mim
             htmlResult.append("</tr>");
         result.append(rowSepText);
 
+        /*
         progress.setValue(row);
         // Abort the operation if the user pressed ESC key or Cancel button
         if (progress.wasCanceled()) {
             return;
         }
+        */
     }
 
     if (!inSQL) {
         htmlResult.append("</table></body></html>");
         mimeData->setHtml(htmlResult);
     }
-    mimeData->setText(result);
-*/
+    result.removeLast();
+    QString test = "test str\r\n";
+    QString test2 = "test str\r\n";
+    test.removeLast();
+    test2.remove(test2.length()-2,2);
+    //result.remove(result.length()-2,2);
+
+    int pos = result.lastIndexOf(rowSepText);
+    result = result.left(pos);
+    mimeData->setText(result.toUtf8().data());
+
 }
 
 void RtabWidget::copy(const bool withHeaders, const bool inSQL )
 {
     QMimeData *mimeData = new QMimeData;
-    copyMimeData( this->ptv->selectionModel()->selectedIndexes(), mimeData, withHeaders, inSQL);
+    mimeData->setText(tr("test"));
+    //auto tmp_list = this->ptv->selectionModel()->selectedIndexes().toList();      //https://stackoverflow.com/questions/15123109/crash-with-qitemselectionmodelselectedindexes
+    //auto tmp_list = this->ptv->selectionModel()->selectedIndexes();
+    copyMimeData( this->ptv->selectionModel()->selectedIndexes(), mimeData, withHeaders, inSQL);  // так падает https://stackoverflow.com/questions/15123109/crash-with-qitemselectionmodelselectedindexes
+    //copyMimeData( tmp_list, mimeData, withHeaders, inSQL);
+
+    // TO DO : выяснить почему падает !
+    //test(this->ptv->selectionModel()->selectedIndexes().toList());
+
+    int a= 1;
+
+   qApp->clipboard()->setMimeData(mimeData);
+}
+void RtabWidget::copy()
+{
+    QMimeData *mimeData = new QMimeData;
+    mimeData->setText(tr("test"));
+    //copyMimeData( this->ptv->selectionModel()->selectedIndexes(), mimeData, withHeaders, inSQL);
+    //copyMimeData( this->ptv->selectionModel()->selectedIndexes(), mimeData, withHeaders, inSQL);
+    test(this->ptv->selectionModel()->selectedIndexes());
     qApp->clipboard()->setMimeData(mimeData);
 
 }

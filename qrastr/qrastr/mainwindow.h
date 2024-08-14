@@ -72,7 +72,7 @@ public:
             nRes = up_rastr_->ReadForms(pars.Get_on_start_load_file_forms());
             if(nRes<0){
                 QMessageBox mb( QMessageBox::Icon::Critical, QObject::tr("Error"),
-                                QString("error: %1 wheh read file : %2").arg(nRes).arg(pars.Get_on_start_load_file_forms().c_str())
+                                QString("error: %1 when read file : %2").arg(nRes).arg(pars.Get_on_start_load_file_forms().c_str())
                                );
                 mb.exec();
                 return ;
@@ -188,6 +188,7 @@ private slots:
     void about();
     void rgm_wrap();
     void onOpenForm(QAction* p_actn);
+    void Btn1_onClick();
     void onButton2Click();
 
     void ondataChanged(std::string _t_name, QModelIndex index, QVariant value);
