@@ -495,17 +495,14 @@ void RtabWidget::copy(const bool withHeaders, const bool inSQL )
 {
     QMimeData *mimeData = new QMimeData;
     mimeData->setText(tr("test"));
-    //auto tmp_list = this->ptv->selectionModel()->selectedIndexes().toList();      //https://stackoverflow.com/questions/15123109/crash-with-qitemselectionmodelselectedindexes
-    //auto tmp_list = this->ptv->selectionModel()->selectedIndexes();
-    copyMimeData( this->ptv->selectionModel()->selectedIndexes(), mimeData, withHeaders, inSQL);  // так падает https://stackoverflow.com/questions/15123109/crash-with-qitemselectionmodelselectedindexes
-    //copyMimeData( tmp_list, mimeData, withHeaders, inSQL);
 
+    copyMimeData( this->ptv->selectionModel()->selectedIndexes(), mimeData, withHeaders, inSQL);  // так падает https://stackoverflow.com/questions/15123109/crash-with-qitemselectionmodelselectedindexes
     // TO DO : выяснить почему падает !
     //test(this->ptv->selectionModel()->selectedIndexes().toList());
+    // Падает только в DEBUG так как QT  использует библиотеки от Release и в этом случае деструктор отрабатывает некорректно.
+    // В  Release не падает все ОК.
 
-    int a= 1;
-
-   qApp->clipboard()->setMimeData(mimeData);
+    qApp->clipboard()->setMimeData(mimeData);
 }
 void RtabWidget::copy()
 {
