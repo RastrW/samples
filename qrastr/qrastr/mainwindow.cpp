@@ -590,16 +590,11 @@ void MainWindow::createToolBars()
     createCalcLayout();
 }
 
-void MainWindow::Btn1_onClick()
+void Btn1_onClick()
 {
     QTableView* ptv = new QTableView();
     CRastrHlp rhlp;
-    //*up_rastr_.get()
-
-
-    RModel* pmm = new RModel(nullptr,*up_rastr_.get());
-    pmm->setFormIndx(0);
-    pmm->populateDataFromRastr();
+    RModel* pmm = new RModel(nullptr,rhlp);
     ptv->setSortingEnabled(true);
     ptv->setModel(pmm);
     ptv->show();
@@ -613,7 +608,7 @@ void MainWindow::createCalcLayout()
     //QPushButton *btn3 = new QPushButton("Button 3");
     //QPushButton *btn4 = new QPushButton("Button 4");
 
-    connect(btn1,&QPushButton::clicked,this, &MainWindow::Btn1_onClick);
+    connect(btn1,&QPushButton::clicked,Btn1_onClick);
     connect(btn2,&QPushButton::clicked,this, &MainWindow::onButton2Click);
 
     QWidget* widget = new QWidget;

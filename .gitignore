@@ -1,1 +1,6 @@
+*.user*
+build*
+.vscode
+.vs*
+*.json
 qrastr/qrastr/CMakeLists.txt.user
