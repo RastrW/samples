@@ -79,6 +79,7 @@ else()
     else()
         add_executable(qmcr
             ${PROJECT_SOURCES}
+            tst_toolbox.h tst_toolbox.cpp tst_toolbox.ui
         )
         qt5_create_translation(QM_FILES ${CMAKE_SOURCE_DIR} ${TS_FILES})
     endif()
