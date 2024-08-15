@@ -13,7 +13,6 @@ public:
     _idRastr GetRastrId() const { return id_rastr_; };
     int ReadForms(std::string str_path_to_file_forms);
     int Load(std::string str_path_to_file); //
-    int Save(std::string str_path_to_file);
     std::list<CUIForm> GetForms() const;
     CUIForm GetUIForm(size_t n_form_indx);
     int GetFormData(int n_form_indx);
@@ -23,7 +22,6 @@ public:
 private:
     _idRastr id_rastr_ = -1;
     std::unique_ptr<CUIFormsCollection> upCUIFormsCollection_;
-    std::vector<std::unique_ptr<CUIFormsCollection>> vupCUIFormsCollection_;
     nlohmann::json jforms_; // for Dima reverse ccompatibility
 };
 

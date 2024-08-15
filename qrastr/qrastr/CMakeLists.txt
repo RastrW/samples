@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.5)
+cmake_minimum_required(VERSION 3.23)
 project(qrastr VERSION 0.1 LANGUAGES CXX)
 
 set(CMAKE_GENERATOR "Ninja")
@@ -11,11 +11,15 @@ set(CMAKE_AUTORCC ON)
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
+option( QRASTR_BUILD_WITH_MCR "QRASTR_BUILD_WITH_MCR"    ON )
+
 add_compile_definitions(ASTRA_NIX)
 add_compile_definitions(
         $<$<CONFIG:Debug>:q4_INLINE=0>
         $<$<CONFIG:Debug>:YYDEBUG>
 )
+
+add_subdirectory("${CMAKE_CURRENT_SOURCE_DIR}/qmcr/" "${CMAKE_CURRENT_BINARY_DIR}/generated/qmcr")
 
 if(MSVC)
     add_compile_definitions(COMPILE_WIN)
@@ -133,12 +137,15 @@ endif()
 target_link_libraries( qrastr PRIVATE Qt${QT_VERSION_MAJOR}::Widgets Qt${QT_VERSION_MAJOR}::PrintSupport Qt${QT_VERSION_MAJOR}::Xml ) #Qt5::PrintSupport
 
 if(MSVC)
-    target_link_libraries( qrastr PRIVATE astra_shrd.lib )
-    #target_link_libraries( qrastr PRIVATE astra ) # when build with pybind11
-    target_link_libraries( qrastr PRIVATE mk4vc22x64     )
+    #target_link_libraries( qrastr PRIVATE astra_shrd.lib )
+    target_link_libraries( qrastr PRIVATE astra       ) # when build with pybind11
+    target_link_libraries( qrastr PRIVATE mk4vc22x64  )
+    target_link_libraries( qrastr PRIVATE qmcr        )
+
 else()
     target_link_libraries( qrastr PRIVATE libqicstable.so  )
     target_link_libraries( qrastr PRIVATE libastra_shrd.so )
+    target_link_libraries( qrastr PRIVATE libqmcr.co       )
 endif()
 
 target_include_directories(qrastr PRIVATE

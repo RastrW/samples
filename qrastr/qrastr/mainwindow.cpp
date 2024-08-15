@@ -11,25 +11,22 @@
 #include <QMdiSubWindow>
 #include <QMessageBox>
 #include <QDebug>
+#include <QSet>
+#include <QListView>
+#include <QDockWidget>
+#include "mainwindow.h"
+#include "./ui_mainwindow.h"
+#include <rtabwidget.h>
+#include <QAbstractTableModel>
 #include "mdiChildTable.h"
 #include "mdiChildGrid.h"
 #include "mdiChildHeaderGrid.h"
 #include <iostream>
 #include "astra_exp.h"
 #include "fmt/format.h"
-#include <QSet>
-#include <QListView>
-#include <QDockWidget>
-#include <rtabwidget.h>
-#include <QAbstractTableModel>
+#include "qmcr/mcrwnd.h"
 
-//#include <QTableView>
-//#include "mymodel.h"
-
-
-
-MainWindow::MainWindow()
-{
+MainWindow::MainWindow(){
     m_workspace = new QMdiArea;
     setCentralWidget(m_workspace);
     connect(m_workspace, SIGNAL(subWindowActivated(QMdiSubWindow *)), this, SLOT(updateMenus()));
@@ -44,9 +41,112 @@ MainWindow::MainWindow()
     setWindowTitle(tr("~qrastr~"));
     //int nRes = test();
 }
+void MainWindow::showEvent( QShowEvent* event ){
+    try{
+        QWidget::showEvent( event );
+        //your code here
+        // https://stackoverflow.com/questions/14161100/which-qt-widget-should-i-use-for-message-display
+        int nRes = 0;
+        QString str_curr_path = QDir::currentPath();
+        std::string str_path_2_conf = "undef";
+#if(defined(COMPILE_WIN))
+        str_path_2_conf = R"(C:\projects\git_web\samples\qrastr\qrastr\appsettings.json)";
+        //str_path_2_conf = R"(..\..\appsettings.json)";
+#else
+        str_path_2_conf = R"(/home/ustas/projects/git_web/samples/qrastr/qrastr/appsettings.json)";
+        //QMessageBox mb( QMessageBox::Icon::Critical, QObject::tr("Error"), QString("In lin not implemented!") );      mb.exec();
+#endif
+        Params pars;
+        nRes = pars.ReadJsonFile(str_path_2_conf);
+        if(nRes<0){
+            QMessageBox mb;
+            // так лучше не делать ,смешение строк qt и std это боль.
+            QString qstr = QObject::tr("Can't load on_start_file: ");
+            std::string qstr_fmt = qstr.toUtf8().constData(); //  qstr.toStdString(); !!not worked!!
+            std::string ss = fmt::format( "{}{} ", qstr_fmt.c_str(), pars.Get_on_start_load_file_rastr());
+            QString str = QString::fromUtf8(ss.c_str());
+            mb.setText(str);
+            mb.exec();
+            return ;
+        }
+        up_rastr_ = std::make_unique<CRastrHlp>();
+        nRes = up_rastr_->CreateRastr();
+        nRes = up_rastr_->Load(pars.Get_on_start_load_file_rastr());
+        nRes = up_rastr_->ReadForms(pars.Get_on_start_load_file_forms());
+        if(nRes<0){
+            QMessageBox mb( QMessageBox::Icon::Critical, QObject::tr("Error"),
+                            QString("error: %1 wheh read file : %2").arg(nRes).arg(pars.Get_on_start_load_file_forms().c_str())
+                           );
+            mb.exec();
+            return ;
+        }
+        setForms();
+    }catch(const std::exception& ex){
+        exclog(ex);
+    }catch(...){
+        exclog();
+    }
+}
+void MainWindow::setForms(){ // https://stackoverflow.com/questions/14151443/how-to-pass-a-qstring-to-a-qt-slot-from-a-qmenu-via-qsignalmapper-or-otherwise
+    int i = 0;
+    QMap<QString,QMenu *> map_menu;
+    //QMap<QString, QMenu>::iterator it ;
+    auto forms = up_rastr_->GetForms();
+    for(const auto& j_form : forms){
+        std::string str_MenuPath = stringutils::cp1251ToUtf8(j_form.MenuPath());
+        if (!str_MenuPath.empty() && str_MenuPath.at(0) == '_')
+            continue;
+        QString qstr_MenuPath = str_MenuPath.c_str();
+        if (!str_MenuPath.empty() && !map_menu.contains(qstr_MenuPath))
+            map_menu.insert(qstr_MenuPath,m_openMenu->addMenu(str_MenuPath.c_str()));
+    }
+    //for(const nlohmann::json& j_form : j_forms_){
+    for(const auto& j_form : forms){
+        std::string str_Name = stringutils::cp1251ToUtf8(j_form.Name());
+        std::string str_TableName = j_form.TableName();
+        std::string str_MenuPath = stringutils::cp1251ToUtf8(j_form.MenuPath());
+        QString qstr_MenuPath = str_MenuPath.c_str();
+        QMenu* cur_menu = m_openMenu;
+        if (map_menu.contains(qstr_MenuPath))
+            cur_menu = map_menu[qstr_MenuPath];
+        if (!str_Name.empty() && str_Name.at(0) != '_'){
+            QAction* p_actn = cur_menu->addAction(str_Name.c_str());
+            p_actn->setData(i);
+        }
+        i++;
+    }
+    connect( m_openMenu, SIGNAL(triggered(QAction *)), this, SLOT(onOpenForm(QAction *)), Qt::UniqueConnection);
+/*
+    //for(const nlohmann::json& j_form : j_forms_){
+        //std::string str_Collection = j_form["Collection"];
+        std::string str_MenuPath = j_form["MenuPath"];
+        if (!str_MenuPath.empty() && str_MenuPath.at(0) == '_')
+            continue;
 
-void MainWindow::closeEvent(QCloseEvent *event)
-{
+        QString qstr_MenuPath = str_MenuPath.c_str();
+        if (!str_MenuPath.empty() && !map_menu.contains(qstr_MenuPath))
+            map_menu.insert(qstr_MenuPath,m_openMenu->addMenu(str_MenuPath.c_str()));
+    }
+    for(const nlohmann::json& j_form : j_forms_){
+        std::string str_Name = j_form["Name"];
+        std::string str_TableName = j_form["TableName"];
+        std::string str_MenuPath = j_form["MenuPath"];
+        QString qstr_MenuPath = str_MenuPath.c_str();
+        QMenu* cur_menu = m_openMenu;
+        if (map_menu.contains(qstr_MenuPath))
+            cur_menu = map_menu[qstr_MenuPath];
+        if (!str_Name.empty() && str_Name.at(0) != '_')
+        {
+            QAction* p_actn = cur_menu->addAction(str_Name.c_str());
+            p_actn->setData(i);
+        }
+        i++;
+    }
+    connect( m_openMenu, SIGNAL(triggered(QAction *)),
+            this, SLOT(onOpenForm(QAction *)), Qt::UniqueConnection);
+*/
+}
+void MainWindow::closeEvent(QCloseEvent *event){
 #if(!defined(QICSGRID_NO))
     m_workspace->closeAllSubWindows();
     if (activeMdiChild()) {
@@ -57,9 +157,7 @@ void MainWindow::closeEvent(QCloseEvent *event)
     }
 #endif// #if(!defined(QICSGRID_NO))
 }
-
-void MainWindow::newFile()
-{
+void MainWindow::newFile(){
 #if(!defined(QICSGRID_NO))
     //MdiChild *child = createMdiChild(  j_forms_[0] );
     MdiChild *child = createMdiChild(  j_forms_[0] );
@@ -67,9 +165,7 @@ void MainWindow::newFile()
     child->show();
 #endif
 }
-
-void MainWindow::open()
-{
+void MainWindow::open(){
     QString fileName = QFileDialog::getOpenFileName(this);
     if (!fileName.isEmpty()) {
 #if(!defined(QICSGRID_NO))
@@ -80,17 +176,14 @@ void MainWindow::open()
         }
 #endif//#if(!defined(QICSGRID_NO))
         int nRes = 0;
-        std::string f = fileName.toUtf8().constData(); //  it works!!!
-        nRes = up_rastr_->Load( f);
-
+        nRes = Load( id_rastr_, fileName.toStdString().c_str(), "");
         if(nRes>0){
-            //std::string str_msg = fmt::format( "{}: {}", tr("File loaded").toStdString(), fileName.toStdString());
-            std::string str_msg = fmt::format( "{}: {}", "File loaded", f);
+            std::string str_msg = fmt::format( "{}: {}", tr("File loaded").toStdString(), fileName.toStdString());
             statusBar()->showMessage( str_msg.c_str(), 2000 );
             cur_file = f;
             emit file_loaded(*up_rastr_.get());
         } else {
-            std::string str_msg = fmt::format( "{}: {}", "File not loaded", f);
+            std::string str_msg = fmt::format( "{}: {}", tr("File not loaded").toStdString(), fileName.toStdString());
             QMessageBox msgBox;
             msgBox.critical( this, tr("File not loaded"), str_msg.c_str() );
         }
@@ -106,9 +199,7 @@ void MainWindow::open()
         */
     }
 }
-
-void MainWindow::save()
-{
+void MainWindow::save(){
 #if(!defined(QICSGRID_NO))
     if (activeMdiChild()->save())
         statusBar()->showMessage(tr("File saved"), 2000);
@@ -127,9 +218,7 @@ void MainWindow::save()
         }
     }
 }
-
-void MainWindow::saveAs()
-{
+void MainWindow::saveAs(){
 #if(!defined(QICSGRID_NO))
     if (activeMdiChild()->saveAs())
         statusBar()->showMessage(tr("File saved"), 2000);
@@ -223,6 +312,18 @@ void MainWindow::rgm_wrap(){
 
     emit rgm_signal();
 }
+void MainWindow::onDlgMcr(){
+    //long res = Rgm(id_rastr_,"");
+    long n_res = 0;
+    McrWnd* pMcrWnd = new McrWnd(this) ;
+    pMcrWnd->show();
+    std::string str_msg = "";
+    if (n_res < 0)
+        str_msg = "Макрос выполнен успешно";
+    else
+        str_msg = "Макрос завершился аварийно!";
+    statusBar()->showMessage( str_msg.c_str(), 0 );
+}
 void MainWindow::about(){
    QMessageBox::about( this, tr("About QRastr"), tr("About the <b>QRastr</b>.") );
 }
@@ -251,8 +352,7 @@ void MainWindow::onOpenForm( QAction* p_actn ){
                   this,SLOT(ondataChanged(std::string,std::string,int,QVariant)));
     connect(this,      SIGNAL(rm_change(std::string,std::string,int,QVariant)),
        prtw->prm,      SLOT(onRModelchange(std::string,std::string,int,QVariant)));
-
-    //Вставка строки
+    //MainWindow: вызывть изменение RModel во всех сущьностях
     connect(prtw->prm, SIGNAL(RowInserted(std::string,int)),
                   this,SLOT(onRowInserted(std::string,int)));
     connect(this,      SIGNAL(rm_RowInserted(std::string,int)),
@@ -260,7 +360,7 @@ void MainWindow::onOpenForm( QAction* p_actn ){
 
     //Удаление строки
     connect(prtw->prm, SIGNAL(RowDeleted(std::string,int)),
-                  this,SLOT(onRowDeleted(std::string,int)));
+                  this,SLOT(onRowInserted(std::string,int)));
     connect(this,      SIGNAL(rm_RowDeleted(std::string,int)),
        prtw->prm,      SLOT(onrm_RowDeleted(std::string,int)));
 
@@ -268,9 +368,8 @@ void MainWindow::onOpenForm( QAction* p_actn ){
             prtw,      SLOT(onUpdate(std::string)));
 
 
+    //up_rtw = prtw;
     // Docking
-    //TO DO: try to use
-    //https://github.com/githubuser0xFFFF/Qt-Advanced-Docking-System?tab=readme-ov-file
     QDockWidget *dock = new QDockWidget( stringutils::cp1251ToUtf8(form.Name()).c_str(), this);
     dock->setWidget(prtw);
     dock->setAllowedAreas(Qt::LeftDockWidgetArea | Qt::RightDockWidgetArea | Qt::TopDockWidgetArea | Qt::BottomDockWidgetArea | Qt::AllDockWidgetAreas);
@@ -532,11 +631,10 @@ void MainWindow::createActions()
     //connect(m_RGMAct, SIGNAL(triggered()), this, SLOT(Rgm(id_rastr_,"")));
     connect(m_RGMAct, SIGNAL(triggered()), this, SLOT(rgm_wrap()));
 
-    ////////////////////////////// RASTR //////////////////////////
-//    long nRes = 0;
-//    id_rastr_ = RastrCreate();
-//    nRes = Load(id_rastr_, R"(/home/ustas/projects/test-rastr/cx195.rg2)", "");
-//    nRes = Rgm(id_rastr_,"");
+    m_ActMacro = new QAction(QIcon(":/images/cut.png"),tr("&macro"), this);
+    m_ActMacro->setShortcut(tr("F11"));
+    m_ActMacro->setStatusTip(tr("Run macro"));
+    connect(m_ActMacro, SIGNAL(triggered()), this, SLOT(onDlgMcr()));
 }
 
 void MainWindow::createMenus()
@@ -561,6 +659,9 @@ void MainWindow::createMenus()
 
     m_CalcMenu = menuBar()->addMenu(tr("&Calc"));
     m_CalcMenu->addAction(m_RGMAct);
+
+    m_CalcMenu = menuBar()->addMenu(tr("&Macro"));
+    m_CalcMenu->addAction(m_ActMacro);
 
     m_openMenu = menuBar()->addMenu(tr("&Open") );
     m_windowMenu = menuBar()->addMenu(tr("&Window"));
@@ -613,7 +714,7 @@ void MainWindow::createCalcLayout()
     //QPushButton *btn3 = new QPushButton("Button 3");
     //QPushButton *btn4 = new QPushButton("Button 4");
 
-    connect(btn1,&QPushButton::clicked,this, &MainWindow::Btn1_onClick);
+    connect(btn1,&QPushButton::clicked,Btn1_onClick);
     connect(btn2,&QPushButton::clicked,this, &MainWindow::onButton2Click);
 
     QWidget* widget = new QWidget;
