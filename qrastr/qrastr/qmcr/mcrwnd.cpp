@@ -41,6 +41,34 @@ def hllo_wrld():
         #adj = ["red", "big", "tasty"]
         fruits = ["apple", "banana", "cherry"]
         continue
+rom datetime import datetime
+import pytz
+
+new_york_tz = pytz.timezone('America/New_York')
+current_time = datetime.now(new_york_tz)
+print(current_time)
+
+pet.bark()
+
+from tkinter import * #sudo apt-get install python3-tk
+
+
+def about():
+    a = Toplevel()
+    a.geometry('200x150')
+    a['bg'] = 'grey'
+    a.overrideredirect(True)
+    Label(a, text="About this").pack(expand=1)
+    a.after(5000, lambda: a.destroy())
+
+root = Tk()
+root.title("Главное окно")
+Button(text="Button", width=20).pack()
+Label(text="Label", width=20, height=3).pack()
+Button(text="About", width=20, command=about).pack()
+
+root.mainloop()
+
 """
 for x in range(6):
   if x == 3: break
