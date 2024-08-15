@@ -13,6 +13,9 @@
   <property name="windowTitle">
    <string>ToolBox</string>
   </property>
+  <property name="windowIcon">
+   <iconset theme="QIcon::ThemeIcon::FolderNew"/>
+  </property>
  </widget>
  <resources/>
  <connections/>

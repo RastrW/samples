@@ -54,8 +54,8 @@ SciHlp::SciHlp(QWidget *parent, _en_role role)
     markerSetBack(0,1);
     markerSetBack(1,1);
 
-    connect(this, SIGNAL(marginClicked( Scintilla::Position, Scintilla::KeyMod, int ) ), this, SLOT(onMarginClicked( Scintilla::Position, Scintilla::KeyMod, int )));
-    connect(this, SIGNAL(notify       (Scintilla::NotificationData* ))                 , this, SLOT(onNotify       ( Scintilla::NotificationData* )) );
+    connect(this, SIGNAL(marginClicked( Scintilla::Position, Scintilla::KeyMod, int ) ), this, SLOT(onMarginClicked( Scintilla::Position, Scintilla::KeyMod, int ) ) );
+    connect(this, SIGNAL(notify       ( Scintilla::NotificationData*                ) ), this, SLOT(onNotify       ( Scintilla::NotificationData* )                ) );
 }
 void SciHlp::onMarginClicked(Scintilla::Position position, Scintilla::KeyMod modifiers, int margin) {
     if(margin == 1) {
