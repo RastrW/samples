@@ -4,6 +4,7 @@
 #include <QStyle>
 #include <QTextEdit>
 #include <QMessageBox>
+#include <QFileDialog>
 #include <QDebug>
 #include "mcrwnd.h"
 #include "scihlp.h"
@@ -123,19 +124,23 @@ void McrWnd::onFileOpen(){
 }
 void McrWnd::onFileSave(bool blSaveAs){
     qDebug().nospace() << "McrWnd::onFileSave("<< blSaveAs<<")";
-    if(blSaveAs==false){
-        const SciHlp::_ret_vals rv = shEdit_->ContentToFile();
+    if(blSaveAs == true){
+        QString qstrPathToFile = QFileDialog::getSaveFileName(this, tr("Save File"));
+        const SciHlp::_ret_vals rv = shEdit_->setFileInfo(QFileInfo(qstrPathToFile));
         if(SciHlp::_ret_vals::ok!=rv){
             QMessageBox mb( QMessageBox::Icon::Critical, QObject::tr("Error"),
-                            QString("Failed save to file: %1").arg(shEdit_->getFileInfo().absoluteFilePath() )
+                            QString("Failed open file: %1").arg( qstrPathToFile )
                            );
             mb.exec();
+            return;
         }
+    }
+    const SciHlp::_ret_vals rv = shEdit_->ContentToFile();
+    if(SciHlp::_ret_vals::ok!=rv){
         QMessageBox mb( QMessageBox::Icon::Critical, QObject::tr("Error"),
-                        QString("Failed save to file: %1").arg(shEdit_->getFileInfo().absoluteFilePath() )
+                        QString("Failed save to file: %1").arg( shEdit_->getFileInfo().absoluteFilePath() )
                        );
         mb.exec();
-
     }
 }
 void McrWnd::onRun(){

@@ -48,7 +48,7 @@ public:
     void showEvent(QShowEvent *event) override;
     _ret_vals setContent(const std::string& str_text);
     _ret_vals setFileInfo(const QFileInfo& fiNew ){
-        if( fiNew.isFile() == false )
+        if( fiNew.permission(QFile::WriteUser) == false )
             return _ret_vals::failure;
         fiFileSource_ = fiNew;
         emit chngFileInfo(fiNew);

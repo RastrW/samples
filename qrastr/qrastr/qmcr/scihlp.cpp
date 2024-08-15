@@ -1,6 +1,7 @@
 #include <QLibrary>
 #include <QMessageBox>
 #include <QFontDatabase>
+#include <QTextStream>
 #include "SciLexer.h"
 #include "scihlp.h"
 
