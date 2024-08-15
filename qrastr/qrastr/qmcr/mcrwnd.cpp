@@ -3,6 +3,7 @@
 #include <QApplication>
 #include <QStyle>
 #include <QTextEdit>
+#include <QDebug>
 #include "mcrwnd.h"
 #include "scihlp.h"
 
@@ -82,12 +83,18 @@ else:
     QVBoxLayout *container_layout = new QVBoxLayout;
     QToolBar* pToolBar = nullptr;
     pToolBar  = new QToolBar;
-    pToolBar->addAction( QIcon(QApplication::style()->standardIcon(QStyle::SP_FileIcon)),               tr("&New"),      QKeySequence(Qt::CTRL+Qt::Key_N), this, SLOT( onFileNew())   );
-    pToolBar->addAction( QIcon(QApplication::style()->standardIcon(QStyle::SP_FileDialogStart)),        tr("&Open"),     QKeySequence(Qt::CTRL+Qt::Key_O), this, SLOT( onFileOpen())  );
-    pToolBar->addAction( QIcon(QApplication::style()->standardIcon(QStyle::SP_DialogSaveButton)),       tr("&Save"),     QKeySequence(Qt::CTRL+Qt::Key_S), this, [this]{ onFileSave(false); } );
-    pToolBar->addAction( QIcon(QApplication::style()->standardIcon(QStyle::SP_DriveFDIcon)),            tr("Save as"),   QKeySequence(Qt::CTRL+Qt::Key_W), this, [this]{ onFileSave(true);  } );
-    pToolBar->addAction( QIcon(QApplication::style()->standardIcon(QStyle::SP_MediaPlay)),              tr("&Run"),      QKeySequence(Qt::Key_F5),         this, SLOT( onRun() )      );
-    pToolBar->addAction( QIcon(QApplication::style()->standardIcon(QStyle::SP_FileDialogContentsView)), tr("&FindRepl"), QKeySequence(Qt::CTRL+Qt::Key_F), this, SLOT( onFindRepl() ) );
+    pToolBar->addAction( QIcon(QApplication::style()->standardIcon(QStyle::SP_FileIcon)),               tr("&New"),   this,    SLOT( onFileNew())   )
+            ->setShortcut({QKeySequence(Qt::CTRL+Qt::Key_N)});
+    pToolBar->addAction( QIcon(QApplication::style()->standardIcon(QStyle::SP_FileDialogStart)),        tr("&Open"), this,   SLOT( onFileOpen())  )
+            ->setShortcut({QKeySequence(Qt::CTRL+Qt::Key_O)});
+    pToolBar->addAction( QIcon(QApplication::style()->standardIcon(QStyle::SP_DialogSaveButton)),       tr("&Save"),       [this]{ onFileSave(false); } )
+            ->setShortcuts( {QKeySequence(Qt::CTRL+Qt::Key_S)});
+    pToolBar->addAction( QIcon(QApplication::style()->standardIcon(QStyle::SP_DriveFDIcon)),            tr("Save as"),   this, [this]{ onFileSave(true);  } )
+            ->setShortcut({QKeySequence(Qt::CTRL+Qt::Key_W)});
+    pToolBar->addAction( QIcon(QApplication::style()->standardIcon(QStyle::SP_MediaPlay)),              tr("Run (F5)"),           this, SLOT( onRun() )      )
+            ->setShortcut({QKeySequence(Qt::Key_F5)});
+    pToolBar->addAction( QIcon(QApplication::style()->standardIcon(QStyle::SP_FileDialogContentsView)), tr("&FindRepl"),  this, SLOT( onFindRepl() ) )
+            ->setShortcut({QKeySequence(Qt::CTRL+Qt::Key_F)});
     container_layout->addWidget(pToolBar);
     splitter->addWidget(edit1);
     splitter->setOrientation(Qt::Orientation::Vertical);
