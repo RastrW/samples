@@ -112,8 +112,32 @@ SciHlp::_ret_vals SciHlp::setContent(const std::string& str_text){
     setText(str_text.c_str());
     //emptyUndoBuffer();
     //setSavePoint();
+
+    setFileInfo( QFileInfo(R"(C:\projects\git_web\samples\qrastr\qrastr\qmcr\tst.py)") );
+    ContentToFile();
+
     return _ret_vals::ok;
-};
+}
+
+SciHlp::_ret_vals SciHlp::ContentToFile(){
+    try{
+        QFile qFile{ fiFileSource_.absoluteFilePath() };
+        if(qFile.open(QIODevice::WriteOnly)==false){
+            return _ret_vals::failure;
+        }
+        QTextStream tsFile{&qFile};
+        QByteArray baContent { getText(textLength()+1) };
+        tsFile << QString::fromUtf8(baContent);
+        tsFile.flush();
+        qFile.close();
+        //setFileInfo(QFileInfo{path2File});
+        setSavePoint();
+    }catch(...){
+        return _ret_vals::failure;
+    }
+    return _ret_vals::ok;
+}
+
 void SciHlp::showEvent(QShowEvent *event){
     #if _WIN32 //https://www.scintilla.org/LexillaDoc.html
         typedef void *(__stdcall *CreateLexerFn)(const char *name);

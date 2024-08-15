@@ -4,6 +4,9 @@
 #include <QWidget>
 #include <QDialog>
 #include <QToolBar>
+#include <QFileInfo>
+
+class SciHlp;
 
 class McrWnd : public QDialog{
     Q_OBJECT
@@ -18,7 +21,10 @@ private slots:
     void onFileSave(bool blSaveAs);
     void onRun();
     void onFindRepl();
+    void onChngEditFileInfo(const QFileInfo& fiNew);
 private:
+    SciHlp* shEdit_ = nullptr;
+    SciHlp* shProt_ = nullptr;
 };
 
 #endif // MCRWND_H

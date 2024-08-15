@@ -1,6 +1,7 @@
 #ifndef SCIHLP_H
 #define SCIHLP_H
 
+#include <QFileInfo>
 #include "ScintillaEdit.h"
 
 //#if defined(Q_OS_WIN)
@@ -46,13 +47,27 @@ public:
     void setStyleHlp( sptr_t style, sptr_t fore, bool bold=false, bool italic=false, sptr_t back=_colors::white, bool underline=false, bool eolfilled=false );
     void showEvent(QShowEvent *event) override;
     _ret_vals setContent(const std::string& str_text);
+    _ret_vals setFileInfo(const QFileInfo& fiNew ){
+        if( fiNew.isFile() == false )
+            return _ret_vals::failure;
+        fiFileSource_ = fiNew;
+        emit chngFileInfo(fiNew);
+        return _ret_vals::ok;
+    }
+    const QFileInfo& getFileInfo()const{
+        return fiFileSource_;
+    }
+    _ret_vals ContentToFile();
+signals:
+    void chngFileInfo(const QFileInfo& fiNew);
 private slots:
     void onMarginClicked(Scintilla::Position position, Scintilla::KeyMod modifiers, int margin);
     void onNotify(Scintilla::NotificationData* );
-public:
+private:
     const _en_role role_;
     const sptr_t margin_line_num_ = 0;
     const sptr_t margin_fold_     = 1;
+    QFileInfo fiFileSource_;
 };//class SciHlp{
 
 #endif // SCIHLP_H

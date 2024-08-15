@@ -3,6 +3,7 @@
 #include <QApplication>
 #include <QStyle>
 #include <QTextEdit>
+#include <QMessageBox>
 #include <QDebug>
 #include "mcrwnd.h"
 #include "scihlp.h"
@@ -18,8 +19,34 @@ McrWnd::McrWnd(QWidget *parent)
     setWindowIcon( QIcon(QApplication::style()->standardIcon(QStyle::SP_ComputerIcon) ));
     setWindowTitle(tr("Macro Python"));
     QSplitter * splitter = new QSplitter(this);
-    SciHlp* edit1 = new SciHlp(this, SciHlp::_en_role::editor_python);
-    edit1->setContent(R"(
+    shEdit_ = new SciHlp(this, SciHlp::_en_role::editor_python);
+    shProt_ = new SciHlp(this, SciHlp::_en_role::prot_macro);
+    QVBoxLayout *layout = new QVBoxLayout();
+    QVBoxLayout *container_layout = new QVBoxLayout;
+    QToolBar* pToolBar = nullptr;
+    pToolBar  = new QToolBar;
+    pToolBar->addAction( QIcon(QApplication::style()->standardIcon(QStyle::SP_FileIcon)),               tr("&New"),     this,    SLOT( onFileNew())   )
+            ->setShortcut({QKeySequence(Qt::CTRL+Qt::Key_N)});
+    pToolBar->addAction( QIcon(QApplication::style()->standardIcon(QStyle::SP_DirIcon)),                tr("&Open"),    this,   SLOT( onFileOpen())   )
+            ->setShortcut({QKeySequence(Qt::CTRL+Qt::Key_O)});
+    pToolBar->addAction( QIcon(QApplication::style()->standardIcon(QStyle::SP_DialogSaveButton)),       tr("&Save"),    [this] { onFileSave(false); } )
+            ->setShortcuts( {QKeySequence(Qt::CTRL+Qt::Key_S)});
+    pToolBar->addAction( QIcon(QApplication::style()->standardIcon(QStyle::SP_DriveFDIcon)),            tr("Save as"),  [this] { onFileSave(true); }  )
+            ->setShortcut({QKeySequence(Qt::CTRL+Qt::Key_W)});
+    pToolBar->addAction( QIcon(QApplication::style()->standardIcon(QStyle::SP_MediaPlay)),              tr("Run (F5)"),  this, SLOT( onRun() )        )
+            ->setShortcut({QKeySequence(Qt::Key_F5)});
+    pToolBar->addAction( QIcon(QApplication::style()->standardIcon(QStyle::SP_BrowserReload)),          tr("&FindRepl"), this, SLOT( onFindRepl() )   )
+            ->setShortcut({QKeySequence(Qt::CTRL+Qt::Key_F)});
+    container_layout->addWidget(pToolBar);
+    splitter->addWidget(shEdit_);
+    splitter->setOrientation(Qt::Orientation::Vertical);
+    splitter->addWidget(shProt_);
+    container_layout->addWidget(splitter);
+    setLayout(container_layout);
+
+    connect( shEdit_, SIGNAL( chngFileInfo(const QFileInfo&) ), this, SLOT( onChngEditFileInfo(const QFileInfo&) ) );
+
+    shEdit_->setContent(R"(
 import os
 #print(os.get_exec_path())
 print(os.getcwd())
@@ -77,35 +104,16 @@ for x in range(6):
 else:
   print("Finally finished!")
 """
-                   )");
-    SciHlp* edit2 = new SciHlp(this, SciHlp::_en_role::prot_macro);
-    QVBoxLayout *layout = new QVBoxLayout();
-    QVBoxLayout *container_layout = new QVBoxLayout;
-    QToolBar* pToolBar = nullptr;
-    pToolBar  = new QToolBar;
-    pToolBar->addAction( QIcon(QApplication::style()->standardIcon(QStyle::SP_FileIcon)),               tr("&New"),     this,    SLOT( onFileNew())   )
-            ->setShortcut({QKeySequence(Qt::CTRL+Qt::Key_N)});
-    pToolBar->addAction( QIcon(QApplication::style()->standardIcon(QStyle::SP_DirIcon)),                tr("&Open"),    this,   SLOT( onFileOpen())   )
-            ->setShortcut({QKeySequence(Qt::CTRL+Qt::Key_O)});
-    pToolBar->addAction( QIcon(QApplication::style()->standardIcon(QStyle::SP_DialogSaveButton)),       tr("&Save"),    [this] { onFileSave(false); } )
-            ->setShortcuts( {QKeySequence(Qt::CTRL+Qt::Key_S)});
-    pToolBar->addAction( QIcon(QApplication::style()->standardIcon(QStyle::SP_DriveFDIcon)),            tr("Save as"),  [this] { onFileSave(true); }  )
-            ->setShortcut({QKeySequence(Qt::CTRL+Qt::Key_W)});
-    pToolBar->addAction( QIcon(QApplication::style()->standardIcon(QStyle::SP_MediaPlay)),              tr("Run (F5)"),  this, SLOT( onRun() )        )
-            ->setShortcut({QKeySequence(Qt::Key_F5)});
-    pToolBar->addAction( QIcon(QApplication::style()->standardIcon(QStyle::SP_BrowserReload)), tr("&FindRepl"), this, SLOT( onFindRepl() )   )
-            ->setShortcut({QKeySequence(Qt::CTRL+Qt::Key_F)});
-    container_layout->addWidget(pToolBar);
-    splitter->addWidget(edit1);
-    splitter->setOrientation(Qt::Orientation::Vertical);
-    splitter->addWidget(edit2);
-    container_layout->addWidget(splitter);
-    setLayout(container_layout);
+)");
+
 }
 McrWnd::~McrWnd(){
 }
 void McrWnd::showEvent(QShowEvent *event) {
     QWidget::showEvent( event );
+}
+void McrWnd::onChngEditFileInfo( const QFileInfo& fiNew){
+    setWindowTitle(fiNew.absoluteFilePath());
 }
 void McrWnd::onFileNew(){
     qDebug("McrWnd::onFileNew()");
@@ -115,6 +123,20 @@ void McrWnd::onFileOpen(){
 }
 void McrWnd::onFileSave(bool blSaveAs){
     qDebug().nospace() << "McrWnd::onFileSave("<< blSaveAs<<")";
+    if(blSaveAs==false){
+        const SciHlp::_ret_vals rv = shEdit_->ContentToFile();
+        if(SciHlp::_ret_vals::ok!=rv){
+            QMessageBox mb( QMessageBox::Icon::Critical, QObject::tr("Error"),
+                            QString("Failed save to file: %1").arg(shEdit_->getFileInfo().absoluteFilePath() )
+                           );
+            mb.exec();
+        }
+        QMessageBox mb( QMessageBox::Icon::Critical, QObject::tr("Error"),
+                        QString("Failed save to file: %1").arg(shEdit_->getFileInfo().absoluteFilePath() )
+                       );
+        mb.exec();
+
+    }
 }
 void McrWnd::onRun(){
     qDebug("McrWnd::onRun()");
