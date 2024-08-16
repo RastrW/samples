@@ -59,7 +59,7 @@ void SciHlp::onMarginClicked(Scintilla::Position position, Scintilla::KeyMod mod
         toggleFold(lineFromPosition(position));
     }
 }
-void SciHlp::onNotify(Scintilla::NotificationData* pnd ){
+void SciHlp::onNotify(Scintilla::NotificationData* pnd){
     switch (pnd->nmhdr.code) {
         case Scintilla::Notification::CharAdded:   { // I try https://www.scintilla.org/ScintillaUsage.html - "Implementing Auto-Indent" - but it's not work properly and I remake:
             if( (pnd->ch == '\r') || (pnd->ch == '\n') ) {
@@ -115,6 +115,17 @@ SciHlp::_ret_vals SciHlp::setContent(const std::string& str_text){
     //ContentToFile();
     return _ret_vals::ok;
 }
+bool SciHlp::getContentModified() const {
+    return modify();
+}
+SciHlp::_ret_vals SciHlp::setFileInfo(const QFileInfo& fiNew ){
+    fiFileSource_ = fiNew;
+    emit chngFileInfo(fiNew);
+    return _ret_vals::ok;
+}
+const QFileInfo& SciHlp::getFileInfo() const {
+    return fiFileSource_;
+}
 SciHlp::_ret_vals SciHlp::ContentToFile(){
     try{
         QFile qFile{ fiFileSource_.absoluteFilePath() };
@@ -125,6 +136,23 @@ SciHlp::_ret_vals SciHlp::ContentToFile(){
         QByteArray baContent { getText(textLength()+1) };
         tsFile << QString::fromUtf8(baContent);
         tsFile.flush();
+        qFile.close();
+        setSavePoint();
+    }catch(...){
+        return _ret_vals::failure;
+    }
+    return _ret_vals::ok;
+}
+SciHlp::_ret_vals SciHlp::ContentFromFile(){
+    try{
+        QFile qFile{ fiFileSource_.absoluteFilePath() };
+        if(qFile.open(QIODevice::ReadOnly|QIODevice::Text)==false){
+            return _ret_vals::failure;
+        }
+        QString qstrFileContent{ qFile.readAll() };
+        std::string str{ qstrFileContent.toStdString() };
+        setText(str.c_str()); // or
+        //setText(qstrFileContent.toLocal8Bit().data()); // https://wiki.qt.io/Technical_FAQ#How_can_I_convert_a_QString_to_char.2A_and_vice_versa.3F // не работает с русскими буквами
         qFile.close();
         setSavePoint();
     }catch(...){

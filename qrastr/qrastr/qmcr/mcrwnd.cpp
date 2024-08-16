@@ -152,8 +152,30 @@ void McrWnd::onFileOpen(){
     if(true==shEdit_->getContentModified()){
         blContentCleared = onFileNew();
     }
-    if(blContentCleared==false)
-
+    if(blContentCleared==false){
+        QMessageBox msgBox;
+        msgBox.setText(tr("Macro is not saved. Ignore and load new?"));
+        msgBox.setIcon(QMessageBox::Question);
+        msgBox.setStandardButtons( QMessageBox::Yes | QMessageBox::Cancel );
+        msgBox.setDefaultButton(QMessageBox::Yes);
+        if (msgBox.exec() != QMessageBox::Yes ) {
+            return;
+        }
+    }
+    QString qstrPathToFile = QFileDialog::getOpenFileName(this, tr("Open file"));
+    if(qstrPathToFile.length()<3){
+        return;
+    }
+    shEdit_->setFileInfo(QFileInfo{qstrPathToFile});
+    const SciHlp::_ret_vals rv = shEdit_->ContentFromFile();
+    if(SciHlp::_ret_vals::ok!=rv){
+        shEdit_->setFileInfo(QFileInfo{});
+        QMessageBox mb( QMessageBox::Icon::Critical, QObject::tr("Error"),
+                        QString(tr("Failed load file: %1")).arg( qstrPathToFile )
+                       );
+        mb.exec();
+        return ;
+    }
 }
 bool McrWnd::onFileSave(bool blSaveAs){
     qDebug().nospace() << "McrWnd::onFileSave("<< blSaveAs<<")";

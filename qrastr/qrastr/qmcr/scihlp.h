@@ -44,26 +44,19 @@ public:
     };
     SciHlp(QWidget *parent, _en_role role);
     virtual ~SciHlp() = default;
-    void setStyleHlp( sptr_t style, sptr_t fore, bool bold=false, bool italic=false, sptr_t back=_colors::white, bool underline=false, bool eolfilled=false );
     void showEvent(QShowEvent *event) override;
+    void setStyleHlp( sptr_t style, sptr_t fore, bool bold=false, bool italic=false, sptr_t back=_colors::white, bool underline=false, bool eolfilled=false );
     _ret_vals setContent(const std::string& str_text);
-    bool getContentModified() const {
-        return modify();
-    }
-    _ret_vals setFileInfo(const QFileInfo& fiNew ){
-        fiFileSource_ = fiNew;
-        emit chngFileInfo(fiNew);
-        return _ret_vals::ok;
-    }
-    const QFileInfo& getFileInfo()const{
-        return fiFileSource_;
-    }
+    bool getContentModified() const;
+    _ret_vals setFileInfo(const QFileInfo& fiNew);
+    const QFileInfo& getFileInfo()const;
     _ret_vals ContentToFile();
+    _ret_vals ContentFromFile();
 signals:
     void chngFileInfo(const QFileInfo& fiNew);
 private slots:
     void onMarginClicked(Scintilla::Position position, Scintilla::KeyMod modifiers, int margin);
-    void onNotify(Scintilla::NotificationData* );
+    void onNotify(Scintilla::NotificationData* pnd);
 private:
     const _en_role role_;
     const sptr_t margin_line_num_ = 0;
