@@ -116,23 +116,59 @@ void McrWnd::showEvent(QShowEvent *event) {
 void McrWnd::onChngEditFileInfo( const QFileInfo& fiNew){
     setWindowTitle(fiNew.absoluteFilePath());
 }
-void McrWnd::onFileNew(){
+bool McrWnd::onFileNew(){
     qDebug("McrWnd::onFileNew()");
+    bool blFileSaved = true;
+    if(true==shEdit_->getContentModified()){
+        QMessageBox msgBox;
+        msgBox.setText(tr("Macro modified. Save?"));
+        msgBox.setIcon(QMessageBox::Question);
+        msgBox.setStandardButtons( QMessageBox::Yes | QMessageBox::Cancel );
+        msgBox.setDefaultButton(QMessageBox::Yes);
+        if(msgBox.exec() == QMessageBox::Yes){
+            QFileInfo fi = shEdit_->getFileInfo();
+            if(fi.absoluteFilePath().length()>3){
+                blFileSaved = onFileSave(false);
+            }else{
+                blFileSaved = onFileSave(true);
+            }
+        }
+    }
+    QMessageBox msgBox;
+    msgBox.setText(blFileSaved ? tr("Clear?") :tr("Macro is not saved. Ignore and Clear?"));
+    msgBox.setIcon(QMessageBox::Question);
+    msgBox.setStandardButtons( QMessageBox::Yes | QMessageBox::Cancel );
+    msgBox.setDefaultButton(QMessageBox::Yes);
+    if (msgBox.exec() != QMessageBox::Yes ) {
+        return false;
+    }
+    shEdit_->setFileInfo(QFileInfo{});
+    shEdit_->setContent("");
+    return true;
 }
 void McrWnd::onFileOpen(){
     qDebug("McrWnd::onFileOpen()");
+    bool blContentCleared = true;
+    if(true==shEdit_->getContentModified()){
+        blContentCleared = onFileNew();
+    }
+    if(blContentCleared==false)
+
 }
-void McrWnd::onFileSave(bool blSaveAs){
+bool McrWnd::onFileSave(bool blSaveAs){
     qDebug().nospace() << "McrWnd::onFileSave("<< blSaveAs<<")";
     if(blSaveAs == true){
-        QString qstrPathToFile = QFileDialog::getSaveFileName(this, tr("Save File"));
+        QString qstrPathToFile = QFileDialog::getSaveFileName(this, tr("Save file as"));
+        if(qstrPathToFile.length()<3){
+            return false;
+        }
         const SciHlp::_ret_vals rv = shEdit_->setFileInfo(QFileInfo(qstrPathToFile));
         if(SciHlp::_ret_vals::ok!=rv){
             QMessageBox mb( QMessageBox::Icon::Critical, QObject::tr("Error"),
-                            QString("Failed open file: %1").arg( qstrPathToFile )
+                            QString(tr("Failed set file: %1")).arg( qstrPathToFile )
                            );
             mb.exec();
-            return;
+            return false;
         }
     }
     const SciHlp::_ret_vals rv = shEdit_->ContentToFile();
@@ -141,7 +177,10 @@ void McrWnd::onFileSave(bool blSaveAs){
                         QString("Failed save to file: %1").arg( shEdit_->getFileInfo().absoluteFilePath() )
                        );
         mb.exec();
+    }else{
+        return true;
     }
+    return false;
 }
 void McrWnd::onRun(){
     qDebug("McrWnd::onRun()");

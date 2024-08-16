@@ -47,9 +47,10 @@ public:
     void setStyleHlp( sptr_t style, sptr_t fore, bool bold=false, bool italic=false, sptr_t back=_colors::white, bool underline=false, bool eolfilled=false );
     void showEvent(QShowEvent *event) override;
     _ret_vals setContent(const std::string& str_text);
+    bool getContentModified() const {
+        return modify();
+    }
     _ret_vals setFileInfo(const QFileInfo& fiNew ){
-        if( fiNew.permission(QFile::WriteUser) == false )
-            return _ret_vals::failure;
         fiFileSource_ = fiNew;
         emit chngFileInfo(fiNew);
         return _ret_vals::ok;

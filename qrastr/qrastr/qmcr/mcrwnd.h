@@ -16,9 +16,9 @@ public:
     void showEvent(QShowEvent *event) override;
 signals:
 private slots:
-    void onFileNew();
+    bool onFileNew();
     void onFileOpen();
-    void onFileSave(bool blSaveAs);
+    bool onFileSave(bool blSaveAs);
     void onRun();
     void onFindRepl();
     void onChngEditFileInfo(const QFileInfo& fiNew);

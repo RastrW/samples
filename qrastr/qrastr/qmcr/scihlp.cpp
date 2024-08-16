@@ -20,13 +20,11 @@ const char *MonospaceFont(){
 SciHlp::SciHlp(QWidget *parent, _en_role role)
     : ScintillaEdit(parent)
     , role_(role){
-
     //By default,
     //margin 0 is set to display line numbers, but is given a width of 0, so it is hidden.
     //Margin 1 is set to display non-folding symbols and is given a width of 16 pixels, so it is visible.
     //Margin 2 is set to display the folding symbols, but is given a width of 0, so it is hidden.
     //Of course, you can set the margins to be whatever you wish.
-
     //https://www.scintilla.org/ScintillaDoc.html#SCI_GETMARGINTYPEN
     //https://stackoverflow.com/questions/78522506/scintilla-will-not-highlight-or-codefold-in-my-c
     //https://www.purebasic.fr/english/viewtopic.php?t=68691
@@ -51,10 +49,8 @@ SciHlp::SciHlp(QWidget *parent, _en_role role)
     setTabWidth(4); // set TAB size in spaces
     //setWrapIndentMode(SC_WRAPINDENT_DEEPINDENT);
     setWrapIndentMode(SC_WRAPINDENT_INDENT );
-
     markerSetBack(0,1);
     markerSetBack(1,1);
-
     connect(this, SIGNAL(marginClicked( Scintilla::Position, Scintilla::KeyMod, int ) ), this, SLOT(onMarginClicked( Scintilla::Position, Scintilla::KeyMod, int ) ) );
     connect(this, SIGNAL(notify       ( Scintilla::NotificationData*                ) ), this, SLOT(onNotify       ( Scintilla::NotificationData* )                ) );
 }
@@ -90,7 +86,6 @@ void SciHlp::onNotify(Scintilla::NotificationData* pnd ){
                         linebuf[pos] = '\0';
                         setSelection(n_curr_pos,n_curr_pos);
                         replaceSel(linebuf);
-
                         //sptr_t spTxtLen = textLength();
                         //QByteArray qbaTxt =  getText(spTxtLen);
                         //qDebug("\n");
@@ -110,16 +105,16 @@ void SciHlp::setStyleHlp(sptr_t style, sptr_t fore, bool bold, bool italic, sptr
     styleSetEOLFilled ( style, eolfilled );
 }
 SciHlp::_ret_vals SciHlp::setContent(const std::string& str_text){
+    /*if(this->modify()==true){
+        return SciHlp::_ret_vals::failure;
+    }*/
     setText(str_text.c_str());
     //emptyUndoBuffer();
-    //setSavePoint();
-
-    setFileInfo( QFileInfo(R"(C:\projects\git_web\samples\qrastr\qrastr\qmcr\tst.py)") );
-    ContentToFile();
-
+    setSavePoint();
+    //setFileInfo( QFileInfo(R"(C:\projects\git_web\samples\qrastr\qrastr\qmcr\tst.py)") );
+    //ContentToFile();
     return _ret_vals::ok;
 }
-
 SciHlp::_ret_vals SciHlp::ContentToFile(){
     try{
         QFile qFile{ fiFileSource_.absoluteFilePath() };
@@ -131,14 +126,12 @@ SciHlp::_ret_vals SciHlp::ContentToFile(){
         tsFile << QString::fromUtf8(baContent);
         tsFile.flush();
         qFile.close();
-        //setFileInfo(QFileInfo{path2File});
         setSavePoint();
     }catch(...){
         return _ret_vals::failure;
     }
     return _ret_vals::ok;
 }
-
 void SciHlp::showEvent(QShowEvent *event){
     #if _WIN32 //https://www.scintilla.org/LexillaDoc.html
         typedef void *(__stdcall *CreateLexerFn)(const char *name);
@@ -205,4 +198,4 @@ void SciHlp::showEvent(QShowEvent *event){
     setProperty("fold", "1"); // show Folders!!
     setProperty("fold.compact", "0");
     setAutomaticFold(true);
-};
+}
