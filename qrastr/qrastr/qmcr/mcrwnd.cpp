@@ -114,6 +114,7 @@ McrWnd::~McrWnd(){
 #include "tst2_dialog.h"
 void McrWnd::showEvent(QShowEvent *event) {
     QWidget::showEvent( event );
+qDebug() << "themeSearchPaths:" << QIcon::themeSearchPaths() << QIcon::themeName();
 
     QIcon::setThemeName("oxygen");
     tst_tb_ = new Tst_ToolBox(this);

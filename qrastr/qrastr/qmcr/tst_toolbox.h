@@ -18,7 +18,7 @@ public:
     explicit Tst_ToolBox(QWidget *parent = nullptr);
     ~Tst_ToolBox();
 
-private:
+public:
     Ui::Tst_ToolBox *ui;
 };
 

@@ -1,9 +1,18 @@
 #include <QApplication>
 #include <QLocale>
 #include <QTranslator>
+#include <iostream>
 #include "mainwindow.h"
 
+void msgHandler( QtMsgType type, const char* msg ){
+    const char symbols[] = { 'I', 'E', '!', 'X' };
+    QString output = QString("[%1] %2").arg( symbols[type] ).arg( msg );
+    std::cerr << output.toStdString() << std::endl;
+    if( type == QtFatalMsg ) abort();
+}
+
 int main(int argc, char *argv[]){
+    //qInstallMsgHandler( msgHandler );
     QApplication a(argc, argv);
     QTranslator translator;
     const QStringList uiLanguages = QLocale::system().uiLanguages();
