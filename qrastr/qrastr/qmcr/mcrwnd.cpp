@@ -111,10 +111,16 @@ else:
 McrWnd::~McrWnd(){
 }
 #include "tst_toolbox.h"
+#include "tst2_dialog.h"
 void McrWnd::showEvent(QShowEvent *event) {
     QWidget::showEvent( event );
+
+    QIcon::setThemeName("oxygen");
     tst_tb_ = new Tst_ToolBox(this);
     tst_tb_->show();
+
+    tst2_dlg_ = new Tst2_Dialog(this);
+    tst2_dlg_->show();
 }
 void McrWnd::onChngEditFileInfo( const QFileInfo& fiNew){
     setWindowTitle(fiNew.absoluteFilePath());

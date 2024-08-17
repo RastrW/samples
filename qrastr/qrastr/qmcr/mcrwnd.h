@@ -8,6 +8,8 @@
 
 class SciHlp;
 class Tst_ToolBox;
+class Tst2_Dialog;
+
 class McrWnd : public QDialog{
     Q_OBJECT
 public:
@@ -26,6 +28,7 @@ private:
     SciHlp* shEdit_ = nullptr;
     SciHlp* shProt_ = nullptr;
     Tst_ToolBox* tst_tb_ = nullptr;
+    Tst2_Dialog* tst2_dlg_ = nullptr;
 };
 
 #endif // MCRWND_H
