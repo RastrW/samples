@@ -1,22 +1,55 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <ui version="4.0">
  <class>Tst_ToolBox</class>
- <widget class="QToolBox" name="Tst_ToolBox">
+ <widget class="QDialog" name="Tst_ToolBox">
   <property name="geometry">
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>400</width>
-    <height>300</height>
+    <width>410</width>
+    <height>275</height>
    </rect>
   </property>
   <property name="windowTitle">
    <string>ToolBox</string>
   </property>
   <property name="windowIcon">
-   <iconset theme="QIcon::ThemeIcon::FolderNew"/>
+   <iconset theme="QIcon::ThemeIcon::DocumentSaveAs"/>
   </property>
+  <widget class="QSplitter" name="splitter">
+   <property name="geometry">
+    <rect>
+     <x>0</x>
+     <y>0</y>
+     <width>256</width>
+     <height>403</height>
+    </rect>
+   </property>
+   <property name="orientation">
+    <enum>Qt::Orientation::Vertical</enum>
+   </property>
+   <widget class="QLineEdit" name="lineEdit"/>
+   <widget class="QTextEdit" name="textEdit"/>
+   <widget class="QPlainTextEdit" name="plainTextEdit"/>
+  </widget>
+  <widget class="QQuickWidget" name="quickWidget">
+   <property name="geometry">
+    <rect>
+     <x>290</x>
+     <y>80</y>
+     <width>111</width>
+     <height>101</height>
+    </rect>
+   </property>
+  </widget>
  </widget>
+ <customwidgets>
+  <customwidget>
+   <class>QQuickWidget</class>
+   <extends>QWidget</extends>
+   <header location="global">QtQuickWidgets/QQuickWidget</header>
+  </customwidget>
+ </customwidgets>
  <resources/>
  <connections/>
 </ui>

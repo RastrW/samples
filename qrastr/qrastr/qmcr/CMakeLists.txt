@@ -29,6 +29,7 @@ set(CMAKE_WINDOWS_EXPORT_ALL_SYMBOLS ON)#visual studio not generate .lib without
 
 find_package(QT NAMES Qt6 Qt5 REQUIRED COMPONENTS Widgets LinguistTools)
 find_package(Qt${QT_VERSION_MAJOR} REQUIRED COMPONENTS Widgets LinguistTools)
+find_package( Qt${QT_VERSION_MAJOR} REQUIRED COMPONENTS QuickWidgets)
 
 include_directories(
         ${SCI_DIR}/scintilla/include
@@ -62,6 +63,7 @@ if(${QT_VERSION_MAJOR} GREATER_EQUAL 6)
     if(QRASTR_BUILD_WITH_MCR)
         add_library( qmcr SHARED
             ${PROJECT_SOURCES}
+            tst_toolbox.h tst_toolbox.cpp tst_toolbox.ui
         )
     else()
         qt_add_executable(qmcr
@@ -86,6 +88,7 @@ else()
 endif()
 
 target_link_libraries( qmcr PRIVATE Qt${QT_VERSION_MAJOR}::Widgets)
+target_link_libraries( qmcr PRIVATE Qt${QT_VERSION_MAJOR}::QuickWidgets)
 
 if(MSVC)
     if (CMAKE_BUILD_TYPE MATCHES Debug)

@@ -110,8 +110,11 @@ else:
 }
 McrWnd::~McrWnd(){
 }
+#include "tst_toolbox.h"
 void McrWnd::showEvent(QShowEvent *event) {
     QWidget::showEvent( event );
+    tst_tb_ = new Tst_ToolBox(this);
+    tst_tb_->show();
 }
 void McrWnd::onChngEditFileInfo( const QFileInfo& fiNew){
     setWindowTitle(fiNew.absoluteFilePath());

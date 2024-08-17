@@ -7,7 +7,7 @@
 #include <QFileInfo>
 
 class SciHlp;
-
+class Tst_ToolBox;
 class McrWnd : public QDialog{
     Q_OBJECT
 public:
@@ -25,6 +25,7 @@ private slots:
 private:
     SciHlp* shEdit_ = nullptr;
     SciHlp* shProt_ = nullptr;
+    Tst_ToolBox* tst_tb_ = nullptr;
 };
 
 #endif // MCRWND_H
