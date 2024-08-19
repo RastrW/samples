@@ -9,6 +9,9 @@
 #include "mcrwnd.h"
 #include "scihlp.h"
 
+#include <QQmlDebuggingEnabler>
+QQmlDebuggingEnabler enabler;
+
 McrWnd::McrWnd(QWidget *parent)
     : QDialog(parent,
               Qt::WindowMinimizeButtonHint |
@@ -121,7 +124,7 @@ qDebug() << "themeSearchPaths:" << QIcon::themeSearchPaths() << QIcon::themeName
     tst_tb_->show();
 
     tst2_dlg_ = new Tst2_Dialog(this);
-    tst2_dlg_->show();
+    //tst2_dlg_->show();
 }
 void McrWnd::onChngEditFileInfo( const QFileInfo& fiNew){
     setWindowTitle(fiNew.absoluteFilePath());
