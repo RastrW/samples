@@ -176,7 +176,9 @@ void MainWindow::open(){
         }
 #endif//#if(!defined(QICSGRID_NO))
         int nRes = 0;
-        nRes = Load( id_rastr_, fileName.toStdString().c_str(), "");
+        std::string f = fileName.toUtf8().constData(); //  it works!!!
+        nRes = up_rastr_->Load( f);
+        //nRes = Load( id_rastr_, fileName.toStdString().c_str(), "");
         if(nRes>0){
             std::string str_msg = fmt::format( "{}: {}", tr("File loaded").toStdString(), fileName.toStdString());
             statusBar()->showMessage( str_msg.c_str(), 2000 );
@@ -714,7 +716,7 @@ void MainWindow::createCalcLayout()
     //QPushButton *btn3 = new QPushButton("Button 3");
     //QPushButton *btn4 = new QPushButton("Button 4");
 
-    connect(btn1,&QPushButton::clicked,Btn1_onClick);
+    connect(btn1,&QPushButton::clicked,this, &MainWindow::Btn1_onClick);
     connect(btn2,&QPushButton::clicked,this, &MainWindow::onButton2Click);
 
     QWidget* widget = new QWidget;

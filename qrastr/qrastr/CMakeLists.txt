@@ -138,7 +138,7 @@ target_link_libraries( qrastr PRIVATE Qt${QT_VERSION_MAJOR}::Widgets Qt${QT_VERS
 
 if(MSVC)
     #target_link_libraries( qrastr PRIVATE astra_shrd.lib )
-    target_link_libraries( qrastr PRIVATE astra       ) # when build with pybind11
+    target_link_libraries( qrastr PRIVATE astra_py       ) # when build with pybind11
     target_link_libraries( qrastr PRIVATE mk4vc22x64  )
     target_link_libraries( qrastr PRIVATE qmcr        )
 

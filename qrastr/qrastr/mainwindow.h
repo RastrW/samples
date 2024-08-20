@@ -79,6 +79,7 @@ private slots:
     void onDlgMcr();
     void onOpenForm(QAction* p_actn);
     void onButton2Click();
+    void Btn1_onClick();
 
     void ondataChanged(std::string _t_name, QModelIndex index, QVariant value);
     void ondataChanged(std::string _t_name, std::string _col_name, int _row, QVariant _value);
