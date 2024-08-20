@@ -31,6 +31,7 @@ set(CMAKE_PREFIX_PATH "C:/Projects/compile/qt/qt6-install")
 
 find_package(QT NAMES Qt6 Qt5 COMPONENTS Widgets LinguistTools   REQUIRED)
 find_package(Qt${QT_VERSION_MAJOR} COMPONENTS Widgets LinguistTools PrintSupport Xml  REQUIRED)
+find_package( Qt${QT_VERSION_MAJOR} REQUIRED COMPONENTS Core)
 
 set(TS_FILES qrastr_ru_RU.ts)
 
@@ -103,10 +104,10 @@ set(PROJECT_SOURCES
 )
 
 if(${QT_VERSION_MAJOR} GREATER_EQUAL 6)
-    qt_add_executable(qrastr
-        MANUAL_FINALIZATION
-        ${PROJECT_SOURCES}
-    )
+     qt6_add_executable(qrastr
+         MANUAL_FINALIZATION
+         ${PROJECT_SOURCES}
+     )
 # Define target properties for Android with Qt 6 as:
 #    set_property(TARGET qrastr APPEND PROPERTY QT_ANDROID_PACKAGE_SOURCE_DIR
 #                 ${CMAKE_CURRENT_SOURCE_DIR}/android)
@@ -131,7 +132,7 @@ target_link_libraries( qrastr PRIVATE Qt${QT_VERSION_MAJOR}::Widgets Qt${QT_VERS
 
 if(MSVC)
     #target_link_libraries( qrastr PRIVATE astra_shrd.lib )
-    target_link_libraries( qrastr PRIVATE astra       ) # when build with pybind11
+    target_link_libraries( qrastr PRIVATE astra_py       ) # when build with pybind11
     target_link_libraries( qrastr PRIVATE mk4vc22x64  )
     target_link_libraries( qrastr PRIVATE qmcr        )
 
