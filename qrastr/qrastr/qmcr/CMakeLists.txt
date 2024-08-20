@@ -21,7 +21,7 @@ endif()
 if(MSVC)
     set(SCI_DIR C:/projects/compile/sci/)
 else()
-    set(SCI_DIR C:/projects/compile/sci/)
+    set(SCI_DIR /home/ustas/projects/compile/sci)
 endif()
 
 
@@ -29,6 +29,7 @@ set(CMAKE_WINDOWS_EXPORT_ALL_SYMBOLS ON)#visual studio not generate .lib without
 
 find_package(QT NAMES Qt6 Qt5 REQUIRED COMPONENTS Widgets LinguistTools)
 find_package(Qt${QT_VERSION_MAJOR} REQUIRED COMPONENTS Widgets LinguistTools)
+find_package( Qt${QT_VERSION_MAJOR} REQUIRED COMPONENTS QuickWidgets)
 
 include_directories(
         ${SCI_DIR}/scintilla/include
@@ -62,12 +63,16 @@ if(${QT_VERSION_MAJOR} GREATER_EQUAL 6)
     if(QRASTR_BUILD_WITH_MCR)
         add_library( qmcr SHARED
             ${PROJECT_SOURCES}
+            tst_toolbox.h tst_toolbox.cpp tst_toolbox.ui
+            tst2_dialog.h tst2_dialog.cpp tst2_dialog.ui
         )
     else()
         qt_add_executable(qmcr
             MANUAL_FINALIZATION
             ${PROJECT_SOURCES}
             tst_toolbox.h tst_toolbox.cpp tst_toolbox.ui
+            tst2_dialog.h tst2_dialog.cpp tst2_dialog.ui
+            tst.qml
         )
     endif()
     qt_create_translation(QM_FILES ${CMAKE_SOURCE_DIR} ${TS_FILES})
@@ -77,14 +82,16 @@ else()
             ${PROJECT_SOURCES}
         )
     else()
-        qt_add_executable(qmcr
+        add_executable(qmcr
             ${PROJECT_SOURCES}
+            tst_toolbox.h tst_toolbox.cpp tst_toolbox.ui
         )
         qt5_create_translation(QM_FILES ${CMAKE_SOURCE_DIR} ${TS_FILES})
     endif()
 endif()
 
 target_link_libraries( qmcr PRIVATE Qt${QT_VERSION_MAJOR}::Widgets)
+target_link_libraries( qmcr PRIVATE Qt${QT_VERSION_MAJOR}::QuickWidgets)
 
 if(MSVC)
     if (CMAKE_BUILD_TYPE MATCHES Debug)
@@ -93,7 +100,7 @@ if(MSVC)
         target_link_libraries( qmcr PRIVATE ScintillaEdit5   Lexilla5   )
     endif()
 else()
-    target_link_libraries( qmcr libScintillaEdit.so libLexilla.so)
+    target_link_libraries( qmcr PRIVATE libScintillaEdit.so libLexilla.so)
 endif()
 
 # Qt for iOS sets MACOSX_BUNDLE_GUI_IDENTIFIER automatically since Qt 6.1.

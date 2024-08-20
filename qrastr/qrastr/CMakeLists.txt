@@ -31,6 +31,7 @@ set(CMAKE_PREFIX_PATH "C:/Projects/compile/qt/qt6-install")
 
 find_package(QT NAMES Qt6 Qt5 COMPONENTS Widgets LinguistTools   REQUIRED)
 find_package(Qt${QT_VERSION_MAJOR} COMPONENTS Widgets LinguistTools PrintSupport Xml  REQUIRED)
+find_package( Qt${QT_VERSION_MAJOR} REQUIRED COMPONENTS Core)
 
 set(TS_FILES qrastr_ru_RU.ts)
 

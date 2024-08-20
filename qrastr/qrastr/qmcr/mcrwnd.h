@@ -4,30 +4,31 @@
 #include <QWidget>
 #include <QDialog>
 #include <QToolBar>
+#include <QFileInfo>
 
-//class McrWnd : public QWidget{
+class SciHlp;
+class Tst_ToolBox;
+class Tst2_Dialog;
+
 class McrWnd : public QDialog{
     Q_OBJECT
 public:
     explicit McrWnd(QWidget *parent = nullptr);
     virtual ~McrWnd();
     void showEvent(QShowEvent *event) override;
-//    QToolBar* pToolBar_ = nullptr;
-   // QAction* pActNew_ = nullptr;
-    /*
-    QAction* pActSave_ = nullptr;
-    QAction* pActPlay_ = nullptr;
-    QAction* pActFindRepl_ = nullptr;
-    */
 signals:
 private slots:
-    void onNewFile();
-    void onOpenFile();
-    void onSave();
+    bool onFileNew();
+    void onFileOpen();
+    bool onFileSave(bool blSaveAs);
     void onRun();
     void onFindRepl();
+    void onChngEditFileInfo(const QFileInfo& fiNew);
 private:
-
+    SciHlp* shEdit_ = nullptr;
+    SciHlp* shProt_ = nullptr;
+    Tst_ToolBox* tst_tb_ = nullptr;
+    Tst2_Dialog* tst2_dlg_ = nullptr;
 };
 
 #endif // MCRWND_H
