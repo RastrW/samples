@@ -208,7 +208,7 @@ void SciHlp::showEvent(QShowEvent *event){
     setStyleHlp( SCE_P_STRING ,       _colors::teal    );      // ""xxx""
     setStyleHlp( SCE_P_CHARACTER ,    _colors::teal    );      // 'xxx'
     setStyleHlp( SCE_P_WORD ,         _colors::maroon, true ); // for xxx in :
-    setStyleHlp( SCE_P_TRIPLE ,       _colors::green );        // ''' '''  - multiline comment
+    setStyleHlp( SCE_P_TRIPLE ,       _colors::green   );        // ''' '''  - multiline comment
     setStyleHlp( SCE_P_TRIPLEDOUBLE , _colors::green   );      // """ """  - multiline comment
     setStyleHlp( SCE_P_CLASSNAME ,    _colors::blue,   true ); // class xxx:
     setStyleHlp( SCE_P_DEFNAME ,      _colors::navy,   true ); // def xxx():
