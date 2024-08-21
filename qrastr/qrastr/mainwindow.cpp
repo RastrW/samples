@@ -50,7 +50,8 @@ void MainWindow::showEvent( QShowEvent* event ){
         QString str_curr_path = QDir::currentPath();
         std::string str_path_2_conf = "undef";
 #if(defined(COMPILE_WIN))
-        str_path_2_conf = R"(C:\projects\git_web\samples\qrastr\qrastr\appsettings.json)";
+        //str_path_2_conf = R"(C:\projects\git_web\samples\qrastr\qrastr\appsettings.json)";
+        str_path_2_conf = R"(appsettings.json)";
         //str_path_2_conf = R"(..\..\appsettings.json)";
 #else
         str_path_2_conf = R"(/home/ustas/projects/git_web/samples/qrastr/qrastr/appsettings.json)";
