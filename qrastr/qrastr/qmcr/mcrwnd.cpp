@@ -6,13 +6,17 @@
 #include <QMessageBox>
 #include <QFileDialog>
 #include <QDebug>
+#include <QCloseEvent>
 #include "mcrwnd.h"
 #include "scihlp.h"
+#include "tst_toolbox.h"
+#include "tst2_dialog.h"
+#include "forms/dlgfindrepl.h"
 
 #include <QQmlDebuggingEnabler>
 QQmlDebuggingEnabler enabler;
 
-McrWnd::McrWnd(QWidget *parent)
+McrWnd::McrWnd(QWidget* parent)
     : QDialog(parent,
               Qt::WindowMinimizeButtonHint |
               Qt::WindowMaximizeButtonHint |
@@ -22,24 +26,23 @@ McrWnd::McrWnd(QWidget *parent)
     resize(nWidth, nHeight);
     setWindowIcon( QIcon(QApplication::style()->standardIcon(QStyle::SP_ComputerIcon) ));
     setWindowTitle(tr("Macro Python"));
-    QSplitter * splitter = new QSplitter(this);
+    QSplitter* splitter = new QSplitter(this);
     shEdit_ = new SciHlp(this, SciHlp::_en_role::editor_python);
     shProt_ = new SciHlp(this, SciHlp::_en_role::prot_macro);
-    QVBoxLayout *layout = new QVBoxLayout();
-    QVBoxLayout *container_layout = new QVBoxLayout;
-    QToolBar* pToolBar = nullptr;
-    pToolBar  = new QToolBar;
-    pToolBar->addAction( QIcon(QApplication::style()->standardIcon(QStyle::SP_FileIcon)),               tr("&New"),     this,    SLOT( onFileNew())   )
+    QVBoxLayout* layout = new QVBoxLayout();
+    QVBoxLayout* container_layout = new QVBoxLayout();
+    QToolBar* pToolBar = new QToolBar();
+    pToolBar->addAction( QIcon(QApplication::style()->standardIcon(QStyle::SP_FileIcon)),         tr("&New"),     this,  SLOT( onFileNew() )    )
             ->setShortcut({QKeySequence(Qt::CTRL+Qt::Key_N)});
-    pToolBar->addAction( QIcon(QApplication::style()->standardIcon(QStyle::SP_DirIcon)),                tr("&Open"),    this,   SLOT( onFileOpen())   )
+    pToolBar->addAction( QIcon(QApplication::style()->standardIcon(QStyle::SP_DirIcon)),          tr("&Open"),    this,  SLOT( onFileOpen() )   )
             ->setShortcut({QKeySequence(Qt::CTRL+Qt::Key_O)});
-    pToolBar->addAction( QIcon(QApplication::style()->standardIcon(QStyle::SP_DialogSaveButton)),       tr("&Save"),    [this] { onFileSave(false); } )
+    pToolBar->addAction( QIcon(QApplication::style()->standardIcon(QStyle::SP_DialogSaveButton)), tr("&Save"),    [this] { onFileSave(false); } )
             ->setShortcuts( {QKeySequence(Qt::CTRL+Qt::Key_S)});
-    pToolBar->addAction( QIcon(QApplication::style()->standardIcon(QStyle::SP_DriveFDIcon)),            tr("Save as"),  [this] { onFileSave(true); }  )
+    pToolBar->addAction( QIcon(QApplication::style()->standardIcon(QStyle::SP_DriveFDIcon)),      tr("Save as"),  [this] { onFileSave(true); }  )
             ->setShortcut({QKeySequence(Qt::CTRL+Qt::Key_W)});
-    pToolBar->addAction( QIcon(QApplication::style()->standardIcon(QStyle::SP_MediaPlay)),              tr("Run (F5)"),  this, SLOT( onRun() )        )
+    pToolBar->addAction( QIcon(QApplication::style()->standardIcon(QStyle::SP_MediaPlay)),        tr("Run (F5)"),  this, SLOT( onRun() )        )
             ->setShortcut({QKeySequence(Qt::Key_F5)});
-    pToolBar->addAction( QIcon(QApplication::style()->standardIcon(QStyle::SP_BrowserReload)),          tr("&FindRepl"), this, SLOT( onFindRepl() )   )
+    pToolBar->addAction( QIcon(QApplication::style()->standardIcon(QStyle::SP_BrowserReload)),    tr("&FindRepl"), this, SLOT( onFindRepl() )   )
             ->setShortcut({QKeySequence(Qt::CTRL+Qt::Key_F)});
     container_layout->addWidget(pToolBar);
     splitter->addWidget(shEdit_);
@@ -110,29 +113,80 @@ else:
 """
 )");
 
-}
-McrWnd::~McrWnd(){
-}
-#include "tst_toolbox.h"
-#include "tst2_dialog.h"
-void McrWnd::showEvent(QShowEvent *event) {
-    QWidget::showEvent( event );
-qDebug() << "themeSearchPaths:" << QIcon::themeSearchPaths() << QIcon::themeName();
+    qDebug() << "themeSearchPaths:" << QIcon::themeSearchPaths() << QIcon::themeName();
 
     QIcon::setThemeName("oxygen");
-    tst_tb_ = new Tst_ToolBox(this);
+    tst_tb_ = new Tst_ToolBox(this->parentWidget());
+    //tst_tb_->setHidden(true);
     tst_tb_->show();
+    //tst_tb_->move(1500,600);
+    //tst_tb_->stackUnder(this->parentWidg
+
+    //this->show();
+    //this->raise();
+    //this->activateWindow();
 
     tst2_dlg_ = new Tst2_Dialog(this);
     //tst2_dlg_->show();
+}
+McrWnd::~McrWnd(){
+}
+void McrWnd::showEvent(QShowEvent *event) {
+    QWidget::showEvent( event );
+}
+std::pair<bool,bool> McrWnd::checkSaveModified(){
+    std::pair<bool,bool> pair_saved_cancelled{false,false};
+    if(true==shEdit_->getContentModified()){
+        QMessageBox msgBox;
+        msgBox.setText(tr("Macro modified. Save?"));
+        msgBox.setIcon(QMessageBox::Question);
+        msgBox.setStandardButtons( QMessageBox::Yes | QMessageBox::No | QMessageBox::Cancel );
+        msgBox.setDefaultButton(QMessageBox::Yes);
+        const QFileInfo fi = shEdit_->getFileInfo();
+        switch(msgBox.exec()){
+            case QMessageBox::Yes:
+                if(fi.absoluteFilePath().length()>3){
+                    pair_saved_cancelled.first = onFileSave(false);
+                }else{
+                    pair_saved_cancelled.first = onFileSave(true);
+                }
+            break;
+            case QMessageBox::No:
+                pair_saved_cancelled.first = false;
+            break;
+            default:
+                pair_saved_cancelled.second = true;
+        }
+    }
+    return pair_saved_cancelled;
+}
+void McrWnd::closeEvent(QCloseEvent *event) {
+    if(pdlgFindRepl_!=nullptr){
+        pdlgFindRepl_->close();
+        pdlgFindRepl_ = nullptr;
+    }
+    std::pair<bool,bool> pair_saved_cancelled = checkSaveModified();
+    if(pair_saved_cancelled.second==true){
+        event->ignore();
+        return;
+    }
+    QMessageBox msgBox;
+    msgBox.setText(pair_saved_cancelled.first ? tr("Clear?") : tr("Macro is not saved. Ignore and Exit?"));
+    msgBox.setIcon(QMessageBox::Question);
+    msgBox.setStandardButtons( QMessageBox::Yes | QMessageBox::Cancel );
+    msgBox.setDefaultButton(QMessageBox::Yes);
+    if(msgBox.exec() != QMessageBox::Yes){
+        event->ignore();
+        return;
+    }
 }
 void McrWnd::onChngEditFileInfo( const QFileInfo& fiNew){
     setWindowTitle(fiNew.absoluteFilePath());
 }
 bool McrWnd::onFileNew(){
     qDebug("McrWnd::onFileNew()");
-    bool blFileSaved = true;
-    if(true==shEdit_->getContentModified()){
+    std::pair<bool,bool> pair_saved_cancelled = checkSaveModified();
+    /*if(true==shEdit_->getContentModified()){
         QMessageBox msgBox;
         msgBox.setText(tr("Macro modified. Save?"));
         msgBox.setIcon(QMessageBox::Question);
@@ -146,13 +200,13 @@ bool McrWnd::onFileNew(){
                 blFileSaved = onFileSave(true);
             }
         }
-    }
+    }*/
     QMessageBox msgBox;
-    msgBox.setText(blFileSaved ? tr("Clear?") :tr("Macro is not saved. Ignore and Clear?"));
+    msgBox.setText(pair_saved_cancelled.first ? tr("Clear?") : tr("Macro is not saved. Ignore and Clear?"));
     msgBox.setIcon(QMessageBox::Question);
     msgBox.setStandardButtons( QMessageBox::Yes | QMessageBox::Cancel );
     msgBox.setDefaultButton(QMessageBox::Yes);
-    if (msgBox.exec() != QMessageBox::Yes ) {
+    if(msgBox.exec() != QMessageBox::Yes){
         return false;
     }
     shEdit_->setFileInfo(QFileInfo{});
@@ -171,7 +225,7 @@ void McrWnd::onFileOpen(){
         msgBox.setIcon(QMessageBox::Question);
         msgBox.setStandardButtons( QMessageBox::Yes | QMessageBox::Cancel );
         msgBox.setDefaultButton(QMessageBox::Yes);
-        if (msgBox.exec() != QMessageBox::Yes ) {
+        if(msgBox.exec() != QMessageBox::Yes){
             return;
         }
     }
@@ -222,4 +276,15 @@ void McrWnd::onRun(){
 }
 void McrWnd::onFindRepl(){
     qDebug("McrWnd::onFindRepl()");
+    if(pdlgFindRepl_==nullptr){
+        pdlgFindRepl_ = new DlgFindRepl(this);
+        connect(pdlgFindRepl_, SIGNAL(chngFindRepl(SciHlp::_params_findrepl)), this, SLOT(FindRepl(SciHlp::_params_findrepl)));
+    }
+    pdlgFindRepl_->show();
+    pdlgFindRepl_->raise();
+    pdlgFindRepl_->activateWindow();
+}
+#include <iostream>
+void McrWnd::FindRepl(SciHlp::_params_findrepl params_findrepl){
+    qDebug()<<"FindRepl()"<<params_findrepl.qstrFind_ << params_findrepl.qstrRepl_ << params_findrepl.blRegExp_ << "\n";
 }

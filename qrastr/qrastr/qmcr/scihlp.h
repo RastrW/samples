@@ -42,6 +42,22 @@ public:
         inline static _color white   { getRGBA( 0xff, 0xff, 0xff, 0x00 ) };
         inline static _color yellow  { getRGBA( 0xff, 0xff, 0x00, 0x00 ) };
     };
+    struct _params_findrepl{
+        _params_findrepl(const QString& qstrFind, const QString& qstrRepl, bool blRegExp)
+            :qstrFind_{qstrFind}
+            ,qstrRepl_{qstrRepl}
+            ,blRegExp_{blRegExp}{
+        }
+        /*_params_findrepl(const _params_findrepl& params_findrepl)
+            :qstrFind_{params_findrepl.qstrFind_}
+            ,qstrRepl_{params_findrepl.qstrRepl_}
+            ,blRegExp_{params_findrepl.blRegExp_}{
+
+        }*/
+        const QString& qstrFind_;
+        const QString& qstrRepl_;
+        const bool     blRegExp_;
+    };
     SciHlp(QWidget *parent, _en_role role);
     virtual ~SciHlp() = default;
     void showEvent(QShowEvent *event) override;
