@@ -1,5 +1,6 @@
 #include <QSplitter>
 #include <QVBoxLayout>
+#include <QLineEdit>
 #include <QApplication>
 #include <QStyle>
 #include <QTextEdit>
@@ -32,6 +33,7 @@ McrWnd::McrWnd(QWidget* parent)
     shProt_ = new SciHlp(this, SciHlp::_en_role::prot_macro);
     QVBoxLayout* layout = new QVBoxLayout();
     QVBoxLayout* container_layout = new QVBoxLayout();
+    QLineEdit* leFind = new QLineEdit();    leFind->setFixedWidth(100);
     QToolBar* pToolBar = new QToolBar();
     pToolBar->addAction( QIcon(QApplication::style()->standardIcon(QStyle::SP_FileIcon)),         tr("&New"),     this,  SLOT( onFileNew() )    )
             ->setShortcut({QKeySequence(Qt::CTRL+Qt::Key_N)});
@@ -43,6 +45,7 @@ McrWnd::McrWnd(QWidget* parent)
             ->setShortcut({QKeySequence(Qt::CTRL+Qt::Key_W)});
     pToolBar->addAction( QIcon(QApplication::style()->standardIcon(QStyle::SP_MediaPlay)),        tr("Run (F5)"),  this, SLOT( onRun() )        )
             ->setShortcut({QKeySequence(Qt::Key_F5)});
+    //pToolBar->addWidget(leFind);
     pToolBar->addAction( QIcon(QApplication::style()->standardIcon(QStyle::SP_BrowserReload)),    tr("&FindRepl"), this, SLOT( onFindRepl() )   )
             ->setShortcut({QKeySequence(Qt::CTRL+Qt::Key_F)});
     pToolBar->addAction( QIcon(QApplication::style()->standardIcon(QStyle::SP_CommandLink)),      tr("&Go to line"), this, SLOT( onGoToLine() )  )
@@ -55,7 +58,8 @@ McrWnd::McrWnd(QWidget* parent)
     setLayout(container_layout);
     //this->addAction();
 
-    connect( shEdit_, SIGNAL( chngFileInfo(const QFileInfo&) ), this, SLOT( onChngEditFileInfo(const QFileInfo&) ) );
+    connect( shEdit_, SIGNAL( chngFileInfo( const QFileInfo& ) ), this, SLOT( onChngEditFileInfo( const QFileInfo& ) ) );
+
     shEdit_->setContent(R"(
 import os
 #print(os.get_exec_path())
@@ -188,21 +192,6 @@ void McrWnd::onChngEditFileInfo( const QFileInfo& fiNew){
 bool McrWnd::onFileNew(){
     qDebug("McrWnd::onFileNew()");
     std::pair<bool,bool> pair_saved_cancelled = checkSaveModified();
-    /*if(true==shEdit_->getContentModified()){
-        QMessageBox msgBox;
-        msgBox.setText(tr("Macro modified. Save?"));
-        msgBox.setIcon(QMessageBox::Question);
-        msgBox.setStandardButtons( QMessageBox::Yes | QMessageBox::Cancel );
-        msgBox.setDefaultButton(QMessageBox::Yes);
-        if(msgBox.exec() == QMessageBox::Yes){
-            QFileInfo fi = shEdit_->getFileInfo();
-            if(fi.absoluteFilePath().length()>3){
-                blFileSaved = onFileSave(false);
-            }else{
-                blFileSaved = onFileSave(true);
-            }
-        }
-    }*/
     QMessageBox msgBox;
     msgBox.setText(pair_saved_cancelled.first ? tr("Clear?") : tr("Macro is not saved. Ignore and Clear?"));
     msgBox.setIcon(QMessageBox::Question);
