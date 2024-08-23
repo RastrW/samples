@@ -56,7 +56,6 @@ McrWnd::McrWnd(QWidget* parent)
     //this->addAction();
 
     connect( shEdit_, SIGNAL( chngFileInfo(const QFileInfo&) ), this, SLOT( onChngEditFileInfo(const QFileInfo&) ) );
-
     shEdit_->setContent(R"(
 import os
 #print(os.get_exec_path())
@@ -136,7 +135,6 @@ else:
 McrWnd::~McrWnd(){
 }
 void McrWnd::showEvent(QShowEvent *event) {
-    QWidget::showEvent( event );
 }
 std::pair<bool,bool> McrWnd::checkSaveModified(){
     std::pair<bool,bool> pair_saved_cancelled{false,false};
@@ -290,13 +288,13 @@ void McrWnd::onFindRepl(){
     qDebug("McrWnd::onFindRepl()");
     if(pdlgFindRepl_==nullptr){
         pdlgFindRepl_ = new DlgFindRepl(this);
-        connect(pdlgFindRepl_, SIGNAL(chngFindRepl(SciHlp::_params_findrepl)), this, SLOT(FindRepl(SciHlp::_params_findrepl)));
+        connect( pdlgFindRepl_, SIGNAL( chngFind( SciHlp::_params_find ) ), this, SLOT( Find( SciHlp::_params_find ) ) );
     }
     pdlgFindRepl_->show();
     pdlgFindRepl_->raise();
     pdlgFindRepl_->activateWindow();
 }
-#include <iostream>
-void McrWnd::FindRepl(SciHlp::_params_findrepl params_findrepl){
-    qDebug()<<"FindRepl()"<<params_findrepl.qstrFind_ << params_findrepl.qstrRepl_ << params_findrepl.blRegExp_ << "\n";
+void McrWnd::Find(SciHlp::_params_find params_find){
+    qDebug()<<"Find()-> "<<params_find.qstrFind_  << "\n";
+    const SciHlp::_ret_vals rv = shEdit_->Find(params_find);
 }

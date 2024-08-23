@@ -1,23 +1,17 @@
 #include "dlgfindrepl.h"
 #include "ui_dlgfindrepl.h"
 
-DlgFindRepl::DlgFindRepl(QWidget *parent) :
-    QDialog(parent),
-    ui(new Ui::DlgFindRepl)
-{
+DlgFindRepl::DlgFindRepl(QWidget *parent)
+    : QDialog(parent)
+    , ui(new Ui::DlgFindRepl){
     ui->setupUi(this);
 }
-
-DlgFindRepl::~DlgFindRepl()
-{
+DlgFindRepl::~DlgFindRepl(){
     delete ui;
 }
-
 void DlgFindRepl::on_pbFind_clicked(){
-    QString qstrFind{"find streing привет"};
-    SciHlp::_params_findrepl params_findrepl{qstrFind,qstrFind,true};
-
-    qDebug()<<qstrFind<< " | " <<params_findrepl.qstrFind_ << "\n";
-    emit chngFindRepl(params_findrepl);
+    const QString qstrFind{ ui->leFind->text() };
+    SciHlp::_params_find params_find{ qstrFind };
+    qDebug()<<qstrFind<< " | " <<params_find.qstrFind_ << "\n";
+    emit chngFind(params_find);
 }
-

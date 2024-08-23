@@ -10,15 +10,13 @@ class DlgFindRepl;
 class DlgFindRepl : public QDialog
 {
     Q_OBJECT
-
 public:
     explicit DlgFindRepl(QWidget *parent = nullptr);
     ~DlgFindRepl();
 signals:
-    void chngFindRepl(SciHlp::_params_findrepl);
+    void chngFind(SciHlp::_params_find);
 private slots:
     void on_pbFind_clicked();
-
 private:
     Ui::DlgFindRepl *ui;
 };

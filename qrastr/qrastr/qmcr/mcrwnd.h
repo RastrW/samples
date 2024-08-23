@@ -28,7 +28,7 @@ private slots:
     void onGoToLine();
     void onFindRepl();
     void onChngEditFileInfo(const QFileInfo& fiNew);
-    void FindRepl(SciHlp::_params_findrepl params_findrepl);
+    void Find(SciHlp::_params_find params_find);
 private:
     SciHlp*       shEdit_{nullptr};
     SciHlp*       shProt_{nullptr};

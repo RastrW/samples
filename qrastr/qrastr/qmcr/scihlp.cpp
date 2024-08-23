@@ -6,6 +6,7 @@
 #include "scihlp.h"
 
 //all of wrapped shit can be found in -> ScintillaEdit.cpp <-
+//https://www.scintilla.org/PaneAPI.html
 //interesting scintilla use https://github.com/SolarAquarion/wxglterm/tree/master/src/external_plugins
 //https://github.com/mneuroth/SciTEQt
 
@@ -159,6 +160,30 @@ SciHlp::_ret_vals SciHlp::ContentFromFile(){
         return _ret_vals::failure;
     }
     return _ret_vals::ok;
+}
+SciHlp::_ret_vals SciHlp::Find(_params_find params_find){
+    //SCFIND_NONE	    Default setting is case-insensitive literal match.
+    //SCFIND_MATCHCASE	A match only occurs with text that matches the case of the search string.
+    //SCFIND_WHOLEWORD	A match only occurs if the characters before and after are not word characters as defined by SCI_SETWORDCHARS.
+    //SCFIND_WORDSTART	A match only occurs if the character before is not a word character as defined by SCI_SETWORDCHARS.
+    //SCFIND_REGEXP	    The search string should be interpreted as a regular expression. Uses Scintilla's base implementation unless combined with SCFIND_CXX11REGEX.
+    //SCFIND_POSIX	    Treat regular expression in a more POSIX compatible manner by interpreting bare ( and ) for tagged sections rather than \( and \). Has no effect when SCFIND_CXX11REGEX is set.
+    //SCFIND_CXX11REGEX	This flag may be set to use C++11 <regex> instead of Scintilla's basic regular expressions. If the regular expression is invalid then -1 is returned and status is set to SC_STATUS_WARN_REGEX. The ECMAScript flag is set on the regex object and UTF-8 documents will exhibit Unicode-compliant behaviour. For MSVC, where wchar_t is 16-bits, the regular expression ".." will match a single astral-plane character. There may be other differences between compilers. Must also have SCFIND_REGEXP set.
+    const sptr_t n_flags {SCFIND_REGEXP};
+    setSearchFlags(n_flags);
+    const sptr_t n_pos_curr { currentPos()} ;
+    const sptr_t n_pos_max  { length()} ;
+    setTargetStart( n_pos_curr );
+    setTargetEnd  ( n_pos_max  );
+    const QByteArray qaFind = params_find.qstrFind_.toUtf8();
+    const sptr_t n_pos_find = searchInTarget( qaFind.length(), qaFind );
+    if(-1 != n_pos_find){
+        gotoPos    ( targetStart() );
+        setSel     ( targetStart(), targetEnd() );
+        scrollRange( targetStart(), targetEnd() );
+        return _ret_vals::ok;
+    }
+    return _ret_vals::failure;
 }
 void SciHlp::showEvent(QShowEvent *event){
     #if _WIN32 //https://www.scintilla.org/LexillaDoc.html
