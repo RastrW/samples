@@ -25,6 +25,7 @@ private slots:
     void onFileOpen();
     bool onFileSave(bool blSaveAs);
     void onRun();
+    void onGoToLine();
     void onFindRepl();
     void onChngEditFileInfo(const QFileInfo& fiNew);
     void FindRepl(SciHlp::_params_findrepl params_findrepl);

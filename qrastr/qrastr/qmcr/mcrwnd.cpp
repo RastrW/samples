@@ -5,6 +5,7 @@
 #include <QTextEdit>
 #include <QMessageBox>
 #include <QFileDialog>
+#include <QInputDialog>
 #include <QDebug>
 #include <QCloseEvent>
 #include "mcrwnd.h"
@@ -44,12 +45,15 @@ McrWnd::McrWnd(QWidget* parent)
             ->setShortcut({QKeySequence(Qt::Key_F5)});
     pToolBar->addAction( QIcon(QApplication::style()->standardIcon(QStyle::SP_BrowserReload)),    tr("&FindRepl"), this, SLOT( onFindRepl() )   )
             ->setShortcut({QKeySequence(Qt::CTRL+Qt::Key_F)});
+    pToolBar->addAction( QIcon(QApplication::style()->standardIcon(QStyle::SP_CommandLink)),      tr("&Go to line"), this, SLOT( onGoToLine() )  )
+            ->setShortcut({QKeySequence(Qt::CTRL+Qt::Key_G)});
     container_layout->addWidget(pToolBar);
     splitter->addWidget(shEdit_);
     splitter->setOrientation(Qt::Orientation::Vertical);
     splitter->addWidget(shProt_);
     container_layout->addWidget(splitter);
     setLayout(container_layout);
+    //this->addAction();
 
     connect( shEdit_, SIGNAL( chngFileInfo(const QFileInfo&) ), this, SLOT( onChngEditFileInfo(const QFileInfo&) ) );
 
@@ -273,6 +277,14 @@ bool McrWnd::onFileSave(bool blSaveAs){
 }
 void McrWnd::onRun(){
     qDebug("McrWnd::onRun()");
+}
+void McrWnd::onGoToLine(){
+    const sptr_t n_num_lines = shEdit_->lineCount();
+    bool bl_ok = false;
+    const int n_go_to_line = QInputDialog::getInt(this, tr("Line number"), QString(tr("Go to line (1..%1) ")).arg(n_num_lines), 1, 1, n_num_lines + 1, 1, &bl_ok);
+    if(bl_ok){
+        shEdit_->gotoLine(n_go_to_line - 1);
+    }
 }
 void McrWnd::onFindRepl(){
     qDebug("McrWnd::onFindRepl()");
