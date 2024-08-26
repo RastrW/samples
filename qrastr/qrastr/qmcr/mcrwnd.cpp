@@ -46,9 +46,9 @@ McrWnd::McrWnd(QWidget* parent)
     pToolBar->addAction( QIcon(QApplication::style()->standardIcon(QStyle::SP_MediaPlay)),        tr("Run (F5)"),  this, SLOT( onRun() )        )
             ->setShortcut({QKeySequence(Qt::Key_F5)});
     //pToolBar->addWidget(leFind);
-    pToolBar->addAction( QIcon(QApplication::style()->standardIcon(QStyle::SP_BrowserReload)),    tr("&FindRepl"), this, SLOT( onFindRepl() )   )
+    pToolBar->addAction( QIcon(QApplication::style()->standardIcon(QStyle::SP_BrowserReload)),    tr("&Find"),     this, SLOT( onFind() )       )
             ->setShortcut({QKeySequence(Qt::CTRL+Qt::Key_F)});
-    pToolBar->addAction( QIcon(QApplication::style()->standardIcon(QStyle::SP_CommandLink)),      tr("&Go to line"), this, SLOT( onGoToLine() )  )
+    pToolBar->addAction( QIcon(QApplication::style()->standardIcon(QStyle::SP_CommandLink)),      tr("&Go to line"), this, SLOT( onGoToLine() ) )
             ->setShortcut({QKeySequence(Qt::CTRL+Qt::Key_G)});
     container_layout->addWidget(pToolBar);
     splitter->addWidget(shEdit_);
@@ -273,7 +273,7 @@ void McrWnd::onGoToLine(){
         shEdit_->gotoLine(n_go_to_line - 1);
     }
 }
-void McrWnd::onFindRepl(){
+void McrWnd::onFind(){
     qDebug("McrWnd::onFindRepl()");
     if(pdlgFindRepl_==nullptr){
         pdlgFindRepl_ = new DlgFindRepl(this);

@@ -26,7 +26,7 @@ private slots:
     bool onFileSave(bool blSaveAs);
     void onRun();
     void onGoToLine();
-    void onFindRepl();
+    void onFind();
     void onChngEditFileInfo(const QFileInfo& fiNew);
     void Find(SciHlp::_params_find params_find);
 private:
