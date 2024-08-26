@@ -48,6 +48,7 @@ list (APPEND PROJECT_SOURCES
         scihlp.h scihlp.cpp
         mcrwnd.h mcrwnd.cpp
         ${TS_FILES}
+        forms/dlgfindrepl.h forms/dlgfindrepl.cpp forms/dlgfindrepl.ui
 )
 message (DEBUG "hello")
 if(QRASTR_BUILD_WITH_MCR)
@@ -73,7 +74,6 @@ if(${QT_VERSION_MAJOR} GREATER_EQUAL 6)
             tst_toolbox.h tst_toolbox.cpp tst_toolbox.ui
             tst2_dialog.h tst2_dialog.cpp tst2_dialog.ui
             tst.qml
-            forms/dlgfindrepl.h forms/dlgfindrepl.cpp forms/dlgfindrepl.ui
         )
     endif()
     qt_create_translation(QM_FILES ${CMAKE_SOURCE_DIR} ${TS_FILES})
@@ -86,6 +86,8 @@ else()
         add_executable(qmcr
             ${PROJECT_SOURCES}
             tst_toolbox.h tst_toolbox.cpp tst_toolbox.ui
+            tst2_dialog.h tst2_dialog.cpp tst2_dialog.ui
+            tst.qml
         )
         qt5_create_translation(QM_FILES ${CMAKE_SOURCE_DIR} ${TS_FILES})
     endif()

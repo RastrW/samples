@@ -1,3 +1,4 @@
+#include <QDebug>
 #include "dlgfindrepl.h"
 #include "ui_dlgfindrepl.h"
 

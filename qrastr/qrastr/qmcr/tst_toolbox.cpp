@@ -12,7 +12,11 @@ Tst_ToolBox::Tst_ToolBox(QWidget *parent)
     ui->quickWidget->setPalette(palette);
     ui->quickWidget->setResizeMode(QQuickWidget::SizeRootObjectToView);
    // ui->quickWidget->setSource(QUrl("qrc:C:/projects/git_web/samples/qrastr/qrastr/qmcr/tst.qml"));
+#if(defined(MSVC))
     ui->quickWidget->setSource(QUrl::fromLocalFile("C:/projects/git_web/samples/qrastr/qrastr/qmcr/tst.qml"));
+#else
+    ui->quickWidget->setSource(QUrl::fromLocalFile("/home/ustas/projects/git_web/samples/qrastr/qrastr/qmcr/tst.qml"));
+#endif
     //ui->quickWidget->setSource(QUrl::fromLocalFile("tst.qml"));
 
     ui->quickWidget->show();
