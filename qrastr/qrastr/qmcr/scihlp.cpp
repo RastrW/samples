@@ -2,6 +2,7 @@
 #include <QMessageBox>
 #include <QFontDatabase>
 #include <QTextStream>
+#include <iostream>
 #include "SciLexer.h"
 #include "scihlp.h"
 
@@ -52,8 +53,246 @@ SciHlp::SciHlp(QWidget *parent, _en_role role)
     setWrapIndentMode(SC_WRAPINDENT_INDENT );
     markerSetBack(0,1);
     markerSetBack(1,1);
-    connect(this, SIGNAL(marginClicked( Scintilla::Position, Scintilla::KeyMod, int ) ), this, SLOT(onMarginClicked( Scintilla::Position, Scintilla::KeyMod, int ) ) );
-    connect(this, SIGNAL(notify       ( Scintilla::NotificationData*                ) ), this, SLOT(onNotify       ( Scintilla::NotificationData* )                ) );
+
+#if _WIN32 //https://www.scintilla.org/LexillaDoc.html
+    typedef void *(__stdcall *CreateLexerFn)(const char* name);
+    const QFunctionPointer pfn = QLibrary::resolve("lexilla5", "CreateLexer");
+#else
+    typedef void *(*CreateLexerFn)(const char* name);
+    const QFunctionPointer pfn = QLibrary::resolve("libLexilla.so.5", "CreateLexer");
+#endif
+    if(pfn == nullptr){
+        QMessageBox mb( QMessageBox::Icon::Critical, QObject::tr("Error"),
+                        QString(tr("error: invalid get function lexilla5.CreateLexer"))
+                       );
+        mb.exec();
+        return;
+    }
+    if(SciHlp::_en_role::editor_python == role){
+        const std::string strLanguageName {"python"};
+        //const std::string strLanguageName {"xml"};
+        const void* plex = ( reinterpret_cast<CreateLexerFn>(pfn) )( strLanguageName.c_str() );
+        if(plex == nullptr){
+            QMessageBox mb( QMessageBox::Icon::Critical, QObject::tr("Error"),
+                            QString(tr("error: invalid lexx [%1] pointer").arg(strLanguageName.c_str()))
+                           );
+            mb.exec();
+            return;
+        }
+        setILexer( reinterpret_cast<sptr_t>(plex) );
+        setCodePage(SC_CP_UTF8);
+
+        setProperty("fold", "1"); // show Folders!!
+        setProperty("fold.compact", "0");
+        setProperty("fold.quotes.python", "1");
+        setAutomaticFold(SCI_SETAUTOMATICFOLD);
+
+        connect(this, SIGNAL(marginClicked( Scintilla::Position, Scintilla::KeyMod, int ) ), this, SLOT(onMarginClicked( Scintilla::Position, Scintilla::KeyMod, int ) ) );
+        connect(this, SIGNAL(notify       ( Scintilla::NotificationData*                ) ), this, SLOT(onNotify       ( Scintilla::NotificationData* )                ) );
+
+        setKeyWords(0,R"(
+            False None True and as assert break class continue def del elif else
+            except finally for from global if import in is lambda nonlocal not
+            or pass raise return try while with yield
+
+            abs aiter all anext any ascii bin bool breakpoint
+            bytearray bytes callable chr classmethod compile
+            complex delattr dict dir divmod enumerate eval
+            exec filter float format frozenset getattr globals
+            hasattr hash help hex id input int isinstance
+            issubclass iter len list locals map max memoryview
+            min next object oct open ord pow print property
+            range repr reversed round set setattr slice sorted
+            staticmethod str sum super tuple type vars zip _
+            __import__
+        )");
+        //setStyleHlp( SCE_P_DEFAULT, _colors::blue, true );
+        setStyleHlp( SCE_P_COMMENTLINE ,  _colors::green   );      // #xxx
+        setStyleHlp( SCE_P_NUMBER ,       _colors::red,    true);  // 13
+        setStyleHlp( SCE_P_STRING ,       _colors::teal    );      // ""xxx""
+        setStyleHlp( SCE_P_CHARACTER ,    _colors::teal    );      // 'xxx'
+        setStyleHlp( SCE_P_WORD ,         _colors::maroon, true ); // for xxx in :
+        setStyleHlp( SCE_P_TRIPLE ,       _colors::green   );        // ''' '''  - multiline comment
+        setStyleHlp( SCE_P_TRIPLEDOUBLE , _colors::green   );      // """ """  - multiline comment
+        setStyleHlp( SCE_P_CLASSNAME ,    _colors::blue,   true ); // class xxx:
+        setStyleHlp( SCE_P_DEFNAME ,      _colors::navy,   true ); // def xxx():
+        setStyleHlp( SCE_P_OPERATOR ,     _colors::black   );       // xxx =
+        setStyleHlp( SCE_P_IDENTIFIER ,   _colors::black   );       // xxx =
+        setStyleHlp( SCE_P_COMMENTBLOCK , _colors::green   );       // #
+        setStyleHlp( SCE_P_STRINGEOL ,    _colors::maroon  );       // ?
+        setStyleHlp( SCE_P_WORD2 ,        _colors::navy    );       // ?
+        setStyleHlp( SCE_P_DECORATOR ,    _colors::olive,  true );  // @gfg_decorator
+        setStyleHlp( SCE_P_FSTRING ,      _colors::teal,   true );  // f""
+        setStyleHlp( SCE_P_FCHARACTER ,   _colors::teal    );
+        setStyleHlp( SCE_P_FTRIPLE ,      _colors::green   );       // f''' '''
+        setStyleHlp( SCE_P_FTRIPLEDOUBLE, _colors::green   );       // f""" """
+        setStyleHlp( SCE_P_ATTRIBUTE ,    _colors::fuchsia );
+    }else{
+        tstSci();// debug: trace all lexers
+        //const std::string strLanguageName {"hypertext"};
+        const std::string strLanguageName {"xml"};
+        const void* plex = ( reinterpret_cast<CreateLexerFn>(pfn) )( strLanguageName.c_str() );
+        if(plex == nullptr){
+            QMessageBox mb( QMessageBox::Icon::Critical, QObject::tr("Error"),
+                            QString(tr("error: invalid lexx [%1] pointer").arg(strLanguageName.c_str()))
+                           );
+            mb.exec();
+            return;
+        }
+        setILexer( reinterpret_cast<sptr_t>(plex) );
+        setReadOnly(true);
+
+        setCodePage(SC_CP_UTF8);
+        setProperty("fold", "1"); // show Folders!!
+        setProperty("fold.compact", "1");
+        // for HTML!!! see C:\Qt\Examples\qt_6\notepad-plus-plus-master\lexilla\lexers\LexHTML.cxx
+        setProperty("fold.html", "1"); // "Folding is turned on or off for HTML and XML files with this option. "
+        setProperty("fold.html.preprocessor", "1"); //"Folding is turned on or off for scripts embedded in HTML files with this option. "
+        setProperty("fold.hypertext.comment", "1"); //"Allow folding for comments in scripts embedded in HTML. "
+        setProperty("fold.xml.at.tag.open", "1");   // "Enable folding for XML at the start of open tag. "
+        setAutomaticFold(SCI_SETAUTOMATICFOLD);
+
+        setKeyWords(0,R"(
+html
+head
+)");
+        const _colors::_color c_xz           {_colors::teal};
+        setStyleHlp( SCE_H_DEFAULT,          _colors::black );
+        setStyleHlp( SCE_H_TAG,              _colors::blue, true );
+        setStyleHlp( SCE_H_TAGUNKNOWN,       _colors::blue, true );
+        setStyleHlp( SCE_H_ATTRIBUTE,        _colors::blue );
+        setStyleHlp( SCE_H_ATTRIBUTEUNKNOWN, _colors::blue );
+        setStyleHlp( SCE_H_NUMBER,           _colors::red );
+        setStyleHlp( SCE_H_DOUBLESTRING ,    _colors::fuchsia );
+        setStyleHlp( SCE_H_SINGLESTRING ,    _colors::aqua );
+        setStyleHlp( SCE_H_OTHER ,           _colors::aqua );
+        setStyleHlp( SCE_H_COMMENT ,         _colors::green );
+        setStyleHlp( SCE_H_ENTITY ,          _colors::olive );
+        setStyleHlp( SCE_H_TAGEND ,          _colors::blue, true );
+        setStyleHlp( SCE_H_XMLSTART ,        _colors::navy );
+        setStyleHlp( SCE_H_XMLEND ,          _colors::olive );
+        setStyleHlp( SCE_H_SCRIPT ,          _colors::yellow );
+        setStyleHlp( SCE_H_ASP , c_xz );
+        setStyleHlp( SCE_H_ASPAT , c_xz );
+        setStyleHlp( SCE_H_CDATA ,           _colors::navy );
+        setStyleHlp( SCE_H_QUESTION , c_xz );
+        setStyleHlp( SCE_H_VALUE , c_xz );
+        setStyleHlp( SCE_H_XCCOMMENT ,       _colors::green );
+        setStyleHlp( SCE_H_SGML_DEFAULT , c_xz );
+        setStyleHlp( SCE_H_SGML_COMMAND , c_xz );
+        setStyleHlp( SCE_H_SGML_1ST_PARAM , c_xz );
+        setStyleHlp( SCE_H_SGML_DOUBLESTRING , c_xz );
+        setStyleHlp( SCE_H_SGML_SIMPLESTRING, c_xz );
+        setStyleHlp( SCE_H_SGML_ERROR , c_xz );
+        setStyleHlp( SCE_H_SGML_SPECIAL , c_xz );
+        setStyleHlp( SCE_H_SGML_ENTITY , c_xz );
+        setStyleHlp( SCE_H_SGML_COMMENT , c_xz );
+        setStyleHlp( SCE_H_SGML_1ST_PARAM_COMMENT , c_xz );
+        setStyleHlp( SCE_H_SGML_BLOCK_DEFAULT , c_xz );
+        setStyleHlp( SCE_HJ_START , c_xz );
+        setStyleHlp( SCE_HJ_DEFAULT , c_xz );
+        setStyleHlp( SCE_HJ_COMMENT , c_xz );
+        setStyleHlp( SCE_HJ_COMMENTLINE , c_xz );
+        setStyleHlp( SCE_HJ_COMMENTDOC , c_xz );
+        setStyleHlp( SCE_HJ_NUMBER , c_xz );
+        setStyleHlp( SCE_HJ_WORD , c_xz );
+        setStyleHlp( SCE_HJ_KEYWORD , c_xz );
+        setStyleHlp( SCE_HJ_DOUBLESTRING , c_xz );
+        setStyleHlp( SCE_HJ_SINGLESTRING , c_xz );
+        setStyleHlp( SCE_HJ_SYMBOLS , c_xz );
+        setStyleHlp( SCE_HJ_STRINGEOL , c_xz );
+        setStyleHlp( SCE_HJ_REGEX , c_xz );
+        setStyleHlp( SCE_HJA_START , c_xz );
+        setStyleHlp( SCE_HJA_DEFAULT , c_xz );
+        setStyleHlp( SCE_HJA_COMMENT , c_xz );
+        setStyleHlp( SCE_HJA_COMMENTLINE , c_xz );
+        setStyleHlp( SCE_HJA_COMMENTDOC , c_xz );
+        setStyleHlp( SCE_HJA_NUMBER , c_xz );
+        setStyleHlp( SCE_HJA_WORD , c_xz );
+        setStyleHlp( SCE_HJA_KEYWORD , c_xz );
+        setStyleHlp( SCE_HJA_DOUBLESTRING , c_xz );
+        setStyleHlp( SCE_HJA_SINGLESTRING , c_xz );
+        setStyleHlp( SCE_HJA_SYMBOLS , c_xz );
+        setStyleHlp( SCE_HJA_STRINGEOL , c_xz );
+        setStyleHlp( SCE_HJA_REGEX , c_xz );
+        setStyleHlp( SCE_HB_START , c_xz );
+        setStyleHlp( SCE_HB_DEFAULT , c_xz );
+        setStyleHlp( SCE_HB_COMMENTLINE , c_xz );
+        setStyleHlp( SCE_HB_NUMBER , c_xz );
+        setStyleHlp( SCE_HB_WORD , c_xz );
+        setStyleHlp( SCE_HB_STRING , c_xz );
+        setStyleHlp( SCE_HB_IDENTIFIER , c_xz );
+        setStyleHlp( SCE_HB_STRINGEOL , c_xz );
+        setStyleHlp( SCE_HBA_START , c_xz );
+        setStyleHlp( SCE_HBA_DEFAULT , c_xz );
+        setStyleHlp( SCE_HBA_COMMENTLINE , c_xz );
+        setStyleHlp( SCE_HBA_NUMBER , c_xz );
+        setStyleHlp( SCE_HBA_WORD , c_xz );
+        setStyleHlp( SCE_HBA_STRING , c_xz );
+        setStyleHlp( SCE_HBA_IDENTIFIER , c_xz );
+        setStyleHlp( SCE_HBA_STRINGEOL , c_xz );
+        setStyleHlp( SCE_HP_START , c_xz );
+        setStyleHlp( SCE_HP_DEFAULT , c_xz );
+        setStyleHlp( SCE_HP_COMMENTLINE , c_xz );
+        setStyleHlp( SCE_HP_NUMBER , c_xz );
+        setStyleHlp( SCE_HP_STRING , c_xz );
+        setStyleHlp( SCE_HP_CHARACTER , c_xz );
+        setStyleHlp( SCE_HP_WORD , c_xz );
+        setStyleHlp( SCE_HP_TRIPLE , c_xz );
+        setStyleHlp( SCE_HP_TRIPLEDOUBLE , c_xz );
+        setStyleHlp( SCE_HP_CLASSNAME , c_xz );
+        setStyleHlp( SCE_HP_DEFNAME , c_xz );
+        setStyleHlp( SCE_HP_OPERATOR , c_xz );
+        setStyleHlp( SCE_HP_IDENTIFIER , c_xz );
+        setStyleHlp( SCE_HPHP_COMPLEX_VARIABLE , c_xz );
+        setStyleHlp( SCE_HPA_START , c_xz );
+        setStyleHlp( SCE_HPA_DEFAULT , c_xz );
+        setStyleHlp( SCE_HPA_COMMENTLINE , c_xz );
+        setStyleHlp( SCE_HPA_NUMBER , c_xz );
+        setStyleHlp( SCE_HPA_STRING , c_xz );
+        setStyleHlp( SCE_HPA_CHARACTER , c_xz );
+        setStyleHlp( SCE_HPA_WORD , c_xz );
+        setStyleHlp( SCE_HPA_TRIPLE , c_xz );
+        setStyleHlp( SCE_HPA_TRIPLEDOUBLE , c_xz );
+        setStyleHlp( SCE_HPA_CLASSNAME , c_xz );
+        setStyleHlp( SCE_HPA_DEFNAME , c_xz );
+        setStyleHlp( SCE_HPA_OPERATOR , c_xz );
+        setStyleHlp( SCE_HPA_IDENTIFIER , c_xz );
+        setStyleHlp( SCE_HPHP_DEFAULT , c_xz );
+        setStyleHlp( SCE_HPHP_HSTRING , c_xz );
+        setStyleHlp( SCE_HPHP_SIMPLESTRING , c_xz );
+        setStyleHlp( SCE_HPHP_WORD , c_xz );
+        setStyleHlp( SCE_HPHP_NUMBER , c_xz );
+        setStyleHlp( SCE_HPHP_VARIABLE , c_xz );
+        setStyleHlp( SCE_HPHP_COMMENT , c_xz );
+        setStyleHlp( SCE_HPHP_COMMENTLINE , c_xz );
+        setStyleHlp( SCE_HPHP_HSTRING_VARIABLE , c_xz );
+        setStyleHlp( SCE_HPHP_OPERATOR , c_xz );
+    }
+}
+void SciHlp::tstSci(){
+#if _WIN32 //https://www.scintilla.org/LexillaDoc.html
+    typedef int ( __stdcall* _pfGetLexerCount)(void);
+    const QFunctionPointer pfGetLexerCount = QLibrary::resolve("lexilla5", "GetLexerCount");
+    //EXPORT_FUNCTION const char * CALLING_CONVENTION LexerNameFromID(int identifier) {
+    typedef const char* ( __stdcall *_pfLexerNameFromID)(int);
+    const QFunctionPointer pfLexerNameFromID = QLibrary::resolve("lexilla5", "LexerNameFromID");
+#else
+    //typedef void *(*CreateLexerFn)(const char *name);
+    //const QFunctionPointer pfn = QLibrary::resolve("libLexilla.so.5", "CreateLexer");
+#endif
+#if _WIN32
+    const int nNumLexs = ( reinterpret_cast<_pfGetLexerCount>(pfGetLexerCount) )(  );
+    for( int nLexsNum = 0 ; nLexsNum < nNumLexs ; nLexsNum++ ){
+        const char*  pchLexName = ( reinterpret_cast<_pfLexerNameFromID>(pfLexerNameFromID) )( nLexsNum );
+        if(pchLexName)
+            qDebug()<<"pchLexName=["<<nLexsNum<<"]= "<<pchLexName;
+        else
+            qDebug()<<"pchLexName=["<<nLexsNum<<"]= MY_NULL!!";
+    }
+#endif
+}
+void SciHlp::showEvent(QShowEvent *event){
 }
 void SciHlp::onMarginClicked(Scintilla::Position position, Scintilla::KeyMod modifiers, int margin) {
     if(margin == 1) {
@@ -106,14 +345,28 @@ void SciHlp::setStyleHlp(sptr_t style, sptr_t fore, bool bold, bool italic, sptr
     styleSetEOLFilled ( style, eolfilled );
 }
 SciHlp::_ret_vals SciHlp::setContent(const std::string& str_text){
-    /*if(this->modify()==true){
-        return SciHlp::_ret_vals::failure;
-    }*/
+    bool bl_read_only_prev = false;
+    if(canPaste() == false){
+        bl_read_only_prev = true;
+        setReadOnly(false);
+    }
     setText(str_text.c_str());
     //emptyUndoBuffer();
     setSavePoint();
-    //setFileInfo( QFileInfo(R"(C:\projects\git_web\samples\qrastr\qrastr\qmcr\tst.py)") );
-    //ContentToFile();
+    if(bl_read_only_prev == true)
+        setReadOnly(true);
+    return _ret_vals::ok;
+}
+SciHlp::_ret_vals SciHlp::my_appendTect(const std::string_view svTxt){
+    bool bl_read_only_prev = false;
+    if(canPaste() == false){
+        bl_read_only_prev = true;
+        setReadOnly(false);
+    }
+    //setText(str_text.c_str());
+    appendText(svTxt.length(),svTxt.data());
+    if(bl_read_only_prev == true)
+        setReadOnly(true);
     return _ret_vals::ok;
 }
 bool SciHlp::getContentModified() const {
@@ -184,71 +437,4 @@ SciHlp::_ret_vals SciHlp::Find(_params_find params_find){
         return _ret_vals::ok;
     }
     return _ret_vals::failure;
-}
-void SciHlp::showEvent(QShowEvent *event){
-    #if _WIN32 //https://www.scintilla.org/LexillaDoc.html
-        typedef void *(__stdcall *CreateLexerFn)(const char *name);
-        const QFunctionPointer pfn = QLibrary::resolve("lexilla5", "CreateLexer");
-    #else
-        typedef void *(*CreateLexerFn)(const char *name);
-        const QFunctionPointer pfn = QLibrary::resolve("libLexilla.so.5", "CreateLexer");
-    #endif
-    if(pfn == nullptr){
-        QMessageBox mb( QMessageBox::Icon::Critical, QObject::tr("Error"),
-                        QString(tr("error: invalid get function lexilla5.CreateLexer"))
-                       );
-        mb.exec();
-        return;
-    }
-    const std::string strLanguageName {"python"};
-    const void* plex = ( reinterpret_cast<CreateLexerFn>(pfn) )( strLanguageName.c_str() );
-    if(plex == nullptr){
-        QMessageBox mb( QMessageBox::Icon::Critical, QObject::tr("Error"),
-                        QString(tr("error: invalid lexx [%1] pointer").arg(strLanguageName.c_str()))
-                       );
-        mb.exec();
-        return;
-    }
-    setILexer( reinterpret_cast<sptr_t>(plex) );
-    setCodePage(SC_CP_UTF8);
-    setKeyWords(0,R"(
-        False None True and as assert break class continue def del elif else
-        except finally for from global if import in is lambda nonlocal not
-        or pass raise return try while with yield
-
-        abs aiter all anext any ascii bin bool breakpoint
-        bytearray bytes callable chr classmethod compile
-        complex delattr dict dir divmod enumerate eval
-        exec filter float format frozenset getattr globals
-        hasattr hash help hex id input int isinstance
-        issubclass iter len list locals map max memoryview
-        min next object oct open ord pow print property
-        range repr reversed round set setattr slice sorted
-        staticmethod str sum super tuple type vars zip _
-        __import__
-    )");
-    //setStyleHlp( SCE_P_DEFAULT, _colors::blue, true );
-    setStyleHlp( SCE_P_COMMENTLINE ,  _colors::green   );      // #xxx
-    setStyleHlp( SCE_P_NUMBER ,       _colors::red,    true);  // 13
-    setStyleHlp( SCE_P_STRING ,       _colors::teal    );      // ""xxx""
-    setStyleHlp( SCE_P_CHARACTER ,    _colors::teal    );      // 'xxx'
-    setStyleHlp( SCE_P_WORD ,         _colors::maroon, true ); // for xxx in :
-    setStyleHlp( SCE_P_TRIPLE ,       _colors::green   );        // ''' '''  - multiline comment
-    setStyleHlp( SCE_P_TRIPLEDOUBLE , _colors::green   );      // """ """  - multiline comment
-    setStyleHlp( SCE_P_CLASSNAME ,    _colors::blue,   true ); // class xxx:
-    setStyleHlp( SCE_P_DEFNAME ,      _colors::navy,   true ); // def xxx():
-    setStyleHlp( SCE_P_OPERATOR ,     _colors::black   );       // xxx =
-    setStyleHlp( SCE_P_IDENTIFIER ,   _colors::black   );       // xxx =
-    setStyleHlp( SCE_P_COMMENTBLOCK , _colors::green   );       // #
-    setStyleHlp( SCE_P_STRINGEOL ,    _colors::maroon  );       // ?
-    setStyleHlp( SCE_P_WORD2 ,        _colors::navy    );       // ?
-    setStyleHlp( SCE_P_DECORATOR ,    _colors::olive,  true );  // @gfg_decorator
-    setStyleHlp( SCE_P_FSTRING ,      _colors::teal,   true );  // f""
-    setStyleHlp( SCE_P_FCHARACTER ,   _colors::teal    );
-    setStyleHlp( SCE_P_FTRIPLE ,      _colors::green   );       // f''' '''
-    setStyleHlp( SCE_P_FTRIPLEDOUBLE, _colors::green   );       // f""" """
-    setStyleHlp( SCE_P_ATTRIBUTE ,    _colors::fuchsia );
-    setProperty("fold", "1"); // show Folders!!
-    setProperty("fold.compact", "0");
-    setAutomaticFold(true);
 }

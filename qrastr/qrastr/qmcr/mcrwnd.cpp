@@ -120,6 +120,19 @@ else:
 """
 )");
 
+
+     shProt_->setContent(R"(
+<!DOCTYPE html>
+<html>
+<body>
+
+<h1>My First Heading</h1>
+<p>My first paragraph.</p>
+
+</body>
+</html>
+)");
+
     qDebug() << "themeSearchPaths:" << QIcon::themeSearchPaths() << QIcon::themeName();
 
     QIcon::setThemeName("oxygen");
@@ -264,6 +277,9 @@ bool McrWnd::onFileSave(bool blSaveAs){
 }
 void McrWnd::onRun(){
     qDebug("McrWnd::onRun()");
+    for( int i = 1 ; i < 100000 ; i++ ){
+        shProt_->my_appendTect( "<ываываыва> ЫВАЫВА фывfdsfsdafsd ываыв [" + std::to_string(i)+  "] ыввввЁЁЁ  ываывпике \n  </ываываыва> \n");
+    }
 }
 void McrWnd::onGoToLine(){
     const sptr_t n_num_lines = shEdit_->lineCount();
