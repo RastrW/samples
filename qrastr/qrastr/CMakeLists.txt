@@ -54,6 +54,10 @@ set(INCLUDES
     "${DEPENDENCIES_LOCATION}/eigen-eigen"
     "${DEPENDENCIES_LOCATION}/boost/boost_1_76_0" # in_nix
     "${DEPENDENCIES_LOCATION}/boost/boost_1_80_0" # in_win
+    "${DEPENDENCIES_LOCATION}/sci/scintilla/include"
+    "${DEPENDENCIES_LOCATION}/sci/scintilla/src"
+    "${DEPENDENCIES_LOCATION}/sci/scintilla/qt/ScintillaEditBase"
+    "${DEPENDENCIES_LOCATION}/sci/scintilla/qt/ScintillaEdit"
 )
 
 if(MSVC)
@@ -100,20 +104,17 @@ set(PROJECT_SOURCES
     rdata.h      rdata.cpp
     testmodel.h  testmodel.cpp
     rtabwidget.h rtabwidget.cpp
-
+    rtableview.h rtableview.cpp
+    filtertableheader.h filtertableheader.cpp
+    filterlineedit.h filterlineedit.cpp
+    utils.h
+    CondFormat.cpp CondFormat.h
 )
 
 if(${QT_VERSION_MAJOR} GREATER_EQUAL 6)
     qt_add_executable(qrastr
         MANUAL_FINALIZATION
         ${PROJECT_SOURCES}
-        rdata.h rdata.cpp
-        rtableview.h rtableview.cpp
-        filtertableheader.h filtertableheader.cpp
-        filterlineedit.h filterlineedit.cpp
-        utils.h
-        CondFormat.cpp CondFormat.h
-
     )
 # Define target properties for Android with Qt 6 as:
 #    set_property(TARGET qrastr APPEND PROPERTY QT_ANDROID_PACKAGE_SOURCE_DIR

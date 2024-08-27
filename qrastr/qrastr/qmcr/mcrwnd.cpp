@@ -397,7 +397,7 @@ void McrWnd::onRun(){
 void McrWnd::onGoToLine(){
     const sptr_t n_num_lines = shEdit_->lineCount();
     bool bl_ok = false;
-    const int n_go_to_line = QInputDialog::getInt(this, tr("Line number"), QString(tr("Go to line (1..%1) ")).arg(n_num_lines), 1, 1, n_num_lines + 1, 1, &bl_ok);
+    const int n_go_to_line = QInputDialog::getInt(this, tr("Go to line"), QString(tr("Go to line (1..%1) ")).arg(n_num_lines), 1, 1, n_num_lines + 1, 1, &bl_ok);
     if(bl_ok){
         shEdit_->gotoLine(n_go_to_line - 1);
     }
