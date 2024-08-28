@@ -58,11 +58,14 @@ set(INCLUDES
     "${DEPENDENCIES_LOCATION}/sci/scintilla/src"
     "${DEPENDENCIES_LOCATION}/sci/scintilla/qt/ScintillaEditBase"
     "${DEPENDENCIES_LOCATION}/sci/scintilla/qt/ScintillaEdit"
+    "${DEPENDENCIES_LOCATION}/Qt-Advanced-Docking-System/src"
 )
 
 if(MSVC)
     link_directories("${ASTRA_LOCATION}/build/Debug/")
     link_directories("${DEPENDENCIES_LOCATION}/metakit/builds/")
+    link_directories("${DEPENDENCIES_LOCATION}/Qt-Advanced-Docking-System/build/vs-Debug/lib/")
+    link_directories("${DEPENDENCIES_LOCATION}/Qt-Advanced-Docking-System/build/vs-Release/lib/")
 else()
     link_directories("${DEPENDENCIES_LOCATION}/qicstable/lib/")
     link_directories("${ASTRA_LOCATION}/build/")
@@ -143,6 +146,12 @@ if(MSVC)
     target_link_libraries( qrastr PRIVATE astra_py       ) # when build with pybind11
     target_link_libraries( qrastr PRIVATE mk4vc22x64  )
     target_link_libraries( qrastr PRIVATE qmcr        )
+
+    if (CMAKE_BUILD_TYPE MATCHES Debug)
+        target_link_libraries( qrastr PRIVATE qtadvanceddockingd )
+    else()
+        target_link_libraries( qrastr PRIVATE qtadvanceddocking  )
+    endif()
 
 else()
     target_link_libraries( qrastr PRIVATE libqicstable.so  )

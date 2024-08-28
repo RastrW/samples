@@ -1,5 +1,3 @@
-#include "mainwindow.h"
-#include "./ui_mainwindow.h"
 #include <QtGui>
 #include <QMdiArea>
 #include <QFileDialog>
@@ -14,17 +12,18 @@
 #include <QSet>
 #include <QListView>
 #include <QDockWidget>
+#include <QAbstractTableModel>
+#include <iostream>
 #include "mainwindow.h"
 #include "./ui_mainwindow.h"
-#include <rtabwidget.h>
-#include <QAbstractTableModel>
+#include "rtabwidget.h"
 #include "mdiChildTable.h"
 #include "mdiChildGrid.h"
 #include "mdiChildHeaderGrid.h"
-#include <iostream>
 #include "astra_exp.h"
 #include "fmt/format.h"
 #include "qmcr/mcrwnd.h"
+#include "DockManager.h"
 
 MainWindow::MainWindow(){
     m_workspace = new QMdiArea;
@@ -40,6 +39,15 @@ MainWindow::MainWindow(){
     readSettings();
     setWindowTitle(tr("~qrastr~"));
     //int nRes = test();
+    ads::CDockManager::setConfigFlag(ads::CDockManager::FocusHighlighting, true);
+    ads::CDockManager::setConfigFlag(ads::CDockManager::AllTabsHaveCloseButton, true);
+    m_DockManager = new ads::CDockManager(this);
+    QObject::connect(m_DockManager, &ads::CDockManager::focusedDockWidgetChanged
+                                  , [] (ads::CDockWidget* old, ads::CDockWidget* now) {
+        static int Count = 0;
+        qDebug() << Count++ << " CDockManager::focusedDockWidgetChanged old: " << (old ? old->objectName() : "-") << " now: " << now->objectName() << " visible: " << now->isVisible();
+        now->widget()->setFocus();
+    });
 }
 void MainWindow::showEvent( QShowEvent* event ){
     try{
@@ -373,11 +381,19 @@ void MainWindow::onOpenForm( QAction* p_actn ){
 
     //up_rtw = prtw;
     // Docking
-    QDockWidget *dock = new QDockWidget( stringutils::cp1251ToUtf8(form.Name()).c_str(), this);
-    dock->setWidget(prtw);
-    dock->setAllowedAreas(Qt::LeftDockWidgetArea | Qt::RightDockWidgetArea | Qt::TopDockWidgetArea | Qt::BottomDockWidgetArea | Qt::AllDockWidgetAreas);
-    addDockWidget(Qt::TopDockWidgetArea, dock);
-
+    if(true) {
+        QDockWidget *dock = new QDockWidget( stringutils::cp1251ToUtf8(form.Name()).c_str(), this);
+        dock->setWidget(prtw);
+        dock->setAllowedAreas(Qt::LeftDockWidgetArea | Qt::RightDockWidgetArea | Qt::TopDockWidgetArea | Qt::BottomDockWidgetArea | Qt::AllDockWidgetAreas);
+        addDockWidget(Qt::TopDockWidgetArea, dock);
+    }else{
+        static int i = 0;
+        auto dw = new ads::CDockWidget( stringutils::cp1251ToUtf8(form.Name()).c_str(), this);
+        dw->setWidget(prtw);
+        dw->setFeature(ads::CDockWidget::DockWidgetDeleteOnClose, true);
+        auto area = m_DockManager->addDockWidgetTab(ads::CenterDockWidgetArea, dw);
+        qDebug() << "doc dock widget created!" << dw << area;
+    }
     prtw->show();
 
     // return;

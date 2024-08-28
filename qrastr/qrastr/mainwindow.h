@@ -32,6 +32,7 @@ class MdiChild;
 class QSignalMapper;
 
 class rmodel;
+namespace ads{ class CDockManager; };
 class MainWindow : public QMainWindow
 {
     Q_OBJECT
@@ -161,10 +162,12 @@ private:
     std::string cur_file;                            // current file
 
 
-public:
+//public:
     QAction *m_SortAscAct;
     QAction *m_SortDescAct;
     QDockWidget *m_dock;
+    // The main container for docking
+    ads::CDockManager* m_DockManager = nullptr;
     //QTableView *table;
     rmodel *model;
 
