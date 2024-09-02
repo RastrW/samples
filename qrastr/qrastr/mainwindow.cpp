@@ -381,7 +381,7 @@ void MainWindow::onOpenForm( QAction* p_actn ){
 
     //up_rtw = prtw;
     // Docking
-    if(true) {
+    if(false) {
         QDockWidget *dock = new QDockWidget( stringutils::cp1251ToUtf8(form.Name()).c_str(), this);
         dock->setWidget(prtw);
         dock->setAllowedAreas(Qt::LeftDockWidgetArea | Qt::RightDockWidgetArea | Qt::TopDockWidgetArea | Qt::BottomDockWidgetArea | Qt::AllDockWidgetAreas);

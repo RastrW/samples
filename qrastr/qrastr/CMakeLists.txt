@@ -145,7 +145,7 @@ if(MSVC)
     #target_link_libraries( qrastr PRIVATE astra_shrd.lib )
     target_link_libraries( qrastr PRIVATE astra_py       ) # when build with pybind11
     target_link_libraries( qrastr PRIVATE mk4vc22x64  )
-    target_link_libraries( qrastr PRIVATE qmcr        )
+    target_link_libraries( ${PROJECT_NAME} PRIVATE qmcr        )
 
     if (CMAKE_BUILD_TYPE MATCHES Debug)
         target_link_libraries( qrastr PRIVATE qtadvanceddockingd )
