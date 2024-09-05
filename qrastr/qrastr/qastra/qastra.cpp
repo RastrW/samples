@@ -12,6 +12,45 @@ qAstra::qAstra(QObject *parent)
 class EventSink : public IRastrEventsSinkBase
 {
 public:
+    IPlainRastrRetCode OnEvent(const IRastrEventLog& Event) noexcept override
+    {
+        std::cout << "Log Status: " << static_cast<std::underlying_type<LogMessageTypes>::type>(Event.Status()) << " ";
+        std::cout << "StageId: " << Event.StageId() << " ";
+        std::cout << Event.Message() << " ";
+        std::cout << "Table: " << Event.DBLocation().Table() << " ";
+        std::cout << "Column: " << Event.DBLocation().Column() << " ";
+        std::cout << "Index: " << Event.DBLocation().Index() << " ";
+        std::cout << "UIForm: " << Event.UIForm() << " ";
+        std::cout << std::endl;
+        return IPlainRastrRetCode::Ok;
+    }
+    IPlainRastrRetCode OnEvent(const IRastrEventHint& Event) noexcept override
+    {
+        std::cout << "Hint: " << static_cast<std::underlying_type<EventHints>::type>(Event.Hint()) << " ";
+        std::cout << "Table: " << Event.DBLocation().Table() << " ";
+        std::cout << "Column: " << Event.DBLocation().Column() << " ";
+        std::cout << "Index: " << Event.DBLocation().Index() << " ";
+        std::cout << std::endl;
+        return IPlainRastrRetCode::Ok;
+    }
+
+    IPlainRastrRetCode OnEvent(const IRastrEventBase& Event) noexcept override
+    {
+        if(Event.Type() == EventTypes::Print)
+            std::cout << "Print: " << static_cast<const IRastrEventPrint&>(Event).Message() << std::endl;
+        return IPlainRastrRetCode::Ok;
+    }
+
+    IPlainRastrRetCode OnUICommand(const IRastrEventBase& Event, IPlainRastrVariant* Result) noexcept override
+    {
+        Result->String("Done");
+        return IPlainRastrRetCode::Ok;
+    }
+};
+/*
+class EventSink : public IRastrEventsSinkBase
+{
+public:
     void OnEvent(const IRastrEventLog& Event) override
     {
         std::cout << "Log Status: " << static_cast<std::underlying_type<LogMessageTypes>::type>(Event.Status()) << " ";
@@ -44,13 +83,15 @@ public:
         return true;
     }
 };
+*/
 
 int qAstra::tst_iplainrastr() const {
 #ifdef _DEBUG
     //std::filesystem::current_path("/source/repos/rastr/RastrWin/Debug64/");
     std::filesystem::current_path(R"(C:\projects\rastr\RastrWin\Debug64)");
 #else
-    std::filesystem::current_path("/source/repos/rastr/RastrWin/Release64/");
+    //std::filesystem::current_path("/source/repos/rastr/RastrWin/Release64/");
+    std::filesystem::current_path(R"(C:\projects\rastr\RastrWin\Release64\)");
 #endif
     SetConsoleOutputCP(CP_UTF8);
     try{
