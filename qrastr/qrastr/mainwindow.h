@@ -160,15 +160,10 @@ private:
     std::unique_ptr<CRastrHlp> up_rastr_;
     RtabWidget *prtw_current;                        // current table
     std::string cur_file;                            // current file
-
-
-//public:
     QAction *m_SortAscAct;
     QAction *m_SortDescAct;
     QDockWidget *m_dock;
-    // The main container for docking
-    ads::CDockManager* m_DockManager = nullptr;
-    //QTableView *table;
+    ads::CDockManager* m_DockManager = nullptr; // The main container for docking
     rmodel *model;
 
 };

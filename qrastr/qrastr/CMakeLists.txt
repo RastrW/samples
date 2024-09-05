@@ -11,7 +11,9 @@ set(CMAKE_AUTORCC ON)
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
-option( QRASTR_BUILD_WITH_MCR "QRASTR_BUILD_WITH_MCR"    ON )
+option( QRASTR_BUILD_WITH_MCR "QR(ASTR_BUILD_WITH_MCR"    ON )
+#set( SPDLOG_USE_STD_FORMAT 1)(
+#set(FMT_HEADER_OONLY)
 
 add_compile_definitions(ASTRA_NIX)
 add_compile_definitions(
@@ -19,7 +21,10 @@ add_compile_definitions(
         $<$<CONFIG:Debug>:YYDEBUG>
 )
 
-add_subdirectory("${CMAKE_CURRENT_SOURCE_DIR}/qmcr/" "${CMAKE_CURRENT_BINARY_DIR}/generated/qmcr")
+add_subdirectory(
+    "${CMAKE_CURRENT_SOURCE_DIR}/qmcr/"
+    "${CMAKE_CURRENT_BINARY_DIR}/generated/qmcr"
+)
 
 if(MSVC)
     add_compile_definitions(COMPILE_WIN)
@@ -32,6 +37,7 @@ set(CMAKE_PREFIX_PATH "C:/Projects/compile/qt/qt6-install")
 find_package(QT NAMES Qt6 Qt5 COMPONENTS Widgets LinguistTools   REQUIRED)
 find_package(Qt${QT_VERSION_MAJOR} COMPONENTS Widgets LinguistTools PrintSupport Xml  REQUIRED)
 find_package( Qt${QT_VERSION_MAJOR} REQUIRED COMPONENTS Core)
+#find_package( Qt${QT_VERSION_MAJOR} REQUIRED COMPONENTS QuickWidgets)
 
 set(TS_FILES qrastr_ru_RU.ts)
 
@@ -47,7 +53,8 @@ endif()
 
 set(INCLUDES
     "${ASTRA_LOCATION}/"
-    "${DEPENDENCIES_LOCATION}/fmt/include"
+    #"${DEPENDENCIES_LOCATION}/fmt/include"
+    "${ASTRA_LOCATION}/fmt/include/"
     "${DEPENDENCIES_LOCATION}/qicstable/include"
     "${DEPENDENCIES_LOCATION}/metakit/include" #-win
     "${DEPENDENCIES_GIT}/metakit/include"      #-lin
@@ -59,6 +66,7 @@ set(INCLUDES
     "${DEPENDENCIES_LOCATION}/sci/scintilla/qt/ScintillaEditBase"
     "${DEPENDENCIES_LOCATION}/sci/scintilla/qt/ScintillaEdit"
     "${DEPENDENCIES_LOCATION}/Qt-Advanced-Docking-System/src"
+    "${DEPENDENCIES_LOCATION}/spdlog/include/"
 )
 
 if(MSVC)
@@ -90,8 +98,11 @@ set(PROJECT_SOURCES
     ColPropForm.ui
     ${TS_FILES}
     qrastr.qrc
-    ${DEPENDENCIES_LOCATION}/fmt/src/format.cc
-    ${DEPENDENCIES_LOCATION}/fmt/src/os.cc
+    #${DEPENDENCIES_LOCATION}/fmt/src/format.cc
+    #${DEPENDENCIES_LOCATION}/fmt/src/os.cc
+    #${ASTRA_LOCATION}/fmt/src/fmt.cc
+    ${ASTRA_LOCATION}/fmt/src/format.cc
+    ${ASTRA_LOCATION}/fmt/src/os.cc
     rmodel.cpp
     rmodel.h
     params.h
@@ -111,7 +122,7 @@ set(PROJECT_SOURCES
     filtertableheader.h filtertableheader.cpp
     filterlineedit.h filterlineedit.cpp
     utils.h
-    CondFormat.cpp CondFormat.h
+    CondFormat.h CondFormat.cpp
 )
 
 if(${QT_VERSION_MAJOR} GREATER_EQUAL 6)
@@ -140,12 +151,13 @@ else()
 endif()
 
 target_link_libraries( qrastr PRIVATE Qt${QT_VERSION_MAJOR}::Widgets Qt${QT_VERSION_MAJOR}::PrintSupport Qt${QT_VERSION_MAJOR}::Xml ) #Qt5::PrintSupport
+#target_link_libraries( ${PROJECT_NAME} PRIVATE Qt${QT_VERSION_MAJOR}::QuickWidgets)
 
 if(MSVC)
     #target_link_libraries( qrastr PRIVATE astra_shrd.lib )
-    target_link_libraries( qrastr PRIVATE astra_py       ) # when build with pybind11
-    target_link_libraries( qrastr PRIVATE mk4vc22x64  )
-    target_link_libraries( ${PROJECT_NAME} PRIVATE qmcr        )
+    target_link_libraries( qrastr PRIVATE astra_py        ) # when build with pybind11
+    target_link_libraries( qrastr PRIVATE mk4vc22x64        )
+    target_link_libraries( ${PROJECT_NAME} PRIVATE qmcr   )
 
     if (CMAKE_BUILD_TYPE MATCHES Debug)
         target_link_libraries( qrastr PRIVATE qtadvanceddockingd )

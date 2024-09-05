@@ -4,7 +4,7 @@
 #include <QTime>
 #include <QDebug>
 
-#include "fmt/format.h"
+//#include "fmt/format.h"
 
 RModel::RModel(QObject *parent, CRastrHlp& rastr)
     : QAbstractTableModel(parent)

@@ -1,3 +1,4 @@
+
 #include <QtGui>
 #include <QMdiArea>
 #include <QFileDialog>
@@ -14,16 +15,28 @@
 #include <QDockWidget>
 #include <QAbstractTableModel>
 #include <iostream>
+
+#include "spdlog/spdlog.h"
+#include "spdlog/sinks/qt_sinks.h"
+
 #include "mainwindow.h"
 #include "./ui_mainwindow.h"
+
 #include "rtabwidget.h"
 #include "mdiChildTable.h"
 #include "mdiChildGrid.h"
 #include "mdiChildHeaderGrid.h"
 #include "astra_exp.h"
-#include "fmt/format.h"
+
 #include "qmcr/mcrwnd.h"
 #include "DockManager.h"
+
+//#undef SPDLOG_USE_STD_FORMAT
+//#define FMT_HEADER_ONLY
+//#include "spdlog/spdlog.h"
+//#include "spdlog/sinks/qt_sinks.h"
+
+//#include "fmt/format.h"
 
 MainWindow::MainWindow(){
     m_workspace = new QMdiArea;
@@ -48,6 +61,33 @@ MainWindow::MainWindow(){
         qDebug() << Count++ << " CDockManager::focusedDockWidgetChanged old: " << (old ? old->objectName() : "-") << " now: " << now->objectName() << " visible: " << now->isVisible();
         now->widget()->setFocus();
     });
+
+    McrWnd* pMcrWnd = new McrWnd( this, McrWnd::_en_role::global_protocol );
+    if(false) {
+        QDockWidget *dock = new QDockWidget( "protocol", this);
+        dock->setWidget(pMcrWnd);
+        dock->setAllowedAreas(Qt::LeftDockWidgetArea | Qt::RightDockWidgetArea | Qt::TopDockWidgetArea | Qt::BottomDockWidgetArea | Qt::AllDockWidgetAreas);
+        addDockWidget(Qt::TopDockWidgetArea, dock);
+    }else{
+        static int i = 0;
+        auto dw = new ads::CDockWidget( "protocol", this);
+        dw->setWidget(pMcrWnd);
+        // Add the dock widget to the top dock widget area
+     //   m_DockManager->addDockWidget(ads::BottomDockWidgetArea, dw);
+        //int f = ads::CDockWidget::CustomCloseHandling|ads::CDockWidget::DockWidgetFocusable;
+        int f = ads::CDockWidget::CustomCloseHandling;
+        dw->setFeature( static_cast<ads::CDockWidget::DockWidgetFeature>(f), true);
+        auto area = m_DockManager->addDockWidgetTab(ads::NoDockWidgetArea, dw);
+        qDebug() << "doc dock widget created!" << dw << area;
+
+
+    }
+    auto logger = spdlog::qt_logger_st("qt_logger", pMcrWnd, "onQStringAppendProtocol");
+    spdlog::set_default_logger(logger);
+    for( int i = 0 ; i < 10 ; i++ ){
+        logger->info("test0. Some info {} message", i);
+    }
+    pMcrWnd->show();
 }
 void MainWindow::showEvent( QShowEvent* event ){
     try{
@@ -59,7 +99,9 @@ void MainWindow::showEvent( QShowEvent* event ){
         std::string str_path_2_conf = "undef";
 #if(defined(COMPILE_WIN))
         //str_path_2_conf = R"(C:\projects\git_web\samples\qrastr\qrastr\appsettings.json)";
-        str_path_2_conf = R"(appsettings.json)";
+        //str_path_2_conf = R"(appsettings.json)";
+        str_path_2_conf = str_curr_path.toStdString() + "/appsettings.json";
+
         //str_path_2_conf = R"(..\..\appsettings.json)";
 #else
         str_path_2_conf = R"(/home/ustas/projects/git_web/samples/qrastr/qrastr/appsettings.json)";
@@ -156,6 +198,11 @@ void MainWindow::setForms(){ // https://stackoverflow.com/questions/14151443/how
 */
 }
 void MainWindow::closeEvent(QCloseEvent *event){
+    QMainWindow::closeEvent(event);
+    if (m_DockManager) {
+        m_DockManager->deleteLater(); //else untabbed window not close!
+    }
+
 #if(!defined(QICSGRID_NO))
     m_workspace->closeAllSubWindows();
     if (activeMdiChild()) {
@@ -165,6 +212,8 @@ void MainWindow::closeEvent(QCloseEvent *event){
         event->accept();
     }
 #endif// #if(!defined(QICSGRID_NO))
+
+    m_DockManager->close();
 }
 void MainWindow::newFile(){
 #if(!defined(QICSGRID_NO))
@@ -394,6 +443,8 @@ void MainWindow::onOpenForm( QAction* p_actn ){
         auto area = m_DockManager->addDockWidgetTab(ads::CenterDockWidgetArea, dw);
         qDebug() << "doc dock widget created!" << dw << area;
     }
+    auto logger = spdlog::get("qt_logger");
+    logger->info("create tab [{}]",stringutils::cp1251ToUtf8(form.Name()));
     prtw->show();
 
     // return;
@@ -739,8 +790,8 @@ void MainWindow::createCalcLayout()
     QWidget* widget = new QWidget;
     widget -> setWindowTitle("Functions");
     m_ActionsLayout = new QHBoxLayout(widget);
-    m_ActionsLayout->addWidget(btn1);
-    m_ActionsLayout->addWidget(btn2);
+//    m_ActionsLayout->addWidget(btn1);
+//    m_ActionsLayout->addWidget(btn2);
     //m_ActionsLayout->addWidget(btn3);
    // m_ActionsLayout->addWidget(btn4);
     m_calcToolBar->addWidget(widget);

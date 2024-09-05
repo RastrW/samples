@@ -18,49 +18,55 @@
 #include <QQmlDebuggingEnabler>
 QQmlDebuggingEnabler enabler;
 
-McrWnd::McrWnd(QWidget* parent)
+McrWnd::McrWnd(QWidget* parent, const _en_role en_role)
     : QDialog(parent,
               Qt::WindowMinimizeButtonHint |
               Qt::WindowMaximizeButtonHint |
-              Qt::WindowCloseButtonHint){
+              Qt::WindowCloseButtonHint
+     ),en_role_(en_role){
     const int nWidth = 600;
     const int nHeight = 800;
     resize(nWidth, nHeight);
     setWindowIcon( QIcon(QApplication::style()->standardIcon(QStyle::SP_ComputerIcon) ));
     setWindowTitle(tr("Macro Python"));
     QSplitter* splitter = new QSplitter(this);
-    shEdit_ = new SciHlp(this, SciHlp::_en_role::editor_python);
-    shProt_ = new SciHlp(this, SciHlp::_en_role::prot_macro);
+
+
     QVBoxLayout* layout = new QVBoxLayout();
     QVBoxLayout* container_layout = new QVBoxLayout();
     QLineEdit* leFind = new QLineEdit();    leFind->setFixedWidth(100);
-    QToolBar* pToolBar = new QToolBar();
-    pToolBar->addAction( QIcon(QApplication::style()->standardIcon(QStyle::SP_FileIcon)),         tr("&New"),     this,  SLOT( onFileNew() )    )
-            ->setShortcut({QKeySequence(Qt::CTRL+Qt::Key_N)});
-    pToolBar->addAction( QIcon(QApplication::style()->standardIcon(QStyle::SP_DirIcon)),          tr("&Open"),    this,  SLOT( onFileOpen() )   )
-            ->setShortcut({QKeySequence(Qt::CTRL+Qt::Key_O)});
-    pToolBar->addAction( QIcon(QApplication::style()->standardIcon(QStyle::SP_DialogSaveButton)), tr("&Save"),    [this] { onFileSave(false); } )
-            ->setShortcuts( {QKeySequence(Qt::CTRL+Qt::Key_S)});
-    pToolBar->addAction( QIcon(QApplication::style()->standardIcon(QStyle::SP_DriveFDIcon)),      tr("Save as"),  [this] { onFileSave(true); }  )
-            ->setShortcut({QKeySequence(Qt::CTRL+Qt::Key_W)});
-    pToolBar->addAction( QIcon(QApplication::style()->standardIcon(QStyle::SP_MediaPlay)),        tr("Run (F5)"),  this, SLOT( onRun() )        )
-            ->setShortcut({QKeySequence(Qt::Key_F5)});
-    //pToolBar->addWidget(leFind);
-    pToolBar->addAction( QIcon(QApplication::style()->standardIcon(QStyle::SP_BrowserReload)),    tr("&Find"),     this, SLOT( onFind() )       )
-            ->setShortcut({QKeySequence(Qt::CTRL+Qt::Key_F)});
-    pToolBar->addAction( QIcon(QApplication::style()->standardIcon(QStyle::SP_CommandLink)),      tr("&Go to line"), this, SLOT( onGoToLine() ) )
-            ->setShortcut({QKeySequence(Qt::CTRL+Qt::Key_G)});
-    container_layout->addWidget(pToolBar);
-    splitter->addWidget(shEdit_);
-    splitter->setOrientation(Qt::Orientation::Vertical);
+    if(_en_role::macro_dlg == en_role_){
+        QToolBar* pToolBar = new QToolBar();
+        pToolBar->addAction( QIcon(QApplication::style()->standardIcon(QStyle::SP_FileIcon)),         tr("&New"),     this,  SLOT( onFileNew() )    )
+                ->setShortcut({QKeySequence(Qt::CTRL+Qt::Key_N)});
+        pToolBar->addAction( QIcon(QApplication::style()->standardIcon(QStyle::SP_DirIcon)),          tr("&Open"),    this,  SLOT( onFileOpen() )   )
+                ->setShortcut({QKeySequence(Qt::CTRL+Qt::Key_O)});
+        pToolBar->addAction( QIcon(QApplication::style()->standardIcon(QStyle::SP_DialogSaveButton)), tr("&Save"),    [this] { onFileSave(false); } )
+                ->setShortcuts( {QKeySequence(Qt::CTRL+Qt::Key_S)});
+        pToolBar->addAction( QIcon(QApplication::style()->standardIcon(QStyle::SP_DriveFDIcon)),      tr("Save as"),  [this] { onFileSave(true); }  )
+                ->setShortcut({QKeySequence(Qt::CTRL+Qt::Key_W)});
+        pToolBar->addAction( QIcon(QApplication::style()->standardIcon(QStyle::SP_MediaPlay)),        tr("Run (F5)"),  this, SLOT( onRun() )        )
+                ->setShortcut({QKeySequence(Qt::Key_F5)});
+        //pToolBar->addWidget(leFind);
+        pToolBar->addAction( QIcon(QApplication::style()->standardIcon(QStyle::SP_BrowserReload)),    tr("&Find"),     this, SLOT( onFind() )       )
+                ->setShortcut({QKeySequence(Qt::CTRL+Qt::Key_F)});
+        pToolBar->addAction( QIcon(QApplication::style()->standardIcon(QStyle::SP_CommandLink)),      tr("&Go to line"), this, SLOT( onGoToLine() ) )
+                ->setShortcut({QKeySequence(Qt::CTRL+Qt::Key_G)});
+        container_layout->addWidget(pToolBar);
+        shEdit_ = new SciHlp(this, SciHlp::_en_role::editor_python);
+        splitter->addWidget(shEdit_);
+        splitter->setOrientation(Qt::Orientation::Vertical);
+    }
+    shProt_ = new SciHlp(this, SciHlp::_en_role::prot_macro);
     splitter->addWidget(shProt_);
     container_layout->addWidget(splitter);
     setLayout(container_layout);
     //this->addAction();
 
-    connect( shEdit_, SIGNAL( chngFileInfo( const QFileInfo& ) ), this, SLOT( onChngEditFileInfo( const QFileInfo& ) ) );
+    if(_en_role::macro_dlg == en_role_){
+        connect( shEdit_, SIGNAL( chngFileInfo( const QFileInfo& ) ), this, SLOT( onChngEditFileInfo( const QFileInfo& ) ) );
 
-    shEdit_->setContent(R"(
+        shEdit_->setContent(R"(
 import os
 #print(os.get_exec_path())
 print(os.getcwd())
@@ -120,8 +126,7 @@ else:
 """
 )");
 
-
-     shProt_->setContent(R"(
+    shProt_->setContent(R"(
 <!DOCTYPE html>
 <html>
 <body>
@@ -245,9 +250,10 @@ for d3VG for d3VG for d3VG for d3VG for d3VG for d3
 </html>
 
 )");
+    }//if(macro_dlg)
 
     qDebug() << "themeSearchPaths:" << QIcon::themeSearchPaths() << QIcon::themeName();
-
+/*
     QIcon::setThemeName("oxygen");
     tst_tb_ = new Tst_ToolBox(this->parentWidget());
     //tst_tb_->setHidden(true);
@@ -261,6 +267,7 @@ for d3VG for d3VG for d3VG for d3VG for d3VG for d3
 
     tst2_dlg_ = new Tst2_Dialog(this);
     //tst2_dlg_->show();
+*/
 }
 McrWnd::~McrWnd(){
 }
@@ -415,4 +422,10 @@ void McrWnd::onFind(){
 void McrWnd::Find(SciHlp::_params_find params_find){
     qDebug()<<"Find()-> "<<params_find.qstrFind_  << "\n";
     const SciHlp::_ret_vals rv = shEdit_->Find(params_find);
+}
+void McrWnd::onQStringAppendProtocol(const QString& qstr){
+    //assert(!"hello");
+    std::string str{qstr.toStdString()};
+    str += "\n";
+    shProt_->my_appendTect(str);
 }
