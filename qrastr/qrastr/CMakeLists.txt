@@ -20,9 +20,9 @@ set( CMAKE_AUTOMOC ON )
 set( CMAKE_AUTORCC ON )
 set( CMAKE_CXX_STANDARD 17 )
 set( CMAKE_CXX_STANDARD_REQUIRED ON )
-set( CMAKE_ARCHIVE_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}//..//${CMAKE_BUILD_TYPE}-lib" )
-set( CMAKE_LIBRARY_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}//..//${CMAKE_BUILD_TYPE}-lib" )
-set( CMAKE_RUNTIME_OUTPUT_DIRECTORY "${CMAKE_SOURCE_DIR}//..//${CMAKE_BUILD_TYPE}-bin" )
+set( CMAKE_ARCHIVE_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}//..//${CMAKE_BUILD_TYPE}" )
+set( CMAKE_LIBRARY_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}//..//${CMAKE_BUILD_TYPE}" )
+set( CMAKE_RUNTIME_OUTPUT_DIRECTORY "${CMAKE_SOURCE_DIR}//..//${CMAKE_BUILD_TYPE}" )
 option( QRASTR_BUILD_WITH_MCR "QRASTR_BUILD_WITH_MCR" ON )
 set( COMPILE_DIR "" CACHE PATH "Installation directory for third-party projects" )# for example C:\projects\rastr\RastrWin\thirdparty\_deps\compile
 if( NOT IS_DIRECTORY ${COMPILE_DIR} )
@@ -31,27 +31,38 @@ else()
     message(NOTICE "COMPILE_DIR= ${COMPILE_DIR}")
 endif()
 list( PREPEND CMAKE_PREFIX_PATH ${COMPILE_DIR} )
+list( PREPEND CMAKE_PREFIX_PATH "${CMAKE_CURRENT_SOURCE_DIR}/qmcr/" )
+
 #set(CMAKE_PREFIX_PATH "C:/Projects/compile/qt/qt6-install") #??
 set( TS_FILES qrastr_ru_RU.ts )
 if(MSVC)
-    set(DEPENDENCIES_LOCATION "c:/projects/compile/")
-    #set(ASTRA_LOCATION        "c:/projects/tfs/rastr/RastrWin/astra/")
-    set(ASTRA_LOCATION        "c:/projects/rastr/RastrWin/astra")
+    set( DEPENDENCIES_LOCATION "c:/projects/compile/" )
+    #set( ASTRA_LOCATION        "c:/projects/tfs/rastr/RastrWin/astra/" )
+    set( ASTRA_LOCATION        "c:/projects/rastr/RastrWin/astra" )
 else()
-    set(DEPENDENCIES_LOCATION "/home/ustas/projects/compile/")
-    set(ASTRA_LOCATION        "/home/ustas/projects/git_r/rastr/RastrWin/astra/")
-    set(DEPENDENCIES_GIT      "/home/ustas/projects/git_r/")
+    set( DEPENDENCIES_LOCATION "/home/ustas/projects/compile/" )
+    set( ASTRA_LOCATION        "/home/ustas/projects/git_r/rastr/RastrWin/astra/" )
+    set( DEPENDENCIES_GIT      "/home/ustas/projects/git_r/" )
 endif()
+find_package( Metakit REQUIRED )
+find_package( fmt     REQUIRED )
+find_package( QT NAMES Qt6 Qt5 COMPONENTS REQUIRED )
+find_package( Qt${QT_VERSION_MAJOR} COMPONENTS
+    Core
+    Widgets
+    LinguistTools
+    PrintSupport
+    Xml
+    REQUIRED
+)
 
-find_package(Metakit REQUIRED)
-find_package(fmt REQUIRED)
+qt_standard_project_setup()
+add_subdirectory("plugins/basictools")
+add_subdirectory("plugins/extrafilters")
 add_subdirectory(
     "${CMAKE_CURRENT_SOURCE_DIR}/qmcr/"
     "${CMAKE_CURRENT_BINARY_DIR}/generated/qmcr"
 )
-find_package( QT NAMES Qt6 Qt5 COMPONENTS REQUIRED )
-find_package( Qt${QT_VERSION_MAJOR} COMPONENTS Widgets LinguistTools PrintSupport Xml REQUIRED )
-find_package( Qt${QT_VERSION_MAJOR} REQUIRED COMPONENTS Core )
 
 set(INCLUDES
     "${ASTRA_LOCATION}/"
@@ -111,6 +122,7 @@ set(PROJECT_SOURCES
     filterlineedit.h filterlineedit.cpp
     utils.h
     CondFormat.h CondFormat.cpp
+    plugin_interfaces.h
 )
 if(MSVC)
     link_directories("${ASTRA_LOCATION}/build/Debug/")

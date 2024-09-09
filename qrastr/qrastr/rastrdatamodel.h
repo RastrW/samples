@@ -6,11 +6,6 @@
 #include "License2/json.hpp"
 #include "astra_shared.h"
 
-template <typename... Args>
-void loggg( int eCod, std::string_view sv_format, Args&&... args ) {
-    //const std::string str_log{fmt::format(sv_format, args...)};
-}
-typedef std::vector<std::string> _vstr;
 
 
 #if(!defined(QICSGRID_NO))

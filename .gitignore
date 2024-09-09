@@ -4,3 +4,4 @@ build*
 .vs*
 *.json
 qrastr/qrastr/CMakeLists.txt.user
+Data
