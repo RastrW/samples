@@ -3,7 +3,7 @@
 
 //! [0]
 //#include <interfaces.h>
-#include "../plugin_interfaces.h"
+#include "plugin_interfaces.h"
 
 
 #include <QObject>
