@@ -27,7 +27,7 @@ if(MSVC)
     add_compile_definitions(QICSGRID_NO)
 endif()
 
-set(CMAKE_PREFIX_PATH "C:/Projects/compile/qt/qt6-install")
+#set(CMAKE_PREFIX_PATH "C:/Projects/compile/qt/qt6-install")
 
 find_package(QT NAMES Qt6 Qt5 COMPONENTS Widgets LinguistTools   REQUIRED)
 find_package(Qt${QT_VERSION_MAJOR} COMPONENTS Widgets LinguistTools PrintSupport Xml  REQUIRED)
@@ -37,8 +37,8 @@ set(TS_FILES qrastr_ru_RU.ts)
 
 if(MSVC)
     set(DEPENDENCIES_LOCATION "c:/projects/compile/")
-    #set(ASTRA_LOCATION        "c:/projects/tfs/rastr/RastrWin/astra/")
-    set(ASTRA_LOCATION        "c:/projects/rastr/RastrWin/astra")
+    set(ASTRA_LOCATION        "c:/projects/tfs/rastr/RastrWin/astra/")
+    #set(ASTRA_LOCATION        "c:/projects/rastr/RastrWin/astra")
 else()
     set(DEPENDENCIES_LOCATION "/home/ustas/projects/compile/")
     set(ASTRA_LOCATION        "/home/ustas/projects/git_r/rastr/RastrWin/astra/")
@@ -59,6 +59,12 @@ set(INCLUDES
     "${DEPENDENCIES_LOCATION}/sci/scintilla/qt/ScintillaEditBase"
     "${DEPENDENCIES_LOCATION}/sci/scintilla/qt/ScintillaEdit"
     "${DEPENDENCIES_LOCATION}/Qt-Advanced-Docking-System/src"
+    "$$QTITANDIR/src/shared/qtitangrid.pri"
+    "C:/Qt/Developer Machines/MSVC_QtitanComponents2024.2.0 Demo/include"
+    #"C:/Qt/Developer Machines/QtitanComponents2024.2.0 Demo/include"
+    "C:/Qt/Developer Machines/MSVC_QtitanComponents2024.2.0 Demo/src/grid"
+
+
 )
 
 if(MSVC)
@@ -66,6 +72,8 @@ if(MSVC)
     link_directories("${DEPENDENCIES_LOCATION}/metakit/builds/")
     link_directories("${DEPENDENCIES_LOCATION}/Qt-Advanced-Docking-System/build/vs-Debug/lib/")
     link_directories("${DEPENDENCIES_LOCATION}/Qt-Advanced-Docking-System/build/vs-Release/lib/")
+    link_directories("C:/Qt/Developer Machines/MSVC_QtitanComponents2024.2.0 Demo/bin/")
+    #link_directories("C:/Qt/Developer Machines/QtitanComponents2024.2.0 Demo/bin/")
 else()
     link_directories("${DEPENDENCIES_LOCATION}/qicstable/lib/")
     link_directories("${ASTRA_LOCATION}/build/")
@@ -146,6 +154,15 @@ if(MSVC)
     target_link_libraries( qrastr PRIVATE astra_py       ) # when build with pybind11
     target_link_libraries( qrastr PRIVATE mk4vc22x64  )
     target_link_libraries( qrastr PRIVATE qmcr        )
+    target_link_libraries( qrastr PRIVATE QtitanBase2 )
+    target_link_libraries( qrastr PRIVATE QtitanChart6 )
+    target_link_libraries( qrastr PRIVATE QtitanDocking4 )
+    target_link_libraries( qrastr PRIVATE QtitanFastInfoset2 )
+    target_link_libraries( qrastr PRIVATE QtitanGrid8 )
+    target_link_libraries( qrastr PRIVATE QtitanNavigationDesignUI3 )
+    target_link_libraries( qrastr PRIVATE QtitanRibbon6 )
+    target_link_libraries( qrastr PRIVATE QtitanStyle2 )
+    #target_link_libraries( qrastr PRIVATE libQtitanBase2 )
 
     if (CMAKE_BUILD_TYPE MATCHES Debug)
         target_link_libraries( qrastr PRIVATE qtadvanceddockingd )

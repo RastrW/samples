@@ -11,6 +11,8 @@
 #include <QDateTime>
 #include <QProgressDialog>
 #include "CondFormat.h"
+
+
 //#include "tableview.h"
 
 
@@ -23,6 +25,7 @@ RtabWidget::RtabWidget(CRastrHlp& rh,int n_indx, QWidget *parent)
     : QWidget{parent}
 {
    // rh = _rh;
+
     form_indx = n_indx;
     ptv = new RTableView();
 
@@ -40,6 +43,8 @@ RtabWidget::RtabWidget(CRastrHlp& rh,int n_indx, QWidget *parent)
     connect(ptv->horizontalHeader(), SIGNAL(filterChanged(size_t , QString )), this, SLOT(updateFilter(size_t , QString) ));
 
     CreateModel(rh);
+
+
 
     ptv->setSortingEnabled(true);
     SetTableView(*ptv,*prm);                // ширина по шаблону

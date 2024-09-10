@@ -381,7 +381,8 @@ void MainWindow::onOpenForm( QAction* p_actn ){
 
     //up_rtw = prtw;
     // Docking
-    if(true) {
+    bool bNewDocking = true;
+    if(!bNewDocking) {
         QDockWidget *dock = new QDockWidget( stringutils::cp1251ToUtf8(form.Name()).c_str(), this);
         dock->setWidget(prtw);
         dock->setAllowedAreas(Qt::LeftDockWidgetArea | Qt::RightDockWidgetArea | Qt::TopDockWidgetArea | Qt::BottomDockWidgetArea | Qt::AllDockWidgetAreas);
@@ -444,12 +445,7 @@ void MainWindow::onRowDeleted(std::string _t_name, int _row)
 
 #include "astra_exp.h"
 
-void MainWindow::onButton2Click(){
-    const long num_chars = 10000;
-    char* pch_JSON_out = new char[num_chars];
-    //long n_res = PyRunMacro( L"", L"", pch_JSON_out, num_chars );
 
-};
 
 //void MainWindow::SetIdrastr(_idRastr id_rastr_in){    id_rastr_ = id_rastr_in;}
 
@@ -724,6 +720,29 @@ void MainWindow::Btn1_onClick()
     ptv->setModel(pmm);
     ptv->show();
 }
+
+void MainWindow::onButton2Click(){
+    const long num_chars = 10000;
+    char* pch_JSON_out = new char[num_chars];
+    //long n_res = PyRunMacro( L"", L"", pch_JSON_out, num_chars );
+
+    //Try create TitanGrid
+  //  Grid::loadTranslation();
+
+  //  m_TitanGrid = new Grid(this);
+    //LargeDataSetModel* model = new LargeDataSetModel(m_grid);
+    RModel* pmm = new RModel(nullptr,*up_rastr_.get());
+    pmm->setFormIndx(0);
+    pmm->populateDataFromRastr();
+
+    // Configure grid view
+  //  m_TitanGrid->setViewType(Grid::TableView);
+  //  GridTableView* view = m_TitanGrid->view<GridTableView>();
+   // view->options().setGridLineWidth(1);
+   // view->options().setGestureEnabled(true);
+
+
+};
 
 void MainWindow::createCalcLayout()
 {

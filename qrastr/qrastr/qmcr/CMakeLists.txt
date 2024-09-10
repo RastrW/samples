@@ -20,6 +20,7 @@ endif()
 
 if(MSVC)
     set(SCI_DIR C:/projects/compile/sci/)
+    #set (SCI_DIR C:/Projects/compile/sci/)
 else()
     set(SCI_DIR /home/ustas/projects/compile/sci)
 endif()

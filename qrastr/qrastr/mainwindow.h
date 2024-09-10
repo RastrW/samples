@@ -24,6 +24,9 @@
 
 #include <QMenu>
 
+#include <DevMachines/QtitanGrid>
+//#include "QtitanBase.h"
+
 class QAction;
 class QMenu;
 class QMdiArea;
@@ -170,6 +173,8 @@ private:
     ads::CDockManager* m_DockManager = nullptr;
     //QTableView *table;
     rmodel *model;
+private:
+    Grid* m_TitanGrid;
 
 };
 

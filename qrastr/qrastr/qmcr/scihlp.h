@@ -2,6 +2,8 @@
 #define SCIHLP_H
 
 #include <QFileInfo>
+//#include "C:\Projects\compile\sci\scintilla\qt\ScintillaEdit\ScintillaEdit.h"
+//#include <ScintillaEdit.h>
 #include "ScintillaEdit.h"
 
 //#if defined(Q_OS_WIN)
