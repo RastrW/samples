@@ -825,7 +825,7 @@ void MainWindow::loadPlugins(){
                 std::shared_ptr<IPlainRastr> sp_rastr = iRastr->getIPlainRastrPtr();
                 IPlainRastrResult* pip { sp_rastr->Load(eLoadCode::RG_REPL, R"(C:\Users\ustas\Documents\RastrWin3\test-rastr\cx195.rg2)", "") };
                 IRastrPayload rgmresult{ sp_rastr->Rgm("p1") };
-                spdlog::info( "{} =Rgm(...) ", static_cast<std::underlying_type<eASTCode>::type>(rgmresult.Value()) );
+                spdlog::info( "{} = Rgm(...) ", static_cast<std::underlying_type<eASTCode>::type>(rgmresult.Value()) );
 
                 spdlog::info( "it is Rastr.test");
             }

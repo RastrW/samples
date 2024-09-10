@@ -50,8 +50,10 @@ qt_add_plugin(rastr
 #)
 
 include_directories(
-    "C:/projects/rastr/flytfs/IPlainRastrTest/"
-    "C:/projects/rastr/RastrWin/astra/"
+#    "C:/projects/rastr/flytfs/IPlainRastrTest/"
+    "${ASTRA_LOCATION}/../../flytfs/IPlainRastrTest/"
+     "${ASTRA_LOCATION}/"
+#    "C:/projects/rastr/RastrWin/astra/"
     "../../"
 )
 
