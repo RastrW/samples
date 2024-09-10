@@ -1,5 +1,5 @@
-#ifndef COMMON_H
-#define COMMON_H
+#ifndef COMMON_QRASTR_H
+#define COMMON_QRASTR_H
 #include <QDebug>
 #include <exception>
 //#undef SPDLOG_USE_STD_FORMAT
@@ -34,4 +34,4 @@ static void exclog(const CException& ex){
     spdlog::error("Catch CException [{}]\n", ex.what());
 }
 
-#endif // COMMON_H
+#endif // COMMON_QRASTR_H

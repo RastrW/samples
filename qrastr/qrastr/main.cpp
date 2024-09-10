@@ -13,7 +13,7 @@
 #include "astra_exp.h"
 #include "License2/json.hpp"
 #include "params.h"
-#include "common.h"
+#include "common_qrastr.h"
 #include "rastrhlp.h"
 
 int main(int argc, char *argv[])

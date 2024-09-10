@@ -9,6 +9,7 @@ set(CMAKE_AUTORCC ON)
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
+
 # from https://github.com/Vatsinator/vatsinator-legacy/blob/develop/CMakeLists.txt
 # set configuration types (msvc/xcode)
 if (CMAKE_CONFIGURATION_TYPES)

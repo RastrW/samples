@@ -14,7 +14,7 @@
 #if(!defined(QICSGRID_NO))
     #include <QicsTable.h>
 #endif //#if(!defined(QICSGRID_NO))
-#include "common.h"
+#include "common_qrastr.h"
 #include "License2/json.hpp"
 #include "params.h"
 #include "rastrhlp.h"
@@ -40,36 +40,17 @@ public:
     struct _cache_log{
         spdlog::level::level_enum lev;
         std::string               str_log;
-        _cache_log( const spdlog::level::level_enum lev_in, std::string_view sv_in )
-            : lev{lev_in}
-            , str_log{sv_in}{
-        }
-        _cache_log& operator=(const _cache_log& cache_log){
-            lev     = cache_log.lev;
-            str_log = cache_log.str_log;
-            return *this;
-        }
-        _cache_log& operator=(const _cache_log&& cache_log){
-            operator=(cache_log);
-            return *this;
-        }
-        _cache_log(const _cache_log& cache_log){
-            operator=(cache_log);
-        }
-        _cache_log(const _cache_log&& cache_log){
-            operator=(cache_log);
-        }
+        _cache_log( const spdlog::level::level_enum lev_in, std::string_view sv_in );
+        _cache_log& operator=(const _cache_log&  cache_log);
+        _cache_log& operator=(const _cache_log&& cache_log);
+        _cache_log           (const _cache_log&  cache_log);
+        _cache_log           (const _cache_log&& cache_log);
     };
     struct _v_cache_log
         : public std::vector<_cache_log> {
-        //void add( const spdlog::level::level_enum lev_in, std::string_view sv_in ){
         template <typename... Args>
-        void add( const spdlog::level::level_enum lev_in, const std::string_view sv_format, Args&&... args ){
-            _cache_log cache_log{lev_in, fmt::format(sv_format, args...)};
-            emplace_back(cache_log);
-        }
+        void add( const spdlog::level::level_enum lev_in, const std::string_view sv_format, Args&&... args );
     };
-
 signals:
     void file_loaded(CRastrHlp& _rh);                                                                     // загружен файл
 

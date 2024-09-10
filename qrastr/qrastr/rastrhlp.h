@@ -1,6 +1,6 @@
 #ifndef CRASTRHLP_H
 #define CRASTRHLP_H
-#include "common.h"
+#include "common_qrastr.h"
 #include "astra_exp.h"
 #include "UIForms.h"
 
