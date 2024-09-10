@@ -1,5 +1,5 @@
 #include "rastrhlp.h"
-#include "common.h"
+#include "common_qrastr.h"
 #include "utils.h"
 #include "License2/json.hpp"
 

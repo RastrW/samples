@@ -13,6 +13,15 @@ class QRect;
 class QString;
 QT_END_NAMESPACE
 
+class IPlainRastr;
+namespace spdlog{ class logger;}
+class InterfaceRastr{
+    public:
+    virtual ~InterfaceRastr() = default;
+    virtual void setLoggerPtr(std::shared_ptr<spdlog::logger> spLoger)=0;
+    virtual std::shared_ptr<IPlainRastr> getIPlainRastrPtr()=0;
+};
+
 //! [0]
 class BrushInterface
 {
@@ -54,6 +63,10 @@ public:
 //! [2]
 
 QT_BEGIN_NAMESPACE
+
+#define InterfaceRastr_iid "Rastr.Plugins.InterfaceRastr/1.0"
+Q_DECLARE_INTERFACE( InterfaceRastr, InterfaceRastr_iid )
+
 //! [3] //! [4]
 #define BrushInterface_iid "org.qt-project.Qt.Examples.PlugAndPaint.BrushInterface/1.0"
 

@@ -59,6 +59,7 @@ find_package( Qt${QT_VERSION_MAJOR} COMPONENTS
 qt_standard_project_setup()
 add_subdirectory("plugins/basictools")
 add_subdirectory("plugins/extrafilters")
+add_subdirectory("plugins/rastr")
 add_subdirectory(
     "${CMAKE_CURRENT_SOURCE_DIR}/qmcr/"
     "${CMAKE_CURRENT_BINARY_DIR}/generated/qmcr"
@@ -80,6 +81,8 @@ set(INCLUDES
     "${DEPENDENCIES_LOCATION}/sci/scintilla/qt/ScintillaEdit"
     "${DEPENDENCIES_LOCATION}/Qt-Advanced-Docking-System/src"
     "${DEPENDENCIES_LOCATION}/spdlog/include/"
+    #C:/projects/rastr/flytfs/IPlainRastrTest/
+    "${ASTRA_LOCATION}/../../flytfs/IPlainRastrTest/"
 )
 set(PROJECT_SOURCES
     main.cpp
@@ -100,28 +103,35 @@ set(PROJECT_SOURCES
     ColPropForm.ui
     ${TS_FILES}
     qrastr.qrc
-    #${ASTRA_LOCATION}/fmt/src/format.cc
-    #${ASTRA_LOCATION}/fmt/src/os.cc
     rmodel.cpp
     rmodel.h
     params.h
     params.cpp
-    common.h
-    common.cpp
+    common_qrastr.h
+    common_qrastr.cpp
     ${ASTRA_LOCATION}/ResourceManager.cpp
     appsettings.json
-    params.h     params.cpp
-    common.h
-    common.cpp
-    rastrhlp.h   rastrhlp.cpp
-    rdata.h      rdata.cpp
-    testmodel.h  testmodel.cpp
-    rtabwidget.h rtabwidget.cpp
-    rtableview.h rtableview.cpp
-    filtertableheader.h filtertableheader.cpp
-    filterlineedit.h filterlineedit.cpp
+    params.h
+    params.cpp
+    common_qrastr.h
+    common_qrastr.cpp
+    rastrhlp.h
+    rastrhlp.cpp
+    rdata.h
+    rdata.cpp
+    testmodel.h
+    testmodel.cpp
+    rtabwidget.h
+    rtabwidget.cpp
+    rtableview.h
+    rtableview.cpp
+    filtertableheader.h
+    filtertableheader.cpp
+    filterlineedit.h
+    filterlineedit.cpp
     utils.h
-    CondFormat.h CondFormat.cpp
+    CondFormat.h
+    CondFormat.cpp
     plugin_interfaces.h
 )
 if(MSVC)

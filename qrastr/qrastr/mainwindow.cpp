@@ -14,7 +14,7 @@
 #include <QDockWidget>
 #include <QAbstractTableModel>
 
-#include "common.h"
+#include "common_qrastr.h"
 #include <spdlog/sinks/stdout_color_sinks.h>
 #include <spdlog/sinks/rotating_file_sink.h>
 #include <spdlog/sinks/qt_sinks.h>
@@ -27,6 +27,9 @@
 #include "mdiChildHeaderGrid.h"
 #include "astra_exp.h"
 #include "qmcr/mcrwnd.h"
+
+using WrapperExceptionType = std::runtime_error;
+#include "IPlainRastrWrappers.h"
 
 MainWindow::MainWindow(){
     m_workspace = new QMdiArea;
@@ -179,6 +182,35 @@ void MainWindow::showEvent( QShowEvent* event ){
         //your code here
         // https://stackoverflow.com/questions/14161100/which-qt-widget-should-i-use-for-message-display
 }
+
+
+MainWindow::_cache_log::_cache_log( const spdlog::level::level_enum lev_in, std::string_view sv_in )
+    : lev{lev_in}
+    , str_log{sv_in}{
+}
+MainWindow::_cache_log& MainWindow::_cache_log::operator=(const MainWindow::_cache_log& cache_log){
+    lev     = cache_log.lev;
+    str_log = cache_log.str_log;
+    return *this;
+}
+MainWindow::_cache_log& MainWindow::_cache_log::operator=(const MainWindow::_cache_log&& cache_log){
+    operator=(cache_log);
+    return *this;
+}
+MainWindow::_cache_log::_cache_log(const MainWindow::_cache_log& cache_log){
+    operator=(cache_log);
+}
+MainWindow::_cache_log::_cache_log(const MainWindow::_cache_log&& cache_log){
+    operator=(cache_log);
+}
+
+template <typename... Args>
+void MainWindow::_v_cache_log::add( const spdlog::level::level_enum lev_in, const std::string_view sv_format, Args&&... args ){
+    _cache_log cache_log{lev_in, fmt::format(sv_format, args...)};
+    emplace_back(cache_log);
+}
+
+
 void MainWindow::setForms(){ // https://stackoverflow.com/questions/14151443/how-to-pass-a-qstring-to-a-qt-slot-from-a-qmenu-via-qsignalmapper-or-otherwise
     int i = 0;
     QMap<QString,QMenu *> map_menu;
@@ -660,6 +692,18 @@ void MainWindow::loadPlugins(){
         if(plugin){
             spdlog::info( "Load dynamic plugin {}/{} : {}", pluginsDir.absolutePath().toStdString(), fileName.toStdString(), plugin->objectName().toStdString());
 
+            auto iRastr = qobject_cast<InterfaceRastr *>(plugin);
+            if(iRastr){
+                spdlog::info( "it is Rastr");
+                std::shared_ptr<spdlog::logger> sp_logger = spdlog::default_logger();
+                iRastr->setLoggerPtr(sp_logger);
+                std::shared_ptr<IPlainRastr> sp_rastr = iRastr->getIPlainRastrPtr();
+                IPlainRastrResult* pip { sp_rastr->Load(eLoadCode::RG_REPL, R"(C:\Users\ustas\Documents\RastrWin3\test-rastr\cx195.rg2)", "") };
+                IRastrPayload rgmresult{ sp_rastr->Rgm("p1") };
+                spdlog::info( "{} =Rgm(...) ", static_cast<std::underlying_type<eASTCode>::type>(rgmresult.Value()) );
+
+                spdlog::info( "it is Rastr.test");
+            }
             auto iBrush = qobject_cast<BrushInterface *>(plugin);
             if (iBrush){
                 spdlog::info("it is brush");

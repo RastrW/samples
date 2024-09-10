@@ -1,7 +1,7 @@
 #include <iostream>
 #include <fstream>
 #include "params.h"
-#include "common.h"
+#include "common_qrastr.h"
 #include "License2/json.hpp"
 
 Params::Params(){
