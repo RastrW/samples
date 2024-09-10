@@ -8,12 +8,13 @@
 #include <QDir>
 #include <QMessageBox>
 #include <QDockWidget>
+#include <QTableView>
+#include <QMenu>
 
 #if(!defined(QICSGRID_NO))
     #include <QicsTable.h>
 #endif //#if(!defined(QICSGRID_NO))
-
-
+#include "common.h"
 #include "License2/json.hpp"
 #include "params.h"
 #include "rastrhlp.h"
@@ -24,9 +25,6 @@
 
 #include <QMenu>
 
-#include <DevMachines/QtitanGrid>
-//#include "QtitanBase.h"
-
 class QAction;
 class QMenu;
 class QMdiArea;
@@ -35,22 +33,42 @@ class MdiChild;
 class QSignalMapper;
 
 class rmodel;
-namespace ads{ class CDockManager; };
-class MainWindow : public QMainWindow
-{
+namespace ads{ class CDockManager; }
+class MainWindow : public QMainWindow{
     Q_OBJECT
 public:
-    MainWindow();
-    QWidget* p_;
-    void showEvent( QShowEvent* event ) override;
-    void setForms(); // https://stackoverflow.com/questions/14151443/how-to-pass-a-qstring-to-a-qt-slot-from-a-qmenu-via-qsignalmapper-or-otherwise
-    //void SetIdrastr(_idRastr id_rastr_in);
-    //void setForms(nlohmann::json& j_forms_in);
-
-#if(!defined(QICSGRID_NO))
-    // Returns pointer to the table that is active, otherwise returns NULL
-    QicsTable* activeTable();
-#endif//#if(!defined(QICSGRID_NO))
+    struct _cache_log{
+        spdlog::level::level_enum lev;
+        std::string               str_log;
+        _cache_log( const spdlog::level::level_enum lev_in, std::string_view sv_in )
+            : lev{lev_in}
+            , str_log{sv_in}{
+        }
+        _cache_log& operator=(const _cache_log& cache_log){
+            lev     = cache_log.lev;
+            str_log = cache_log.str_log;
+            return *this;
+        }
+        _cache_log& operator=(const _cache_log&& cache_log){
+            operator=(cache_log);
+            return *this;
+        }
+        _cache_log(const _cache_log& cache_log){
+            operator=(cache_log);
+        }
+        _cache_log(const _cache_log&& cache_log){
+            operator=(cache_log);
+        }
+    };
+    struct _v_cache_log
+        : public std::vector<_cache_log> {
+        //void add( const spdlog::level::level_enum lev_in, std::string_view sv_in ){
+        template <typename... Args>
+        void add( const spdlog::level::level_enum lev_in, const std::string_view sv_format, Args&&... args ){
+            _cache_log cache_log{lev_in, fmt::format(sv_format, args...)};
+            emplace_back(cache_log);
+        }
+    };
 
 signals:
     void file_loaded(CRastrHlp& _rh);                                                                     // загружен файл
@@ -62,8 +80,8 @@ signals:
     void rm_RowInserted(std::string _t_name, int _row);
     void rm_RowDeleted(std::string _t_name, int _row);
     void rm_update(std::string _t_name);
-protected:
-    void closeEvent(QCloseEvent *event);
+//protected:
+//    void closeEvent(QCloseEvent *event);
 
 ///slots.begin
 private slots:
@@ -109,17 +127,30 @@ public slots:
 
     void setActiveSubWindow(QWidget *window);
 private:
+///slots.end.
+public:
+    MainWindow();
+    virtual ~MainWindow();
+private:
+    int  readSettings();
+    int  writeSettings();
+    void showEvent( QShowEvent* event ) override;
+    void setForms(); // https://stackoverflow.com/questions/14151443/how-to-pass-a-qstring-to-a-qt-slot-from-a-qmenu-via-qsignalmapper-or-otherwise
+#if(!defined(QICSGRID_NO))
+    QicsTable* activeTable(); // Returns pointer to the table that is active, otherwise returns NULL
+#endif//#if(!defined(QICSGRID_NO))
     void createActions();
     void createMenus();
     void createToolBars();
+    void loadPlugins();
     void createCalcLayout();
     void createStatusBar();
-    void readSettings();
-    void writeSettings();
+    void logCacheFlush();
 #if(!defined(QICSGRID_NO))
     MdiChild *activeMdiChild();
     QMdiSubWindow *findMdiChild(const QString &fileName);
 #endif
+    void closeEvent(QCloseEvent *event)override;
     QMdiArea* m_workspace;
     QSignalMapper *m_windowMapper;
     QMenu *m_fileMenu;
@@ -169,13 +200,12 @@ private:
     QAction *m_SortAscAct;
     QAction *m_SortDescAct;
     QDockWidget *m_dock;
-    // The main container for docking
-    ads::CDockManager* m_DockManager = nullptr;
-    //QTableView *table;
+    ads::CDockManager* m_DockManager = nullptr; // The main container for docking
     rmodel *model;
-private:
-    Grid* m_TitanGrid;
-
+    QDir qdirData_;
+    _v_cache_log v_cache_log_;
+    static constexpr char* pchSettingsDirData_[]{ "Data"};
+    static constexpr char pchSettingsOrg_[]{ "QRastr"};
 };
 
 

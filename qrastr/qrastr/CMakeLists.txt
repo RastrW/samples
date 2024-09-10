@@ -1,53 +1,74 @@
-cmake_minimum_required(VERSION 3.23)
-project(qrastr VERSION 0.1 LANGUAGES CXX)
+cmake_minimum_required(VERSION 3.23) # 3.20 min version for "astra" build
+project( qrastr VERSION 0.1 LANGUAGES CXX )
 
-set(CMAKE_GENERATOR "Ninja")
-message("generator is set to ${CMAKE_GENERATOR}")
-
-set(CMAKE_INCLUDE_CURRENT_DIR ON)
-set(CMAKE_AUTOUIC ON)
-set(CMAKE_AUTOMOC ON)
-set(CMAKE_AUTORCC ON)
-set(CMAKE_CXX_STANDARD 17)
-set(CMAKE_CXX_STANDARD_REQUIRED ON)
-
-option( QRASTR_BUILD_WITH_MCR "QRASTR_BUILD_WITH_MCR"    ON )
-
+if(MSVC)
+    add_compile_definitions( COMPILE_WIN )
+    add_compile_definitions( _SILENCE_ALL_MS_EXT_DEPRECATION_WARNINGS )
+    add_compile_definitions( QICSGRID_NO )
+endif()
 add_compile_definitions(ASTRA_NIX)
 add_compile_definitions(
         $<$<CONFIG:Debug>:q4_INLINE=0>
         $<$<CONFIG:Debug>:YYDEBUG>
 )
 
-add_subdirectory("${CMAKE_CURRENT_SOURCE_DIR}/qmcr/" "${CMAKE_CURRENT_BINARY_DIR}/generated/qmcr")
-
-if(MSVC)
-    add_compile_definitions(COMPILE_WIN)
-    add_compile_definitions( _SILENCE_ALL_MS_EXT_DEPRECATION_WARNINGS )
-    add_compile_definitions(QICSGRID_NO)
-endif()
-
-#set(CMAKE_PREFIX_PATH "C:/Projects/compile/qt/qt6-install")
-
-find_package(QT NAMES Qt6 Qt5 COMPONENTS Widgets LinguistTools   REQUIRED)
-find_package(Qt${QT_VERSION_MAJOR} COMPONENTS Widgets LinguistTools PrintSupport Xml  REQUIRED)
-find_package( Qt${QT_VERSION_MAJOR} REQUIRED COMPONENTS Core)
-
-set(TS_FILES qrastr_ru_RU.ts)
-
-if(MSVC)
-    set(DEPENDENCIES_LOCATION "c:/projects/compile/")
-    set(ASTRA_LOCATION        "c:/projects/tfs/rastr/RastrWin/astra/")
-    #set(ASTRA_LOCATION        "c:/projects/rastr/RastrWin/astra")
+set(CMAKE_GENERATOR "Ninja")
+message("generator is set to ${CMAKE_GENERATOR}")
+set( CMAKE_INCLUDE_CURRENT_DIR ON )
+set( CMAKE_AUTOUIC ON )
+set( CMAKE_AUTOMOC ON )
+set( CMAKE_AUTORCC ON )
+set( CMAKE_CXX_STANDARD 17 )
+set( CMAKE_CXX_STANDARD_REQUIRED ON )
+set( CMAKE_ARCHIVE_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}//..//${CMAKE_BUILD_TYPE}" )
+set( CMAKE_LIBRARY_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}//..//${CMAKE_BUILD_TYPE}" )
+set( CMAKE_RUNTIME_OUTPUT_DIRECTORY "${CMAKE_SOURCE_DIR}//..//${CMAKE_BUILD_TYPE}" )
+option( QRASTR_BUILD_WITH_MCR "QRASTR_BUILD_WITH_MCR" ON )
+#set( COMPILE_DIR "C:/Projects/tfs/rastr/RastrWin/thirdparty/_deps/compile_cmake" CACHE PATH "Installation directory for third-party projects" )# for example C:\projects\rastr\RastrWin\thirdparty\_deps\compile
+set( COMPILE_DIR "C:/Projects/compile_cmake" )# for example C:\projects\rastr\RastrWin\thirdparty\_deps\compile
+if( NOT IS_DIRECTORY ${COMPILE_DIR} )
+    message(FATAL_ERROR "Not defined COMPILE_DIR")
 else()
-    set(DEPENDENCIES_LOCATION "/home/ustas/projects/compile/")
-    set(ASTRA_LOCATION        "/home/ustas/projects/git_r/rastr/RastrWin/astra/")
-    set(DEPENDENCIES_GIT      "/home/ustas/projects/git_r/")
+    message(NOTICE "COMPILE_DIR= ${COMPILE_DIR}")
 endif()
+list( PREPEND CMAKE_PREFIX_PATH ${COMPILE_DIR} )
+list( PREPEND CMAKE_PREFIX_PATH "${CMAKE_CURRENT_SOURCE_DIR}/qmcr/" )
+
+#set(CMAKE_PREFIX_PATH "C:/Projects/compile/qt/qt6-install") #??
+set( TS_FILES qrastr_ru_RU.ts )
+if(MSVC)
+    set( DEPENDENCIES_LOCATION "c:/projects/compile/" )
+    set( ASTRA_LOCATION        "c:/projects/tfs/rastr/RastrWin/astra/" )
+    #set( ASTRA_LOCATION        "c:/projects/rastr/RastrWin/astra" )
+else()
+    set( DEPENDENCIES_LOCATION "/home/ustas/projects/compile/" )
+    set( ASTRA_LOCATION        "/home/ustas/projects/git_r/rastr/RastrWin/astra/" )
+    set( DEPENDENCIES_GIT      "/home/ustas/projects/git_r/" )
+endif()
+find_package( Metakit REQUIRED )
+find_package( fmt     REQUIRED )
+find_package( QT NAMES Qt6 Qt5 COMPONENTS REQUIRED )
+find_package( Qt${QT_VERSION_MAJOR} COMPONENTS
+    Core
+    Widgets
+    LinguistTools
+    PrintSupport
+    Xml
+    REQUIRED
+)
+
+qt_standard_project_setup()
+add_subdirectory("plugins/basictools")
+add_subdirectory("plugins/extrafilters")
+add_subdirectory(
+    "${CMAKE_CURRENT_SOURCE_DIR}/qmcr/"
+    "${CMAKE_CURRENT_BINARY_DIR}/generated/qmcr"
+)
 
 set(INCLUDES
     "${ASTRA_LOCATION}/"
-    "${DEPENDENCIES_LOCATION}/fmt/include"
+    #"${DEPENDENCIES_LOCATION}/fmt/include"
+    "${ASTRA_LOCATION}/fmt/include/"
     "${DEPENDENCIES_LOCATION}/qicstable/include"
     "${DEPENDENCIES_LOCATION}/metakit/include" #-win
     "${DEPENDENCIES_GIT}/metakit/include"      #-lin
@@ -59,12 +80,7 @@ set(INCLUDES
     "${DEPENDENCIES_LOCATION}/sci/scintilla/qt/ScintillaEditBase"
     "${DEPENDENCIES_LOCATION}/sci/scintilla/qt/ScintillaEdit"
     "${DEPENDENCIES_LOCATION}/Qt-Advanced-Docking-System/src"
-    "$$QTITANDIR/src/shared/qtitangrid.pri"
-    "C:/Qt/Developer Machines/MSVC_QtitanComponents2024.2.0 Demo/include"
-    #"C:/Qt/Developer Machines/QtitanComponents2024.2.0 Demo/include"
-    "C:/Qt/Developer Machines/MSVC_QtitanComponents2024.2.0 Demo/src/grid"
-
-
+    "${DEPENDENCIES_LOCATION}/spdlog/include/"
 )
 
 if(MSVC)
@@ -72,8 +88,6 @@ if(MSVC)
     link_directories("${DEPENDENCIES_LOCATION}/metakit/builds/")
     link_directories("${DEPENDENCIES_LOCATION}/Qt-Advanced-Docking-System/build/vs-Debug/lib/")
     link_directories("${DEPENDENCIES_LOCATION}/Qt-Advanced-Docking-System/build/vs-Release/lib/")
-    link_directories("C:/Qt/Developer Machines/MSVC_QtitanComponents2024.2.0 Demo/bin/")
-    #link_directories("C:/Qt/Developer Machines/QtitanComponents2024.2.0 Demo/bin/")
 else()
     link_directories("${DEPENDENCIES_LOCATION}/qicstable/lib/")
     link_directories("${ASTRA_LOCATION}/build/")
@@ -98,8 +112,8 @@ set(PROJECT_SOURCES
     ColPropForm.ui
     ${TS_FILES}
     qrastr.qrc
-    ${DEPENDENCIES_LOCATION}/fmt/src/format.cc
-    ${DEPENDENCIES_LOCATION}/fmt/src/os.cc
+    #${ASTRA_LOCATION}/fmt/src/format.cc
+    #${ASTRA_LOCATION}/fmt/src/os.cc
     rmodel.cpp
     rmodel.h
     params.h
@@ -119,77 +133,60 @@ set(PROJECT_SOURCES
     filtertableheader.h filtertableheader.cpp
     filterlineedit.h filterlineedit.cpp
     utils.h
-    CondFormat.cpp CondFormat.h
+    CondFormat.h CondFormat.cpp
+    plugin_interfaces.h
 )
-
+if(MSVC)
+    link_directories("${ASTRA_LOCATION}/build/Debug/")
+    link_directories("${DEPENDENCIES_LOCATION}/metakit/builds/")
+    link_directories("${DEPENDENCIES_LOCATION}/Qt-Advanced-Docking-System/build/vs-Debug/lib/")
+    link_directories("${DEPENDENCIES_LOCATION}/Qt-Advanced-Docking-System/build/vs-Release/lib/")
+else()
+    link_directories("${DEPENDENCIES_LOCATION}/qicstable/lib/")
+    link_directories("${ASTRA_LOCATION}/build/")
+endif()
 if(${QT_VERSION_MAJOR} GREATER_EQUAL 6)
-    qt_add_executable(qrastr
+    qt_add_executable( ${PROJECT_NAME}
         MANUAL_FINALIZATION
         ${PROJECT_SOURCES}
     )
-# Define target properties for Android with Qt 6 as:
-#    set_property(TARGET qrastr APPEND PROPERTY QT_ANDROID_PACKAGE_SOURCE_DIR
-#                 ${CMAKE_CURRENT_SOURCE_DIR}/android)
-# For more information, see https://doc.qt.io/qt-6/qt-add-executable.html#target-creation
-    qt_create_translation(QM_FILES ${CMAKE_SOURCE_DIR} ${TS_FILES})
+    qt_create_translation( QM_FILES ${CMAKE_SOURCE_DIR} ${TS_FILES} )
 else()
-    if(ANDROID)
-        add_library(qrastr SHARED
-            ${PROJECT_SOURCES}
-        )
-# Define properties for Android with Qt 5 after find_package() calls as:
-#    set(ANDROID_PACKAGE_SOURCE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/android")
-    else()
-        add_executable(qrastr
-            ${PROJECT_SOURCES}
-        )
-    endif()
+    add_executable( ${PROJECT_NAME}
+        ${PROJECT_SOURCES}
+    )
     qt5_create_translation(QM_FILES ${CMAKE_SOURCE_DIR} ${TS_FILES})
 endif()
-
-target_link_libraries( qrastr PRIVATE Qt${QT_VERSION_MAJOR}::Widgets Qt${QT_VERSION_MAJOR}::PrintSupport Qt${QT_VERSION_MAJOR}::Xml ) #Qt5::PrintSupport
-
+target_link_libraries( ${PROJECT_NAME} PRIVATE Metakit::mk4         )
+target_link_libraries( ${PROJECT_NAME} PRIVATE fmt::fmt-header-only )
 if(MSVC)
-    #target_link_libraries( qrastr PRIVATE astra_shrd.lib )
-    target_link_libraries( qrastr PRIVATE astra_py       ) # when build with pybind11
-    target_link_libraries( qrastr PRIVATE mk4vc22x64  )
-    target_link_libraries( qrastr PRIVATE qmcr        )
-    target_link_libraries( qrastr PRIVATE QtitanBase2 )
-    target_link_libraries( qrastr PRIVATE QtitanChart6 )
-    target_link_libraries( qrastr PRIVATE QtitanDocking4 )
-    target_link_libraries( qrastr PRIVATE QtitanFastInfoset2 )
-    target_link_libraries( qrastr PRIVATE QtitanGrid8 )
-    target_link_libraries( qrastr PRIVATE QtitanNavigationDesignUI3 )
-    target_link_libraries( qrastr PRIVATE QtitanRibbon6 )
-    target_link_libraries( qrastr PRIVATE QtitanStyle2 )
-    #target_link_libraries( qrastr PRIVATE libQtitanBase2 )
-
+    target_link_libraries( ${PROJECT_NAME} PRIVATE astra_py     ) # when build with pybind11
+    target_link_libraries( ${PROJECT_NAME} PRIVATE qmcr         )
     if (CMAKE_BUILD_TYPE MATCHES Debug)
-        target_link_libraries( qrastr PRIVATE qtadvanceddockingd )
+        target_link_libraries( ${PROJECT_NAME} PRIVATE qtadvanceddockingd )
     else()
-        target_link_libraries( qrastr PRIVATE qtadvanceddocking  )
+        target_link_libraries( ${PROJECT_NAME} PRIVATE qtadvanceddocking  )
     endif()
 
 else()
-    target_link_libraries( qrastr PRIVATE libqicstable.so  )
-    target_link_libraries( qrastr PRIVATE libastra_shrd.so )
-    target_link_libraries( qrastr PRIVATE libqmcr.co       )
+    target_link_libraries( ${PROJECT_NAME} PRIVATE libqicstable.so  )
+    target_link_libraries( ${PROJECT_NAME} PRIVATE libastra_shrd.so )
+    target_link_libraries( ${PROJECT_NAME} PRIVATE libqmcr.co       )
 endif()
-
-target_include_directories(qrastr PRIVATE
+target_link_libraries( ${PROJECT_NAME} PRIVATE
+    Qt${QT_VERSION_MAJOR}::Widgets
+    Qt${QT_VERSION_MAJOR}::PrintSupport
+    Qt${QT_VERSION_MAJOR}::Xml
+)
+target_include_directories( ${PROJECT_NAME} PRIVATE
   ${INCLUDES}
 )
-
-set_target_properties(qrastr PROPERTIES
-    MACOSX_BUNDLE_GUI_IDENTIFIER my.example.com
-    MACOSX_BUNDLE_BUNDLE_VERSION ${PROJECT_VERSION}
-    MACOSX_BUNDLE_SHORT_VERSION_STRING ${PROJECT_VERSION_MAJOR}.${PROJECT_VERSION_MINOR}
-    MACOSX_BUNDLE TRUE
+set_target_properties( ${PROJECT_NAME} PROPERTIES
     WIN32_EXECUTABLE TRUE
 )
 
 if(QT_VERSION_MAJOR EQUAL 6)
-    qt_finalize_executable(qrastr)
+    qt_finalize_executable( ${PROJECT_NAME} )
 endif()
 
 # To Start qrastr.exe it is need to copy the QT directory "platforms" found in the QT plugins directory

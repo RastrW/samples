@@ -29,21 +29,17 @@ int CRastrHlp::Load(std::string str_path_to_file){
     try{
         int nRes = 0;
         std::filesystem::path path_file_load;
-        if( !std::filesystem::exists(str_path_to_file.c_str()))
-        {
-            qDebug() << "File : [" <<str_path_to_file.c_str() << "] not exist!";
-            return 0;
+        if( !std::filesystem::exists(str_path_to_file.c_str())) {
+            spdlog::error( "File rastr  not exist : [{}]!", str_path_to_file );
+            return -1;
         }
         //on Windows, you MUST use 8bit ANSI (and it must match the user's locale) or UTF-16 !! Unicode!
         //!!! https://stackoverflow.com/questions/30829364/open-utf8-encoded-filename-in-c-windows  !!!
         path_file_load = stringutils::utf8_decode(str_path_to_file);
-
-        nRes = ::Load(id_rastr_, str_path_to_file.c_str(), "");
+        nRes = ::Load(id_rastr_, path_file_load.c_str(), L"");
         if(nRes<0){
-            throw CException("can't read Rastr file: {}", str_path_to_file);
-        }
-        else
-        {
+            throw CException("Can't read Rastr file: {}", str_path_to_file);
+        }else{
             qDebug() << "File : [" <<str_path_to_file.c_str() << "] loaded.";
         }
     }catch(const std::exception& ex){

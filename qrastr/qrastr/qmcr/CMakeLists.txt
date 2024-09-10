@@ -67,6 +67,7 @@ if(${QT_VERSION_MAJOR} GREATER_EQUAL 6)
             ${PROJECT_SOURCES}
             tst_toolbox.h tst_toolbox.cpp tst_toolbox.ui
             tst2_dialog.h tst2_dialog.cpp tst2_dialog.ui
+            tst.qml
         )
     else()
         qt_add_executable(qmcr
@@ -104,7 +105,7 @@ if(MSVC)
         target_link_libraries( qmcr PRIVATE ScintillaEdit5   Lexilla5   )
     endif()
 else()
-    target_link_libraries( qmcr PRIVATE libScintillaEdit.so libLexilla.so)
+    target_link_libraries( qmcr PRIVATE libScintillaEdit.so libLexilla.so )
 endif()
 
 # Qt for iOS sets MACOSX_BUNDLE_GUI_IDENTIFIER automatically since Qt 6.1.
