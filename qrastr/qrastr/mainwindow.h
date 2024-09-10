@@ -204,8 +204,8 @@ private:
     rmodel *model;
     QDir qdirData_;
     _v_cache_log v_cache_log_;
-    static constexpr char* pchSettingsDirData_[]{ "Data"};
-    static constexpr char pchSettingsOrg_[]{ "QRastr"};
+    static constexpr char pchSettingsDirData_[5]{ "Data"};
+    static constexpr char pchSettingsOrg_[7]{ "QRastr"};
 };
 
 
