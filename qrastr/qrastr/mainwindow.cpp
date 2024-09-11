@@ -21,15 +21,12 @@
 #include <iostream>
 #include <DockManager.h>
 #include "mainwindow.h"
-#include "./ui_mainwindow.h"
 #include "rtabwidget.h"
 #include "mdiChildTable.h"
 #include "mdiChildGrid.h"
 #include "mdiChildHeaderGrid.h"
 #include "astra_exp.h"
-#include "fmt/format.h"
 #include "qmcr/mcrwnd.h"
-#include "DockManager.h"
 
 using WrapperExceptionType = std::runtime_error;
 #include "IPlainRastrWrappers.h"
@@ -45,18 +42,17 @@ MainWindow::MainWindow(){
     createToolBars();
     createStatusBar();
     updateMenus();
-    readSettings();
     setWindowTitle(tr("~qrastr~"));
     //int nRes = test();
     ads::CDockManager::setConfigFlag(ads::CDockManager::FocusHighlighting, true);
     ads::CDockManager::setConfigFlag(ads::CDockManager::AllTabsHaveCloseButton, true);
     m_DockManager = new ads::CDockManager(this);
     QObject::connect(m_DockManager, &ads::CDockManager::focusedDockWidgetChanged
-                                  , [] (ads::CDockWidget* old, ads::CDockWidget* now) {
-        static int Count = 0;
-        qDebug() << Count++ << " CDockManager::focusedDockWidgetChanged old: " << (old ? old->objectName() : "-") << " now: " << now->objectName() << " visible: " << now->isVisible();
-        now->widget()->setFocus();
-    });
+                     , [] (ads::CDockWidget* old, ads::CDockWidget* now) {
+                         static int Count = 0;
+                         qDebug() << Count++ << " CDockManager::focusedDockWidgetChanged old: " << (old ? old->objectName() : "-") << " now: " << now->objectName() << " visible: " << now->isVisible();
+                         now->widget()->setFocus();
+                     });
     int n_res = readSettings();
     McrWnd* pMcrWnd = new McrWnd( this, McrWnd::_en_role::global_protocol );
     if(false){
@@ -141,23 +137,24 @@ int MainWindow::readSettings(){ //it cache log messages to vector, because it ca
             return -1;
         }
         v_cache_log_.add(spdlog::level::info, "**************************************************************************");
+        v_cache_log_.add(spdlog::level::info, "ReadForms : {}", pars.Get_on_start_load_file_forms());
+        nRes = up_rastr_->ReadForms(pars.Get_on_start_load_file_forms());
+        if(nRes<0){
+            v_cache_log_.add( spdlog::level::err, "{} ReadForms()", nRes);
+            QMessageBox mb( QMessageBox::Icon::Critical, QObject::tr("Error"),
+                           QString("error: %1 when read file : %2").arg(nRes).arg(pars.Get_on_start_load_file_forms().c_str())
+                           );
+            mb.exec();
+            return -1;
+        }
+        setForms();
+        v_cache_log_.add(spdlog::level::info, "**************************************************************************");
         v_cache_log_.add(spdlog::level::info, "Load: {}", pars.Get_on_start_load_file_rastr());
         nRes = up_rastr_->Load(pars.Get_on_start_load_file_rastr());
         if(nRes < 0){
             v_cache_log_.add( spdlog::level::err, "{} Load(...)", nRes);
             return -1;
         }
-        v_cache_log_.add(spdlog::level::info, "ReadForms : {}", pars.Get_on_start_load_file_forms());
-        nRes = up_rastr_->ReadForms(pars.Get_on_start_load_file_forms());
-        if(nRes<0){
-            v_cache_log_.add( spdlog::level::err, "{} ReadForms()", nRes);
-            QMessageBox mb( QMessageBox::Icon::Critical, QObject::tr("Error"),
-                            QString("error: %1 wheh read file : %2").arg(nRes).arg(pars.Get_on_start_load_file_forms().c_str())
-                           );
-            mb.exec();
-            return -1;
-        }
-        setForms();
     }catch(const std::exception& ex){
         v_cache_log_.add( spdlog::level::err,"Exception: {} ", ex.what());
         return -4;
@@ -182,9 +179,9 @@ void MainWindow::logCacheFlush(){
     v_cache_log_.clear();
 }
 void MainWindow::showEvent( QShowEvent* event ){
-        QWidget::showEvent( event );
-        //your code here
-        // https://stackoverflow.com/questions/14161100/which-qt-widget-should-i-use-for-message-display
+    QWidget::showEvent( event );
+    //your code here
+    // https://stackoverflow.com/questions/14161100/which-qt-widget-should-i-use-for-message-display
 }
 
 
@@ -228,7 +225,6 @@ void MainWindow::setForms(){ // https://stackoverflow.com/questions/14151443/how
         if (!str_MenuPath.empty() && !map_menu.contains(qstr_MenuPath))
             map_menu.insert(qstr_MenuPath,m_openMenu->addMenu(str_MenuPath.c_str()));
     }
-    //for(const nlohmann::json& j_form : j_forms_){
     for(const auto& j_form : forms){
         std::string str_Name = stringutils::cp1251ToUtf8(j_form.Name());
         std::string str_TableName = j_form.TableName();
@@ -244,35 +240,6 @@ void MainWindow::setForms(){ // https://stackoverflow.com/questions/14151443/how
         i++;
     }
     connect( m_openMenu, SIGNAL(triggered(QAction *)), this, SLOT(onOpenForm(QAction *)), Qt::UniqueConnection);
-/*
-    //for(const nlohmann::json& j_form : j_forms_){
-        //std::string str_Collection = j_form["Collection"];
-        std::string str_MenuPath = j_form["MenuPath"];
-        if (!str_MenuPath.empty() && str_MenuPath.at(0) == '_')
-            continue;
-
-        QString qstr_MenuPath = str_MenuPath.c_str();
-        if (!str_MenuPath.empty() && !map_menu.contains(qstr_MenuPath))
-            map_menu.insert(qstr_MenuPath,m_openMenu->addMenu(str_MenuPath.c_str()));
-    }
-    for(const nlohmann::json& j_form : j_forms_){
-        std::string str_Name = j_form["Name"];
-        std::string str_TableName = j_form["TableName"];
-        std::string str_MenuPath = j_form["MenuPath"];
-        QString qstr_MenuPath = str_MenuPath.c_str();
-        QMenu* cur_menu = m_openMenu;
-        if (map_menu.contains(qstr_MenuPath))
-            cur_menu = map_menu[qstr_MenuPath];
-        if (!str_Name.empty() && str_Name.at(0) != '_')
-        {
-            QAction* p_actn = cur_menu->addAction(str_Name.c_str());
-            p_actn->setData(i);
-        }
-        i++;
-    }
-    connect( m_openMenu, SIGNAL(triggered(QAction *)),
-            this, SLOT(onOpenForm(QAction *)), Qt::UniqueConnection);
-*/
 }
 void MainWindow::closeEvent(QCloseEvent *event){
     QMainWindow::closeEvent(event);
@@ -286,7 +253,6 @@ void MainWindow::closeEvent(QCloseEvent *event){
     if (activeMdiChild()) {
         event->ignore();
     } else {
-        writeSettings();
         event->accept();
     }
 #endif// #if(!defined(QICSGRID_NO))
@@ -324,16 +290,6 @@ void MainWindow::open(){
             QMessageBox msgBox;
             msgBox.critical( this, tr("File not loaded"), str_msg.c_str() );
         }
-
-        /* // ustas
-        MdiChild *child = createMdiChild();
-        if (child->loadFile(fileName)) {
-            statusBar()->showMessage(tr("File loaded"), 2000);
-            child->show();
-        } else {
-            child->close();
-        }
-        */
     }
 }
 void MainWindow::save(){
@@ -379,17 +335,17 @@ void MainWindow::cut(){
 #if(!defined(QICSGRID_NO))
     activeMdiChild()->cut();
 #endif//#if(!defined(QICSGRID_NO))
-}
+    }
 void MainWindow::copy(){
 #if(!defined(QICSGRID_NO))
     activeMdiChild()->copy();
 #endif//#if(!defined(QICSGRID_NO))
-}
+    }
 void MainWindow::paste(){
 #if(!defined(QICSGRID_NO))
     activeMdiChild()->paste();
 #endif// #if(!defined(QICSGRID_NO))
-}
+    }
 void MainWindow::insertRow(){
 #if(!defined(QICSGRID_NO))
     int rowIndex = activeMdiChild()->currentCell()->rowIndex();
@@ -397,13 +353,10 @@ void MainWindow::insertRow(){
         return;
     activeMdiChild()->insertRow( rowIndex );
 #endif//#if(!defined(QICSGRID_NO))
-#if(defined(QICSGRID_NO))
-#endif//#if(defined(QICSGRID_NO))
-
-}
+    }
 void MainWindow::deleteRow(){
 #if(!defined(QICSGRID_NO))
-     // DO NOT WORK... WHY ?
+    // DO NOT WORK... WHY ?
     const QicsCell * cell = activeMdiChild()->currentCell();
     activeMdiChild()->deleteRow( cell->rowIndex() );
 #endif
@@ -415,18 +368,15 @@ void MainWindow::insertCol(){
         return;
     activeMdiChild()->insertColumn( colIndex );
 #endif //#if(!defined(QICSGRID_NO))
-}
+    }
 void MainWindow::deleteCol(){
 #if(!defined(QICSGRID_NO))
     const QicsCell * cell = activeMdiChild()->currentCell();
     activeMdiChild()->deleteColumn( cell->columnIndex() );
 #endif // #if(!defined(QICSGRID_NO))
-}
-
+    }
 void MainWindow::rgm_wrap(){
     long res = Rgm(id_rastr_,"");
-
-    //qDebug() << "rgm return  " << res;
     std::string str_msg = "";
     if (res == 0){
         str_msg = "Расчет режима выполнен успешно";
@@ -436,25 +386,15 @@ void MainWindow::rgm_wrap(){
         spdlog::error("{} : {}", res, str_msg);
     }
     statusBar()->showMessage( str_msg.c_str(), 0 );
-
     emit rgm_signal();
 }
 void MainWindow::onDlgMcr(){
-    //long res = Rgm(id_rastr_,"");
-    long n_res = 0;
     McrWnd* pMcrWnd = new McrWnd(this) ;
     pMcrWnd->show();
-    std::string str_msg = "";
-    if (n_res < 0)
-        str_msg = "Макрос выполнен успешно";
-    else
-        str_msg = "Макрос завершился аварийно!";
-    statusBar()->showMessage( str_msg.c_str(), 0 );
 }
 void MainWindow::about(){
-   QMessageBox::about( this, tr("About QRastr"), tr("About the <b>QRastr</b>.") );
+    QMessageBox::about( this, tr("About QRastr"), tr("About the <b>QRastr</b>.") );
 }
-
 void MainWindow::onOpenForm( QAction* p_actn ){
     const int n_indx = p_actn->data().toInt();
     const auto forms = up_rastr_->GetForms();
@@ -464,40 +404,27 @@ void MainWindow::onOpenForm( QAction* p_actn ){
     qDebug() << "\n Open form:" + form.Name();
     spdlog::info( "Create tab [{}]", stringutils::cp1251ToUtf8(form.Name()) );
     RtabWidget *prtw = new RtabWidget(*up_rastr_.get(),n_indx);
-
-    //connect(sender, &MyClass::signalName, this, &MyClass::slotName);
     connect(this, &MainWindow::file_loaded,  prtw, &RtabWidget::onFileLoad);    //Загрузка файла
     connect(this, &MainWindow::rgm_signal, prtw, &RtabWidget::update_data);     //Расчет УР
-    //connect(this, SIGNAL(file_loaded()),  prtw, SLOT(onFileLoad()));
-
-    //Connect(prtw->prm, &RModel::dataChanged2(std::string, QModelIndex , QVariant),this,MainWindow::ondataChanged(std::string, QModelIndex , QVariant));
-    //connect(prtw->prm, SIGNAL(dataChanged2(std::string)),this,SLOT(ondataChanged(std::string)));
-
     //RModel вызывает изменение Data: Запомнить изменение Data в MainWindow и из MainWindow вызывть изменение RModel во всех сущьностях
     connect(prtw->prm, SIGNAL(dataChanged(std::string,std::string,int,QVariant)),
-                 this, SLOT(ondataChanged(std::string,std::string,int,QVariant)));
+            this, SLOT(ondataChanged(std::string,std::string,int,QVariant)));
     connect(this,      SIGNAL(rm_change(std::string,std::string,int,QVariant)),
-       prtw->prm,      SLOT(onRModelchange(std::string,std::string,int,QVariant)));
+            prtw->prm,      SLOT(onRModelchange(std::string,std::string,int,QVariant)));
     //MainWindow: вызывть изменение RModel во всех сущьностях
     connect(prtw->prm, SIGNAL(RowInserted(std::string,int)),
-                  this,SLOT(onRowInserted(std::string,int)));
+            this,SLOT(onRowInserted(std::string,int)));
     connect(this,      SIGNAL(rm_RowInserted(std::string,int)),
-       prtw->prm,      SLOT(onrm_RowInserted(std::string,int)));
-
+            prtw->prm,      SLOT(onrm_RowInserted(std::string,int)));
     //Удаление строки
     connect(prtw->prm, SIGNAL(RowDeleted(std::string,int)),
-                  this,SLOT(onRowInserted(std::string,int)));
+            this,SLOT(onRowInserted(std::string,int)));
     connect(this,      SIGNAL(rm_RowDeleted(std::string,int)),
-       prtw->prm,      SLOT(onrm_RowDeleted(std::string,int)));
-
+            prtw->prm,      SLOT(onrm_RowDeleted(std::string,int)));
     connect(this,      SIGNAL(rm_update(std::string)),
             prtw,      SLOT(onUpdate(std::string)));
-
-
-    //up_rtw = prtw;
     // Docking
-    bool bNewDocking = true;
-    if(!bNewDocking) {
+    if(false){
         QDockWidget *dock = new QDockWidget( stringutils::cp1251ToUtf8(form.Name()).c_str(), this);
         dock->setWidget(prtw);
         dock->setAllowedAreas(Qt::LeftDockWidgetArea | Qt::RightDockWidgetArea | Qt::TopDockWidgetArea | Qt::BottomDockWidgetArea | Qt::AllDockWidgetAreas);
@@ -511,21 +438,13 @@ void MainWindow::onOpenForm( QAction* p_actn ){
         qDebug() << "doc dock widget created!" << dw << area;
     }
     prtw->show();
-
-    // return;
-
-    // const nlohmann::json j_form = j_forms_[n_indx];
-    //for Dima
-    //const nlohmann::json j_form = up_rastr_->GetJForms().operator[](n_indx);
-
 #if(!defined(QICSGRID_NO))
     const nlohmann::json j_form = up_rastr_->GetJForms()[n_indx];
     MdiChild *child = createMdiChild( j_form );
     //child->newFile();
     child->show();
 #endif // #if(!defined(QICSGRID_NO))
-
-}
+    }
 void MainWindow::onItemPressed(const QModelIndex &index){
     //prtw_current = qobject_cast<RtabWidget*>(index.);
     int row = index.row();
@@ -548,50 +467,10 @@ void MainWindow::onRowDeleted(std::string _t_name, int _row){
     emit rm_RowDeleted(_t_name,_row);
     emit rm_update(_t_name);
 }
-
-
-#include "astra_exp.h"
-
 void MainWindow::onButton2Click(){
     const long num_chars = 10000;
     char* pch_JSON_out = new char[num_chars];
     //long n_res = PyRunMacro( L"", L"", pch_JSON_out, num_chars );
-
-};
-
-//void MainWindow::SetIdrastr(_idRastr id_rastr_in){    id_rastr_ = id_rastr_in;}
-
-/*
-void MainWindow::setForms(nlohmann::json& j_forms_in){ // https://stackoverflow.com/questions/14151443/how-to-pass-a-qstring-to-a-qt-slot-from-a-qmenu-via-qsignalmapper-or-otherwise
-    j_forms_ = j_forms_in;
-    int i = 0;
-    QMap<QString,QMenu *> map_menu;
-    for(const nlohmann::json& j_form : j_forms_){
-        //std::string str_Collection = j_form["Collection"];
-        std::string str_MenuPath = j_form["MenuPath"];
-        if (!str_MenuPath.empty() && str_MenuPath.at(0) == '_')
-            continue;
-        QString qstr_MenuPath = str_MenuPath.c_str();
-        if (!str_MenuPath.empty() && !map_menu.contains(qstr_MenuPath))
-            map_menu.insert(qstr_MenuPath,m_openMenu->addMenu(str_MenuPath.c_str()));
-    }
-    for(const nlohmann::json& j_form : j_forms_){
-        std::string str_Name = j_form["Name"];
-        std::string str_TableName = j_form["TableName"];
-        std::string str_MenuPath = j_form["MenuPath"];
-        QString qstr_MenuPath = str_MenuPath.c_str();
-        QMenu* cur_menu = m_openMenu;
-        if (map_menu.contains(qstr_MenuPath))
-            cur_menu = map_menu[qstr_MenuPath];
-        if (!str_Name.empty() && str_Name.at(0) != '_')
-        {
-            QAction* p_actn = cur_menu->addAction(str_Name.c_str());
-            p_actn->setData(i);
-        }
-        i++;
-    }
-    connect( m_openMenu, SIGNAL(triggered(QAction *)),
-            this, SLOT(onOpenForm(QAction *)), Qt::UniqueConnection);
 }
 void MainWindow::updateMenus(){
 #if(!defined(QICSGRID_NO))
@@ -607,7 +486,7 @@ void MainWindow::updateMenus(){
     m_previousAct->setEnabled(hasMdiChild);
     m_separatorAct->setVisible(hasMdiChild);
 #endif //#if(!defined(QICSGRID_NO))
-}
+    }
 void MainWindow::updateWindowMenu(){
     m_windowMenu->clear();
     m_windowMenu->addAction(m_closeAct);
@@ -621,7 +500,6 @@ void MainWindow::updateWindowMenu(){
     m_windowMenu->addAction(m_separatorAct);
     QList<QMdiSubWindow *> windows = m_workspace->subWindowList();
     m_separatorAct->setVisible(!windows.isEmpty());
-
 #if(!defined(QICSGRID_NO))
     for (int i = 0; i < windows.size(); ++i) {
         MdiChild *child = qobject_cast<MdiChild *>(windows.at(i)->widget());
@@ -629,10 +507,10 @@ void MainWindow::updateWindowMenu(){
         QString text;
         if (i < 9) {
             text = tr("&%1 %2").arg(i + 1)
-                               .arg(child->userFriendlyCurrentFile());
+            .arg(child->userFriendlyCurrentFile());
         } else {
             text = tr("%1 %2").arg(i + 1)
-                              .arg(child->userFriendlyCurrentFile());
+            .arg(child->userFriendlyCurrentFile());
         }
         QAction *action  = m_windowMenu->addAction(text);
         action->setCheckable(true);
@@ -668,17 +546,17 @@ void MainWindow::createActions(){
     m_cutAct = new QAction(QIcon(":/images/cut.png"), tr("Cu&t"), this);
     m_cutAct->setShortcut(tr("Ctrl+X"));
     m_cutAct->setStatusTip(tr("Cut the current selection's contents to the "
-                            "clipboard"));
+                              "clipboard"));
     connect(m_cutAct, SIGNAL(triggered()), this, SLOT(cut()));
     m_copyAct = new QAction(QIcon(":/images/copy.png"), tr("&Copy"), this);
     m_copyAct->setShortcut(tr("Ctrl+C"));
     m_copyAct->setStatusTip(tr("Copy the current selection's contents to the "
-                             "clipboard"));
+                               "clipboard"));
     connect(m_copyAct, SIGNAL(triggered()), this, SLOT(copy()));
     m_pasteAct = new QAction(QIcon(":/images/paste.png"), tr("&Paste"), this);
     m_pasteAct->setShortcut(tr("Ctrl+V"));
     m_pasteAct->setStatusTip(tr("Paste the clipboard's contents into the current "
-                              "selection"));
+                                "selection"));
     connect(m_pasteAct, SIGNAL(triggered()), this, SLOT(paste()));
 
     m_insertRowAct = new QAction( QIcon(":/images/Rastr3_grid_insrow_16x16.png"),tr( "&Insert Row" ), this );
@@ -720,7 +598,7 @@ void MainWindow::createActions(){
     m_previousAct = new QAction(tr("Pre&vious"), this);
     m_previousAct->setShortcut(tr("Ctrl+Shift+F6"));
     m_previousAct->setStatusTip(tr("Move the focus to the previous "
-                                 "window"));
+                                   "window"));
     connect(m_previousAct, SIGNAL(triggered()),
             m_workspace, SLOT(activatePreviousSubWindow()));
     m_separatorAct = new QAction(this);
@@ -738,7 +616,6 @@ void MainWindow::createActions(){
     m_SortDescAct->setShortcut(tr("Ctrl+Down"));
     m_SortDescAct->setStatusTip(tr("Sort Descending (Ctrl+Down)"));
     connect(m_SortDescAct, SIGNAL(triggered()), this, SLOT(sortDescending()));
-
 
     m_RGMAct = new QAction(QIcon(":/images/Rastr3_rgm_16x16.png"),tr("&rgm"), this);
     m_RGMAct->setShortcut(tr("F5"));
@@ -767,7 +644,7 @@ void MainWindow::createMenus(){
     m_editMenu->addAction( m_deleteRowAct );
     m_editMenu->addAction( m_insertColAct );
     m_editMenu->addAction( m_deleteColAct );
-   // m_viewMenu = menuBar()->addMenu(tr("&View"));
+    // m_viewMenu = menuBar()->addMenu(tr("&View"));
     //m_editMenu->addAction(m_SortAscAct);
 
     m_CalcMenu = menuBar()->addMenu(tr("&Calc"));
@@ -798,7 +675,6 @@ void MainWindow::createToolBars(){
     m_viewToolBar->addAction(m_SortDescAct);
     m_calcToolBar = addToolBar(tr("Calc"));
     m_calcToolBar->addAction(m_RGMAct);
-
     createCalcLayout();
 }
 #include "plugin_interfaces.h"
@@ -823,7 +699,9 @@ void MainWindow::loadPlugins(){
                 std::shared_ptr<spdlog::logger> sp_logger = spdlog::default_logger();
                 iRastr->setLoggerPtr(sp_logger);
                 std::shared_ptr<IPlainRastr> sp_rastr = iRastr->getIPlainRastrPtr();
-                IPlainRastrResult* pip { sp_rastr->Load(eLoadCode::RG_REPL, R"(C:\Users\ustas\Documents\RastrWin3\test-rastr\cx195.rg2)", "") };
+                //IPlainRastrResult* pip { sp_rastr->Load(eLoadCode::RG_REPL, R"(C:\Users\ustas\Documents\RastrWin3\test-rastr\cx195.rg2)", "") };
+               // IPlainRastrResult* pip { sp_rastr->Load(eLoadCode::RG_REPL, R"(C:\Users\maximal\Documents\RastrWin3\test-rastr\cx195.rg2)", "") };
+                IPlainRastrResult* pip { sp_rastr->Load(eLoadCode::RG_REPL, R"(Files/cx195.rg2)", "") };
                 IRastrPayload rgmresult{ sp_rastr->Rgm("p1") };
                 spdlog::info( "{} = Rgm(...) ", static_cast<std::underlying_type<eASTCode>::type>(rgmresult.Value()) );
 
@@ -849,8 +727,6 @@ void MainWindow::Btn1_onClick()
     QTableView* ptv = new QTableView();
     CRastrHlp rhlp;
     //*up_rastr_.get()
-
-
     RModel* pmm = new RModel(nullptr,*up_rastr_.get());
     pmm->setFormIndx(0);
     pmm->populateDataFromRastr();
@@ -858,7 +734,6 @@ void MainWindow::Btn1_onClick()
     ptv->setModel(pmm);
     ptv->show();
 }
-
 void MainWindow::createCalcLayout()
 {
     // набор вложенных виджетов - кнопок
@@ -873,45 +748,24 @@ void MainWindow::createCalcLayout()
     QWidget* widget = new QWidget;
     widget -> setWindowTitle("Functions");
     m_ActionsLayout = new QHBoxLayout(widget);
-//    m_ActionsLayout->addWidget(btn1);
-//    m_ActionsLayout->addWidget(btn2);
+    //    m_ActionsLayout->addWidget(btn1);
+    //    m_ActionsLayout->addWidget(btn2);
     //m_ActionsLayout->addWidget(btn3);
-   // m_ActionsLayout->addWidget(btn4);
+    // m_ActionsLayout->addWidget(btn4);
     m_calcToolBar->addWidget(widget);
     //view->setSortingEnabled(true);
 }
-
 void MainWindow::createStatusBar()
 {
     statusBar()->showMessage(tr("Ready"));
-}
-
-void MainWindow::readSettings()
-{
-    QSettings settings("MDI Example");
-    QPoint pos = settings.value("pos", QPoint(200, 200)).toPoint();
-    QSize size = settings.value("size", QSize(600, 800)).toSize();
-    move(pos);
-    resize(size);
-}
-
-void MainWindow::writeSettings()
-{
-    QSettings settings("MDI Example");
-    settings.setValue("pos", pos());
-    settings.setValue("size", size());
 }
 
 #if(!defined(QICSGRID_NO))
 MdiChild *MainWindow::createMdiChild( nlohmann::json j_form ){
     //MdiChild* child = new MdiChild(id_rastr_, j_form ,mdiChildGrid::createGrid,mdiChildHeaderGrid::createHeaderGrid,this);
     MdiChild* child = new MdiChild( up_rastr_->GetRastrId(), j_form, mdiChildGrid::createGrid,mdiChildHeaderGrid::createHeaderGrid,this);
-
     QObject::connect(this, SIGNAL(rgm_signal()), child, SLOT(update_data()));
-
     //QObject::connect(child, SIGNAL(rowsDeleted()), child, SLOT(update_data()));
-
-
     m_workspace->addSubWindow(child);
     return child;
 }
@@ -924,7 +778,6 @@ QicsTable* MainWindow::activeTable(){
     QMdiSubWindow* activeWindow = m_workspace->activeSubWindow();
     if(!activeWindow)
         return 0;
-
     QicsTable *table = static_cast<QicsTable*>(activeMdiChild());
     return table;
 }
@@ -943,13 +796,10 @@ void MainWindow::sortAscending(){
         QicsSelectionList *list = table->selectionList(true);
         if (!list)
             return;
-
         QVector<int> selectedCols = list->columns().toVector();
         if (selectedCols.size() <= 0) selectedCols << 0;
-
         //QicsRegion reg = list->region();
         //table->sortRows(selectedCols, Qics::Ascending, reg.startRow(), reg.endRow());
-
         table->sortRows(selectedCols, Qics::Ascending);
     }
 }
@@ -959,30 +809,11 @@ void MainWindow::sortDescending(){
         QicsSelectionList *list = table->selectionList(true);
         if (!list)
             return;
-
         QVector<int> selectedCols = list->columns().toVector();
         if (selectedCols.size() <= 0) selectedCols << 0;
-
         //QicsRegion reg = list->region();
         //table->sortRows(selectedCols, Qics::Ascending, reg.startRow(), reg.endRow());
-
         table->sortRows(selectedCols, Qics::Descending);
     }
 }
-
 #endif //#if(!defined(QICSGRID_NO))
-
-/*
-MainWindow::MainWindow(QWidget *parent)
-    : QMainWindow(parent)
-    , ui(new Ui::MainWindow)
-{
-    ui->setupUi(this);
-}
-
-MainWindow::~MainWindow()
-{
-    delete ui;
-}
-*/
-

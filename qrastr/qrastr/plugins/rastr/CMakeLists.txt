@@ -10,7 +10,8 @@ set( CMAKE_RUNTIME_OUTPUT_DIRECTORY "${CMAKE_SOURCE_DIR}//..//..//..//${CMAKE_BU
 
 if(MSVC)
     set( DEPENDENCIES_LOCATION "c:/projects/compile/" )
-    set( ASTRA_LOCATION        "c:/projects/rastr/RastrWin/astra" )
+    #set( ASTRA_LOCATION        "c:/projects/rastr/RastrWin/astra" )
+    set( ASTRA_LOCATION        "c:/projects/tfs/rastr/RastrWin/astra" )
 else()
     set( DEPENDENCIES_LOCATION "/home/ustas/projects/compile/" )
     set( ASTRA_LOCATION        "/home/ustas/projects/git_r/rastr/RastrWin/astra/" )
