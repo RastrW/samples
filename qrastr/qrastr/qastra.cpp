@@ -6,8 +6,11 @@ using WrapperExceptionType = std::runtime_error;
 class EventSink
         : public IRastrEventsSinkBase{
 public:
-    IPlainRastrRetCode OnEvent(const IRastrEventLog& Event) noexcept override
-    {
+    EventSink(const QAstra* pqa){
+
+    }
+    virtual ~EventSink() = default;
+    IPlainRastrRetCode OnEvent(const IRastrEventLog& Event) noexcept override {
         spdlog::info( "Log Status: {:3}  StageId: {:2} EventMsg: {:40} Table: {:10}  Column: {:5} Index: {:5} UIForm: {:10}"
             , static_cast<std::underlying_type<LogMessageTypes>::type>(Event.Status())
             , Event.StageId()
@@ -19,9 +22,9 @@ public:
         );
         return IPlainRastrRetCode::Ok;
     }
-    IPlainRastrRetCode OnEvent(const IRastrEventHint& Event) noexcept override
-    {
-        spdlog::info( "Hint: {:1} Table: {:10} Column: {:5} Index: {} "
+    IPlainRastrRetCode OnEvent(const IRastrEventHint& Event) noexcept override {
+        spdlog::info( "Hint: [{:10}] [{:1}] Table: {:10} Column: {:5} Index: {}"
+            , getHintName(Event.Hint())
             , static_cast<std::underlying_type<EventHints>::type>(Event.Hint())
             , Event.DBLocation().Table()
             , Event.DBLocation().Column()
@@ -29,21 +32,19 @@ public:
         );
         return IPlainRastrRetCode::Ok;
     }
-
-    IPlainRastrRetCode OnEvent(const IRastrEventBase& Event) noexcept override
-    {
+    IPlainRastrRetCode OnEvent(const IRastrEventBase& Event) noexcept override {
         if(Event.Type() == EventTypes::Print)
             //std::cout << "Print: " << static_cast<const IRastrEventPrint&>(Event).Message() << std::endl;
             spdlog::info( "Print: {}", static_cast<const IRastrEventPrint&>(Event).Message() );
         return IPlainRastrRetCode::Ok;
     }
-
-    IPlainRastrRetCode OnUICommand(const IRastrEventBase& Event, IPlainRastrVariant* Result) noexcept override
-    {
+    IPlainRastrRetCode OnUICommand(const IRastrEventBase& Event, IPlainRastrVariant* Result) noexcept override {
         EventTypes et = Event.Type();
         std::string str;
         if(Event.Type() == EventTypes::Hint){
-            str = fmt::format(" {} {} {} "
+            str = fmt::format("[{}][{}] {} {} {} "
+                , getHintName(static_cast<const IRastrEventHint&>(Event).Hint())
+                , static_cast<std::underlying_type<EventHints>::type>( static_cast<const IRastrEventHint&>(Event).Hint() )
                 , static_cast<const IRastrEventHint&>(Event).DBLocation().Table()
                 , static_cast<const IRastrEventHint&>(Event).DBLocation().Column()
                 , static_cast<const IRastrEventHint&>(Event).DBLocation().Index()
@@ -65,6 +66,25 @@ public:
         Result->String("Done");
         return IPlainRastrRetCode::Ok;
     }
+    static const char* const getHintName(EventHints eh){
+        switch(eh){
+            case EventHints::None:             return "hint_None";
+            case EventHints::ChangeAll:        return "hint_ChangeAll";
+            case EventHints::ChangeColumn:     return "hint_ChangeColumn";
+            case EventHints::ChangeRow:        return "hint_ChangeRow";
+            case EventHints::ChangeData:       return "hint_ChangeData";
+            case EventHints::AddRow:           return "hint_AddRow";
+            case EventHints::DeleteRow:        return "hint_DeleteRow";
+            case EventHints::InsertRow :       return "hint_InsertRow";
+            case EventHints::ChangeTable:      return "hint_ChangeTable";
+            case EventHints::BeforeRowDelete:  return "hint_BeforeRowDelete";
+            case EventHints::DeleteTable :     return "hint_DeleteTable";
+            case EventHints::ChangeColor:      return "hint_ChangeColor";
+            case EventHints::AddTable :        return "hint_AddTable";
+        }
+        assert(!"getHintName()");
+        return "hint_xz";
+    }
 };
 
 QAstra::QAstra(QObject *parent)
@@ -72,8 +92,10 @@ QAstra::QAstra(QObject *parent)
 }
 void QAstra::setRastr(_sp_rastr sp_rastr_in){
     sp_rastr_     = sp_rastr_in;
-    up_EventSink_ = std::make_unique<EventSink>();
-    IRastrResultVerify(sp_rastr_->SubscribeEvents(up_EventSink_.get()));
+//    up_EventSink_ = std::make_unique<EventSink>(this);
+ //   IRastrResultVerify(sp_rastr_->SubscribeEvents(up_EventSink_.get()));
+
+    IRastrResultVerify(sp_rastr_->SubscribeEvents(this));
 }
 void QAstra::LoadFile( eLoadCode LoadCode, const std::string_view& FilePath, const std::string_view& TemplatePath ){
     IRastrResultVerify loadresult{ sp_rastr_->Load(LoadCode,FilePath,TemplatePath) };

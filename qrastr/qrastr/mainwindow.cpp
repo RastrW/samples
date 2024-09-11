@@ -174,6 +174,7 @@ int MainWindow::writeSettings(){
     settings.setValue("size", size());
     return 1;
 }
+/*
 class EventSink : public IRastrEventsSinkBase
 {
 public:
@@ -236,7 +237,21 @@ public:
         Result->String("Done");
         return IPlainRastrRetCode::Ok;
     }
-};
+};*/
+
+void MainWindow::tst_onRastrHint(const _data_hint& dh){
+    spdlog::info("XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX");
+    spdlog::info("XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX");
+    spdlog::info("XXX MainWindow::tst_onRastrHint about {} {} {} {} {} XXX"
+        , QAstra::getHintName(dh.hint)
+        , static_cast<std::underlying_type<EventHints>::type>(dh.hint)
+        , dh.str_table
+        , dh.str_column
+        , dh.n_indx
+    );
+    spdlog::info("XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX");
+    spdlog::info("XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX");
+}
 void MainWindow::loadPlugins(){
     //const auto staticInstances = QPluginLoader::staticInstances();
     //for (QObject *plugin : staticInstances){
@@ -266,11 +281,16 @@ void MainWindow::loadPlugins(){
                     iRastr->setLoggerPtr( sp_logger );
                     const std::shared_ptr<IPlainRastr> rastr = iRastr->getIPlainRastrPtr(); // Destroyable rastr{ iRastr };
                     m_up_qastra = std::make_unique<QAstra>();
+                    //QMetaObject::Connection  ccc = connect( m_up_qastra.get(), SIGNAL( onRastrHint(const _data_hint&) ), this, SLOT( tst_onRastrHint(const _data_hint&) ) );
+                    //static const bool myConnection =connect( m_up_qastra.get(), SIGNAL( onRastrHint(const _data_hint&) ), this, SLOT( tst_onRastrHint(const _data_hint&) ) );
+                    const bool myConnection = QObject::connect( m_up_qastra.get(), SIGNAL( onRastrHint(const _data_hint&) ), this, SLOT( tst_onRastrHint(const _data_hint&) ) );
+                    assert(myConnection == true);
+
                     m_up_qastra->setRastr(rastr);
                     QDir::setCurrent(qdirData_.absolutePath());
                     m_up_qastra->LoadFile( eLoadCode::RG_REPL, m_params.Get_on_start_load_file_rastr(), "" );
-
                     if(false){
+                        /*
                         EventSink sink;
                         IRastrResultVerify(rastr->SubscribeEvents(&sink));
                         //std::filesystem::path path_file{LR"(C:\Users\ustas\Documents\RastrWin3\test-rastr\cx195.rg2)"};
@@ -349,6 +369,7 @@ void MainWindow::loadPlugins(){
                         IRastrObjectPtr dcol{ dataset->Item("ny") };
                         // на выходе из скопа врапперы делают Destroy в хипе астры
                         IRastrResultVerify(rastr->UnsubscribeEvents(&sink));
+                        */
                     }//if(false)
 
                 }catch(const std::exception& ex){
