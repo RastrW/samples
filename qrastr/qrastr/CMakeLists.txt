@@ -131,6 +131,8 @@ set(PROJECT_SOURCES
     CondFormat.h
     CondFormat.cpp
     plugin_interfaces.h
+    qastra.h
+    qastra.cpp
 )
 if(MSVC)
     link_directories("${ASTRA_LOCATION}/build/Debug/")

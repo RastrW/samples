@@ -110,7 +110,6 @@ int qAstra::tst_iplainrastr() const {
                         stringutils::acp_encode(R"(C:\Users\ustas\Documents\RastrWin3\test-rastr\cx195.rg2)"),
                         //stringutils::acp_encode(R"(C:\Users\ustas\Documents\RastrWin3\SHABLON\режим.rg2)")
                         std::filesystem::u8path(R"(C:\Users\ustas\Documents\RastrWin3\SHABLON\режим.rg2)").generic_string()
-
                     )
                 };
                 IRastrPayload  rgmresult{ rastr->Rgm("") };

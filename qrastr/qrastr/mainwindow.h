@@ -28,9 +28,11 @@ class QMdiSubWindow;
 class MdiChild;
 class QSignalMapper;
 
+class QAstra;
 class rmodel;
 namespace ads{ class CDockManager; }
-class MainWindow : public QMainWindow{
+class MainWindow
+    : public QMainWindow{
     Q_OBJECT
 public:
     struct _cache_log{
@@ -163,9 +165,13 @@ private:
     QDockWidget *m_dock;
     ads::CDockManager* m_DockManager = nullptr; // The main container for docking
     rmodel *model;
+    Params m_params;
     QDir qdirData_;
     _v_cache_log v_cache_log_;
-    static constexpr char pchSettingsDirData_[]{ "Data"};
-    static constexpr char pchSettingsOrg_[]{ "QRastr"};
+    std::unique_ptr<QAstra> m_up_qastra;
+
+    static constexpr char pchSettingsDirData_[]{"Data"};
+    static constexpr char pchSettingsOrg_[]{"QRastr"};
+
 };
 #endif // MAINWINDOW_H
