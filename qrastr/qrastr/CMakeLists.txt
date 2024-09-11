@@ -57,8 +57,6 @@ find_package( Qt${QT_VERSION_MAJOR} COMPONENTS
 )
 
 qt_standard_project_setup()
-add_subdirectory("plugins/basictools")
-add_subdirectory("plugins/extrafilters")
 add_subdirectory("plugins/rastr")
 add_subdirectory(
     "${CMAKE_CURRENT_SOURCE_DIR}/qmcr/"
