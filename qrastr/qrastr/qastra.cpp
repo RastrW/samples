@@ -7,7 +7,6 @@ class EventSink
         : public IRastrEventsSinkBase{
 public:
     EventSink(const QAstra* pqa){
-
     }
     virtual ~EventSink() = default;
     IPlainRastrRetCode OnEvent(const IRastrEventLog& Event) noexcept override {
@@ -90,12 +89,12 @@ public:
 QAstra::QAstra(QObject *parent)
     : QObject{parent}{
 }
-void QAstra::setRastr(_sp_rastr sp_rastr_in){
+void QAstra::setRastr(const _sp_rastr& sp_rastr_in){
     sp_rastr_     = sp_rastr_in;
-//    up_EventSink_ = std::make_unique<EventSink>(this);
- //   IRastrResultVerify(sp_rastr_->SubscribeEvents(up_EventSink_.get()));
-
     IRastrResultVerify(sp_rastr_->SubscribeEvents(this));
+}
+QAstra::_sp_rastr QAstra::getRastr() const {
+    return sp_rastr_;
 }
 void QAstra::LoadFile( eLoadCode LoadCode, const std::string_view& FilePath, const std::string_view& TemplatePath ){
     IRastrResultVerify loadresult{ sp_rastr_->Load(LoadCode,FilePath,TemplatePath) };

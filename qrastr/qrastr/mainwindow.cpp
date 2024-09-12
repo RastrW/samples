@@ -31,6 +31,7 @@
 using WrapperExceptionType = std::runtime_error;
 #include "IPlainRastrWrappers.h"
 #include "qastra.h"
+#include "tsthints.h"
 
 MainWindow::MainWindow(){
     auto logg = std::make_shared<spdlog::logger>( "qrastr" );
@@ -82,12 +83,17 @@ MainWindow::MainWindow(){
         dw->setWidget(pMcrWnd);
         int f = ads::CDockWidget::CustomCloseHandling;
         dw->setFeature( static_cast<ads::CDockWidget::DockWidgetFeature>(f), true);
-        auto area = m_DockManager->addDockWidgetTab(ads::NoDockWidgetArea, dw);
+        //auto area = m_DockManager->addDockWidgetTab(ads::NoDockWidgetArea, dw);
+        auto container = m_DockManager->addDockWidgetFloating(dw);
+        container->move(QPoint(2100, 20));
+        container->resize(1200,800);
     }
     auto qt_sink = std::make_shared<spdlog::sinks::qt_sink_mt>(pMcrWnd, "onQStringAppendProtocol");
     logg->sinks().push_back(qt_sink);
     pMcrWnd->show();
     loadPlugins();
+
+
 }
 MainWindow::~MainWindow(){
 }
@@ -174,71 +180,6 @@ int MainWindow::writeSettings(){
     settings.setValue("size", size());
     return 1;
 }
-/*
-class EventSink : public IRastrEventsSinkBase
-{
-public:
-    IPlainRastrRetCode OnEvent(const IRastrEventLog& Event) noexcept override
-    {
-        spdlog::info( "Log Status: {:3}  StageId: {:2} EventMsg: {:40} Table: {:10}  Column: {:5} Index: {:5} UIForm: {:10}"
-            , static_cast<std::underlying_type<LogMessageTypes>::type>(Event.Status())
-            , Event.StageId()
-            , Event.Message()
-            , Event.DBLocation().Table()
-            , Event.DBLocation().Column()
-            , Event.DBLocation().Index()
-            , Event.UIForm()
-        );
-        return IPlainRastrRetCode::Ok;
-    }
-    IPlainRastrRetCode OnEvent(const IRastrEventHint& Event) noexcept override
-    {
-        spdlog::info( "Hint: {:1} Table: {:10} Column: {:5} Index: {} "
-            , static_cast<std::underlying_type<EventHints>::type>(Event.Hint())
-            , Event.DBLocation().Table()
-            , Event.DBLocation().Column()
-            , Event.DBLocation().Index()
-        );
-        return IPlainRastrRetCode::Ok;
-    }
-
-    IPlainRastrRetCode OnEvent(const IRastrEventBase& Event) noexcept override
-    {
-        if(Event.Type() == EventTypes::Print)
-            //std::cout << "Print: " << static_cast<const IRastrEventPrint&>(Event).Message() << std::endl;
-            spdlog::info( "Print: {}", static_cast<const IRastrEventPrint&>(Event).Message() );
-        return IPlainRastrRetCode::Ok;
-    }
-
-    IPlainRastrRetCode OnUICommand(const IRastrEventBase& Event, IPlainRastrVariant* Result) noexcept override
-    {
-        EventTypes et = Event.Type();
-        std::string str;
-        if(Event.Type() == EventTypes::Hint){
-            str = fmt::format(" {} {} {} "
-                , static_cast<const IRastrEventHint&>(Event).DBLocation().Table()
-                , static_cast<const IRastrEventHint&>(Event).DBLocation().Column()
-                ,static_cast<const IRastrEventHint&>(Event).DBLocation().Index()
-            );
-        }else if(Event.Type() == EventTypes::Command){
-            str = fmt::format("{} {} {}"
-                , static_cast<const IRastrEventCommand&>(Event).Arg1() // stringutils::acp_encode
-                , static_cast<const IRastrEventCommand&>(Event).Arg2()
-                , static_cast<const IRastrEventCommand&>(Event).Arg3()
-            );
-        }else if(Event.Type() == EventTypes::Log){
-            const auto& w = static_cast<const IRastrEventLog&>(Event);
-            str = fmt::format( "EventTypes::Log" );
-        }else if(Event.Type() == EventTypes::Print){
-            const auto& w = static_cast<const IRastrEventPrint&>(Event);
-            str = fmt::format( "EventTypes::Print" );
-        }
-        spdlog::info( "OnUICommand ({}): {}", static_cast<std::underlying_type<EventTypes>::type>( Event.Type()), str );
-        Result->String("Done");
-        return IPlainRastrRetCode::Ok;
-    }
-};*/
-
 void MainWindow::tst_onRastrHint(const _data_hint& dh){
     spdlog::info("XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX");
     spdlog::info("XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX");
@@ -280,15 +221,56 @@ void MainWindow::loadPlugins(){
                     const std::shared_ptr<spdlog::logger> sp_logger = spdlog::default_logger();
                     iRastr->setLoggerPtr( sp_logger );
                     const std::shared_ptr<IPlainRastr> rastr = iRastr->getIPlainRastrPtr(); // Destroyable rastr{ iRastr };
-                    m_up_qastra = std::make_unique<QAstra>();
-                    //QMetaObject::Connection  ccc = connect( m_up_qastra.get(), SIGNAL( onRastrHint(const _data_hint&) ), this, SLOT( tst_onRastrHint(const _data_hint&) ) );
-                    //static const bool myConnection =connect( m_up_qastra.get(), SIGNAL( onRastrHint(const _data_hint&) ), this, SLOT( tst_onRastrHint(const _data_hint&) ) );
-                    const bool myConnection = QObject::connect( m_up_qastra.get(), SIGNAL( onRastrHint(const _data_hint&) ), this, SLOT( tst_onRastrHint(const _data_hint&) ) );
+                    m_sp_qastra = std::make_unique<QAstra>();
+                    //QMetaObject::Connection  ccc = connect( m_sp_qastra.get(), SIGNAL( onRastrHint(const _data_hint&) ), this, SLOT( tst_onRastrHint(const _data_hint&) ) );
+                    //static const bool myConnection =connect( m_sp_qastra.get(), SIGNAL( onRastrHint(const _data_hint&) ), this, SLOT( tst_onRastrHint(const _data_hint&) ) );
+                    const bool myConnection = QObject::connect( m_sp_qastra.get(), SIGNAL( onRastrHint(const _data_hint&) ), this, SLOT( tst_onRastrHint(const _data_hint&) ) );
                     assert(myConnection == true);
 
-                    m_up_qastra->setRastr(rastr);
+                    m_sp_qastra->setRastr(rastr);
                     QDir::setCurrent(qdirData_.absolutePath());
-                    m_up_qastra->LoadFile( eLoadCode::RG_REPL, m_params.Get_on_start_load_file_rastr(), "" );
+                    m_sp_qastra->LoadFile( eLoadCode::RG_REPL, m_params.Get_on_start_load_file_rastr(), "" );
+                    if(true){
+                        //vetv
+                        TstHints* tstHints_vetv = new TstHints(this);
+                        tstHints_vetv->setQAstra(std::weak_ptr<QAstra>(m_sp_qastra));
+                        tstHints_vetv->setTableName("vetv");
+                        tstHints_vetv->setColNames({"ip","iq","np","name","pl_ip","slb"});
+                        const bool my0 = QObject::connect( m_sp_qastra.get(), SIGNAL( onRastrHint(const _data_hint&) ), tstHints_vetv, SLOT( onRastrHint(const _data_hint&) ) );
+                        assert(my0 == true);
+                        auto dw_tst_hints_vetv = new ads::CDockWidget( "TstHints", this);
+                        dw_tst_hints_vetv->setWidget(tstHints_vetv);
+                        dw_tst_hints_vetv->move(QPoint(20, 20));
+                        auto container_tsthints_vetv = m_DockManager->addDockWidgetFloating(dw_tst_hints_vetv);
+                        container_tsthints_vetv->move(QPoint(1800,10));
+                        container_tsthints_vetv->resize(600,400);
+                        //node
+                        TstHints* tstHints = new TstHints(this);
+                        tstHints->setQAstra(std::weak_ptr<QAstra>(m_sp_qastra));
+                        tstHints->setTableName("node");
+                        tstHints->setColNames({"ny","name","vras","delta"});
+                        const bool my1 = QObject::connect( m_sp_qastra.get(), SIGNAL( onRastrHint(const _data_hint&) ), tstHints, SLOT( onRastrHint(const _data_hint&) ) );
+                        assert(my1 == true);
+                        auto dw_tst_hints = new ads::CDockWidget( "TstHints", this);
+                        dw_tst_hints->setWidget(tstHints);
+                        dw_tst_hints->move(QPoint(20, 20));
+                        auto container_tsthints = m_DockManager->addDockWidgetFloating(dw_tst_hints);
+                        container_tsthints->move(QPoint(1400,20));
+                        container_tsthints->resize(600,400);
+/*
+                        static int colCount = 50;
+                        static int rowCount = 300;
+                        tstHints->setColumnCount(colCount);
+                        tstHints->setRowCount(rowCount);
+                        for (int col = 0; col < colCount; ++col){
+                          tstHints->setHorizontalHeaderItem(col, new QTableWidgetItem(QString("Col %1").arg(col+1)));
+                          for (int row = 0; row < rowCount; ++row){
+                             tstHints->setItem(row, col, new QTableWidgetItem(QString("T %1-%2").arg(row + 1).arg(col+1)));
+                          }
+                        }
+*/
+                    }
+
                     if(false){
                         /*
                         EventSink sink;
@@ -496,7 +478,7 @@ void MainWindow::open(){
             msgBox.critical( this, tr("File not loaded"), str_msg.c_str() );
         }
 
-        m_up_qastra->LoadFile(eLoadCode::RG_REPL, fileName.toStdString(),"");
+        m_sp_qastra->LoadFile(eLoadCode::RG_REPL, fileName.toStdString(),"");
     }
 }
 void MainWindow::save(){
@@ -594,7 +576,7 @@ void MainWindow::rgm_wrap(){
     }
     statusBar()->showMessage( str_msg.c_str(), 0 );
 
-    m_up_qastra->Rgm("");
+    m_sp_qastra->Rgm("");
 
     emit rgm_signal();
 }

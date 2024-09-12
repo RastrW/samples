@@ -171,7 +171,7 @@ private:
     Params m_params;
     QDir qdirData_;
     _v_cache_log v_cache_log_;
-    std::unique_ptr<QAstra> m_up_qastra;
+    std::shared_ptr<QAstra> m_sp_qastra;
 
     static constexpr char pchSettingsDirData_[]{"Data"};
     static constexpr char pchSettingsOrg_[]{"QRastr"};

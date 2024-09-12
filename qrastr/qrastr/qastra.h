@@ -107,10 +107,10 @@ public:
         assert(!"getHintName()");
         return "hint_xz";
     }
-
     explicit QAstra(QObject *parent = nullptr);
     virtual ~QAstra() = default;
-    void setRastr(_sp_rastr sp_rastr_in);
+    void      setRastr(const _sp_rastr& sp_rastr_in);
+    _sp_rastr getRastr() const;
     void LoadFile( eLoadCode LoadCode, const std::string_view& FilePath, const std::string_view& TemplatePath );
     eASTCode Rgm(const std::string_view& parameters = {});
 signals:

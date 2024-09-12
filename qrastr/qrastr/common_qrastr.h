@@ -12,6 +12,15 @@
 #include "Exceptions.h"
 //#include <spdlog/fmt/bundled/format.h>
 
+template<>
+struct fmt::formatter<QString>
+    : fmt::formatter<std::string>{
+    auto format(QString qstr, format_context &ctx) const -> decltype(ctx.out()) {
+        return format_to( ctx.out(), "{}", qstr.toStdString() );
+    }
+};
+
+
 enum class _err_code1{
     norm = 1,
     fail = -1,
