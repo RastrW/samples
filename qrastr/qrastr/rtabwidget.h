@@ -16,6 +16,7 @@
 
 
 class QMimeData;
+class QAstra;
 
 class RtabWidget : public QWidget
 {
@@ -23,6 +24,8 @@ class RtabWidget : public QWidget
 public:
     explicit RtabWidget(QWidget *parent = nullptr);
     explicit RtabWidget(CRastrHlp& _rh,int n_indx,QWidget *parent = nullptr);
+    explicit RtabWidget(CRastrHlp& _rh, QAstra* pqastra, int n_indx,QWidget *parent = nullptr);
+
     void SetTableView(QTableView& tv, RModel& mm, int myltiplier = 15);
 private:
     void test(const QModelIndexList& fromIndices);
@@ -48,6 +51,7 @@ public slots:
 
 private slots:
     void CreateModel(CRastrHlp& _rh);
+    void CreateModel(CRastrHlp& _rh,QAstra* pqastra);
 
 
 public:

@@ -1,0 +1,322 @@
+{
+    "forms": [
+        {
+            "addToMenuIndex": 1,
+            "fields": [
+                {
+                    "name": "sel"
+                },
+                {
+                    "name": "Num"
+                },
+                {
+                    "name": "name"
+                },
+                {
+                    "name": "Type"
+                },
+                {
+                    "name": "auto"
+                }
+            ],
+            "menuPath": "\\АПНУ",
+            "name": "АПНУ:Аварийный процесс",
+            "tableName": "var_mer"
+        },
+        {
+            "addToMenuIndex": 1,
+            "fields": [
+                {
+                    "name": "sta"
+                },
+                {
+                    "name": "Num"
+                },
+                {
+                    "name": "fol"
+                },
+                {
+                    "name": "auto"
+                },
+                {
+                    "name": "Type"
+                },
+                {
+                    "name": "Ad1"
+                },
+                {
+                    "name": "Ad2"
+                },
+                {
+                    "name": "Ad3"
+                },
+                {
+                    "name": "Value1"
+                },
+                {
+                    "name": "Value2"
+                },
+                {
+                    "name": "Value3"
+                },
+                {
+                    "name": "time"
+                }
+            ],
+            "menuPath": "\\АПНУ",
+            "name": "АПНУ:Аварийная ситуация",
+            "tableName": "var_Param"
+        },
+        {
+            "addToMenuIndex": 1,
+            "fields": [
+                {
+                    "name": "sta"
+                },
+                {
+                    "name": "Id"
+                },
+                {
+                    "name": "Name"
+                },
+                {
+                    "name": "tipel"
+                },
+                {
+                    "name": "tip"
+                },
+                {
+                    "name": "sgn"
+                },
+                {
+                    "name": "vord"
+                },
+                {
+                    "name": "Id1"
+                },
+                {
+                    "name": "Id2"
+                },
+                {
+                    "name": "Id3"
+                },
+                {
+                    "name": "out"
+                },
+                {
+                    "name": "Acxema"
+                },
+                {
+                    "name": "Agroup"
+                },
+                {
+                    "name": "koef"
+                },
+                {
+                    "name": "delay"
+                },
+                {
+                    "name": "delay_stat"
+                },
+                {
+                    "name": "percent"
+                },
+                {
+                    "name": "power"
+                }
+            ],
+            "menuPath": "\\АПНУ",
+            "name": "АПНУ:Элементы автоматики",
+            "tableName": "KPRd"
+        },
+        {
+            "addToMenuIndex": 1,
+            "fields": [
+                {
+                    "name": "Id"
+                },
+                {
+                    "name": "Id_sx"
+                },
+                {
+                    "name": "Id_stp"
+                },
+                {
+                    "name": "P"
+                },
+                {
+                    "name": "Kv"
+                },
+                {
+                    "name": "T"
+                }
+            ],
+            "menuPath": "\\АПНУ",
+            "name": "АПНУ: Уставки эл-тов автоматики",
+            "tableName": "KPRs"
+        },
+        {
+            "addToMenuIndex": 1,
+            "fields": [
+                {
+                    "name": "model"
+                },
+                {
+                    "name": "Id_in"
+                },
+                {
+                    "name": "Id_out"
+                },
+                {
+                    "name": "Id1"
+                },
+                {
+                    "name": "Id2"
+                },
+                {
+                    "name": "Id3"
+                },
+                {
+                    "name": "P"
+                },
+                {
+                    "name": "status"
+                }
+            ],
+            "menuPath": "\\АПНУ",
+            "name": "АПНУ:Логика соединения элементов",
+            "tableName": "LogicLAPNU"
+        },
+        {
+            "addToMenuIndex": 1,
+            "fields": [
+                {
+                    "name": "sta"
+                },
+                {
+                    "name": "sel"
+                },
+                {
+                    "name": "Id"
+                },
+                {
+                    "name": "Name"
+                },
+                {
+                    "name": "balance"
+                },
+                {
+                    "name": "u_krit"
+                }
+            ],
+            "menuPath": "\\АПНУ",
+            "name": "АПНУ: Название автоматики",
+            "tableName": "LAPNU"
+        },
+        {
+            "addToMenuIndex": 1,
+            "fields": [
+                {
+                    "name": "ng"
+                },
+                {
+                    "name": "Name"
+                },
+                {
+                    "name": "n_zav"
+                },
+                {
+                    "name": "png"
+                },
+                {
+                    "name": "contr_ng"
+                },
+                {
+                    "name": "Id_out"
+                },
+                {
+                    "name": "ng_tarif"
+                },
+                {
+                    "name": "pmax_ng"
+                }
+            ],
+            "menuPath": "\\АПНУ",
+            "name": "АПНУ: Группа отключения нагрузки (ОН)",
+            "tableName": "nagrVRDO"
+        },
+        {
+            "addToMenuIndex": 1,
+            "fields": [
+                {
+                    "name": "nng"
+                },
+                {
+                    "name": "nyng"
+                },
+                {
+                    "name": "proc"
+                },
+                {
+                    "name": "P"
+                },
+                {
+                    "name": "Q"
+                },
+                {
+                    "name": "delay"
+                }
+            ],
+            "menuPath": "\\АПНУ",
+            "name": "АПНУ:Состав  группы ОН",
+            "tableName": "snagrVRDO"
+        },
+        {
+            "addToMenuIndex": 1,
+            "fields": [
+                {
+                    "name": "Id_group"
+                },
+                {
+                    "name": "Id_parent"
+                },
+                {
+                    "name": "name_parent"
+                },
+                {
+                    "name": "tipel_parent"
+                },
+                {
+                    "name": "Id_child"
+                },
+                {
+                    "name": "name_child"
+                },
+                {
+                    "name": "tip_child"
+                },
+                {
+                    "name": "act_group_alg_child"
+                },
+                {
+                    "name": "power_child"
+                }
+            ],
+            "menuPath": "\\АПНУ",
+            "name": "АПНУ:Слагаемые сумматора",
+            "tableName": "RelElemLapnu"
+        },
+        {
+            "addToMenuIndex": 2,
+            "fields": [
+                {
+                    "name": "log_level"
+                }
+            ],
+            "menuPath": "\\",
+            "name": "АПНУ",
+            "tableName": "com_lapnu",
+            "vertical": true
+        }
+    ]
+}

@@ -15,6 +15,17 @@ RModel::RModel(QObject *parent, CRastrHlp& rastr)
     connect(timer_, &QTimer::timeout , this, &RModel::timerHit);
     timer_->start();
 }
+RModel::RModel(QObject *parent, CRastrHlp& rastr, QAstra* pqastra)
+    : QAbstractTableModel(parent)
+    , rastr_(rastr)
+    , pqastra_(pqastra)
+    , timer_(new QTimer(this)){
+    setEmitSignals(true);
+    timer_->setInterval(1000);
+    connect(timer_, &QTimer::timeout , this, &RModel::timerHit);
+    timer_->start();
+}
+
 int RModel::populateDataFromRastr(){
 
     rastr_.GetFormData(n_form_indx_);
@@ -22,7 +33,8 @@ int RModel::populateDataFromRastr(){
 
     up_rdata = std::unique_ptr<RData>(new RData( rastr_.GetRastrId(),form.TableName()));
     up_rdata->Initialize(form);
-    up_rdata->populate();
+    //up_rdata->populate();
+    up_rdata->populate_qastra(this->pqastra_);
 
     for (RCol &rcol : *up_rdata)
         vqcols_.push_back(rcol.title().c_str());
@@ -58,7 +70,8 @@ QVariant RModel::data(const QModelIndex &index, int role) const
         case Qt::EditRole:
 
         switch((*iter_data).index()){
-            case RCol::_en_data::DATA_INT: item =  std::get<int>(*iter_data) ;                 break;
+            case RCol::_en_data::DATA_BOOL: item =  std::get<bool>(*iter_data) ;                 break;
+            case RCol::_en_data::DATA_INT: item =  (qlonglong)std::get<long>(*iter_data) ;                 break;
             case RCol::_en_data::DATA_STR: item =  std::get<std::string>(*iter_data).c_str() ; break;
             case RCol::_en_data::DATA_DBL: item =  std::get<double>(*iter_data);               break;
             default :                      item =  ( "type_unknown" );                         break;
@@ -163,7 +176,7 @@ bool RModel::setData(const QModelIndex &index, const QVariant &value, int role)
         switch((*iter_data).index()){
         case RCol::_en_data::DATA_INT:
             qDebug() << "int: " << value.toInt();
-            (*iter_data).emplace<int> (value.toInt());
+            (*iter_data).emplace<long> (value.toInt());
             ValSetInt(up_rdata->id_rastr_,up_rdata->t_name_.c_str(),(*iter_col).str_name_.c_str(),row,value.toInt());
             qDebug() << "set: "<<up_rdata->t_name_.c_str()<<"."<< (*iter_col).str_name_.c_str() << "(" << row << ")=" <<value.toInt();
             break;
@@ -289,7 +302,7 @@ void RModel::onRModelchange(std::string _t_name, std::string _col_name, int _row
 
     switch((*iter_data).index()){
     case RCol::_en_data::DATA_INT:
-        (*iter_data).emplace<int> (_value.toInt());
+        (*iter_data).emplace<long> (_value.toInt());
         break;
     case RCol::_en_data::DATA_STR:
         (*iter_data).emplace<std::string>(_value.toString().toStdString().c_str());

@@ -1,0 +1,53 @@
+{
+    "forms": [
+        {
+            "addToMenuIndex": 1,
+            "fields": [
+                {
+                    "name": "sel"
+                },
+                {
+                    "name": "Num"
+                },
+                {
+                    "name": "name"
+                },
+                {
+                    "name": "tip"
+                },
+                {
+                    "name": "tabl"
+                },
+                {
+                    "name": "vibork"
+                },
+                {
+                    "name": "formula"
+                },
+                {
+                    "name": "prec"
+                },
+                {
+                    "name": "mash"
+                }
+            ],
+            "menuPath": "\\Контр-е величины",
+            "name": "Описание",
+            "tableName": "ots_val"
+        },
+        {
+            "addToMenuIndex": 1,
+            "fields": [
+                {
+                    "name": "Num"
+                },
+                {
+                    "name": "name"
+                }
+            ],
+            "menuPath": "\\Контр-е величины",
+            "name": "Значения",
+            "tableName": "ots_znach"
+        }
+    ]
+}

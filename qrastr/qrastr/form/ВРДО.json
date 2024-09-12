@@ -1,0 +1,736 @@
+{
+    "forms": [
+        {
+            "addToMenuIndex": 2,
+            "fields": [
+                {
+                    "name": "obj_func"
+                },
+                {
+                    "name": "obj_fgen"
+                },
+                {
+                    "name": "obj_fV"
+                },
+                {
+                    "name": "obj_fQ"
+                },
+                {
+                    "name": "obj_fKt"
+                },
+                {
+                    "name": "obj_fI"
+                },
+                {
+                    "name": "obj_fNG"
+                },
+                {
+                    "name": "obj_fSch"
+                },
+                {
+                    "name": "num"
+                },
+                {
+                    "name": "centr"
+                },
+                {
+                    "name": "tipr"
+                },
+                {
+                    "name": "it_max"
+                },
+                {
+                    "name": "plos"
+                },
+                {
+                    "name": "status"
+                },
+                {
+                    "name": "potr"
+                },
+                {
+                    "name": "LP_max"
+                },
+                {
+                    "name": "LQ_max"
+                },
+                {
+                    "name": "LDPG_max"
+                },
+                {
+                    "name": "LPS_max"
+                },
+                {
+                    "name": "LI_max"
+                },
+                {
+                    "name": "LV_max"
+                },
+                {
+                    "name": "LDQ_max"
+                },
+                {
+                    "name": "LKT_max"
+                },
+                {
+                    "name": "LP_dta"
+                },
+                {
+                    "name": "LQ_dta"
+                },
+                {
+                    "name": "LDPG_dta"
+                },
+                {
+                    "name": "LPS_dta"
+                },
+                {
+                    "name": "LI_dta"
+                },
+                {
+                    "name": "LV_dta"
+                },
+                {
+                    "name": "LDQ_dta"
+                },
+                {
+                    "name": "LKT_dta"
+                },
+                {
+                    "name": "out_level"
+                },
+                {
+                    "name": "LIO_max"
+                },
+                {
+                    "name": "LOI_dta"
+                },
+                {
+                    "name": "T_func"
+                },
+                {
+                    "name": "Tg_func"
+                },
+                {
+                    "name": "tarif"
+                },
+                {
+                    "name": "start_method"
+                },
+                {
+                    "name": "main_method"
+                },
+                {
+                    "name": "criteria1"
+                },
+                {
+                    "name": "formula1"
+                },
+                {
+                    "name": "R_it"
+                },
+                {
+                    "name": "start_sigma"
+                },
+                {
+                    "name": "main_sigma"
+                },
+                {
+                    "name": "R_ro"
+                },
+                {
+                    "name": "R_sigma"
+                },
+                {
+                    "name": "R_pdad"
+                },
+                {
+                    "name": "R_pdad_af"
+                },
+                {
+                    "name": "min_mu2"
+                },
+                {
+                    "name": "min_mu"
+                },
+                {
+                    "name": "test_PQ_diagram"
+                }
+            ],
+            "menuPath": "\\ВРДО",
+            "name": "Настройки OPF",
+            "tableName": "com_opf",
+            "vertical": true
+        },
+        {
+            "addToMenuIndex": 1,
+            "fields": [
+                {
+                    "name": "sel"
+                },
+                {
+                    "name": "sta"
+                },
+                {
+                    "name": "tip"
+                },
+                {
+                    "name": "ny"
+                },
+                {
+                    "name": "name"
+                },
+                {
+                    "name": "umin"
+                },
+                {
+                    "name": "umax"
+                },
+                {
+                    "name": "vras"
+                },
+                {
+                    "name": "vzd_min"
+                },
+                {
+                    "name": "vzd_max"
+                },
+                {
+                    "name": "vzd"
+                },
+                {
+                    "name": "contr_v"
+                },
+                {
+                    "name": "usmin"
+                },
+                {
+                    "name": "usmax"
+                },
+                {
+                    "name": "vs_tarif"
+                },
+                {
+                    "name": "contr_vs"
+                },
+                {
+                    "name": "qmin"
+                },
+                {
+                    "name": "qmax"
+                },
+                {
+                    "name": "qg"
+                },
+                {
+                    "name": "reg_q"
+                },
+                {
+                    "name": "qsmin"
+                },
+                {
+                    "name": "qsmax"
+                },
+                {
+                    "name": "qs_tarif"
+                },
+                {
+                    "name": "reg_qs"
+                },
+                {
+                    "name": "lp"
+                },
+                {
+                    "name": "lq"
+                }
+            ],
+            "menuPath": "\\ВРДО",
+            "name": "ВРДО: Узлы",
+            "tableName": "node"
+        },
+        {
+            "addToMenuIndex": 1,
+            "fields": [
+                {
+                    "name": "sel"
+                },
+                {
+                    "name": "sta"
+                },
+                {
+                    "name": "tip"
+                },
+                {
+                    "name": "ip"
+                },
+                {
+                    "name": "iq"
+                },
+                {
+                    "name": "np"
+                },
+                {
+                    "name": "name"
+                },
+                {
+                    "name": "kr_min"
+                },
+                {
+                    "name": "kr_max"
+                },
+                {
+                    "name": "ktr"
+                },
+                {
+                    "name": "kti"
+                },
+                {
+                    "name": "n_anc"
+                },
+                {
+                    "name": "bd"
+                },
+                {
+                    "name": "reg_kt"
+                },
+                {
+                    "name": "krs_min"
+                },
+                {
+                    "name": "krs_max"
+                },
+                {
+                    "name": "krs_tarif"
+                },
+                {
+                    "name": "reg_krs"
+                },
+                {
+                    "name": "ib"
+                },
+                {
+                    "name": "ie"
+                },
+                {
+                    "name": "msi"
+                },
+                {
+                    "name": "i_dop"
+                },
+                {
+                    "name": "i_dop_r"
+                },
+                {
+                    "name": "contr_i"
+                },
+                {
+                    "name": "is_dop"
+                },
+                {
+                    "name": "is_dop_r"
+                },
+                {
+                    "name": "is_tarif"
+                },
+                {
+                    "name": "contr_is"
+                }
+            ],
+            "menuPath": "\\ВРДО",
+            "name": "ВРДО: Ветви",
+            "tableName": "vetv"
+        },
+        {
+            "addToMenuIndex": 1,
+            "fields": [
+                {
+                    "name": "ny"
+                },
+                {
+                    "name": "vras"
+                },
+                {
+                    "name": "vras_cmp"
+                },
+                {
+                    "name": "vras_cmp_d"
+                },
+                {
+                    "name": "delta"
+                },
+                {
+                    "name": "delta_cmp"
+                },
+                {
+                    "name": "delta_cmp_d"
+                },
+                {
+                    "name": "pg"
+                },
+                {
+                    "name": "pg_cmp"
+                },
+                {
+                    "name": "pg_cmp_d"
+                },
+                {
+                    "name": "vzd"
+                },
+                {
+                    "name": "vzd_cmp"
+                },
+                {
+                    "name": "vzd_cmp_d"
+                }
+            ],
+            "menuPath": "\\ВРДО",
+            "name": "ВРДО: Узлы_различия",
+            "tableName": "node"
+        },
+        {
+            "addToMenuIndex": 1,
+            "fields": [
+                {
+                    "name": "ip"
+                },
+                {
+                    "name": "iq"
+                },
+                {
+                    "name": "n_anc"
+                },
+                {
+                    "name": "n_anc_cmp"
+                },
+                {
+                    "name": "n_anc_cmp_d"
+                },
+                {
+                    "name": "n_anc_i"
+                },
+                {
+                    "name": "n_anc_i_cmp"
+                },
+                {
+                    "name": "n_anc_i_cmp_d"
+                },
+                {
+                    "name": "ktr"
+                },
+                {
+                    "name": "ktr_cmp"
+                },
+                {
+                    "name": "ktr_cmp_d"
+                },
+                {
+                    "name": "kti"
+                },
+                {
+                    "name": "kti_cmp"
+                },
+                {
+                    "name": "kti_cmp_d"
+                }
+            ],
+            "menuPath": "\\ВРДО",
+            "name": "ВРДО: Ветви_различия",
+            "tableName": "vetv"
+        },
+        {
+            "addToMenuIndex": 1,
+            "fields": [
+                {
+                    "name": "ns"
+                },
+                {
+                    "name": "name"
+                },
+                {
+                    "name": "pmin"
+                },
+                {
+                    "name": "pmax"
+                },
+                {
+                    "name": "psmin"
+                },
+                {
+                    "name": "psmax"
+                },
+                {
+                    "name": "psech"
+                },
+                {
+                    "name": "ps_tarif"
+                },
+                {
+                    "name": "sta_ps"
+                },
+                {
+                    "name": "sta"
+                },
+                {
+                    "name": "tip"
+                }
+            ],
+            "menuPath": "\\ВРДО",
+            "name": "ВРДО: Сечения",
+            "tableName": "sechen"
+        },
+        {
+            "addToMenuIndex": 1,
+            "fields": [
+                {
+                    "name": "ny"
+                },
+                {
+                    "name": "name"
+                },
+                {
+                    "name": "vras"
+                },
+                {
+                    "name": "gsh"
+                },
+                {
+                    "name": "bsh"
+                },
+                {
+                    "name": "sta_r"
+                },
+                {
+                    "name": "reg_rk"
+                },
+                {
+                    "name": "nrk"
+                },
+                {
+                    "name": "max_rk"
+                },
+                {
+                    "name": "grk"
+                },
+                {
+                    "name": "brk"
+                },
+                {
+                    "name": "psh"
+                },
+                {
+                    "name": "qsh"
+                },
+                {
+                    "name": "gshr"
+                },
+                {
+                    "name": "bshr"
+                }
+            ],
+            "menuPath": "\\ВРДО",
+            "name": "ВРДО: Шунты",
+            "query": "gsh!=0|bsh!=0|brk!=0",
+            "tableName": "node"
+        },
+        {
+            "addToMenuIndex": 1,
+            "fields": [
+                {
+                    "name": "sta"
+                },
+                {
+                    "name": "reg_sta"
+                },
+                {
+                    "name": "Type"
+                },
+                {
+                    "name": "Num"
+                },
+                {
+                    "name": "Name"
+                },
+                {
+                    "name": "Node"
+                },
+                {
+                    "name": "Pdem"
+                },
+                {
+                    "name": "P"
+                },
+                {
+                    "name": "P2"
+                },
+                {
+                    "name": "Pmin"
+                },
+                {
+                    "name": "Pmax"
+                },
+                {
+                    "name": "PminCav"
+                },
+                {
+                    "name": "PmaxCav"
+                },
+                {
+                    "name": "Q"
+                },
+                {
+                    "name": "Qmin"
+                },
+                {
+                    "name": "Qmax"
+                },
+                {
+                    "name": "NumPQ"
+                },
+                {
+                    "name": "Pgconst"
+                },
+                {
+                    "name": "Tarif"
+                },
+                {
+                    "name": "NodePrice"
+                },
+                {
+                    "name": "tg_phi"
+                },
+                {
+                    "name": "xd"
+                },
+                {
+                    "name": "cosFi"
+                },
+                {
+                    "name": "Ugnom"
+                },
+                {
+                    "name": "ki"
+                },
+                {
+                    "name": "ke"
+                }
+            ],
+            "menuPath": "\\ВРДО",
+            "name": "ВРДО: Генераторы",
+            "tableName": "Generator"
+        },
+        {
+            "addToMenuIndex": 1,
+            "fields": [
+                {
+                    "name": "Num"
+                },
+                {
+                    "name": "NPoint"
+                },
+                {
+                    "name": "P"
+                },
+                {
+                    "name": "dB"
+                }
+            ],
+            "menuPath": "\\ВРДО",
+            "name": "ВРДО: ХОПС Генераторы",
+            "tableName": "ReadyXop"
+        },
+        {
+            "addToMenuIndex": 1,
+            "fields": [
+                {
+                    "name": "nng"
+                },
+                {
+                    "name": "nyng"
+                },
+                {
+                    "name": "proc"
+                },
+                {
+                    "name": "P"
+                },
+                {
+                    "name": "Q"
+                }
+            ],
+            "menuPath": "\\ВРДО",
+            "name": "ВРДО: Состав нагр.гр.",
+            "tableName": "snagrVRDO"
+        },
+        {
+            "addToMenuIndex": 1,
+            "fields": [
+                {
+                    "name": "ng"
+                },
+                {
+                    "name": "contr_ng"
+                },
+                {
+                    "name": "ng_tarif"
+                },
+                {
+                    "name": "png"
+                },
+                {
+                    "name": "pmax_ng"
+                }
+            ],
+            "menuPath": "\\ВРДО",
+            "name": "ВРДО: Нагр. группы",
+            "tableName": "nagrVRDO"
+        },
+        {
+            "addToMenuIndex": 2,
+            "fields": [
+                {
+                    "name": "contr_I"
+                },
+                {
+                    "name": "contr_V"
+                },
+                {
+                    "name": "contr_Ps"
+                },
+                {
+                    "name": "reg_Kt"
+                },
+                {
+                    "name": "reg_Q"
+                },
+                {
+                    "name": "contr_Is"
+                },
+                {
+                    "name": "contr_Vs"
+                },
+                {
+                    "name": "contr_Pss"
+                },
+                {
+                    "name": "reg_Krs"
+                },
+                {
+                    "name": "reg_Kis"
+                },
+                {
+                    "name": "reg_Qs"
+                },
+                {
+                    "name": "save_rg"
+                },
+                {
+                    "name": "run_auto"
+                }
+            ],
+            "menuPath": "\\ВРДО",
+            "name": "Настройки ВРДО",
+            "tableName": "com_vrdo",
+            "vertical": true
+        }
+    ]
+}

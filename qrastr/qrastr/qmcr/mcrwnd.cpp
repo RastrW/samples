@@ -423,9 +423,44 @@ void McrWnd::Find(SciHlp::_params_find params_find){
     qDebug()<<"Find()-> "<<params_find.qstrFind_  << "\n";
     const SciHlp::_ret_vals rv = shEdit_->Find(params_find);
 }
+void encode(std::string& data){
+    std::string buffer;
+    buffer.reserve(data.size()+30);
+    for(size_t pos = 0; pos != data.size(); ++pos){
+        switch(data[pos]) {
+            case '&':  buffer.append("&amp;");       break;
+            case '\"': buffer.append("&quot;");      break;
+            case '\'': buffer.append("&apos;");      break;
+            case '<':  buffer.append("&lt;");        break;
+            case '>':  buffer.append("&gt;");        break;
+            default:   buffer.append(&data[pos], 1); break;
+        }
+    }
+    data.swap(buffer);
+}
+void encode(std::string& data_out, const QString& qstr_in){
+    data_out.reserve(qstr_in.length() + 50);
+    for(size_t pos = 0; pos != qstr_in.length(); ++pos) {
+        if      (QLatin1Char('&')  == qstr_in[pos]){
+            data_out.append("&amp;");
+        }else if(QLatin1Char('\"') == qstr_in[pos]){
+            data_out.append("&quot;");
+        }else if(QLatin1Char('\'') == qstr_in[pos]){
+            data_out.append("&apos;");
+        }else if(QLatin1Char('<')  == qstr_in[pos]){
+            data_out.append("&lt;");
+        }else if(QLatin1Char('>')  == qstr_in[pos]){
+            data_out.append("&gt;");
+        }else{
+            data_out.append("x", 1);
+        }
+    }
+    data_out.append("\n");
+}
+
 void McrWnd::onQStringAppendProtocol(const QString& qstr){
-    //assert(!"hello");
     std::string str{qstr.toStdString()};
+    encode(str);
     str += "\n";
     shProt_->my_appendTect(str);
 }

@@ -58,8 +58,6 @@ find_package( Qt${QT_VERSION_MAJOR} COMPONENTS
 )
 
 qt_standard_project_setup()
-add_subdirectory("plugins/basictools")
-add_subdirectory("plugins/extrafilters")
 add_subdirectory("plugins/rastr")
 add_subdirectory(
     "${CMAKE_CURRENT_SOURCE_DIR}/qmcr/"
@@ -145,6 +143,8 @@ set(PROJECT_SOURCES
     CondFormat.h
     CondFormat.cpp
     plugin_interfaces.h
+    qastra.h
+    qastra.cpp
 )
 if(MSVC)
     link_directories("${ASTRA_LOCATION}/build/Debug/")

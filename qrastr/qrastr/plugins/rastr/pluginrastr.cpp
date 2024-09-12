@@ -9,9 +9,6 @@ using WrapperExceptionType = std::runtime_error;
 #include "IPlainRastrWrappers.h"
 #include "pluginrastr.h"
 
-qAstra::qAstra(QObject *parent)
-    : QObject{parent}{
-}
 class EventSink : public IRastrEventsSinkBase
 {
 public:
@@ -50,6 +47,9 @@ public:
         return IPlainRastrRetCode::Ok;
     }
 };
+qAstra::qAstra(QObject *parent)
+    : QObject{parent}{
+}
 int qAstra::tst_iplainrastr() const {
 #ifdef _DEBUG
     //std::filesystem::current_path("/source/repos/rastr/RastrWin/Debug64/");
@@ -76,7 +76,6 @@ int qAstra::tst_iplainrastr() const {
                         stringutils::acp_encode(R"(C:\Users\ustas\Documents\RastrWin3\test-rastr\cx195.rg2)"),
                         //stringutils::acp_encode(R"(C:\Users\ustas\Documents\RastrWin3\SHABLON\режим.rg2)")
                         std::filesystem::u8path(R"(C:\Users\ustas\Documents\RastrWin3\SHABLON\режим.rg2)").generic_string()
-
                     )
                 };
                 IRastrPayload  rgmresult{ rastr->Rgm("") };
@@ -150,34 +149,40 @@ int qAstra::tst_iplainrastr() const {
     }
     return 1;
 }
-
 std::shared_ptr<IPlainRastr> qAstra::getPlainRastrSharedPtr(){
+    std::filesystem::path path_dir_r;
 #ifdef _DEBUG
-    //std::filesystem::current_path("/source/repos/rastr/RastrWin/Debug64/");
-    //std::filesystem::current_path(R"(C:\projects\rastr\RastrWin\Debug64)");
-    std::filesystem::current_path(R"(C:\projects\tfs\rastr\RastrWin\Debug64)");
+    //path_dir_r = LR"(C:\projects\rastr\RastrWin\Debug64)";
+    path_dir_r = LR"(C:\projects\tfs\rastr\RastrWin\Debug64)";
 #else
-    //std::filesystem::current_path("/source/repos/rastr/RastrWin/Release64/");
-    std::filesystem::current_path(R"(C:\projects\rastr\RastrWin\Release64\)");
+    path_dir_r = LR"(C:\projects\rastr\RastrWin\Release64\)";
 #endif
-    std::shared_ptr<IPlainRastr> shRastr1 ;
-    SetConsoleOutputCP(CP_UTF8);
+    spdlog::info( "Look Rastr in: {}", path_dir_r.generic_u8string());
+    std::filesystem::current_path(path_dir_r);
+    std::shared_ptr<IPlainRastr> shRastrOut;
     try{
-        QLibrary qlRastr{"astra"};
+        const char* pch_name_astra_dll         {"astra"};
+        const char* pch_name_plain_factory_fun {"PlainRastrFactory"};
+        QLibrary qlRastr{pch_name_astra_dll};
         if(qlRastr.load()){
-            const QFunctionPointer pfn{ qlRastr.resolve("PlainRastrFactory") };
+            const QFunctionPointer pfn{ qlRastr.resolve(pch_name_plain_factory_fun) };
             if(pfn!=nullptr){
                 _prf fnFactory = reinterpret_cast<_prf>(pfn);
                 std::shared_ptr<IPlainRastr> shRastr {  (fnFactory)() };
-                shRastr1.swap( shRastr );
-                Destroyable rastr{ (fnFactory)() };
-
+                shRastrOut.swap( shRastr );
+                spdlog::info("Get from [{}] functon: {}", pch_name_astra_dll, pch_name_plain_factory_fun);
+            }else{
+                spdlog::error("Not found functon: {} :: {}", pch_name_astra_dll, pch_name_plain_factory_fun);
             }
+        }else{
+            spdlog::error("Can't load: {}", pch_name_astra_dll);
         }
-    } catch(...){
-
+    }catch(const std::exception& ex){
+        spdlog::error("Catch exception: {}", ex.what());
+    }catch(...){
+        spdlog::error("Catch unknown exception.");
     }
-    return shRastr1;
+    return shRastrOut;
 }
 void PluginRastr::setLoggerPtr(std::shared_ptr<spdlog::logger> spLoger){
     spdlog::set_default_logger(spLoger);

@@ -27,11 +27,26 @@
 #include "mdiChildHeaderGrid.h"
 #include "astra_exp.h"
 #include "qmcr/mcrwnd.h"
-
+#include "plugin_interfaces.h"
 using WrapperExceptionType = std::runtime_error;
 #include "IPlainRastrWrappers.h"
+#include "qastra.h"
 
 MainWindow::MainWindow(){
+    auto logg = std::make_shared<spdlog::logger>( "qrastr" );
+    spdlog::set_default_logger(logg);
+    SetConsoleOutputCP(CP_UTF8);
+    auto console_sink = std::make_shared<spdlog::sinks::stdout_color_sink_mt>();
+    logg->sinks().push_back(console_sink);
+    int n_res = readSettings();
+    const bool bl_res = QDir::setCurrent(qdirData_.path()); assert(bl_res==true);
+    std::filesystem::path path_log{ qdirData_.absolutePath().toStdString() };
+    path_log /= L"qrastr_log.txt";
+    auto rotating_sink = std::make_shared<spdlog::sinks::rotating_file_sink_mt>( path_log.c_str(), 1024*1024*1, 3);
+    std::vector<spdlog::sink_ptr> sinks{ console_sink, rotating_sink };
+    logg->sinks().push_back(rotating_sink);
+    spdlog::info( "ReadSetting: {}", n_res );
+    spdlog::info( "Log: {}", path_log.generic_u8string() );
     m_workspace = new QMdiArea;
     setCentralWidget(m_workspace);
     connect(m_workspace, SIGNAL(subWindowActivated(QMdiSubWindow *)), this, SLOT(updateMenus()));
@@ -42,18 +57,19 @@ MainWindow::MainWindow(){
     createToolBars();
     createStatusBar();
     updateMenus();
+    setForms();
     setWindowTitle(tr("~qrastr~"));
     //int nRes = test();
     ads::CDockManager::setConfigFlag(ads::CDockManager::FocusHighlighting, true);
     ads::CDockManager::setConfigFlag(ads::CDockManager::AllTabsHaveCloseButton, true);
     m_DockManager = new ads::CDockManager(this);
     QObject::connect(m_DockManager, &ads::CDockManager::focusedDockWidgetChanged
-                     , [] (ads::CDockWidget* old, ads::CDockWidget* now) {
-                         static int Count = 0;
-                         qDebug() << Count++ << " CDockManager::focusedDockWidgetChanged old: " << (old ? old->objectName() : "-") << " now: " << now->objectName() << " visible: " << now->isVisible();
-                         now->widget()->setFocus();
-                     });
-    int n_res = readSettings();
+                                  , [] (ads::CDockWidget* old, ads::CDockWidget* now) {
+        static int Count = 0;
+        qDebug() << Count++ << " CDockManager::focusedDockWidgetChanged old: " << (old ? old->objectName() : "-") << " now: " << now->objectName() << " visible: " << now->isVisible();
+        now->widget()->setFocus();
+    });
+    //int n_res = readSettings();
     McrWnd* pMcrWnd = new McrWnd( this, McrWnd::_en_role::global_protocol );
     if(false){
         QDockWidget *dock = new QDockWidget( "protocol", this);
@@ -68,20 +84,10 @@ MainWindow::MainWindow(){
         dw->setFeature( static_cast<ads::CDockWidget::DockWidgetFeature>(f), true);
         auto area = m_DockManager->addDockWidgetTab(ads::NoDockWidgetArea, dw);
     }
-    auto console_sink = std::make_shared<spdlog::sinks::stdout_color_sink_mt>();
     auto qt_sink = std::make_shared<spdlog::sinks::qt_sink_mt>(pMcrWnd, "onQStringAppendProtocol");
-    const bool bl_res = QDir::setCurrent(qdirData_.path()); assert(bl_res==true);
-    std::filesystem::path path_log{ qdirData_.absolutePath().toStdString() };
-    path_log /= L"qrastr_log.txt";
-    auto rotating_sink = std::make_shared<spdlog::sinks::rotating_file_sink_mt>( path_log.c_str(), 1024*1024*1, 3);
-    //auto logger = spdlog::qt_logger_st("qt_logger", pMcrWnd, "onQStringAppendProtocol");
-    std::vector<spdlog::sink_ptr> sinks{ console_sink, qt_sink, rotating_sink };
-    auto logg = std::make_shared<spdlog::logger>( "qrastr", sinks.begin(), sinks.end() );
-    spdlog::set_default_logger(logg);
+    logg->sinks().push_back(qt_sink);
     pMcrWnd->show();
-    logCacheFlush();
-    spdlog::info( "ReadSetting: {}", n_res );
-    spdlog::info( "Log: {}", path_log.generic_u8string() );
+    
     loadPlugins();
 }
 MainWindow::~MainWindow(){
@@ -91,8 +97,8 @@ int MainWindow::readSettings(){ //it cache log messages to vector, because it ca
         QSettings settings(pchSettingsOrg_);
         QPoint pos = settings.value("pos", QPoint(200, 200)).toPoint();
         QSize size = settings.value("size", QSize(600, 800)).toSize();
-        move(pos);
-        resize(size);
+        //move(pos);
+        //resize(size);
 
         int nRes = 0;
         QString qstr_curr_path = QDir::currentPath();
@@ -114,14 +120,13 @@ int MainWindow::readSettings(){ //it cache log messages to vector, because it ca
         }else{
             v_cache_log_.add(spdlog::level::err, "Can't set DataDir: {}", qdirData_.path().toStdString());
         }
-        Params pars;
-        nRes = pars.ReadJsonFile(str_path_2_conf);
+        nRes = m_params.ReadJsonFile(str_path_2_conf);
         if(nRes<0){
             QMessageBox mb;
             // так лучше не делать ,смешение строк qt и std это боль.
             QString qstr = QObject::tr("Can't load on_start_file: ");
             std::string qstr_fmt = qstr.toUtf8().constData(); //  qstr.toStdString(); !!not worked!!
-            std::string ss = fmt::format( "{}{} ", qstr_fmt.c_str(), pars.Get_on_start_load_file_rastr());
+            std::string ss = fmt::format( "{}{} ", qstr_fmt.c_str(), m_params.Get_on_start_load_file_rastr());
             QString str = QString::fromUtf8(ss.c_str());
             mb.setText(str);
             v_cache_log_.add( spdlog::level::err, "{} ReadJsonFile {}", nRes, str.toStdString());
@@ -137,22 +142,20 @@ int MainWindow::readSettings(){ //it cache log messages to vector, because it ca
             return -1;
         }
         v_cache_log_.add(spdlog::level::info, "**************************************************************************");
-        v_cache_log_.add(spdlog::level::info, "ReadForms : {}", pars.Get_on_start_load_file_forms());
-        nRes = up_rastr_->ReadForms(pars.Get_on_start_load_file_forms());
+        v_cache_log_.add(spdlog::level::info, "Load: {}", m_params.Get_on_start_load_file_rastr());
+        nRes = up_rastr_->Load(m_params.Get_on_start_load_file_rastr());
+        if(nRes < 0){
+            v_cache_log_.add( spdlog::level::err, "{} Load(...)", nRes);
+            return -1;
+        }
+        v_cache_log_.add(spdlog::level::info, "ReadForms : {}", m_params.Get_on_start_load_file_forms());
+        nRes = up_rastr_->ReadForms(m_params.Get_on_start_load_file_forms());
         if(nRes<0){
             v_cache_log_.add( spdlog::level::err, "{} ReadForms()", nRes);
             QMessageBox mb( QMessageBox::Icon::Critical, QObject::tr("Error"),
-                           QString("error: %1 when read file : %2").arg(nRes).arg(pars.Get_on_start_load_file_forms().c_str())
+                            QString("error: %1 wheh read file : %2").arg(nRes).arg(m_params.Get_on_start_load_file_forms().c_str())
                            );
             mb.exec();
-            return -1;
-        }
-        setForms();
-        v_cache_log_.add(spdlog::level::info, "**************************************************************************");
-        v_cache_log_.add(spdlog::level::info, "Load: {}", pars.Get_on_start_load_file_rastr());
-        nRes = up_rastr_->Load(pars.Get_on_start_load_file_rastr());
-        if(nRes < 0){
-            v_cache_log_.add( spdlog::level::err, "{} Load(...)", nRes);
             return -1;
         }
     }catch(const std::exception& ex){
@@ -172,6 +175,191 @@ int MainWindow::writeSettings(){
     settings.setValue("size", size());
     return 1;
 }
+class EventSink : public IRastrEventsSinkBase
+{
+public:
+    IPlainRastrRetCode OnEvent(const IRastrEventLog& Event) noexcept override
+    {
+        spdlog::info( "Log Status: {:3}  StageId: {:2} EventMsg: {:40} Table: {:10}  Column: {:5} Index: {:5} UIForm: {:10}"
+            , static_cast<std::underlying_type<LogMessageTypes>::type>(Event.Status())
+            , Event.StageId()
+            , Event.Message()
+            , Event.DBLocation().Table()
+            , Event.DBLocation().Column()
+            , Event.DBLocation().Index()
+            , Event.UIForm()
+        );
+        return IPlainRastrRetCode::Ok;
+    }
+    IPlainRastrRetCode OnEvent(const IRastrEventHint& Event) noexcept override
+    {
+        spdlog::info( "Hint: {:1} Table: {:10} Column: {:5} Index: {} "
+            , static_cast<std::underlying_type<EventHints>::type>(Event.Hint())
+            , Event.DBLocation().Table()
+            , Event.DBLocation().Column()
+            , Event.DBLocation().Index()
+        );
+        return IPlainRastrRetCode::Ok;
+    }
+
+    IPlainRastrRetCode OnEvent(const IRastrEventBase& Event) noexcept override
+    {
+        if(Event.Type() == EventTypes::Print)
+            //std::cout << "Print: " << static_cast<const IRastrEventPrint&>(Event).Message() << std::endl;
+            spdlog::info( "Print: {}", static_cast<const IRastrEventPrint&>(Event).Message() );
+        return IPlainRastrRetCode::Ok;
+    }
+
+    IPlainRastrRetCode OnUICommand(const IRastrEventBase& Event, IPlainRastrVariant* Result) noexcept override
+    {
+        EventTypes et = Event.Type();
+        std::string str;
+        if(Event.Type() == EventTypes::Hint){
+            str = fmt::format(" {} {} {} "
+                , static_cast<const IRastrEventHint&>(Event).DBLocation().Table()
+                , static_cast<const IRastrEventHint&>(Event).DBLocation().Column()
+                ,static_cast<const IRastrEventHint&>(Event).DBLocation().Index()
+            );
+        }else if(Event.Type() == EventTypes::Command){
+            str = fmt::format("{} {} {}"
+                , static_cast<const IRastrEventCommand&>(Event).Arg1() // stringutils::acp_encode
+                , static_cast<const IRastrEventCommand&>(Event).Arg2()
+                , static_cast<const IRastrEventCommand&>(Event).Arg3()
+            );
+        }else if(Event.Type() == EventTypes::Log){
+            const auto& w = static_cast<const IRastrEventLog&>(Event);
+            str = fmt::format( "EventTypes::Log" );
+        }else if(Event.Type() == EventTypes::Print){
+            const auto& w = static_cast<const IRastrEventPrint&>(Event);
+            str = fmt::format( "EventTypes::Print" );
+        }
+        spdlog::info( "OnUICommand ({}): {}", static_cast<std::underlying_type<EventTypes>::type>( Event.Type()), str );
+        Result->String("Done");
+        return IPlainRastrRetCode::Ok;
+    }
+};
+void MainWindow::loadPlugins(){
+    //const auto staticInstances = QPluginLoader::staticInstances();
+    //for (QObject *plugin : staticInstances){
+    //    spdlog::log(spdlog::level::info, "Load static plugin: {}", plugin->objectName().toStdString());
+    //}
+    QDir pluginsDir{QDir{QCoreApplication::applicationDirPath()}};
+    pluginsDir.cd("plugins");
+    spdlog::info("Plugins dir: {}", pluginsDir.absolutePath().toStdString());
+#if(COMPILE_WIN)
+    const auto entryList = pluginsDir.entryList(QStringList() << "*.dll", QDir::Files);
+#else
+    const auto entryList = pluginsDir.entryList(QDir::Files);
+#endif
+    for( const QString &fileName : entryList ){
+        QPluginLoader loader(pluginsDir.absoluteFilePath(fileName));
+        spdlog::info("loader.bindableObjectName: {}", loader.bindableObjectName().value().toStdString());
+        spdlog::info("loader.fileName: {}", loader.fileName().toStdString());
+        spdlog::info("loader.objectName: {}", loader.objectName().toStdString());
+        QObject *plugin = loader.instance();
+        if(plugin){
+            spdlog::info( "Load dynamic plugin {}/{} : {}", pluginsDir.absolutePath().toStdString(), fileName.toStdString(), plugin->objectName().toStdString());
+            auto iRastr = qobject_cast<InterfaceRastr *>(plugin);
+            if(iRastr){
+                try{
+                    spdlog::info( "it is Rastr" );
+                    const std::shared_ptr<spdlog::logger> sp_logger = spdlog::default_logger();
+                    iRastr->setLoggerPtr( sp_logger );
+                    const std::shared_ptr<IPlainRastr> rastr = iRastr->getIPlainRastrPtr(); // Destroyable rastr{ iRastr };
+                    m_up_qastra = std::make_unique<QAstra>();
+                    m_up_qastra->setRastr(rastr);
+                    QDir::setCurrent(qdirData_.absolutePath());
+                    m_up_qastra->LoadFile( eLoadCode::RG_REPL, m_params.Get_on_start_load_file_rastr(), "" );
+
+                    if(false){
+                        EventSink sink;
+                        IRastrResultVerify(rastr->SubscribeEvents(&sink));
+                        //std::filesystem::path path_file{LR"(C:\Users\ustas\Documents\RastrWin3\test-rastr\cx195.rg2)"};
+                        //std::filesystem::path path_file{LR"(C:\Temp\Новая папка\mega2_ur_.rg2)"};
+                        std::filesystem::path path_file{LR"(C:\Temp\Новая папка\cx195.rg2)"};
+                        IRastrResultVerify loadresult{  //IPlainRastrResult* pip { rastr->Load(eLoadCode::RG_REPL, path_file.generic_u8string(), "") };
+                                rastr->Load(
+                                eLoadCode::RG_REPL,
+                                stringutils::acp_encode(path_file.generic_u8string()),
+                                //stringutils::acp_encode(R"(C:\Users\ustas\Documents\RastrWin3\SHABLON\режим.rg2)")
+                                ""
+                            )
+                        };
+                        spdlog::info( "Rastr.Load {}", path_file.generic_u8string());
+                        IRastrPayload rgmresult{ rastr->Rgm("p1") };
+                        spdlog::info( "{} = Rgm(...) ", static_cast<std::underlying_type<eASTCode>::type>(rgmresult.Value()) );
+                        if( rgmresult.Value() == eASTCode::AST_OK ){
+                            spdlog::info( "Rgm ok!");
+                        }else{
+                            spdlog::error( "Rgm fail!");
+                        }
+
+                        IRastrTablesPtr tablesx{ rastr->Tables() };
+                        IRastrPayload tablecount{ tablesx->Count() };
+                        spdlog::info("tablecount: {}", tablecount.Value() );
+                        IRastrTablePtr nodes{ tablesx->Item("node") };
+
+                        IRastrPayload tablesize{ nodes->Size() };
+                        spdlog::info("node.tablesize: {}",tablesize.Value());
+                        IRastrPayload tablename{ nodes->Name() };
+                        spdlog::info("node.tablename: {}",tablename.Value() );
+                        IRastrObjectPtr<IPlainRastrColumns> nodecolumns{ nodes->Columns() };
+                        IRastrColumnPtr ny{ nodecolumns->Item("ny") };
+                        IRastrColumnPtr name{ nodecolumns->Item("name") };
+                        IRastrColumnPtr v{ nodecolumns->Item("vras") };
+                        IRastrColumnPtr delta{ nodecolumns->Item("delta") };
+                        for (long index{ 0 }; index < tablesize.Value(); index++) {
+                            IRastrVariantPtr Varny{ ny->Value(index) };
+                            IRastrVariantPtr Varname{ name->Value(index) };
+                            IRastrVariantPtr Varv{ v->Value(index) };
+                            IRastrVariantPtr Vardelta{ delta->Value(index) };
+
+                            IRastrPayload nyvalue{ Varny->Long() };
+                            IRastrPayload namevalue{ Varname->String() };
+                            IRastrPayload vvalue{ Varv->Double() };
+                            IRastrPayload deltavalue{ Vardelta->Double() };
+                            spdlog::info( "ny: {:10} name: {:15} vras: {:3.2f} delta: {:2.3f}"
+                                , nyvalue.Value()
+                                , stringutils::acp_decode(namevalue.Value())
+                                , vvalue.Value()
+                                , deltavalue.Value()
+                            );
+                        }
+                        IRastrResultVerify selectionresult{ nodes->SetSelection("uhom>330") };
+                        IRastrObjectPtr<IPlainRastrDataset> dataset{ nodes->Dataset("ny, name, uhom, 62,")};
+                        const long datasize{ IRastrPayload(dataset->Count()).Value() };
+
+                        for (long colindex = 0; colindex < datasize; colindex++)
+                        {
+                            IRastrObjectPtr<IPlainRastrDatasetColumn> datacolumn{ dataset->Item(colindex) };
+                            spdlog::info( "col_name: {:10} col_type: {}"
+                                , IRastrPayload(datacolumn->Name()).Value()
+                                , static_cast<std::underlying_type<ePropType>::type>(IRastrPayload(datacolumn->Type()).Value())
+                            );
+                            const long columnsize{ IRastrPayload(datacolumn->Count()).Value() };
+                            for (long rowindex = 0; rowindex < columnsize; rowindex++)
+                            {
+                                IRastrObjectPtr<IPlainRastrDatasetValue> indexedvalue{ datacolumn->Item(rowindex) };
+                                IRastrVariantPtr value{ indexedvalue->Value() };
+                                spdlog::info(" indx: {:5} str: {:40}"
+                                    , IRastrPayload(indexedvalue->Index()).Value()
+                                    , stringutils::acp_decode(IRastrPayload(value->String()).Value())
+                                );
+                            }
+                        }
+                        IRastrObjectPtr dcol{ dataset->Item("ny") };
+                        // на выходе из скопа врапперы делают Destroy в хипе астры
+                        IRastrResultVerify(rastr->UnsubscribeEvents(&sink));
+                    }//if(false)
+
+                }catch(const std::exception& ex){
+                    exclog( ex );
+                }
+                spdlog::info( "it is Rastr.test.finished");
+            }
+        }
+    }
+}
 void MainWindow::logCacheFlush(){
     for( const auto& cache_log : v_cache_log_){
         spdlog::log(cache_log.lev, cache_log.str_log);
@@ -179,9 +367,9 @@ void MainWindow::logCacheFlush(){
     v_cache_log_.clear();
 }
 void MainWindow::showEvent( QShowEvent* event ){
-    QWidget::showEvent( event );
-    //your code here
-    // https://stackoverflow.com/questions/14161100/which-qt-widget-should-i-use-for-message-display
+        QWidget::showEvent( event );
+        //your code here
+        // https://stackoverflow.com/questions/14161100/which-qt-widget-should-i-use-for-message-display
 }
 
 
@@ -290,6 +478,8 @@ void MainWindow::open(){
             QMessageBox msgBox;
             msgBox.critical( this, tr("File not loaded"), str_msg.c_str() );
         }
+
+        m_up_qastra->LoadFile(eLoadCode::RG_REPL, fileName.toStdString(),"");
     }
 }
 void MainWindow::save(){
@@ -335,17 +525,17 @@ void MainWindow::cut(){
 #if(!defined(QICSGRID_NO))
     activeMdiChild()->cut();
 #endif//#if(!defined(QICSGRID_NO))
-    }
+}
 void MainWindow::copy(){
 #if(!defined(QICSGRID_NO))
     activeMdiChild()->copy();
 #endif//#if(!defined(QICSGRID_NO))
-    }
+}
 void MainWindow::paste(){
 #if(!defined(QICSGRID_NO))
     activeMdiChild()->paste();
 #endif// #if(!defined(QICSGRID_NO))
-    }
+}
 void MainWindow::insertRow(){
 #if(!defined(QICSGRID_NO))
     int rowIndex = activeMdiChild()->currentCell()->rowIndex();
@@ -353,10 +543,10 @@ void MainWindow::insertRow(){
         return;
     activeMdiChild()->insertRow( rowIndex );
 #endif//#if(!defined(QICSGRID_NO))
-    }
+}
 void MainWindow::deleteRow(){
 #if(!defined(QICSGRID_NO))
-    // DO NOT WORK... WHY ?
+     // DO NOT WORK... WHY ?
     const QicsCell * cell = activeMdiChild()->currentCell();
     activeMdiChild()->deleteRow( cell->rowIndex() );
 #endif
@@ -368,13 +558,13 @@ void MainWindow::insertCol(){
         return;
     activeMdiChild()->insertColumn( colIndex );
 #endif //#if(!defined(QICSGRID_NO))
-    }
+}
 void MainWindow::deleteCol(){
 #if(!defined(QICSGRID_NO))
     const QicsCell * cell = activeMdiChild()->currentCell();
     activeMdiChild()->deleteColumn( cell->columnIndex() );
 #endif // #if(!defined(QICSGRID_NO))
-    }
+}
 void MainWindow::rgm_wrap(){
     long res = Rgm(id_rastr_,"");
     std::string str_msg = "";
@@ -386,6 +576,9 @@ void MainWindow::rgm_wrap(){
         spdlog::error("{} : {}", res, str_msg);
     }
     statusBar()->showMessage( str_msg.c_str(), 0 );
+
+    m_up_qastra->Rgm("");
+
     emit rgm_signal();
 }
 void MainWindow::onDlgMcr(){
@@ -393,7 +586,7 @@ void MainWindow::onDlgMcr(){
     pMcrWnd->show();
 }
 void MainWindow::about(){
-    QMessageBox::about( this, tr("About QRastr"), tr("About the <b>QRastr</b>.") );
+   QMessageBox::about( this, tr("About QRastr"), tr("About the <b>QRastr</b>.") );
 }
 void MainWindow::onOpenForm( QAction* p_actn ){
     const int n_indx = p_actn->data().toInt();
@@ -403,24 +596,24 @@ void MainWindow::onOpenForm( QAction* p_actn ){
     auto form  =*it;
     qDebug() << "\n Open form:" + form.Name();
     spdlog::info( "Create tab [{}]", stringutils::cp1251ToUtf8(form.Name()) );
-    RtabWidget *prtw = new RtabWidget(*up_rastr_.get(),n_indx);
+    RtabWidget *prtw = new RtabWidget(*up_rastr_.get(),m_up_qastra.get(),n_indx);
     connect(this, &MainWindow::file_loaded,  prtw, &RtabWidget::onFileLoad);    //Загрузка файла
     connect(this, &MainWindow::rgm_signal, prtw, &RtabWidget::update_data);     //Расчет УР
     //RModel вызывает изменение Data: Запомнить изменение Data в MainWindow и из MainWindow вызывть изменение RModel во всех сущьностях
     connect(prtw->prm, SIGNAL(dataChanged(std::string,std::string,int,QVariant)),
-            this, SLOT(ondataChanged(std::string,std::string,int,QVariant)));
+                 this, SLOT(ondataChanged(std::string,std::string,int,QVariant)));
     connect(this,      SIGNAL(rm_change(std::string,std::string,int,QVariant)),
-            prtw->prm,      SLOT(onRModelchange(std::string,std::string,int,QVariant)));
+       prtw->prm,      SLOT(onRModelchange(std::string,std::string,int,QVariant)));
     //MainWindow: вызывть изменение RModel во всех сущьностях
     connect(prtw->prm, SIGNAL(RowInserted(std::string,int)),
-            this,SLOT(onRowInserted(std::string,int)));
+                  this,SLOT(onRowInserted(std::string,int)));
     connect(this,      SIGNAL(rm_RowInserted(std::string,int)),
-            prtw->prm,      SLOT(onrm_RowInserted(std::string,int)));
+       prtw->prm,      SLOT(onrm_RowInserted(std::string,int)));
     //Удаление строки
     connect(prtw->prm, SIGNAL(RowDeleted(std::string,int)),
-            this,SLOT(onRowInserted(std::string,int)));
+                  this,SLOT(onRowInserted(std::string,int)));
     connect(this,      SIGNAL(rm_RowDeleted(std::string,int)),
-            prtw->prm,      SLOT(onrm_RowDeleted(std::string,int)));
+       prtw->prm,      SLOT(onrm_RowDeleted(std::string,int)));
     connect(this,      SIGNAL(rm_update(std::string)),
             prtw,      SLOT(onUpdate(std::string)));
     // Docking
@@ -444,7 +637,7 @@ void MainWindow::onOpenForm( QAction* p_actn ){
     //child->newFile();
     child->show();
 #endif // #if(!defined(QICSGRID_NO))
-    }
+}
 void MainWindow::onItemPressed(const QModelIndex &index){
     //prtw_current = qobject_cast<RtabWidget*>(index.);
     int row = index.row();
@@ -486,7 +679,7 @@ void MainWindow::updateMenus(){
     m_previousAct->setEnabled(hasMdiChild);
     m_separatorAct->setVisible(hasMdiChild);
 #endif //#if(!defined(QICSGRID_NO))
-    }
+}
 void MainWindow::updateWindowMenu(){
     m_windowMenu->clear();
     m_windowMenu->addAction(m_closeAct);
@@ -507,10 +700,10 @@ void MainWindow::updateWindowMenu(){
         QString text;
         if (i < 9) {
             text = tr("&%1 %2").arg(i + 1)
-            .arg(child->userFriendlyCurrentFile());
+                               .arg(child->userFriendlyCurrentFile());
         } else {
             text = tr("%1 %2").arg(i + 1)
-            .arg(child->userFriendlyCurrentFile());
+                              .arg(child->userFriendlyCurrentFile());
         }
         QAction *action  = m_windowMenu->addAction(text);
         action->setCheckable(true);
@@ -546,17 +739,17 @@ void MainWindow::createActions(){
     m_cutAct = new QAction(QIcon(":/images/cut.png"), tr("Cu&t"), this);
     m_cutAct->setShortcut(tr("Ctrl+X"));
     m_cutAct->setStatusTip(tr("Cut the current selection's contents to the "
-                              "clipboard"));
+                            "clipboard"));
     connect(m_cutAct, SIGNAL(triggered()), this, SLOT(cut()));
     m_copyAct = new QAction(QIcon(":/images/copy.png"), tr("&Copy"), this);
     m_copyAct->setShortcut(tr("Ctrl+C"));
     m_copyAct->setStatusTip(tr("Copy the current selection's contents to the "
-                               "clipboard"));
+                             "clipboard"));
     connect(m_copyAct, SIGNAL(triggered()), this, SLOT(copy()));
     m_pasteAct = new QAction(QIcon(":/images/paste.png"), tr("&Paste"), this);
     m_pasteAct->setShortcut(tr("Ctrl+V"));
     m_pasteAct->setStatusTip(tr("Paste the clipboard's contents into the current "
-                                "selection"));
+                              "selection"));
     connect(m_pasteAct, SIGNAL(triggered()), this, SLOT(paste()));
 
     m_insertRowAct = new QAction( QIcon(":/images/Rastr3_grid_insrow_16x16.png"),tr( "&Insert Row" ), this );
@@ -598,7 +791,7 @@ void MainWindow::createActions(){
     m_previousAct = new QAction(tr("Pre&vious"), this);
     m_previousAct->setShortcut(tr("Ctrl+Shift+F6"));
     m_previousAct->setStatusTip(tr("Move the focus to the previous "
-                                   "window"));
+                                 "window"));
     connect(m_previousAct, SIGNAL(triggered()),
             m_workspace, SLOT(activatePreviousSubWindow()));
     m_separatorAct = new QAction(this);
@@ -644,7 +837,7 @@ void MainWindow::createMenus(){
     m_editMenu->addAction( m_deleteRowAct );
     m_editMenu->addAction( m_insertColAct );
     m_editMenu->addAction( m_deleteColAct );
-    // m_viewMenu = menuBar()->addMenu(tr("&View"));
+   // m_viewMenu = menuBar()->addMenu(tr("&View"));
     //m_editMenu->addAction(m_SortAscAct);
 
     m_CalcMenu = menuBar()->addMenu(tr("&Calc"));
@@ -677,51 +870,8 @@ void MainWindow::createToolBars(){
     m_calcToolBar->addAction(m_RGMAct);
     createCalcLayout();
 }
-#include "plugin_interfaces.h"
-void MainWindow::loadPlugins(){
-    //const auto staticInstances = QPluginLoader::staticInstances();
-    //for (QObject *plugin : staticInstances){
-    //    spdlog::log(spdlog::level::info, "Load static plugin: {}", plugin->objectName().toStdString());
-    //}
-    QDir pluginsDir{QDir{QCoreApplication::applicationDirPath()}};
-    pluginsDir.cd("plugins");
-    spdlog::info("Plugins dir: {}", pluginsDir.absolutePath().toStdString());
-    const auto entryList = pluginsDir.entryList(QDir::Files);
-    for (const QString &fileName : entryList) {
-        QPluginLoader loader(pluginsDir.absoluteFilePath(fileName));
-        QObject *plugin = loader.instance();
-        if(plugin){
-            spdlog::info( "Load dynamic plugin {}/{} : {}", pluginsDir.absolutePath().toStdString(), fileName.toStdString(), plugin->objectName().toStdString());
 
-            auto iRastr = qobject_cast<InterfaceRastr *>(plugin);
-            if(iRastr){
-                spdlog::info( "it is Rastr");
-                std::shared_ptr<spdlog::logger> sp_logger = spdlog::default_logger();
-                iRastr->setLoggerPtr(sp_logger);
-                std::shared_ptr<IPlainRastr> sp_rastr = iRastr->getIPlainRastrPtr();
-                //IPlainRastrResult* pip { sp_rastr->Load(eLoadCode::RG_REPL, R"(C:\Users\ustas\Documents\RastrWin3\test-rastr\cx195.rg2)", "") };
-               // IPlainRastrResult* pip { sp_rastr->Load(eLoadCode::RG_REPL, R"(C:\Users\maximal\Documents\RastrWin3\test-rastr\cx195.rg2)", "") };
-                IPlainRastrResult* pip { sp_rastr->Load(eLoadCode::RG_REPL, R"(Files/cx195.rg2)", "") };
-                IRastrPayload rgmresult{ sp_rastr->Rgm("p1") };
-                spdlog::info( "{} = Rgm(...) ", static_cast<std::underlying_type<eASTCode>::type>(rgmresult.Value()) );
 
-                spdlog::info( "it is Rastr.test");
-            }
-            auto iBrush = qobject_cast<BrushInterface *>(plugin);
-            if (iBrush){
-                spdlog::info("it is brush");
-            }
-            auto iShape = qobject_cast<ShapeInterface *>(plugin);
-            if (iShape){
-                spdlog::info("it is shape");
-            }
-            auto iFilter = qobject_cast<FilterInterface *>(plugin);
-            if (iFilter){
-                spdlog::info( "it is filter");
-            }
-        }
-    }
-}
 void MainWindow::Btn1_onClick()
 {
     QTableView* ptv = new QTableView();
@@ -748,10 +898,10 @@ void MainWindow::createCalcLayout()
     QWidget* widget = new QWidget;
     widget -> setWindowTitle("Functions");
     m_ActionsLayout = new QHBoxLayout(widget);
-    //    m_ActionsLayout->addWidget(btn1);
-    //    m_ActionsLayout->addWidget(btn2);
+//    m_ActionsLayout->addWidget(btn1);
+//    m_ActionsLayout->addWidget(btn2);
     //m_ActionsLayout->addWidget(btn3);
-    // m_ActionsLayout->addWidget(btn4);
+   // m_ActionsLayout->addWidget(btn4);
     m_calcToolBar->addWidget(widget);
     //view->setSortingEnabled(true);
 }
@@ -817,3 +967,4 @@ void MainWindow::sortDescending(){
     }
 }
 #endif //#if(!defined(QICSGRID_NO))
+

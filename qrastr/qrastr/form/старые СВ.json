@@ -1,0 +1,289 @@
+{
+    "forms": [
+        {
+            "addToMenuIndex": 1,
+            "fields": [
+                {
+                    "name": "Id"
+                },
+                {
+                    "name": "Name"
+                },
+                {
+                    "name": "sta"
+                },
+                {
+                    "name": "ModelType"
+                },
+                {
+                    "name": "Q0"
+                },
+                {
+                    "name": "P1"
+                },
+                {
+                    "name": "Q1"
+                },
+                {
+                    "name": "P2"
+                },
+                {
+                    "name": "Q2"
+                },
+                {
+                    "name": "P3"
+                },
+                {
+                    "name": "Q3"
+                },
+                {
+                    "name": "P4"
+                },
+                {
+                    "name": "Q4"
+                },
+                {
+                    "name": "P5"
+                },
+                {
+                    "name": "Q5"
+                },
+                {
+                    "name": "P6"
+                },
+                {
+                    "name": "Q6"
+                },
+                {
+                    "name": "Kuf"
+                },
+                {
+                    "name": "Kfb"
+                },
+                {
+                    "name": "Kui"
+                },
+                {
+                    "name": "Kul"
+                },
+                {
+                    "name": "K1"
+                },
+                {
+                    "name": "K2"
+                },
+                {
+                    "name": "Tu1"
+                },
+                {
+                    "name": "Tu2"
+                },
+                {
+                    "name": "Tu3"
+                },
+                {
+                    "name": "Tu4"
+                },
+                {
+                    "name": "Tuv"
+                },
+                {
+                    "name": "Tul"
+                },
+                {
+                    "name": "Tuq"
+                },
+                {
+                    "name": "Tup"
+                },
+                {
+                    "name": "Vuimax"
+                },
+                {
+                    "name": "Vuimin"
+                },
+                {
+                    "name": "Vulmax"
+                },
+                {
+                    "name": "Vulmin"
+                }
+            ],
+            "menuPath": "\\Динамика (ИД)",
+            "name": "Ограничители недовозбуждения",
+            "tableName": "UEL"
+        },
+        {
+            "addToMenuIndex": 1,
+            "fields": [
+                {
+                    "name": "Id"
+                },
+                {
+                    "name": "Name"
+                },
+                {
+                    "name": "sta"
+                },
+                {
+                    "name": "ModelType"
+                },
+                {
+                    "name": "M"
+                },
+                {
+                    "name": "N"
+                },
+                {
+                    "name": "Ks1"
+                },
+                {
+                    "name": "Ks2"
+                },
+                {
+                    "name": "Ks3"
+                },
+                {
+                    "name": "T1"
+                },
+                {
+                    "name": "T2"
+                },
+                {
+                    "name": "T3"
+                },
+                {
+                    "name": "T4"
+                },
+                {
+                    "name": "T5"
+                },
+                {
+                    "name": "T6"
+                },
+                {
+                    "name": "T7"
+                },
+                {
+                    "name": "T8"
+                },
+                {
+                    "name": "T9"
+                },
+                {
+                    "name": "T10"
+                },
+                {
+                    "name": "T11"
+                },
+                {
+                    "name": "Tw1"
+                },
+                {
+                    "name": "Tw2"
+                },
+                {
+                    "name": "Tw3"
+                },
+                {
+                    "name": "Tw4"
+                },
+                {
+                    "name": "Pmax"
+                },
+                {
+                    "name": "Pmin"
+                },
+                {
+                    "name": "Fmax"
+                },
+                {
+                    "name": "Fmin"
+                },
+                {
+                    "name": "Vstmax"
+                },
+                {
+                    "name": "Vstmin"
+                }
+            ],
+            "menuPath": "\\Динамика (ИД)",
+            "name": "Системные стабилизаторы (ИД)",
+            "tableName": "PSS"
+        },
+        {
+            "addToMenuIndex": 1,
+            "fields": [
+                {
+                    "name": "Id"
+                },
+                {
+                    "name": "Name"
+                },
+                {
+                    "name": "sta"
+                },
+                {
+                    "name": "ModelType"
+                },
+                {
+                    "name": "T1"
+                },
+                {
+                    "name": "StabilizerId"
+                },
+                {
+                    "name": "Kr"
+                },
+                {
+                    "name": "Kc"
+                },
+                {
+                    "name": "Tc1"
+                },
+                {
+                    "name": "Tb1"
+                },
+                {
+                    "name": "Tc2"
+                },
+                {
+                    "name": "Tb2"
+                },
+                {
+                    "name": "Tuc1"
+                },
+                {
+                    "name": "Tub1"
+                },
+                {
+                    "name": "Tuc2"
+                },
+                {
+                    "name": "Tub2"
+                },
+                {
+                    "name": "Toc1"
+                },
+                {
+                    "name": "Tob1"
+                },
+                {
+                    "name": "Toc2"
+                },
+                {
+                    "name": "Tob2"
+                },
+                {
+                    "name": "Urv_max"
+                },
+                {
+                    "name": "Urv_min"
+                }
+            ],
+            "menuPath": "\\Динамика (ИД)",
+            "name": "АРВ ST5B (ИД)",
+            "tableName": "ExcControlST5B"
+        }
+    ]
+}

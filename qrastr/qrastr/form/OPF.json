@@ -1,0 +1,139 @@
+{
+    "forms": [
+        {
+            "addToMenuIndex": 2,
+            "fields": [
+                {
+                    "name": "num"
+                },
+                {
+                    "name": "centr"
+                },
+                {
+                    "name": "tipr"
+                },
+                {
+                    "name": "it_max"
+                },
+                {
+                    "name": "plos"
+                },
+                {
+                    "name": "status"
+                },
+                {
+                    "name": "potr"
+                },
+                {
+                    "name": "LP_max"
+                },
+                {
+                    "name": "LQ_max"
+                },
+                {
+                    "name": "LDPG_max"
+                },
+                {
+                    "name": "LPS_max"
+                },
+                {
+                    "name": "LI_max"
+                },
+                {
+                    "name": "LV_max"
+                },
+                {
+                    "name": "LDQ_max"
+                },
+                {
+                    "name": "LKT_max"
+                },
+                {
+                    "name": "LP_dta"
+                },
+                {
+                    "name": "LQ_dta"
+                },
+                {
+                    "name": "LDPG_dta"
+                },
+                {
+                    "name": "LPS_dta"
+                },
+                {
+                    "name": "LI_dta"
+                },
+                {
+                    "name": "LV_dta"
+                },
+                {
+                    "name": "LDQ_dta"
+                },
+                {
+                    "name": "LKT_dta"
+                },
+                {
+                    "name": "out_level"
+                },
+                {
+                    "name": "LIO_max"
+                },
+                {
+                    "name": "LIO_dta"
+                },
+                {
+                    "name": "T_func"
+                },
+                {
+                    "name": "Tg_func"
+                },
+                {
+                    "name": "tarif"
+                },
+                {
+                    "name": "start_method"
+                },
+                {
+                    "name": "main_method"
+                },
+                {
+                    "name": "criteria1"
+                },
+                {
+                    "name": "formula1"
+                },
+                {
+                    "name": "R_it"
+                },
+                {
+                    "name": "start_sigma"
+                },
+                {
+                    "name": "main_sigma"
+                },
+                {
+                    "name": "R_ro"
+                },
+                {
+                    "name": "R_sigma"
+                },
+                {
+                    "name": "R_pdad"
+                },
+                {
+                    "name": "R_pdad_af"
+                },
+                {
+                    "name": "min_mu2"
+                },
+                {
+                    "name": "min_mu"
+                }
+            ],
+            "menuPath": "\\",
+            "name": "Настройки OPF",
+            "tableName": "com_opf",
+            "vertical": true
+        }
+    ]
+}

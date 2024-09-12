@@ -7,6 +7,7 @@
 #include "astra_exp.h"
 //#include "astra_shared.h"
 #include "rdata.h"
+#include "qastra.h"
 
 
 
@@ -15,12 +16,15 @@ class RModel : public QAbstractTableModel
     Q_OBJECT
     QTimer* timer_;
     CRastrHlp& rastr_;
+   // QAstra& qastra_;
+    QAstra* pqastra_;
     std::unique_ptr<RData> up_rdata;
     //RData rdata_;
     int n_form_indx_ = -1;
     std::vector<QString> vqcols_;                                 // Заголовки столбцов
 public:
     RModel(QObject *parent, CRastrHlp& rastr);
+    RModel(QObject *parent, CRastrHlp& rastr, QAstra* pqastra);
     int rowCount(const QModelIndex &parent = QModelIndex()) const override;
     int columnCount(const QModelIndex &parent = QModelIndex()) const override;
     QVariant data(const QModelIndex &index, int role = Qt::DisplayRole) const override;

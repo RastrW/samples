@@ -11,6 +11,9 @@
 #include <QDateTime>
 #include <QProgressDialog>
 #include "CondFormat.h"
+#include "qastra.h"
+using WrapperExceptionType = std::runtime_error;
+#include "IPlainRastrWrappers.h"
 
 
 //#include "tableview.h"
@@ -19,14 +22,7 @@
 RtabWidget::RtabWidget(QWidget *parent)
     : QWidget{parent}
 {
-}
 
-RtabWidget::RtabWidget(CRastrHlp& rh,int n_indx, QWidget *parent)
-    : QWidget{parent}
-{
-   // rh = _rh;
-
-    form_indx = n_indx;
     ptv = new RTableView();
 
     ptv->setContextMenuPolicy(Qt::CustomContextMenu);                   //https://forum.qt.io/topic/31233/how-to-create-a-custom-context-menu-for-qtableview/6
@@ -42,12 +38,34 @@ RtabWidget::RtabWidget(CRastrHlp& rh,int n_indx, QWidget *parent)
     //connect(ptv->horizontalHeader(), &FilterTableHeader::filterChanged, this, &RtabWidget::updateFilter);
     connect(ptv->horizontalHeader(), SIGNAL(filterChanged(size_t , QString )), this, SLOT(updateFilter(size_t , QString) ));
 
+    ptv->setSortingEnabled(true);
+}
+
+RtabWidget::RtabWidget(CRastrHlp& rh,int n_indx, QWidget *parent)
+    : RtabWidget{parent}
+{
+    form_indx = n_indx;
     CreateModel(rh);
 
+    //SetTableView(*ptv,*prm);                // ширина по шаблону
+    ptv->resizeColumnsToContents();         // ширина по контенту
+    ptv->setParent(this);
 
+    int ncols = prm->columnCount();
+    ptv->generateFilters(ncols);
+    ptv->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
 
-    ptv->setSortingEnabled(true);
-    SetTableView(*ptv,*prm);                // ширина по шаблону
+    QVBoxLayout *layout = new QVBoxLayout(this);
+    layout->addWidget(ptv);
+    setLayout(layout);
+}
+RtabWidget::RtabWidget(CRastrHlp& rh,QAstra* pqastra,int n_indx, QWidget *parent)
+    : RtabWidget{parent}
+{
+    form_indx = n_indx;
+    CreateModel(rh,pqastra);
+
+    //SetTableView(*ptv,*prm);                // ширина по шаблону
     ptv->resizeColumnsToContents();         // ширина по контенту
     ptv->setParent(this);
 
@@ -205,6 +223,18 @@ void RtabWidget::update_data()
 void RtabWidget::CreateModel(CRastrHlp& _rh)
 {
     prm = new RModel(nullptr, _rh );
+    proxyModel = new QSortFilterProxyModel(prm); // used for sorting: create proxy //https://doc.qt.io/qt-5/qsortfilterproxymodel.html#details
+    proxyModel->setSourceModel(prm);
+    prm->setFormIndx(form_indx);
+    prm->populateDataFromRastr();
+    ptv->setModel(proxyModel);
+
+    this->update();
+    this->repaint();
+}
+void RtabWidget::CreateModel(CRastrHlp& _rh,QAstra* pqastra)
+{
+    prm = new RModel(nullptr, _rh, pqastra );
     proxyModel = new QSortFilterProxyModel(prm); // used for sorting: create proxy //https://doc.qt.io/qt-5/qsortfilterproxymodel.html#details
     proxyModel->setSourceModel(prm);
     prm->setFormIndx(form_indx);

@@ -1,0 +1,232 @@
+{
+    "forms": [
+        {
+            "addToMenuIndex": 1,
+            "fields": [
+                {
+                    "name": "Id"
+                },
+                {
+                    "name": "ParentId"
+                },
+                {
+                    "name": "Name"
+                },
+                {
+                    "name": "Type"
+                },
+                {
+                    "name": "Formula"
+                },
+                {
+                    "name": "Actions"
+                },
+                {
+                    "name": "Delay"
+                },
+                {
+                    "name": "UnitStarters"
+                },
+                {
+                    "name": "UnitConstants"
+                },
+                {
+                    "name": "UnitActions"
+                },
+                {
+                    "name": "OutputMode"
+                }
+            ],
+            "menuPath": "\\Автоматика",
+            "name": "Логика",
+            "tableName": "DFWAutoLogic"
+        },
+        {
+            "addToMenuIndex": 1,
+            "fields": [
+                {
+                    "name": "State"
+                },
+                {
+                    "name": "Id"
+                },
+                {
+                    "name": "ParentId"
+                },
+                {
+                    "name": "Type"
+                },
+                {
+                    "name": "Name"
+                },
+                {
+                    "name": "Formula"
+                },
+                {
+                    "name": "ObjectClass"
+                },
+                {
+                    "name": "ObjectProp"
+                },
+                {
+                    "name": "ObjectKey"
+                },
+                {
+                    "name": "OutputMode"
+                },
+                {
+                    "name": "RunsCount"
+                }
+            ],
+            "menuPath": "\\Автоматика",
+            "name": "Действия",
+            "tableName": "DFWAutoAction"
+        },
+        {
+            "addToMenuIndex": 1,
+            "fields": [
+                {
+                    "name": "State"
+                },
+                {
+                    "name": "Id"
+                },
+                {
+                    "name": "ParentId"
+                },
+                {
+                    "name": "Type"
+                },
+                {
+                    "name": "Name"
+                },
+                {
+                    "name": "Formula"
+                },
+                {
+                    "name": "ObjectClass"
+                },
+                {
+                    "name": "ObjectProp"
+                },
+                {
+                    "name": "ObjectKey"
+                },
+                {
+                    "name": "OutputMode"
+                },
+                {
+                    "name": "RunsCount"
+                },
+                {
+                    "name": "TimeStart"
+                },
+                {
+                    "name": "DT"
+                }
+            ],
+            "menuPath": "\\Сценарий",
+            "name": "Действия (t)",
+            "tableName": "DFWAutoActionScn"
+        },
+        {
+            "addToMenuIndex": 1,
+            "fields": [
+                {
+                    "name": "Id"
+                },
+                {
+                    "name": "Name"
+                },
+                {
+                    "name": "ParentId"
+                },
+                {
+                    "name": "Type"
+                },
+                {
+                    "name": "Formula"
+                },
+                {
+                    "name": "Actions"
+                },
+                {
+                    "name": "Delay"
+                },
+                {
+                    "name": "UnitStarters"
+                },
+                {
+                    "name": "UnitConstants"
+                },
+                {
+                    "name": "UnitActions"
+                },
+                {
+                    "name": "OutputMode"
+                }
+            ],
+            "menuPath": "\\Сценарий",
+            "name": "Логика (t)",
+            "tableName": "DFWAutoLogicScn"
+        },
+        {
+            "addToMenuIndex": 1,
+            "fields": [
+                {
+                    "name": "Id"
+                },
+                {
+                    "name": "Type"
+                },
+                {
+                    "name": "Name"
+                },
+                {
+                    "name": "Formula"
+                },
+                {
+                    "name": "ObjectClass"
+                },
+                {
+                    "name": "ObjectProp"
+                },
+                {
+                    "name": "ObjectKey"
+                }
+            ],
+            "menuPath": "\\Автоматика",
+            "name": "Пуск. Орг.",
+            "tableName": "DFWAutoStarter"
+        },
+        {
+            "addToMenuIndex": 1,
+            "fields": [
+                {
+                    "name": "Id"
+                },
+                {
+                    "name": "Type"
+                },
+                {
+                    "name": "Name"
+                },
+                {
+                    "name": "Formula"
+                },
+                {
+                    "name": "ObjectClass"
+                },
+                {
+                    "name": "ObjectProp"
+                },
+                {
+                    "name": "ObjectKey"
+                }
+            ],
+            "menuPath": "\\Сценарий",
+            "name": "Пуск. Орг. (t)",
+            "tableName": "DFWAutoStarterScn"
+        }
+    ]
+}

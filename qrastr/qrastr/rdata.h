@@ -5,8 +5,13 @@
 #include "astra_exp.h"
 #include "astra_shared.h"
 #include "UIForms.h"
+#include "qastra.h"
 
-typedef std::variant< int, double, std::string >  _vt ;
+using WrapperExceptionType = std::runtime_error;
+#include "IPlainRastrWrappers.h"
+
+//typedef std::variant< int, double, std::string >  _vt ;
+typedef std::variant< bool,long, double, std::string >  _vt ;
 typedef std::vector< _vt > _col_data ;
 typedef std::vector<std::string> _vstr;
 
@@ -17,9 +22,10 @@ class RCol
 public:
     enum _en_data{ // in _col_data
         DATA_ERR =  -1,
-        DATA_INT =   0,
-        DATA_DBL =   1,
-        DATA_STR =   2
+        DATA_BOOL=   0,
+        DATA_INT =   1,
+        DATA_DBL =   2,
+        DATA_STR =   3
     };
     template <typename... Args>
     RCol(Args&&... args)
@@ -33,8 +39,10 @@ public:
         int n_type = std::stoi(str_Type);
         enComPropTT com_prop_tt = static_cast<enComPropTT>(n_type);
         switch(com_prop_tt){
-        case enComPropTT::COM_PR_INT	   : //= 0,
         case enComPropTT::COM_PR_BOOL	   : //= 3,
+            en_data_ = _en_data::DATA_BOOL;
+            break;
+        case enComPropTT::COM_PR_INT	   : //= 0,
         case enComPropTT::COM_PR_ENUM	   : //= 4,
         case enComPropTT::COM_PR_ENPIC	   : //= 5,
         case enComPropTT::COM_PR_COLOR	   : //= 6,
@@ -117,8 +125,13 @@ public:
 
     void Initialize(CUIForm _form);
     void Initialize(nlohmann::json _j_Fields , nlohmann::json _j_metas,_vstr _vstr_fields_form);// old
+    // Заполняем через плоскую dll через запрос GetJSON
     void populate();
     void populate(nlohmann::json _j_Fields , nlohmann::json _j_metas,_vstr _vstr_fields_form);  // old Заполнить данными
+
+    //Заполняем через IRastrPlain
+    void populate_qastra(QAstra* _pqastra);
+
     void clear_data();                                                                          // Удалить данные (стуктура остается)
 
     std::string getCommaSeparatedFieldNames(){
@@ -138,7 +151,7 @@ public:
             for(const _col_data::value_type& cdata : col ){
                 switch(col.en_data_){
                 case RCol::_en_data::DATA_INT :
-                    qDebug()<<"cdata : "<< std::get<int>(cdata);
+                    qDebug()<<"cdata : "<< std::get<long>(cdata);
                     break;
                 case RCol::_en_data::DATA_DBL :
                     qDebug()<<"cdata : "<< std::get<double>(cdata);

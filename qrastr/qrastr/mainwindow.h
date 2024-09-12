@@ -18,12 +18,8 @@
 #include "License2/json.hpp"
 #include "params.h"
 #include "rastrhlp.h"
-
-#include <QTableView>
 #include "rmodel.h"
 #include "rtabwidget.h"
-
-#include <QMenu>
 
 class QAction;
 class QMenu;
@@ -32,9 +28,11 @@ class QMdiSubWindow;
 class MdiChild;
 class QSignalMapper;
 
+class QAstra;
 class rmodel;
 namespace ads{ class CDockManager; }
-class MainWindow : public QMainWindow{
+class MainWindow
+    : public QMainWindow{
     Q_OBJECT
 public:
     struct _cache_log{
@@ -53,17 +51,12 @@ public:
     };
 signals:
     void file_loaded(CRastrHlp& _rh);                                                                     // загружен файл
-
     void rgm_signal();
-
     void rm_change(std::string _t_name, QModelIndex index, QVariant value);
     void rm_change(std::string _t_name, std::string _col_name, int _row, QVariant _value);
     void rm_RowInserted(std::string _t_name, int _row);
     void rm_RowDeleted(std::string _t_name, int _row);
     void rm_update(std::string _t_name);
-//protected:
-//    void closeEvent(QCloseEvent *event);
-
 ///slots.begin
 private slots:
     void newFile();
@@ -83,29 +76,21 @@ private slots:
     void onOpenForm(QAction* p_actn);
     void onButton2Click();
     void Btn1_onClick();
-
     void ondataChanged(std::string _t_name, QModelIndex index, QVariant value);
     void ondataChanged(std::string _t_name, std::string _col_name, int _row, QVariant _value);
     void onRowInserted(std::string _t_name, int _row);
     void onRowDeleted(std::string _t_name, int _row);
-
-    //void SetTableView(QTableView& tv, RModel& mm);
 #if(!defined(QICSGRID_NO))
     void sortAscending();
     void sortDescending();
 #endif//#if(!defined(QICSGRID_NO))
     void onItemPressed(const QModelIndex &index);
 public slots:
-
-///slots.end.
-
     void updateMenus();
     void updateWindowMenu();
-
 #if(!defined(QICSGRID_NO))
     MdiChild *createMdiChild(nlohmann::json j_form = "");
 #endif//#if(!defined(QICSGRID_NO))
-
     void setActiveSubWindow(QWidget *window);
 private:
 ///slots.end.
@@ -175,36 +160,18 @@ private:
     std::unique_ptr<CRastrHlp> up_rastr_;
     RtabWidget *prtw_current;                        // current table
     std::string cur_file;                            // current file
-
-
-//public:
     QAction *m_SortAscAct;
     QAction *m_SortDescAct;
     QDockWidget *m_dock;
     ads::CDockManager* m_DockManager = nullptr; // The main container for docking
     rmodel *model;
+    Params m_params;
     QDir qdirData_;
     _v_cache_log v_cache_log_;
-    static constexpr char pchSettingsDirData_[5]{ "Data"};
-    static constexpr char pchSettingsOrg_[7]{ "QRastr"};
+    std::unique_ptr<QAstra> m_up_qastra;
+
+    static constexpr char pchSettingsDirData_[5]{"Data"};
+    static constexpr char pchSettingsOrg_[7]{"QRastr"};
+
 };
-
-
-/*
-QT_BEGIN_NAMESPACE
-namespace Ui { class MainWindow; }
-QT_END_NAMESPACE
-
-class MainWindow : public QMainWindow
-{
-    Q_OBJECT
-
-public:
-    MainWindow(QWidget *parent = nullptr);
-    ~MainWindow();
-
-private:
-    Ui::MainWindow *ui;
-};
-*/
 #endif // MAINWINDOW_H
