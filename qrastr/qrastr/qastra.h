@@ -5,7 +5,7 @@
 #include "IPlainRastr.h"
 #include "common_qrastr.h"
 
-struct _data_hint{
+struct _hint_data{
     EventHints  hint;
     std::string str_table;
     std::string str_column;
@@ -32,7 +32,7 @@ public:
         return IPlainRastrRetCode::Ok;
     }
     IPlainRastrRetCode OnEvent(const IRastrEventHint& Event) noexcept override {
-        _data_hint dh;
+        _hint_data dh;
         dh.hint       = Event.Hint();
         dh.str_table  = Event.DBLocation().Table();
         dh.str_column = Event.DBLocation().Column();
@@ -114,7 +114,7 @@ public:
     void LoadFile( eLoadCode LoadCode, const std::string_view& FilePath, const std::string_view& TemplatePath );
     eASTCode Rgm(const std::string_view& parameters = {});
 signals:
-    void onRastrHint(const _data_hint& );
+    void onRastrHint(const _hint_data& );
 private:
     _sp_rastr sp_rastr_;
 };

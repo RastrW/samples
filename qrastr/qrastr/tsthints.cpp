@@ -22,7 +22,7 @@ void TstHints::setColNames(const _vstrs& vstrs_col_names_in){
       setHorizontalHeaderItem(col, new QTableWidgetItem(QString("%1").arg(vstrs_col_names_[col].c_str())));
     }
 }
-void TstHints::onRastrHint(const _data_hint& hint_data){
+void TstHints::onRastrHint(const _hint_data& hint_data){
     try{
         spdlog::info("i alive");
         std::shared_ptr<QAstra> sp_qastra = wp_qastra_.lock(); assert(sp_qastra);

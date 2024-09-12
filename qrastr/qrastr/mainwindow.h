@@ -29,8 +29,8 @@ class MdiChild;
 class QSignalMapper;
 
 class QAstra ;
-//class QAstra{ struct _data_hint;};
-struct _data_hint;
+//class QAstra{ struct _hint_data;};
+struct _hint_data;
 class rmodel;
 namespace ads{ class CDockManager; }
 class MainWindow
@@ -94,7 +94,7 @@ public slots:
     MdiChild *createMdiChild(nlohmann::json j_form = "");
 #endif//#if(!defined(QICSGRID_NO))
     void setActiveSubWindow(QWidget *window);
-    void tst_onRastrHint(const _data_hint&);
+    void tst_onRastrHint(const _hint_data&);
 private:
 ///slots.end.
 public:

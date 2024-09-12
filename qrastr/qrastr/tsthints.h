@@ -6,7 +6,7 @@
 #include <QTableWidget>
 
 class QAstra;
-struct _data_hint;
+struct _hint_data;
 class TstHints
     //: public QWidget
     :public QTableWidget
@@ -23,7 +23,7 @@ public:
 signals:
 
 private slots:
-    void onRastrHint(const _data_hint&);
+    void onRastrHint(const _hint_data&);
 
 private:
     std::string str_tname_;

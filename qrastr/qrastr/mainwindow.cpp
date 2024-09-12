@@ -180,7 +180,7 @@ int MainWindow::writeSettings(){
     settings.setValue("size", size());
     return 1;
 }
-void MainWindow::tst_onRastrHint(const _data_hint& dh){
+void MainWindow::tst_onRastrHint(const _hint_data& dh){
     spdlog::info("XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX");
     spdlog::info("XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX");
     spdlog::info("XXX MainWindow::tst_onRastrHint about {} {} {} {} {} XXX"
@@ -222,9 +222,9 @@ void MainWindow::loadPlugins(){
                     iRastr->setLoggerPtr( sp_logger );
                     const std::shared_ptr<IPlainRastr> rastr = iRastr->getIPlainRastrPtr(); // Destroyable rastr{ iRastr };
                     m_sp_qastra = std::make_unique<QAstra>();
-                    //QMetaObject::Connection  ccc = connect( m_sp_qastra.get(), SIGNAL( onRastrHint(const _data_hint&) ), this, SLOT( tst_onRastrHint(const _data_hint&) ) );
-                    //static const bool myConnection =connect( m_sp_qastra.get(), SIGNAL( onRastrHint(const _data_hint&) ), this, SLOT( tst_onRastrHint(const _data_hint&) ) );
-                    const bool myConnection = QObject::connect( m_sp_qastra.get(), SIGNAL( onRastrHint(const _data_hint&) ), this, SLOT( tst_onRastrHint(const _data_hint&) ) );
+                    //QMetaObject::Connection  ccc = connect( m_sp_qastra.get(), SIGNAL( onRastrHint(const _hint_data&) ), this, SLOT( tst_onRastrHint(const _hint_data&) ) );
+                    //static const bool myConnection =connect( m_sp_qastra.get(), SIGNAL( onRastrHint(const _hint_data&) ), this, SLOT( tst_onRastrHint(const _hint_data&) ) );
+                    const bool myConnection = QObject::connect( m_sp_qastra.get(), SIGNAL( onRastrHint(const _hint_data&) ), this, SLOT( tst_onRastrHint(const _hint_data&) ) );
                     assert(myConnection == true);
 
                     m_sp_qastra->setRastr(rastr);
@@ -236,7 +236,7 @@ void MainWindow::loadPlugins(){
                         tstHints_vetv->setQAstra(std::weak_ptr<QAstra>(m_sp_qastra));
                         tstHints_vetv->setTableName("vetv");
                         tstHints_vetv->setColNames({"ip","iq","np","name","pl_ip","slb"});
-                        const bool my0 = QObject::connect( m_sp_qastra.get(), SIGNAL( onRastrHint(const _data_hint&) ), tstHints_vetv, SLOT( onRastrHint(const _data_hint&) ) );
+                        const bool my0 = QObject::connect( m_sp_qastra.get(), SIGNAL( onRastrHint(const _hint_data&) ), tstHints_vetv, SLOT( onRastrHint(const _hint_data&) ) );
                         assert(my0 == true);
                         auto dw_tst_hints_vetv = new ads::CDockWidget( "TstHints", this);
                         dw_tst_hints_vetv->setWidget(tstHints_vetv);
@@ -249,7 +249,7 @@ void MainWindow::loadPlugins(){
                         tstHints->setQAstra(std::weak_ptr<QAstra>(m_sp_qastra));
                         tstHints->setTableName("node");
                         tstHints->setColNames({"ny","name","vras","delta"});
-                        const bool my1 = QObject::connect( m_sp_qastra.get(), SIGNAL( onRastrHint(const _data_hint&) ), tstHints, SLOT( onRastrHint(const _data_hint&) ) );
+                        const bool my1 = QObject::connect( m_sp_qastra.get(), SIGNAL( onRastrHint(const _hint_data&) ), tstHints, SLOT( onRastrHint(const _hint_data&) ) );
                         assert(my1 == true);
                         auto dw_tst_hints = new ads::CDockWidget( "TstHints", this);
                         dw_tst_hints->setWidget(tstHints);
