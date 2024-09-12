@@ -28,7 +28,9 @@ class QMdiSubWindow;
 class MdiChild;
 class QSignalMapper;
 
-class QAstra;
+class QAstra ;
+//class QAstra{ struct _hint_data;};
+struct _hint_data;
 class rmodel;
 namespace ads{ class CDockManager; }
 class MainWindow
@@ -92,6 +94,7 @@ public slots:
     MdiChild *createMdiChild(nlohmann::json j_form = "");
 #endif//#if(!defined(QICSGRID_NO))
     void setActiveSubWindow(QWidget *window);
+    void tst_onRastrHint(const _hint_data&);
 private:
 ///slots.end.
 public:
@@ -168,7 +171,7 @@ private:
     Params m_params;
     QDir qdirData_;
     _v_cache_log v_cache_log_;
-    std::unique_ptr<QAstra> m_up_qastra;
+    std::shared_ptr<QAstra> m_sp_qastra;
 
     static constexpr char pchSettingsDirData_[5]{"Data"};
     static constexpr char pchSettingsOrg_[7]{"QRastr"};

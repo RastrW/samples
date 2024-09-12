@@ -145,6 +145,8 @@ set(PROJECT_SOURCES
     plugin_interfaces.h
     qastra.h
     qastra.cpp
+    tsthints.h
+    tsthints.cpp
 )
 if(MSVC)
     link_directories("${ASTRA_LOCATION}/build/Debug/")
