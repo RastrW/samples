@@ -105,10 +105,6 @@ eASTCode QAstra::Rgm(const std::string_view& parameters){
     IRastrPayload  rgmresult{ sp_rastr_->Rgm("") };
     return rgmresult.Value();
 }
-IPlainRastrResultObject<IPlainRastrTables>* QAstra::Tables(){
-    IRastrTablesPtr Tables{  sp_rastr_->Tables()};
 
-    return sp_rastr_->Tables();
-}
 
 

@@ -353,7 +353,7 @@ void RData::populate_qastra(QAstra* _pqastra)
     FieldDataOptions Options;
     Options.SetEnumAsInt(TriBool::True);
     Options.SetSuperEnumAsInt(TriBool::True);
-    IRastrTablesPtr tablesx{ _pqastra->Tables() };
+    IRastrTablesPtr tablesx{ _pqastra->getRastr()->Tables() };
     IRastrTablePtr table{ tablesx->Item(t_name_) };
     IRastrColumnsPtr nodecolumns{ table->Columns() };
     DataBlock<FieldVariantData> nparray;
