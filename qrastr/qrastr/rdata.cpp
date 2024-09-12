@@ -350,16 +350,6 @@ void RData::populate(nlohmann::json _j_Fields , nlohmann::json _j_metas,_vstr _v
 
 void RData::populate_qastra(QAstra* _pqastra)
 {
-
-    struct ToVal {
-        std::string operator()(std::monostate) { return { "def" }; }
-        long operator()(const long& value) { return value; }
-        std::string operator()(const uint64_t& value) { return std::to_string(value); }
-        std::string operator()(const double& value) { return std::to_string(value); }
-        std::string operator()(const bool& value) { return value ? "1" : "0"; }
-        std::string operator()(const std::string& value) { return value; }
-    };
-
     FieldDataOptions Options;
     Options.SetEnumAsInt(TriBool::True);
     Options.SetSuperEnumAsInt(TriBool::True);
@@ -369,7 +359,7 @@ void RData::populate_qastra(QAstra* _pqastra)
     DataBlock<FieldVariantData> nparray;
     IRastrResultVerify(table->DenseDataBlock(str_cols_, nparray, Options));
 
-    nparray.QDump();
+    //nparray.QDump();
 
     for (long column = 0; column < nparray.Columns(); column++)
     {
