@@ -8,22 +8,14 @@
 
 RModel::RModel(QObject *parent, CRastrHlp& rastr)
     : QAbstractTableModel(parent)
-        , rastr_(rastr)
-    , timer_(new QTimer(this)){
+        , rastr_(rastr) {
     setEmitSignals(true);
-    timer_->setInterval(1000);
-    connect(timer_, &QTimer::timeout , this, &RModel::timerHit);
-    timer_->start();
 }
 RModel::RModel(QObject *parent, CRastrHlp& rastr, QAstra* pqastra)
     : QAbstractTableModel(parent)
     , rastr_(rastr)
-    , pqastra_(pqastra)
-    , timer_(new QTimer(this)){
+    , pqastra_(pqastra) {
     setEmitSignals(true);
-    timer_->setInterval(1000);
-    connect(timer_, &QTimer::timeout , this, &RModel::timerHit);
-    timer_->start();
 }
 
 int RModel::populateDataFromRastr(){
@@ -47,12 +39,7 @@ int RModel::rowCount(const QModelIndex & /*parent*/) const{
 int RModel::columnCount(const QModelIndex & /*parent*/) const{
     return static_cast<int>(up_rdata->size());
 }
-void RModel::timerHit(){
-    QModelIndex topLeft = createIndex(1,1);
-    //emit a signal to make the view reread identified data
-    QVector<int>* pl = new QVector<int>{ Qt::DisplayRole};
-    //emit dataChanged(topLeft, topLeft, *pl);  //!!! emit dataChanged(topLeft, topLeft, {Qt::DisplayRole}); //ustas!!! not working!!
-}
+
 QVariant RModel::data(const QModelIndex &index, int role) const
 {
     int row = index.row();

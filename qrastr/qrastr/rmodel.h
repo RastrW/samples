@@ -14,12 +14,10 @@
 class RModel : public QAbstractTableModel
 {
     Q_OBJECT
-    QTimer* timer_;
+    //QTimer* timer_;
     CRastrHlp& rastr_;
-   // QAstra& qastra_;
     QAstra* pqastra_;
     std::unique_ptr<RData> up_rdata;
-    //RData rdata_;
     int n_form_indx_ = -1;
     std::vector<QString> vqcols_;                                 // Заголовки столбцов
 public:

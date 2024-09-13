@@ -32,6 +32,8 @@ using WrapperExceptionType = std::runtime_error;
 #include "IPlainRastrWrappers.h"
 #include "qastra.h"
 #include "tsthints.h"
+#include "comboboxdelegate.h"
+
 
 MainWindow::MainWindow(){
     auto logg = std::make_shared<spdlog::logger>( "qrastr" );
@@ -231,7 +233,8 @@ void MainWindow::loadPlugins(){
                     m_sp_qastra->setRastr(rastr);
                     QDir::setCurrent(qdirData_.absolutePath());
                     m_sp_qastra->LoadFile( eLoadCode::RG_REPL, m_params.Get_on_start_load_file_rastr(), "" );
-                    if(true){
+                    bool bHints = false;
+                    if(bHints){
                         //vetv
                         TstHints* tstHints_vetv = new TstHints(this);
                         tstHints_vetv->setQAstra(std::weak_ptr<QAstra>(m_sp_qastra));
@@ -877,33 +880,66 @@ void MainWindow::createToolBars(){
 
 void MainWindow::Btn1_onClick()
 {
+    //Show stock grid with nodes table
+
     QTableView* ptv = new QTableView();
     CRastrHlp rhlp;
     //*up_rastr_.get()
-    RModel* pmm = new RModel(nullptr,*up_rastr_.get());
+    RModel* pmm = new RModel(nullptr,*up_rastr_.get(),m_sp_qastra.get());
     pmm->setFormIndx(0);
     pmm->populateDataFromRastr();
     ptv->setSortingEnabled(true);
     ptv->setModel(pmm);
     ptv->show();
 }
+void MainWindow::Btn3_onClick()
+{
+    //Show test ComboBox item at grid column
+
+    QStandardItemModel* model = new QStandardItemModel(4, 2);
+    QTableView* ptableView = new QTableView();;
+
+    ComboBoxDelegate* delegate = new ComboBoxDelegate(this,"Item1,Item2,Item3");
+    //tableView.setItemDelegate(&delegate);
+    ptableView->setItemDelegateForColumn(1, delegate); // Column 0 can take any value, column 1 can only take values up to 8.
+
+    for (int row = 0; row < 4; ++row)
+    {
+        for (int column = 0; column < 2; ++column)
+        {
+            QModelIndex index = model->index(row, column, QModelIndex());
+            int value = (row+1) * (column+1);
+            std::cout << "Setting (" << row << ", " << column << ") to " << value << std::endl;
+            model->setData(index, QVariant(value));
+        }
+    }
+
+    // Make the combo boxes always displayed.
+    for ( int i = 0; i < model->rowCount(); ++i )
+    {
+        ptableView->openPersistentEditor( model->index(i, 1) );
+    }
+    ptableView->setModel(model);
+    ptableView->show();
+}
 void MainWindow::createCalcLayout()
 {
     // набор вложенных виджетов - кнопок
-    QPushButton *btn1 = new QPushButton("Button 1");
+    QPushButton *btn1 = new QPushButton("Stock grid");
     QPushButton *btn2 = new QPushButton("Button 2");
-    //QPushButton *btn3 = new QPushButton("Button 3");
+    QPushButton *btn3 = new QPushButton("Tst ComboBoxDelegate");
     //QPushButton *btn4 = new QPushButton("Button 4");
 
     connect(btn1,&QPushButton::clicked,this, &MainWindow::Btn1_onClick);
     connect(btn2,&QPushButton::clicked,this, &MainWindow::onButton2Click);
+    connect(btn3,&QPushButton::clicked,this, &MainWindow::Btn3_onClick);
 
     QWidget* widget = new QWidget;
     widget -> setWindowTitle("Functions");
     m_ActionsLayout = new QHBoxLayout(widget);
-//    m_ActionsLayout->addWidget(btn1);
+    m_ActionsLayout->addWidget(btn1);
 //    m_ActionsLayout->addWidget(btn2);
-    //m_ActionsLayout->addWidget(btn3);
+    m_ActionsLayout->addWidget(btn3);
    // m_ActionsLayout->addWidget(btn4);
     m_calcToolBar->addWidget(widget);
     //view->setSortingEnabled(true);

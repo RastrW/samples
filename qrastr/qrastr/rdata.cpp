@@ -377,19 +377,15 @@ void RData::populate_qastra(QAstra* _pqastra)
                 (*iter_col).emplace<long>(std::get<long>(nparray.Data()[row * nparray.Columns() + column]));
                 break;
             case RCol::_en_data::DATA_DBL:
-               // (*iter_col).emplace<double>( j_data_row[i] );
                 (*iter_col).emplace<double>(std::get<double>(nparray.Data()[row * nparray.Columns() + column]));
-                //qDebug() << "dbl: " << std::get<double>(*iter_col);
                 break;
             case RCol::_en_data::DATA_STR:
                 (*iter_col).emplace<std::string>(std::get<std::string>(nparray.Data()[row * nparray.Columns() + column]));
-               // (*iter_col).emplace<std::string>(j_data_row[i]);
-                //qDebug() << "str: " << std::get<std::string>(*iter_col).c_str();
                 break;
             default:
                 Q_ASSERT(!"unknown type");
                 break;
-            }//switch
+            }//switc
         }
     }
 }

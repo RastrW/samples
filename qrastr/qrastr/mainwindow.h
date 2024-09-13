@@ -78,6 +78,7 @@ private slots:
     void onOpenForm(QAction* p_actn);
     void onButton2Click();
     void Btn1_onClick();
+    void Btn3_onClick();
     void ondataChanged(std::string _t_name, QModelIndex index, QVariant value);
     void ondataChanged(std::string _t_name, std::string _col_name, int _row, QVariant _value);
     void onRowInserted(std::string _t_name, int _row);
@@ -158,6 +159,7 @@ private:
     //QAction *m_SortDescAct;
     QAction* m_RGMAct;
     QAction* m_ActMacro;
+    QAction* m_TestAct;
     nlohmann::json             j_forms_;
     _idRastr                   id_rastr_ = -1;
     std::unique_ptr<CRastrHlp> up_rastr_;
