@@ -5,6 +5,7 @@ if(MSVC)
     add_compile_definitions( COMPILE_WIN )
     add_compile_definitions( _SILENCE_ALL_MS_EXT_DEPRECATION_WARNINGS )
     add_compile_definitions( QICSGRID_NO )
+    add_compile_definitions( NOMINMAX )
 endif()
 add_compile_definitions(ASTRA_NIX)
 add_compile_definitions(
@@ -25,7 +26,7 @@ set( CMAKE_LIBRARY_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}//..//${CMAKE_BUILD_TYPE
 set( CMAKE_RUNTIME_OUTPUT_DIRECTORY "${CMAKE_SOURCE_DIR}//..//${CMAKE_BUILD_TYPE}" )
 option( QRASTR_BUILD_WITH_MCR "QRASTR_BUILD_WITH_MCR" ON )
 #set( COMPILE_DIR "C:/Projects/tfs/rastr/RastrWin/thirdparty/_deps/compile_cmake" CACHE PATH "Installation directory for third-party projects" )# for example C:\projects\rastr\RastrWin\thirdparty\_deps\compile
-set( COMPILE_DIR "C:/Projects/compile_cmake" )# for example C:\projects\rastr\RastrWin\thirdparty\_deps\compile
+#set( COMPILE_DIR "C:/Projects/compile_cmake" )# for example C:\projects\rastr\RastrWin\thirdparty\_deps\compile
 if( NOT IS_DIRECTORY ${COMPILE_DIR} )
     message(FATAL_ERROR "Not defined COMPILE_DIR")
 else()
@@ -38,8 +39,8 @@ list( PREPEND CMAKE_PREFIX_PATH "${CMAKE_CURRENT_SOURCE_DIR}/qmcr/" )
 set( TS_FILES qrastr_ru_RU.ts )
 if(MSVC)
     set( DEPENDENCIES_LOCATION "c:/projects/compile/" )
-    set( ASTRA_LOCATION        "c:/projects/tfs/rastr/RastrWin/astra/" )
-    #set( ASTRA_LOCATION        "c:/projects/rastr/RastrWin/astra" )
+    #set( ASTRA_LOCATION        "c:/projects/tfs/rastr/RastrWin/astra/" )
+    set( ASTRA_LOCATION        "c:/projects/rastr/RastrWin/astra" )
 else()
     set( DEPENDENCIES_LOCATION "/home/ustas/projects/compile/" )
     set( ASTRA_LOCATION        "/home/ustas/projects/git_r/rastr/RastrWin/astra/" )
@@ -161,6 +162,7 @@ if(${QT_VERSION_MAJOR} GREATER_EQUAL 6)
     qt_add_executable( ${PROJECT_NAME}
         MANUAL_FINALIZATION
         ${PROJECT_SOURCES}
+        app.h app.cpp
     )
     qt_create_translation( QM_FILES ${CMAKE_SOURCE_DIR} ${TS_FILES} )
 else()

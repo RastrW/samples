@@ -1,9 +1,10 @@
 #include "qastra.h"
 #include "common_qrastr.h"
+#include "UIForms.h"
+#include "utils.h"
 
 using WrapperExceptionType = std::runtime_error;
 #include "IPlainRastrWrappers.h"
-
 
 class EventSink
         : public IRastrEventsSinkBase{
@@ -105,6 +106,10 @@ eASTCode QAstra::Rgm(const std::string_view& parameters){
     IRastrPayload  rgmresult{ sp_rastr_->Rgm("") };
     return rgmresult.Value();
 }
+
+
+
+
 
 
 

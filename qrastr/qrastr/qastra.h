@@ -48,6 +48,8 @@ struct _hint_data{
 //  public int           Pp
 //  public object        Result
 
+class CUIFormsCollection;
+
 class QAstra
     : public QObject
     , public IRastrEventsSinkBase{
@@ -153,6 +155,7 @@ signals:
     void onRastrHint(const _hint_data& );
 private:
     _sp_rastr sp_rastr_;
+     std::unique_ptr<CUIFormsCollection> upCUIFormsCollection_;
 };
 
 #endif // QASTRA_H

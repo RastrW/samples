@@ -5,7 +5,7 @@
 #include <QApplication>
 #include <QDebug>
 
-class App Q_DECL_FINAL
+class App final
     : public QApplication{
     Q_OBJECT
 public:
@@ -31,7 +31,7 @@ public:
             printf("excep UNKNOWN\n");
         }
         return done;
-     }
+    }
 };
 
 #endif // APP_H
