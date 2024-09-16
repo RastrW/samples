@@ -10,7 +10,8 @@ set( CMAKE_RUNTIME_OUTPUT_DIRECTORY "${CMAKE_SOURCE_DIR}//..//..//..//${CMAKE_BU
 
 set( INCLUDES
     "${DEPENDENCIES_LOCATION}/spdlog/include/"
-    "${ASTRA_LOCATION}/../../flytfs/IPlainRastrTest/"
+#    "${ASTRA_LOCATION}/../../flytfs/IPlainRastrTest/"
+    "${ASTRA_LOCATION}/"
     "../../"
 )
 set(PROJECT_SOURCES

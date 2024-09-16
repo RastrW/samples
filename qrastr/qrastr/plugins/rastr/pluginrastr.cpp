@@ -150,21 +150,24 @@ int qAstra::tst_iplainrastr() const {
     return 1;
 }
 std::shared_ptr<IPlainRastr> qAstra::getPlainRastrSharedPtr(){
-    std::filesystem::path path_dir_r;
+    //std::filesystem::path path_dir_r;
 #ifdef _DEBUG
     //path_dir_r = LR"(C:\projects\rastr\RastrWin\Debug64)";
-    path_dir_r = LR"(C:\projects\tfs\rastr\RastrWin\Debug64)";
+    //path_dir_r = LR"(C:\projects\tfs\rastr\RastrWin\Debug64)";
 #else
-    path_dir_r = LR"(C:\projects\rastr\RastrWin\Release64\)";
+    //path_dir_r = LR"(C:\projects\rastr\RastrWin\Release64\)";
 #endif
-    spdlog::info( "Look Rastr in: {}", path_dir_r.generic_u8string());
-    std::filesystem::current_path(path_dir_r);
+    //spdlog::info( "Look Rastr in: {}", path_dir_r.generic_u8string());
+    //path_dir_r = std::filesystem::current_path();
+    //spdlog::info( "Look Rastr in: {}", path_dir_r.generic_u8string());
+    //std::filesystem::current_path(path_dir_r);
     std::shared_ptr<IPlainRastr> shRastrOut;
     try{
         const char* pch_name_astra_dll         {"astra"};
         const char* pch_name_plain_factory_fun {"PlainRastrFactory"};
         QLibrary qlRastr{pch_name_astra_dll};
         if(qlRastr.load()){
+
             const QFunctionPointer pfn{ qlRastr.resolve(pch_name_plain_factory_fun) };
             if(pfn!=nullptr){
                 _prf fnFactory = reinterpret_cast<_prf>(pfn);
