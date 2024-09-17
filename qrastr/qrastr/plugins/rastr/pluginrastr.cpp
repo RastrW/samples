@@ -151,15 +151,6 @@ int qAstra::tst_iplainrastr() const {
     return 1;
 }
 std::shared_ptr<IPlainRastr> qAstra::getPlainRastrSharedPtr(){
-    std::filesystem::path path_dir_r;
-#ifdef _DEBUG
-    //path_dir_r = LR"(C:\projects\rastr\RastrWin\Debug64)";
-    path_dir_r = LR"(C:\projects\tfs\rastr\RastrWin\Debug64)";
-#else
-    path_dir_r = LR"(C:\projects\rastr\RastrWin\Release64\)";
-#endif
-    spdlog::info( "Look Rastr in: {}", path_dir_r.generic_u8string());
-    std::filesystem::current_path(path_dir_r);
     std::shared_ptr<IPlainRastr> shRastrOut;
     try{
         const char* pch_name_astra_dll         {"astra"};
@@ -190,7 +181,6 @@ void PluginRastr::setLoggerPtr(std::shared_ptr<spdlog::logger> spLoger){
     spdlog::info("RastrPlugin get logger");
 }
 std::shared_ptr<IPlainRastr> PluginRastr::getIPlainRastrPtr(){
-    //return std::make_shared<IPlainRastr>();
     qAstra qastra;
     spdlog::info("getIPlainRastrPtr()");
     return qastra.getPlainRastrSharedPtr();

@@ -19,8 +19,6 @@ struct fmt::formatter<QString>
         return format_to( ctx.out(), "{}", qstr.toStdString() );
     }
 };
-
-
 enum class _err_code1{
     norm = 1,
     fail = -1,

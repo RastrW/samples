@@ -36,6 +36,7 @@ using WrapperExceptionType = std::runtime_error;
 
 
 MainWindow::MainWindow(){
+/*
     auto logg = std::make_shared<spdlog::logger>( "qrastr" );
     spdlog::set_default_logger(logg);
     SetConsoleOutputCP(CP_UTF8);
@@ -49,7 +50,7 @@ MainWindow::MainWindow(){
     std::vector<spdlog::sink_ptr> sinks{ console_sink, rotating_sink };
     logg->sinks().push_back(rotating_sink);
     spdlog::info( "ReadSetting: {}", n_res );
-    spdlog::info( "Log: {}", path_log.generic_u8string() );
+    spdlog::info( "Log: {}", path_log.generic_u8string() );*/
     m_workspace = new QMdiArea;
     setCentralWidget(m_workspace);
     connect(m_workspace, SIGNAL(subWindowActivated(QMdiSubWindow *)), this, SLOT(updateMenus()));
@@ -60,7 +61,7 @@ MainWindow::MainWindow(){
     createToolBars();
     createStatusBar();
     updateMenus();
-    setForms();
+//    setForms();
     setWindowTitle(tr("~qrastr~"));
     //int nRes = test();
     ads::CDockManager::setConfigFlag(ads::CDockManager::FocusHighlighting, true);
@@ -91,15 +92,19 @@ MainWindow::MainWindow(){
         container->resize(1200,800);
     }
     auto qt_sink = std::make_shared<spdlog::sinks::qt_sink_mt>(pMcrWnd, "onQStringAppendProtocol");
+    auto logg = spdlog::default_logger();
     logg->sinks().push_back(qt_sink);
     pMcrWnd->show();
     
-    loadPlugins();
-
-
+    //loadPlugins();
 }
 MainWindow::~MainWindow(){
 }
+
+long MainWindow::init(){
+    return 1;
+}
+
 int MainWindow::readSettings(){ //it cache log messages to vector, because it called befor logger intialization
     try{
         QSettings settings(pchSettingsOrg_);
@@ -274,90 +279,6 @@ void MainWindow::loadPlugins(){
                         }
 */
                     }
-
-                    if(false){
-                        /*
-                        EventSink sink;
-                        IRastrResultVerify(rastr->SubscribeEvents(&sink));
-                        //std::filesystem::path path_file{LR"(C:\Users\ustas\Documents\RastrWin3\test-rastr\cx195.rg2)"};
-                        //std::filesystem::path path_file{LR"(C:\Temp\Новая папка\mega2_ur_.rg2)"};
-                        std::filesystem::path path_file{LR"(C:\Temp\Новая папка\cx195.rg2)"};
-                        IRastrResultVerify loadresult{  //IPlainRastrResult* pip { rastr->Load(eLoadCode::RG_REPL, path_file.generic_u8string(), "") };
-                                rastr->Load(
-                                eLoadCode::RG_REPL,
-                                stringutils::acp_encode(path_file.generic_u8string()),
-                                //stringutils::acp_encode(R"(C:\Users\ustas\Documents\RastrWin3\SHABLON\режим.rg2)")
-                                ""
-                            )
-                        };
-                        spdlog::info( "Rastr.Load {}", path_file.generic_u8string());
-                        IRastrPayload rgmresult{ rastr->Rgm("p1") };
-                        spdlog::info( "{} = Rgm(...) ", static_cast<std::underlying_type<eASTCode>::type>(rgmresult.Value()) );
-                        if( rgmresult.Value() == eASTCode::AST_OK ){
-                            spdlog::info( "Rgm ok!");
-                        }else{
-                            spdlog::error( "Rgm fail!");
-                        }
-
-                        IRastrTablesPtr tablesx{ rastr->Tables() };
-                        IRastrPayload tablecount{ tablesx->Count() };
-                        spdlog::info("tablecount: {}", tablecount.Value() );
-                        IRastrTablePtr nodes{ tablesx->Item("node") };
-
-                        IRastrPayload tablesize{ nodes->Size() };
-                        spdlog::info("node.tablesize: {}",tablesize.Value());
-                        IRastrPayload tablename{ nodes->Name() };
-                        spdlog::info("node.tablename: {}",tablename.Value() );
-                        IRastrObjectPtr<IPlainRastrColumns> nodecolumns{ nodes->Columns() };
-                        IRastrColumnPtr ny{ nodecolumns->Item("ny") };
-                        IRastrColumnPtr name{ nodecolumns->Item("name") };
-                        IRastrColumnPtr v{ nodecolumns->Item("vras") };
-                        IRastrColumnPtr delta{ nodecolumns->Item("delta") };
-                        for (long index{ 0 }; index < tablesize.Value(); index++) {
-                            IRastrVariantPtr Varny{ ny->Value(index) };
-                            IRastrVariantPtr Varname{ name->Value(index) };
-                            IRastrVariantPtr Varv{ v->Value(index) };
-                            IRastrVariantPtr Vardelta{ delta->Value(index) };
-
-                            IRastrPayload nyvalue{ Varny->Long() };
-                            IRastrPayload namevalue{ Varname->String() };
-                            IRastrPayload vvalue{ Varv->Double() };
-                            IRastrPayload deltavalue{ Vardelta->Double() };
-                            spdlog::info( "ny: {:10} name: {:15} vras: {:3.2f} delta: {:2.3f}"
-                                , nyvalue.Value()
-                                , stringutils::acp_decode(namevalue.Value())
-                                , vvalue.Value()
-                                , deltavalue.Value()
-                            );
-                        }
-                        IRastrResultVerify selectionresult{ nodes->SetSelection("uhom>330") };
-                        IRastrObjectPtr<IPlainRastrDataset> dataset{ nodes->Dataset("ny, name, uhom, 62,")};
-                        const long datasize{ IRastrPayload(dataset->Count()).Value() };
-
-                        for (long colindex = 0; colindex < datasize; colindex++)
-                        {
-                            IRastrObjectPtr<IPlainRastrDatasetColumn> datacolumn{ dataset->Item(colindex) };
-                            spdlog::info( "col_name: {:10} col_type: {}"
-                                , IRastrPayload(datacolumn->Name()).Value()
-                                , static_cast<std::underlying_type<ePropType>::type>(IRastrPayload(datacolumn->Type()).Value())
-                            );
-                            const long columnsize{ IRastrPayload(datacolumn->Count()).Value() };
-                            for (long rowindex = 0; rowindex < columnsize; rowindex++)
-                            {
-                                IRastrObjectPtr<IPlainRastrDatasetValue> indexedvalue{ datacolumn->Item(rowindex) };
-                                IRastrVariantPtr value{ indexedvalue->Value() };
-                                spdlog::info(" indx: {:5} str: {:40}"
-                                    , IRastrPayload(indexedvalue->Index()).Value()
-                                    , stringutils::acp_decode(IRastrPayload(value->String()).Value())
-                                );
-                            }
-                        }
-                        IRastrObjectPtr dcol{ dataset->Item("ny") };
-                        // на выходе из скопа врапперы делают Destroy в хипе астры
-                        IRastrResultVerify(rastr->UnsubscribeEvents(&sink));
-                        */
-                    }//if(false)
-
                 }catch(const std::exception& ex){
                     exclog( ex );
                 }
@@ -398,19 +319,17 @@ MainWindow::_cache_log::_cache_log(const MainWindow::_cache_log& cache_log){
 MainWindow::_cache_log::_cache_log(const MainWindow::_cache_log&& cache_log){
     operator=(cache_log);
 }
-
 template <typename... Args>
 void MainWindow::_v_cache_log::add( const spdlog::level::level_enum lev_in, const std::string_view sv_format, Args&&... args ){
     _cache_log cache_log{lev_in, fmt::format(sv_format, args...)};
     emplace_back(cache_log);
 }
-
-
-void MainWindow::setForms(){ // https://stackoverflow.com/questions/14151443/how-to-pass-a-qstring-to-a-qt-slot-from-a-qmenu-via-qsignalmapper-or-otherwise
+void MainWindow::setForms(std::list<CUIForm>& forms){ // https://stackoverflow.com/questions/14151443/how-to-pass-a-qstring-to-a-qt-slot-from-a-qmenu-via-qsignalmapper-or-otherwise
     int i = 0;
+    m_lstUIForms = forms;
     QMap<QString,QMenu *> map_menu;
     //QMap<QString, QMenu>::iterator it ;
-    auto forms = up_rastr_->GetForms();
+//    auto forms = up_rastr_->GetForms();
     for(const auto& j_form : forms){
         std::string str_MenuPath = stringutils::cp1251ToUtf8(j_form.MenuPath());
         if (!str_MenuPath.empty() && str_MenuPath.at(0) == '_')
@@ -434,6 +353,52 @@ void MainWindow::setForms(){ // https://stackoverflow.com/questions/14151443/how
         i++;
     }
     connect( m_openMenu, SIGNAL(triggered(QAction *)), this, SLOT(onOpenForm(QAction *)), Qt::UniqueConnection);
+}
+void MainWindow::setQAstra(std::shared_ptr<QAstra> sp_qastra){
+    assert(nullptr!=sp_qastra);
+    m_sp_qastra = sp_qastra;
+
+    if(true){
+        //vetv
+        TstHints* tstHints_vetv = new TstHints(this);
+        tstHints_vetv->setQAstra(std::weak_ptr<QAstra>(m_sp_qastra));
+        tstHints_vetv->setTableName("vetv");
+        tstHints_vetv->setColNames({"ip","iq","np","name","pl_ip","slb"});
+        const bool my0 = QObject::connect( m_sp_qastra.get(), SIGNAL( onRastrHint(const _hint_data&) ), tstHints_vetv, SLOT( onRastrHint(const _hint_data&) ) );
+        assert(my0 == true);
+        auto dw_tst_hints_vetv = new ads::CDockWidget( "TstHints", this);
+        dw_tst_hints_vetv->setWidget(tstHints_vetv);
+        dw_tst_hints_vetv->move(QPoint(20, 20));
+        auto container_tsthints_vetv = m_DockManager->addDockWidgetFloating(dw_tst_hints_vetv);
+        container_tsthints_vetv->move(QPoint(1800,10));
+        container_tsthints_vetv->resize(600,400);
+        //node
+        TstHints* tstHints = new TstHints(this);
+        tstHints->setQAstra(std::weak_ptr<QAstra>(m_sp_qastra));
+        tstHints->setTableName("node");
+        tstHints->setColNames({"ny","name","vras","delta"});
+        const bool my1 = QObject::connect( m_sp_qastra.get(), SIGNAL( onRastrHint(const _hint_data&) ), tstHints, SLOT( onRastrHint(const _hint_data&) ) );
+        assert(my1 == true);
+        auto dw_tst_hints = new ads::CDockWidget( "TstHints", this);
+        dw_tst_hints->setWidget(tstHints);
+        dw_tst_hints->move(QPoint(20, 20));
+        auto container_tsthints = m_DockManager->addDockWidgetFloating(dw_tst_hints);
+        container_tsthints->move(QPoint(1400,20));
+        container_tsthints->resize(600,400);
+/*
+        static int colCount = 50;
+        static int rowCount = 300;
+        tstHints->setColumnCount(colCount);
+        tstHints->setRowCount(rowCount);
+        for (int col = 0; col < colCount; ++col){
+          tstHints->setHorizontalHeaderItem(col, new QTableWidgetItem(QString("Col %1").arg(col+1)));
+          for (int row = 0; row < rowCount; ++row){
+             tstHints->setItem(row, col, new QTableWidgetItem(QString("T %1-%2").arg(row + 1).arg(col+1)));
+          }
+        }
+*/
+    }
+
 }
 void MainWindow::closeEvent(QCloseEvent *event){
     QMainWindow::closeEvent(event);
@@ -470,6 +435,7 @@ void MainWindow::open(){
             return;
         }
 #endif//#if(!defined(QICSGRID_NO))
+ /*
         int nRes = 0;
         std::string f = fileName.toUtf8().constData(); //  it works!!!
         nRes = up_rastr_->Load( f);
@@ -484,7 +450,7 @@ void MainWindow::open(){
             QMessageBox msgBox;
             msgBox.critical( this, tr("File not loaded"), str_msg.c_str() );
         }
-
+*/
         m_sp_qastra->LoadFile(eLoadCode::RG_REPL, fileName.toStdString(),"");
     }
 }
@@ -596,7 +562,9 @@ void MainWindow::about(){
 }
 void MainWindow::onOpenForm( QAction* p_actn ){
     const int n_indx = p_actn->data().toInt();
-    const auto forms = up_rastr_->GetForms();
+//    const auto forms = up_rastr_->GetForms();
+    const auto& forms = m_lstUIForms;
+
     auto it = forms.begin();
     std::advance(it,n_indx);
     auto form  =*it;

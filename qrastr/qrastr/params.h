@@ -1,13 +1,7 @@
 #ifndef PARAMS_H
 #define PARAMS_H
 
-#include <filesystem>
-
-constexpr char param_json_[] {  "on_start_load_file_rastr"};
-static constexpr char on_start_load_file_rastr1 [] {"on_start_load_file_rastr"};
-
-class Params
-{
+class Params{
 public:
     Params();
     virtual ~Params() = default;

@@ -29,7 +29,7 @@ class MdiChild;
 class QSignalMapper;
 
 class QAstra ;
-//class QAstra{ struct _hint_data;};
+class CUIForm;
 struct _hint_data;
 class rmodel;
 namespace ads{ class CDockManager; }
@@ -101,11 +101,13 @@ private:
 public:
     MainWindow();
     virtual ~MainWindow();
+    long init();
+    void setForms(std::list<CUIForm>& forms); // https://stackoverflow.com/questions/14151443/how-to-pass-a-qstring-to-a-qt-slot-from-a-qmenu-via-qsignalmapper-or-otherwise
+    void setQAstra(std::shared_ptr<QAstra> sp_qastra);
 private:
     int  readSettings();
     int  writeSettings();
     void showEvent( QShowEvent* event ) override;
-    void setForms(); // https://stackoverflow.com/questions/14151443/how-to-pass-a-qstring-to-a-qt-slot-from-a-qmenu-via-qsignalmapper-or-otherwise
 #if(!defined(QICSGRID_NO))
     QicsTable* activeTable(); // Returns pointer to the table that is active, otherwise returns NULL
 #endif//#if(!defined(QICSGRID_NO))
@@ -174,6 +176,7 @@ private:
     QDir qdirData_;
     _v_cache_log v_cache_log_;
     std::shared_ptr<QAstra> m_sp_qastra;
+    std::list<CUIForm> m_lstUIForms;
 
     static constexpr char pchSettingsDirData_[5]{"Data"};
     static constexpr char pchSettingsOrg_[7]{"QRastr"};
