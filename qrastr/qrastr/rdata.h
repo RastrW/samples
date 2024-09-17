@@ -31,11 +31,29 @@ public:
     RCol(Args&&... args)
         : _col_data{args...} {
     }
+   /* RCol(const RCol &col)
+    {
+        //pcol_ptr2 = col.pcol_ptr2;
+
+    }*/
     virtual ~RCol() = default;
     void setMeta(const nlohmann::json& j_meta_in){
-        j_meta_ = j_meta_in;
+
+    }
+
+    //void setMeta(IRastrColumnPtr* _pcol_ptr){
+    void setMeta(QAstra* _pqastra){
+        pqastra_ = _pqastra;
+        IRastrTablesPtr tablesx{ _pqastra->getRastr()->Tables() };
+        IRastrTablePtr table{ tablesx->Item(table_name_) };
+        IRastrColumnsPtr columns{ table->Columns() };
+        IRastrColumnPtr col_ptr{ columns->Item(str_name_) };
+
+        //pcol_ptr = _pcol_ptr;
+        //j_meta_ = j_meta_in;
         en_data_ = _en_data::DATA_ERR;
-        const std::string str_Type = j_meta_["Type"];
+        //const std::string str_Type = j_meta_["Type"];
+        const std::string str_Type = Type();
         int n_type = std::stoi(str_Type);
         com_prop_tt = static_cast<enComPropTT>(n_type);
         switch(com_prop_tt){
@@ -60,73 +78,118 @@ public:
         }
     }
     std::string name() const{
-        const std::string str_name = j_meta_["Name"];
+        IRastrTablesPtr tablesx{ pqastra_->getRastr()->Tables() };
+        IRastrTablePtr table{ tablesx->Item(table_name_) };
+        IRastrColumnsPtr columns{ table->Columns() };
+        IRastrColumnPtr col_ptr{ columns->Item(str_name_) };
+        std::string str_name = IRastrPayload(IRastrVariantPtr(col_ptr->Property(FieldProperties::Name))->String()).Value();
         return str_name;
     }
+
     std::string Type() const{
-        const std::string str_Type = j_meta_["Type"];
+        IRastrTablesPtr tablesx{ pqastra_->getRastr()->Tables() };
+        IRastrTablePtr table{ tablesx->Item(table_name_) };
+        IRastrColumnsPtr columns{ table->Columns() };
+        IRastrColumnPtr col_ptr{ columns->Item(str_name_) };
+        std::string str_Type = IRastrPayload(IRastrVariantPtr(col_ptr->Property(FieldProperties::Type))->String()).Value();
         return str_Type;
     }
+
     std::string width() const{
-        const std::string str_width = j_meta_["Width"];
+        IRastrTablesPtr tablesx{ pqastra_->getRastr()->Tables() };
+        IRastrTablePtr table{ tablesx->Item(table_name_) };
+        IRastrColumnsPtr columns{ table->Columns() };
+        IRastrColumnPtr col_ptr{ columns->Item(str_name_) };
+        std::string str_width = IRastrPayload(IRastrVariantPtr(col_ptr->Property(FieldProperties::Width))->String()).Value();
         return str_width;
     }
-    std::string prec() const{
-        const std::string str_prec = j_meta_["Precision"];
-        return str_prec;
-    }
+
     std::string title() const{
-        const std::string str_title = j_meta_["Title"];
+        IRastrTablesPtr tablesx{ pqastra_->getRastr()->Tables() };
+        IRastrTablePtr table{ tablesx->Item(table_name_) };
+        IRastrColumnsPtr columns{ table->Columns() };
+        IRastrColumnPtr col_ptr{ columns->Item(str_name_) };
+        std::string str_title = IRastrPayload(IRastrVariantPtr(col_ptr->Property(FieldProperties::Title))->String()).Value();
         return str_title;
     }
+    std::string desc() const{
+        IRastrTablesPtr tablesx{ pqastra_->getRastr()->Tables() };
+        IRastrTablePtr table{ tablesx->Item(table_name_) };
+        IRastrColumnsPtr columns{ table->Columns() };
+        IRastrColumnPtr col_ptr{ columns->Item(str_name_) };
+        std::string str_desc = IRastrPayload(IRastrVariantPtr(col_ptr->Property(FieldProperties::Description))->String()).Value();
+        return str_desc;
+    }
+
+    std::string prec() const{
+        IRastrTablesPtr tablesx{ pqastra_->getRastr()->Tables() };
+        IRastrTablePtr table{ tablesx->Item(table_name_) };
+        IRastrColumnsPtr columns{ table->Columns() };
+        IRastrColumnPtr col_ptr{ columns->Item(str_name_) };
+        std::string str_prec = IRastrPayload(IRastrVariantPtr(col_ptr->Property(FieldProperties::Precision))->String()).Value();
+        return str_prec;
+    }
     std::string expr() const{
-        const std::string str_expr = j_meta_["Expression"];
+        IRastrTablesPtr tablesx{ pqastra_->getRastr()->Tables() };
+        IRastrTablePtr table{ tablesx->Item(table_name_) };
+        IRastrColumnsPtr columns{ table->Columns() };
+        IRastrColumnPtr col_ptr{ columns->Item(str_name_) };
+        std::string str_expr = IRastrPayload(IRastrVariantPtr(col_ptr->Property(FieldProperties::Expression))->String()).Value();
         return str_expr;
     }
+    /*
     std::string AFOR() const{
-        const std::string str_AFOR = j_meta_["AFOR"];
+        std::string str_AFOR = IRastrPayload(IRastrVariantPtr((*pcol_ptr)->Property(FieldProperties::AFOR))->String()).Value();
         return str_AFOR;
     }
     std::string IsActiveFormula() const{
-        const std::string str_IsActiveFormula = j_meta_["IsActiveFormula"];
+        std::string str_IsActiveFormula = IRastrPayload(IRastrVariantPtr((*pcol_ptr)->Property(FieldProperties::IsActiveFormula))->String()).Value();
         return str_IsActiveFormula;
     }
     std::string NameRef() const{
-        const std::string str_NameRef = j_meta_["NameRef"];
+        std::string str_NameRef = IRastrPayload(IRastrVariantPtr((*pcol_ptr)->Property(FieldProperties::NameRef))->String()).Value();
         return str_NameRef;
     }
-    std::string desc() const{
-        const std::string str_desc = j_meta_["Description"];
-        return str_desc;
-    }
+
     std::string Min() const{
-        const std::string str_Min = j_meta_["Min"];
+        std::string str_Min = IRastrPayload(IRastrVariantPtr((*pcol_ptr)->Property(FieldProperties::Min))->String()).Value();
         return str_Min;
     }
     std::string Max() const{
-        const std::string str_Max = j_meta_["Max"];
+        std::string str_Max = IRastrPayload(IRastrVariantPtr((*pcol_ptr)->Property(FieldProperties::Max))->String()).Value();
         return str_Max;
     }
     std::string Scale() const{
-        const std::string str_Scale = j_meta_["Scale"];
+        std::string str_Scale = IRastrPayload(IRastrVariantPtr((*pcol_ptr)->Property(FieldProperties::Scale))->String()).Value();
         return str_Scale;
     }
     std::string Cache() const{
-        const std::string str_Cache = j_meta_["Cache"];
+        std::string str_Cache = IRastrPayload(IRastrVariantPtr((*pcol_ptr)->Property(FieldProperties::Cache))->String()).Value();
         return str_Cache;
     }
+*/
     std::string unit() const{
-        const std::string str_unit = j_meta_["Unit"];
+        IRastrTablesPtr tablesx{ pqastra_->getRastr()->Tables() };
+        IRastrTablePtr table{ tablesx->Item(table_name_) };
+        IRastrColumnsPtr columns{ table->Columns() };
+        IRastrColumnPtr col_ptr{ columns->Item(str_name_) };
+        std::string str_unit = IRastrPayload(IRastrVariantPtr(col_ptr->Property(FieldProperties::Unit))->String()).Value();
         return str_unit;
     }
 
+
     enComPropTT com_prop_tt;
     std::string    str_name_;
+    std::string    table_name_;
     _en_data       en_data_;
     std::string nameref;
+    std::string title_;
     long    index;
 private:
     nlohmann::json j_meta_;
+    //IRastrColumnPtr col_ptr;
+    QAstra* pqastra_;
+
 };// class RCol
 
 class RData
@@ -135,9 +198,9 @@ public:
     RData()
     {
     }
-    RData(const _idRastr _id_rastr, std::string _t_name)
+    RData(QAstra* _pqastra, std::string _t_name)
     {
-        id_rastr_ = _id_rastr;
+        pqastra_ = _pqastra;
         t_name_ = _t_name;
     }
     void SetNumRows(long n_new_num_rows){
@@ -158,7 +221,7 @@ public:
 
 
 
-    void Initialize(CUIForm _form);
+    void Initialize(CUIForm _form, QAstra* _pqastra);
     void Initialize(nlohmann::json _j_Fields , nlohmann::json _j_metas,_vstr _vstr_fields_form);// old
     // Заполняем через плоскую dll через запрос GetJSON
     void populate();
@@ -204,6 +267,7 @@ public:
     }
 
     _idRastr id_rastr_ = 0;
+    QAstra* pqastra_;
     std::string t_name_ = "";
     std::string t_title_ = "";
     std::string str_cols_ = "";                     // строка имен столбцов ex: "ny,pn,qn,vras"

@@ -6,30 +6,21 @@
 
 //#include "fmt/format.h"
 
-RModel::RModel(QObject *parent, CRastrHlp& rastr)
+RModel::RModel(QObject *parent, QAstra* pqastra)
     : QAbstractTableModel(parent)
-        , rastr_(rastr) {
-    setEmitSignals(true);
-}
-RModel::RModel(QObject *parent, CRastrHlp& rastr, QAstra* pqastra)
-    : QAbstractTableModel(parent)
-    , rastr_(rastr)
     , pqastra_(pqastra) {
     setEmitSignals(true);
 }
 
 int RModel::populateDataFromRastr(){
 
-    rastr_.GetFormData(n_form_indx_);
-    CUIForm form = rastr_.GetUIForm(n_form_indx_);
-
-    up_rdata = std::unique_ptr<RData>(new RData( rastr_.GetRastrId(),form.TableName()));
-    up_rdata->Initialize(form);
-    //up_rdata->populate();
+    up_rdata = std::unique_ptr<RData>(new RData(pqastra_,pUIForm_->TableName()));
+    up_rdata->Initialize(*pUIForm_,pqastra_);
     up_rdata->populate_qastra(this->pqastra_);
 
     for (RCol &rcol : *up_rdata)
-        vqcols_.push_back(rcol.title().c_str());
+        //vqcols_.push_back(rcol.title().c_str());
+        vqcols_.push_back(rcol.title_.c_str());
 
     return 1;
 };
@@ -160,7 +151,7 @@ bool RModel::setData(const QModelIndex &index, const QVariant &value, int role)
 
     if (data(index, role) != value)
     {
-        switch((*iter_data).index()){
+       /* switch((*iter_data).index()){
         case RCol::_en_data::DATA_INT:
             qDebug() << "int: " << value.toInt();
             (*iter_data).emplace<long> (value.toInt());
@@ -181,6 +172,7 @@ bool RModel::setData(const QModelIndex &index, const QVariant &value, int role)
             break;
         default :                                               break;
         }
+    */
 
         if (emitSignals())
         {

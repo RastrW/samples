@@ -602,7 +602,7 @@ void MainWindow::onOpenForm( QAction* p_actn ){
     auto form  =*it;
     qDebug() << "\n Open form:" + form.Name();
     spdlog::info( "Create tab [{}]", stringutils::cp1251ToUtf8(form.Name()) );
-    RtabWidget *prtw = new RtabWidget(*up_rastr_.get(),m_sp_qastra.get(),n_indx);
+    RtabWidget *prtw = new RtabWidget(m_sp_qastra.get(),form,this);
     connect(this, &MainWindow::file_loaded,  prtw, &RtabWidget::onFileLoad);    //Загрузка файла
     connect(this, &MainWindow::rgm_signal, prtw, &RtabWidget::update_data);     //Расчет УР
     //RModel вызывает изменение Data: Запомнить изменение Data в MainWindow и из MainWindow вызывть изменение RModel во всех сущьностях
@@ -885,8 +885,12 @@ void MainWindow::Btn1_onClick()
     QTableView* ptv = new QTableView();
     CRastrHlp rhlp;
     //*up_rastr_.get()
-    RModel* pmm = new RModel(nullptr,*up_rastr_.get(),m_sp_qastra.get());
-    pmm->setFormIndx(0);
+    RModel* pmm = new RModel(nullptr,m_sp_qastra.get());
+    const auto forms = up_rastr_->GetForms();
+    auto it = forms.begin();
+    std::advance(it,0);
+    auto form  =*it;
+    pmm->setForm(&form);
     pmm->populateDataFromRastr();
     ptv->setSortingEnabled(true);
     ptv->setModel(pmm);

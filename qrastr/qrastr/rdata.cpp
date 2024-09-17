@@ -158,38 +158,59 @@ protected:
         return std::visit(ToString(), Value);
     }
 };
-void RData::Initialize(CUIForm _form)
+void RData::Initialize(CUIForm _form, QAstra* _pqastra)
 {
     //Мета информация о таблице (по сути шаблон)
-    std::string str_json;
-    str_json.resize(CRastrHlp::SIZE_STR_BUF_);
-    int nRes = GetMeta( id_rastr_, t_name_.c_str(), "", const_cast<char*>(str_json.c_str()), static_cast<long>(str_json.size()) );
-    if(nRes<0){
-        qDebug() << "GetMeta(...)  return error" << nRes;
-    }
+    //std::string str_json;
+    //str_json.resize(CRastrHlp::SIZE_STR_BUF_);
+    //int nRes = GetMeta( id_rastr_, t_name_.c_str(), "", const_cast<char*>(str_json.c_str()), static_cast<long>(str_json.size()) );
+    //if(nRes<0){
+    //    qDebug() << "GetMeta(...)  return error" << nRes;
+    //}
     //qDebug() << "Meta   : " << str_json.c_str();
-    str_json.resize(std::strlen(str_json.c_str())+1);
-    j_metas_ = nlohmann::json::parse(str_json);
+    //str_json.resize(std::strlen(str_json.c_str())+1);
+    //j_metas_ = nlohmann::json::parse(str_json);
     reserve(_form.Fields().size()+5);               // Без reserve RCol данные обнуляются видимио при reallocation  If a reallocation happens, all contained elements are modified.
+
+    IRastrTablesPtr tablesx{ _pqastra->getRastr()->Tables() };
+    IRastrTablePtr table{ tablesx->Item(t_name_) };
+    IRastrColumnsPtr columns{ table->Columns() };
 
 
     // В RData создаем RCol по образу формы
+    /*for (CUIFormField &f : _form.Fields()){
+        for(const nlohmann::json& j_meta : j_metas_ ){
+            const std::string str_Name = j_meta["Name"];
+            if(f.Name() == str_Name){ // for make same order like in a form
+                str_cols_.append(f.Name());
+                str_cols_.append(",");
+
+                RCol rc;
+                rc.str_name_ = f.Name();
+                rc.setMeta( j_meta );
+
+                int nRes = AddCol(rc); Q_ASSERT(nRes>=0);
+                break;
+            }
+        }
+    }*/
+
+    // В RData создаем RCol по образу формы
     for (CUIFormField &f : _form.Fields()){
-      for(const nlohmann::json& j_meta : j_metas_ ){
-        const std::string str_Name = j_meta["Name"];
-        if(f.Name() == str_Name){ // for make same order like in a form
             str_cols_.append(f.Name());
             str_cols_.append(",");
+            IRastrColumnPtr col{ columns->Item(f.Name()) };
+            std::string str_Type = IRastrPayload(IRastrVariantPtr((col)->Property(FieldProperties::Type))->String()).Value();
 
             RCol rc;
             rc.str_name_ = f.Name();
-            rc.setMeta( j_meta );
+            rc.table_name_ = _form.TableName();
+            rc.setMeta(_pqastra);
 
-            int nRes = AddCol(rc); Q_ASSERT(nRes>=0);
-            break;
+            int nRes = AddCol(rc);
+            Q_ASSERT(nRes>=0);
         }
-      }
-    }
+
 
     if(str_cols_.length()>0)
         str_cols_.pop_back();
@@ -359,13 +380,15 @@ void RData::populate_qastra(QAstra* _pqastra)
     IRastrTablePtr table{ tablesx->Item(t_name_) };
     IRastrColumnsPtr nodecolumns{ table->Columns() };
     DataBlock<FieldVariantData> nparray;
-    //IRastrResultVerify(table->DenseDataBlock(str_cols_, nparray, Options));
-    IRastrResultVerify(table->SparseDataBlock(str_cols_, nparray,Options));   // падает эл 0;0 - monostate , а кастится к bool
+    IRastrResultVerify(table->DenseDataBlock(str_cols_, nparray, Options));
+    //IRastrResultVerify(table->SparseDataBlock(str_cols_, nparray,Options));   // падает эл 0;0 - monostate , а кастится к bool
     const long* pIndicesChanged =  nparray.ChangedIndices();            // массив записанных индексов (0...ValuesAvailable)
     const size_t IndicesChangedCount = nparray.ChangedIndicesCount();	// размер массива измененных индексов
 
     //nparray.QDump();
 
+    // Test populate with Sparse DataBlock
+    /*
     //Создаем колонки инициализированные дефолтными значениями
     for (long column = 0; column < nparray.Columns(); column++)
     {
@@ -405,16 +428,21 @@ void RData::populate_qastra(QAstra* _pqastra)
             }//switch
         }
     }
+    */
 
-   /* for (long column = 0; column < nparray.Columns(); column++)
+    //Populate with Dense Data Block
+    for (long column = 0; column < nparray.Columns(); column++)
     {
-
         RCol& rcol = (*this)[column];
         rcol.index = column;
 
-        IRastrColumnPtr col_ptr{ nodecolumns->Item(rcol.name()) };
+        IRastrColumnPtr col_ptr{ nodecolumns->Item(rcol.str_name_) };
         std::string prop_nameref = IRastrPayload(IRastrVariantPtr(col_ptr->Property(FieldProperties::NameRef))->String()).Value();
+        std::string prop_title = IRastrPayload(IRastrVariantPtr(col_ptr->Property(FieldProperties::Title))->String()).Value();
+
+
         rcol.nameref = prop_nameref;
+        rcol.title_ = prop_title;
 
         rcol.resize(nparray.Rows());
         //RCol::iterator iter_col = this->begin()+column;
@@ -439,7 +467,7 @@ void RData::populate_qastra(QAstra* _pqastra)
                 break;
             }//switch
         }
-    }*/
+    }
 }
 
 

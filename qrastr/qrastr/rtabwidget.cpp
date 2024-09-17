@@ -41,11 +41,12 @@ RtabWidget::RtabWidget(QWidget *parent)
     ptv->setSortingEnabled(true);
 }
 
-RtabWidget::RtabWidget(CRastrHlp& rh,int n_indx, QWidget *parent)
+//RtabWidget::RtabWidget(CRastrHlp& rh,QAstra* pqastra,int n_indx, QWidget *parent)
+RtabWidget::RtabWidget(QAstra* pqastra,CUIForm UIForm, QWidget *parent)
     : RtabWidget{parent}
 {
-    form_indx = n_indx;
-    CreateModel(rh);
+    m_UIForm = UIForm;
+    CreateModel(pqastra,&m_UIForm);
 
     //SetTableView(*ptv,*prm);                // ширина по шаблону
     ptv->resizeColumnsToContents();         // ширина по контенту
@@ -59,23 +60,34 @@ RtabWidget::RtabWidget(CRastrHlp& rh,int n_indx, QWidget *parent)
     layout->addWidget(ptv);
     setLayout(layout);
 }
-RtabWidget::RtabWidget(CRastrHlp& rh,QAstra* pqastra,int n_indx, QWidget *parent)
-    : RtabWidget{parent}
+
+void RtabWidget::CreateModel(QAstra* pqastra, CUIForm* pUIForm)
 {
-    form_indx = n_indx;
-    CreateModel(rh,pqastra);
+    prm = new RModel(nullptr, pqastra );
+    proxyModel = new QSortFilterProxyModel(prm); // used for sorting: create proxy //https://doc.qt.io/qt-5/qsortfilterproxymodel.html#details
+    proxyModel->setSourceModel(prm);
+    prm->setForm(pUIForm);
+    prm->populateDataFromRastr();
 
-    //SetTableView(*ptv,*prm);                // ширина по шаблону
-    ptv->resizeColumnsToContents();         // ширина по контенту
-    ptv->setParent(this);
+    for (RCol& rcol : *prm->getRdata())
+    {
+        if (rcol.com_prop_tt == enComPropTT::COM_PR_ENUM)
+        {
+            //Почему то в гриде перечисление отображает по строкам и затем по последнему варианту  из enum , короче неверно
+            ComboBoxDelegate* delegate = new ComboBoxDelegate(this,rcol.nameref);
+            ptv->setItemDelegateForColumn(rcol.index, delegate);
+        }
+        // Make the combo boxes always displayed.
+        /*for ( int i = 0; i < prm->rowCount(); ++i )
+        {
+            ptv->openPersistentEditor( prm->index(i, rcol.index) );
+        }*/
+    }
 
-    int ncols = prm->columnCount();
-    ptv->generateFilters(ncols);
-    ptv->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
+    ptv->setModel(proxyModel);
 
-    QVBoxLayout *layout = new QVBoxLayout(this);
-    layout->addWidget(ptv);
-    setLayout(layout);
+    this->update();
+    this->repaint();
 }
 
 void RtabWidget::SetTableView(QTableView& tv, RModel& mm, int myltiplier  )
@@ -214,55 +226,14 @@ void RtabWidget::updateFilter(size_t column, QString value)
 }
 void RtabWidget::onFileLoad(CRastrHlp& _rh)
 {
-    CreateModel(_rh);
+   // CreateModel(_rh);
 }
 void RtabWidget::update_data()
 {
     prm->populateDataFromRastr();
 }
-void RtabWidget::CreateModel(CRastrHlp& _rh)
-{
-    prm = new RModel(nullptr, _rh );
-    proxyModel = new QSortFilterProxyModel(prm); // used for sorting: create proxy //https://doc.qt.io/qt-5/qsortfilterproxymodel.html#details
-    proxyModel->setSourceModel(prm);
-    prm->setFormIndx(form_indx);
-    prm->populateDataFromRastr();
-    ptv->setModel(proxyModel);
-
-    this->update();
-    this->repaint();
-}
-void RtabWidget::CreateModel(CRastrHlp& _rh,QAstra* pqastra)
-{
-    prm = new RModel(nullptr, _rh, pqastra );
-    proxyModel = new QSortFilterProxyModel(prm); // used for sorting: create proxy //https://doc.qt.io/qt-5/qsortfilterproxymodel.html#details
-    proxyModel->setSourceModel(prm);
-    prm->setFormIndx(form_indx);
-    prm->populateDataFromRastr();
-
-    for (RCol& rcol : *prm->getRdata())
-    {
-        if (rcol.com_prop_tt == enComPropTT::COM_PR_ENUM)
-        {
-            //Некорректно отображается тип начиная с 38 индекса (как минимум) в 195сх
-            ComboBoxDelegate* delegate = new ComboBoxDelegate(this,rcol.nameref);
-            ptv->setItemDelegateForColumn(rcol.index, delegate);
-        }
-        // Make the combo boxes always displayed.
-        /*for ( int i = 0; i < prm->rowCount(); ++i )
-        {
-            ptv->openPersistentEditor( prm->index(i, rcol.index) );
-        }*/
-    }
 
 
-
-
-    ptv->setModel(proxyModel);
-
-    this->update();
-    this->repaint();
-}
 
 void RtabWidget::test(const QModelIndexList& fromIndices)
 {

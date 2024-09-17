@@ -14,19 +14,18 @@
 class RModel : public QAbstractTableModel
 {
     Q_OBJECT
-    //QTimer* timer_;
-    CRastrHlp& rastr_;
+    //CRastrHlp& rastr_;
     QAstra* pqastra_;
     std::unique_ptr<RData> up_rdata;
-    int n_form_indx_ = -1;
     std::vector<QString> vqcols_;                                 // Заголовки столбцов
+    CUIForm* pUIForm_;
 public:
-    RModel(QObject *parent, CRastrHlp& rastr);
-    RModel(QObject *parent, CRastrHlp& rastr, QAstra* pqastra);
+    RModel(QObject *parent, QAstra* pqastra);
     int rowCount(const QModelIndex &parent = QModelIndex()) const override;
     int columnCount(const QModelIndex &parent = QModelIndex()) const override;
     QVariant data(const QModelIndex &index, int role = Qt::DisplayRole) const override;
-    void setFormIndx(int n_form_indx) { n_form_indx_ = n_form_indx; };
+    //void setFormIndx(int n_form_indx) { n_form_indx_ = n_form_indx; };
+    void setForm( CUIForm* _pUIForm) { pUIForm_ = _pUIForm; };
     int populateDataFromRastr();
     std::vector<std::tuple<int,int>>  ColumnsWidth ();
     RCol* getRCol(int n_col);

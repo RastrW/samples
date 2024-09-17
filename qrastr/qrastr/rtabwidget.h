@@ -23,8 +23,7 @@ class RtabWidget : public QWidget
     Q_OBJECT
 public:
     explicit RtabWidget(QWidget *parent = nullptr);
-    explicit RtabWidget(CRastrHlp& _rh,int n_indx,QWidget *parent = nullptr);
-    explicit RtabWidget(CRastrHlp& _rh, QAstra* pqastra, int n_indx,QWidget *parent = nullptr);
+    explicit RtabWidget(QAstra* pqastra, CUIForm UIForm, QWidget *parent = nullptr);
 
     void SetTableView(QTableView& tv, RModel& mm, int myltiplier = 15);
 private:
@@ -50,12 +49,13 @@ public slots:
     void update_data();
 
 private slots:
-    void CreateModel(CRastrHlp& _rh);
-    void CreateModel(CRastrHlp& _rh,QAstra* pqastra);
+    void CreateModel(QAstra* pqastra,CUIForm* pUIForm);
 
 
 public:
     RModel *prm;
+    CUIForm m_UIForm;
+
 private:
     //QTableView* ptv ;
    // CRastrHlp& rh;
