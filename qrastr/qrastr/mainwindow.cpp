@@ -432,6 +432,7 @@ void MainWindow::open(){
             return;
         }
 #endif//#if(!defined(QICSGRID_NO))
+ /*
         int nRes = 0;
         std::string f = fileName.toUtf8().constData(); //  it works!!!
         nRes = up_rastr_->Load( f);
@@ -446,7 +447,7 @@ void MainWindow::open(){
             QMessageBox msgBox;
             msgBox.critical( this, tr("File not loaded"), str_msg.c_str() );
         }
-
+*/
         m_sp_qastra->LoadFile(eLoadCode::RG_REPL, fileName.toStdString(),"");
     }
 }
