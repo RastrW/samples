@@ -172,6 +172,7 @@ void RData::Initialize(CUIForm _form)
     j_metas_ = nlohmann::json::parse(str_json);
     reserve(_form.Fields().size()+5);               // Без reserve RCol данные обнуляются видимио при reallocation  If a reallocation happens, all contained elements are modified.
 
+
     // В RData создаем RCol по образу формы
     for (CUIFormField &f : _form.Fields()){
       for(const nlohmann::json& j_meta : j_metas_ ){
@@ -353,17 +354,68 @@ void RData::populate_qastra(QAstra* _pqastra)
     FieldDataOptions Options;
     Options.SetEnumAsInt(TriBool::True);
     Options.SetSuperEnumAsInt(TriBool::True);
+    Options.SetUseChangedIndices(true);
     IRastrTablesPtr tablesx{ _pqastra->getRastr()->Tables() };
     IRastrTablePtr table{ tablesx->Item(t_name_) };
     IRastrColumnsPtr nodecolumns{ table->Columns() };
     DataBlock<FieldVariantData> nparray;
-    IRastrResultVerify(table->DenseDataBlock(str_cols_, nparray, Options));
+    //IRastrResultVerify(table->DenseDataBlock(str_cols_, nparray, Options));
+    IRastrResultVerify(table->SparseDataBlock(str_cols_, nparray,Options));   // падает эл 0;0 - monostate , а кастится к bool
+    const long* pIndicesChanged =  nparray.ChangedIndices();            // массив записанных индексов (0...ValuesAvailable)
+    const size_t IndicesChangedCount = nparray.ChangedIndicesCount();	// размер массива измененных индексов
 
     //nparray.QDump();
 
+    //Создаем колонки инициализированные дефолтными значениями
     for (long column = 0; column < nparray.Columns(); column++)
     {
         RCol& rcol = (*this)[column];
+        rcol.index = column;
+
+        IRastrColumnPtr col_ptr{ nodecolumns->Item(rcol.name()) };
+        std::string prop_nameref = IRastrPayload(IRastrVariantPtr(col_ptr->Property(FieldProperties::NameRef))->String()).Value();
+        rcol.nameref = prop_nameref;
+        rcol.resize(nparray.Rows());
+    }
+    //заполняем значениям
+    for (long column = 0; column < nparray.Columns(); column++)
+    {
+        RCol& rcol = (*this)[column];
+        for (long ich_indx = 0; ich_indx < IndicesChangedCount; ich_indx++)
+        {
+            long ch_indx = pIndicesChanged[ich_indx];
+            long row = ch_indx / nparray.Columns();
+            RCol::iterator iter_col = rcol.begin() + row;
+            switch(rcol.en_data_){
+            case RCol::_en_data::DATA_BOOL:
+                (*iter_col).emplace<bool>(std::get<bool>(nparray.Data()[ch_indx]));
+                break;
+            case RCol::_en_data::DATA_INT:
+                (*iter_col).emplace<long>(std::get<long>(nparray.Data()[ch_indx]));
+                break;
+            case RCol::_en_data::DATA_DBL:
+                (*iter_col).emplace<double>(std::get<double>(nparray.Data()[ch_indx]));
+                break;
+            case RCol::_en_data::DATA_STR:
+                (*iter_col).emplace<std::string>(std::get<std::string>(nparray.Data()[ch_indx]));
+                break;
+            default:
+                Q_ASSERT(!"unknown type");
+                break;
+            }//switch
+        }
+    }
+
+   /* for (long column = 0; column < nparray.Columns(); column++)
+    {
+
+        RCol& rcol = (*this)[column];
+        rcol.index = column;
+
+        IRastrColumnPtr col_ptr{ nodecolumns->Item(rcol.name()) };
+        std::string prop_nameref = IRastrPayload(IRastrVariantPtr(col_ptr->Property(FieldProperties::NameRef))->String()).Value();
+        rcol.nameref = prop_nameref;
+
         rcol.resize(nparray.Rows());
         //RCol::iterator iter_col = this->begin()+column;
         for (long row = 0; row < nparray.Rows(); row++)
@@ -385,9 +437,9 @@ void RData::populate_qastra(QAstra* _pqastra)
             default:
                 Q_ASSERT(!"unknown type");
                 break;
-            }//switc
+            }//switch
         }
-    }
+    }*/
 }
 
 

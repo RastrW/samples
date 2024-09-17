@@ -54,6 +54,7 @@ int qAstra::tst_iplainrastr() const {
 #ifdef _DEBUG
     //std::filesystem::current_path("/source/repos/rastr/RastrWin/Debug64/");
     std::filesystem::current_path(R"(C:\projects\rastr\RastrWin\Debug64)");
+    //std::filesystem::current_path(R"(C:\projects\tfs\rastr\RastrWin\Debug64)");
 #else
     //std::filesystem::current_path("/source/repos/rastr/RastrWin/Release64/");
     std::filesystem::current_path(R"(C:\projects\rastr\RastrWin\Release64\)");

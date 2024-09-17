@@ -25,7 +25,11 @@ ComboBoxDelegate::ComboBoxDelegate(QObject *parent)
 ComboBoxDelegate::ComboBoxDelegate(QObject *parent, std::string strItems)
     :QItemDelegate(parent)
 {
-    for (auto val : split(strItems,','))
+    char delimiter = '|';
+    if (strItems.find_first_of(',') != std::variant_npos)
+        delimiter = ',';
+
+    for (auto val : split(strItems,delimiter))
     {
         Items.push_back(val) ;
     }

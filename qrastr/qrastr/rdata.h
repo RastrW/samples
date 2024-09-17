@@ -37,7 +37,7 @@ public:
         en_data_ = _en_data::DATA_ERR;
         const std::string str_Type = j_meta_["Type"];
         int n_type = std::stoi(str_Type);
-        enComPropTT com_prop_tt = static_cast<enComPropTT>(n_type);
+        com_prop_tt = static_cast<enComPropTT>(n_type);
         switch(com_prop_tt){
         case enComPropTT::COM_PR_BOOL	   : //= 3,
             en_data_ = _en_data::DATA_BOOL;
@@ -59,17 +59,13 @@ public:
             break;
         }
     }
-    std::string title() const{
-        const std::string str_title = j_meta_["Title"];
-        return str_title;
-    }
     std::string name() const{
         const std::string str_name = j_meta_["Name"];
         return str_name;
     }
-    std::string desc() const{
-        const std::string str_desc = j_meta_["Description"];
-        return str_desc;
+    std::string Type() const{
+        const std::string str_Type = j_meta_["Type"];
+        return str_Type;
     }
     std::string width() const{
         const std::string str_width = j_meta_["Width"];
@@ -79,18 +75,56 @@ public:
         const std::string str_prec = j_meta_["Precision"];
         return str_prec;
     }
-    std::string unit() const{
-        const std::string str_unit = j_meta_["Unit"];
-        return str_unit;
+    std::string title() const{
+        const std::string str_title = j_meta_["Title"];
+        return str_title;
     }
     std::string expr() const{
         const std::string str_expr = j_meta_["Expression"];
         return str_expr;
     }
+    std::string AFOR() const{
+        const std::string str_AFOR = j_meta_["AFOR"];
+        return str_AFOR;
+    }
+    std::string IsActiveFormula() const{
+        const std::string str_IsActiveFormula = j_meta_["IsActiveFormula"];
+        return str_IsActiveFormula;
+    }
+    std::string NameRef() const{
+        const std::string str_NameRef = j_meta_["NameRef"];
+        return str_NameRef;
+    }
+    std::string desc() const{
+        const std::string str_desc = j_meta_["Description"];
+        return str_desc;
+    }
+    std::string Min() const{
+        const std::string str_Min = j_meta_["Min"];
+        return str_Min;
+    }
+    std::string Max() const{
+        const std::string str_Max = j_meta_["Max"];
+        return str_Max;
+    }
+    std::string Scale() const{
+        const std::string str_Scale = j_meta_["Scale"];
+        return str_Scale;
+    }
+    std::string Cache() const{
+        const std::string str_Cache = j_meta_["Cache"];
+        return str_Cache;
+    }
+    std::string unit() const{
+        const std::string str_unit = j_meta_["Unit"];
+        return str_unit;
+    }
 
-
+    enComPropTT com_prop_tt;
     std::string    str_name_;
     _en_data       en_data_;
+    std::string nameref;
+    long    index;
 private:
     nlohmann::json j_meta_;
 };// class RCol
@@ -113,6 +147,7 @@ public:
         //      if(rcol.size()!=n_num_rows_)
         //          return -1;
         emplace_back(rcol);
+        //qDebug() << rcol.name() << "->" << rcol.NameRef();
         //push_back(rcol);
         return static_cast<int>(size());
     }

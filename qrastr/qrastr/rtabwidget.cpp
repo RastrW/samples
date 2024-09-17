@@ -14,7 +14,7 @@
 #include "qastra.h"
 using WrapperExceptionType = std::runtime_error;
 #include "IPlainRastrWrappers.h"
-
+#include "comboboxdelegate.h"
 
 //#include "tableview.h"
 
@@ -239,6 +239,25 @@ void RtabWidget::CreateModel(CRastrHlp& _rh,QAstra* pqastra)
     proxyModel->setSourceModel(prm);
     prm->setFormIndx(form_indx);
     prm->populateDataFromRastr();
+
+    for (RCol& rcol : *prm->getRdata())
+    {
+        if (rcol.com_prop_tt == enComPropTT::COM_PR_ENUM)
+        {
+            //Некорректно отображается тип начиная с 38 индекса (как минимум) в 195сх
+            ComboBoxDelegate* delegate = new ComboBoxDelegate(this,rcol.nameref);
+            ptv->setItemDelegateForColumn(rcol.index, delegate);
+        }
+        // Make the combo boxes always displayed.
+        /*for ( int i = 0; i < prm->rowCount(); ++i )
+        {
+            ptv->openPersistentEditor( prm->index(i, rcol.index) );
+        }*/
+    }
+
+
+
+
     ptv->setModel(proxyModel);
 
     this->update();

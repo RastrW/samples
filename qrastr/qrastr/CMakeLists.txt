@@ -11,6 +11,7 @@ add_compile_definitions(
         $<$<CONFIG:Debug>:q4_INLINE=0>
         $<$<CONFIG:Debug>:YYDEBUG>
 )
+add_compile_definitions( QTN_NAMESPACE ) ## !! IT'S CRYTICAL!!
 
 set(CMAKE_GENERATOR "Ninja")
 message("generator is set to ${CMAKE_GENERATOR}")
@@ -82,6 +83,7 @@ set(INCLUDES
     "${DEPENDENCIES_LOCATION}/spdlog/include/"
     #C:/projects/rastr/flytfs/IPlainRastrTest/
     "${ASTRA_LOCATION}/../../flytfs/IPlainRastrTest/"
+    "C:/Qt/Developer_Machines/QtitanComponents2024.2.0_Demo/include"
 )
 
 if(MSVC)
@@ -89,6 +91,7 @@ if(MSVC)
     link_directories("${DEPENDENCIES_LOCATION}/metakit/builds/")
     link_directories("${DEPENDENCIES_LOCATION}/Qt-Advanced-Docking-System/build/vs-Debug/lib/")
     link_directories("${DEPENDENCIES_LOCATION}/Qt-Advanced-Docking-System/build/vs-Release/lib/")
+    link_directories("C:/Qt/Developer_Machines/QtitanComponents2024.2.0_Demo/bin/")
 else()
     link_directories("${DEPENDENCIES_LOCATION}/qicstable/lib/")
     link_directories("${ASTRA_LOCATION}/build/")
@@ -174,6 +177,7 @@ else()
 endif()
 target_link_libraries( ${PROJECT_NAME} PRIVATE Metakit::mk4         )
 target_link_libraries( ${PROJECT_NAME} PRIVATE fmt::fmt-header-only )
+
 if(MSVC)
     target_link_libraries( ${PROJECT_NAME} PRIVATE astra_py     ) # when build with pybind11
     target_link_libraries( ${PROJECT_NAME} PRIVATE qmcr         )
@@ -181,6 +185,8 @@ if(MSVC)
         target_link_libraries( ${PROJECT_NAME} PRIVATE qtadvanceddockingd )
     else()
         target_link_libraries( ${PROJECT_NAME} PRIVATE qtadvanceddocking  )
+        target_link_libraries( ${PROJECT_NAME} PRIVATE QtitanBase2 )
+        target_link_libraries( ${PROJECT_NAME} PRIVATE QtitanGrid8 )
     endif()
 
 else()
