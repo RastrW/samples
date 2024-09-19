@@ -280,9 +280,9 @@ void RData::populate_qastra(QAstra* _pqastra)
         RCol& rcol = (*this)[column];
         rcol.index = column;
 
-       // IRastrColumnPtr col_ptr{ nodecolumns->Item(rcol.str_name_) };
-        //std::string prop_title = IRastrPayload(IRastrVariantPtr(col_ptr->Property(FieldProperties::Title))->String()).Value();
+/*
         rcol.resize(nparray_.Rows());
+
         for (long row = 0; row < nparray_.Rows(); row++)
         {
             RCol::iterator iter_col = rcol.begin() + row;
@@ -303,7 +303,10 @@ void RData::populate_qastra(QAstra* _pqastra)
                 Q_ASSERT(!"unknown type");
                 break;
             }//switch
+
         }
+*/
+
     }
 }
 
