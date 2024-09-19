@@ -6,7 +6,10 @@ if(MSVC)
     add_compile_definitions( _SILENCE_ALL_MS_EXT_DEPRECATION_WARNINGS )
     add_compile_definitions( QICSGRID_NO )
     add_compile_definitions( NOMINMAX )
-    set(CMAKE_MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>")
+    if (CMAKE_BUILD_TYPE MATCHES Debug)
+    else()
+        set(CMAKE_MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>") # Debug was fall on this with "__acrt_first_block == header", beacuse Qt have MtD heap but this have Mt heap
+    endif()
 endif()
 add_compile_definitions(ASTRA_NIX)
 add_compile_definitions(
