@@ -109,13 +109,12 @@ private:
     QMdiArea*          m_workspace;
     QSignalMapper*     m_windowMapper;
     QMenu*             m_menuOpen;
-    QHBoxLayout*       m_layoutActions;   // actions: rgm,opf,...
+    QHBoxLayout*       m_layoutActions;                 // actions: rgm,opf,...
     QToolBar*          m_toolbarCalc;
-    RtabWidget*        m_prtw_current;                     // current table
+    RtabWidget*        m_prtw_current;                  // current table
     std::string        m_cur_file;                      // current file
     QDockWidget*       m_dock        = nullptr;
     ads::CDockManager* m_DockManager = nullptr; // The main container for docking
-    rmodel*            model;
     Params             m_params;
     _v_cache_log       m_v_cache_log;
     std::shared_ptr<QAstra> m_sp_qastra;
