@@ -868,14 +868,14 @@ void MainWindow::Btn3_onClick()
 {
     //Show test ComboBox item at grid column
 
-    QStandardItemModel* model = new QStandardItemModel(4, 2);
+    QStandardItemModel* model = new QStandardItemModel(8, 2);
     QTableView* ptableView = new QTableView();;
 
     ComboBoxDelegate* delegate = new ComboBoxDelegate(this,"Item1,Item2,Item3");
     //tableView.setItemDelegate(&delegate);
     ptableView->setItemDelegateForColumn(1, delegate); // Column 0 can take any value, column 1 can only take values up to 8.
 
-    for (int row = 0; row < 4; ++row)
+    for (int row = 0; row < 8; ++row)
     {
         for (int column = 0; column < 2; ++column)
         {

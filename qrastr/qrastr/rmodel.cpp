@@ -19,8 +19,7 @@ int RModel::populateDataFromRastr(){
     up_rdata->populate_qastra(this->pqastra_);
 
     for (RCol &rcol : *up_rdata)
-        //vqcols_.push_back(rcol.title().c_str());
-        vqcols_.push_back(rcol.title_.c_str());
+        vqcols_.push_back(rcol.title().c_str());
 
     return 1;
 };
@@ -44,11 +43,13 @@ QVariant RModel::data(const QModelIndex &index, int role) const
         /*case Qt::CheckStateRole:
             if (row == 1 && col == 0) //add a checkbox to cell(1,0)
                 return Qt::Checked;*/
+        //case Qt::CheckStateRole:
         case Qt::DisplayRole:
         case Qt::EditRole:
 
         switch((*iter_data).index()){
-            case RCol::_en_data::DATA_BOOL: item =  std::get<bool>(*iter_data) ;                 break;
+            //case RCol::_en_data::DATA_BOOL: item =  std::get<bool>(*iter_data)?Qt::Checked: Qt::Unchecked; break;
+            case RCol::_en_data::DATA_BOOL: item =  std::get<bool>(*iter_data); break;
             case RCol::_en_data::DATA_INT: item =  (qlonglong)std::get<long>(*iter_data) ;                 break;
             case RCol::_en_data::DATA_STR: item =  std::get<std::string>(*iter_data).c_str() ; break;
             case RCol::_en_data::DATA_DBL: item =  std::get<double>(*iter_data);               break;

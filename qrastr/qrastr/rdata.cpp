@@ -378,13 +378,12 @@ void RData::populate_qastra(QAstra* _pqastra)
     Options.SetUseChangedIndices(true);
     IRastrTablesPtr tablesx{ _pqastra->getRastr()->Tables() };
     IRastrTablePtr table{ tablesx->Item(t_name_) };
-    IRastrColumnsPtr nodecolumns{ table->Columns() };
+
     DataBlock<FieldVariantData> nparray;
     IRastrResultVerify(table->DenseDataBlock(str_cols_, nparray, Options));
     //IRastrResultVerify(table->SparseDataBlock(str_cols_, nparray,Options));   // падает эл 0;0 - monostate , а кастится к bool
     const long* pIndicesChanged =  nparray.ChangedIndices();            // массив записанных индексов (0...ValuesAvailable)
     const size_t IndicesChangedCount = nparray.ChangedIndicesCount();	// размер массива измененных индексов
-
     //nparray.QDump();
 
     // Test populate with Sparse DataBlock
@@ -436,16 +435,9 @@ void RData::populate_qastra(QAstra* _pqastra)
         RCol& rcol = (*this)[column];
         rcol.index = column;
 
-        IRastrColumnPtr col_ptr{ nodecolumns->Item(rcol.str_name_) };
-        std::string prop_nameref = IRastrPayload(IRastrVariantPtr(col_ptr->Property(FieldProperties::NameRef))->String()).Value();
-        std::string prop_title = IRastrPayload(IRastrVariantPtr(col_ptr->Property(FieldProperties::Title))->String()).Value();
-
-
-        rcol.nameref = prop_nameref;
-        rcol.title_ = prop_title;
-
+       // IRastrColumnPtr col_ptr{ nodecolumns->Item(rcol.str_name_) };
+        //std::string prop_title = IRastrPayload(IRastrVariantPtr(col_ptr->Property(FieldProperties::Title))->String()).Value();
         rcol.resize(nparray.Rows());
-        //RCol::iterator iter_col = this->begin()+column;
         for (long row = 0; row < nparray.Rows(); row++)
         {
             RCol::iterator iter_col = rcol.begin() + row;

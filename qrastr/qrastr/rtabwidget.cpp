@@ -15,6 +15,10 @@
 using WrapperExceptionType = std::runtime_error;
 #include "IPlainRastrWrappers.h"
 #include "comboboxdelegate.h"
+#include "doubleitemdelegate.h"
+#include "checkboxdelegate.h"
+
+
 
 //#include "tableview.h"
 
@@ -69,19 +73,32 @@ void RtabWidget::CreateModel(QAstra* pqastra, CUIForm* pUIForm)
     prm->setForm(pUIForm);
     prm->populateDataFromRastr();
 
+
     for (RCol& rcol : *prm->getRdata())
     {
         if (rcol.com_prop_tt == enComPropTT::COM_PR_ENUM)
         {
-            //Почему то в гриде перечисление отображает по строкам и затем по последнему варианту  из enum , короче неверно
-            ComboBoxDelegate* delegate = new ComboBoxDelegate(this,rcol.nameref);
+            ComboBoxDelegate* delegate = new ComboBoxDelegate(this,rcol.NameRef());
+            ptv->setItemDelegateForColumn(rcol.index, delegate);
+            // Make the combo boxes always displayed.
+            /*for ( int i = 0; i < prm->rowCount(); ++i )
+            {
+                ptv->openPersistentEditor( prm->index(i, rcol.index) );
+            }*/
+        }
+
+        if (rcol.com_prop_tt == enComPropTT::COM_PR_REAL)
+        {
+            int prec = std::atoi(rcol.prec().c_str());
+            DoubleItemDelegate* delegate = new DoubleItemDelegate(prec,this);
             ptv->setItemDelegateForColumn(rcol.index, delegate);
         }
-        // Make the combo boxes always displayed.
-        /*for ( int i = 0; i < prm->rowCount(); ++i )
+
+        if (rcol.com_prop_tt == enComPropTT::COM_PR_BOOL)
         {
-            ptv->openPersistentEditor( prm->index(i, rcol.index) );
-        }*/
+            checkboxDelegate* delegate = new checkboxDelegate(this);
+            ptv->setItemDelegateForColumn(rcol.index, delegate);
+        }
     }
 
     ptv->setModel(proxyModel);

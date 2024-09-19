@@ -6,6 +6,7 @@
 #include "astra_shared.h"
 #include "UIForms.h"
 #include "qastra.h"
+#include "stringutils.h";
 
 using WrapperExceptionType = std::runtime_error;
 #include "IPlainRastrWrappers.h"
@@ -137,37 +138,65 @@ public:
         std::string str_expr = IRastrPayload(IRastrVariantPtr(col_ptr->Property(FieldProperties::Expression))->String()).Value();
         return str_expr;
     }
-    /*
+
     std::string AFOR() const{
-        std::string str_AFOR = IRastrPayload(IRastrVariantPtr((*pcol_ptr)->Property(FieldProperties::AFOR))->String()).Value();
+        IRastrTablesPtr tablesx{ pqastra_->getRastr()->Tables() };
+        IRastrTablePtr table{ tablesx->Item(table_name_) };
+        IRastrColumnsPtr columns{ table->Columns() };
+        IRastrColumnPtr col_ptr{ columns->Item(str_name_) };
+        std::string str_AFOR = IRastrPayload(IRastrVariantPtr(col_ptr->Property(FieldProperties::AFOR))->String()).Value();
         return str_AFOR;
     }
     std::string IsActiveFormula() const{
-        std::string str_IsActiveFormula = IRastrPayload(IRastrVariantPtr((*pcol_ptr)->Property(FieldProperties::IsActiveFormula))->String()).Value();
+        IRastrTablesPtr tablesx{ pqastra_->getRastr()->Tables() };
+        IRastrTablePtr table{ tablesx->Item(table_name_) };
+        IRastrColumnsPtr columns{ table->Columns() };
+        IRastrColumnPtr col_ptr{ columns->Item(str_name_) };
+        std::string str_IsActiveFormula = IRastrPayload(IRastrVariantPtr(col_ptr->Property(FieldProperties::IsActiveFormula))->String()).Value();
         return str_IsActiveFormula;
     }
     std::string NameRef() const{
-        std::string str_NameRef = IRastrPayload(IRastrVariantPtr((*pcol_ptr)->Property(FieldProperties::NameRef))->String()).Value();
+        IRastrTablesPtr tablesx{ pqastra_->getRastr()->Tables() };
+        IRastrTablePtr table{ tablesx->Item(table_name_) };
+        IRastrColumnsPtr columns{ table->Columns() };
+        IRastrColumnPtr col_ptr{ columns->Item(str_name_) };
+        std::string str_NameRef = IRastrPayload(IRastrVariantPtr(col_ptr->Property(FieldProperties::NameRef))->String()).Value();
         return str_NameRef;
     }
 
     std::string Min() const{
-        std::string str_Min = IRastrPayload(IRastrVariantPtr((*pcol_ptr)->Property(FieldProperties::Min))->String()).Value();
+        IRastrTablesPtr tablesx{ pqastra_->getRastr()->Tables() };
+        IRastrTablePtr table{ tablesx->Item(table_name_) };
+        IRastrColumnsPtr columns{ table->Columns() };
+        IRastrColumnPtr col_ptr{ columns->Item(str_name_) };
+        std::string str_Min = IRastrPayload(IRastrVariantPtr(col_ptr->Property(FieldProperties::Min))->String()).Value();
         return str_Min;
     }
     std::string Max() const{
-        std::string str_Max = IRastrPayload(IRastrVariantPtr((*pcol_ptr)->Property(FieldProperties::Max))->String()).Value();
+        IRastrTablesPtr tablesx{ pqastra_->getRastr()->Tables() };
+        IRastrTablePtr table{ tablesx->Item(table_name_) };
+        IRastrColumnsPtr columns{ table->Columns() };
+        IRastrColumnPtr col_ptr{ columns->Item(str_name_) };
+        std::string str_Max = IRastrPayload(IRastrVariantPtr(col_ptr->Property(FieldProperties::Max))->String()).Value();
         return str_Max;
     }
     std::string Scale() const{
-        std::string str_Scale = IRastrPayload(IRastrVariantPtr((*pcol_ptr)->Property(FieldProperties::Scale))->String()).Value();
+        IRastrTablesPtr tablesx{ pqastra_->getRastr()->Tables() };
+        IRastrTablePtr table{ tablesx->Item(table_name_) };
+        IRastrColumnsPtr columns{ table->Columns() };
+        IRastrColumnPtr col_ptr{ columns->Item(str_name_) };
+        std::string str_Scale = IRastrPayload(IRastrVariantPtr(col_ptr->Property(FieldProperties::Scale))->String()).Value();
         return str_Scale;
     }
     std::string Cache() const{
-        std::string str_Cache = IRastrPayload(IRastrVariantPtr((*pcol_ptr)->Property(FieldProperties::Cache))->String()).Value();
+        IRastrTablesPtr tablesx{ pqastra_->getRastr()->Tables() };
+        IRastrTablePtr table{ tablesx->Item(table_name_) };
+        IRastrColumnsPtr columns{ table->Columns() };
+        IRastrColumnPtr col_ptr{ columns->Item(str_name_) };
+        std::string str_Cache = IRastrPayload(IRastrVariantPtr(col_ptr->Property(FieldProperties::Cache))->String()).Value();
         return str_Cache;
     }
-*/
+
     std::string unit() const{
         IRastrTablesPtr tablesx{ pqastra_->getRastr()->Tables() };
         IRastrTablePtr table{ tablesx->Item(table_name_) };
@@ -182,8 +211,8 @@ public:
     std::string    str_name_;
     std::string    table_name_;
     _en_data       en_data_;
-    std::string nameref;
-    std::string title_;
+    //std::string nameref;
+    //std::string title_;
     long    index;
 private:
     nlohmann::json j_meta_;
