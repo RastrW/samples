@@ -39,6 +39,7 @@ QVariant RModel::data(const QModelIndex &index, int role) const
 
     RData::const_iterator iter_col = up_rdata->begin() + col;
     _col_data::const_iterator iter_data = (*iter_col).begin() + row;
+     auto datablock_item = up_rdata->nparray_.Data()[row * up_rdata->nparray_.Columns() + col];
     switch (role) {
         /*case Qt::CheckStateRole:
             if (row == 1 && col == 0) //add a checkbox to cell(1,0)
@@ -47,14 +48,29 @@ QVariant RModel::data(const QModelIndex &index, int role) const
         case Qt::DisplayRole:
         case Qt::EditRole:
 
-        switch((*iter_data).index()){
+            // Fill from RData
+            /*
+             switch((*iter_data).index()){
             //case RCol::_en_data::DATA_BOOL: item =  std::get<bool>(*iter_data)?Qt::Checked: Qt::Unchecked; break;
-            case RCol::_en_data::DATA_BOOL: item =  std::get<bool>(*iter_data); break;
-            case RCol::_en_data::DATA_INT: item =  (qlonglong)std::get<long>(*iter_data) ;                 break;
-            case RCol::_en_data::DATA_STR: item =  std::get<std::string>(*iter_data).c_str() ; break;
-            case RCol::_en_data::DATA_DBL: item =  std::get<double>(*iter_data);               break;
+                case RCol::_en_data::DATA_BOOL: item =  std::get<bool>(*iter_data); break;
+                case RCol::_en_data::DATA_INT: item =  (qlonglong)std::get<long>(*iter_data) ;                 break;
+                case RCol::_en_data::DATA_STR: item =  std::get<std::string>(*iter_data).c_str() ; break;
+                case RCol::_en_data::DATA_DBL: item =  std::get<double>(*iter_data);               break;
             default :                      item =  ( "type_unknown" );                         break;
-        }
+
+                (*iter_col).emplace<bool>(std::get<bool>(up_rdata->nparray_.Data()[row * up_rdata->nparray_.Columns() + col]));
+              }
+           */
+
+            //Fill from QAstra->DataBlock
+
+            switch((*iter_data).index()){
+                case RCol::_en_data::DATA_BOOL: item =  std::get<bool>(datablock_item); break;
+                case RCol::_en_data::DATA_INT: item =  (qlonglong)std::get<long>(datablock_item) ;                 break;
+                case RCol::_en_data::DATA_STR: item =  std::get<std::string>(datablock_item).c_str(); break;
+                case RCol::_en_data::DATA_DBL: item =  std::get<double>(datablock_item);               break;
+            default :                      item =  ( "type_unknown" );                         break;
+            }
         return item;
 
         case Qt::ToolTipRole:

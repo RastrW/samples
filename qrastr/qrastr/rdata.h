@@ -6,7 +6,8 @@
 #include "astra_shared.h"
 #include "UIForms.h"
 #include "qastra.h"
-#include "stringutils.h";
+#include "iostream"
+//#include "stringutils.h";
 
 using WrapperExceptionType = std::runtime_error;
 #include "IPlainRastrWrappers.h"
@@ -16,6 +17,163 @@ typedef std::variant< bool,long, double, std::string >  _vt ;
 typedef std::vector< _vt > _col_data ;
 typedef std::vector<std::string> _vstr;
 
+template<typename T>
+class DataBlock : public IRastrDataBlock<T>
+{
+protected:
+    T* Block_ = nullptr;
+    long Rows_ = 0;
+    long Columns_ = 0;
+    long* pIndiciesChanged_ = nullptr;
+    std::list<std::string> ColumnTitles_;
+    std::vector<long> vChangedIndices_;
+
+public:
+    IPlainRastrRetCode SetBlockSize(long Rows, long Columns) noexcept override
+    {
+        if (Block_ != nullptr)
+            delete[] Block_;
+
+        ColumnTitles_.clear();
+
+        Rows_ = Columns_ = 0;
+        Block_ = new T[Rows * Columns];
+        if (Block_ != nullptr)
+        {
+            Rows_ = Rows;
+            Columns_ = Columns;
+            return IPlainRastrRetCode::Ok;
+        }
+        else
+            return IPlainRastrRetCode::Failed;
+    }
+    ~DataBlock()
+    {
+        delete[] Block_;
+    }
+
+    // отдаем SparseDataBlock в сервер
+
+    // Говорим сколько вообще значений в DataBlock
+    long ValuesAvailable() const noexcept override
+    {
+        return Rows_ * Columns_;
+    }
+
+    // Возвращаем значение в диапазоне [0; ValuesAvailable)
+    // в структуре (строка, столбец, const* значение, код возврата)
+    IRastrDataBlock<T>::ValueReturn Value(long Index) const noexcept override
+    {
+        // здесь демо возврата просто прямоугольной таблицы
+        // если есть строки / столбцы / инфа о дефолтах внутри датаблока - отдаем из списка
+        // по коду возврата можно закенселить, если хочется.
+        //return { Index / Columns(), Index % Columns(), Block_ + Index, IPlainRastrRetCode::Ok };
+        // если вернуть из Value NotImplemented - будет предпринята попытка
+        // получить dense блок - см. ниже
+        return IRastrDataBlock<T>::Value(Index);
+    }
+
+    // Ну а если блок dense - то отдаем
+
+    const T* Data() const override { return Block_; }
+    T* Data() override { return Block_; }
+    long Rows() const override { return Rows_; }
+    long Columns() const override { return Columns_; }
+    const long* ChangedIndices() const override { return vChangedIndices_.data(); }
+    const size_t ChangedIndicesCount() const override { return vChangedIndices_.size(); }
+
+
+    // и забираем просто из прямоугольной таблицы
+
+
+    IPlainRastrRetCode Emplace(long Row, long Column, const T& Value) noexcept override
+    {
+        if (Row >= 0 && Row < Rows_ && Column >= 0 && Column < Columns_)
+        {
+            Block_[Row * Columns_ + Column] = Value;
+            return IPlainRastrRetCode::Ok;
+        }
+        else
+            return IPlainRastrRetCode::Failed;
+    }
+    IPlainRastrRetCode EmplaceSaveIndChange(long Row, long Column, const T& Value) noexcept override
+    {
+        if (Emplace(Row, Column, Value) != IPlainRastrRetCode::Failed)
+        {
+            vChangedIndices_.push_back(Row * Columns_ + Column);
+            return IPlainRastrRetCode::Ok;
+        }
+        else
+            return IPlainRastrRetCode::Failed;
+    }
+
+    IPlainRastrRetCode MapColumn(const std::string_view Name, long DataBlockIndex) const noexcept override
+    {
+        const_cast<DataBlock*>(this)->ColumnTitles_.emplace_back(Name);
+        return IPlainRastrRetCode::Ok;
+    }
+
+    struct ToString {
+        std::string operator()(std::monostate) { return { "def" }; }
+        std::string operator()(const long& value) { return std::to_string(value); }
+        std::string operator()(const uint64_t& value) { return std::to_string(value); }
+        std::string operator()(const double& value) { return std::to_string(value); }
+        std::string operator()(const bool& value) { return value ? "1" : "0"; }
+        std::string operator()(const std::string& value) { return value; }
+    };
+    struct ToVal {
+        std::string operator()(std::monostate) { return { "def" }; }
+        long operator()(const long& value) { return value; }
+        std::string operator()(const uint64_t& value) { return std::to_string(value); }
+        std::string operator()(const double& value) { return std::to_string(value); }
+        std::string operator()(const bool& value) { return value ? "1" : "0"; }
+        std::string operator()(const std::string& value) { return value; }
+    };
+
+    void Dump()
+    {
+        for (const auto& ColumnTitle : ColumnTitles_)
+            std::cout << ColumnTitle << ";";
+        std::cout << std::endl;
+        for (long row = 0; row < Rows(); row++)
+        {
+            for (long column = 0; column < Columns(); column++)
+                std::cout << StringValue(Data()[row * Columns() + column]) << ";";
+            std::cout << std::endl;
+        }
+    }
+    void QDump()
+    {
+        std::string str_cols = "";
+        for (const auto& ColumnTitle : ColumnTitles_)
+        {
+            str_cols.append(ColumnTitle);
+            str_cols.append(";");
+        }
+        qDebug() << str_cols;
+        for (long row = 0; row < Rows(); row++)
+        {
+            std::string str_out = "";
+            for (long column = 0; column < Columns(); column++)
+            {
+                str_out.append(StringValue(Data()[row * Columns() + column]));
+                str_out.append(";");
+            }
+            qDebug() << str_out << ";";
+        }
+    }
+
+protected:
+    std::string StringValue(const double& Value)
+    {
+        return std::to_string(Value);
+    }
+
+    std::string StringValue(const FieldVariantData& Value)
+    {
+        return std::visit(ToString(), Value);
+    }
+};
 
 class RCol
     : public _col_data
@@ -300,7 +458,8 @@ public:
     std::string t_name_ = "";
     std::string t_title_ = "";
     std::string str_cols_ = "";                     // строка имен столбцов ex: "ny,pn,qn,vras"
-    nlohmann::json j_metas_;                        // Мета информация о таблице (шаблон)
+    //nlohmann::json j_metas_;                        // Мета информация о таблице (шаблон)
+    DataBlock<FieldVariantData> nparray_;
 private:
     const int SIZE_STR_BUF = 500'000'000;
     long n_num_rows_ = 0;
