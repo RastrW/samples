@@ -102,32 +102,7 @@ long App::readSettings(){ //it cache log messages to vector, because it called b
             v_cache_log_.add( spdlog::level::err, "{} ReadJsonFile {}", nRes, str.toStdString());
             mb.exec();
             return -1;
-        }/*
-        v_cache_log_.add(spdlog::level::info, "**************************************************************************");
-        up_rastr_ = std::make_unique<CRastrHlp>();
-        nRes = up_rastr_->CreateRastr();
-        v_cache_log_.add(spdlog::level::info, "CreateRastr()");
-        if(nRes < 0){
-            v_cache_log_.add( spdlog::level::err, "{} CreateRastr()", nRes);
-            return -1;
         }
-        v_cache_log_.add(spdlog::level::info, "**************************************************************************");
-        v_cache_log_.add(spdlog::level::info, "Load: {}", m_params.Get_on_start_load_file_rastr());
-        nRes = up_rastr_->Load(m_params.Get_on_start_load_file_rastr());
-        if(nRes < 0){
-            v_cache_log_.add( spdlog::level::err, "{} Load(...)", nRes);
-            return -1;
-        }
-        v_cache_log_.add(spdlog::level::info, "ReadForms : {}", m_params.Get_on_start_load_file_forms());
-        nRes = up_rastr_->ReadForms(m_params.Get_on_start_load_file_forms());
-        if(nRes<0){
-            v_cache_log_.add( spdlog::level::err, "{} ReadForms()", nRes);
-            QMessageBox mb( QMessageBox::Icon::Critical, QObject::tr("Error"),
-                            QString("error: %1 wheh read file : %2").arg(nRes).arg(m_params.Get_on_start_load_file_forms().c_str())
-                           );
-            mb.exec();
-            return -1;
-        }*/
     }catch(const std::exception& ex){
         v_cache_log_.add( spdlog::level::err,"Exception: {} ", ex.what());
         return -4;
