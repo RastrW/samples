@@ -1,163 +1,7 @@
 #include "rdata.h"
 #include "iostream"
 
-template<typename T>
-class DataBlock : public IRastrDataBlock<T>
-{
-protected:
-    T* Block_ = nullptr;
-    long Rows_ = 0;
-    long Columns_ = 0;
-    long* pIndiciesChanged_ = nullptr;
-    std::list<std::string> ColumnTitles_;
-    std::vector<long> vChangedIndices_;
 
-public:
-    IPlainRastrRetCode SetBlockSize(long Rows, long Columns) noexcept override
-    {
-        if (Block_ != nullptr)
-            delete[] Block_;
-
-        ColumnTitles_.clear();
-
-        Rows_ = Columns_ = 0;
-        Block_ = new T[Rows * Columns];
-        if (Block_ != nullptr)
-        {
-            Rows_ = Rows;
-            Columns_ = Columns;
-            return IPlainRastrRetCode::Ok;
-        }
-        else
-            return IPlainRastrRetCode::Failed;
-    }
-    ~DataBlock()
-    {
-        delete[] Block_;
-    }
-
-    // отдаем SparseDataBlock в сервер
-
-    // Говорим сколько вообще значений в DataBlock
-    long ValuesAvailable() const noexcept override
-    {
-        return Rows_ * Columns_;
-    }
-
-    // Возвращаем значение в диапазоне [0; ValuesAvailable)
-    // в структуре (строка, столбец, const* значение, код возврата)
-    IRastrDataBlock<T>::ValueReturn Value(long Index) const noexcept override
-    {
-        // здесь демо возврата просто прямоугольной таблицы
-        // если есть строки / столбцы / инфа о дефолтах внутри датаблока - отдаем из списка
-        // по коду возврата можно закенселить, если хочется.
-        //return { Index / Columns(), Index % Columns(), Block_ + Index, IPlainRastrRetCode::Ok };
-        // если вернуть из Value NotImplemented - будет предпринята попытка
-        // получить dense блок - см. ниже
-        return IRastrDataBlock<T>::Value(Index);
-    }
-
-    // Ну а если блок dense - то отдаем
-
-    const T* Data() const override { return Block_; }
-    T* Data() override { return Block_; }
-    long Rows() const override { return Rows_; }
-    long Columns() const override { return Columns_; }
-    const long* ChangedIndices() const override { return vChangedIndices_.data(); }
-    const size_t ChangedIndicesCount() const override { return vChangedIndices_.size(); }
-
-
-    // и забираем просто из прямоугольной таблицы
-
-
-    IPlainRastrRetCode Emplace(long Row, long Column, const T& Value) noexcept override
-    {
-        if (Row >= 0 && Row < Rows_ && Column >= 0 && Column < Columns_)
-        {
-            Block_[Row * Columns_ + Column] = Value;
-            return IPlainRastrRetCode::Ok;
-        }
-        else
-            return IPlainRastrRetCode::Failed;
-    }
-    IPlainRastrRetCode EmplaceSaveIndChange(long Row, long Column, const T& Value) noexcept override
-    {
-        if (Emplace(Row, Column, Value) != IPlainRastrRetCode::Failed)
-        {
-            vChangedIndices_.push_back(Row * Columns_ + Column);
-            return IPlainRastrRetCode::Ok;
-        }
-        else
-            return IPlainRastrRetCode::Failed;
-    }
-
-    IPlainRastrRetCode MapColumn(const std::string_view Name, long DataBlockIndex) const noexcept override
-    {
-        const_cast<DataBlock*>(this)->ColumnTitles_.emplace_back(Name);
-        return IPlainRastrRetCode::Ok;
-    }
-
-    struct ToString {
-        std::string operator()(std::monostate) { return { "def" }; }
-        std::string operator()(const long& value) { return std::to_string(value); }
-        std::string operator()(const uint64_t& value) { return std::to_string(value); }
-        std::string operator()(const double& value) { return std::to_string(value); }
-        std::string operator()(const bool& value) { return value ? "1" : "0"; }
-        std::string operator()(const std::string& value) { return value; }
-    };
-    struct ToVal {
-        std::string operator()(std::monostate) { return { "def" }; }
-        long operator()(const long& value) { return value; }
-        std::string operator()(const uint64_t& value) { return std::to_string(value); }
-        std::string operator()(const double& value) { return std::to_string(value); }
-        std::string operator()(const bool& value) { return value ? "1" : "0"; }
-        std::string operator()(const std::string& value) { return value; }
-    };
-
-    void Dump()
-    {
-        for (const auto& ColumnTitle : ColumnTitles_)
-            std::cout << ColumnTitle << ";";
-        std::cout << std::endl;
-        for (long row = 0; row < Rows(); row++)
-        {
-            for (long column = 0; column < Columns(); column++)
-                std::cout << StringValue(Data()[row * Columns() + column]) << ";";
-            std::cout << std::endl;
-        }
-    }
-    void QDump()
-    {
-        std::string str_cols = "";
-        for (const auto& ColumnTitle : ColumnTitles_)
-        {
-            str_cols.append(ColumnTitle);
-            str_cols.append(";");
-        }
-        qDebug() << str_cols;
-        for (long row = 0; row < Rows(); row++)
-        {
-            std::string str_out = "";
-            for (long column = 0; column < Columns(); column++)
-            {
-                str_out.append(StringValue(Data()[row * Columns() + column]));
-                str_out.append(";");
-            }
-            qDebug() << str_out << ";";
-        }
-    }
-
-protected:
-    std::string StringValue(const double& Value)
-    {
-        return std::to_string(Value);
-    }
-
-    std::string StringValue(const FieldVariantData& Value)
-    {
-        return std::visit(ToString(), Value);
-    }
-};
 void RData::Initialize(CUIForm _form, QAstra* _pqastra)
 {
     //Мета информация о таблице (по сути шаблон)
@@ -378,13 +222,13 @@ void RData::populate_qastra(QAstra* _pqastra)
     Options.SetUseChangedIndices(true);
     IRastrTablesPtr tablesx{ _pqastra->getRastr()->Tables() };
     IRastrTablePtr table{ tablesx->Item(t_name_) };
-    IRastrColumnsPtr nodecolumns{ table->Columns() };
-    DataBlock<FieldVariantData> nparray;
-    IRastrResultVerify(table->DenseDataBlock(str_cols_, nparray, Options));
-    //IRastrResultVerify(table->SparseDataBlock(str_cols_, nparray,Options));   // падает эл 0;0 - monostate , а кастится к bool
-    const long* pIndicesChanged =  nparray.ChangedIndices();            // массив записанных индексов (0...ValuesAvailable)
-    const size_t IndicesChangedCount = nparray.ChangedIndicesCount();	// размер массива измененных индексов
 
+    //DataBlock<FieldVariantData> nparray;
+
+    IRastrResultVerify(table->DenseDataBlock(str_cols_, nparray_, Options));
+    //IRastrResultVerify(table->SparseDataBlock(str_cols_, nparray,Options));   // падает эл 0;0 - monostate , а кастится к bool
+    const long* pIndicesChanged =  nparray_.ChangedIndices();            // массив записанных индексов (0...ValuesAvailable)
+    const size_t IndicesChangedCount = nparray_.ChangedIndicesCount();	// размер массива измененных индексов
     //nparray.QDump();
 
     // Test populate with Sparse DataBlock
@@ -431,42 +275,38 @@ void RData::populate_qastra(QAstra* _pqastra)
     */
 
     //Populate with Dense Data Block
-    for (long column = 0; column < nparray.Columns(); column++)
+    for (long column = 0; column < nparray_.Columns(); column++)
     {
         RCol& rcol = (*this)[column];
         rcol.index = column;
 
-        IRastrColumnPtr col_ptr{ nodecolumns->Item(rcol.str_name_) };
-        std::string prop_nameref = IRastrPayload(IRastrVariantPtr(col_ptr->Property(FieldProperties::NameRef))->String()).Value();
-        std::string prop_title = IRastrPayload(IRastrVariantPtr(col_ptr->Property(FieldProperties::Title))->String()).Value();
+/*
+        rcol.resize(nparray_.Rows());
 
-
-        rcol.nameref = prop_nameref;
-        rcol.title_ = prop_title;
-
-        rcol.resize(nparray.Rows());
-        //RCol::iterator iter_col = this->begin()+column;
-        for (long row = 0; row < nparray.Rows(); row++)
+        for (long row = 0; row < nparray_.Rows(); row++)
         {
             RCol::iterator iter_col = rcol.begin() + row;
             switch(rcol.en_data_){
             case RCol::_en_data::DATA_BOOL:
-                (*iter_col).emplace<bool>(std::get<bool>(nparray.Data()[row * nparray.Columns() + column]));
+                (*iter_col).emplace<bool>(std::get<bool>(nparray_.Data()[row * nparray_.Columns() + column]));
                 break;
             case RCol::_en_data::DATA_INT:
-                (*iter_col).emplace<long>(std::get<long>(nparray.Data()[row * nparray.Columns() + column]));
+                (*iter_col).emplace<long>(std::get<long>(nparray_.Data()[row * nparray_.Columns() + column]));
                 break;
             case RCol::_en_data::DATA_DBL:
-                (*iter_col).emplace<double>(std::get<double>(nparray.Data()[row * nparray.Columns() + column]));
+                (*iter_col).emplace<double>(std::get<double>(nparray_.Data()[row * nparray_.Columns() + column]));
                 break;
             case RCol::_en_data::DATA_STR:
-                (*iter_col).emplace<std::string>(std::get<std::string>(nparray.Data()[row * nparray.Columns() + column]));
+                (*iter_col).emplace<std::string>(std::get<std::string>(nparray_.Data()[row * nparray_.Columns() + column]));
                 break;
             default:
                 Q_ASSERT(!"unknown type");
                 break;
             }//switch
+
         }
+*/
+
     }
 }
 

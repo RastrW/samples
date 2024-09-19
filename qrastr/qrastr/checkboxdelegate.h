@@ -1,34 +1,23 @@
-#ifndef COMBOBOXDELEGATE_H
-#define COMBOBOXDELEGATE_H
-
-#include <string>
-#include <vector>
+#ifndef CHECKBOXDELEGATE_H
+#define CHECKBOXDELEGATE_H
 
 #include <QItemDelegate>
+#include <QObject>
+#include <QCheckBox>
 #include <QStyledItemDelegate>
 
-class QModelIndex;
-class QWidget;
-class QVariant;
-
-class ComboBoxDelegate : public QItemDelegate
+class checkboxDelegate : public QItemDelegate
 {
     Q_OBJECT
 public:
-    ComboBoxDelegate(QObject *parent = 0);
-    ComboBoxDelegate(QObject *parent = 0,std::string strItems = "");
-
+   // explicit checkboxDelegate(QObject *parent = nullptr);
+    checkboxDelegate(QObject *parent = 0);
 
     QWidget *createEditor(QWidget *parent, const QStyleOptionViewItem &option, const QModelIndex &index) const;
-    void setEditorData(QWidget *editor, const QModelIndex &index) const;
+    void setEditorData(QWidget *editor,  const QModelIndex &index) const;
     void setModelData(QWidget *editor, QAbstractItemModel *model, const QModelIndex &index) const;
     void updateEditorGeometry(QWidget *editor, const QStyleOptionViewItem &option, const QModelIndex &index) const;
     void paint(QPainter *painter, const QStyleOptionViewItem &option, const QModelIndex &index) const;
-
-private:
-    std::vector<std::string> Items;
-
 };
 
-
-#endif
+#endif // CHECKBOXDELEGATE_H

@@ -19,16 +19,17 @@ int RModel::populateDataFromRastr(){
     up_rdata->populate_qastra(this->pqastra_);
 
     for (RCol &rcol : *up_rdata)
-        //vqcols_.push_back(rcol.title().c_str());
-        vqcols_.push_back(rcol.title_.c_str());
+        vqcols_.push_back(rcol.title().c_str());
 
     return 1;
 };
 int RModel::rowCount(const QModelIndex & /*parent*/) const{
-    return static_cast<int>(up_rdata->at(0).size());
+    //return static_cast<int>(up_rdata->at(0).size());
+    return static_cast<int>(up_rdata->nparray_.Rows());
 }
 int RModel::columnCount(const QModelIndex & /*parent*/) const{
-    return static_cast<int>(up_rdata->size());
+    //return static_cast<int>(up_rdata->size());
+    return static_cast<int>(up_rdata->nparray_.Columns());
 }
 
 QVariant RModel::data(const QModelIndex &index, int role) const
@@ -39,21 +40,39 @@ QVariant RModel::data(const QModelIndex &index, int role) const
     QVariant item;
 
     RData::const_iterator iter_col = up_rdata->begin() + col;
-    _col_data::const_iterator iter_data = (*iter_col).begin() + row;
+    //_col_data::const_iterator iter_data = (*iter_col).begin() + row;
+    auto datablock_item = up_rdata->nparray_.Data()[row * up_rdata->nparray_.Columns() + col];
     switch (role) {
         /*case Qt::CheckStateRole:
             if (row == 1 && col == 0) //add a checkbox to cell(1,0)
                 return Qt::Checked;*/
+        //case Qt::CheckStateRole:
         case Qt::DisplayRole:
         case Qt::EditRole:
 
-        switch((*iter_data).index()){
-            case RCol::_en_data::DATA_BOOL: item =  std::get<bool>(*iter_data) ;                 break;
-            case RCol::_en_data::DATA_INT: item =  (qlonglong)std::get<long>(*iter_data) ;                 break;
-            case RCol::_en_data::DATA_STR: item =  std::get<std::string>(*iter_data).c_str() ; break;
-            case RCol::_en_data::DATA_DBL: item =  std::get<double>(*iter_data);               break;
+            // Fill from RData
+            /*
+             switch((*iter_data).index()){
+            //case RCol::_en_data::DATA_BOOL: item =  std::get<bool>(*iter_data)?Qt::Checked: Qt::Unchecked; break;
+                case RCol::_en_data::DATA_BOOL: item =  std::get<bool>(*iter_data); break;
+                case RCol::_en_data::DATA_INT: item =  (qlonglong)std::get<long>(*iter_data) ;                 break;
+                case RCol::_en_data::DATA_STR: item =  std::get<std::string>(*iter_data).c_str() ; break;
+                case RCol::_en_data::DATA_DBL: item =  std::get<double>(*iter_data);               break;
             default :                      item =  ( "type_unknown" );                         break;
-        }
+
+                (*iter_col).emplace<bool>(std::get<bool>(up_rdata->nparray_.Data()[row * up_rdata->nparray_.Columns() + col]));
+              }
+           */
+
+            //Fill from QAstra->DataBlock
+            //switch((*iter_data).index()){
+                switch( iter_col->en_data_){
+                case RCol::_en_data::DATA_BOOL: item =  std::get<bool>(datablock_item); break;
+                case RCol::_en_data::DATA_INT: item =  (qlonglong)std::get<long>(datablock_item) ;                 break;
+                case RCol::_en_data::DATA_STR: item =  std::get<std::string>(datablock_item).c_str(); break;
+                case RCol::_en_data::DATA_DBL: item =  std::get<double>(datablock_item);               break;
+            default :                      item =  ( "type_unknown" );                         break;
+            }
         return item;
 
         case Qt::ToolTipRole:

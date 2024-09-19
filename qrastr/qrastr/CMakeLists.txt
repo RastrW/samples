@@ -102,10 +102,12 @@ else()
 endif()
 
 set(PROJECT_SOURCES
+    app.h
+    app.cpp
     main.cpp
     mainwindow.cpp
     mainwindow.h
-    mainwindow.ui
+#    mainwindow.ui
     mdiChildTable.h
     mdiChildTable.cpp
     mdiChildGrid.h
@@ -156,6 +158,10 @@ set(PROJECT_SOURCES
     tsthints.cpp
     comboboxdelegate.cpp
     comboboxdelegate.h
+    doubleitemdelegate.h
+    doubleitemdelegate.cpp
+    checkboxdelegate.h
+    checkboxdelegate.cpp
 )
 if(MSVC)
     link_directories("${ASTRA_LOCATION}/build/Debug/")
@@ -170,7 +176,6 @@ if(${QT_VERSION_MAJOR} GREATER_EQUAL 6)
     qt_add_executable( ${PROJECT_NAME}
         MANUAL_FINALIZATION
         ${PROJECT_SOURCES}
-        app.h app.cpp
     )
     qt_create_translation( QM_FILES ${CMAKE_SOURCE_DIR} ${TS_FILES} )
 else()
