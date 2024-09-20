@@ -45,7 +45,7 @@ public slots:
     void sortDescending();
     void onUpdate(std::string _t_name);
     void updateFilter(size_t column, QString value);
-    void onFileLoad(CRastrHlp& _rh);
+    void onFileLoad();
     void update_data();
 
 private slots:

@@ -156,7 +156,7 @@ QVariant RModel::headerData(int section, Qt::Orientation orientation, int role) 
 
 Qt::ItemFlags RModel::flags(const QModelIndex &index) const
 {
-    return Qt::ItemIsEditable | QAbstractTableModel::flags(index) ;
+    return Qt::ItemIsEditable | Qt::ItemIsEditable |  QAbstractTableModel::flags(index) ;
 }
 
 
@@ -166,11 +166,70 @@ bool RModel::setData(const QModelIndex &index, const QVariant &value, int role)
     int row = index.row();
 
     RData::iterator iter_col = up_rdata->begin() + col;
-    _col_data::iterator iter_data = (*iter_col).begin() + row;
+
+    IRastrTablesPtr tablesx{this->pqastra_->getRastr()->Tables()};
+    IRastrTablePtr table{ tablesx->Item(iter_col->table_name_) };
+    IRastrColumnsPtr columns{table->Columns()};
+    IRastrColumnPtr col_ptr{ columns->Item(iter_col->str_name_) };
 
     if (data(index, role) != value)
     {
-       /* switch((*iter_data).index()){
+        switch((*iter_col).en_data_){
+            case RCol::_en_data::DATA_BOOL:
+            {
+                bool val =  value.toBool();
+                FieldVariantData vd(val);
+                up_rdata->nparray_.EmplaceSaveIndChange(row,col,vd);
+                col_ptr->SetValue(row,val);
+                qDebug() << "set: "<<up_rdata->t_name_.c_str()<<"."<< (*iter_col).str_name_.c_str() << "(" << row << ")=" <<val;
+                break;
+             }
+            case RCol::_en_data::DATA_INT:
+            {
+                long val =  value.toInt();
+                FieldVariantData vd(val);
+                up_rdata->nparray_.EmplaceSaveIndChange(row,col,vd);
+                col_ptr->SetValue(row,val);
+                qDebug() << "set: "<<up_rdata->t_name_.c_str()<<"."<< (*iter_col).str_name_.c_str() << "(" << row << ")=" <<val;
+                break;
+            }
+            case RCol::_en_data::DATA_STR:
+            {
+                std::string val =  value.toString().toStdString().c_str();
+                FieldVariantData vd(val);
+                up_rdata->nparray_.EmplaceSaveIndChange(row,col,vd);
+                col_ptr->SetValue(row,val);
+                qDebug() << "set: "<<up_rdata->t_name_.c_str()<<"."<< (*iter_col).str_name_.c_str() << "(" << row << ")=" <<val;
+                break;
+            }
+                break;
+            case RCol::_en_data::DATA_DBL:
+            {
+                double val =  value.toDouble();
+                FieldVariantData vd(val);
+                up_rdata->nparray_.EmplaceSaveIndChange(row,col,vd);
+                col_ptr->SetValue(row,val);
+                qDebug() << "set: "<<up_rdata->t_name_.c_str()<<"."<< (*iter_col).str_name_.c_str() << "(" << row << ")=" <<val;
+            }
+                break;
+        default :
+                break;
+        }
+
+        if (emitSignals())
+        {
+            emit dataChanged(getRdata()->t_name_,getRCol(col)->name(),row,value );
+            return true;
+        }
+        return false;
+    }
+
+    // Old version
+    /*
+    _col_data::iterator iter_data = (*iter_col).begin() + row;
+    if (data(index, role) != value)
+    {
+        switch((*iter_data).index()){
         case RCol::_en_data::DATA_INT:
             qDebug() << "int: " << value.toInt();
             (*iter_data).emplace<long> (value.toInt());
@@ -193,32 +252,9 @@ bool RModel::setData(const QModelIndex &index, const QVariant &value, int role)
         }
     */
 
-        if (emitSignals())
-        {
-            emit dataChanged(getRdata()->t_name_,getRCol(col)->name(),row,value );
-            return true;
-        }
-        return false;
-    }
-    return true;
-
-
-    if (role == Qt::EditRole ) {
-        if (!checkIndex(index))
-            return false;
-        //save value from editor to member m_gridData
-        //m_gridData[index.row()][index.column()] = value.toString();
-        //for presentation purposes only: build and emit a joined string
-        QString result;
-       // for (int row = 0; row < n_rows_; row++) {
-        //    for (int col= 0; col < n_cols_; col++)
-                //result += m_gridData[row][col] + ' ';
-      //  }
-        emit editCompleted(result);
-        return true;
-    }
     return false;
 }
+
 std::vector<std::tuple<int,int>>  RModel::ColumnsWidth()
 {
     std::vector<std::tuple<int,int>> cw;
@@ -286,7 +322,7 @@ bool RModel::removeColumns(int column, int count, const QModelIndex &parent)
     return true;
 }
 
-void RModel::onRModelchange(std::string _t_name, std::string _col_name, int _row, QVariant _value)
+void RModel::onRModelchange(std::string _t_name, std::string _col_name, int row, QVariant value)
 {
     if (_t_name != this->getRdata()->t_name_)
         return;
@@ -296,8 +332,42 @@ void RModel::onRModelchange(std::string _t_name, std::string _col_name, int _row
         return;
 
     RData::iterator iter_col = up_rdata->begin() + col;
-    _col_data::iterator iter_data = (*iter_col).begin() + _row;
+    switch((*iter_col).en_data_){
+        case RCol::_en_data::DATA_BOOL:
+        {
+            bool val =  value.toBool();
+            FieldVariantData vd(val);
+            up_rdata->nparray_.EmplaceSaveIndChange(row,col,vd);
+            break;
+        }
+        case RCol::_en_data::DATA_INT:
+        {
+            long val =  value.toInt();
+            FieldVariantData vd(val);
+            up_rdata->nparray_.EmplaceSaveIndChange(row,col,vd);
+            break;
+        }
+        case RCol::_en_data::DATA_STR:
+        {
+            std::string val =  value.toString().toStdString().c_str();
+            FieldVariantData vd(val);
+            up_rdata->nparray_.EmplaceSaveIndChange(row,col,vd);
+            break;
+        }
+        break;
+        case RCol::_en_data::DATA_DBL:
+        {
+            double val =  value.toDouble();
+            FieldVariantData vd(val);
+            up_rdata->nparray_.EmplaceSaveIndChange(row,col,vd);
+        }
+        break;
+        default :
+            break;
+    }
 
+    /*
+    _col_data::iterator iter_data = (*iter_col).begin() + _row;
     switch((*iter_data).index()){
     case RCol::_en_data::DATA_INT:
         (*iter_data).emplace<long> (_value.toInt());
@@ -310,6 +380,7 @@ void RModel::onRModelchange(std::string _t_name, std::string _col_name, int _row
         break;
     default :                                               break;
     }
+    */
 }
 
 void RModel::onrm_RowInserted(std::string _t_name, int _row)

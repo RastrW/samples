@@ -217,7 +217,8 @@ void RtabWidget::OpenColPropForm()
 {
     //RCol* prcol = prm->getRCol(index.column());
     RCol* prcol = prm->getRCol(column);
-    ColPropForm* PropForm = new ColPropForm(prm->getRdata(),prcol);
+    //ColPropForm* PropForm = new ColPropForm(prm->getRdata(),prcol);
+    ColPropForm* PropForm = new ColPropForm(prm->getRdata(),ptv, prcol);
     PropForm->show();
 }
 void RtabWidget::sortAscending()
@@ -241,13 +242,16 @@ void RtabWidget::updateFilter(size_t column, QString value)
     proxyModel->setFilterRegularExpression(QRegularExpression(value));
     proxyModel->setFilterKeyColumn(column);                 //The default value is 0. If the value is -1, the keys will be read from all columns
 }
-void RtabWidget::onFileLoad(CRastrHlp& _rh)
+void RtabWidget::onFileLoad()
 {
    // CreateModel(_rh);
+    prm->populateDataFromRastr();
 }
 void RtabWidget::update_data()
 {
     prm->populateDataFromRastr();
+    this->update();
+    this->repaint();
 }
 
 

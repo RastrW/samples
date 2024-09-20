@@ -452,6 +452,7 @@ void MainWindow::open(){
         }
 */
         m_sp_qastra->LoadFile(eLoadCode::RG_REPL, fileName.toStdString(),"");
+        emit file_loaded();
     }
 }
 void MainWindow::save(){
@@ -538,8 +539,8 @@ void MainWindow::deleteCol(){
 #endif // #if(!defined(QICSGRID_NO))
 }
 void MainWindow::rgm_wrap(){
-    long res = Rgm(id_rastr_,"");
     std::string str_msg = "";
+    long res = static_cast<long>(m_sp_qastra->Rgm(""));
     if (res == 0){
         str_msg = "Расчет режима выполнен успешно";
         spdlog::info("{}", str_msg);
@@ -548,8 +549,6 @@ void MainWindow::rgm_wrap(){
         spdlog::error("{} : {}", res, str_msg);
     }
     statusBar()->showMessage( str_msg.c_str(), 0 );
-
-    m_sp_qastra->Rgm("");
 
     emit rgm_signal();
 }
