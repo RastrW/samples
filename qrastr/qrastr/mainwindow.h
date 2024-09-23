@@ -47,7 +47,7 @@ public:
         void add( const spdlog::level::level_enum lev_in, const std::string_view sv_format, Args&&... args );
     };
 signals:
-    void file_loaded(CRastrHlp& _rh);                                                                     // загружен файл
+    void file_loaded();                                                                     // загружен файл
     void rgm_signal();
     void rm_change(std::string _t_name, QModelIndex index, QVariant value);
     void rm_change(std::string _t_name, std::string _col_name, int _row, QVariant _value);
@@ -120,7 +120,7 @@ private:
     std::shared_ptr<QAstra> m_sp_qastra;
     std::list<CUIForm> m_lstUIForms;
 
-    static constexpr char m_pchSettingsDirData[] {"Data"};
-    static constexpr char m_pchSettingsOrg[]     {"QRastr"};
+    static constexpr char m_pchSettingsDirData[5] {"Data"};
+    static constexpr char m_pchSettingsOrg[7]     {"QRastr"};
 };
 #endif // MAINWINDOW_H

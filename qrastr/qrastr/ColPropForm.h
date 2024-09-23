@@ -3,8 +3,9 @@
 
 #include <QWidget>
 #include <QString>
-#include "rastrdatamodel.h"
+//#include "rastrdatamodel.h"
 #include "rmodel.h"
+#include "rtableview.h"
 
 namespace Ui {
 class ColPropForm;
@@ -16,7 +17,8 @@ class ColPropForm : public QWidget
 
 public:
 //#if(!defined(QICSGRID_NO))
-    explicit ColPropForm(RData* prdata,RCol* prcol, QWidget *parent = nullptr);
+    explicit ColPropForm(RData* prdata,RTableView* ptv, RCol* prcol, QWidget *parent = nullptr);
+    //explicit ColPropForm(RModel* prmodel,RCol* prcol, QWidget *parent = nullptr);
 //#endif//#if(!defined(QICSGRID_NO))
     ~ColPropForm();
 
@@ -27,6 +29,7 @@ public:
     void setPrec(const QString& acc);
     void setExpr(const QString& expr);
     QString name() const;
+    QString prec() const;
 
 private slots:
 
@@ -34,7 +37,10 @@ private slots:
     void on_btn_ok_clicked();
 
 private:
+    RTableView* ptv;
     Ui::ColPropForm *ui;
+    RData* prdata;
+    RCol* prcol;
 };
 
 #endif // COLPROPFORM_H

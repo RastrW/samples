@@ -1,11 +1,16 @@
 #include "ColPropForm.h"
 #include "ui_ColPropForm.h"
+#include "doubleitemdelegate.h"
 
 
-ColPropForm::ColPropForm(RData* prdata,RCol* prcol,QWidget *parent) :
+ColPropForm::ColPropForm(RData* _prdata, RTableView* _ptv,RCol* _prcol,QWidget *parent) :
     QWidget(parent),
     ui(new Ui::ColPropForm)
 {
+    ptv = _ptv;
+    prdata = _prdata;
+
+    prcol = _prcol;
     std::string title = prdata->t_name_ + "[" +prdata->t_title_ + "]." + prcol->name() + "[" +prcol->title() + "]" ;
     setWindowTitle(title.c_str());
     windowTitle();
@@ -54,6 +59,10 @@ QString ColPropForm::name() const
 {
     return ui->te_name->toPlainText();
 }
+QString ColPropForm::prec() const
+{
+    return ui->te_precision->toPlainText();
+}
 
 //Slots
 void ColPropForm::on_btn_cancel_clicked()
@@ -64,7 +73,10 @@ void ColPropForm::on_btn_cancel_clicked()
 void ColPropForm::on_btn_ok_clicked()
 {
     //TO DO: need change propertires
-
+   // prcol->set_prec(prec().toStdString().c_str());
+    static_cast<DoubleItemDelegate*>(ptv->itemDelegateForColumn(prcol->index))->set_prec(prec().toInt());
+    //auto delagete = ptv->itemDelegateForColumn(prcol->index);
+    //delagete->se
     this->close();
 }
 

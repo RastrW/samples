@@ -40,6 +40,7 @@ void RData::Initialize(CUIForm _form, QAstra* _pqastra)
     }*/
 
     // В RData создаем RCol по образу формы
+    int ind = 0;
     for (CUIFormField &f : _form.Fields()){
             str_cols_.append(f.Name());
             str_cols_.append(",");
@@ -50,6 +51,7 @@ void RData::Initialize(CUIForm _form, QAstra* _pqastra)
             rc.str_name_ = f.Name();
             rc.table_name_ = _form.TableName();
             rc.setMeta(_pqastra);
+            rc.index = ind++;
 
             int nRes = AddCol(rc);
             Q_ASSERT(nRes>=0);
@@ -275,12 +277,13 @@ void RData::populate_qastra(QAstra* _pqastra)
     */
 
     //Populate with Dense Data Block
+    /*
     for (long column = 0; column < nparray_.Columns(); column++)
     {
         RCol& rcol = (*this)[column];
         rcol.index = column;
 
-/*
+
         rcol.resize(nparray_.Rows());
 
         for (long row = 0; row < nparray_.Rows(); row++)
@@ -303,11 +306,9 @@ void RData::populate_qastra(QAstra* _pqastra)
                 Q_ASSERT(!"unknown type");
                 break;
             }//switch
-
         }
-*/
-
     }
+*/
 }
 
 

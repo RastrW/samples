@@ -288,6 +288,14 @@ public:
         std::string str_prec = IRastrPayload(IRastrVariantPtr(col_ptr->Property(FieldProperties::Precision))->String()).Value();
         return str_prec;
     }
+    std::string set_prec(std::string str_prec) const{
+        IRastrTablesPtr tablesx{ pqastra_->getRastr()->Tables() };
+        IRastrTablePtr table{ tablesx->Item(table_name_) };
+        IRastrColumnsPtr columns{ table->Columns() };
+        IRastrColumnPtr col_ptr{ columns->Item(str_name_) };
+        col_ptr->SetProperty(FieldProperties::Precision,str_prec);
+        return str_prec;
+    }
     std::string expr() const{
         IRastrTablesPtr tablesx{ pqastra_->getRastr()->Tables() };
         IRastrTablePtr table{ tablesx->Item(table_name_) };
