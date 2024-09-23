@@ -2,63 +2,62 @@
 #define QASTRA_H
 
 #include <QObject>
-#include "IPlainRastr.h"
+//#include "IPlainRastr.h"
 #include "common_qrastr.h"
-
-///////////////////////////////////////////////////////////////////////
-//RastrEngine.cs
-///////////////////////////////////////////////////////////////////////
-
-// Событие, возникающее при изменении данных в таблице
-//public event EventHandler<ChangeDataEventArgs> OnChangeData; // IRastrEventHint
-//public class ChangeDataEventArgs : EventArgs
-//    public ChangeDataHint Hint
-//    public string         Table
-//    public string         Column
-//    public int            RowIndex
-struct _hint_data{
-    EventHints  hint;
-    std::string str_table;
-    std::string str_column;
-    long        n_indx;
-};
-
-// Событие журналирования
-//public event EventHandler<LogEventArgs> OnLog; //IRastrEventLog
-//public class LogEventArgs : EventArgs
-//  public LogMessageCode MessageCode
-//  public int Level
-//  public int StageId
-//  public string TableName
-//  public int TableIndex
-//  public string Description
-//  public string FormName
-
-// Событие протоколирования
-//public event EventHandler<ProtEventArgs> OnProtocol; //IRastrEventBase
-//public class ProtEventArgs : EventArgs
-//  public string Message { get; private set; }
-
-// Событие CommandMain
-//public event EventHandler<CommandMainEventArgs> OnCommandMain; // OnUICommand(const IRastrEventBase& ... )
-//public class CommandMainEventArgs:EventArgs
-//  public CommandMainId CommandId
-//  public string        P1
-//  public string        P2
-//  public int           Pp
-//  public object        Result
+#include "qastra_events_data.h"
 
 class CUIFormsCollection;
-
 class QAstra
     : public QObject
     , public IRastrEventsSinkBase{
     Q_OBJECT
 public:
     typedef std::shared_ptr<IPlainRastr> _sp_rastr;
-
+    static spdlog::level::level_enum getSpdLevel(const LogMessageTypes lmt){
+        spdlog::level::level_enum level_out = spdlog::level::level_enum::off;
+        switch(lmt){
+            case LogMessageTypes::SystemError:
+                level_out = spdlog::level::level_enum::critical;
+            break;
+            case LogMessageTypes::Failed:
+                level_out = spdlog::level::level_enum::err;
+            break;
+            case LogMessageTypes::Error:
+                level_out = spdlog::level::level_enum::err;
+            break;
+            case LogMessageTypes::Warning:
+                level_out = spdlog::level::level_enum::warn;
+            break;
+            case LogMessageTypes::Message:
+                level_out = spdlog::level::level_enum::info;
+            break;
+            case LogMessageTypes::Info:
+                level_out = spdlog::level::level_enum::info;
+            break;
+            case LogMessageTypes::OpenStage:
+                //assert(!"OpenStage");
+            break;
+            case LogMessageTypes::CloseStage:
+                //assert(!"CloseStage");
+            break;
+            case LogMessageTypes::EnterDefault:
+                assert(!"EnterDefault");
+            break;
+            case LogMessageTypes::Reset:
+                assert(!"Reset");
+            break;
+            case LogMessageTypes::None:
+                assert(!"Node");
+            break;
+            default:
+                assert(!"unknown log message type!");
+            break;
+        };
+        return level_out;
+    }
     IPlainRastrRetCode OnEvent(const IRastrEventLog& Event) noexcept override {
-        spdlog::info( "OnEvent.Log Status: {:3}  StageId: {:2} EventMsg: {:40} Table: {:10}  Column: {:5} Index: {:5} UIForm: {:10}"
+        //spdlog::info( "OnEvent.Log Status: {:3}  StageId: {:2} EventMsg: {:40} Table: {:10}  Column: {:5} Index: {:5} UIForm: {:10}"
+        spdlog::log( getSpdLevel(Event.Status()), "OnEvent.Log Status: {:3}  StageId: {:2} EventMsg: {:40} Table: {:10}  Column: {:5} Index: {:5} UIForm: {:10}"
             , static_cast<std::underlying_type<LogMessageTypes>::type>(Event.Status())
             , Event.StageId()
             , Event.Message()
@@ -67,6 +66,15 @@ public:
             , Event.DBLocation().Index()
             , Event.UIForm()
         );
+        _log_data log_data;
+        log_data.lmt        = Event.Status();
+        log_data.n_stage_id = Event.StageId();
+        log_data.str_msg    = Event.Message();
+        log_data.str_table  = Event.DBLocation().Table();
+        log_data.str_col    = Event.DBLocation().Column();
+        log_data.n_indx     = Event.DBLocation().Index();
+        log_data.str_uiform = Event.UIForm();
+        emit onRastrLog(log_data);
         return IPlainRastrRetCode::Ok;
     }
     IPlainRastrRetCode OnEvent(const IRastrEventHint& Event) noexcept override {
@@ -75,7 +83,6 @@ public:
         dh.str_table  = Event.DBLocation().Table();
         dh.str_column = Event.DBLocation().Column();
         dh.n_indx     = Event.DBLocation().Index();
-        emit onRastrHint( dh );
         spdlog::info( "OnEvent.Hint: [{:10}] [{:1}] Table: {:10} Column: {:5} Index: {}"
             , getHintName(Event.Hint())
             , static_cast<std::underlying_type<EventHints>::type>(Event.Hint())
@@ -83,6 +90,7 @@ public:
             , Event.DBLocation().Column()
             , Event.DBLocation().Index()
         );
+        emit onRastrHint( dh );
         return IPlainRastrRetCode::Ok;
     }
     IPlainRastrRetCode OnEvent(const IRastrEventBase& Event) noexcept override {
@@ -145,17 +153,19 @@ public:
         assert(!"getHintName()");
         return "hint_xz";
     }
-    explicit QAstra(QObject *parent = nullptr);
-    virtual ~QAstra() = default;
+    explicit  QAstra(QObject *parent = nullptr);
+    virtual   ~QAstra() = default;
     void      setRastr(const _sp_rastr& sp_rastr_in);
     _sp_rastr getRastr() const;
-    void LoadFile( eLoadCode LoadCode, const std::string_view& FilePath, const std::string_view& TemplatePath );
-    eASTCode Rgm(const std::string_view& parameters = {});
+    void      LoadFile( eLoadCode LoadCode, const std::string_view& FilePath, const std::string_view& TemplatePath );
+    eASTCode  Rgm(const std::string_view& parameters = {});
 signals:
-    void onRastrHint(const _hint_data& );
+    void onRastrHint( const _hint_data& );
+    void onRastrLog ( const _log_data&  );
 private:
     _sp_rastr sp_rastr_;
      std::unique_ptr<CUIFormsCollection> upCUIFormsCollection_;
+
 };
 
 #endif // QASTRA_H

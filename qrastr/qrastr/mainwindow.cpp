@@ -52,16 +52,16 @@ MainWindow::MainWindow(){
         qDebug() << Count++ << " CDockManager::focusedDockWidgetChanged old: " << (old ? old->objectName() : "-") << " now: " << now->objectName() << " visible: " << now->isVisible();
         now->widget()->setFocus();
     });
-    McrWnd* pMcrWnd = new McrWnd( this, McrWnd::_en_role::global_protocol );
+    m_pMcrWnd = new McrWnd( this, McrWnd::_en_role::global_protocol );
     if(false){
         QDockWidget *dock = new QDockWidget( "protocol", this);
-        dock->setWidget(pMcrWnd);
+        dock->setWidget(m_pMcrWnd);
         dock->setAllowedAreas(Qt::LeftDockWidgetArea | Qt::RightDockWidgetArea | Qt::TopDockWidgetArea | Qt::BottomDockWidgetArea | Qt::AllDockWidgetAreas);
         addDockWidget(Qt::TopDockWidgetArea, dock);
     }else{
         static int i = 0;
         auto dw = new ads::CDockWidget( "protocol", this);
-        dw->setWidget(pMcrWnd);
+        dw->setWidget(m_pMcrWnd);
         int f = ads::CDockWidget::CustomCloseHandling;
         dw->setFeature( static_cast<ads::CDockWidget::DockWidgetFeature>(f), true);
         //auto area = m_DockManager->addDockWidgetTab(ads::NoDockWidgetArea, dw);
@@ -69,10 +69,10 @@ MainWindow::MainWindow(){
         container->move(QPoint(2100, 20));
         container->resize(1200,800);
     }
-    auto qt_sink = std::make_shared<spdlog::sinks::qt_sink_mt>(pMcrWnd, "onQStringAppendProtocol");
+    auto qt_sink = std::make_shared<spdlog::sinks::qt_sink_mt>(m_pMcrWnd, "onQStringAppendProtocol");
     auto logg = spdlog::default_logger();
     logg->sinks().push_back(qt_sink);
-    pMcrWnd->show();
+    //m_pMcrWnd->show();
 }
 MainWindow::~MainWindow(){
 }
@@ -179,6 +179,10 @@ void MainWindow::setForms(const std::list<CUIForm>& forms){ // https://stackover
 void MainWindow::setQAstra(const std::shared_ptr<QAstra>& sp_qastra){
     assert(nullptr!=sp_qastra);
     m_sp_qastra = sp_qastra;
+
+    connect( m_sp_qastra.get(), SIGNAL(onRastrLog(const _log_data&) ), m_pMcrWnd, SLOT(onRastrLog(const _log_data&)));
+
+    m_pMcrWnd;
     if(true){
         //vetv
         TstHints* tstHints_vetv = new TstHints(this);

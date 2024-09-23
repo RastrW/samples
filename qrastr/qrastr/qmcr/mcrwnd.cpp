@@ -9,14 +9,16 @@
 #include <QInputDialog>
 #include <QDebug>
 #include <QCloseEvent>
+#include <QQmlDebuggingEnabler>
+QQmlDebuggingEnabler enabler;
+
 #include "mcrwnd.h"
 #include "scihlp.h"
 #include "tst_toolbox.h"
 #include "tst2_dialog.h"
 #include "forms/dlgfindrepl.h"
-
-#include <QQmlDebuggingEnabler>
-QQmlDebuggingEnabler enabler;
+//#include "IPlainRastr.h"
+#include "../qastra_events_data.h"
 
 McrWnd::McrWnd(QWidget* parent, const _en_role en_role)
     : QDialog(parent,
@@ -30,8 +32,6 @@ McrWnd::McrWnd(QWidget* parent, const _en_role en_role)
     setWindowIcon( QIcon(QApplication::style()->standardIcon(QStyle::SP_ComputerIcon) ));
     setWindowTitle(tr("Macro Python"));
     QSplitter* splitter = new QSplitter(this);
-
-
     QVBoxLayout* layout = new QVBoxLayout();
     QVBoxLayout* container_layout = new QVBoxLayout();
     QLineEdit* leFind = new QLineEdit();    leFind->setFixedWidth(100);
@@ -457,10 +457,26 @@ void encode(std::string& data_out, const QString& qstr_in){
     }
     data_out.append("\n");
 }
-
 void McrWnd::onQStringAppendProtocol(const QString& qstr){
     std::string str{qstr.toStdString()};
     encode(str);
     str += "\n";
     shProt_->my_appendTect(str);
+}
+void McrWnd::onRastrLog(const _log_data& log_data){
+    std::string str = "";
+    if( LogMessageTypes::OpenStage == log_data.lmt) {
+        str  = "<STAGE";
+        str += std::to_string(log_data.n_stage_id);
+        str += ">\t";
+        str += log_data.str_msg;
+        str += "\n";
+        shProt_->my_appendTect(str);
+    }
+    if( LogMessageTypes::CloseStage == log_data.lmt) {
+        str  = "</STAGE";
+        str += std::to_string(log_data.n_stage_id);
+        str += ">";
+        shProt_->my_appendTect(str);
+    }
 }

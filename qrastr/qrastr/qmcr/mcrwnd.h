@@ -10,7 +10,7 @@
 class  Tst_ToolBox;
 class  Tst2_Dialog;
 class  DlgFindRepl;
-
+struct _log_data;
 class McrWnd : public QDialog{
     Q_OBJECT
 public:
@@ -34,6 +34,7 @@ private slots:
     void onChngEditFileInfo(const QFileInfo& fiNew);
     void Find(SciHlp::_params_find params_find);
     void onQStringAppendProtocol(const QString& qstr);
+    void onRastrLog(const _log_data&);
 private:
     const _en_role en_role_;
     SciHlp*        shEdit_{nullptr};

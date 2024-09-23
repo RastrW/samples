@@ -25,6 +25,7 @@ class QSignalMapper;*/
 
 class QAstra;
 class CUIForm;
+class McrWnd;
 struct _hint_data;
 class rmodel;
 namespace ads{ class CDockManager; }
@@ -106,12 +107,13 @@ private:
     QMdiSubWindow *findMdiChild(const QString &fileName);
 #endif
     void closeEvent(QCloseEvent *event)override;
-    QMdiArea*          m_workspace;
-    QSignalMapper*     m_windowMapper;
-    QMenu*             m_menuOpen;
-    QHBoxLayout*       m_layoutActions;                 // actions: rgm,opf,...
-    QToolBar*          m_toolbarCalc;
-    RtabWidget*        m_prtw_current;                  // current table
+    QMdiArea*          m_workspace     = nullptr;
+    McrWnd*            m_pMcrWnd       = nullptr;
+    QSignalMapper*     m_windowMapper  = nullptr;
+    QMenu*             m_menuOpen      = nullptr;
+    QHBoxLayout*       m_layoutActions = nullptr;                 // actions: rgm,opf,...
+    QToolBar*          m_toolbarCalc   = nullptr;
+    RtabWidget*        m_prtw_current  = nullptr;                  // current table
     std::string        m_cur_file;                      // current file
     QDockWidget*       m_dock        = nullptr;
     ads::CDockManager* m_DockManager = nullptr; // The main container for docking

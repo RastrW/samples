@@ -18,14 +18,14 @@ public:
     MyModel(QObject *parent = nullptr);
     int rowCount(const QModelIndex &parent = QModelIndex()) const override{
         return ROWS;
-    };
+    }
     int columnCount(const QModelIndex &parent = QModelIndex()) const override{
         return COLS;
-    };
+    }
     QVariant data(const QModelIndex &index, int role = Qt::DisplayRole) const override{
         QVariant qvt;
         return qvt;
-    };
+    }
     bool setData(const QModelIndex &index, const QVariant &value, int role = Qt::EditRole) override{
         if (role == Qt::EditRole) {
              if (!checkIndex(index))
@@ -42,10 +42,10 @@ public:
              return true;
          }
          return false;
-    };
+    }
     Qt::ItemFlags flags(const QModelIndex &index) const override{
         return Qt::ItemIsEditable;
-    };
+    }
 private:
     QString m_gridData[ROWS][COLS];  //holds text entered into QTableView
 signals:

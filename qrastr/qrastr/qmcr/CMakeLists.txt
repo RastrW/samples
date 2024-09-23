@@ -1,15 +1,10 @@
 cmake_minimum_required(VERSION 3.16)
-
 project(qmcr VERSION 0.1 LANGUAGES CXX)
-
 set(CMAKE_AUTOUIC ON)
 set(CMAKE_AUTOMOC ON)
 set(CMAKE_AUTORCC ON)
-
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
-
-
 # from https://github.com/Vatsinator/vatsinator-legacy/blob/develop/CMakeLists.txt
 # set configuration types (msvc/xcode)
 if (CMAKE_CONFIGURATION_TYPES)
@@ -26,7 +21,6 @@ else()
     set(SCI_DIR /home/ustas/projects/compile/sci)
 endif()
 
-
 set(CMAKE_WINDOWS_EXPORT_ALL_SYMBOLS ON)#visual studio not generate .lib without exported from .dll!
 
 find_package(QT NAMES Qt6 Qt5 REQUIRED COMPONENTS Widgets LinguistTools)
@@ -41,19 +35,29 @@ include_directories(
         ${SCI_DIR}/lexilla/include
         include
 )
+if(QRASTR_BUILD_WITH_MCR)
+    include_directories(
+        "${ASTRA_LOCATION}/"
+    )
+endif()
 
 link_directories(${SCI_DIR}/bin)
 
 set(TS_FILES qmcr_ru_RU.ts)
 set(PROJECT_SOURCES)
 list (APPEND PROJECT_SOURCES
-        scihlp.h scihlp.cpp
-        mcrwnd.h mcrwnd.cpp
-        ${TS_FILES}
-        forms/dlgfindrepl.h forms/dlgfindrepl.cpp forms/dlgfindrepl.ui
+    scihlp.h
+    scihlp.cpp
+    mcrwnd.h
+    mcrwnd.cpp
+    ${TS_FILES}
+    forms/dlgfindrepl.h
+    forms/dlgfindrepl.cpp
+    forms/dlgfindrepl.ui
 )
-message (DEBUG "hello")
 if(QRASTR_BUILD_WITH_MCR)
+    list(APPEND PROJECT_SOURCES
+    )
 else()
     list(APPEND PROJECT_SOURCES
         main.cpp
@@ -133,7 +137,6 @@ install(TARGETS qmcr
     LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
     RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
 )
-
 if(QT_VERSION_MAJOR EQUAL 6)
     if(QRASTR_BUILD_WITH_MCR)
     else()
