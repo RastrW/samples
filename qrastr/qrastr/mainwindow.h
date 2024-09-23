@@ -2,14 +2,9 @@
 #define MAINWINDOW_H
 
 #include <QMainWindow>
-#include <QWidget>
-#include <QHBoxLayout>
-#include <QPushButton>
-#include <QDir>
-#include <QMessageBox>
-#include <QDockWidget>
-#include <QTableView>
 #include <QMenu>
+#include <QMdiArea>
+#include <QSignalMapper>
 
 #if(!defined(QICSGRID_NO))
     #include <QicsTable.h>
@@ -20,15 +15,15 @@
 #include "rastrhlp.h"
 #include "rmodel.h"
 #include "rtabwidget.h"
-
+/*
 class QAction;
 class QMenu;
 class QMdiArea;
 class QMdiSubWindow;
 class MdiChild;
-class QSignalMapper;
+class QSignalMapper;*/
 
-class QAstra ;
+class QAstra;
 class CUIForm;
 struct _hint_data;
 class rmodel;
@@ -65,13 +60,6 @@ private slots:
     void open();
     void save();
     void saveAs();
-    void cut();
-    void copy();
-    void paste();
-    void insertRow();
-    void deleteRow();
-    void insertCol();
-    void deleteCol();
     void about();
     void rgm_wrap();
     void onDlgMcr();
@@ -82,7 +70,7 @@ private slots:
     void ondataChanged(std::string _t_name, QModelIndex index, QVariant value);
     void ondataChanged(std::string _t_name, std::string _col_name, int _row, QVariant _value);
     void onRowInserted(std::string _t_name, int _row);
-    void onRowDeleted(std::string _t_name, int _row);
+    void onRowDeleted (std::string _t_name, int _row);
 #if(!defined(QICSGRID_NO))
     void sortAscending();
     void sortDescending();
@@ -90,7 +78,6 @@ private slots:
     void onItemPressed(const QModelIndex &index);
 public slots:
     void updateMenus();
-    void updateWindowMenu();
 #if(!defined(QICSGRID_NO))
     MdiChild *createMdiChild(nlohmann::json j_form = "");
 #endif//#if(!defined(QICSGRID_NO))
@@ -101,9 +88,8 @@ private:
 public:
     MainWindow();
     virtual ~MainWindow();
-    long init();
-    void setForms(std::list<CUIForm>& forms); // https://stackoverflow.com/questions/14151443/how-to-pass-a-qstring-to-a-qt-slot-from-a-qmenu-via-qsignalmapper-or-otherwise
-    void setQAstra(std::shared_ptr<QAstra> sp_qastra);
+    void setForms(const std::list<CUIForm>& forms); // https://stackoverflow.com/questions/14151443/how-to-pass-a-qstring-to-a-qt-slot-from-a-qmenu-via-qsignalmapper-or-otherwise
+    void setQAstra(const std::shared_ptr<QAstra>& sp_qastra);
 private:
     int  readSettings();
     int  writeSettings();
@@ -112,9 +98,6 @@ private:
     QicsTable* activeTable(); // Returns pointer to the table that is active, otherwise returns NULL
 #endif//#if(!defined(QICSGRID_NO))
     void createActions();
-    void createMenus();
-    void createToolBars();
-    void loadPlugins();
     void createCalcLayout();
     void createStatusBar();
     void logCacheFlush();
@@ -123,63 +106,21 @@ private:
     QMdiSubWindow *findMdiChild(const QString &fileName);
 #endif
     void closeEvent(QCloseEvent *event)override;
-    QMdiArea* m_workspace;
-    QSignalMapper *m_windowMapper;
-    QMenu *m_fileMenu;
-    QMenu *m_editMenu;
-    QMenu *m_CalcMenu;
-    QMenu *m_openMenu;
-    QMenu *m_windowMenu;
-    QMenu *m_helpMenu;
-    QHBoxLayout *m_ActionsLayout;   // actions: rgm,opf,...
-    QToolBar *m_fileToolBar;
-    QToolBar *m_editToolBar;
-    QToolBar *m_viewToolBar;
-    QToolBar *m_calcToolBar;
-    QAction *m_newAct;
-    QAction *m_openAct;
-    QAction *m_saveAct;
-    QAction *m_saveAsAct;
-    QAction *m_exitAct;
-    QAction *m_cutAct;
-    QAction *m_copyAct;
-    QAction *m_pasteAct;
-    QAction *m_insertRowAct;
-    QAction *m_deleteRowAct;
-    QAction *m_insertColAct;
-    QAction *m_deleteColAct;
-    QAction *m_closeAct;
-    QAction *m_closeAllAct;
-    QAction *m_tileAct;
-    QAction *m_cascadeAct;
-    QAction *m_arrangeAct;
-    QAction *m_nextAct;
-    QAction *m_previousAct;
-    QAction *m_separatorAct;
-    QAction *m_aboutAct;
-    //QAction *m_SortAscAct;
-    //QAction *m_SortDescAct;
-    QAction* m_RGMAct;
-    QAction* m_ActMacro;
-    QAction* m_TestAct;
-    nlohmann::json             j_forms_;
-    _idRastr                   id_rastr_ = -1;
-    std::unique_ptr<CRastrHlp> up_rastr_;
-    RtabWidget *prtw_current;                        // current table
-    std::string cur_file;                            // current file
-    QAction *m_SortAscAct;
-    QAction *m_SortDescAct;
-    QDockWidget *m_dock;
+    QMdiArea*          m_workspace;
+    QSignalMapper*     m_windowMapper;
+    QMenu*             m_menuOpen;
+    QHBoxLayout*       m_layoutActions;                 // actions: rgm,opf,...
+    QToolBar*          m_toolbarCalc;
+    RtabWidget*        m_prtw_current;                  // current table
+    std::string        m_cur_file;                      // current file
+    QDockWidget*       m_dock        = nullptr;
     ads::CDockManager* m_DockManager = nullptr; // The main container for docking
-    rmodel *model;
-    Params m_params;
-    QDir qdirData_;
-    _v_cache_log v_cache_log_;
+    Params             m_params;
+    _v_cache_log       m_v_cache_log;
     std::shared_ptr<QAstra> m_sp_qastra;
     std::list<CUIForm> m_lstUIForms;
 
-    static constexpr char pchSettingsDirData_[5]{"Data"};
-    static constexpr char pchSettingsOrg_[7]{"QRastr"};
-
+    static constexpr char m_pchSettingsDirData[5] {"Data"};
+    static constexpr char m_pchSettingsOrg[7]     {"QRastr"};
 };
 #endif // MAINWINDOW_H
