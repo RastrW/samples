@@ -107,7 +107,6 @@ set(PROJECT_SOURCES
     main.cpp
     mainwindow.cpp
     mainwindow.h
-#    mainwindow.ui
     mdiChildTable.h
     mdiChildTable.cpp
     mdiChildGrid.h
@@ -162,6 +161,8 @@ set(PROJECT_SOURCES
     doubleitemdelegate.cpp
     checkboxdelegate.h
     checkboxdelegate.cpp
+    tsthintsmvc.h
+    tsthintsmvc.cpp
 )
 if(MSVC)
     link_directories("${ASTRA_LOCATION}/build/Debug/")
