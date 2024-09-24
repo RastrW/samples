@@ -42,6 +42,7 @@ private:
     Tst_ToolBox*   tst_tb_{nullptr};
     Tst2_Dialog*   tst2_dlg_{ nullptr};
     DlgFindRepl*   pdlgFindRepl_{ nullptr};
+    long           n_stage_max_id_ = 0;
 };
 
 #endif // MCRWND_H
