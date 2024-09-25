@@ -164,6 +164,12 @@ set(PROJECT_SOURCES
     tsthintsmvc.h
     tsthintsmvc.cpp
     qastra_events_data.h
+    formsettingsdatas.h
+    formsettingsdatas.cpp
+    formsettingsdatas.ui
+    formsettingsforms.h
+    formsettingsforms.cpp
+    formsettingsforms.ui
 )
 if(MSVC)
     link_directories("${ASTRA_LOCATION}/build/Debug/")
