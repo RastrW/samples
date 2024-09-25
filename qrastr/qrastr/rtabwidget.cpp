@@ -18,15 +18,9 @@ using WrapperExceptionType = std::runtime_error;
 #include "doubleitemdelegate.h"
 #include "checkboxdelegate.h"
 
-
-
-//#include "tableview.h"
-
-
 RtabWidget::RtabWidget(QWidget *parent)
     : QWidget{parent}
 {
-
     ptv = new RTableView();
 
     ptv->setContextMenuPolicy(Qt::CustomContextMenu);                   //https://forum.qt.io/topic/31233/how-to-create-a-custom-context-menu-for-qtableview/6
@@ -50,6 +44,11 @@ RtabWidget::RtabWidget(QAstra* pqastra,CUIForm UIForm, QWidget *parent)
     : RtabWidget{parent}
 {
     m_UIForm = UIForm;
+    m_pqastra = pqastra;
+
+    //const bool my1 = QObject::connect( m_sp_qastra.get(), SIGNAL( onRastrHint(const _hint_data&) ), tstHints, SLOT( onRastrHint(const _hint_data&) ) );
+    const bool my1 = QObject::connect( m_pqastra, SIGNAL( onRastrHint(const _hint_data&) ), this, SLOT( onRastrHint(const _hint_data&) ) );
+
     CreateModel(pqastra,&m_UIForm);
 
     //SetTableView(*ptv,*prm);                // ширина по шаблону
@@ -106,6 +105,62 @@ void RtabWidget::CreateModel(QAstra* pqastra, CUIForm* pUIForm)
     this->update();
     this->repaint();
 }
+
+void RtabWidget::onRastrHint(const _hint_data& hint_data){
+    try{
+          //spdlog::info("i alive from RtabWidget");
+        long row = hint_data.n_indx;
+        long col =  this->prm->getIndexCol(hint_data.str_column.c_str());
+
+          switch (hint_data.hint)
+          {
+          case EventHints::ChangeAll:
+              /*Пока что полностью пересоздаем модель, возможно стоит обновлять данные модели
+               * но в этом случае не обновляется количество строк. То есть было 197
+               * загрузили mdp_debug_1 данные при update_data() поменялись, но строк осталось 197
+               * */
+              CreateModel(m_pqastra,&m_UIForm);
+              //update_data();
+              //ptv->update();
+            break;
+          case EventHints::ChangeTable:
+              if (hint_data.str_table == this->prm->getRdata()->t_name_)
+              {
+                  update_data();
+                  ptv->update();
+              }
+              break;
+          case EventHints::ChangeData:
+              if (hint_data.str_table == this->prm->getRdata()->t_name_)
+              {
+                std::string val = m_pqastra->GetVal(hint_data.str_table.c_str(),hint_data.str_column.c_str(),hint_data.n_indx);
+                this->prm->onRModelchange(hint_data.str_table.c_str(),hint_data.str_column,hint_data.n_indx,val.c_str());
+
+                /*FieldVariantData vd(val);
+                long icol = this->prm->getIndexCol(hint_data.str_column.c_str());
+                this->prm->getRdata()->nparray_.EmplaceSaveIndChange(hint_data.n_indx,icol,vd);
+                ptv->update();*/
+              }
+              break;
+          case EventHints::InsertRow:
+              if (hint_data.str_table == this->prm->getRdata()->t_name_)
+              {
+                  //this->prm->onrm_RowInserted(hint_data.str_table.c_str(),row);
+                  CreateModel(m_pqastra,&m_UIForm);
+              }
+
+          default:
+              break;
+          }
+
+
+    }catch(const std::exception& ex){
+        spdlog::error("std::exception: {}", ex.what());
+    }catch(...){
+        spdlog::error("Exception in RtabWidget::onRastrHint(...)!");
+    }
+}
+
 
 void RtabWidget::SetTableView(QTableView& tv, RModel& mm, int myltiplier  )
 {
@@ -197,9 +252,14 @@ void RtabWidget::insertRow()
 #endif//#if(!defined(QICSGRID_NO))
 #if(defined(QICSGRID_NO))
 
-    prm->insertRows(index.row(),1,index);
+   // prm->insertRows(index.row(),1,index);
 
 #endif//#if(defined(QICSGRID_NO))
+
+    IRastrTablesPtr tablesx{ this->m_pqastra->getRastr()->Tables() };
+    IRastrPayload tablecount{ tablesx->Count() };
+    IRastrTablePtr table{ tablesx->Item(this->prm->getRdata()->t_name_) };
+    table->InsertRow(index.row());
 }
 void RtabWidget::deleteRow()
 {

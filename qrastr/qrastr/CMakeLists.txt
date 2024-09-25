@@ -31,7 +31,7 @@ set( CMAKE_LIBRARY_OUTPUT_DIRECTORY "${CMAKE_SOURCE_DIR}//..//${CMAKE_BUILD_TYPE
 set( CMAKE_RUNTIME_OUTPUT_DIRECTORY "${CMAKE_SOURCE_DIR}//..//${CMAKE_BUILD_TYPE}" )
 option( QRASTR_BUILD_WITH_MCR "QRASTR_BUILD_WITH_MCR" ON )
 #set( COMPILE_DIR "C:/Projects/tfs/rastr/RastrWin/thirdparty/_deps/compile_cmake" CACHE PATH "Installation directory for third-party projects" )# for example C:\projects\rastr\RastrWin\thirdparty\_deps\compile
-#set( COMPILE_DIR "C:/Projects/compile_cmake" )# for example C:\projects\rastr\RastrWin\thirdparty\_deps\compile
+set( COMPILE_DIR "C:/Projects/compile_cmake" )# for example C:\projects\rastr\RastrWin\thirdparty\_deps\compile
 if( NOT IS_DIRECTORY ${COMPILE_DIR} )
     message(FATAL_ERROR "Not defined COMPILE_DIR")
 else()
@@ -40,12 +40,11 @@ endif()
 list( PREPEND CMAKE_PREFIX_PATH ${COMPILE_DIR} )
 list( PREPEND CMAKE_PREFIX_PATH "${CMAKE_CURRENT_SOURCE_DIR}/qmcr/" )
 
-#set(CMAKE_PREFIX_PATH "C:/Projects/compile/qt/qt6-install") #??
 set( TS_FILES qrastr_ru_RU.ts )
 if(MSVC)
     set( DEPENDENCIES_LOCATION "c:/projects/compile/" )
-    #set( ASTRA_LOCATION        "c:/projects/tfs/rastr/RastrWin/astra/" )
-    set( ASTRA_LOCATION        "c:/projects/rastr/RastrWin/astra" )
+    set( ASTRA_LOCATION        "c:/projects/tfs/rastr/RastrWin/astra/" )
+    #set( ASTRA_LOCATION        "c:/projects/rastr/RastrWin/astra" )
 else()
     set( DEPENDENCIES_LOCATION "/home/ustas/projects/compile/" )
     set( ASTRA_LOCATION        "/home/ustas/projects/git_r/rastr/RastrWin/astra/" )
@@ -87,12 +86,12 @@ set(INCLUDES
     "${DEPENDENCIES_LOCATION}/sci/scintilla/qt/ScintillaEdit"
     "${DEPENDENCIES_LOCATION}/Qt-Advanced-Docking-System/src"
     "${DEPENDENCIES_LOCATION}/spdlog/include/"
-    #C:/projects/rastr/flytfs/IPlainRastrTest/
     "${ASTRA_LOCATION}/../../flytfs/IPlainRastrTest/"
 )
 
 if(MSVC)
     link_directories("${CMAKE_LIBRARY_OUTPUT_DIRECTORY}")
+    link_directories("${ASTRA_LOCATION}/build/Debug/")
     link_directories("${DEPENDENCIES_LOCATION}/metakit/builds/")
     link_directories("${DEPENDENCIES_LOCATION}/Qt-Advanced-Docking-System/build/vs-Debug/lib/")
     link_directories("${DEPENDENCIES_LOCATION}/Qt-Advanced-Docking-System/build/vs-Release/lib/")
@@ -171,15 +170,7 @@ set(PROJECT_SOURCES
     formsettingsforms.cpp
     formsettingsforms.ui
 )
-if(MSVC)
-    link_directories("${ASTRA_LOCATION}/build/Debug/")
-    link_directories("${DEPENDENCIES_LOCATION}/metakit/builds/")
-    link_directories("${DEPENDENCIES_LOCATION}/Qt-Advanced-Docking-System/build/vs-Debug/lib/")
-    link_directories("${DEPENDENCIES_LOCATION}/Qt-Advanced-Docking-System/build/vs-Release/lib/")
-else()
-    link_directories("${DEPENDENCIES_LOCATION}/qicstable/lib/")
-    link_directories("${ASTRA_LOCATION}/build/")
-endif()
+
 if(${QT_VERSION_MAJOR} GREATER_EQUAL 6)
     qt_add_executable( ${PROJECT_NAME}
         MANUAL_FINALIZATION

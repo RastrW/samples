@@ -14,7 +14,6 @@
 #include "RtableView.h"
 
 
-
 class QMimeData;
 class QAstra;
 
@@ -50,19 +49,16 @@ public slots:
 
 private slots:
     void CreateModel(QAstra* pqastra,CUIForm* pUIForm);
-
+    void onRastrHint(const _hint_data&);
 
 public:
-    RModel *prm;
+    RModel* prm;
     CUIForm m_UIForm;
+    QAstra* m_pqastra;
 
 private:
-    //QTableView* ptv ;
-   // CRastrHlp& rh;
     using BufferRow = std::vector<QByteArray>;
-    //static std::vector<std::vector<QByteArray>> m_buffer;
     std::vector<std::vector<QByteArray>> m_buffer;
-    //static QString m_generatorStamp;
     QString m_generatorStamp;
     RTableView* ptv ;
     QSortFilterProxyModel *proxyModel;

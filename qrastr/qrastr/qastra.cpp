@@ -107,6 +107,20 @@ eASTCode QAstra::Rgm(const std::string_view& parameters){
     return rgmresult.Value();
 }
 
+std::string QAstra::GetVal( const std::string_view& Table, const std::string_view& Col , const long row )
+{
+    IRastrTablesPtr tablesx{ sp_rastr_->Tables() };
+    IRastrPayload tablecount{ tablesx->Count() };
+    IRastrTablePtr table{ tablesx->Item(Table) };
+    IRastrObjectPtr<IPlainRastrColumns> columns{ table->Columns() };
+    IRastrColumnPtr col {columns->Item(Col)};
+    IRastrVariantPtr v_ptr{ col->Value(row) };
+    IRastrPayload payload{ v_ptr->String() };
+    std::string str_val = stringutils::acp_decode(payload.Value());
+
+    return str_val;
+}
+
 
 
 
