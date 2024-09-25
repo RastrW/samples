@@ -53,7 +53,7 @@ RtabWidget::RtabWidget(QAstra* pqastra,CUIForm UIForm, QWidget *parent)
     CreateModel(pqastra,&m_UIForm);
 
     //SetTableView(*ptv,*prm);                // ширина по шаблону
-    ptv->resizeColumnsToContents();         // ширина по контенту
+    //ptv->resizeColumnsToContents();         // ширина по контенту
     ptv->setParent(this);
 
     int ncols = prm->columnCount();
