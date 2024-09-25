@@ -24,11 +24,9 @@ int RModel::populateDataFromRastr(){
     return 1;
 };
 int RModel::rowCount(const QModelIndex & /*parent*/) const{
-    //return static_cast<int>(up_rdata->at(0).size());
     return static_cast<int>(up_rdata->nparray_.Rows());
 }
 int RModel::columnCount(const QModelIndex & /*parent*/) const{
-    //return static_cast<int>(up_rdata->size());
     return static_cast<int>(up_rdata->nparray_.Columns());
 }
 
@@ -365,26 +363,14 @@ void RModel::onRModelchange(std::string _t_name, std::string _col_name, int row,
         default :
             break;
     }
-
-    /*
-    _col_data::iterator iter_data = (*iter_col).begin() + _row;
-    switch((*iter_data).index()){
-    case RCol::_en_data::DATA_INT:
-        (*iter_data).emplace<long> (_value.toInt());
-        break;
-    case RCol::_en_data::DATA_STR:
-        (*iter_data).emplace<std::string>(_value.toString().toStdString().c_str());
-        break;
-    case RCol::_en_data::DATA_DBL:
-        (*iter_data).emplace<double> (_value.toDouble());
-        break;
-    default :                                               break;
-    }
-    */
 }
 
 void RModel::onrm_RowInserted(std::string _t_name, int _row)
 {
+    // видимо проще всего получить новый DataBlock
+
+    /*
+     * Плоская dll
      _vt val;
     if ( (_row < 0) || (_row > (this->getRdata()[0]).size() )) // add at end
     {
@@ -400,6 +386,7 @@ void RModel::onrm_RowInserted(std::string _t_name, int _row)
             col.insert(col.begin()+_row,val);
         }
     }
+    */
 }
 void RModel::onrm_RowDeleted(std::string _t_name, int _row)
 {

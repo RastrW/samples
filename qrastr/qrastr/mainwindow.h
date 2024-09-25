@@ -50,8 +50,8 @@ public:
 signals:
     void file_loaded();                                                                     // загружен файл
     void rgm_signal();
-    void rm_change(std::string _t_name, QModelIndex index, QVariant value);
-    void rm_change(std::string _t_name, std::string _col_name, int _row, QVariant _value);
+   // void rm_change(std::string _t_name, QModelIndex index, QVariant value);
+   // void rm_change(std::string _t_name, std::string _col_name, int _row, QVariant _value);
     void rm_RowInserted(std::string _t_name, int _row);
     void rm_RowDeleted(std::string _t_name, int _row);
     void rm_update(std::string _t_name);

@@ -190,11 +190,7 @@ public:
     RCol(Args&&... args)
         : _col_data{args...} {
     }
-   /* RCol(const RCol &col)
-    {
-        //pcol_ptr2 = col.pcol_ptr2;
 
-    }*/
     virtual ~RCol() = default;
     void setMeta(const nlohmann::json& j_meta_in){
 

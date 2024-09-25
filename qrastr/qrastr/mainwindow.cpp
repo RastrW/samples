@@ -329,6 +329,8 @@ void MainWindow::onOpenForm( QAction* p_actn ){
     qDebug() << "\n Open form:" + form.Name();
     spdlog::info( "Create tab [{}]", stringutils::cp1251ToUtf8(form.Name()) );
     RtabWidget *prtw = new RtabWidget(m_sp_qastra.get(),form,this);
+
+    /*
     connect(this, &MainWindow::file_loaded,  prtw, &RtabWidget::onFileLoad);    //Загрузка файла
     connect(this, &MainWindow::rgm_signal, prtw, &RtabWidget::update_data);     //Расчет УР
     //RModel вызывает изменение Data: Запомнить изменение Data в MainWindow и из MainWindow вызывть изменение RModel во всех сущьностях
@@ -348,6 +350,7 @@ void MainWindow::onOpenForm( QAction* p_actn ){
        prtw->prm,      SLOT(onrm_RowDeleted(std::string,int)));
     connect(this,      SIGNAL(rm_update(std::string)),
             prtw,      SLOT(onUpdate(std::string)));
+*/
     // Docking
     if(false){
         QDockWidget *dock = new QDockWidget( stringutils::cp1251ToUtf8(form.Name()).c_str(), this);
@@ -379,10 +382,10 @@ void MainWindow::onItemPressed(const QModelIndex &index){
 }
 void MainWindow::ondataChanged(std::string _t_name, QModelIndex index, QVariant value ){
     std::string tname = _t_name;
-    emit rm_change(_t_name,index,value);
+    //emit rm_change(_t_name,index,value);
 }
 void MainWindow::ondataChanged(std::string _t_name, std::string _col_name, int _row, QVariant _value){
-    emit rm_change(_t_name,_col_name,_row,_value);
+    //emit rm_change(_t_name,_col_name,_row,_value);
 }
 void MainWindow::onRowInserted(std::string _t_name, int _row){
     emit rm_RowInserted(_t_name,_row);
