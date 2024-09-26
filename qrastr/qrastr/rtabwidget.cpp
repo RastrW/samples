@@ -46,6 +46,7 @@ RtabWidget::RtabWidget(QAstra* pqastra,CUIForm UIForm, QWidget *parent)
     m_UIForm = UIForm;
     m_pqastra = pqastra;
 
+
     //const bool my1 = QObject::connect( m_sp_qastra.get(), SIGNAL( onRastrHint(const _hint_data&) ), tstHints, SLOT( onRastrHint(const _hint_data&) ) );
     const bool my1 = QObject::connect( m_pqastra, SIGNAL( onRastrHint(const _hint_data&) ), this, SLOT( onRastrHint(const _hint_data&) ) );
 
@@ -62,6 +63,8 @@ RtabWidget::RtabWidget(QAstra* pqastra,CUIForm UIForm, QWidget *parent)
     QVBoxLayout *layout = new QVBoxLayout(this);
     layout->addWidget(ptv);
     setLayout(layout);
+
+    setAcceptDrops(true);
 }
 
 void RtabWidget::CreateModel(QAstra* pqastra, CUIForm* pUIForm)

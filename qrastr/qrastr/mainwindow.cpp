@@ -73,6 +73,9 @@ MainWindow::MainWindow(){
     auto logg = spdlog::default_logger();
     logg->sinks().push_back(qt_sink);
     //m_pMcrWnd->show();
+
+    setAcceptDrops(true);
+
 }
 MainWindow::~MainWindow(){
 }
