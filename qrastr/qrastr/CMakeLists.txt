@@ -47,8 +47,13 @@ if(MSVC)
     #set( ASTRA_LOCATION        "c:/projects/rastr/RastrWin/astra" )
 else()
     set( DEPENDENCIES_LOCATION "/home/ustas/projects/compile/" )
-    set( ASTRA_LOCATION        "/home/ustas/projects/git_r/rastr/RastrWin/astra/" )
+    #set( ASTRA_LOCATION        "/home/ustas/projects/git_r/rastr/RastrWin/astra/" )
     set( DEPENDENCIES_GIT      "/home/ustas/projects/git_r/" )
+endif()
+if( NOT IS_DIRECTORY ${ASTRA_LOCATION} )
+    message(FATAL_ERROR "Not defined ASTRA_LOCATION !") # example "c:/projects/rastr/RastrWin/astra"  "c:/projects/tfs/rastr/RastrWin/astra/"
+else()
+    message(NOTICE "ASTRA_LOCATION= ${ASTRA_LOCATION}")
 endif()
 find_package( Metakit REQUIRED )
 find_package( fmt     REQUIRED )
@@ -163,6 +168,14 @@ set(PROJECT_SOURCES
     tsthintsmvc.h
     tsthintsmvc.cpp
     qastra_events_data.h
+    formsettings.h
+    formsettings.cpp
+    formsettingsdatas.h
+    formsettingsdatas.cpp
+    formsettingsdatas.ui
+    formsettingsforms.h
+    formsettingsforms.cpp
+    formsettingsforms.ui
 )
 
 if(${QT_VERSION_MAJOR} GREATER_EQUAL 6)

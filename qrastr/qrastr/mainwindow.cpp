@@ -33,6 +33,7 @@ using WrapperExceptionType = std::runtime_error;
 #include "qastra.h"
 #include "tsthints.h"
 #include "comboboxdelegate.h"
+#include "formsettings.h"
 
 MainWindow::MainWindow(){
     m_workspace = new QMdiArea;
