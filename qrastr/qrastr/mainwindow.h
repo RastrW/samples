@@ -61,6 +61,7 @@ private slots:
     void open();
     void save();
     void saveAs();
+    void showFormSettings();
     void about();
     void rgm_wrap();
     void onDlgMcr();

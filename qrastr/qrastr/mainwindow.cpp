@@ -48,7 +48,7 @@ MainWindow::MainWindow(){
     ads::CDockManager::setConfigFlag(ads::CDockManager::AllTabsHaveCloseButton, true);
     m_DockManager = new ads::CDockManager(this);
     QObject::connect(m_DockManager, &ads::CDockManager::focusedDockWidgetChanged
-                                  , [] (ads::CDockWidget* old, ads::CDockWidget* now) {
+                                  , [] (ads::CDockWidget* old, ads::CDockWidget* now){
         static int Count = 0;
         qDebug() << Count++ << " CDockManager::focusedDockWidgetChanged old: " << (old ? old->objectName() : "-") << " now: " << now->objectName() << " visible: " << now->isVisible();
         now->widget()->setFocus();
@@ -183,7 +183,6 @@ void MainWindow::setQAstra(const std::shared_ptr<QAstra>& sp_qastra){
 
     connect( m_sp_qastra.get(), SIGNAL(onRastrLog(const _log_data&) ), m_pMcrWnd, SLOT(onRastrLog(const _log_data&)));
 
-    m_pMcrWnd;
     if(true){
         //vetv
         TstHints* tstHints_vetv = new TstHints(this);
@@ -419,94 +418,102 @@ void MainWindow::updateMenus(){
 void MainWindow::setActiveSubWindow(QWidget *window){
     m_workspace->setActiveSubWindow(qobject_cast<QMdiSubWindow *>(window));
 }
+void MainWindow::showFormSettings(){
+    FormSettings* pformSettings = new FormSettings();
+    pformSettings->init();
+    pformSettings->show();
+}
 void MainWindow::createActions(){
     //file
-    QAction* m_newAct = new QAction(QIcon(":/images/new.png"), tr("&New"), this);
-    m_newAct->setShortcut(tr("Ctrl+N"));
-    m_newAct->setStatusTip(tr("Create a new file"));
-    connect(m_newAct, SIGNAL(triggered()), this, SLOT(newFile()));
-    QAction* m_openAct = new QAction(QIcon(":/images/open.png"), tr("&Open..."), this);
-    m_openAct->setShortcut(tr("Ctrl+O"));
-    m_openAct->setStatusTip(tr("Open an existing file"));
-    connect(m_openAct, SIGNAL(triggered()), this, SLOT(open()));
-    QAction* m_saveAct = new QAction(QIcon(":/images/save.png"), tr("&Save"), this);
-    m_saveAct->setShortcut(tr("Ctrl+S"));
-    m_saveAct->setStatusTip(tr("Save the document to disk"));
-    connect(m_saveAct, SIGNAL(triggered()), this, SLOT(save()));
-    QAction* m_saveAsAct = new QAction(tr("Save &As..."), this);
-    m_saveAsAct->setStatusTip(tr("Save the document under a new name"));
-    connect(m_saveAsAct, SIGNAL(triggered()), this, SLOT(saveAs()));
-    QAction* m_exitAct = new QAction(tr("E&xit"), this);
-    m_exitAct->setShortcut(tr("Ctrl+Q"));
-    m_exitAct->setStatusTip(tr("Exit the application"));
-    connect(m_exitAct, SIGNAL(triggered()), qApp, SLOT(closeAllWindows()));
+    QAction* newAct = new QAction(QIcon(":/images/new.png"), tr("&New"), this);
+    newAct->setShortcut(tr("Ctrl+N"));
+    newAct->setStatusTip(tr("Create a new file"));
+    connect(newAct, SIGNAL(triggered()), this, SLOT(newFile()));
+    QAction* openAct = new QAction(QIcon(":/images/open.png"), tr("&Open..."), this);
+    openAct->setShortcut(tr("Ctrl+O"));
+    openAct->setStatusTip(tr("Open an existing file"));
+    connect(openAct, SIGNAL(triggered()), this, SLOT(open()));
+    QAction* saveAct = new QAction(QIcon(":/images/save.png"), tr("&Save"), this);
+    saveAct->setShortcut(tr("Ctrl+S"));
+    saveAct->setStatusTip(tr("Save the document to disk"));
+    connect(saveAct, SIGNAL(triggered()), this, SLOT(save()));
+    QAction* saveAsAct = new QAction(tr("Save &As..."), this);
+    saveAsAct->setStatusTip(tr("Save the document under a new name"));
+    connect(saveAsAct, SIGNAL(triggered()), this, SLOT(saveAs()));
+    QAction* actShowFormSettings = new QAction(tr("S&ettings..."), this);
+    actShowFormSettings->setStatusTip(tr("Open settings form."));
+    connect(actShowFormSettings, SIGNAL(triggered()), this, SLOT(showFormSettings()));
+    QAction* exitAct = new QAction(tr("E&xit"), this);
+    exitAct->setShortcut(tr("Ctrl+Q"));
+    exitAct->setStatusTip(tr("Exit the application"));
+    connect(exitAct, SIGNAL(triggered()), qApp, SLOT(closeAllWindows()));
     //macro
-    QAction* m_ActMacro = new QAction(QIcon(":/images/cut.png"),tr("&macro"), this);
-    m_ActMacro->setShortcut(tr("F11"));
-    m_ActMacro->setStatusTip(tr("Run macro"));
-    connect(m_ActMacro, SIGNAL(triggered()), this, SLOT(onDlgMcr()));
+    QAction* ActMacro = new QAction(QIcon(":/images/cut.png"),tr("&macro"), this);
+    ActMacro->setShortcut(tr("F11"));
+    ActMacro->setStatusTip(tr("Run macro"));
+    connect(ActMacro, SIGNAL(triggered()), this, SLOT(onDlgMcr()));
     //calc
-    QAction* m_RGMAct = new QAction(QIcon(":/images/Rastr3_rgm_16x16.png"),tr("&rgm"), this);
-    m_RGMAct->setShortcut(tr("F5"));
-    m_RGMAct->setStatusTip(tr("Calc rgm"));
-    connect(m_RGMAct, SIGNAL(triggered()), this, SLOT(rgm_wrap()));
+    QAction* actRGM = new QAction(QIcon(":/images/Rastr3_rgm_16x16.png"),tr("&rgm"), this);
+    actRGM->setShortcut(tr("F5"));
+    actRGM->setStatusTip(tr("Calc rgm"));
+    connect(actRGM, SIGNAL(triggered()), this, SLOT(rgm_wrap()));
     //windows
-    QAction* m_closeAct = new QAction(tr("Cl&ose"), this);
-    m_closeAct->setShortcut(tr("Ctrl+F4"));
-    m_closeAct->setStatusTip(tr("Close the active window"));
-    connect(m_closeAct, SIGNAL(triggered()), m_workspace, SLOT(closeActiveSubWindow()));
-    QAction* m_closeAllAct = new QAction(tr("Close &All"), this);
-    m_closeAllAct->setStatusTip(tr("Close all the windows"));
-    connect(m_closeAllAct, SIGNAL(triggered()), m_workspace, SLOT(closeAllSubWindows()));
-    QAction* m_tileAct = new QAction(tr("&Tile"), this);
-    m_tileAct->setStatusTip(tr("Tile the windows"));
-    connect(m_tileAct, SIGNAL(triggered()), m_workspace, SLOT(tileSubWindows()));
-    QAction* m_cascadeAct = new QAction(tr("&Cascade"), this);
-    m_cascadeAct->setStatusTip(tr("Cascade the windows"));
-    connect(m_cascadeAct, SIGNAL(triggered()), m_workspace, SLOT(cascadeSubWindows()));
-    QAction* m_nextAct = new QAction(tr("Ne&xt"), this);
-    m_nextAct->setShortcut(tr("Ctrl+F6"));
-    m_nextAct->setStatusTip(tr("Move the focus to the next window"));
-    connect(m_nextAct, SIGNAL(triggered()), m_workspace, SLOT(activateNextSubWindow()));
-    QAction* m_previousAct = new QAction(tr("Pre&vious"), this);
-    m_previousAct->setShortcut(tr("Ctrl+Shift+F6"));
-    m_previousAct->setStatusTip(tr("Move the focus to the previous window"));
-    connect(m_previousAct, SIGNAL(triggered()), m_workspace, SLOT(activatePreviousSubWindow()));
-    QAction* m_separatorAct = new QAction(this);
-    m_separatorAct->setSeparator(true);
+    QAction* closeAct = new QAction(tr("Cl&ose"), this);
+    closeAct->setShortcut(tr("Ctrl+F4"));
+    closeAct->setStatusTip(tr("Close the active window"));
+    connect(closeAct, SIGNAL(triggered()), m_workspace, SLOT(closeActiveSubWindow()));
+    QAction* closeAllAct = new QAction(tr("Close &All"), this);
+    closeAllAct->setStatusTip(tr("Close all the windows"));
+    connect(closeAllAct, SIGNAL(triggered()), m_workspace, SLOT(closeAllSubWindows()));
+    QAction* tileAct = new QAction(tr("&Tile"), this);
+    tileAct->setStatusTip(tr("Tile the windows"));
+    connect(tileAct, SIGNAL(triggered()), m_workspace, SLOT(tileSubWindows()));
+    QAction* cascadeAct = new QAction(tr("&Cascade"), this);
+    cascadeAct->setStatusTip(tr("Cascade the windows"));
+    connect(cascadeAct, SIGNAL(triggered()), m_workspace, SLOT(cascadeSubWindows()));
+    QAction* nextAct = new QAction(tr("Ne&xt"), this);
+    nextAct->setShortcut(tr("Ctrl+F6"));
+    nextAct->setStatusTip(tr("Move the focus to the next window"));
+    connect(nextAct, SIGNAL(triggered()), m_workspace, SLOT(activateNextSubWindow()));
+    QAction* previousAct = new QAction(tr("Pre&vious"), this);
+    previousAct->setShortcut(tr("Ctrl+Shift+F6"));
+    previousAct->setStatusTip(tr("Move the focus to the previous window"));
+    connect(previousAct, SIGNAL(triggered()), m_workspace, SLOT(activatePreviousSubWindow()));
+    QAction* separatorAct = new QAction(this);
+    separatorAct->setSeparator(true);
     //help
-    QAction* m_aboutAct = new QAction(tr("&About"), this);
-    m_aboutAct->setStatusTip(tr("Show the application's About box"));
-    connect(m_aboutAct, SIGNAL(triggered()), this, SLOT(about()));
+    QAction* aboutAct = new QAction(tr("&About"), this);
+    aboutAct->setStatusTip(tr("Show the application's About box"));
+    connect(aboutAct, SIGNAL(triggered()), this, SLOT(about()));
 
     //MENU's
     QMenu* menuFile = menuBar()->addMenu(tr("&File"));
-    menuFile->addAction(m_newAct);
-    menuFile->addAction(m_openAct);
-    menuFile->addAction(m_saveAct);
-    menuFile->addAction(m_saveAsAct);
+    menuFile->addAction(newAct);
+    menuFile->addAction(openAct);
+    menuFile->addAction(saveAct);
+    menuFile->addAction(actShowFormSettings);
     menuFile->addSeparator();
-    menuFile->addAction(m_exitAct);
+    menuFile->addAction(exitAct);
     QMenu* menuMacro = menuBar()->addMenu(tr("&Macro"));
-    menuMacro->addAction(m_ActMacro);
+    menuMacro->addAction(ActMacro);
     QMenu* menuCalc = menuBar()->addMenu(tr("&Calc"));
-    menuCalc->addAction(m_RGMAct);
+    menuCalc->addAction(actRGM);
     m_menuOpen = menuBar()->addMenu(tr("&Open") );
     menuBar()->addSeparator();
     QMenu* menuWindow = menuBar()->addMenu(tr("&Window"));
     //connect(m_windowMenu, SIGNAL(aboutToShow()), this, SLOT(updateWindowMenu()));// ustas about: not understend for a what this? (have fall on it)
     menuWindow->clear();
-    menuWindow->addAction(m_closeAct);
-    menuWindow->addAction(m_closeAllAct);
+    menuWindow->addAction(closeAct);
+    menuWindow->addAction(closeAllAct);
     menuWindow->addSeparator();
-    menuWindow->addAction(m_tileAct);
-    menuWindow->addAction(m_cascadeAct);
+    menuWindow->addAction(tileAct);
+    menuWindow->addAction(cascadeAct);
     menuWindow->addSeparator();
-    menuWindow->addAction(m_nextAct);
-    menuWindow->addAction(m_previousAct);
-    menuWindow->addAction(m_separatorAct);
+    menuWindow->addAction(nextAct);
+    menuWindow->addAction(previousAct);
+    menuWindow->addAction(separatorAct);
     QList<QMdiSubWindow *> windows = m_workspace->subWindowList();
-    m_separatorAct->setVisible(!windows.isEmpty());
+    separatorAct->setVisible(!windows.isEmpty());
 #if(!defined(QICSGRID_NO))
     for (int i = 0; i < windows.size(); ++i) {
         MdiChild *child = qobject_cast<MdiChild *>(windows.at(i)->widget());
@@ -527,15 +534,15 @@ void MainWindow::createActions(){
     }
 #endif
     QMenu* menuHelp = menuBar()->addMenu(tr("&Help"));
-    menuHelp->addAction(m_aboutAct);
+    menuHelp->addAction(aboutAct);
 
-    //TOOLBARs
+    //ToolBars
     QToolBar* toolbarFile = addToolBar(tr("File"));
-    toolbarFile->addAction(m_newAct);
-    toolbarFile->addAction(m_openAct);
-    toolbarFile->addAction(m_saveAct);
+    toolbarFile->addAction(newAct);
+    toolbarFile->addAction(openAct);
+    toolbarFile->addAction(saveAct);
     m_toolbarCalc = addToolBar(tr("Calc"));
-    m_toolbarCalc->addAction(m_RGMAct);
+    m_toolbarCalc->addAction(actRGM);
 
     //XZ
     createCalcLayout();

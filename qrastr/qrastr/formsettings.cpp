@@ -101,6 +101,9 @@ FormSettings::FormSettings(QWidget *parent)
     :QWidget{parent}{
     setWindowTitle("Settings");
     resize(800,500);
+    setWindowFlags(Qt::WindowMinimizeButtonHint | Qt::WindowMinMaxButtonsHint | Qt::WindowCloseButtonHint);
+    //setWindowModality(Qt::WindowModal);
+    setWindowModality(Qt::ApplicationModal);
     QSplitter* splitter = new QSplitter(this);
     QVBoxLayout* layout = new QVBoxLayout();
     ptw_sections_ = new QTreeWidget{};
@@ -111,7 +114,6 @@ FormSettings::FormSettings(QWidget *parent)
     layout->addWidget(splitter);
     setLayout(layout);
 }
-
 int FormSettings::init(){
     pti_settings_root_ = new _tree_item{"root","Настройки"};
     _tree_item ti_datas     { "datas",     "Данные" , new FormSettingsDatas()  };
@@ -140,13 +142,19 @@ int FormSettings::init(){
     psw_->addWidget(ti_datas.pw);
     psw_->addWidget(ti_forms.pw);
 
-    connect( ptw_sections_, &QTreeView::clicked, psw_, [=]( const QModelIndex &index ){
+    //connect( ptw_sections_, &QTreeView::clicked, psw_, [=]( const QModelIndex &index ){
+    //connect( ptw_sections_, &QTreeView::clicked, psw_, [this]( const QModelIndex &index ){
+    connect( ptw_sections_, &QTreeView::clicked, psw_, [this]( const QModelIndex &index ){
         qDebug()<<"pc."<< index.parent().column()<< " : pr."<< index.parent().row() <<" -- c."<< index.column()<< " : r."<< index.row()
             <<" == " << index.data().toString()<< " :: " << index.internalId()
         ;
-        const QTreeWidgetItem* ptiw = ptw_sections_->currentItem();
-        const _tree_item*      pti  = pti_settings_root_->getEq(ptiw);//strange to look by pointer, but it works
-        psw_->setCurrentWidget(pti->pw);
+
+        //const QStandardItemModel *model =            qobject_cast<QStandardItemModel *>( ptw_sections_->model() );
+        //const QStandardItem *item = model->itemFromIndex( index );
+
+        const QTreeWidgetItem* ptiw = this->ptw_sections_->currentItem();
+        const _tree_item*      pti  = this->pti_settings_root_->getEq(ptiw);//strange to look by pointer, but it works
+        this->psw_->setCurrentWidget(pti->pw);
     });
     return 1;
 }

@@ -3,12 +3,8 @@
 
 #include <QtWidgets>
 
-
-
-
-
-class FormSettings : public QWidget
-{
+class FormSettings
+    : public QWidget{
     Q_OBJECT
     struct _tree_item;
     using _v_tree_items = std::vector<_tree_item>;
