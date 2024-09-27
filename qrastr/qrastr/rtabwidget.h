@@ -39,6 +39,8 @@ public slots:
     void deleteRow();
     void widebyshabl();
     void widebydata();
+    void setSectionMoveable(bool b);
+    bool sectionMoveable();
     void OpenColPropForm();
     void sortAscending();
     void sortDescending();

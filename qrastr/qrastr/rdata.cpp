@@ -14,11 +14,13 @@ void RData::Initialize(CUIForm _form, QAstra* _pqastra)
     //qDebug() << "Meta   : " << str_json.c_str();
     //str_json.resize(std::strlen(str_json.c_str())+1);
     //j_metas_ = nlohmann::json::parse(str_json);
-    reserve(_form.Fields().size()+5);               // Без reserve RCol данные обнуляются видимио при reallocation  If a reallocation happens, all contained elements are modified.
+
 
     IRastrTablesPtr tablesx{ _pqastra->getRastr()->Tables() };
     IRastrTablePtr table{ tablesx->Item(t_name_) };
     IRastrColumnsPtr columns{ table->Columns() };
+    //std::string table_Name = IRastrPayload(IRastrVariantPtr(table->Name()));
+
 
 
     // В RData создаем RCol по образу формы
@@ -38,9 +40,47 @@ void RData::Initialize(CUIForm _form, QAstra* _pqastra)
             }
         }
     }*/
+      IRastrPayload ColumnsCount{ columns->Count() };
+      //reserve(_form.Fields().size()+5);               // Без reserve RCol данные обнуляются видимио при reallocation  If a reallocation happens, all contained elements are modified.
+      reserve( ColumnsCount.Value()+5);               // Без reserve RCol данные обнуляются видимио при reallocation  If a reallocation happens, all contained elements are modified.
+
+
+
+    // Берем все колонки таблицы
+    for (long index{ 0 }; index < ColumnsCount.Value(); index++)
+    {
+        IRastrColumnPtr col{ columns->Item(index) };
+        std::string col_Type = IRastrPayload(IRastrVariantPtr((col)->Property(FieldProperties::Type))->String()).Value();
+        std::string col_Name = IRastrPayload(IRastrVariantPtr((col)->Property(FieldProperties::Name))->String()).Value();
+
+        str_cols_.append(col_Name);
+        str_cols_.append(",");
+
+        RCol rc;
+        rc.str_name_ = col_Name;
+        rc.table_name_ = t_name_;
+        rc.setMeta(_pqastra);
+        rc.index = index;
+        rc.hidden = true;
+
+        int nRes = AddCol(rc);
+        Q_ASSERT(nRes>=0);
+    }
+
+    for (CUIFormField &f : _form.Fields())
+    {
+        for  (RCol &rc : *this)
+        {
+            if (rc.str_name_ == f.Name())
+                rc.hidden = false;
+        }
+    }
+
+
 
     // В RData создаем RCol по образу формы
-    int ind = 0;
+
+   /* int ind = 0;
     for (CUIFormField &f : _form.Fields()){
             str_cols_.append(f.Name());
             str_cols_.append(",");
@@ -56,6 +96,7 @@ void RData::Initialize(CUIForm _form, QAstra* _pqastra)
             int nRes = AddCol(rc);
             Q_ASSERT(nRes>=0);
         }
+*/
 
 
     if(str_cols_.length()>0)

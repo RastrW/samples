@@ -17,6 +17,7 @@ using WrapperExceptionType = std::runtime_error;
 #include "comboboxdelegate.h"
 #include "doubleitemdelegate.h"
 #include "checkboxdelegate.h"
+#include <QShortcut>
 
 RtabWidget::RtabWidget(QWidget *parent)
     : QWidget{parent}
@@ -37,6 +38,12 @@ RtabWidget::RtabWidget(QWidget *parent)
     connect(ptv->horizontalHeader(), SIGNAL(filterChanged(size_t , QString )), this, SLOT(updateFilter(size_t , QString) ));
 
     ptv->setSortingEnabled(true);
+    //setSectionMoveable(true);
+    ptv->horizontalHeader()->setSectionsMovable(true);
+    ptv->setAlternatingRowColors(true);
+    ptv->setAutoFillBackground(true);
+
+
 }
 
 //RtabWidget::RtabWidget(CRastrHlp& rh,QAstra* pqastra,int n_indx, QWidget *parent)
@@ -102,6 +109,13 @@ void RtabWidget::CreateModel(QAstra* pqastra, CUIForm* pUIForm)
 
     ptv->setModel(proxyModel);
 
+
+    for (RCol& rcol : *prm->getRdata())
+        ptv->setColumnHidden(rcol.index,rcol.hidden);
+
+
+
+
     this->update();
     this->repaint();
 }
@@ -166,7 +180,7 @@ void RtabWidget::onRastrHint(const _hint_data& hint_data){
 void RtabWidget::SetTableView(QTableView& tv, RModel& mm, int myltiplier  )
 {
     // Ширина колонок
-    //int myltiplier = 15;
+    //int myltiplier = 10;
     for (auto cw : mm.ColumnsWidth())
         tv.setColumnWidth(std::get<0>(cw),std::get<1>(cw)*myltiplier);
 }
@@ -179,15 +193,8 @@ void RtabWidget::customMenuRequested(QPoint pos){
     QAction* copyWithHeadersAction = new QAction( tr("Copy with Headers"), menu);
     menu->addAction(copyAction);
     menu->addAction(copyWithHeadersAction);
-
-    //menu->addAction(QIcon(":/images/cut.png"),tr("Cut"), this, SLOT(cut()));
-    //menu->addAction(QIcon(":/images/copy.png"),tr("Copy"), this, SLOT(copy()));
-    //menu->addAction(QIcon(":/images/paste.png"),tr("Paste"), this, SLOT(paste()));
-    //menu->addSeparator();
-    //menu->addAction(tr("Clear Contents"),this,SLOT(clearContents()));
-    //menu->addSeparator();
-    menu->addAction(QIcon(":/images/Rastr3_grid_insrow_16x16.png"),tr("Insert Row"),this,SLOT(insertRow()));
-    menu->addAction(QIcon(":/images/Rastr3_grid_delrow_16x16.png"),tr("Delete Row"),this,SLOT(deleteRow()));
+    menu->addAction(QIcon(":/images/Rastr3_grid_insrow_16x16.png"),tr("Insert Row"),this,SLOT(insertRow()),QKeySequence(Qt::CTRL | Qt::Key_I));
+    menu->addAction(QIcon(":/images/Rastr3_grid_delrow_16x16.png"),tr("Delete Row"),this,SLOT(deleteRow()),QKeySequence(Qt::CTRL | Qt::Key_D));
     //menu->addAction(tr("Hide Rows"),this,SLOT(hideRows()));
     //menu->addAction(tr("Unhide Rows"),this,SLOT(unhideRows()));
     menu->addSeparator();
@@ -201,12 +208,16 @@ void RtabWidget::customMenuRequested(QPoint pos){
     menu->addAction(tr("Format"));
     menu->popup(ptv->viewport()->mapToGlobal(pos));
 
+    //ShotCuts
+    QShortcut *sC_CTRL_I = new QShortcut( QKeySequence(Qt::CTRL | Qt::Key_I), this);
+    QShortcut *sC_CTRL_D = new QShortcut( QKeySequence(Qt::CTRL | Qt::Key_D), this);
+    connect(sC_CTRL_I, &QShortcut::activated, this, &RtabWidget::insertRow);
+    connect(sC_CTRL_D, &QShortcut::activated, this, &RtabWidget::deleteRow);
+
+    //connect(copyAction, &QAction::triggered, this, &RtabWidget::copy);
     connect(copyAction, &QAction::triggered, this, [&]() {
         copy(false, false);
     });
-
-    //connect(copyAction, &QAction::triggered, this, &RtabWidget::copy);
-
     //connect(cutAction, &QAction::triggered, this, &ExtendedTableWidget::cut);
     connect(copyWithHeadersAction, &QAction::triggered, this, [&]() {
         copy(true, false);
@@ -236,8 +247,9 @@ void RtabWidget::customHeaderMenuRequested(QPoint pos){
     menu->addAction(tr("Format"));
     menu->popup(ptv->horizontalHeader()->viewport()->mapToGlobal(pos));
 }
-void RtabWidget::onItemPressed(const QModelIndex &index)
+void RtabWidget::onItemPressed(const QModelIndex &_index)
 {
+    index = _index;
     int row = index.row();
     int column = index.column();
     qDebug()<<"Pressed:" <<row<< ","<<column;
@@ -259,6 +271,15 @@ void RtabWidget::widebyshabl()
 void RtabWidget::widebydata()
 {
     ptv->resizeColumnsToContents();
+}
+void RtabWidget::setSectionMoveable(bool b)
+{
+    ptv->horizontalHeader()->setSectionsMovable(b);
+}
+
+bool RtabWidget::sectionMoveable()
+{
+    return ptv->horizontalHeader()->sectionsMovable();
 }
 void RtabWidget::OpenColPropForm()
 {
