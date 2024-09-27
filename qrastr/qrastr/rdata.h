@@ -189,6 +189,7 @@ public:
     template <typename... Args>
     RCol(Args&&... args)
         : _col_data{args...} {
+        hidden = true;
     }
 
     virtual ~RCol() = default;
@@ -376,6 +377,7 @@ public:
     //std::string nameref;
     //std::string title_;
     long    index;
+    bool hidden ;
 private:
     nlohmann::json j_meta_;
     //IRastrColumnPtr col_ptr;
