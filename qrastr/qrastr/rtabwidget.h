@@ -24,7 +24,7 @@ public:
     explicit RtabWidget(QWidget *parent = nullptr);
     explicit RtabWidget(QAstra* pqastra, CUIForm UIForm, QWidget *parent = nullptr);
 
-    void SetTableView(QTableView& tv, RModel& mm, int myltiplier = 15);
+    void SetTableView(QTableView& tv, RModel& mm, int myltiplier = 10);
 private:
     void test(const QModelIndexList& fromIndices);
     void copyMimeData(const QModelIndexList& fromIndices, QMimeData* mimeData, const bool withHeaders, const bool inSQL);

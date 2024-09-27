@@ -46,9 +46,8 @@ RtabWidget::RtabWidget(QAstra* pqastra,CUIForm UIForm, QWidget *parent)
     m_UIForm = UIForm;
     m_pqastra = pqastra;
 
-
-    //const bool my1 = QObject::connect( m_sp_qastra.get(), SIGNAL( onRastrHint(const _hint_data&) ), tstHints, SLOT( onRastrHint(const _hint_data&) ) );
-    const bool my1 = QObject::connect( m_pqastra, SIGNAL( onRastrHint(const _hint_data&) ), this, SLOT( onRastrHint(const _hint_data&) ) );
+    //QObject::connect( m_pqastra, SIGNAL( onRastrHint(const _hint_data&) ), this, SLOT( onRastrHint(const _hint_data&) ) );
+    connect(m_pqastra, &QAstra::onRastrHint, this, &RtabWidget::onRastrHint);
 
     CreateModel(pqastra,&m_UIForm);
 
@@ -63,8 +62,6 @@ RtabWidget::RtabWidget(QAstra* pqastra,CUIForm UIForm, QWidget *parent)
     QVBoxLayout *layout = new QVBoxLayout(this);
     layout->addWidget(ptv);
     setLayout(layout);
-
-    setAcceptDrops(true);
 }
 
 void RtabWidget::CreateModel(QAstra* pqastra, CUIForm* pUIForm)
@@ -111,7 +108,7 @@ void RtabWidget::CreateModel(QAstra* pqastra, CUIForm* pUIForm)
 
 void RtabWidget::onRastrHint(const _hint_data& hint_data){
     try{
-          //spdlog::info("i alive from RtabWidget");
+        //spdlog::info("i alive from RtabWidget");
         long row = hint_data.n_indx;
         long col =  this->prm->getIndexCol(hint_data.str_column.c_str());
 
@@ -127,22 +124,20 @@ void RtabWidget::onRastrHint(const _hint_data& hint_data){
               //ptv->update();
             break;
           case EventHints::ChangeTable:
+              /*Прилетает на изменение свойств столбца, поменяли точность -
+               * не уверен что нужно перезапрашивать все данные.
+               */
               if (hint_data.str_table == this->prm->getRdata()->t_name_)
               {
-                  update_data();
+                  //update_data();
                   ptv->update();
               }
               break;
           case EventHints::ChangeData:
               if (hint_data.str_table == this->prm->getRdata()->t_name_)
               {
-                std::string val = m_pqastra->GetVal(hint_data.str_table.c_str(),hint_data.str_column.c_str(),hint_data.n_indx);
-                this->prm->onRModelchange(hint_data.str_table.c_str(),hint_data.str_column,hint_data.n_indx,val.c_str());
-
-                /*FieldVariantData vd(val);
-                long icol = this->prm->getIndexCol(hint_data.str_column.c_str());
-                this->prm->getRdata()->nparray_.EmplaceSaveIndChange(hint_data.n_indx,icol,vd);
-                ptv->update();*/
+                  std::string val = m_pqastra->GetVal(hint_data.str_table.c_str(),hint_data.str_column.c_str(),hint_data.n_indx);
+                  this->prm->onRModelchange(hint_data.str_table.c_str(),hint_data.str_column,hint_data.n_indx,val.c_str());
               }
               break;
           case EventHints::InsertRow:
@@ -151,12 +146,15 @@ void RtabWidget::onRastrHint(const _hint_data& hint_data){
                   //this->prm->onrm_RowInserted(hint_data.str_table.c_str(),row);
                   CreateModel(m_pqastra,&m_UIForm);
               }
-
+          case EventHints::DeleteRow:
+              if (hint_data.str_table == this->prm->getRdata()->t_name_)
+              {
+                  //this->prm->onrm_RowInserted(hint_data.str_table.c_str(),row);
+                  CreateModel(m_pqastra,&m_UIForm);
+              }
           default:
               break;
           }
-
-
     }catch(const std::exception& ex){
         spdlog::error("std::exception: {}", ex.what());
     }catch(...){
@@ -242,45 +240,29 @@ void RtabWidget::onItemPressed(const QModelIndex &index)
 {
     int row = index.row();
     int column = index.column();
-    //QTableView* t = index.parent();
     qDebug()<<"Pressed:" <<row<< ","<<column;
 }
 void RtabWidget::insertRow()
 {
-#if(!defined(QICSGRID_NO))
-    int rowIndex = activeMdiChild()->currentCell()->rowIndex();
-    if (rowIndex < 0)
-        return;
-    activeMdiChild()->insertRow( rowIndex );
-#endif//#if(!defined(QICSGRID_NO))
-#if(defined(QICSGRID_NO))
-
-   // prm->insertRows(index.row(),1,index);
-
-#endif//#if(defined(QICSGRID_NO))
-
-    IRastrTablesPtr tablesx{ this->m_pqastra->getRastr()->Tables() };
-    IRastrPayload tablecount{ tablesx->Count() };
-    IRastrTablePtr table{ tablesx->Item(this->prm->getRdata()->t_name_) };
-    table->InsertRow(index.row());
+    prm->insertRows(index.row(),1,index);
 }
 void RtabWidget::deleteRow()
 {
     prm->removeRows(index.row(),1,index);
 }
+// ширина по шаблону
 void RtabWidget::widebyshabl()
 {
-    SetTableView(*ptv,*prm);                // ширина по шаблону
+    SetTableView(*ptv,*prm);
 }
+// ширина по контенту
 void RtabWidget::widebydata()
 {
-    ptv->resizeColumnsToContents();         // ширина по контенту
+    ptv->resizeColumnsToContents();
 }
 void RtabWidget::OpenColPropForm()
 {
-    //RCol* prcol = prm->getRCol(index.column());
     RCol* prcol = prm->getRCol(column);
-    //ColPropForm* PropForm = new ColPropForm(prm->getRdata(),prcol);
     ColPropForm* PropForm = new ColPropForm(prm->getRdata(),ptv, prcol);
     PropForm->show();
 }

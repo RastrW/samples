@@ -3,18 +3,13 @@
 
 #include <QAbstractTableModel>
 #include <QTimer>
-#include "rastrhlp.h"
 #include "astra_exp.h"
-//#include "astra_shared.h"
 #include "rdata.h"
 #include "qastra.h"
-
-
 
 class RModel : public QAbstractTableModel
 {
     Q_OBJECT
-    //CRastrHlp& rastr_;
     QAstra* pqastra_;
     std::unique_ptr<RData> up_rdata;
     std::vector<QString> vqcols_;                                 // Заголовки столбцов
@@ -33,8 +28,6 @@ public:
     RData* getRdata();
     inline bool emitSignals() const { return m_emitSignals; }
     inline void setEmitSignals(bool b)  { m_emitSignals = b; }
-
-    void timerHit(); // from example of time change in cell
 
     //"2.4 Setting up Headers for Columns and Rows"
     QVariant headerData(int section, Qt::Orientation orientation, int role) const override;

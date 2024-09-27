@@ -105,6 +105,7 @@ int MainWindow::writeSettings(){
     return 1;
 }
 void MainWindow::tst_onRastrHint(const _hint_data& dh){
+
     spdlog::info("XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX");
     spdlog::info("XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX");
     spdlog::info("XXX MainWindow::tst_onRastrHint about {} {} {} {} {} XXX"
@@ -116,6 +117,21 @@ void MainWindow::tst_onRastrHint(const _hint_data& dh){
     );
     spdlog::info("XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX");
     spdlog::info("XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX");
+}
+void MainWindow::dragEnterEvent(QDragEnterEvent *event)
+{
+   event->acceptProposedAction();
+}
+void MainWindow::dropEvent(QDropEvent *dropEvent)
+{
+   QStringList filePathList;
+   foreach (QUrl url, dropEvent->mimeData()->urls())
+   {
+       std::string fileName = url.toLocalFile().toStdString();
+       filePathList << url.toLocalFile();
+       m_sp_qastra->LoadFile(eLoadCode::RG_REPL, fileName,"");
+   }
+   dropEvent->acceptProposedAction();
 }
 void MainWindow::logCacheFlush(){
     for( const auto& cache_log : m_v_cache_log){

@@ -12,13 +12,14 @@ RTableView::RTableView()
 
     //connect(verticalScrollBar(), &QScrollBar::valueChanged,  dynamic_cast<RtabWidget*>(this->parentWidget()), &RtabWidget::vscrollbarChanged);
 
+    /*
     // Drag & Drop
     this->setDragEnabled(true);
     this->viewport()->setAcceptDrops(true);
     this->setAcceptDrops(true);
     this->setDropIndicatorShown(true);
     this->setDragDropMode(QAbstractItemView::InternalMove);
-
+*/
 
 }
 /*RTableView::RTableView(RTabWidget* rtw)

@@ -85,6 +85,10 @@ public slots:
 #endif//#if(!defined(QICSGRID_NO))
     void setActiveSubWindow(QWidget *window);
     void tst_onRastrHint(const _hint_data&);
+    void dragEnterEvent(QDragEnterEvent *event);
+    void dropEvent(QDropEvent *event) override;
+
+
 private:
 ///slots.end.
 public:

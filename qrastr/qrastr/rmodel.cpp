@@ -282,13 +282,11 @@ RData* RModel::getRdata()
 }
 bool RModel::insertRows(int row, int count, const QModelIndex &parent)
 {
-    beginInsertRows(parent, row, row + count - 1);
-    getRdata()->AddRow(row);
-    if (emitSignals())
-    {
-        emit RowInserted(getRdata()->t_name_,row);
-    }
-    endInsertRows();
+    IRastrTablesPtr tablesx{ this->pqastra_->getRastr()->Tables() };
+    IRastrPayload tablecount{ tablesx->Count() };
+    IRastrTablePtr table{ tablesx->Item(getRdata()->t_name_) };
+    IPlainRastrResult* pres = table->InsertRow(row);
+
     return true;
 }
 
@@ -302,13 +300,11 @@ bool RModel::insertColumns(int column, int count, const QModelIndex &parent)
 
 bool RModel::removeRows(int row, int count, const QModelIndex &parent)
 {
-    beginRemoveRows(parent, row, row + count - 1);
-    getRdata()->RemoveRDMRow(row);
-    if (emitSignals())
-    {
-        emit RowDeleted(getRdata()->t_name_,row);
-    }
-    endRemoveRows();
+    IRastrTablesPtr tablesx{ this->pqastra_->getRastr()->Tables() };
+    IRastrPayload tablecount{ tablesx->Count() };
+    IRastrTablePtr table{ tablesx->Item(getRdata()->t_name_) };
+    IPlainRastrResult* pres = table->DeleteRow(row);
+
     return true;
 }
 
@@ -390,10 +386,11 @@ void RModel::onrm_RowInserted(std::string _t_name, int _row)
 }
 void RModel::onrm_RowDeleted(std::string _t_name, int _row)
 {
-    for( RCol& col : *this->getRdata() )
+    /*for( RCol& col : *this->getRdata() )
     {
         col.erase(col.begin()+_row);
     }
+    */
 }
 
 bool RModel::isBinary(const QModelIndex& index) const
@@ -409,6 +406,9 @@ bool RModel::isBinary(const QModelIndex& index) const
     */
     switch (this->up_rdata->at(index.column()).en_data_)
    {
+       case RCol::_en_data::DATA_BOOL:
+           return false;
+           break;
        case RCol::_en_data::DATA_INT:
         return true;
            break;
