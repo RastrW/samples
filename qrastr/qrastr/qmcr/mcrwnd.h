@@ -22,6 +22,8 @@ public:
     virtual ~McrWnd();
     void showEvent(QShowEvent *event) override;
     void closeEvent(QCloseEvent *event) override;
+    void encode(std::string& data);
+    void encode(std::string& data_out, const QString& qstr_in);
 signals:
 private slots:
     std::pair<bool,bool> checkSaveModified();

@@ -10,15 +10,6 @@
 //https://www.scintilla.org/PaneAPI.html
 //interesting scintilla use https://github.com/SolarAquarion/wxglterm/tree/master/src/external_plugins
 //https://github.com/mneuroth/SciTEQt
-
-const char *MonospaceFont(){
-    static char fontNameDefault[200] = "";
-    if (!fontNameDefault[0]) {
-        const QFont font = QFontDatabase::systemFont(QFontDatabase::FixedFont);
-        strcpy(fontNameDefault, font.family().toUtf8());
-    }
-    return fontNameDefault;
-}
 SciHlp::SciHlp(QWidget *parent, _en_role role)
     : ScintillaEdit(parent)
     , role_(role){
@@ -269,6 +260,14 @@ head
         setStyleHlp( SCE_HPHP_HSTRING_VARIABLE , c_xz );
         setStyleHlp( SCE_HPHP_OPERATOR , c_xz );
     }
+}
+const char* SciHlp::MonospaceFont(){
+    static char fontNameDefault[200] = "";
+    if (!fontNameDefault[0]) {
+        const QFont font = QFontDatabase::systemFont(QFontDatabase::FixedFont);
+        strcpy(fontNameDefault, font.family().toUtf8());
+    }
+    return fontNameDefault;
 }
 void SciHlp::tstSci(){
 #if _WIN32 //https://www.scintilla.org/LexillaDoc.html

@@ -5,6 +5,7 @@
 
 #include "formsettingsdatas.h"
 #include "formsettingsforms.h"
+#include "formsettingsonloadfiles.h"
 
 struct FormSettings::_tree_item{
     _tree_item( const std::string_view& sv_name_in, const std::string_view& sv_caption_in, QWidget* pw_show = nullptr )
@@ -120,14 +121,17 @@ int FormSettings::init(){
     _tree_item ti_protocol  { "protocol",  "Протокол" };
     _tree_item ti_forms     { "forms",     "Формы", new FormSettingsForms()    };
         ti_forms.v_childs.emplace_back(_tree_item{ "loaded", "Загруженные" });
-    _tree_item ti_templates { "on_start", "Загружаемые при старте"  };
-        ti_templates.v_childs.emplace_back(_tree_item{ "templates", "Загружаемые формы"   });
-        ti_templates.v_childs.emplace_back(_tree_item{ "shablons",  "Загружаемые шаблоны" });
+    _tree_item ti_on_start { "on_start", "Загружаемые при старте"  };
+        ti_on_start.v_childs.emplace_back(_tree_item{ "shablons",  "Загружаемые шаблоны" });
+        ti_on_start.v_childs.emplace_back(_tree_item{ "templates", "Загружаемые формы"   });
+        _tree_item ti_on_load_files{ "templates", "Загружаемые файлы", new FormSettingsOnLoadFiles() };
+        //ti_on_start.v_childs.emplace_back(_tree_item{ "templates", "Загружаемые файлы", new FormSettingsOnLoadFiles() });
+        ti_on_start.v_childs.emplace_back(ti_on_load_files);
     _tree_item ti_modules   { "modules",   "Модули"   };
     pti_settings_root_->v_childs.emplace_back( ti_datas     );
     pti_settings_root_->v_childs.emplace_back( ti_protocol  );
     pti_settings_root_->v_childs.emplace_back( ti_forms     );
-    pti_settings_root_->v_childs.emplace_back( ti_templates );
+    pti_settings_root_->v_childs.emplace_back( ti_on_start );
     pti_settings_root_->v_childs.emplace_back( ti_modules   );
 
     ptw_sections_->setHeaderLabels( QStringList() << tr(pti_settings_root_->str_caption.c_str()) );
@@ -141,6 +145,8 @@ int FormSettings::init(){
     psw_->addWidget(thirdPageWidget);
     psw_->addWidget(ti_datas.pw);
     psw_->addWidget(ti_forms.pw);
+    psw_->addWidget(ti_on_load_files.pw);
+
 
     //connect( ptw_sections_, &QTreeView::clicked, psw_, [=]( const QModelIndex &index ){
     //connect( ptw_sections_, &QTreeView::clicked, psw_, [this]( const QModelIndex &index ){

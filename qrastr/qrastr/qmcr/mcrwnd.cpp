@@ -423,7 +423,7 @@ void McrWnd::Find(SciHlp::_params_find params_find){
     qDebug()<<"Find()-> "<<params_find.qstrFind_  << "\n";
     const SciHlp::_ret_vals rv = shEdit_->Find(params_find);
 }
-void encode(std::string& data){
+void McrWnd::encode(std::string& data){
     std::string buffer;
     buffer.reserve(data.size()+30);
     for(size_t pos = 0; pos != data.size(); ++pos){
@@ -438,7 +438,7 @@ void encode(std::string& data){
     }
     data.swap(buffer);
 }
-void encode(std::string& data_out, const QString& qstr_in){
+void McrWnd::encode(std::string& data_out, const QString& qstr_in){
     data_out.reserve(qstr_in.length() + 50);
     for(size_t pos = 0; pos != qstr_in.length(); ++pos) {
         if      (QLatin1Char('&')  == qstr_in[pos]){

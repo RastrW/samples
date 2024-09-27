@@ -5,7 +5,7 @@
 #include "app.h"
 #include "formsettings.h"
 
-int main323(int argc, char *argv[])
+int main423(int argc, char *argv[])
 {
     QApplication app(argc, argv);
     app.setWindowIcon(QIcon(":/images/new.png"));
