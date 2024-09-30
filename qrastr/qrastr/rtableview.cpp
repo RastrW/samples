@@ -2,24 +2,95 @@
 #include "rtabwidget.h"
 #include "FilterTableHeader.h"
 #include <QScrollBar>
+#include <private/qtableview_p.h>
 
-RTableView::RTableView()
+
+RTableCornerButton::RTableCornerButton(QWidget *parent)
+    : QAbstractButton(parent)
 {
+    m_align = Qt::AlignCenter;
+    m_text = "*";
+    setFocusPolicy(Qt::NoFocus);
+
+    setObjectName("PBSTABLWCORNERWIDGET");
+}
+
+void RTableCornerButton::paintEvent(QPaintEvent*)
+{
+    QStyleOptionHeader opt;
+    opt.initFrom(this);
+    QStyle::State state = isDown() ? QStyle::State_Sunken : QStyle::State_Raised;
+
+    if (isEnabled())
+    {
+        state |= QStyle::State_Enabled;
+    }
+
+    if (isActiveWindow())
+    {
+        state |= QStyle::State_Active;
+    }
+
+    opt.state = state;
+    opt.text = m_text;
+    opt.rect = rect();
+    opt.position = QStyleOptionHeader::OnlyOneSection;
+    opt.textAlignment = m_align;
+    QPainter painter(this);
+    style()->drawControl(QStyle::CE_Header, &opt, &painter, this);
+}
+
+//RTableView::RTableView()
+RTableView::RTableView(QWidget *parent) :
+    QTableView(parent),
+    //pVertical(Qt::Vertical, this),
+    //pHorizontal(Qt::Horizontal, this),
+    cornerButton(this)
+    //actDeleteRecord(QIcon(":/Resource/Images/cancel.png"), PBSTR("Kayıt Sil"), this)
+{
+
+    //cornerButton = new RTableCornerButton(this);
     // Set up filter row
     m_tableHeader = new FilterTableHeader(this);
     //m_tableHeader->setFilter(4,tr("<100"));
     setHorizontalHeader(m_tableHeader);             // слетает сортировка по клику на заголовке столбца
-
     //connect(verticalScrollBar(), &QScrollBar::valueChanged,  dynamic_cast<RtabWidget*>(this->parentWidget()), &RtabWidget::vscrollbarChanged);
-
+    setContextMenuPolicy(Qt::CustomContextMenu);                   //https://forum.qt.io/topic/31233/how-to-create-a-custom-context-menu-for-qtableview/6
+    horizontalHeader()->setContextMenuPolicy(Qt::CustomContextMenu);
     /*
-    // Drag & Drop
-    this->setDragEnabled(true);
-    this->viewport()->setAcceptDrops(true);
-    this->setAcceptDrops(true);
-    this->setDropIndicatorShown(true);
-    this->setDragDropMode(QAbstractItemView::InternalMove);
+    connect(this, SIGNAL(customContextMenuRequested(QPoint)),
+            SLOT(customMenuRequested(QPoint)));
+    connect(this, SIGNAL(pressed(const QModelIndex &)),
+            SLOT(onItemPressed(const QModelIndex &)));
+    connect(this->horizontalHeader(),
+            SIGNAL(customContextMenuRequested(QPoint)),
+            SLOT(customHeaderMenuRequested(QPoint)));
 */
+
+
+    //connect(ptv->horizontalHeader(), &FilterTableHeader::filterChanged, this, &RtabWidget::updateFilter);
+    connect(horizontalHeader(), SIGNAL(filterChanged(size_t , QString )), this, SLOT(updateFilter(size_t , QString) ));
+
+
+
+    setSortingEnabled(true);
+    //setSectionMoveable(true);
+    horizontalHeader()->setSectionsMovable(true);
+    setAlternatingRowColors(true);
+    setAutoFillBackground(true);
+
+
+
+    Q_D(QTableView);
+    d->cornerWidget = (QTableCornerButton*)&cornerButton;
+
+    cornerButton.setText("*");
+    disconnect(&cornerButton, SIGNAL(clicked()), this, SLOT(selectAll()));
+    connect(&cornerButton , SIGNAL(clicked()), this, SLOT(CornerButtonPressed()));
+    //this->c
+
+
+
 
 }
 /*RTableView::RTableView(RTabWidget* rtw)
@@ -32,6 +103,10 @@ RTableView::RTableView()
 void RTableView::generateFilters(int count)
 {
     m_tableHeader->generateFilters(count);
+}
+void RTableView::CornerButtonPressed()
+{
+    emit onCornerButtonPressed();
 }
 
 

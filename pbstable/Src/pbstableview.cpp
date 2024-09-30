@@ -13,12 +13,12 @@
 PBSTableView::PBSTableView(QString sSettings, QWidget *parent) :
     QWidget(parent),
     sSettingsName(sSettings),
+    pFilterFrame(this),
+    pLayout(this),
     pTableWidget(this),
     pFooterFrame(this),
-    popupMenu(this),
-    pFilterFrame(this),
     customizeFrame(this, Qt::Popup | Qt::Window),
-    pLayout(this),
+    popupMenu(this),
     actFooter(QIcon(":/Resource/Images/footer.png"), PBSTR("Bilgi Satırı"), this),
     actFilter(QIcon(":/Resource/Images/filter.png"), tr( "Filtreleme"), this),
     actSortAsc(QIcon(":/Resource/Images/Ascending.png"), PBSTR("A-Z Sıralaması"), this),
@@ -26,15 +26,15 @@ PBSTableView::PBSTableView(QString sSettings, QWidget *parent) :
     actStretchColumn(QIcon(":/Resource/Images/stretch.png"), PBSTR("En iyi Uzunluk"), this),
     actStretchColumnAll(QIcon(":/Resource/Images/stretchall.png"), PBSTR("En iyi Uzunluk (Tüm Kolonlar)"), this),
     actStretch(QIcon(":/Resource/Images/sigdir.png"), PBSTR("Kolonları Ekrana Sığdır"), this),
+    actSaveLayout(QIcon(":/Resource/Images/save.png"), PBSTR("Görünümü Kaydet"), this),
     actSaveExcel(QIcon(":/Resource/Images/xls.png"), PBSTR("Excel Dosyası Olarak"), this),
     actSaveExcelXML(QIcon(":/Resource/Images/xls.png"), PBSTR("Excel (XML) Dosyası Olarak"), this),
     actSaveWordXML(QIcon(":/Resource/Images/word.png"), PBSTR("Word (XML) Dosyası Olarak"), this),
-    actSendToPrinter(QIcon(":/Resource/Images/printer.png"), PBSTR("Yazdır..."), this),
+    actSaveXML(QIcon(":/Resource/Images/xml.png"), PBSTR("XML Dosyası Olarak"), this),
     actSavePDF(QIcon(":/Resource/Images/pdf.png"), PBSTR("PDF Dosyası Olarak"), this),
     actSaveCSV(QIcon(":/Resource/Images/csv.png"), PBSTR("Text (CSV) Dosyası Olarak"), this),
-    actSaveXML(QIcon(":/Resource/Images/xml.png"), PBSTR("XML Dosyası Olarak"), this),
     actSaveHTML(QIcon(":/Resource/Images/htm.png"), PBSTR("HTML Dosyası Olarak"), this),
-    actSaveLayout(QIcon(":/Resource/Images/save.png"), PBSTR("Görünümü Kaydet"), this)
+    actSendToPrinter(QIcon(":/Resource/Images/printer.png"), PBSTR("Yazdır..."), this)
 {
     setReadOnly(false);
     setAutoEdit(false);

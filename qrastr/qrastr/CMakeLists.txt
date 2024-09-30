@@ -65,6 +65,7 @@ find_package( Qt${QT_VERSION_MAJOR} COMPONENTS
     LinguistTools
     PrintSupport
     Xml
+    #widgets-private
     REQUIRED
 )
 
@@ -196,6 +197,7 @@ target_link_libraries( ${PROJECT_NAME} PRIVATE fmt::fmt-header-only )
 if(MSVC)
     target_link_libraries( ${PROJECT_NAME} PRIVATE astra_py     ) # when build with pybind11
     target_link_libraries( ${PROJECT_NAME} PRIVATE qmcr         )
+    target_link_libraries( ${PROJECT_NAME} PRIVATE Qt::WidgetsPrivate)
     if (CMAKE_BUILD_TYPE MATCHES Debug)
         target_link_libraries( ${PROJECT_NAME} PRIVATE qtadvanceddockingd )
     else()
