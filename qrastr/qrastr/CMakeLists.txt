@@ -177,6 +177,9 @@ set(PROJECT_SOURCES
     formsettingsforms.h
     formsettingsforms.cpp
     formsettingsforms.ui
+    formsettingsonloadfiles.h
+    formsettingsonloadfiles.cpp
+    formsettingsonloadfiles.ui
 )
 
 if(${QT_VERSION_MAJOR} GREATER_EQUAL 6)
