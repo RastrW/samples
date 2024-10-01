@@ -121,6 +121,9 @@ public slots:
     void OpenColPropForm();
     void sortAscending();
     void sortDescending();
+    void hideColumns();
+    void unhideColumns();
+    void showAllColumns();
     void onUpdate(std::string _t_name);
     void updateFilter(size_t column, QString value);
     void onFileLoad();
@@ -144,6 +147,7 @@ private:
     QModelIndex index;              // current index (Cell clicked)
     int form_indx;
     int column;                     // for header
+    QPoint MenuRequestedPoint;
 protected:
     itemStateMap tItemStateMap;
     QFrame customizeFrame;
