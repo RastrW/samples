@@ -46,9 +46,7 @@ RTableView::RTableView(QWidget *parent) :
     //pVertical(Qt::Vertical, this),
     //pHorizontal(Qt::Horizontal, this),
     cornerButton(this)
-    //actDeleteRecord(QIcon(":/Resource/Images/cancel.png"), PBSTR("Kayıt Sil"), this)
 {
-
     //cornerButton = new RTableCornerButton(this);
     // Set up filter row
     m_tableHeader = new FilterTableHeader(this);
@@ -57,20 +55,8 @@ RTableView::RTableView(QWidget *parent) :
     //connect(verticalScrollBar(), &QScrollBar::valueChanged,  dynamic_cast<RtabWidget*>(this->parentWidget()), &RtabWidget::vscrollbarChanged);
     setContextMenuPolicy(Qt::CustomContextMenu);                   //https://forum.qt.io/topic/31233/how-to-create-a-custom-context-menu-for-qtableview/6
     horizontalHeader()->setContextMenuPolicy(Qt::CustomContextMenu);
-    /*
-    connect(this, SIGNAL(customContextMenuRequested(QPoint)),
-            SLOT(customMenuRequested(QPoint)));
-    connect(this, SIGNAL(pressed(const QModelIndex &)),
-            SLOT(onItemPressed(const QModelIndex &)));
-    connect(this->horizontalHeader(),
-            SIGNAL(customContextMenuRequested(QPoint)),
-            SLOT(customHeaderMenuRequested(QPoint)));
-*/
-
 
     //connect(ptv->horizontalHeader(), &FilterTableHeader::filterChanged, this, &RtabWidget::updateFilter);
-    connect(horizontalHeader(), SIGNAL(filterChanged(size_t , QString )), this, SLOT(updateFilter(size_t , QString) ));
-
 
 
     setSortingEnabled(true);
@@ -79,19 +65,12 @@ RTableView::RTableView(QWidget *parent) :
     setAlternatingRowColors(true);
     setAutoFillBackground(true);
 
-
-
     Q_D(QTableView);
     d->cornerWidget = (QTableCornerButton*)&cornerButton;
 
     cornerButton.setText("*");
     disconnect(&cornerButton, SIGNAL(clicked()), this, SLOT(selectAll()));
     connect(&cornerButton , SIGNAL(clicked()), this, SLOT(CornerButtonPressed()));
-    //this->c
-
-
-
-
 }
 /*RTableView::RTableView(RTabWidget* rtw)
 {

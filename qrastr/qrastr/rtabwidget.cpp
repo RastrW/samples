@@ -59,6 +59,7 @@ RtabWidget::RtabWidget(QAstra* pqastra,CUIForm UIForm, QWidget *parent)
     connect(this->ptv->horizontalHeader(),
             SIGNAL(customContextMenuRequested(QPoint)),
             SLOT(customHeaderMenuRequested(QPoint)));
+    connect(ptv->horizontalHeader(), SIGNAL(filterChanged(size_t , QString )), this, SLOT(updateFilter(size_t , QString) ));
     CreateModel(pqastra,&m_UIForm);
 
     //SetTableView(*ptv,*prm);                // ширина по шаблону
@@ -186,6 +187,7 @@ void RtabWidget::SetTableView(QTableView& tv, RModel& mm, int myltiplier  )
 
 void RtabWidget::customMenuRequested(QPoint pos){
     index=ptv->indexAt(pos);
+    MenuRequestedPoint = pos;
 
     QMenu *menu=new QMenu(this);
     QAction* copyAction = new QAction( tr("Copy"), menu);
@@ -224,6 +226,7 @@ void RtabWidget::customMenuRequested(QPoint pos){
 }
 
 void RtabWidget::customHeaderMenuRequested(QPoint pos){
+    MenuRequestedPoint = pos;
     column=ptv->horizontalHeader()->logicalIndexAt(pos);
 
     RCol* prcol = prm->getRCol(column);
@@ -238,8 +241,9 @@ void RtabWidget::customHeaderMenuRequested(QPoint pos){
     menu->addSeparator();
     menu->addAction(tr("Clear Contents"),this,SLOT(clearContents()));
     menu->addSeparator();
-    menu->addAction(tr("Hide Columns"),this,SLOT(hideColumns()));
-    menu->addAction(tr("Unhide Columns"),this,SLOT(unhideColumns()));
+    menu->addAction(tr("Скрыть"),this,SLOT(hideColumns()));
+    menu->addAction(tr("Выбор колонок"),this,SLOT(unhideColumns()));
+    menu->addAction(tr("Показать все колонки"),this,SLOT(showAllColumns()));
     //m_menu->addAction(tr("Подбор ширины все колонки"),this,SLOT(AutoWidthColumns())); // thats  not work
     //m_menu->addAction(Act_AutoWidthColumns);
     menu->addSeparator();
@@ -307,12 +311,20 @@ void RtabWidget::cornerButtonPressed()
 void RtabWidget::changeColumnVisible(QListWidgetItem *item)
 {
     //PBSHeaderView *hdr = static_cast<PBSHeaderView*>(pTableWidget.horizontalHeader());
+    /*
+     * Чтобы при загрузке файла сохранялась форма нужно
+     * редактировать m_UIForm при изменении настроек отображения стобцов
+     * --   Работает, но теперь вопрос если загрузили файл в котором нет
+     * исходных полей, при попытке изменить значение ошибка конечно же
+    */
 
     auto hh = this->ptv->horizontalHeader();
 
     int ix = item->data(RTABLEVIEWCOLINDEXROLE).toInt();
     int i = hh->logicalIndex(ix); // customizeListWidget.row(item));
 
+    std::string name = (item->data(Qt::DisplayRole).toString()).toStdString();
+    std::string item_rname = item->whatsThis().toStdString();
     if(i < 0)
         return;
 
@@ -322,6 +334,8 @@ void RtabWidget::changeColumnVisible(QListWidgetItem *item)
         if(hh->isSectionHidden(i))
         {
             hh->showSection(i);
+            CUIFormField uiff(item_rname.c_str());
+            m_UIForm.Fields().insert( m_UIForm.Fields().begin(),uiff);
         }
     }
     else
@@ -330,10 +344,9 @@ void RtabWidget::changeColumnVisible(QListWidgetItem *item)
         if(!hh->isSectionHidden(i))
         {
             hh->hideSection(i);
+            m_UIForm.Fields().remove_if([&](const CUIFormField Field){return (Field.Name() == item_rname);});
         }
     }
-
-   // hh->adjustPositions();
 }
 
 void RtabWidget::onItemPressed(const QModelIndex &_index)
@@ -375,6 +388,80 @@ void RtabWidget::sortDescending()
 {
     proxyModel->sort(column,Qt::DescendingOrder);
 }
+void RtabWidget::hideColumns()
+{
+    RCol* prcol = prm->getRCol(column);
+    prcol->hidden = true;
+    ptv->setColumnHidden(prcol->index,prcol->hidden);
+}
+void RtabWidget::unhideColumns()
+{
+    RCol* prcol = prm->getRCol(column);
+    auto hh = ptv->horizontalHeader();
+
+    QObject::disconnect(&customizeListWidget, SIGNAL(itemChanged(QListWidgetItem*)),
+                        this, SLOT(changeColumnVisible(QListWidgetItem*)));
+
+    customizeListWidget.clear();
+
+    QVector<QString> headers(ptv->model()->columnCount());
+    QVector<QString> rnames(ptv->model()->columnCount());
+    QVector<bool> visibles(ptv->model()->columnCount());
+
+    for(int ix = 0; ix < hh->count(); ix++)
+    {
+        if(tItemStateMap[ix].bVisible)
+        {
+            int x = hh->visualIndex(ix);
+            headers[x] = ptv->model()->headerData(ix, Qt::Horizontal).toString();
+            rnames[x] = prm->getRCol(ix)->str_name_.c_str();
+            visibles[x] = hh->isSectionHidden(ix);
+        }
+    }
+    for(int ix = 0; ix < hh->count(); ix++)
+    {
+        if(tItemStateMap[ix].bVisible)
+            customizeListWidget.addItem(headers[ix]);
+    }
+
+    int x = 0;
+    for(int ix = 0; ix < hh->count(); ix++)
+    {
+        if(tItemStateMap[ix].bVisible)
+        {
+            QListWidgetItem *item = customizeListWidget.item(x++);
+            item->setData(RTABLEVIEWCOLINDEXROLE, ix);
+            item->setFlags(item->flags() | Qt::ItemIsUserCheckable);
+            item->setCheckState(visibles[ix] ? Qt::Unchecked : Qt::Checked);
+            item->setWhatsThis(rnames[ix]);
+        }
+    }
+
+    QObject::connect(&customizeListWidget, SIGNAL(itemChanged(QListWidgetItem*)),
+                     this, SLOT(changeColumnVisible(QListWidgetItem*)));
+
+
+    int position = hh->sectionPosition(prcol->index);
+    //QPoint P(point.x(), point.y() + 20);
+    QPoint P(position, rect().y() + hh->height());
+
+
+    customizeFrame.move(mapToGlobal(P));
+    //customizeFrame.move(P);
+    customizeFrame.setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
+    customizeFrame.show();
+}
+void RtabWidget::showAllColumns()
+{
+    for (auto &rcol : *this->prm->getRdata())
+    {
+        rcol.hidden = false;
+        ptv->setColumnHidden(rcol.index,rcol.hidden);
+    }
+     ptv->resizeColumnsToContents();
+}
+
+
 void RtabWidget::onUpdate(std::string _t_name)
 {
     if (prm->getRdata()->t_name_ == _t_name)
