@@ -1,5 +1,5 @@
-#ifndef COMBOBOXDELEGATE_H
-#define COMBOBOXDELEGATE_H
+#ifndef DELEGATECOMBOBOX_H
+#define DELEGATECOMBOBOX_H
 
 #include <string>
 #include <vector>
@@ -11,12 +11,12 @@ class QModelIndex;
 class QWidget;
 class QVariant;
 
-class ComboBoxDelegate : public QItemDelegate
+class DelegateComboBox : public QItemDelegate
 {
     Q_OBJECT
 public:
-    ComboBoxDelegate(QObject *parent = 0);
-    ComboBoxDelegate(QObject *parent = 0,std::string strItems = "");
+    DelegateComboBox(QObject *parent = 0);
+    DelegateComboBox(QObject *parent = 0,std::string strItems = "");
 
 
     QWidget *createEditor(QWidget *parent, const QStyleOptionViewItem &option, const QModelIndex &index) const;

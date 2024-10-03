@@ -14,9 +14,9 @@
 #include "qastra.h"
 //using WrapperExceptionType = std::runtime_error;
 //#include "IPlainRastrWrappers.h"
-#include "comboboxdelegate.h"
-#include "doubleitemdelegate.h"
-#include "checkboxdelegate.h"
+#include "delegatecombobox.h"
+#include "delegatedoubleitem.h"
+#include "delegatecheckbox.h"
 #include <QShortcut>
 
 RtabWidget::RtabWidget(QWidget *parent) :
@@ -85,7 +85,7 @@ void RtabWidget::CreateModel(QAstra* pqastra, CUIForm* pUIForm)
     {
         if (rcol.com_prop_tt == enComPropTT::COM_PR_ENUM)
         {
-            ComboBoxDelegate* delegate = new ComboBoxDelegate(this,rcol.NameRef());
+            DelegateComboBox* delegate = new DelegateComboBox(this,rcol.NameRef());
             ptv->setItemDelegateForColumn(rcol.index, delegate);
             // Make the combo boxes always displayed.
             /*for ( int i = 0; i < prm->rowCount(); ++i )
@@ -97,13 +97,13 @@ void RtabWidget::CreateModel(QAstra* pqastra, CUIForm* pUIForm)
         if (rcol.com_prop_tt == enComPropTT::COM_PR_REAL)
         {
             int prec = std::atoi(rcol.prec().c_str());
-            DoubleItemDelegate* delegate = new DoubleItemDelegate(prec,this);
+            DelegateDoubleItem* delegate = new DelegateDoubleItem(prec,this);
             ptv->setItemDelegateForColumn(rcol.index, delegate);
         }
 
         if (rcol.com_prop_tt == enComPropTT::COM_PR_BOOL)
         {
-            checkboxDelegate* delegate = new checkboxDelegate(this);
+            DelegateCheckBox* delegate = new DelegateCheckBox(this);
             ptv->setItemDelegateForColumn(rcol.index, delegate);
         }
     }

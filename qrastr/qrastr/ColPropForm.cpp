@@ -1,6 +1,6 @@
 #include "ColPropForm.h"
 #include "ui_ColPropForm.h"
-#include "doubleitemdelegate.h"
+#include "delegatedoubleitem.h"
 
 
 ColPropForm::ColPropForm(RData* _prdata, RTableView* _ptv,RCol* _prcol,QWidget *parent) :
@@ -74,7 +74,7 @@ void ColPropForm::on_btn_ok_clicked()
 {
     //TO DO: need change propertires
     prcol->set_prec(prec().toStdString().c_str());
-    static_cast<DoubleItemDelegate*>(ptv->itemDelegateForColumn(prcol->index))->set_prec(prec().toInt());
+    static_cast<DelegateDoubleItem*>(ptv->itemDelegateForColumn(prcol->index))->set_prec(prec().toInt());
     this->close();
 }
 

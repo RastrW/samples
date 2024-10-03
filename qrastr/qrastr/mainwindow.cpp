@@ -32,7 +32,7 @@ using WrapperExceptionType = std::runtime_error;
 #include "IPlainRastrWrappers.h"
 #include "qastra.h"
 #include "tsthints.h"
-#include "comboboxdelegate.h"
+#include "delegatecombobox.h"
 #include "formsettings.h"
 
 MainWindow::MainWindow(){
@@ -585,7 +585,7 @@ void MainWindow::Btn3_onClick(){
 
     QStandardItemModel* model = new QStandardItemModel(8, 2);
     QTableView* ptableView = new QTableView();;
-    ComboBoxDelegate* delegate = new ComboBoxDelegate(this,"Item1,Item2,Item3");
+    DelegateComboBox* delegate = new DelegateComboBox(this,"Item1,Item2,Item3");
     //tableView.setItemDelegate(&delegate);
     ptableView->setItemDelegateForColumn(1, delegate); // Column 0 can take any value, column 1 can only take values up to 8.
 

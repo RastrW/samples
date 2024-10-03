@@ -1,4 +1,4 @@
-#include "ComboBoxDelegate.h"
+#include "delegatecombobox.h"
 
 #include <QComboBox>
 #include <QWidget>
@@ -9,7 +9,7 @@
 
 #include <iostream>
 
-ComboBoxDelegate::ComboBoxDelegate(QObject *parent)
+DelegateComboBox::DelegateComboBox(QObject *parent)
     :QItemDelegate(parent)
 {
     Items.push_back("Test0");
@@ -22,7 +22,7 @@ ComboBoxDelegate::ComboBoxDelegate(QObject *parent)
     Items.push_back("Test7");
     Items.push_back("Test8");
 }
-ComboBoxDelegate::ComboBoxDelegate(QObject *parent, std::string strItems)
+DelegateComboBox::DelegateComboBox(QObject *parent, std::string strItems)
     :QItemDelegate(parent)
 {
     char delimiter = '|';
@@ -36,7 +36,7 @@ ComboBoxDelegate::ComboBoxDelegate(QObject *parent, std::string strItems)
 }
 
 
-QWidget *ComboBoxDelegate::createEditor(QWidget *parent, const QStyleOptionViewItem &/* option */, const QModelIndex &/* index */) const
+QWidget *DelegateComboBox::createEditor(QWidget *parent, const QStyleOptionViewItem &/* option */, const QModelIndex &/* index */) const
 {
     QComboBox* editor = new QComboBox(parent);
     for(unsigned int i = 0; i < Items.size(); ++i)
@@ -46,25 +46,25 @@ QWidget *ComboBoxDelegate::createEditor(QWidget *parent, const QStyleOptionViewI
     return editor;
 }
 
-void ComboBoxDelegate::setEditorData(QWidget *editor, const QModelIndex &index) const
+void DelegateComboBox::setEditorData(QWidget *editor, const QModelIndex &index) const
 {
     QComboBox *comboBox = static_cast<QComboBox*>(editor);
     int value = index.model()->data(index, Qt::EditRole).toUInt();
     comboBox->setCurrentIndex(value);
 }
 
-void ComboBoxDelegate::setModelData(QWidget *editor, QAbstractItemModel *model, const QModelIndex &index) const
+void DelegateComboBox::setModelData(QWidget *editor, QAbstractItemModel *model, const QModelIndex &index) const
 {
     QComboBox *comboBox = static_cast<QComboBox*>(editor);
     model->setData(index, comboBox->currentIndex(), Qt::EditRole);
 }
 
-void ComboBoxDelegate::updateEditorGeometry(QWidget *editor, const QStyleOptionViewItem &option, const QModelIndex &/* index */) const
+void DelegateComboBox::updateEditorGeometry(QWidget *editor, const QStyleOptionViewItem &option, const QModelIndex &/* index */) const
 {
     editor->setGeometry(option.rect);
 }
 
-void ComboBoxDelegate::paint(QPainter *painter, const QStyleOptionViewItem &option, const QModelIndex &index) const
+void DelegateComboBox::paint(QPainter *painter, const QStyleOptionViewItem &option, const QModelIndex &index) const
 {
     QStyleOptionViewItem myOption = option;
 

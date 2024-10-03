@@ -1,16 +1,16 @@
-#include "checkboxdelegate.h"
+#include "delegatecheckbox.h"
 #include <QApplication>
 
-checkboxDelegate::checkboxDelegate(QObject *parent)
+DelegateCheckBox::DelegateCheckBox(QObject *parent)
     : QItemDelegate{parent}
 {}
 
-QWidget *checkboxDelegate::createEditor(QWidget *parent, const QStyleOptionViewItem &option, const QModelIndex &index) const
+QWidget *DelegateCheckBox::createEditor(QWidget *parent, const QStyleOptionViewItem &option, const QModelIndex &index) const
 {
     if(index.isValid() )
     {
         QCheckBox *editor = new QCheckBox(parent);
-        editor->installEventFilter(const_cast<checkboxDelegate*>(this));
+        editor->installEventFilter(const_cast<DelegateCheckBox*>(this));
         return editor;
     }
     else
@@ -19,7 +19,7 @@ QWidget *checkboxDelegate::createEditor(QWidget *parent, const QStyleOptionViewI
     }
 }
 
-void checkboxDelegate::setEditorData(QWidget *editor,
+void DelegateCheckBox::setEditorData(QWidget *editor,
                                      const QModelIndex &index) const
 {
     if(index.isValid())
@@ -39,7 +39,7 @@ void checkboxDelegate::setEditorData(QWidget *editor,
     }
 }
 
-void checkboxDelegate::setModelData(QWidget *editor, QAbstractItemModel *model,
+void DelegateCheckBox::setModelData(QWidget *editor, QAbstractItemModel *model,
                                     const QModelIndex &index) const
 {
     if(index.isValid())
@@ -60,7 +60,7 @@ void checkboxDelegate::setModelData(QWidget *editor, QAbstractItemModel *model,
     }
 }
 
-void checkboxDelegate::updateEditorGeometry(QWidget *editor,
+void DelegateCheckBox::updateEditorGeometry(QWidget *editor,
                                             const QStyleOptionViewItem &option, const QModelIndex &index) const
 {
     if(index.isValid() )
@@ -69,7 +69,7 @@ void checkboxDelegate::updateEditorGeometry(QWidget *editor,
         QItemDelegate::updateEditorGeometry(editor, option, index);
 
 }
-void checkboxDelegate::paint(QPainter *painter, const QStyleOptionViewItem &option, const QModelIndex &index) const
+void DelegateCheckBox::paint(QPainter *painter, const QStyleOptionViewItem &option, const QModelIndex &index) const
 {
     QStyleOptionViewItem myOption = option;
     if (index.data().toInt() > 0)

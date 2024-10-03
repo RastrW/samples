@@ -1,17 +1,17 @@
-#ifndef CHECKBOXDELEGATE_H
-#define CHECKBOXDELEGATE_H
+#ifndef DELEGATECHECKBOX_H
+#define DELEGATECHECKBOX_H
 
 #include <QItemDelegate>
 #include <QObject>
 #include <QCheckBox>
 #include <QStyledItemDelegate>
 
-class checkboxDelegate : public QItemDelegate
+class DelegateCheckBox : public QItemDelegate
 {
     Q_OBJECT
 public:
-   // explicit checkboxDelegate(QObject *parent = nullptr);
-    checkboxDelegate(QObject *parent = 0);
+   // explicit DelegateCheckBox(QObject *parent = nullptr);
+    DelegateCheckBox(QObject *parent = 0);
 
     QWidget *createEditor(QWidget *parent, const QStyleOptionViewItem &option, const QModelIndex &index) const;
     void setEditorData(QWidget *editor,  const QModelIndex &index) const;
@@ -20,4 +20,4 @@ public:
     void paint(QPainter *painter, const QStyleOptionViewItem &option, const QModelIndex &index) const;
 };
 
-#endif // CHECKBOXDELEGATE_H
+#endif // DELEGATECHECKBOX_H

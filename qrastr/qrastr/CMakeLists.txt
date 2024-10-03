@@ -164,12 +164,12 @@ set(PROJECT_SOURCES
     qastra.cpp
     tsthints.h
     tsthints.cpp
-    comboboxdelegate.cpp
-    comboboxdelegate.h
-    doubleitemdelegate.h
-    doubleitemdelegate.cpp
-    checkboxdelegate.h
-    checkboxdelegate.cpp
+    delegatecombobox.cpp
+    delegatecombobox.h
+    delegatedoubleitem.h
+    delegatedoubleitem.cpp
+    delegatecheckbox.h
+    delegatecheckbox.cpp
     tsthintsmvc.h
     tsthintsmvc.cpp
     qastra_events_data.h
