@@ -36,3 +36,30 @@ int Params::ReadJsonFile(std::filesystem::path path_2_json){
     }
     return 1;
 }
+int Params::WriteJsonFile(std::filesystem::path path_2_json){
+    try{
+        std::ofstream ofs(path_2_json);
+        if(ofs.is_open()){
+            spdlog::warn("write JSON file: [{}]", path_2_json.string());
+            /*
+            nlohmann::json jf = nlohmann::json::parse(ifs);
+            std::string sssdd = jf.dump(1, ' ', true);
+            //spdlog::info("JSON : [{}]", sssdd);
+            str_on_start_load_file_rastr_ = jf[on_start_load_file_rastr_];
+            str_on_start_load_file_forms_ = jf[on_start_load_file_forms_];
+            */
+            ofs.close();
+        }else{
+            //spdlog::error("Can't open file [{}]", path_2_json.string());
+            return -3;
+        }
+    }catch(const std::exception& ex){
+        //exclog(ex);
+        return -1;
+    }catch(...){
+        //exclog();
+        return -2;
+    }
+    return 1;
+
+}

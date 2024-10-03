@@ -128,6 +128,7 @@ set(PROJECT_SOURCES
     qrastr.qrc
     rmodel.cpp
     rmodel.h
+    singleton_dclp.hpp
     params.h
     params.cpp
     common_qrastr.h
@@ -184,13 +185,14 @@ set(PROJECT_SOURCES
     formsettingsonloadfiles.h
     formsettingsonloadfiles.cpp
     formsettingsonloadfiles.ui
+    formsettingsstackeditem.h
+    formsettingsstackeditem.cpp
 )
 
 if(${QT_VERSION_MAJOR} GREATER_EQUAL 6)
     qt_add_executable( ${PROJECT_NAME}
         MANUAL_FINALIZATION
         ${PROJECT_SOURCES}
-
 
     )
     qt_create_translation( QM_FILES ${CMAKE_SOURCE_DIR} ${TS_FILES} )

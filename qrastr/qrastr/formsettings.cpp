@@ -3,6 +3,7 @@
 #include <QSplitter>
 #include <QVBoxLayout>
 
+#include "params.h"
 #include "formsettingsdatas.h"
 #include "formsettingsforms.h"
 #include "formsettingsonloadfiles.h"
@@ -31,16 +32,12 @@ struct FormSettings::_tree_item{
     QTreeWidgetItem* ptwi_my = nullptr;
     _v_tree_items    v_childs;
 };
-
 /*
-
-
 class Widget : public QWidget
 {
 public:
     Widget(QWidget *parent = nullptr);
 };
-
 Widget::Widget(QWidget *parent)
     : QWidget(parent)
 {
@@ -63,7 +60,6 @@ Widget::Widget(QWidget *parent)
     pageComboBox->addItem(tr("Page 3"));
     connect(pageComboBox, &QComboBox::activated,
             stackedWidget, &QStackedWidget::setCurrentIndex);
-
 //! [1] //! [2]
     QVBoxLayout *layout = new QVBoxLayout;
 //! [2]
@@ -72,16 +68,14 @@ Widget::Widget(QWidget *parent)
     layout->addWidget(stackedWidget);
     setLayout(layout);
 //! [3]
-        QTreeWidgetItemIterator it(ptwSections_);
-        while (*it) {
-          if ((*it)->text(0)=="searched")
-            break;
-          ++it;
-        }
-
+    QTreeWidgetItemIterator it(ptwSections_);
+    while (*it) {
+      if ((*it)->text(0)=="searched")
+        break;
+      ++it;
+    }
 }
 */
-
 void FormSettings::populateSettingsTree( _tree_item& ti_root, QTreeWidgetItem* ptwi_parent){
     for( auto& ti_child : ti_root.v_childs ){
         QTreeWidgetItem* ptwi_new = nullptr;
@@ -99,7 +93,7 @@ void FormSettings::populateSettingsTree( _tree_item& ti_root, QTreeWidgetItem* p
     }
 }
 FormSettings::FormSettings(QWidget *parent)
-    :QWidget{parent}{
+    : QWidget{parent} {
     setWindowTitle("Settings");
     resize(800,500);
     setWindowFlags(Qt::WindowMinimizeButtonHint | Qt::WindowMinMaxButtonsHint | Qt::WindowCloseButtonHint);
@@ -113,7 +107,20 @@ FormSettings::FormSettings(QWidget *parent)
     psw_ = new QStackedWidget;
     splitter->addWidget(psw_);
     layout->addWidget(splitter);
+    ppb_save_settings_ = new QPushButton();
+    setButtonSaveEnabled(false);
+    ppb_save_settings_->setText("Save");
+    connect( ppb_save_settings_, &QPushButton::clicked, this, &FormSettings::onBtnSaveClick );
+    layout->addWidget(ppb_save_settings_);
     setLayout(layout);
+}
+void FormSettings::setButtonSaveEnabled(bool bl_new_val){
+    ppb_save_settings_->setEnabled(bl_new_val);
+}
+void FormSettings::onBtnSaveClick(){
+    //Params::GetInstance()->Get_on_start_load_file_forms();
+    assert(!"save!!!");
+    //Params::GetInstance()->WriteJsonFile();
 }
 int FormSettings::init(){
     pti_settings_root_ = new _tree_item{"root","Настройки"};
@@ -124,7 +131,7 @@ int FormSettings::init(){
     _tree_item ti_on_start { "on_start", "Загружаемые при старте"  };
         ti_on_start.v_childs.emplace_back(_tree_item{ "shablons",  "Загружаемые шаблоны" });
         ti_on_start.v_childs.emplace_back(_tree_item{ "templates", "Загружаемые формы"   });
-        _tree_item ti_on_load_files{ "templates", "Загружаемые файлы", new FormSettingsOnLoadFiles() };
+        _tree_item ti_on_load_files{ "templates", "Загружаемые файлы", new FormSettingsOnLoadFiles(this) };
         //ti_on_start.v_childs.emplace_back(_tree_item{ "templates", "Загружаемые файлы", new FormSettingsOnLoadFiles() });
         ti_on_start.v_childs.emplace_back(ti_on_load_files);
     _tree_item ti_modules   { "modules",   "Модули"   };
@@ -136,9 +143,9 @@ int FormSettings::init(){
 
     ptw_sections_->setHeaderLabels( QStringList() << tr(pti_settings_root_->str_caption.c_str()) );
     populateSettingsTree( *pti_settings_root_, nullptr );
-    QWidget *firstPageWidget = new QWidget{};
+    QWidget *firstPageWidget = new QWidget();
     QPlainTextEdit* secondPageWidget = new QPlainTextEdit();
-    secondPageWidget->setWindowTitle("TEster2");
+    secondPageWidget->setWindowTitle("Tester2");
     QWidget *thirdPageWidget = new QWidget();
     psw_->addWidget(firstPageWidget);
     psw_->addWidget(secondPageWidget);
@@ -146,21 +153,28 @@ int FormSettings::init(){
     psw_->addWidget(ti_datas.pw);
     psw_->addWidget(ti_forms.pw);
     psw_->addWidget(ti_on_load_files.pw);
-
-
-    //connect( ptw_sections_, &QTreeView::clicked, psw_, [=]( const QModelIndex &index ){
+    //connect( ptw_sections_, &QTreeView::clicked, psw_, [=](    const QModelIndex &index ){
     //connect( ptw_sections_, &QTreeView::clicked, psw_, [this]( const QModelIndex &index ){
     connect( ptw_sections_, &QTreeView::clicked, psw_, [this]( const QModelIndex &index ){
         qDebug()<<"pc."<< index.parent().column()<< " : pr."<< index.parent().row() <<" -- c."<< index.column()<< " : r."<< index.row()
-            <<" == " << index.data().toString()<< " :: " << index.internalId()
-        ;
-
-        //const QStandardItemModel *model =            qobject_cast<QStandardItemModel *>( ptw_sections_->model() );
+            <<" == " << index.data().toString()<< " :: " << index.internalId();
+        //const QStandardItemModel *model = qobject_cast<QStandardItemModel *>( ptw_sections_->model() );
         //const QStandardItem *item = model->itemFromIndex( index );
-
         const QTreeWidgetItem* ptiw = this->ptw_sections_->currentItem();
         const _tree_item*      pti  = this->pti_settings_root_->getEq(ptiw);//strange to look by pointer, but it works
         this->psw_->setCurrentWidget(pti->pw);
     });
+    class Header //from https://stackoverflow.com/questions/10082028/how-to-add-a-button-or-other-widget-in-qtreewidget-header
+        : public QHeaderView
+    {
+        public:
+        Header(QWidget* parent)
+            : QHeaderView(Qt::Horizontal, parent)
+            , pb_save_(new QPushButton("Save", this)){
+        }
+        private:
+        QPushButton* pb_save_ = nullptr;
+    };
+    //ptw_sections_->setHeader(new Header(ptw_sections_));
     return 1;
 }

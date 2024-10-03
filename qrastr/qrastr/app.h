@@ -42,8 +42,8 @@ public:
     std::shared_ptr<QAstra> getQAstraPtr(){ return m_sp_qastra;}
     long start();
 
-    Params m_params;
-    QDir qdirData_;
+    //Params m_params;
+    //QDir qdirData_;
     _v_cache_log v_cache_log_;
     std::shared_ptr<QAstra> m_sp_qastra;
     std::unique_ptr<CUIFormsCollection> upCUIFormsCollection_;

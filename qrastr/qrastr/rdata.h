@@ -731,6 +731,7 @@ public:
     //MyDenseDataBlock<FieldVariantData> nparray_;
     //MyDataSet nparray_;
     QDenseDataBlock<FieldVariantData> nparray_;
+    std::weak_ptr<QDenseDataBlock<FieldVariantData>> pnparray_;
 private:
     const int SIZE_STR_BUF = 500'000'000;
     long n_num_rows_ = 0;
