@@ -268,10 +268,12 @@ void RData::populate_qastra(QAstra* _pqastra)
 
     //DataBlock<FieldVariantData> nparray;
 
-    IRastrResultVerify(table->DenseDataBlock(str_cols_, nparray_, Options));
+    IRastrResultVerify(table->DataBlock(str_cols_, nparray_, Options));
     //IRastrResultVerify(table->SparseDataBlock(str_cols_, nparray,Options));   // падает эл 0;0 - monostate , а кастится к bool
-    const long* pIndicesChanged =  nparray_.ChangedIndices();            // массив записанных индексов (0...ValuesAvailable)
-    const size_t IndicesChangedCount = nparray_.ChangedIndicesCount();	// размер массива измененных индексов
+    //IRastrResultVerify(table->DataSet(str_cols_, nparray_, Options));
+
+    //const long* pIndicesChanged =  nparray_.ChangedIndices();            // массив записанных индексов (0...ValuesAvailable)
+   // const size_t IndicesChangedCount = nparray_.ChangedIndicesCount();	// размер массива измененных индексов
     //nparray.QDump();
 
     // Test populate with Sparse DataBlock

@@ -1,21 +1,139 @@
 #ifndef RDATA_H
 #define RDATA_H
-
+#pragma once
 #include "rastrhlp.h"
 #include "astra_exp.h"
 #include "astra_shared.h"
 #include "UIForms.h"
 #include "qastra.h"
-#include "iostream"
+//#include "iostream"
 //#include "stringutils.h";
-
 using WrapperExceptionType = std::runtime_error;
-#include "IPlainRastrWrappers.h"
+//#include "IDataBlocksWrappers.h"
+#include "QDataBlocks.h"
 
-//typedef std::variant< int, double, std::string >  _vt ;
+//using WrapperExceptionType = std::runtime_error;
+#include "IPlainRastrWrappers.h"
+//#include "IDataBlocksWrappers.h"
+
+
 typedef std::variant< bool,long, double, std::string >  _vt ;
 typedef std::vector< _vt > _col_data ;
 typedef std::vector<std::string> _vstr;
+
+/*
+struct ToString {
+    std::string operator()(std::monostate) { return { "def" }; }
+    std::string operator()(const long& value) { return std::to_string(value); }
+    std::string operator()(const uint64_t& value) { return std::to_string(value); }
+    std::string operator()(const double& value) { return std::to_string(value); }
+    std::string operator()(const bool& value) { return value ? "1" : "0"; }
+    std::string operator()(const std::string& value) { return value; }
+};
+template<typename T>
+struct VariantToString
+{
+    static std::string String(const T& Value)
+    {
+        return std::to_string(Value);
+    }
+};
+
+
+template<typename T>
+struct MapFieldVariantType
+{
+    static eFieldVariantType Type() noexcept;
+    static const std::string_view VerbalType() noexcept;
+};
+
+template<> eFieldVariantType MapFieldVariantType<FieldVariantData>::Type() noexcept { return eFieldVariantType::Monostate; }
+template<> eFieldVariantType MapFieldVariantType<double>::Type() noexcept { return eFieldVariantType::Double; }
+template<> eFieldVariantType MapFieldVariantType<bool>::Type() noexcept { return eFieldVariantType::Bool; }
+template<> eFieldVariantType MapFieldVariantType<std::string>::Type() noexcept { return eFieldVariantType::String; }
+template<> eFieldVariantType MapFieldVariantType<long>::Type() noexcept { return eFieldVariantType::Long; }
+template<> eFieldVariantType MapFieldVariantType<uint64_t>::Type() noexcept { return eFieldVariantType::Uint64; }
+template<> const std::string_view MapFieldVariantType<FieldVariantData>::VerbalType() noexcept { return "monostate"; }
+template<> const std::string_view MapFieldVariantType<double>::VerbalType() noexcept { return "double"; }
+template<> const std::string_view MapFieldVariantType<bool>::VerbalType() noexcept { return "bool"; }
+template<> const std::string_view MapFieldVariantType<std::string>::VerbalType() noexcept { return "string"; }
+template<> const std::string_view MapFieldVariantType<long>::VerbalType() noexcept { return "long"; }
+template<> const std::string_view MapFieldVariantType<uint64_t>::VerbalType() noexcept { return "uint64"; }
+
+template<typename T>
+struct VariantToString
+{
+    static std::string String(const T& Value)
+    {
+        return std::to_string(Value);
+    }
+};
+
+template<> std::string VariantToString<FieldVariantData>::String(const FieldVariantData& Value)
+{
+    return std::visit(ToString(), Value);
+}
+template<> std::string VariantToString<std::string>::String(const std::string& Value)
+{
+    return Value;
+}
+
+template<template<typename> class T>
+std::unique_ptr<IDataBlockBase> CreateDataBlock(eFieldVariantType Type)
+{
+    switch (Type)
+    {
+    case eFieldVariantType::Monostate: return std::make_unique<T<FieldVariantData>>();
+    case eFieldVariantType::Long: return std::make_unique<T<long>>();
+    case eFieldVariantType::Double: return std::make_unique<T<double>>();
+    case eFieldVariantType::Bool: return std::make_unique<T<bool>>();
+    case eFieldVariantType::String: return std::make_unique<T<std::string>>();
+    case eFieldVariantType::Uint64: return std::make_unique<T<uint64_t>>();
+    default: return nullptr;
+    }
+}
+
+const std::string_view MapFieldVariantName(eFieldVariantType Type)
+{
+    switch (Type)
+    {
+    case eFieldVariantType::Monostate: return MapFieldVariantType<FieldVariantData>::VerbalType();
+    case eFieldVariantType::Long: return MapFieldVariantType<long>::VerbalType();
+    case eFieldVariantType::Double: return MapFieldVariantType<double>::VerbalType();
+    case eFieldVariantType::Bool: return MapFieldVariantType<bool>::VerbalType();
+    case eFieldVariantType::String: return MapFieldVariantType<std::string>::VerbalType();
+    case eFieldVariantType::Uint64: return MapFieldVariantType<uint64_t>::VerbalType();
+    default: return nullptr;
+    }
+}
+
+
+template<template<typename> class T>
+std::unique_ptr<IDataBlockBase> CreateDataBlock(eFieldVariantType Type)
+{
+    switch (Type)
+    {
+    case eFieldVariantType::Monostate: return std::make_unique<T<FieldVariantData>>();
+    case eFieldVariantType::Long: return std::make_unique<T<long>>();
+    case eFieldVariantType::Double: return std::make_unique<T<double>>();
+    case eFieldVariantType::Bool: return std::make_unique<T<bool>>();
+    case eFieldVariantType::String: return std::make_unique<T<std::string>>();
+    case eFieldVariantType::Uint64: return std::make_unique<T<uint64_t>>();
+    default: return nullptr;
+    }
+}
+
+template<typename T>
+class DataBlockIndex : public T
+{
+protected:
+    IndexesT Indexes_;
+public:
+    const IndexT* const Indexes() const noexcept override { return Indexes_.size() ? Indexes_.data() : nullptr; }
+    IndexT* Indexes() noexcept override { return Indexes_.size() ? Indexes_.data() : nullptr; }
+    IndexT IndexesSize() const noexcept override { return static_cast<IndexT>(Indexes_.size()); }
+    IndexesT& IndexesVector() { return Indexes_; }
+};
 
 template<typename T>
 class DataBlock : public IRastrDataBlock<T>
@@ -175,6 +293,152 @@ protected:
     }
 };
 
+template<typename T>
+class DataBlockSparse : public DataBlock<T>
+{
+public:
+    T* Data() noexcept override { return nullptr; }
+    const T* const Data() const noexcept override { return nullptr; }
+    IndexT DataSize() const noexcept { return 0; };
+    IPlainRastrRetCode Set(IndexT Row, IndexT Column, const T& Value) noexcept override
+    {
+        std::cout << "Sparse block set(" << Row << "," << Column << "," << VariantToString<T>::String(Value) << ")" << std::endl;
+        return IPlainRastrRetCode::Ok;
+    }
+};
+
+class DataSet : public DataBlockIndex<IDataSetBase>
+{
+    using BaseT = DataBlockIndex<IDataSetBase>;
+protected:
+    IndexT RowsCount_ = 0;
+    struct ColumnHeader
+    {
+        std::unique_ptr<IDataBlockBase> Column;
+        std::string Name;
+    };
+    std::vector<ColumnHeader> Columns_;
+    // функция фабрика столбцов. Вы можете (и должны) будете наследовать свой класс столбца
+    // от IDataBlockColumn, и с помощью этого вложенного шаблона укажете его в качестве
+    // типа столбцов датасета
+    template<template<typename> class T>
+    std::unique_ptr<IDataBlockBase> CreateDataBlock(eFieldVariantType Type)
+    {
+        switch (Type)
+        {
+        case eFieldVariantType::Monostate: return std::make_unique<T<FieldVariantData>>();
+        case eFieldVariantType::Long: return std::make_unique<T<long>>();
+        case eFieldVariantType::Double: return std::make_unique<T<double>>();
+        case eFieldVariantType::Bool: return std::make_unique<T<bool>>();
+        case eFieldVariantType::String: return std::make_unique<T<std::string>>();
+        case eFieldVariantType::Uint64: return std::make_unique<T<uint64_t>>();
+        default: return nullptr;
+        }
+    }
+public:
+    IPlainRastrRetCode AddColumn(IndexT ColumnIndex, std::string_view Name, eFieldVariantType Type) noexcept override
+    {
+        try
+        {
+            // мы его создаем фабрикой, указывая тип __своего__ столбца, который делает то что вам нужно
+            // я здесь использую тот же самый датаблок
+            Columns_.emplace_back(ColumnHeader{ CreateDataBlock<DataBlock>(Type), std::string(Name) });
+            // если что-то пошло не так с созданием - у нас есть код возврата
+            if (Columns_.back().Column != nullptr)
+                return IPlainRastrRetCode::Ok;
+            Columns_.pop_back();
+        }
+        catch (const std::exception&)
+        {
+            return IPlainRastrRetCode::Failed;
+        }
+        return IPlainRastrRetCode::Failed;
+    }
+
+    IndexT RowsCount() const noexcept override { return RowsCount_; }
+    void Clear()
+    {
+        Columns_.clear();
+        RowsCount_ = 0;
+    }
+    IPlainRastrRetCode SetBlockSize(IndexT RowsCount, IndexT ColumnsCount, bool UseIndexes) noexcept override
+    {
+        try
+        {
+            BaseT::IndexesVector().clear();
+            RowsCount_ = 0;
+            if (ColumnsCount > static_cast<IndexT>(Columns_.size()))
+                return IPlainRastrRetCode::Failed;
+
+            for (const auto& Column : Columns_)
+
+                if (Column.Column->SetBlockSize(RowsCount, 1) == IPlainRastrRetCode::Failed)
+
+                    return IPlainRastrRetCode::Failed;
+            BaseT::IndexesVector().resize(RowsCount);
+            RowsCount_ = RowsCount;
+        }
+        catch (const std::exception&)
+        {
+            return IPlainRastrRetCode::Failed;
+        }
+
+        return IPlainRastrRetCode::Ok;
+    }
+    IndexT ColumnsCount() const noexcept override { return static_cast<IndexT>(Columns_.size()); }
+    const IDataBlockBase* Column(IndexT ColumnIndex) const noexcept override
+    {
+        return ColumnIndex >= 0 && ColumnIndex < Columns_.size() ? Columns_[ColumnIndex].Column.get() : nullptr;
+    }
+    IDataBlockBase* Column(IndexT ColumnIndex) noexcept override
+    {
+        return ColumnIndex >= 0 && ColumnIndex < Columns_.size() ? Columns_[ColumnIndex].Column.get() : nullptr;
+    }
+
+    double Sparcity()
+    {
+        double Nzs{ 0 };
+        for (const auto& column : Columns_)
+            Nzs += column.Column->DataSize();
+        return Nzs > 0.0 ? Nzs / (RowsCount() * ColumnsCount()) : Nzs;
+    }
+
+    void Dump()
+    {
+        std::cout << "DataSet " << RowsCount() << "x" << ColumnsCount() << std::endl;
+        for (const auto& Column : Columns_)
+            std::cout << Column.Name << "(" <<
+                static_cast<std::underlying_type<eFieldVariantType>::type>(Column.Column->Type()) << ",[" <<
+                Column.Column->DataSize() << "]" <<
+                ");";
+        std::cout << std::endl;
+        for (IndexT row{ 0 }; row < RowsCount(); row++)
+        {
+            for (IndexT column = 0; column < ColumnsCount(); column++)
+            {
+                if (column)
+                    std::cout << ";";
+                else if (row < BaseT::IndexesVector().size())
+                    std::cout << BaseT::IndexesVector()[row] << ";";
+
+                const auto& col{ Column(column) };
+                if (col->DataSize() == RowsCount())
+                    std::cout << std::visit(ToString(), Column(column)->Get(row, 0));
+                else
+                {
+                    auto CurrentIndex{ BaseT::IndexesVector()[row] };
+                    auto first{ col->Indexes() };
+                    auto last{ first + col->IndexesSize() };
+                    auto locindex{ std::lower_bound(col->Indexes(), last, CurrentIndex) };
+                    if(locindex != last && CurrentIndex == *locindex)
+                        std::cout << std::visit(ToString(), Column(column)->Get(static_cast<IndexT>(locindex - first), 0));
+                }
+            }
+            std::cout << std::endl;
+        }
+    }
+};
+*/
 class RCol
     : public _col_data
 {
@@ -290,7 +554,7 @@ public:
         IRastrTablePtr table{ tablesx->Item(table_name_) };
         IRastrColumnsPtr columns{ table->Columns() };
         IRastrColumnPtr col_ptr{ columns->Item(str_name_) };
-        col_ptr->SetProperty(FieldProperties::Precision,str_prec);
+        IRastrResultVerify{col_ptr->SetProperty(FieldProperties::Precision,str_prec)};
         return str_prec;
     }
     std::string expr() const{
@@ -395,6 +659,7 @@ public:
     {
         pqastra_ = _pqastra;
         t_name_ = _t_name;
+        //nparray_ = new  MyDenseDataBlock<FieldVariantData>(pqastra_);
     }
     void SetNumRows(long n_new_num_rows){
         n_num_rows_ = n_new_num_rows;
@@ -410,9 +675,6 @@ public:
 
     int AddRow(int index = -1);
     int RemoveRDMRow(int index = -1);
-
-
-
 
     void Initialize(CUIForm _form, QAstra* _pqastra);
     void Initialize(nlohmann::json _j_Fields , nlohmann::json _j_metas,_vstr _vstr_fields_form);// old
@@ -465,7 +727,10 @@ public:
     std::string t_title_ = "";
     std::string str_cols_ = "";                     // строка имен столбцов ex: "ny,pn,qn,vras"
     //nlohmann::json j_metas_;                        // Мета информация о таблице (шаблон)
-    DataBlock<FieldVariantData> nparray_;
+    //DataBlock<FieldVariantData> nparray_;
+    //MyDenseDataBlock<FieldVariantData> nparray_;
+    //MyDataSet nparray_;
+    QDenseDataBlock<FieldVariantData> nparray_;
 private:
     const int SIZE_STR_BUF = 500'000'000;
     long n_num_rows_ = 0;

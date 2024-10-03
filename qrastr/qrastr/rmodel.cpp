@@ -24,22 +24,47 @@ int RModel::populateDataFromRastr(){
     return 1;
 };
 int RModel::rowCount(const QModelIndex & /*parent*/) const{
-    return static_cast<int>(up_rdata->nparray_.Rows());
+    return static_cast<int>(up_rdata->nparray_.RowsCount());
 }
 int RModel::columnCount(const QModelIndex & /*parent*/) const{
-    return static_cast<int>(up_rdata->nparray_.Columns());
+    return static_cast<int>(up_rdata->nparray_.ColumnsCount());
 }
 
 QVariant RModel::data(const QModelIndex &index, int role) const
 {
+    struct ToQVariant {
+        QVariant operator()(std::monostate) { return { QVariant() }; }
+        QVariant operator()(const long& value) { return (qlonglong)value; }
+        QVariant operator()(const uint64_t& value) { return value; }
+        QVariant operator()(const double& value) { return value; }
+        QVariant operator()(const bool& value) { return value; }
+        QVariant operator()(const std::string& value) { return std::string(value).c_str(); }
+
+    };
+
+    struct ToString {
+        std::string operator()(std::monostate) { return { "def" }; }
+        std::string operator()(const long& value) { return std::to_string(value); }
+        std::string operator()(const uint64_t& value) { return std::to_string(value); }
+        std::string operator()(const double& value) { return std::to_string(value); }
+        std::string operator()(const bool& value) { return value ? "1" : "0"; }
+        std::string operator()(const std::string& value) { return value; }
+    };
     int row = index.row();
     int col = index.column();
 
     QVariant item;
 
+
     RData::const_iterator iter_col = up_rdata->begin() + col;
     //_col_data::const_iterator iter_data = (*iter_col).begin() + row;
-    auto datablock_item = up_rdata->nparray_.Data()[row * up_rdata->nparray_.Columns() + col];
+  //  auto datablock_item = up_rdata->nparray_.Data()[row * up_rdata->nparray_.ColumnsCount() + col];
+    auto datablock_item = up_rdata->nparray_.Get(row,col);
+
+   // MapFieldVariantType
+
+    QVariant res = std::visit(ToQVariant(),datablock_item);
+    std::string str = std::visit(ToString(),datablock_item);
     switch (role) {
         /*case Qt::CheckStateRole:
             if (row == 1 && col == 0) //add a checkbox to cell(1,0)
@@ -64,13 +89,24 @@ QVariant RModel::data(const QModelIndex &index, int role) const
 
             //Fill from QAstra->DataBlock
             //switch((*iter_data).index()){
-                switch( iter_col->en_data_){
+            /*switch( iter_col->en_data_){
                 case RCol::_en_data::DATA_BOOL: item =  std::get<bool>(datablock_item); break;
                 case RCol::_en_data::DATA_INT: item =  (qlonglong)std::get<long>(datablock_item) ;                 break;
                 case RCol::_en_data::DATA_STR: item =  std::get<std::string>(datablock_item).c_str(); break;
                 case RCol::_en_data::DATA_DBL: item =  std::get<double>(datablock_item);               break;
-            default :                      item =  ( "type_unknown" );                         break;
-            }
+            default :                      item =  ( "type_unknown" );                         break;*/
+
+            //Fill from QAstra->DataBlock new
+
+           /* switch( iter_col->en_data_){
+                case RCol::_en_data::DATA_BOOL: item =  std::get<bool>(datablock_item); break;
+                case RCol::_en_data::DATA_INT: item =  (qlonglong)std::get<long>(datablock_item) ;                 break;
+                case RCol::_en_data::DATA_STR: item =  std::get<std::string>(datablock_item).c_str(); break;
+                case RCol::_en_data::DATA_DBL: item =  std::get<double>(datablock_item);         break;
+                default :                      item =  ( "type_unknown" );                         break;
+            }*/
+            item = std::visit(ToQVariant(),datablock_item);
+
         return item;
 
         case Qt::ToolTipRole:
@@ -177,8 +213,9 @@ bool RModel::setData(const QModelIndex &index, const QVariant &value, int role)
             {
                 bool val =  value.toBool();
                 FieldVariantData vd(val);
-                up_rdata->nparray_.EmplaceSaveIndChange(row,col,vd);
-                col_ptr->SetValue(row,val);
+                //up_rdata->nparray_.EmplaceSaveIndChange(row,col,vd);
+                //up_rdata->nparray_.Set(row,col,vd);
+                IRastrResultVerify(col_ptr->SetValue(row,val));
                 qDebug() << "set: "<<up_rdata->t_name_.c_str()<<"."<< (*iter_col).str_name_.c_str() << "(" << row << ")=" <<val;
                 break;
              }
@@ -186,8 +223,9 @@ bool RModel::setData(const QModelIndex &index, const QVariant &value, int role)
             {
                 long val =  value.toInt();
                 FieldVariantData vd(val);
-                up_rdata->nparray_.EmplaceSaveIndChange(row,col,vd);
-                col_ptr->SetValue(row,val);
+                //up_rdata->nparray_.EmplaceSaveIndChange(row,col,vd);
+                //up_rdata->nparray_.Set(row,col,vd);
+                IRastrResultVerify(col_ptr->SetValue(row,val));
                 qDebug() << "set: "<<up_rdata->t_name_.c_str()<<"."<< (*iter_col).str_name_.c_str() << "(" << row << ")=" <<val;
                 break;
             }
@@ -195,8 +233,9 @@ bool RModel::setData(const QModelIndex &index, const QVariant &value, int role)
             {
                 std::string val =  value.toString().toStdString().c_str();
                 FieldVariantData vd(val);
-                up_rdata->nparray_.EmplaceSaveIndChange(row,col,vd);
-                col_ptr->SetValue(row,val);
+                //up_rdata->nparray_.EmplaceSaveIndChange(row,col,vd);
+                //up_rdata->nparray_.Set(row,col,vd);
+                IRastrResultVerify(col_ptr->SetValue(row,val));
                 qDebug() << "set: "<<up_rdata->t_name_.c_str()<<"."<< (*iter_col).str_name_.c_str() << "(" << row << ")=" <<val;
                 break;
             }
@@ -205,8 +244,9 @@ bool RModel::setData(const QModelIndex &index, const QVariant &value, int role)
             {
                 double val =  value.toDouble();
                 FieldVariantData vd(val);
-                up_rdata->nparray_.EmplaceSaveIndChange(row,col,vd);
-                col_ptr->SetValue(row,val);
+                //up_rdata->nparray_.EmplaceSaveIndChange(row,col,vd);
+                //up_rdata->nparray_.Set(row,col,vd);
+                IRastrResultVerify(col_ptr->SetValue(row,val));
                 qDebug() << "set: "<<up_rdata->t_name_.c_str()<<"."<< (*iter_col).str_name_.c_str() << "(" << row << ")=" <<val;
             }
                 break;
@@ -331,21 +371,28 @@ void RModel::onRModelchange(std::string _t_name, std::string _col_name, int row,
         {
             bool val =  value.toBool();
             FieldVariantData vd(val);
-            up_rdata->nparray_.EmplaceSaveIndChange(row,col,vd);
+            //up_rdata->nparray_.EmplaceSaveIndChange(row,col,vd);
+            up_rdata->nparray_.Set(row,col,vd);
             break;
         }
         case RCol::_en_data::DATA_INT:
         {
             long val =  value.toInt();
             FieldVariantData vd(val);
-            up_rdata->nparray_.EmplaceSaveIndChange(row,col,vd);
+            up_rdata->nparray_.Set(row,col,vd);
+              //variant_block.Data()[row * variant_block.ColumnsCount() + 4] = std::string("оттакой");
+            up_rdata->nparray_.Data()[row * up_rdata->nparray_.ColumnsCount() +row] = val;
+
+            //up_rdata->nparray_.Data()[]
+            //up_rdata->nparray_.Set(Da)
+
             break;
         }
         case RCol::_en_data::DATA_STR:
         {
             std::string val =  value.toString().toStdString().c_str();
             FieldVariantData vd(val);
-            up_rdata->nparray_.EmplaceSaveIndChange(row,col,vd);
+            up_rdata->nparray_.Set(row,col,vd);
             break;
         }
         break;
@@ -353,7 +400,7 @@ void RModel::onRModelchange(std::string _t_name, std::string _col_name, int row,
         {
             double val =  value.toDouble();
             FieldVariantData vd(val);
-            up_rdata->nparray_.EmplaceSaveIndChange(row,col,vd);
+            up_rdata->nparray_.Set(row,col,vd);
         }
         break;
         default :

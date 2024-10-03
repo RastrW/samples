@@ -12,8 +12,8 @@
 #include <QProgressDialog>
 #include "CondFormat.h"
 #include "qastra.h"
-using WrapperExceptionType = std::runtime_error;
-#include "IPlainRastrWrappers.h"
+//using WrapperExceptionType = std::runtime_error;
+//#include "IPlainRastrWrappers.h"
 #include "comboboxdelegate.h"
 #include "doubleitemdelegate.h"
 #include "checkboxdelegate.h"
@@ -23,7 +23,6 @@ RtabWidget::RtabWidget(QWidget *parent) :
       QWidget(parent),
       customizeFrame(this, Qt::Popup | Qt::Window)
 {
-    //ptv = new RTableView();
     ptv = new RTableView(this);
 }
 
@@ -48,7 +47,6 @@ RtabWidget::RtabWidget(QAstra* pqastra,CUIForm UIForm, QWidget *parent)
 
     customizeFrame.hide();
 
-    //QObject::connect( m_pqastra, SIGNAL( onRastrHint(const _hint_data&) ), this, SLOT( onRastrHint(const _hint_data&) ) );
     connect(m_pqastra, &QAstra::onRastrHint, this, &RtabWidget::onRastrHint);
     connect(ptv, SIGNAL(onCornerButtonPressed()), SLOT(cornerButtonPressed()));
 

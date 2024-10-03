@@ -142,6 +142,10 @@ set(PROJECT_SOURCES
     rastrhlp.cpp
     rdata.h
     rdata.cpp
+    IDataBlocksWrappers.h
+    IDataBlocksWrappers.cpp
+    QDataBlocks.h
+    QDataBlocks.cpp
     testmodel.h
     testmodel.cpp
     rtabwidget.h
@@ -186,6 +190,8 @@ if(${QT_VERSION_MAJOR} GREATER_EQUAL 6)
     qt_add_executable( ${PROJECT_NAME}
         MANUAL_FINALIZATION
         ${PROJECT_SOURCES}
+
+
     )
     qt_create_translation( QM_FILES ${CMAKE_SOURCE_DIR} ${TS_FILES} )
 else()
