@@ -5,34 +5,12 @@
 #include "app.h"
 #include "formsettings.h"
 
-
-#include <singleton_dclp.hpp>
-
-class Foo
-    : public SingletonDclp<Foo>{
-public:
-    Foo(int n):n_{n}{
-    }
-    virtual ~Foo(){
-        //assert(0);
-    }
-    void Bar() {
-        //assert(0);
-    }
-private:
-    int n_;
-};
-int main123(int argc, char *argv[]){
+int main23(int argc, char *argv[]){
     int n_res = 0;
     //QApplication app(argc, argv);
     App app(argc, argv);
     n_res = app.init(); assert(n_res>0);
     app.setWindowIcon(QIcon(":/images/new.png"));
-
-    Foo::Construct(17);
-    const Foo* pf = Foo::GetInstance();
-    Foo::GetInstance()->Bar();
-    Foo::Destruct();
 
     n_res = app.start();
     if(n_res<0){
