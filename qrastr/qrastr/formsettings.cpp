@@ -108,8 +108,8 @@ FormSettings::FormSettings(QWidget *parent)
     splitter->addWidget(psw_);
     layout->addWidget(splitter);
     ppb_save_settings_ = new QPushButton();
-    setButtonSaveEnabled(false);
-    ppb_save_settings_->setText("Save");
+    //setButtonSaveEnabled(false);
+    ppb_save_settings_->setText(QString("%1 : %2").arg("Save: ").arg(Params::GetInstance()->getFileAppsettings().string().c_str()));
     connect( ppb_save_settings_, &QPushButton::clicked, this, &FormSettings::onBtnSaveClick );
     layout->addWidget(ppb_save_settings_);
     setLayout(layout);
@@ -119,8 +119,22 @@ void FormSettings::setButtonSaveEnabled(bool bl_new_val){
 }
 void FormSettings::onBtnSaveClick(){
     //Params::GetInstance()->Get_on_start_load_file_forms();
-    assert(!"save!!!");
-    //Params::GetInstance()->WriteJsonFile();
+    Params* p_params = Params::GetInstance();
+    const std::filesystem::path path_appsettings = p_params->getFileAppsettings();
+    if(std::filesystem::exists(path_appsettings))
+    {
+        QMessageBox msgBox;
+        msgBox.setText(tr("File existed.Overwrite?"));
+        msgBox.setIcon(QMessageBox::Question);
+        msgBox.setStandardButtons( QMessageBox::Yes | QMessageBox::No | QMessageBox::Cancel );
+        msgBox.setDefaultButton(QMessageBox::No);
+        if(QMessageBox::Yes == msgBox.exec()){
+            std::filesystem::path path_appsettings_cpy = path_appsettings;
+            path_appsettings_cpy.replace_filename(path_appsettings.stem().string()+"_previos"+path_appsettings.extension().string());
+            std::filesystem::copy(path_appsettings, path_appsettings_cpy, std::filesystem::copy_options::overwrite_existing);
+            Params::GetInstance()->writeJsonFile(path_appsettings.string());
+        }
+    }
 }
 int FormSettings::init(){
     pti_settings_root_ = new _tree_item{"root","Настройки"};

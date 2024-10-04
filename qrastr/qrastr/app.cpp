@@ -20,6 +20,7 @@ App::App(int &argc, char **argv)
     upCUIFormsCollection_ = std::make_unique<CUIFormsCollection>();
 }
 App::~App() {
+    Params::Destruct();
 }
 bool App::event( QEvent *event ){
     const bool done = QApplication::event( event);
@@ -65,7 +66,7 @@ void App::_v_cache_log::add( const spdlog::level::level_enum lev_in, const std::
 long App::readSettings(){ //it cache log messages to vector, because it called befor logger intialization
     try{
         Params::Construct();
-        QSettings settings(pchSettingsOrg_);
+        QSettings settings(Params::pch_org_qrastr_);
         QPoint pos = settings.value("pos", QPoint(200, 200)).toPoint();
         QSize size = settings.value("size", QSize(600, 800)).toSize();
         //move(pos);
@@ -75,43 +76,36 @@ long App::readSettings(){ //it cache log messages to vector, because it called b
         QString qstr_curr_path = QDir::currentPath();
         std::string str_path_2_conf = "undef";
 #if(defined(COMPILE_WIN))
-        //str_path_2_conf = R"(C:\projects\git_web\samples\qrastr\qrastr\appsettings.json)";
-        //str_path_2_conf = R"(appsettings.json)";
-        str_path_2_conf = qstr_curr_path.toStdString()+ "/../"+pchSettingsDirData_ + "/appsettings.json";
-        //str_path_2_conf = R"(..\..\appsettings.json)";
+        str_path_2_conf = qstr_curr_path.toStdString()+ "/../"+Params::pch_dir_data_ +"/"+ Params::pch_fname_appsettings;
 #else
         str_path_2_conf = R"(/home/ustas/projects/git_web/samples/qrastr/qrastr/appsettings.json)";
-        //QMessageBox mb( QMessageBox::Icon::Critical, QObject::tr("Error"), QString("In lin not implemented!") );  mb.exec();
+        QMessageBox mb( QMessageBox::Icon::Critical, QObject::tr("Error"), QString("In lin not implemented!") );  mb.exec();
 #endif
-        QFileInfo qfi(str_path_2_conf.c_str());
+        QFileInfo fi_appsettings(str_path_2_conf.c_str());
         Params* p_params = Params::GetInstance();
         if(p_params!=nullptr){
-            //qdirData_ = qfi.dir();
-            p_params->setDirData(qfi.dir());
-            //const bool bl_res = QDir::setCurrent(qdirData_.path());
+            p_params->setDirData(fi_appsettings.dir());
             const bool bl_res = QDir::setCurrent(p_params->getDirData().path());
             if(bl_res == true){
-                //v_cache_log_.add(spdlog::level::info, "Set DataDir: {}", qdirData_.path().toStdString());
                 v_cache_log_.add(spdlog::level::info, "Set DataDir: {}", p_params->getDirData().path().toStdString());
             }else{
-                //v_cache_log_.add(spdlog::level::err, "Can't set DataDir: {}", qdirData_.path().toStdString());
                 v_cache_log_.add(spdlog::level::err, "Can't set DataDir: {}", p_params->getDirData().path().toStdString());
             }
-            //nRes = m_params.ReadJsonFile(str_path_2_conf);
-            p_params->ReadJsonFile(str_path_2_conf);
+            p_params->readJsonFile(str_path_2_conf);
             if(nRes<0){
                 QMessageBox mb;
                 // так лучше не делать ,смешение строк qt и std это боль.
                 QString qstr = QObject::tr("Can't load on_start_file: ");
                 std::string qstr_fmt = qstr.toUtf8().constData(); //  qstr.toStdString(); !!not worked!!
-                //std::string ss = fmt::format( "{}{} ", qstr_fmt.c_str(), m_params.Get_on_start_load_file_rastr());
-                std::string ss = fmt::format( "{}{} ", qstr_fmt.c_str(), p_params->Get_on_start_load_file_rastr());
+                //std::string ss = fmt::format( "{}{} ", qstr_fmt.c_str(), p_params->Get_on_start_load_file_rastr());
+                std::string ss = "error in files load";
                 QString str = QString::fromUtf8(ss.c_str());
                 mb.setText(str);
                 v_cache_log_.add( spdlog::level::err, "{} ReadJsonFile {}", nRes, str.toStdString());
                 mb.exec();
                 return -1;
             }
+            p_params->setFileAppsettings(str_path_2_conf);
         }else{
             v_cache_log_.add(spdlog::level::err, "Can't create singleton Params");
         }
@@ -125,11 +119,9 @@ long App::readSettings(){ //it cache log messages to vector, because it called b
     return 1;
 }
 long App::writeSettings(){
-    QSettings settings(pchSettingsOrg_);
+    QSettings settings(Params::pch_org_qrastr_);
     //QSettings::IniFormat
     QString qstr = settings.fileName();
-    //settings.setValue("pos", pos());
-    //settings.setValue("size", size());
     return 1;
 }
 long App::init(){
@@ -160,10 +152,6 @@ long App::init(){
     return 1;
 }
 void App::loadPlugins(){
-    //const auto staticInstances = QPluginLoader::staticInstances();
-    //for (QObject *plugin : staticInstances){
-    //    spdlog::log(spdlog::level::info, "Load static plugin: {}", plugin->objectName().toStdString());
-    //}
     QDir pluginsDir{QDir{QCoreApplication::applicationDirPath()}};
     pluginsDir.cd("plugins");
     spdlog::info("Plugins dir: {}", pluginsDir.absolutePath().toStdString());
@@ -174,10 +162,6 @@ void App::loadPlugins(){
 #endif
     for( const QString &fileName : entryList ){
         QPluginLoader loader(pluginsDir.absoluteFilePath(fileName));
-
-//        spdlog::info("loader.bindableObjectName: {}", loader.bindableObjectName().value().toStdString());
-//        spdlog::info("loader.fileName: {}", loader.fileName().toStdString());
-//        spdlog::info("loader.objectName: {}", loader.objectName().toStdString());
         QObject *plugin = loader.instance();
         if(plugin){
             spdlog::info( "Load dynamic plugin {}/{} : {}", pluginsDir.absolutePath().toStdString(), fileName.toStdString(), plugin->objectName().toStdString());
@@ -192,44 +176,9 @@ void App::loadPlugins(){
                         spdlog::error( "rastr==null" );
                         continue;
                     }
+                    //m_sp_qastra = std::move( std::make_shared<QAstra>());
                     m_sp_qastra = std::make_shared<QAstra>();
                     m_sp_qastra->setRastr(rastr);
-
-                    /*const bool myConnection = QObject::connect( m_sp_qastra.get(), SIGNAL( onRastrHint(const _hint_data&) ), this, SLOT( tst_onRastrHint(const _hint_data&) ) );
-                    assert(myConnection == true);
-
-                    m_sp_qastra->setRastr(rastr);
-                    QDir::setCurrent(qdirData_.absolutePath());
-                    m_sp_qastra->LoadFile( eLoadCode::RG_REPL, m_params.Get_on_start_load_file_rastr(), "" );
-                    if(true){
-                        //vetv
-                        TstHints* tstHints_vetv = new TstHints(this);
-                        tstHints_vetv->setQAstra(std::weak_ptr<QAstra>(m_sp_qastra));
-                        tstHints_vetv->setTableName("vetv");
-                        tstHints_vetv->setColNames({"ip","iq","np","name","pl_ip","slb"});
-                        const bool my0 = QObject::connect( m_sp_qastra.get(), SIGNAL( onRastrHint(const _hint_data&) ), tstHints_vetv, SLOT( onRastrHint(const _hint_data&) ) );
-                        assert(my0 == true);
-                        auto dw_tst_hints_vetv = new ads::CDockWidget( "TstHints", this);
-                        dw_tst_hints_vetv->setWidget(tstHints_vetv);
-                        dw_tst_hints_vetv->move(QPoint(20, 20));
-                        auto container_tsthints_vetv = m_DockManager->addDockWidgetFloating(dw_tst_hints_vetv);
-                        container_tsthints_vetv->move(QPoint(1800,10));
-                        container_tsthints_vetv->resize(600,400);
-                        //node
-                        TstHints* tstHints = new TstHints(this);
-                        tstHints->setQAstra(std::weak_ptr<QAstra>(m_sp_qastra));
-                        tstHints->setTableName("node");
-                        tstHints->setColNames({"ny","name","vras","delta"});
-                        const bool my1 = QObject::connect( m_sp_qastra.get(), SIGNAL( onRastrHint(const _hint_data&) ), tstHints, SLOT( onRastrHint(const _hint_data&) ) );
-                        assert(my1 == true);
-                        auto dw_tst_hints = new ads::CDockWidget( "TstHints", this);
-                        dw_tst_hints->setWidget(tstHints);
-                        dw_tst_hints->move(QPoint(20, 20));
-                        auto container_tsthints = m_DockManager->addDockWidgetFloating(dw_tst_hints);
-                        container_tsthints->move(QPoint(1400,20));
-                        container_tsthints->resize(600,400);
-                    }
-                    */
                 }catch(const std::exception& ex){
                     exclog(ex);
                 }catch(...){
@@ -241,15 +190,16 @@ void App::loadPlugins(){
     }
 }
 // form files are deployed in form catalog near qrastr.exe
-long App::ReadForms(std::string str_path_forms){
+long App::readForms(){
     try{
-        std::vector<std::string> forms = split(str_path_forms, ',');
+        //std::vector<std::string> forms = split(str_path_forms, ',');
         std::filesystem::path path_forms ("form");
         std::filesystem::path path_form_load;
 #if(defined(_MSC_VER))
         //on Windows, you MUST use 8bit ANSI (and it must match the user's locale) or UTF-16 !! Unicode!
         //!!! https://stackoverflow.com/questions/30829364/open-utf8-encoded-filename-in-c-windows  !!!
-        for (std::string &form : forms){
+        //for (std::string &form : forms){
+        for(const Params::_v_forms::value_type &form : Params::GetInstance()->getForms()){
             std::filesystem::path path_file_form = stringutils::utf8_decode(form);
             path_form_load =  path_forms / path_file_form;
             qDebug() << "read form from file : " << path_form_load.wstring();
@@ -307,25 +257,32 @@ long App::start(){
         loadPlugins();
         if(nullptr!=m_sp_qastra){
             //m_sp_qastra->LoadFile( eLoadCode::RG_REPL, m_params.Get_on_start_load_file_rastr(), "" );
-            m_sp_qastra->LoadFile( eLoadCode::RG_REPL, Params::GetInstance()->Get_on_start_load_file_rastr(), "" );
-            if(n_res<0){
-                spdlog::error("{} =LoadFile()", n_res);
-                QMessageBox mb( QMessageBox::Icon::Critical, QObject::tr("Error"),
-                                //QString("error: %1 wheh read file : %2").arg(n_res).arg(m_params.Get_on_start_load_file_rastr().c_str())
-                                QString("error: %1 wheh read file : %2").arg(n_res).arg(Params::GetInstance()->Get_on_start_load_file_rastr().c_str())
-                               );
-                mb.exec();
+            for(const Params::_v_file_templates::value_type& file_template : Params::GetInstance()->getFileTemplates()){
+                //m_sp_qastra->LoadFile( eLoadCode::RG_REPL, Params::GetInstance()->Get_on_start_load_file_rastr(), "" );
+                QDir dir = Params::GetInstance()->getDirSHABLON();
+                std::filesystem::path path_template = Params::GetInstance()->getDirSHABLON().filesystemPath();
+                path_template /= file_template.second;
+                m_sp_qastra->LoadFile( eLoadCode::RG_REPL, file_template.first, path_template.string() );
+                if(n_res<0){
+                    spdlog::error("{} =LoadFile()", n_res);
+                    QMessageBox mb( QMessageBox::Icon::Critical, QObject::tr("Error"),
+                                    //QString("error: %1 wheh read file : %2").arg(n_res).arg(m_params.Get_on_start_load_file_rastr().c_str())
+                                    QString("error: %1 wheh read file : %2").arg(n_res).arg(file_template.first.c_str())
+                                   );
+                    mb.exec();
+                }
             }
         }
         //spdlog::info("ReadForms: {}", m_params.Get_on_start_load_file_forms() );
-        spdlog::info("ReadForms: {}", Params::GetInstance()->Get_on_start_load_file_forms() );
+        spdlog::info("ReadForms");
         //n_res = ReadForms(m_params.Get_on_start_load_file_forms());
-        n_res = ReadForms(Params::GetInstance()->Get_on_start_load_file_forms());
+        //n_res = ReadForms(Params::GetInstance()->Get_on_start_load_file_forms());
+        n_res = readForms();
         if(n_res<0){
             spdlog::error("{} =ReadForms()", n_res);
-            QMessageBox mb( QMessageBox::Icon::Critical, QObject::tr("Error"),
+            QMessageBox mb( QMessageBox::Icon::Critical, QObject::tr("Error"), QObject::tr("Can't read forms")
                             //QString("error: %1 wheh read file : %2").arg(n_res).arg(m_params.Get_on_start_load_file_forms().c_str())
-                            QString("error: %1 wheh read file : %2").arg(n_res).arg(Params::GetInstance()->Get_on_start_load_file_forms().c_str())
+                            //QString("error: %1 wheh read file : %2").arg(n_res).arg(Params::GetInstance()->Get_on_start_load_file_forms().c_str())
                            );
             mb.exec();
         }

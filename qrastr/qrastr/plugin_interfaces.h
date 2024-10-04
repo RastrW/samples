@@ -1,15 +1,8 @@
 #ifndef PLUGIN_INTERFACES_H
 #define PLUGIN_INTERFACES_H
 
-#include <QtPlugin>
 QT_BEGIN_NAMESPACE
-class QImage;
-class QPainter;
-class QWidget;
-class QPainterPath;
-class QPoint;
-class QRect;
-class QString;
+#include <QtPlugin>
 QT_END_NAMESPACE
 
 class IPlainRastr;

@@ -37,7 +37,7 @@ public:
     long writeSettings();
     long init();
     void loadPlugins();
-    long ReadForms(std::string str_path_forms);
+    long readForms();
     std::list<CUIForm>& GetForms() const;
     std::shared_ptr<QAstra> getQAstraPtr(){ return m_sp_qastra;}
     long start();
@@ -49,8 +49,6 @@ public:
     std::unique_ptr<CUIFormsCollection> upCUIFormsCollection_;
 
 
-    static constexpr char pchSettingsDirData_[5]{"Data"};
-    static constexpr char pchSettingsOrg_[7]{"QRastr"};
 };
 
 #endif // APP_H

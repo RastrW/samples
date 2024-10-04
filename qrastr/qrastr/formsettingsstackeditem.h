@@ -1,7 +1,6 @@
 #ifndef FORMSETTINGSSTACKEDITEM_H
 #define FORMSETTINGSSTACKEDITEM_H
 
-
 class FormSettings;
 class FormSettingsStackedItem
 {
