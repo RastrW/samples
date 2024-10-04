@@ -30,41 +30,27 @@ int RModel::columnCount(const QModelIndex & /*parent*/) const{
     return static_cast<int>(up_rdata->nparray_.ColumnsCount());
 }
 
+struct ToQVariant {
+    QVariant operator()(std::monostate) { return { QVariant() }; }
+    QVariant operator()(const long& value) { return (qlonglong)value; }
+    QVariant operator()(const uint64_t& value) { return value; }
+    QVariant operator()(const double& value) { return value; }
+    QVariant operator()(const bool& value) { return value; }
+    QVariant operator()(const std::string& value) { return std::string(value).c_str(); }
+
+};
+
 QVariant RModel::data(const QModelIndex &index, int role) const
 {
-    struct ToQVariant {
-        QVariant operator()(std::monostate) { return { QVariant() }; }
-        QVariant operator()(const long& value) { return (qlonglong)value; }
-        QVariant operator()(const uint64_t& value) { return value; }
-        QVariant operator()(const double& value) { return value; }
-        QVariant operator()(const bool& value) { return value; }
-        QVariant operator()(const std::string& value) { return std::string(value).c_str(); }
-
-    };
-
-    struct ToString {
-        std::string operator()(std::monostate) { return { "def" }; }
-        std::string operator()(const long& value) { return std::to_string(value); }
-        std::string operator()(const uint64_t& value) { return std::to_string(value); }
-        std::string operator()(const double& value) { return std::to_string(value); }
-        std::string operator()(const bool& value) { return value ? "1" : "0"; }
-        std::string operator()(const std::string& value) { return value; }
-    };
     int row = index.row();
     int col = index.column();
 
     QVariant item;
-
-
-    RData::const_iterator iter_col = up_rdata->begin() + col;
+    //RData::const_iterator iter_col = up_rdata->begin() + col;
     //_col_data::const_iterator iter_data = (*iter_col).begin() + row;
-  //  auto datablock_item = up_rdata->nparray_.Data()[row * up_rdata->nparray_.ColumnsCount() + col];
-    auto datablock_item = up_rdata->nparray_.Get(row,col);
+    // auto datablock_item = up_rdata->nparray_.Data()[row * up_rdata->nparray_.ColumnsCount() + col];
+    //auto datablock_item = up_rdata->nparray_.Get(row,col);
 
-   // MapFieldVariantType
-
-    QVariant res = std::visit(ToQVariant(),datablock_item);
-    std::string str = std::visit(ToString(),datablock_item);
     switch (role) {
         /*case Qt::CheckStateRole:
             if (row == 1 && col == 0) //add a checkbox to cell(1,0)
@@ -97,15 +83,7 @@ QVariant RModel::data(const QModelIndex &index, int role) const
             default :                      item =  ( "type_unknown" );                         break;*/
 
             //Fill from QAstra->DataBlock new
-
-           /* switch( iter_col->en_data_){
-                case RCol::_en_data::DATA_BOOL: item =  std::get<bool>(datablock_item); break;
-                case RCol::_en_data::DATA_INT: item =  (qlonglong)std::get<long>(datablock_item) ;                 break;
-                case RCol::_en_data::DATA_STR: item =  std::get<std::string>(datablock_item).c_str(); break;
-                case RCol::_en_data::DATA_DBL: item =  std::get<double>(datablock_item);         break;
-                default :                      item =  ( "type_unknown" );                         break;
-            }*/
-            item = std::visit(ToQVariant(),datablock_item);
+            item = std::visit(ToQVariant(),up_rdata->nparray_.Get(row,col));
 
         return item;
 
@@ -118,21 +96,7 @@ QVariant RModel::data(const QModelIndex &index, int role) const
             return QVariant();
     }
 
-    // generate a log message when this method gets called
-    //qDebug() << QString("row %1, col%2, role %3").arg(row).arg(col).arg(role);
-
-    //"2.5 The Minimal Editing Example"
-   // if(role==Qt::DisplayRole) // else will see a checkboxes near string!!
-    //    return QString("%1").arg(m_gridData[row][col]);
-
-
-    //return QVariant();
-    return QString("Row%1, Column%2")
-        .arg(index.row() + 1)
-        .arg(index.column() +1);
-
-    //ELSE!
-
+    // Some old examples , code not reach hear
     switch (role) {
         case Qt::DisplayRole:
             if(row == 0 && col == 1) return QString("<--left");
@@ -162,12 +126,6 @@ QVariant RModel::data(const QModelIndex &index, int role) const
         break;
     }
     return QVariant();
-    /*
-    if (role == Qt::DisplayRole)
-        return QString("Row%1, Column%2")
-            .arg(index.row() + 1)
-            .arg(index.column() +1);
-*/
 }
 
 QVariant RModel::headerData(int section, Qt::Orientation orientation, int role) const
@@ -380,12 +338,6 @@ void RModel::onRModelchange(std::string _t_name, std::string _col_name, int row,
             long val =  value.toInt();
             FieldVariantData vd(val);
             up_rdata->nparray_.Set(row,col,vd);
-              //variant_block.Data()[row * variant_block.ColumnsCount() + 4] = std::string("оттакой");
-            up_rdata->nparray_.Data()[row * up_rdata->nparray_.ColumnsCount() +row] = val;
-
-            //up_rdata->nparray_.Data()[]
-            //up_rdata->nparray_.Set(Da)
-
             break;
         }
         case RCol::_en_data::DATA_STR:
