@@ -10,13 +10,21 @@ FormSettingsOnLoadFiles::FormSettingsOnLoadFiles(QWidget *parent)
     , ui{new Ui::FormSettingsOnLoadFiles}
     , FormSettingsStackedItem{qobject_cast<FormSettings*>(parent)}{
     ui->setupUi(this);
-//    std::string str = Params::GetInstance()->Get_on_start_load_file_rastr();
-    //assert(!"not impl!");
-    std::string str = "";
-    ui->lePathToLoadFile->setText(str.c_str());
+    for(const auto& str_template_ext : Params::GetInstance()->getTemplateExts()){
+        const QVariant qv_user_data_null;
+        QString qstr = QString("%1%2").arg(str_template_ext.first.c_str()).arg(str_template_ext.second.c_str());
+        ui->cbTemplate->addItem(qstr, qv_user_data_null);
+    }
+    if(Params::GetInstance()->getStartLoadFileTemplates().size()>0){
+        ui->lePathToLoadFile->setText ( Params::GetInstance()->getStartLoadFileTemplates()[0].first .c_str() );
+        ui->cbTemplate->setCurrentText( Params::GetInstance()->getStartLoadFileTemplates()[0].second.c_str() ); //int n_item = ui->cbTemplate->findText(qstr_templ);
+    }
     QAction* act_trig_path_to_load_file = ui->lePathToLoadFile->addAction(QIcon(":/images/open.png"), QLineEdit::LeadingPosition); // TrailingPosition
     //bool bl_res = connect( act_trig_path_to_load_file, &QAction::triggered, [this](){  assert(0);  }); assert(bl_res == true);
-    bool bl_res = connect( act_trig_path_to_load_file, &QAction::triggered,this, &FormSettingsOnLoadFiles::onActTrigNewPathToFile ); assert(bl_res == true);
+    //bool bl_res = connect( act_trig_path_to_load_file, &QAction::triggered, this, &FormSettingsOnLoadFiles::onActTrigNewPathToFile ); assert(bl_res == true);
+    bool bl_res = connect( act_trig_path_to_load_file, SIGNAL(triggered(bool)), this, SLOT(onActTrigNewPathToFile()) ); assert(bl_res == true);
+    bl_res      = connect( ui->lePathToLoadFile, SIGNAL(editingFinished()), this, SLOT(onChangeData()) );assert(bl_res == true);
+    bl_res      = connect( ui->cbTemplate, SIGNAL(currentTextChanged(const QString&)), this, SLOT(onChangeData()) );assert(bl_res == true);
 }
 FormSettingsOnLoadFiles::~FormSettingsOnLoadFiles(){
     delete ui;
@@ -28,5 +36,11 @@ void FormSettingsOnLoadFiles::onActTrigNewPathToFile(){
     }
     ui->lePathToLoadFile->setText(qstr_path_to_file);
     getFormSettings()->setButtonSaveEnabled(true);
+}
+void FormSettingsOnLoadFiles::onChangeData(){
+    Params::_v_file_templates v_start_load_file_templates_new;
+    v_start_load_file_templates_new.emplace_back(ui->lePathToLoadFile->text().toStdString(), ui->cbTemplate->currentText().toStdString() );
+    Params::GetInstance()->setStartLoadFileTemplates(v_start_load_file_templates_new);
+    getFormSettings()->setAppSettingsChanged();
 }
 

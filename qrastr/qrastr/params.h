@@ -4,25 +4,22 @@
 #include <QDir>
 
 #include <singleton_dclp.hpp>
-
+class CUIFormsCollection;
 class Params
     : public SingletonDclp<Params>{
 public:
-    struct _file_template{
-        std::string str_file;
-        std::string str_template;
-    };
     using _v_file_templates = std::vector<std::pair< std::string, std::string > >;
     using _v_forms = std::vector<std::string>;
     using _v_templates = std::vector<std::string>;
+    using _v_template_exts = std::vector<std::pair< std::string, std::string > >;
     Params();
     virtual ~Params() = default;
     int readJsonFile (const std::filesystem::path& path_2_json);
     int writeJsonFile(const std::filesystem::path& path_2_json)const;
-    //void setFileAppsettings(const QFileInfo& fi_appsettings){
+    int readForms(const std::filesystem::path& path_form_load);
+    int readTemplates(const std::filesystem::path& path_form_load);
     void setFileAppsettings(const std::filesystem::path& path_appsettings){
         path_appsettings_ = path_appsettings;
-        //fi_appsettings_ = fi_appsettings;
     }
     const std::filesystem::path& getFileAppsettings()const{
         return path_appsettings_;
@@ -38,8 +35,12 @@ public:
     const QDir& getDirSHABLON( )const{
         return dir_SHABLON_;
     }
-    const _v_file_templates& getFileTemplates()const{
-        return v_file_templates_;
+    const _v_file_templates& getStartLoadFileTemplates()const{
+        return v_start_load_file_templates_;
+    }
+    void setStartLoadFileTemplates(_v_file_templates& v_start_load_file_templates){
+        v_start_load_file_templates_.clear();
+        v_start_load_file_templates_.insert( v_start_load_file_templates_.begin(), v_start_load_file_templates.begin(), v_start_load_file_templates.end() );
     }
     const _v_templates& getTemplates()const{
         return v_templates_;
@@ -47,14 +48,18 @@ public:
     const _v_forms& getForms()const{
         return v_forms_;
     }
+    const _v_template_exts& getTemplateExts(){
+        return v_template_exts_;
+    }
 private:
-    QDir                 dir_Data_;
-    QDir                 dir_SHABLON_;
-    //QFileInfo         fi_appsettings_;
+    QDir                  dir_Data_;
+    QDir                  dir_SHABLON_;
     std::filesystem::path path_appsettings_;
-    _v_file_templates     v_file_templates_;
+    _v_file_templates     v_start_load_file_templates_;
     _v_forms              v_forms_;
     _v_templates          v_templates_;
+    std::unique_ptr<CUIFormsCollection> upCUIFormsCollection_;
+    _v_template_exts      v_template_exts_;
 public:
     static constexpr const char pch_stub_phrase_[]=               "not_set";
     static constexpr const char pch_dir_data_[]=                  "Data";

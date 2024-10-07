@@ -29,10 +29,10 @@
   <widget class="QTableWidget" name="tbLoadedForms">
    <property name="geometry">
     <rect>
-     <x>70</x>
+     <x>50</x>
      <y>40</y>
-     <width>391</width>
-     <height>251</height>
+     <width>291</width>
+     <height>181</height>
     </rect>
    </property>
   </widget>

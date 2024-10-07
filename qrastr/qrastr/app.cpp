@@ -257,7 +257,7 @@ long App::start(){
         loadPlugins();
         if(nullptr!=m_sp_qastra){
             //m_sp_qastra->LoadFile( eLoadCode::RG_REPL, m_params.Get_on_start_load_file_rastr(), "" );
-            for(const Params::_v_file_templates::value_type& file_template : Params::GetInstance()->getFileTemplates()){
+            for(const Params::_v_file_templates::value_type& file_template : Params::GetInstance()->getStartLoadFileTemplates()){
                 //m_sp_qastra->LoadFile( eLoadCode::RG_REPL, Params::GetInstance()->Get_on_start_load_file_rastr(), "" );
                 QDir dir = Params::GetInstance()->getDirSHABLON();
                 std::filesystem::path path_template = Params::GetInstance()->getDirSHABLON().filesystemPath();
