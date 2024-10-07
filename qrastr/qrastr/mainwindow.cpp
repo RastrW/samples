@@ -434,7 +434,7 @@ void MainWindow::setActiveSubWindow(QWidget *window){
 }
 void MainWindow::showFormSettings(){
     FormSettings* pformSettings = new FormSettings();
-    pformSettings->init();
+    pformSettings->init(m_sp_qastra);
     pformSettings->show();
 }
 void MainWindow::createActions(){

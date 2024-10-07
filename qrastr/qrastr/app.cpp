@@ -230,25 +230,6 @@ std::list<CUIForm>& App::GetForms() const {
     assert(nullptr!=upCUIFormsCollection_);
     return upCUIFormsCollection_->Forms();
 }
-/*
-CUIForm CRastrHlp::GetUIForm(size_t n_form_indx){
-    auto it = upCUIFormsCollection_->Forms().begin();
-    std::advance(it,n_form_indx);
-    auto form  =*it;
-
-    return form;
-}
-
-int CRastrHlp::GetFormData(int n_form_indx){
-    if(n_form_indx<0)
-        return -1;
-    auto it = upCUIFormsCollection_->Forms().begin();
-    std::advance(it,n_form_indx);
-    auto form  =*it;
-
-    return 1;
-*/
-
 long App::start(){
     try{
         long n_res =0;

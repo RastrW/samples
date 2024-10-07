@@ -90,43 +90,6 @@ int Params::writeJsonFile(const std::filesystem::path& path_2_json)const {
     }
     return 1;
 }
-int Params:: readForms(const std::filesystem::path& path_form_load){
-
-    return 1;
-
-    try{
-        std::filesystem::path path_forms ("form");
-        std::filesystem::path path_form_load;
-#if(defined(_MSC_VER))
-        //on Windows, you MUST use 8bit ANSI (and it must match the user's locale) or UTF-16 !! Unicode!
-        //!!! https://stackoverflow.com/questions/30829364/open-utf8-encoded-filename-in-c-windows  !!!
-        //for (std::string &form : forms){
-        for(const Params::_v_forms::value_type &form : Params::GetInstance()->getStartLoadForms()){
-            std::filesystem::path path_file_form = stringutils::utf8_decode(form);
-            path_form_load =  path_forms / path_file_form;
-            qDebug() << "read form from file : " << path_form_load.wstring();
-#else
-            path_forms_load = str_path_to_file_forms;
-            qDebug() << "read form from file : " << path_forms_load.c_str();
-#endif
-            CUIFormsCollection* CUIFormsCollection_ = new CUIFormsCollection ;
-            if (path_form_load.extension() == ".fm")
-                *CUIFormsCollection_ = CUIFormCollectionSerializerBinary(path_form_load).Deserialize();
-            else
-                *CUIFormsCollection_ = CUIFormCollectionSerializerJson(path_form_load).Deserialize();
-            for(const  CUIForm& uiform : CUIFormsCollection_->Forms()){
-                upCUIFormsCollection_->Forms().emplace_back(uiform);
-            }
-        }
-    }catch(const std::exception& ex){
-        exclog(ex);
-        return -1;
-    }catch(...){
-        exclog();
-        return -2;
-    }
-    return 1;
-}
 int Params::readTemplates(const std::filesystem::path& path_dir_templates){
     try{
         v_template_exts_.clear();

@@ -16,7 +16,7 @@ public:
     virtual ~Params() = default;
     int readJsonFile (const std::filesystem::path& path_2_json);
     int writeJsonFile(const std::filesystem::path& path_2_json)const;
-    int readForms(const std::filesystem::path& path_form_load);
+//    int readForms(const std::filesystem::path& path_form_load);
     int readTemplates(const std::filesystem::path& path_form_load);
     void setFileAppsettings(const std::filesystem::path& path_appsettings){
         path_appsettings_ = path_appsettings;

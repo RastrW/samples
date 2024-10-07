@@ -2,7 +2,7 @@
 #define FORMSETTINGS_H
 
 #include <QtWidgets>
-
+class QAstra;
 class FormSettings
     : public QWidget{
     Q_OBJECT
@@ -10,7 +10,7 @@ class FormSettings
     using _v_tree_items = std::vector<_tree_item>;
 public:
     explicit FormSettings(QWidget *parent = nullptr);
-    int init();
+    int init(const std::shared_ptr<QAstra>& sp_qastra);
     void populateSettingsTree( _tree_item& ti_root, QTreeWidgetItem* ptwi_parent );
     void setButtonSaveEnabled(bool bl_new_val);
     void setAppSettingsChanged();
@@ -19,6 +19,7 @@ signals:
 public slots:
     void onBtnSaveClick();
 private:
+    std::shared_ptr<QAstra> sp_qastra_;
     _tree_item*      pti_settings_root_ = nullptr;
     QPushButton*     ppb_save_settings_ = nullptr;
     QTreeWidget*     ptw_sections_      = nullptr;

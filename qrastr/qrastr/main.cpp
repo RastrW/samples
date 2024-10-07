@@ -18,7 +18,7 @@ int main23(int argc, char *argv[]){
     }
 
     FormSettings fs;
-    n_res = fs.init();
+    n_res = fs.init(app.getQAstraPtr());
     fs.show();
     return app.exec();
 }

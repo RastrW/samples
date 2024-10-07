@@ -4,6 +4,7 @@
 #include <QVBoxLayout>
 
 #include <filesystem>
+#include "qastra.h"
 #include "params.h"
 #include "formsettingsdatas.h"
 #include "formsettingsforms.h"
@@ -161,9 +162,10 @@ void FormSettings::onBtnSaveClick(){
         }
     }
 }
-int FormSettings::init(){
+int FormSettings::init(const std::shared_ptr<QAstra>& sp_qastra){
     int n_res = 0;
-    n_res = Params::GetInstance()->readForms    ( Params::GetInstance()->getDirSHABLON().absolutePath().toStdString() ); assert(n_res>0);
+    sp_qastra_ = sp_qastra;
+    //n_res = Params::GetInstance()->readForms    ( Params::GetInstance()->getDirSHABLON().absolutePath().toStdString() ); assert(n_res>0);
     n_res = Params::GetInstance()->readTemplates( Params::GetInstance()->getDirSHABLON().absolutePath().toStdString() ); assert(n_res>0);
 
     pti_settings_root_ = new _tree_item{"root","Настройки"};
