@@ -2,26 +2,14 @@
 #define MAINWINDOW_H
 
 #include <QMainWindow>
-#include <QMenu>
-#include <QMdiArea>
-#include <QSignalMapper>
 
 #if(!defined(QICSGRID_NO))
     #include <QicsTable.h>
 #endif //#if(!defined(QICSGRID_NO))
-#include "common_qrastr.h"
-#include "License2/json.hpp"
-#include "params.h"
-#include "rastrhlp.h"
-#include "rmodel.h"
-#include "rtabwidget.h"
-/*
-class QAction;
-class QMenu;
+
 class QMdiArea;
-class QMdiSubWindow;
-class MdiChild;
-class QSignalMapper;*/
+class QSignalMapper;
+class QHBoxLayout;
 
 class QAstra;
 class CUIForm;
@@ -29,6 +17,8 @@ class McrWnd;
 struct _hint_data;
 class rmodel;
 namespace ads{ class CDockManager; }
+class RtabWidget;
+namespace spdlog{namespace level{enum level_enum;}}
 class MainWindow
     : public QMainWindow{
     Q_OBJECT
@@ -122,12 +112,8 @@ private:
     std::string        m_cur_file;                      // current file
     QDockWidget*       m_dock        = nullptr;
     ads::CDockManager* m_DockManager = nullptr; // The main container for docking
-    Params             m_params;
     _v_cache_log       m_v_cache_log;
     std::shared_ptr<QAstra> m_sp_qastra;
     std::list<CUIForm> m_lstUIForms;
-
-    static constexpr char m_pchSettingsDirData[5] {"Data"};
-    static constexpr char m_pchSettingsOrg[7]     {"QRastr"};
 };
 #endif // MAINWINDOW_H

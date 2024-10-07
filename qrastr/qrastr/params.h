@@ -45,8 +45,8 @@ public:
     const _v_templates& getTemplates()const{
         return v_templates_;
     }
-    const _v_forms& getForms()const{
-        return v_forms_;
+    const _v_forms& getStartLoadForms()const{
+        return v_start_load_forms_;
     }
     const _v_template_exts& getTemplateExts(){
         return v_template_exts_;
@@ -56,7 +56,7 @@ private:
     QDir                  dir_SHABLON_;
     std::filesystem::path path_appsettings_;
     _v_file_templates     v_start_load_file_templates_;
-    _v_forms              v_forms_;
+    _v_forms              v_start_load_forms_;
     _v_templates          v_templates_;
     std::unique_ptr<CUIFormsCollection> upCUIFormsCollection_;
     _v_template_exts      v_template_exts_;

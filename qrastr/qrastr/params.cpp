@@ -11,7 +11,7 @@ int Params::readJsonFile(const std::filesystem::path& path_2_json){
     try{
         //spdlog::info("read JSON file: [{}]", path_2_json.string());
         v_start_load_file_templates_.clear();
-        v_forms_.clear();
+        v_start_load_forms_.clear();
         v_templates_.clear();
         std::ifstream ifs(path_2_json);
         if(ifs.is_open()){
@@ -26,7 +26,7 @@ int Params::readJsonFile(const std::filesystem::path& path_2_json){
             }
             const nlohmann::json j_forms = j_start[pch_json_start_forms_];
             for( const nlohmann::json& j_form : j_forms ){
-                v_forms_.emplace_back(j_form);
+                v_start_load_forms_.emplace_back(j_form);
             }
             const nlohmann::json j_templates = j_start[pch_json_start_templates_];
             for( const nlohmann::json& j_template : j_templates ){
@@ -57,7 +57,7 @@ int Params::writeJsonFile(const std::filesystem::path& path_2_json)const {
             jarr_load.emplace_back(j_file_temple);
         }
         nlohmann::json jarr_forms;
-        for(const _v_forms::value_type& form : v_forms_){
+        for(const _v_forms::value_type& form : v_start_load_forms_){
             jarr_forms.emplace_back(form);
         }
         nlohmann::json jarr_templates;
@@ -101,7 +101,7 @@ int Params:: readForms(const std::filesystem::path& path_form_load){
         //on Windows, you MUST use 8bit ANSI (and it must match the user's locale) or UTF-16 !! Unicode!
         //!!! https://stackoverflow.com/questions/30829364/open-utf8-encoded-filename-in-c-windows  !!!
         //for (std::string &form : forms){
-        for(const Params::_v_forms::value_type &form : Params::GetInstance()->getForms()){
+        for(const Params::_v_forms::value_type &form : Params::GetInstance()->getStartLoadForms()){
             std::filesystem::path path_file_form = stringutils::utf8_decode(form);
             path_form_load =  path_forms / path_file_form;
             qDebug() << "read form from file : " << path_form_load.wstring();

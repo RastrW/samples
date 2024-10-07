@@ -82,7 +82,7 @@ long App::readSettings(){ //it cache log messages to vector, because it called b
         QMessageBox mb( QMessageBox::Icon::Critical, QObject::tr("Error"), QString("In lin not implemented!") );  mb.exec();
 #endif
         QFileInfo fi_appsettings(str_path_2_conf.c_str());
-        Params* p_params = Params::GetInstance();
+        Params* const p_params = Params::GetInstance();
         if(p_params!=nullptr){
             p_params->setDirData(fi_appsettings.dir());
             const bool bl_res = QDir::setCurrent(p_params->getDirData().path());
@@ -199,7 +199,7 @@ long App::readForms(){
         //on Windows, you MUST use 8bit ANSI (and it must match the user's locale) or UTF-16 !! Unicode!
         //!!! https://stackoverflow.com/questions/30829364/open-utf8-encoded-filename-in-c-windows  !!!
         //for (std::string &form : forms){
-        for(const Params::_v_forms::value_type &form : Params::GetInstance()->getForms()){
+        for(const Params::_v_forms::value_type &form : Params::GetInstance()->getStartLoadForms()){
             std::filesystem::path path_file_form = stringutils::utf8_decode(form);
             path_form_load =  path_forms / path_file_form;
             qDebug() << "read form from file : " << path_form_load.wstring();

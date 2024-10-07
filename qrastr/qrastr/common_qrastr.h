@@ -8,9 +8,8 @@
 //#define SPDLOG_USE_WCHAR
 #define SPDLOG_WCHAR_FILENAMES
 #include <spdlog/spdlog.h>
-//#include "fmt/format.h"
-#include "Exceptions.h"
 //#include <spdlog/fmt/bundled/format.h>
+#include "Exceptions.h"
 
 template<>
 struct fmt::formatter<QString>
