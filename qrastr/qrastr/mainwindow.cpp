@@ -272,6 +272,7 @@ void MainWindow::open(){
         }
 #endif//#if(!defined(QICSGRID_NO))
         m_sp_qastra->LoadFile(eLoadCode::RG_REPL, fileName.toStdString(),"");
+        m_cur_file = fileName.toStdString();
     }
 }
 void MainWindow::save(){
