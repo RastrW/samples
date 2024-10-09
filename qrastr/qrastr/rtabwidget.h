@@ -12,6 +12,7 @@
 #include "ColPropForm.h"
 #include "rmodel.h"
 #include "RtableView.h"
+#include "rtablesdatamanager.h"
 
 
 class QMimeData;
@@ -99,6 +100,7 @@ class RtabWidget : public QWidget
 public:
     explicit RtabWidget(QWidget *parent = nullptr);
     explicit RtabWidget(QAstra* pqastra, CUIForm UIForm, QWidget *parent = nullptr);
+    explicit RtabWidget(QAstra* pqastra, CUIForm UIForm, RTablesDataManager* pRTDM, QWidget *parent = nullptr);
 
     void SetTableView(QTableView& tv, RModel& mm, int myltiplier = 10);
 private:
@@ -131,12 +133,14 @@ public slots:
 
 private slots:
     void CreateModel(QAstra* pqastra,CUIForm* pUIForm);
-    void onRastrHint(const _hint_data&);
+    void onRTDM_UpdateModel(std::string tname);
+    void onRTDM_UpdateView(std::string tname);
 
 public:
-    RModel* prm;
+    std::unique_ptr<RModel> prm;
     CUIForm m_UIForm;
     QAstra* m_pqastra;
+    RTablesDataManager* m_pRTDM;
 
 private:
     using BufferRow = std::vector<QByteArray>;

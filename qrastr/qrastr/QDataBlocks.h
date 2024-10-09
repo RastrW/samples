@@ -667,5 +667,11 @@ class QDenseDataBlock : public MyDenseDataBlock<T>
     }
 };
 
+//template<typename T>
+class QDataBlock : public QDenseDataBlock<FieldVariantData>
+{
+
+};
+
 
 #endif // RDATABLOCKS_H

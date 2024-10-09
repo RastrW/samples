@@ -2,6 +2,7 @@
 #define IDATABLOCKSWRAPPERS_H
 #pragma once
 #include "iostream"
+#include <QDebug>
 
 
 using WrapperExceptionType = std::runtime_error;
@@ -156,8 +157,25 @@ public:
                 std::cout << VariantToString<T>::String(Data()[row * ColumnsCount() + column]);
             }
             std::cout << std::endl;
+        }*/
+
+    }
+    void QDump(long LimitRows = (std::numeric_limits<long>::max)())
+    {
+         for (IndexT row = 0; row < RowsCount() && row < LimitRows; row++)
+        {
+            for (IndexT column = 0; column < ColumnsCount(); column++)
+            {
+                if (column)
+                      qDebug() << ";";
+                else if (row < BaseT::IndexesVector().size())
+                    qDebug() << BaseT::IndexesVector()[row] << ";";
+                //qDebug() << VariantToString<T>::String(Data()[row * ColumnsCount() + column]);
+                //qDebug() << (Data()[row * ColumnsCount() + column]);
+            }
+            qDebug() << "\n";
         }
-    */
+
     }
 
     IPlainRastrRetCode Get(IDataBlockSetter<T>& Setter) const noexcept override

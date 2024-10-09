@@ -6,16 +6,18 @@
 #include "astra_exp.h"
 #include "rdata.h"
 #include "qastra.h"
+#include "rtablesdatamanager.h"
 
 class RModel : public QAbstractTableModel
 {
     Q_OBJECT
     QAstra* pqastra_;
+    RTablesDataManager* pRTDM_;
     std::unique_ptr<RData> up_rdata;
     std::vector<QString> vqcols_;                                 // Заголовки столбцов
     CUIForm* pUIForm_;
 public:
-    RModel(QObject *parent, QAstra* pqastra);
+    RModel(QObject *parent, QAstra* pqastra,RTablesDataManager* pRTDM);
     int rowCount(const QModelIndex &parent = QModelIndex()) const override;
     int columnCount(const QModelIndex &parent = QModelIndex()) const override;
     QVariant data(const QModelIndex &index, int role = Qt::DisplayRole) const override;

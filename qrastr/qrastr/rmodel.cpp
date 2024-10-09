@@ -6,9 +6,11 @@
 
 //#include "fmt/format.h"
 
-RModel::RModel(QObject *parent, QAstra* pqastra)
+RModel::RModel(QObject *parent, QAstra* pqastra, RTablesDataManager* pRTDM)
     : QAbstractTableModel(parent)
-    , pqastra_(pqastra) {
+    , pqastra_(pqastra)
+    , pRTDM_(pRTDM)
+{
     setEmitSignals(true);
 }
 
@@ -16,7 +18,7 @@ int RModel::populateDataFromRastr(){
 
     up_rdata = std::unique_ptr<RData>(new RData(pqastra_,pUIForm_->TableName()));
     up_rdata->Initialize(*pUIForm_,pqastra_);
-    up_rdata->populate_qastra(this->pqastra_);
+    up_rdata->populate_qastra(this->pqastra_,pRTDM_);
 
     for (RCol &rcol : *up_rdata)
         vqcols_.push_back(rcol.title().c_str());
@@ -24,10 +26,11 @@ int RModel::populateDataFromRastr(){
     return 1;
 };
 int RModel::rowCount(const QModelIndex & /*parent*/) const{
-    return static_cast<int>(up_rdata->nparray_.RowsCount());
+    return static_cast<int>(up_rdata->pnparray_->RowsCount());
+    //return static_cast<int>(pRTDM_->Add("node","cols")->RowsCount());
 }
 int RModel::columnCount(const QModelIndex & /*parent*/) const{
-    return static_cast<int>(up_rdata->nparray_.ColumnsCount());
+    return static_cast<int>(up_rdata->pnparray_->ColumnsCount());
 }
 
 struct ToQVariant {
@@ -74,16 +77,16 @@ QVariant RModel::data(const QModelIndex &index, int role) const
            */
 
             //Fill from QAstra->DataBlock
-            //switch((*iter_data).index()){
             /*switch( iter_col->en_data_){
                 case RCol::_en_data::DATA_BOOL: item =  std::get<bool>(datablock_item); break;
                 case RCol::_en_data::DATA_INT: item =  (qlonglong)std::get<long>(datablock_item) ;                 break;
                 case RCol::_en_data::DATA_STR: item =  std::get<std::string>(datablock_item).c_str(); break;
                 case RCol::_en_data::DATA_DBL: item =  std::get<double>(datablock_item);               break;
-            default :                      item =  ( "type_unknown" );                         break;*/
+            default :                      item =  ( "type_unknown" );                         break;
+            */
 
             //Fill from QAstra->DataBlock new
-            item = std::visit(ToQVariant(),up_rdata->nparray_.Get(row,col));
+            item = std::visit(ToQVariant(),up_rdata->pnparray_->Get(row,col));
 
         return item;
 
@@ -330,21 +333,21 @@ void RModel::onRModelchange(std::string _t_name, std::string _col_name, int row,
             bool val =  value.toBool();
             FieldVariantData vd(val);
             //up_rdata->nparray_.EmplaceSaveIndChange(row,col,vd);
-            up_rdata->nparray_.Set(row,col,vd);
+            up_rdata->pnparray_->Set(row,col,vd);
             break;
         }
         case RCol::_en_data::DATA_INT:
         {
             long val =  value.toInt();
             FieldVariantData vd(val);
-            up_rdata->nparray_.Set(row,col,vd);
+            up_rdata->pnparray_->Set(row,col,vd);
             break;
         }
         case RCol::_en_data::DATA_STR:
         {
             std::string val =  value.toString().toStdString().c_str();
             FieldVariantData vd(val);
-            up_rdata->nparray_.Set(row,col,vd);
+            up_rdata->pnparray_->Set(row,col,vd);
             break;
         }
         break;
@@ -352,7 +355,7 @@ void RModel::onRModelchange(std::string _t_name, std::string _col_name, int row,
         {
             double val =  value.toDouble();
             FieldVariantData vd(val);
-            up_rdata->nparray_.Set(row,col,vd);
+            up_rdata->pnparray_->Set(row,col,vd);
         }
         break;
         default :

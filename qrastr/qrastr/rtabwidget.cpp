@@ -18,6 +18,7 @@
 #include "delegatedoubleitem.h"
 #include "delegatecheckbox.h"
 #include <QShortcut>
+#include <QPalette>
 
 RtabWidget::RtabWidget(QWidget *parent) :
       QWidget(parent),
@@ -26,11 +27,12 @@ RtabWidget::RtabWidget(QWidget *parent) :
     ptv = new RTableView(this);
 }
 
-RtabWidget::RtabWidget(QAstra* pqastra,CUIForm UIForm, QWidget *parent)
+RtabWidget::RtabWidget(QAstra* pqastra,CUIForm UIForm,RTablesDataManager* pRTDM, QWidget *parent)
     : RtabWidget{parent}
 {
     m_UIForm = UIForm;
     m_pqastra = pqastra;
+    m_pRTDM = pRTDM;
 
     customizeFrame.setObjectName("RTABLEVIEWCUSTOMIZEFRAME");
     customizeFrame.setFrameShape(QFrame::StyledPanel);
@@ -47,7 +49,9 @@ RtabWidget::RtabWidget(QAstra* pqastra,CUIForm UIForm, QWidget *parent)
 
     customizeFrame.hide();
 
-    connect(m_pqastra, &QAstra::onRastrHint, this, &RtabWidget::onRastrHint);
+    connect(m_pRTDM, SIGNAL(RTDM_UpdateModel(std::string)), this, SLOT(onRTDM_UpdateModel(std::string)));
+    connect(m_pRTDM, SIGNAL(RTDM_UpdateView(std::string)), this, SLOT(onRTDM_UpdateView(std::string)));
+
     connect(ptv, SIGNAL(onCornerButtonPressed()), SLOT(cornerButtonPressed()));
 
     connect(this->ptv, SIGNAL(customContextMenuRequested(QPoint)),
@@ -73,11 +77,13 @@ RtabWidget::RtabWidget(QAstra* pqastra,CUIForm UIForm, QWidget *parent)
     setLayout(layout);
 }
 
+
+
 void RtabWidget::CreateModel(QAstra* pqastra, CUIForm* pUIForm)
 {
-    prm = new RModel(nullptr, pqastra );
-    proxyModel = new QSortFilterProxyModel(prm); // used for sorting: create proxy //https://doc.qt.io/qt-5/qsortfilterproxymodel.html#details
-    proxyModel->setSourceModel(prm);
+    prm = std::unique_ptr<RModel>(new RModel(nullptr, pqastra, m_pRTDM ));
+    proxyModel = new QSortFilterProxyModel(prm.get()); // used for sorting: create proxy //https://doc.qt.io/qt-5/qsortfilterproxymodel.html#details
+    proxyModel->setSourceModel(prm.get());
     prm->setForm(pUIForm);
     prm->populateDataFromRastr();
 
@@ -118,61 +124,28 @@ void RtabWidget::CreateModel(QAstra* pqastra, CUIForm* pUIForm)
     this->repaint();
 }
 
-void RtabWidget::onRastrHint(const _hint_data& hint_data){
-    try{
-        //spdlog::info("i alive from RtabWidget");
-        long row = hint_data.n_indx;
-        long col =  this->prm->getIndexCol(hint_data.str_column.c_str());
-
-          switch (hint_data.hint)
-          {
-          case EventHints::ChangeAll:
-              /*Пока что полностью пересоздаем модель, возможно стоит обновлять данные модели
-               * но в этом случае не обновляется количество строк. То есть было 197
-               * загрузили mdp_debug_1 данные при update_data() поменялись, но строк осталось 197
-               * */
-              CreateModel(m_pqastra,&m_UIForm);
-              //update_data();
-              //ptv->update();
-            break;
-          case EventHints::ChangeTable:
-              /*Прилетает на изменение свойств столбца, поменяли точность -
-               * не уверен что нужно перезапрашивать все данные.
-               */
-              if (hint_data.str_table == this->prm->getRdata()->t_name_)
-              {
-                  //update_data();
-                  ptv->update();
-              }
-              break;
-          case EventHints::ChangeData:
-              if (hint_data.str_table == this->prm->getRdata()->t_name_)
-              {
-                  std::string val = m_pqastra->GetVal(hint_data.str_table.c_str(),hint_data.str_column.c_str(),hint_data.n_indx);
-                  this->prm->onRModelchange(hint_data.str_table.c_str(),hint_data.str_column,hint_data.n_indx,val.c_str());
-              }
-              break;
-          case EventHints::InsertRow:
-              if (hint_data.str_table == this->prm->getRdata()->t_name_)
-              {
-                  //this->prm->onrm_RowInserted(hint_data.str_table.c_str(),row);
-                  CreateModel(m_pqastra,&m_UIForm);
-              }
-          case EventHints::DeleteRow:
-              if (hint_data.str_table == this->prm->getRdata()->t_name_)
-              {
-                  //this->prm->onrm_RowInserted(hint_data.str_table.c_str(),row);
-                  CreateModel(m_pqastra,&m_UIForm);
-              }
-          default:
-              break;
-          }
-    }catch(const std::exception& ex){
-        spdlog::error("std::exception: {}", ex.what());
-    }catch(...){
-        spdlog::error("Exception in RtabWidget::onRastrHint(...)!");
-    }
+void RtabWidget::onRTDM_UpdateModel(std::string tname)
+{
+    CreateModel(m_pqastra,&m_UIForm);
+    ptv->update();
 }
+void RtabWidget::onRTDM_UpdateView(std::string tname)
+{
+    // Не работает, при добавлении строки вторая таблица не обновляется пока не ткнешь в нее мышь
+    ptv->update();
+    ptv->repaint();
+    QPalette paletteBGColor;
+    QBrush brush;
+    brush.setColor(Qt::black);
+    paletteBGColor.setBrush(QPalette::Base, brush);
+    this->setPalette(paletteBGColor);
+
+    this->repaint();
+    this->update();
+   // this->parent()->
+}
+
+
 
 
 void RtabWidget::SetTableView(QTableView& tv, RModel& mm, int myltiplier  )
@@ -207,7 +180,7 @@ void RtabWidget::customMenuRequested(QPoint pos){
     menu->addAction(tr("Format"));
     menu->popup(ptv->viewport()->mapToGlobal(pos));
 
-    //ShotCuts
+    //ShotCuts (no ru variant :(  ...)
     QShortcut *sC_CTRL_I = new QShortcut( QKeySequence(Qt::CTRL | Qt::Key_I), this);
     QShortcut *sC_CTRL_D = new QShortcut( QKeySequence(Qt::CTRL | Qt::Key_D), this);
     connect(sC_CTRL_I, &QShortcut::activated, this, &RtabWidget::insertRow);
@@ -242,8 +215,6 @@ void RtabWidget::customHeaderMenuRequested(QPoint pos){
     menu->addAction(tr("Скрыть"),this,SLOT(hideColumns()));
     menu->addAction(tr("Выбор колонок"),this,SLOT(unhideColumns()));
     menu->addAction(tr("Показать все колонки"),this,SLOT(showAllColumns()));
-    //m_menu->addAction(tr("Подбор ширины все колонки"),this,SLOT(AutoWidthColumns())); // thats  not work
-    //m_menu->addAction(Act_AutoWidthColumns);
     menu->addSeparator();
     menu->addAction(tr("Format"));
     menu->popup(ptv->horizontalHeader()->viewport()->mapToGlobal(pos));
@@ -512,7 +483,7 @@ void RtabWidget::copyMimeData(const QModelIndexList& fromIndices, QMimeData* mim
         return;
 
     //RModel* m = qobject_cast<RModel*>( this->ptv->model());
-    RModel* m =  this->prm;
+    RModel* m =  this->prm.get();
 
 
     // Clear internal copy-paste buffer

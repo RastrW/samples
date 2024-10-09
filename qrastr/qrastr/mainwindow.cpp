@@ -199,6 +199,7 @@ void MainWindow::setForms(const std::list<CUIForm>& forms){ // https://stackover
 void MainWindow::setQAstra(const std::shared_ptr<QAstra>& sp_qastra){
     assert(nullptr!=sp_qastra);
     m_sp_qastra = sp_qastra;
+    m_RTDM.setQAstra(sp_qastra.get());
 
     connect( m_sp_qastra.get(), SIGNAL(onRastrLog(const _log_data&) ), m_pMcrWnd, SLOT(onRastrLog(const _log_data&)));
 
@@ -347,7 +348,7 @@ void MainWindow::onOpenForm( QAction* p_actn ){
     auto form  =*it;
     qDebug() << "\n Open form:" + form.Name();
     spdlog::info( "Create tab [{}]", stringutils::cp1251ToUtf8(form.Name()) );
-    RtabWidget *prtw = new RtabWidget(m_sp_qastra.get(),form,this);
+    RtabWidget *prtw = new RtabWidget(m_sp_qastra.get(),form,&m_RTDM,this);
 
     /*
     connect(this, &MainWindow::file_loaded,  prtw, &RtabWidget::onFileLoad);    //Загрузка файла
@@ -569,7 +570,7 @@ void MainWindow::createActions(){
 void MainWindow::Btn1_onClick(){
     //Show stock grid with nodes table
     QTableView* ptv = new QTableView();
-    RModel* pmm = new RModel(nullptr,m_sp_qastra.get());
+    RModel* pmm = new RModel(nullptr,m_sp_qastra.get(),nullptr);
     const auto& forms = m_lstUIForms;
     auto it = forms.begin();
     std::advance(it,0);

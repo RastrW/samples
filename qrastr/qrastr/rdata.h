@@ -6,6 +6,7 @@
 #include "astra_shared.h"
 #include "UIForms.h"
 #include "qastra.h"
+#include "rtablesdatamanager.h"
 //#include "iostream"
 //#include "stringutils.h";
 using WrapperExceptionType = std::runtime_error;
@@ -661,9 +662,7 @@ public:
         t_name_ = _t_name;
         //nparray_ = new  MyDenseDataBlock<FieldVariantData>(pqastra_);
     }
-    void SetNumRows(long n_new_num_rows){
-        n_num_rows_ = n_new_num_rows;
-    }
+
     int AddCol(const RCol& rcol){
         //      if(rcol.size()!=n_num_rows_)
         //          return -1;
@@ -683,7 +682,7 @@ public:
     void populate(nlohmann::json _j_Fields , nlohmann::json _j_metas,_vstr _vstr_fields_form);  // old Заполнить данными
 
     //Заполняем через IRastrPlain
-    void populate_qastra(QAstra* _pqastra);
+    void populate_qastra(QAstra* _pqastra,RTablesDataManager* _pRTDM);
 
     void clear_data();                                                                          // Удалить данные (стуктура остается)
 
@@ -730,11 +729,15 @@ public:
     //DataBlock<FieldVariantData> nparray_;
     //MyDenseDataBlock<FieldVariantData> nparray_;
     //MyDataSet nparray_;
-    QDenseDataBlock<FieldVariantData> nparray_;
-    std::weak_ptr<QDenseDataBlock<FieldVariantData>> pnparray_;
+    //QDenseDataBlock<FieldVariantData> nparray_;
+   // DataBlock<FieldVariantData> nparray_;
+   // std::weak_ptr<QDenseDataBlock<FieldVariantData>> pnparray_;
+  //  std::weak_ptr<IDataBlockBaseT<FieldVariantData>> pnparray_base;
+    //std::weak_ptr<QDataBlock> pnparray_;
+     std::shared_ptr<QDataBlock> pnparray_;
 private:
-    const int SIZE_STR_BUF = 500'000'000;
-    long n_num_rows_ = 0;
+    //const int SIZE_STR_BUF = 500'000'000;
+    //long n_num_rows_ = 0;
 
 };// class RData
 

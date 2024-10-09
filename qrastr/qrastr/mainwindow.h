@@ -15,6 +15,7 @@
 #include "rastrhlp.h"
 #include "rmodel.h"
 #include "rtabwidget.h"
+#include "rtablesdatamanager.h"
 /*
 class QAction;
 class QMenu;
@@ -125,6 +126,10 @@ private:
     Params             m_params;
     _v_cache_log       m_v_cache_log;
     std::shared_ptr<QAstra> m_sp_qastra;
+
+    //RTablesDataManager<QDenseDataBlock<FieldVariantData>> m_RTDM;
+    RTablesDataManager m_RTDM;
+
     std::list<CUIForm> m_lstUIForms;
 
     static constexpr char m_pchSettingsDirData[5] {"Data"};

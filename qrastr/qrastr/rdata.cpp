@@ -173,7 +173,8 @@ void RData::populate()
     }//for(j_data_arr)
 }
 
-void RData::populate(nlohmann::json _j_Fields , nlohmann::json _j_metas,_vstr _vstr_fields_form)
+//obsolete
+/*void RData::populate(nlohmann::json _j_Fields , nlohmann::json _j_metas,_vstr _vstr_fields_form)
 {
     // clear_data();
     std::string str_tmp;
@@ -256,10 +257,19 @@ void RData::populate(nlohmann::json _j_Fields , nlohmann::json _j_metas,_vstr _v
         }//for(j_data_arr)
     }
 }
+*/
 
-void RData::populate_qastra(QAstra* _pqastra)
+void RData::populate_qastra(QAstra* _pqastra, RTablesDataManager* _pRTDM )
 {
-    FieldDataOptions Options;
+    /*
+     * Идея иметь 1 хранилище данных таблицы для всех клиентов
+     * Теперь попробуем обратиться к менеджеру данных таблиц
+     * если такая таблица уже есть берем указатель на нее, если нет
+     * тогда создаем в менеджере и отдаем указатель
+    */
+    pnparray_ = _pRTDM->Get(t_name_,str_cols_);
+
+   /* FieldDataOptions Options;
     Options.SetEnumAsInt(TriBool::True);
     Options.SetSuperEnumAsInt(TriBool::True);
     Options.SetUseChangedIndices(true);
@@ -268,7 +278,10 @@ void RData::populate_qastra(QAstra* _pqastra)
 
     //DataBlock<FieldVariantData> nparray;
 
-    IRastrResultVerify(table->DataBlock(str_cols_, nparray_, Options));
+    IRastrResultVerify(table->DataBlock(str_cols_, nparray_, Options));*/
+
+    //nparray_.QDump(20);
+
     //IRastrResultVerify(table->SparseDataBlock(str_cols_, nparray,Options));   // падает эл 0;0 - monostate , а кастится к bool
     //IRastrResultVerify(table->DataSet(str_cols_, nparray_, Options));
 
