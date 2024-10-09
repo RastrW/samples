@@ -35,6 +35,7 @@ using WrapperExceptionType = std::runtime_error;
 #include "delegatecombobox.h"
 #include "formsettings.h"
 #include "rtabwidget.h"
+#include "params.h"
 
 MainWindow::MainWindow(){
     m_workspace = new QMdiArea;
@@ -263,6 +264,46 @@ void MainWindow::newFile(){
 #endif
 }
 void MainWindow::open(){
+    QFileDialog fileDlg( this, tr("Open Rastr files") );
+    fileDlg.setOption(QFileDialog::DontUseNativeDialog, true);
+    fileDlg.setViewMode(QFileDialog::Detail);
+    QString qstr_filter;
+    qstr_filter += "Known types(";
+    const Params::_v_template_exts v_template_ext{ Params::GetInstance()->getTemplateExts() };
+    for(const Params::_v_template_exts::value_type& template_ext : v_template_ext){
+        qstr_filter += QString("*%1 ").arg(template_ext.second.c_str());
+    }
+    qstr_filter += ");;";
+    const QString qstr_filter_no_template {"No template (*)"};
+    qstr_filter += qstr_filter_no_template; //qstr_filter += QString("xz (*.rg2 *.os)");
+    fileDlg.setNameFilter(qstr_filter);
+    fileDlg.setFileMode(QFileDialog::ExistingFiles); //ExistingFile
+    int n_res = fileDlg.exec();
+    if(QDialog::Accepted == n_res){
+        QString selectedFilter = fileDlg.selectedNameFilter();
+        for(const auto& rfile : fileDlg.selectedFiles()){
+            spdlog::info("try load file: ", rfile.toStdString());
+            if(qstr_filter_no_template != selectedFilter){
+                bool bl_find_template = false;
+                for(const Params::_v_template_exts::value_type& template_ext : v_template_ext){
+                    if(true == rfile.endsWith(template_ext.second.c_str())){
+                        bl_find_template = true;
+                        const std::string str_path_to_shablon =  Params::GetInstance()->getDirSHABLON().absolutePath().toStdString() + "//" +template_ext.first +template_ext.second;
+                        m_sp_qastra->LoadFile( eLoadCode::RG_REPL, rfile.toStdString(), str_path_to_shablon );
+                        break;
+                    }
+                }
+                if(false ==bl_find_template){
+                    spdlog::error("Template not found! for: ", rfile.toStdString());
+                }
+            }else{
+                m_sp_qastra->LoadFile( eLoadCode::RG_REPL, rfile.toStdString(), "" );
+                break;
+            }
+        }
+    }
+    return;
+
     QString fileName = QFileDialog::getOpenFileName(this);
     if (!fileName.isEmpty()) {
 #if(!defined(QICSGRID_NO))

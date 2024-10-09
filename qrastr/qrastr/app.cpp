@@ -106,6 +106,11 @@ long App::readSettings(){ //it cache log messages to vector, because it called b
                 return -1;
             }
             p_params->setFileAppsettings(str_path_2_conf);
+            v_cache_log_.add(spdlog::level::info, "ReadTemplates: {}", p_params->getDirSHABLON().absolutePath().toStdString());
+            nRes = Params::GetInstance()->readTemplates( p_params->getDirSHABLON().absolutePath().toStdString() ); assert(nRes>0);
+            if(nRes < 0){
+                v_cache_log_.add(spdlog::level::err, "Error while read: {}", nRes);
+            }
         }else{
             v_cache_log_.add(spdlog::level::err, "Can't create singleton Params");
         }
