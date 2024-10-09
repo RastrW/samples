@@ -8,7 +8,6 @@ namespace Ui {
 class FormSettingsOnLoadFiles;
 }
 
-//class FormSettings;
 class FormSettingsOnLoadFiles
     : public QWidget
     , public FormSettingsStackedItem
@@ -20,7 +19,9 @@ public:
 signals:
 private slots:
     void onActTrigNewPathToFile();
+    void onChangeData();
 private:
+
     Ui::FormSettingsOnLoadFiles *ui;
 };
 

@@ -34,6 +34,7 @@ using WrapperExceptionType = std::runtime_error;
 #include "tsthints.h"
 #include "delegatecombobox.h"
 #include "formsettings.h"
+#include "rtabwidget.h"
 
 MainWindow::MainWindow(){
     m_workspace = new QMdiArea;
@@ -82,9 +83,7 @@ MainWindow::~MainWindow(){
 }
 int MainWindow::readSettings(){ //it cache log messages to vector, because it called befor logger intialization
     try{
-        QSettings settings(m_pchSettingsOrg);
-        QPoint pos = settings.value("pos", QPoint(200, 200)).toPoint();
-        QSize size = settings.value("size", QSize(600, 800)).toSize();
+
         //move(pos);
         //resize(size);
     }catch(const std::exception& ex){
@@ -97,11 +96,7 @@ int MainWindow::readSettings(){ //it cache log messages to vector, because it ca
     return 1;
 }
 int MainWindow::writeSettings(){
-    QSettings settings(m_pchSettingsOrg);
-    //QSettings::IniFormat
-    QString qstr = settings.fileName();
-    settings.setValue("pos", pos());
-    settings.setValue("size", size());
+
     return 1;
 }
 void MainWindow::tst_onRastrHint(const _hint_data& dh){
@@ -278,6 +273,7 @@ void MainWindow::open(){
         }
 #endif//#if(!defined(QICSGRID_NO))
         m_sp_qastra->LoadFile(eLoadCode::RG_REPL, fileName.toStdString(),"");
+        m_cur_file = fileName.toStdString();
     }
 }
 void MainWindow::save(){
@@ -440,7 +436,7 @@ void MainWindow::setActiveSubWindow(QWidget *window){
 }
 void MainWindow::showFormSettings(){
     FormSettings* pformSettings = new FormSettings();
-    pformSettings->init();
+    pformSettings->init(m_sp_qastra);
     pformSettings->show();
 }
 void MainWindow::createActions(){

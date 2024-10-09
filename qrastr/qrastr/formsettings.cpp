@@ -3,10 +3,14 @@
 #include <QSplitter>
 #include <QVBoxLayout>
 
+#include <filesystem>
+#include "qastra.h"
 #include "params.h"
 #include "formsettingsdatas.h"
 #include "formsettingsforms.h"
 #include "formsettingsonloadfiles.h"
+#include "common_qrastr.h"
+
 
 struct FormSettings::_tree_item{
     _tree_item( const std::string_view& sv_name_in, const std::string_view& sv_caption_in, QWidget* pw_show = nullptr )
@@ -114,8 +118,29 @@ FormSettings::FormSettings(QWidget *parent)
     layout->addWidget(ppb_save_settings_);
     setLayout(layout);
 }
+void FormSettings::closeEvent(QCloseEvent *event){
+     if (event->spontaneous()) {
+        spdlog::info("The close button was clicked");
+        if(bl_app_settings_chnged_ == true){
+            QMessageBox msgBox;
+            msgBox.setText(tr("Appsettings changed, but not saved in the file. Ignore and close dialog?"));
+            msgBox.setIcon(QMessageBox::Question);
+            msgBox.setStandardButtons( QMessageBox::Yes | QMessageBox::Cancel );
+            msgBox.setDefaultButton(QMessageBox::Yes);
+            if(msgBox.exec() != QMessageBox::Yes){
+                event->ignore();
+                return;
+            }
+        }
+     }else{
+        QWidget::closeEvent(event);
+     }
+ }
 void FormSettings::setButtonSaveEnabled(bool bl_new_val){
     ppb_save_settings_->setEnabled(bl_new_val);
+}
+void FormSettings::setAppSettingsChanged(){
+    bl_app_settings_chnged_ = true;
 }
 void FormSettings::onBtnSaveClick(){
     //Params::GetInstance()->Get_on_start_load_file_forms();
@@ -133,10 +158,16 @@ void FormSettings::onBtnSaveClick(){
             path_appsettings_cpy.replace_filename(path_appsettings.stem().string()+"_previos"+path_appsettings.extension().string());
             std::filesystem::copy(path_appsettings, path_appsettings_cpy, std::filesystem::copy_options::overwrite_existing);
             Params::GetInstance()->writeJsonFile(path_appsettings.string());
+            bl_app_settings_chnged_ = false;
         }
     }
 }
-int FormSettings::init(){
+int FormSettings::init(const std::shared_ptr<QAstra>& sp_qastra){
+    int n_res = 0;
+    sp_qastra_ = sp_qastra;
+    //n_res = Params::GetInstance()->readForms    ( Params::GetInstance()->getDirSHABLON().absolutePath().toStdString() ); assert(n_res>0);
+    n_res = Params::GetInstance()->readTemplates( Params::GetInstance()->getDirSHABLON().absolutePath().toStdString() ); assert(n_res>0);
+
     pti_settings_root_ = new _tree_item{"root","Настройки"};
     _tree_item ti_datas     { "datas",     "Данные" , new FormSettingsDatas()  };
     _tree_item ti_protocol  { "protocol",  "Протокол" };
@@ -190,5 +221,6 @@ int FormSettings::init(){
         QPushButton* pb_save_ = nullptr;
     };
     //ptw_sections_->setHeader(new Header(ptw_sections_));
+
     return 1;
 }
