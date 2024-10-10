@@ -36,6 +36,7 @@ using WrapperExceptionType = std::runtime_error;
 #include "formsettings.h"
 #include "rtabwidget.h"
 #include "params.h"
+#include "formfilenew.h"
 
 MainWindow::MainWindow(){
     m_workspace = new QMdiArea;
@@ -114,18 +115,15 @@ void MainWindow::tst_onRastrHint(const _hint_data& dh){
     spdlog::info("XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX");
     spdlog::info("XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX");
 }
-void MainWindow::dragEnterEvent(QDragEnterEvent *event)
-{
+void MainWindow::dragEnterEvent(QDragEnterEvent *event){
    event->acceptProposedAction();
 }
-void MainWindow::dropEvent(QDropEvent *dropEvent)
-{
+void MainWindow::dropEvent(QDropEvent *dropEvent){
    QStringList filePathList;
-   foreach (QUrl url, dropEvent->mimeData()->urls())
-   {
+   foreach (QUrl url, dropEvent->mimeData()->urls()){
        std::string fileName = url.toLocalFile().toStdString();
        filePathList << url.toLocalFile();
-       m_sp_qastra->LoadFile(eLoadCode::RG_REPL, fileName,"");
+       m_sp_qastra->Load( eLoadCode::RG_REPL, fileName, "" );
    }
    dropEvent->acceptProposedAction();
 }
@@ -257,6 +255,14 @@ void MainWindow::closeEvent(QCloseEvent *event){
 #endif// #if(!defined(QICSGRID_NO))
 }
 void MainWindow::newFile(){
+    FormFileNew* pformFileNew = new FormFileNew(this);
+    if(QDialog::Accepted == pformFileNew->exec()){
+        const FormFileNew::_s_checked_templatenames s_checked_templatenames = pformFileNew->getCheckedTemplateNames();
+        for(const FormFileNew::_s_checked_templatenames::value_type& templatename : s_checked_templatenames){
+            const std::string str_path_to_shablon = Params::GetInstance()->getDirSHABLON().absolutePath().toStdString() + "//" +templatename;
+            m_sp_qastra->Load( eLoadCode::RG_REPL, "", str_path_to_shablon );
+        }
+    }
 #if(!defined(QICSGRID_NO))
     MdiChild *child = createMdiChild(  j_forms_[0] );
     child->newFile();
@@ -280,7 +286,7 @@ void MainWindow::open(){
     fileDlg.setFileMode(QFileDialog::ExistingFiles); //ExistingFile
     int n_res = fileDlg.exec();
     if(QDialog::Accepted == n_res){
-        QString selectedFilter = fileDlg.selectedNameFilter();
+        const QString selectedFilter = fileDlg.selectedNameFilter();
         for(const auto& rfile : fileDlg.selectedFiles()){
             spdlog::info("try load file: ", rfile.toStdString());
             if(qstr_filter_no_template != selectedFilter){
@@ -288,16 +294,16 @@ void MainWindow::open(){
                 for(const Params::_v_template_exts::value_type& template_ext : v_template_ext){
                     if(true == rfile.endsWith(template_ext.second.c_str())){
                         bl_find_template = true;
-                        const std::string str_path_to_shablon =  Params::GetInstance()->getDirSHABLON().absolutePath().toStdString() + "//" +template_ext.first +template_ext.second;
-                        m_sp_qastra->LoadFile( eLoadCode::RG_REPL, rfile.toStdString(), str_path_to_shablon );
+                        const std::string str_path_to_shablon = Params::GetInstance()->getDirSHABLON().absolutePath().toStdString() + "//" +template_ext.first +template_ext.second;
+                        m_sp_qastra->Load( eLoadCode::RG_REPL, rfile.toStdString(), str_path_to_shablon );
                         break;
                     }
                 }
-                if(false ==bl_find_template){
+                if(false == bl_find_template){
                     spdlog::error("Template not found! for: ", rfile.toStdString());
                 }
             }else{
-                m_sp_qastra->LoadFile( eLoadCode::RG_REPL, rfile.toStdString(), "" );
+                m_sp_qastra->Load( eLoadCode::RG_REPL, rfile.toStdString(), "" );
                 break;
             }
         }
@@ -313,11 +319,35 @@ void MainWindow::open(){
             return;
         }
 #endif//#if(!defined(QICSGRID_NO))
-        m_sp_qastra->LoadFile(eLoadCode::RG_REPL, fileName.toStdString(),"");
+        m_sp_qastra->Load(eLoadCode::RG_REPL, fileName.toStdString(),"");
         m_cur_file = fileName.toStdString();
     }
 }
 void MainWindow::save(){
+    QFileDialog fileDlg( this, tr("Save Rastr file") );
+    fileDlg.setAcceptMode(QFileDialog::AcceptSave);
+    fileDlg.setOption(QFileDialog::DontUseNativeDialog, true);
+    fileDlg.setViewMode(QFileDialog::Detail);
+    QString qstr_filter;
+    const Params::_v_template_exts v_template_ext{ Params::GetInstance()->getTemplateExts() };
+    for(const Params::_v_template_exts::value_type& template_ext : v_template_ext){
+        qstr_filter += QString("%1 (*%2);;").arg(template_ext.first.c_str()).arg(template_ext.second.c_str());
+    }
+    const QString qstr_filter_no_template {"No template (*)"};
+    qstr_filter += qstr_filter_no_template; //qstr_filter += QString("xz (*.rg2 *.os)");
+    fileDlg.setNameFilter(qstr_filter);
+    fileDlg.selectNameFilter("режим (*.rg2)");
+    fileDlg.setFileMode(QFileDialog::AnyFile);
+    int n_res = fileDlg.exec();
+    if(QDialog::Accepted == n_res){
+        const QString qstr_template = fileDlg.selectedNameFilter();
+        const QString qstr_rfile    =  fileDlg.selectedFiles()[0];
+        const std::string str_path_to_shablon = Params::GetInstance()->getDirSHABLON().absolutePath().toStdString() + "//" +qstr_template.toStdString();
+        //m_sp_qastra->LoadFile( eLoadCode::RG_REPL, "", str_path_to_shablon );
+        m_sp_qastra->Save( qstr_rfile.toStdString(), str_path_to_shablon );
+        qDebug() << "templ: "<< qstr_template << "  file : " << qstr_rfile ;
+    }
+
 #if(!defined(QICSGRID_NO))
     if (activeMdiChild()->save())
         statusBar()->showMessage(tr("File saved"), 2000);

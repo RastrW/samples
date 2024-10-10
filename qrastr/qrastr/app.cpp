@@ -33,6 +33,7 @@ bool App::notify(QObject* receiver, QEvent* event){
     }catch(std::exception& ex){
         exclog(ex);
         std::string str{fmt::format("std::exception: {}",ex.what())};
+        //spdlog::error("ERROR: {}", ex.what());
         assert(!str.c_str());
     }catch (...){
         exclog();
@@ -238,17 +239,15 @@ std::list<CUIForm>& App::GetForms() const {
 long App::start(){
     try{
         long n_res =0;
-        //QDir::setCurrent(qdirData_.absolutePath());
         QDir::setCurrent(Params::GetInstance()->getDirData().absolutePath());
         loadPlugins();
         if(nullptr!=m_sp_qastra){
-            //m_sp_qastra->LoadFile( eLoadCode::RG_REPL, m_params.Get_on_start_load_file_rastr(), "" );
             for(const Params::_v_file_templates::value_type& file_template : Params::GetInstance()->getStartLoadFileTemplates()){
                 //m_sp_qastra->LoadFile( eLoadCode::RG_REPL, Params::GetInstance()->Get_on_start_load_file_rastr(), "" );
                 QDir dir = Params::GetInstance()->getDirSHABLON();
                 std::filesystem::path path_template = Params::GetInstance()->getDirSHABLON().filesystemPath();
                 path_template /= file_template.second;
-                m_sp_qastra->LoadFile( eLoadCode::RG_REPL, file_template.first, path_template.string() );
+                m_sp_qastra->Load( eLoadCode::RG_REPL, file_template.first, path_template.string() );
                 if(n_res<0){
                     spdlog::error("{} =LoadFile()", n_res);
                     QMessageBox mb( QMessageBox::Icon::Critical, QObject::tr("Error"),
@@ -259,10 +258,7 @@ long App::start(){
                 }
             }
         }
-        //spdlog::info("ReadForms: {}", m_params.Get_on_start_load_file_forms() );
         spdlog::info("ReadForms");
-        //n_res = ReadForms(m_params.Get_on_start_load_file_forms());
-        //n_res = ReadForms(Params::GetInstance()->Get_on_start_load_file_forms());
         n_res = readForms();
         if(n_res<0){
             spdlog::error("{} =ReadForms()", n_res);
