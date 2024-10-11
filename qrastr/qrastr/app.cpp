@@ -242,10 +242,17 @@ long App::start(){
         QDir::setCurrent(Params::GetInstance()->getDirData().absolutePath());
         loadPlugins();
         if(nullptr!=m_sp_qastra){
+            const QDir dir = Params::GetInstance()->getDirSHABLON();
+            //std::filesystem::path path_templates = Params::GetInstance()->getDirSHABLON().canonicalPath().toStdString();
+            const std::filesystem::path path_templates = Params::GetInstance()->getDirSHABLON().filesystemCanonicalPath();
+            const Params::_v_templates v_templates{ Params::GetInstance()->getTemplates() };
+            for(const Params::_v_templates::value_type& templ_to_load : v_templates){
+                std::filesystem::path path_template = path_templates;
+                path_template /= templ_to_load;
+                m_sp_qastra->Load( eLoadCode::RG_REPL, "", path_template.string() );
+            }
             for(const Params::_v_file_templates::value_type& file_template : Params::GetInstance()->getStartLoadFileTemplates()){
-                //m_sp_qastra->LoadFile( eLoadCode::RG_REPL, Params::GetInstance()->Get_on_start_load_file_rastr(), "" );
-                QDir dir = Params::GetInstance()->getDirSHABLON();
-                std::filesystem::path path_template = Params::GetInstance()->getDirSHABLON().filesystemPath();
+                std::filesystem::path path_template = path_templates;
                 path_template /= file_template.second;
                 m_sp_qastra->Load( eLoadCode::RG_REPL, file_template.first, path_template.string() );
                 if(n_res<0){
