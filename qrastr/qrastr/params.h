@@ -42,6 +42,9 @@ public:
         v_start_load_file_templates_.clear();
         v_start_load_file_templates_.insert( v_start_load_file_templates_.begin(), v_start_load_file_templates.begin(), v_start_load_file_templates.end() );
     }
+    void setTemplates(const _v_templates& v_templates_in){
+        v_templates_ = v_templates_in;
+    }
     const _v_templates& getTemplates()const{
         return v_templates_;
     }

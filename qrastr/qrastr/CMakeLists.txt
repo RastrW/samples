@@ -189,6 +189,9 @@ set(PROJECT_SOURCES
     formsettingsonloadfiles.ui
     formsettingsstackeditem.h
     formsettingsstackeditem.cpp
+    formsettingsonloadtemplates.h
+    formsettingsonloadtemplates.cpp
+    formsettingsonloadtemplates.ui
     formfilenew.h
     formfilenew.cpp
     formfilenew.ui
@@ -196,7 +199,7 @@ set(PROJECT_SOURCES
 if(${QT_VERSION_MAJOR} GREATER_EQUAL 6)
     qt_add_executable( ${PROJECT_NAME}
         MANUAL_FINALIZATION
-        ${PROJECT_SOURCES}   
+        ${PROJECT_SOURCES}
     )
     qt_create_translation( QM_FILES ${CMAKE_SOURCE_DIR} ${TS_FILES} )
 else()
