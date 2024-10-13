@@ -14,8 +14,20 @@ FormSettingsOnLoadTemplates::FormSettingsOnLoadTemplates(QWidget *parent) :
     //headers<<""<<"Template";
     //ui->twTemplates->setHorizontalHeaderLabels(headers);
     ui->twTemplates->horizontalHeader()->setStretchLastSection(true);
-    const Params::_v_templates v_templates{ Params::GetInstance()->getTemplates() };
-    const Params::_v_template_exts v_template_ext{ Params::GetInstance()->getTemplateExts() };
+
+    ui->twTemplates->resizeColumnsToContents();
+    ui->twTemplates->resizeRowsToContents();
+    ui->twTemplates->verticalHeader()->setVisible(false); // hide row numbers
+    ui->twTemplates->horizontalHeader()->setVisible(false);
+}
+FormSettingsOnLoadTemplates::~FormSettingsOnLoadTemplates(){
+    delete ui;
+}
+void FormSettingsOnLoadTemplates::showEvent( QShowEvent* event ) {
+    QWidget::showEvent( event );
+    const Params::_v_templates& v_templates{ Params::GetInstance()->getTemplates() };
+    const Params::_v_template_exts& v_template_ext{ Params::GetInstance()->getTemplateExts() };
+    ui->twTemplates->clear();
     int n_row_num = 0;
     for(const Params::_v_template_exts::value_type& template_ext : v_template_ext){
         ui->twTemplates->insertRow(n_row_num);
@@ -34,15 +46,8 @@ FormSettingsOnLoadTemplates::FormSettingsOnLoadTemplates(QWidget *parent) :
         ui->twTemplates->setItem( n_row_num, n_colnum_templatename_, ptwi_templatename );
         n_row_num++;
     }
-    ui->twTemplates->resizeColumnsToContents();
-    ui->twTemplates->resizeRowsToContents();
-    ui->twTemplates->verticalHeader()->setVisible(false); // hide row numbers
-    ui->twTemplates->horizontalHeader()->setVisible(false);
 }
-FormSettingsOnLoadTemplates::~FormSettingsOnLoadTemplates(){
-    delete ui;
-}
-void FormSettingsOnLoadTemplates::on_pbApplay_clicked(){
+void FormSettingsOnLoadTemplates::on_pbApply_clicked(){
     Params::_v_templates v_templates_new;
     for( int n_rownum = 0; n_rownum < ui->twTemplates->rowCount() ; n_rownum++ ){
         const QTableWidgetItem* ptwi_checkbox = ui->twTemplates->item( n_rownum, n_colnum_checked_ );

@@ -109,5 +109,62 @@ int Params::readTemplates(const std::filesystem::path& path_dir_templates){
     }
     return 1;
 }
+int Params::readForms(const std::filesystem::path& path_forms){
+    try{
+        /*
+    #if(defined(_MSC_VER))
+        //on Windows, you MUST use 8bit ANSI (and it must match the user's locale) or UTF-16 !! Unicode!
+        //!!! https://stackoverflow.com/questions/30829364/open-utf8-encoded-filename-in-c-windows  !!!
+        //for (std::string &form : forms){
+        for(const Params::_v_forms::value_type &form : Params::GetInstance()->getStartLoadForms()){
+            std::filesystem::path path_file_form = stringutils::utf8_decode(form);
+            path_form_load =  path_forms / path_file_form;
+            qDebug() << "read form from file : " << path_form_load.wstring();
+    #else
+            path_forms_load = str_path_to_file_forms;
+            qDebug() << "read form from file : " << path_forms_load.c_str();
+    #endif
+
+    */
+        upCUIFormsCollection_ = std::make_unique<CUIFormsCollection>();
+        for(const Params::_v_forms::value_type &form : v_start_load_forms_){
+            std::filesystem::path path_file_form  {path_forms};
+            path_file_form /= stringutils::utf8_decode(form);
+            CUIFormsCollection* CUIFormsCollection_ = new CUIFormsCollection ;
+            if (path_file_form.extension() == ".fm")
+                *CUIFormsCollection_ = CUIFormCollectionSerializerBinary(path_file_form).Deserialize();
+            else
+                *CUIFormsCollection_ = CUIFormCollectionSerializerJson(path_file_form).Deserialize();
+            for(const  CUIForm& uiform : CUIFormsCollection_->Forms()){
+                upCUIFormsCollection_->Forms().emplace_back(uiform);
+            }
+        }
+    }catch(const std::exception& ex){
+        exclog(ex);
+        return -1;
+    }catch(...){
+        exclog();
+        return -2;
+    }
+    return 1;
+}
+int Params::readFormsExists(const std::filesystem::path& path_dir_forms){
+    try{
+        v_forms_exists_.clear();
+        for(const auto& entry : std::filesystem::directory_iterator(path_dir_forms)){
+            std::filesystem::path path_form = entry.path();
+            std::string str_form_name = path_form.filename().u8string();
+            v_forms_exists_.emplace_back(str_form_name);
+        }
+    }catch(const std::exception& ex){
+        exclog(ex);
+        return -1;
+    }catch(...){
+        exclog();
+        return -2;
+    }
+    return 1;
+}
+
 
 

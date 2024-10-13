@@ -341,7 +341,7 @@ void MainWindow::save(){
     int n_res = fileDlg.exec();
     if(QDialog::Accepted == n_res){
         const QString qstr_template = fileDlg.selectedNameFilter();
-        const QString qstr_rfile    =  fileDlg.selectedFiles()[0];
+        const QString qstr_rfile    = fileDlg.selectedFiles()[0];
         const std::string str_path_to_shablon = Params::GetInstance()->getDirSHABLON().absolutePath().toStdString() + "//" +qstr_template.toStdString();
         //m_sp_qastra->LoadFile( eLoadCode::RG_REPL, "", str_path_to_shablon );
         m_sp_qastra->Save( qstr_rfile.toStdString(), str_path_to_shablon );

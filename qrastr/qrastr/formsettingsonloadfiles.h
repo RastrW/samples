@@ -16,6 +16,7 @@ class FormSettingsOnLoadFiles
 public:
     explicit FormSettingsOnLoadFiles(QWidget *parent = nullptr);
     ~FormSettingsOnLoadFiles();
+    void showEvent( QShowEvent* event )override;
 signals:
 private slots:
     void onActTrigNewPathToFile();

@@ -13,10 +13,11 @@ class FormSettingsOnLoadTemplates
 public:
     explicit FormSettingsOnLoadTemplates(QWidget *parent = nullptr);
     ~FormSettingsOnLoadTemplates();
+    void showEvent( QShowEvent* event )override;
     static constexpr const int n_colnum_checked_      = 0;
     static constexpr const int n_colnum_templatename_ = 1;
 private slots:
-    void on_pbApplay_clicked();
+    void on_pbApply_clicked();
 private:
     Ui::FormSettingsOnLoadTemplates *ui;
 };

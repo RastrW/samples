@@ -112,6 +112,18 @@ long App::readSettings(){ //it cache log messages to vector, because it called b
             if(nRes < 0){
                 v_cache_log_.add(spdlog::level::err, "Error while read: {}", nRes);
             }
+
+            const std::filesystem::path path_dirforms = p_params->getDirData().canonicalPath().toStdString()+"//form//";
+            v_cache_log_.add(spdlog::level::info, "ReadForms: {}", path_dirforms.string());
+            nRes = Params::GetInstance()->readFormsExists( path_dirforms ); assert(nRes>0);
+            if(nRes < 0){
+                v_cache_log_.add(spdlog::level::err, "Error while read existed forms: {}", nRes);
+            }
+            nRes = Params::GetInstance()->readForms( path_dirforms ); assert(nRes>0);
+            if(nRes < 0){
+                v_cache_log_.add(spdlog::level::err, "Error while read: {}", nRes);
+            }
+
         }else{
             v_cache_log_.add(spdlog::level::err, "Can't create singleton Params");
         }
@@ -201,7 +213,7 @@ long App::readForms(){
         //std::vector<std::string> forms = split(str_path_forms, ',');
         std::filesystem::path path_forms ("form");
         std::filesystem::path path_form_load;
-#if(defined(_MSC_VER))
+    #if(defined(_MSC_VER))
         //on Windows, you MUST use 8bit ANSI (and it must match the user's locale) or UTF-16 !! Unicode!
         //!!! https://stackoverflow.com/questions/30829364/open-utf8-encoded-filename-in-c-windows  !!!
         //for (std::string &form : forms){

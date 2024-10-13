@@ -11,6 +11,7 @@
 #include "formsettingsforms.h"
 #include "formsettingsonloadfiles.h"
 #include "formsettingsonloadtemplates.h"
+#include "formsettingsonloadforms.h"
 
 struct FormSettings::_tree_item{
     _tree_item( const std::string_view& sv_name_in, const std::string_view& sv_caption_in, QWidget* pw_show = nullptr )
@@ -176,7 +177,9 @@ int FormSettings::init(const std::shared_ptr<QAstra>& sp_qastra){
         _tree_item  ti_onload_templates{ "templates",  "Шаблоны", new FormSettingsOnLoadTemplates() };
         ti_on_start.v_childs.emplace_back(ti_onload_templates);
         //ti_on_start.v_childs.emplace_back(_tree_item{ "templates",  "Шаблоны", new FormSettingsOnLoadTemplates() });
-        ti_on_start.v_childs.emplace_back(_tree_item{ "foms", "Формы"   });
+        _tree_item  ti_onload_forms{ "forms",  "Формы", new FormSettingsOnLoadForms() };
+        //ti_on_start.v_childs.emplace_back(_tree_item{ "foms", "Формы"   });
+        ti_on_start.v_childs.emplace_back(ti_onload_forms);
         _tree_item ti_on_load_files{ "templates", "Файлы", new FormSettingsOnLoadFiles(this) };
         //ti_on_start.v_childs.emplace_back(_tree_item{ "templates", "Загружаемые файлы", new FormSettingsOnLoadFiles() });
         ti_on_start.v_childs.emplace_back(ti_on_load_files);
@@ -200,6 +203,7 @@ int FormSettings::init(const std::shared_ptr<QAstra>& sp_qastra){
     psw_->addWidget(ti_forms.pw);
     psw_->addWidget(ti_on_load_files.pw);
     psw_->addWidget(ti_onload_templates.pw);
+    psw_->addWidget(ti_onload_forms.pw);
     //psw_->adjustSize();
     //psw_->setContentsMargins();
     //psw_->setSizePolicy();

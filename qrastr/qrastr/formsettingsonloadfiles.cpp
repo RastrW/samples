@@ -10,6 +10,7 @@ FormSettingsOnLoadFiles::FormSettingsOnLoadFiles(QWidget *parent)
     , ui{new Ui::FormSettingsOnLoadFiles}
     , FormSettingsStackedItem{qobject_cast<FormSettings*>(parent)}{
     ui->setupUi(this);
+    ui->cbTemplate->clear();
     for(const auto& str_template_ext : Params::GetInstance()->getTemplateExts()){
         const QVariant qv_user_data_null;
         QString qstr = QString("%1%2").arg(str_template_ext.first.c_str()).arg(str_template_ext.second.c_str());
@@ -28,6 +29,8 @@ FormSettingsOnLoadFiles::FormSettingsOnLoadFiles(QWidget *parent)
 }
 FormSettingsOnLoadFiles::~FormSettingsOnLoadFiles(){
     delete ui;
+}
+void FormSettingsOnLoadFiles::showEvent( QShowEvent* event ){
 }
 void FormSettingsOnLoadFiles::onActTrigNewPathToFile(){
     QString qstr_path_to_file = QFileDialog::getOpenFileName(this, tr("Open file"));
