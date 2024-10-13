@@ -25,9 +25,9 @@ FormSettingsOnLoadTemplates::~FormSettingsOnLoadTemplates(){
 }
 void FormSettingsOnLoadTemplates::showEvent( QShowEvent* event ) {
     QWidget::showEvent( event );
-    const Params::_v_templates& v_templates{ Params::GetInstance()->getTemplates() };
+    const Params::_v_templates& v_templates{ Params::GetInstance()->getStartLoadTemplates() };
     const Params::_v_template_exts& v_template_ext{ Params::GetInstance()->getTemplateExts() };
-    ui->twTemplates->clear();
+    ui->twTemplates->setRowCount(0);
     int n_row_num = 0;
     for(const Params::_v_template_exts::value_type& template_ext : v_template_ext){
         ui->twTemplates->insertRow(n_row_num);
@@ -56,6 +56,6 @@ void FormSettingsOnLoadTemplates::on_pbApply_clicked(){
             v_templates_new.emplace_back(ptwi_templatename->text().toStdString());
         }
     }
-    Params::GetInstance()->setTemplates(v_templates_new);
+    Params::GetInstance()->setStartLoadTemplates(v_templates_new);
 }
 

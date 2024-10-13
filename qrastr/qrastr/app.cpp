@@ -257,7 +257,7 @@ long App::start(){
             const QDir dir = Params::GetInstance()->getDirSHABLON();
             //std::filesystem::path path_templates = Params::GetInstance()->getDirSHABLON().canonicalPath().toStdString();
             const std::filesystem::path path_templates = Params::GetInstance()->getDirSHABLON().filesystemCanonicalPath();
-            const Params::_v_templates v_templates{ Params::GetInstance()->getTemplates() };
+            const Params::_v_templates v_templates{ Params::GetInstance()->getStartLoadTemplates() };
             for(const Params::_v_templates::value_type& templ_to_load : v_templates){
                 std::filesystem::path path_template = path_templates;
                 path_template /= templ_to_load;

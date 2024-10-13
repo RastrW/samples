@@ -16,7 +16,7 @@ FormSettingsOnLoadForms::FormSettingsOnLoadForms(QWidget *parent) :
     ui->twForms->horizontalHeader()->setVisible(false);
 }
 void FormSettingsOnLoadForms::showEvent( QShowEvent* event ){
-    ui->twForms->clear();
+    ui->twForms->setRowCount(0);
     int n_row_num = 0;
     for(const auto& form_exists_name : Params::GetInstance()->getFormsExists()){
         ui->twForms->insertRow(n_row_num);
@@ -47,6 +47,6 @@ void FormSettingsOnLoadForms::on_pbApply_clicked(){
             v_forms_load_new.emplace_back(ptwi_formname->text().toStdString());
         }
     }
-    Params::GetInstance()->setStartLoadFileForms(v_forms_load_new);
+    Params::GetInstance()->setStartLoadForms(v_forms_load_new);
 }
 

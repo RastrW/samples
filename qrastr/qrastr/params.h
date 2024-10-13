@@ -46,16 +46,16 @@ public:
         v_start_load_file_templates_.clear();
         v_start_load_file_templates_.insert( v_start_load_file_templates_.begin(), v_start_load_file_templates.begin(), v_start_load_file_templates.end() );
     }
-    void setTemplates(const _v_templates& v_templates_in){
-        v_templates_ = v_templates_in;
+    void setStartLoadTemplates(const _v_templates& v_templates_in){
+        v_start_load_templates_ = v_templates_in;
     }
-    const _v_templates& getTemplates()const{
-        return v_templates_;
+    const _v_templates& getStartLoadTemplates()const{
+        return v_start_load_templates_;
     }
     const _v_forms& getStartLoadForms()const{
         return v_start_load_forms_;
     }
-    void setStartLoadFileForms(const _v_forms& v_start_load_file_forms){
+    void setStartLoadForms(const _v_forms& v_start_load_file_forms){
         v_start_load_forms_.clear();
         v_start_load_forms_.insert( v_start_load_forms_.begin(), v_start_load_file_forms.begin(), v_start_load_file_forms.end() );
     }
@@ -66,10 +66,10 @@ private:
     QDir                  dir_Data_;
     QDir                  dir_SHABLON_;
     std::filesystem::path path_appsettings_;
-    _v_file_templates     v_start_load_file_templates_;
+    _v_templates          v_start_load_templates_;
     _v_forms              v_start_load_forms_;
+    _v_file_templates     v_start_load_file_templates_;
     _v_forms              v_forms_exists_;
-    _v_templates          v_templates_;
     std::unique_ptr<CUIFormsCollection> upCUIFormsCollection_;
     _v_template_exts      v_template_exts_;
 public:

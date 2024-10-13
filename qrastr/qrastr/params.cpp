@@ -12,7 +12,7 @@ int Params::readJsonFile(const std::filesystem::path& path_2_json){
         //spdlog::info("read JSON file: [{}]", path_2_json.string());
         v_start_load_file_templates_.clear();
         v_start_load_forms_.clear();
-        v_templates_.clear();
+        v_start_load_templates_.clear();
         std::ifstream ifs(path_2_json);
         if(ifs.is_open()){
             const nlohmann::json jf = nlohmann::json::parse(ifs);
@@ -30,7 +30,7 @@ int Params::readJsonFile(const std::filesystem::path& path_2_json){
             }
             const nlohmann::json j_templates = j_start[pch_json_start_templates_];
             for( const nlohmann::json& j_template : j_templates ){
-                v_templates_.emplace_back(j_template);
+                v_start_load_templates_.emplace_back(j_template);
             }
             ifs.close();
         }else{
@@ -61,7 +61,7 @@ int Params::writeJsonFile(const std::filesystem::path& path_2_json)const {
             jarr_forms.emplace_back(form);
         }
         nlohmann::json jarr_templates;
-        for(const _v_templates::value_type& templ : v_templates_){
+        for(const _v_templates::value_type& templ : v_start_load_templates_){
             jarr_templates.emplace_back(templ);
         }
         nlohmann::json j_start;
