@@ -33,6 +33,7 @@ bool App::notify(QObject* receiver, QEvent* event){
     }catch(std::exception& ex){
         exclog(ex);
         std::string str{fmt::format("std::exception: {}",ex.what())};
+        //spdlog::error("ERROR: {}", ex.what());
         assert(!str.c_str());
     }catch (...){
         exclog();
@@ -106,6 +107,23 @@ long App::readSettings(){ //it cache log messages to vector, because it called b
                 return -1;
             }
             p_params->setFileAppsettings(str_path_2_conf);
+            v_cache_log_.add(spdlog::level::info, "ReadTemplates: {}", p_params->getDirSHABLON().absolutePath().toStdString());
+            nRes = Params::GetInstance()->readTemplates( p_params->getDirSHABLON().absolutePath().toStdString() ); assert(nRes>0);
+            if(nRes < 0){
+                v_cache_log_.add(spdlog::level::err, "Error while read: {}", nRes);
+            }
+
+            const std::filesystem::path path_dirforms = p_params->getDirData().canonicalPath().toStdString()+"//form//";
+            v_cache_log_.add(spdlog::level::info, "ReadForms: {}", path_dirforms.string());
+            nRes = Params::GetInstance()->readFormsExists( path_dirforms ); assert(nRes>0);
+            if(nRes < 0){
+                v_cache_log_.add(spdlog::level::err, "Error while read existed forms: {}", nRes);
+            }
+            nRes = Params::GetInstance()->readForms( path_dirforms ); assert(nRes>0);
+            if(nRes < 0){
+                v_cache_log_.add(spdlog::level::err, "Error while read: {}", nRes);
+            }
+
         }else{
             v_cache_log_.add(spdlog::level::err, "Can't create singleton Params");
         }
@@ -195,7 +213,7 @@ long App::readForms(){
         //std::vector<std::string> forms = split(str_path_forms, ',');
         std::filesystem::path path_forms ("form");
         std::filesystem::path path_form_load;
-#if(defined(_MSC_VER))
+    #if(defined(_MSC_VER))
         //on Windows, you MUST use 8bit ANSI (and it must match the user's locale) or UTF-16 !! Unicode!
         //!!! https://stackoverflow.com/questions/30829364/open-utf8-encoded-filename-in-c-windows  !!!
         //for (std::string &form : forms){
@@ -233,17 +251,22 @@ std::list<CUIForm>& App::GetForms() const {
 long App::start(){
     try{
         long n_res =0;
-        //QDir::setCurrent(qdirData_.absolutePath());
         QDir::setCurrent(Params::GetInstance()->getDirData().absolutePath());
         loadPlugins();
         if(nullptr!=m_sp_qastra){
-            //m_sp_qastra->LoadFile( eLoadCode::RG_REPL, m_params.Get_on_start_load_file_rastr(), "" );
+            const QDir dir = Params::GetInstance()->getDirSHABLON();
+            //std::filesystem::path path_templates = Params::GetInstance()->getDirSHABLON().canonicalPath().toStdString();
+            const std::filesystem::path path_templates = Params::GetInstance()->getDirSHABLON().filesystemCanonicalPath();
+            const Params::_v_templates v_templates{ Params::GetInstance()->getStartLoadTemplates() };
+            for(const Params::_v_templates::value_type& templ_to_load : v_templates){
+                std::filesystem::path path_template = path_templates;
+                path_template /= templ_to_load;
+                m_sp_qastra->Load( eLoadCode::RG_REPL, "", path_template.string() );
+            }
             for(const Params::_v_file_templates::value_type& file_template : Params::GetInstance()->getStartLoadFileTemplates()){
-                //m_sp_qastra->LoadFile( eLoadCode::RG_REPL, Params::GetInstance()->Get_on_start_load_file_rastr(), "" );
-                QDir dir = Params::GetInstance()->getDirSHABLON();
-                std::filesystem::path path_template = Params::GetInstance()->getDirSHABLON().filesystemPath();
+                std::filesystem::path path_template = path_templates;
                 path_template /= file_template.second;
-                m_sp_qastra->LoadFile( eLoadCode::RG_REPL, file_template.first, path_template.string() );
+                m_sp_qastra->Load( eLoadCode::RG_REPL, file_template.first, path_template.string() );
                 if(n_res<0){
                     spdlog::error("{} =LoadFile()", n_res);
                     QMessageBox mb( QMessageBox::Icon::Critical, QObject::tr("Error"),
@@ -254,10 +277,7 @@ long App::start(){
                 }
             }
         }
-        //spdlog::info("ReadForms: {}", m_params.Get_on_start_load_file_forms() );
         spdlog::info("ReadForms");
-        //n_res = ReadForms(m_params.Get_on_start_load_file_forms());
-        //n_res = ReadForms(Params::GetInstance()->Get_on_start_load_file_forms());
         n_res = readForms();
         if(n_res<0){
             spdlog::error("{} =ReadForms()", n_res);

@@ -22,7 +22,5 @@ void FormSelection::on_buttonBox_accepted()
     RtabWidget* pRTW = static_cast<RtabWidget*>(this->parent());
     QString selection = ui->textEdit->toPlainText();
     pRTW->SetSelection(selection.toStdString());
-
-    int a= 1;
 }
 

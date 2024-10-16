@@ -99,16 +99,17 @@ void QAstra::setRastr(const _sp_rastr& sp_rastr_in){
 QAstra::_sp_rastr QAstra::getRastr() const {
     return sp_rastr_;
 }
-void QAstra::LoadFile( eLoadCode LoadCode, const std::string_view& FilePath, const std::string_view& TemplatePath ){
-    IRastrResultVerify loadresult{ sp_rastr_->Load(LoadCode,FilePath,TemplatePath) };
+void QAstra::Load( eLoadCode LoadCode, const std::string_view& FilePath, const std::string_view& TemplatePath ){
+    IRastrResultVerify loadresult{ sp_rastr_->Load( LoadCode, FilePath, TemplatePath ) };
+}
+void QAstra::Save( const std::string_view& FilePath, const std::string_view& TemplatePath ){
+    IRastrResultVerify saveresult{ sp_rastr_->Save( FilePath, TemplatePath ) };
 }
 eASTCode QAstra::Rgm(const std::string_view& parameters){
     IRastrPayload  rgmresult{ sp_rastr_->Rgm("") };
     return rgmresult.Value();
 }
-
-std::string QAstra::GetVal( const std::string_view& Table, const std::string_view& Col , const long row )
-{
+std::string QAstra::GetVal( const std::string_view& Table, const std::string_view& Col , const long row ){
     IRastrTablesPtr tablesx{ sp_rastr_->Tables() };
     IRastrPayload tablecount{ tablesx->Count() };
     IRastrTablePtr table{ tablesx->Item(Table) };
@@ -117,7 +118,6 @@ std::string QAstra::GetVal( const std::string_view& Table, const std::string_vie
     IRastrVariantPtr v_ptr{ col->Value(row) };
     IRastrPayload payload{ v_ptr->String() };
     std::string str_val = stringutils::acp_decode(payload.Value());
-
     return str_val;
 }
 
