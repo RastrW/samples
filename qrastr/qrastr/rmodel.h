@@ -46,6 +46,9 @@ public:
     bool removeRows(int row, int count, const QModelIndex &parent = QModelIndex()) override;
     bool removeColumns(int column, int count, const QModelIndex &parent = QModelIndex()) override;
     bool isBinary(const QModelIndex& index) const;
+
+    void SetSelection(std::string Selection);
+
 private:
     bool isBinary(const QByteArray& index) const;
     bool m_emitSignals;

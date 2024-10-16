@@ -3,6 +3,12 @@
 
 #include <QAbstractTableModel>
 
+#include <QTableView>
+#include <QStandardItemModel>
+#include <QLinearGradient>
+#include <QList>
+#include <QStandardItem>
+
 class TestModel : public QAbstractTableModel
 {
     Q_OBJECT
@@ -46,6 +52,41 @@ public:
     bool removeColumns(int column, int count, const QModelIndex &parent = QModelIndex()) override;
 
 private:
+};
+
+class ChartModel : public QStandardItemModel
+{
+public:
+    ChartModel():QStandardItemModel()
+    {
+        for (int i = 0; i < 10; ++i)
+        {
+            QList<QStandardItem*> row;
+            for (int j = 0; j < 2; ++j)
+            {
+                QStandardItem* item = new QStandardItem;
+                item->setData("50 %", Qt::EditRole);
+                row.push_back(item);
+            }
+            appendRow(row);
+        }
+    }
+
+    QVariant data(const QModelIndex& index, int role) const
+    {
+        if (role == Qt::BackgroundRole && index.isValid())
+        {
+            QLinearGradient grad(QPointF(0, 0), QPointF(1, 0));
+            grad.setCoordinateMode(QGradient::ObjectBoundingMode);
+            grad.setColorAt(0, Qt::blue);
+            grad.setColorAt(0.5, Qt::blue);
+            grad.setColorAt(0.50001, Qt::white);
+            grad.setColorAt(1, Qt::white);
+            grad.setSpread(QGradient::RepeatSpread);
+            return QBrush(grad);
+        }
+        return QStandardItemModel::data(index, role);
+    }
 };
 
 #endif // TESTMODEL_H

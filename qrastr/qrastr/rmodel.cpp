@@ -55,6 +55,9 @@ QVariant RModel::data(const QModelIndex &index, int role) const
     //auto datablock_item = up_rdata->nparray_.Get(row,col);
 
     switch (role) {
+        case Qt::BackgroundRole:
+            if (row == 1 && col == 2)  //change background only for cell(1,2)
+                return QBrush(Qt::red);
         /*case Qt::CheckStateRole:
             if (row == 1 && col == 0) //add a checkbox to cell(1,0)
                 return Qt::Checked;*/

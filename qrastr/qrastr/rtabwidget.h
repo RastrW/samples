@@ -10,6 +10,7 @@
 #include <QVBoxLayout>
 #include <QSortFilterProxyModel>
 #include "ColPropForm.h"
+#include "formselection.h"
 #include "rmodel.h"
 #include "RtableView.h"
 #include "rtablesdatamanager.h"
@@ -121,6 +122,7 @@ public slots:
     void widebyshabl();
     void widebydata();
     void OpenColPropForm();
+    void OpenSelectionForm();
     void sortAscending();
     void sortDescending();
     void hideColumns();
@@ -130,6 +132,7 @@ public slots:
     void updateFilter(size_t column, QString value);
     void onFileLoad();
     void update_data();
+    void SetSelection(std::string Selection);
 
 private slots:
     void CreateModel(QAstra* pqastra,CUIForm* pUIForm);
@@ -152,6 +155,7 @@ private:
     int form_indx;
     int column;                     // for header
     QPoint MenuRequestedPoint;
+    std::string m_selection;
 protected:
     itemStateMap tItemStateMap;
     QFrame customizeFrame;

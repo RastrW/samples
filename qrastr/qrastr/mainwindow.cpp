@@ -35,6 +35,8 @@ using WrapperExceptionType = std::runtime_error;
 #include "delegatecombobox.h"
 #include "formsettings.h"
 #include "rtabwidget.h"
+#include "testmodel.h"
+
 
 MainWindow::MainWindow(){
     m_workspace = new QMdiArea;
@@ -564,7 +566,15 @@ void MainWindow::createActions(){
     createCalcLayout();
 }
 void MainWindow::Btn1_onClick(){
+
+    QTableView* view = new QTableView;
+    view->setWindowTitle("charttest");
+    view->setWindowFlags(Qt::Tool);
+    view->setModel(new ChartModel);
+    view->show();
+
     //Show stock grid with nodes table
+    /*
     QTableView* ptv = new QTableView();
     RModel* pmm = new RModel(nullptr,m_sp_qastra.get(),nullptr);
     const auto& forms = m_lstUIForms;
@@ -576,6 +586,7 @@ void MainWindow::Btn1_onClick(){
     ptv->setSortingEnabled(true);
     ptv->setModel(pmm);
     ptv->show();
+    */
 }
 void MainWindow::Btn3_onClick(){
     //Show test ComboBox item at grid column

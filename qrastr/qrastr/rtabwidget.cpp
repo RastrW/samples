@@ -30,6 +30,7 @@ RtabWidget::RtabWidget(QWidget *parent) :
 RtabWidget::RtabWidget(QAstra* pqastra,CUIForm UIForm,RTablesDataManager* pRTDM, QWidget *parent)
     : RtabWidget{parent}
 {
+    m_selection = "";
     m_UIForm = UIForm;
     m_pqastra = pqastra;
     m_pRTDM = pRTDM;
@@ -177,6 +178,7 @@ void RtabWidget::customMenuRequested(QPoint pos){
     menu->addAction(tr("Выравнивание: по шаблону"),this,SLOT(widebyshabl()));
     menu->addAction(tr("Выравнивание: по данным"),this,SLOT(widebydata()));
     menu->addSeparator();
+    menu->addAction("Выборка", this, SLOT(OpenSelectionForm()));
     menu->addAction(tr("Format"));
     menu->popup(ptv->viewport()->mapToGlobal(pos));
 
@@ -349,6 +351,11 @@ void RtabWidget::OpenColPropForm()
     ColPropForm* PropForm = new ColPropForm(prm->getRdata(),ptv, prcol);
     PropForm->show();
 }
+void RtabWidget::OpenSelectionForm()
+{
+    FormSelection* Selection = new FormSelection(this->m_selection, this);
+    Selection->show();
+}
 void RtabWidget::sortAscending()
 {
     proxyModel->sort(column,Qt::AscendingOrder);
@@ -455,7 +462,27 @@ void RtabWidget::update_data()
     this->update();
     this->repaint();
 }
+void RtabWidget::SetSelection(std::string Selection)
+{
+    m_selection = Selection;
+    IRastrTablesPtr tablesx{ m_pqastra->getRastr()->Tables() };
+    IRastrPayload tablecount{ tablesx->Count() };
+    IRastrTablePtr table{ tablesx->Item(prm->getRdata()->t_name_) };
+    IPlainRastrResult* pres = table->SetSelection(Selection);
 
+    DataBlock<FieldVariantData> variant_block;
+    IRastrPayload keys = table->Key();
+    IRastrResultVerify(table->DataBlock(keys.Value(), variant_block));
+    auto vind = variant_block.IndexesVector();
+    for(int ir = 0 ; ir < prm->rowCount() ; ir++)
+        ptv->setRowHidden(ir,true);
+
+    for (IndexT &ind : vind)
+    {
+        qDebug() << ind;
+        ptv->setRowHidden(ind,false);
+    }
+}
 
 
 void RtabWidget::test(const QModelIndexList& fromIndices)
