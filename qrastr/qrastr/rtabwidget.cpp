@@ -19,6 +19,10 @@
 #include "delegatecheckbox.h"
 #include <QShortcut>
 #include <QPalette>
+#include "CondFormatManager.h"
+#include "Settings.h"
+
+//std::map<std::string, BrowseDataTableSettings> RtabWidget::m_settings;
 
 RtabWidget::RtabWidget(QWidget *parent) :
       QWidget(parent),
@@ -159,11 +163,13 @@ void RtabWidget::SetTableView(QTableView& tv, RModel& mm, int myltiplier  )
 
 void RtabWidget::customMenuRequested(QPoint pos){
     index=ptv->indexAt(pos);
+
     MenuRequestedPoint = pos;
 
     QMenu *menu=new QMenu(this);
     QAction* copyAction = new QAction( tr("Copy"), menu);
     QAction* copyWithHeadersAction = new QAction( tr("Copy with Headers"), menu);
+    QAction* condFormatAction = new QAction(QIcon(":/icons/edit_cond_formats"), tr("Edit Conditional Formats..."), menu);
     menu->addAction(copyAction);
     menu->addAction(copyWithHeadersAction);
     menu->addAction(QIcon(":/images/Rastr3_grid_insrow_16x16.png"),tr("Insert Row"),this,SLOT(insertRow()),QKeySequence(Qt::CTRL | Qt::Key_I));
@@ -180,6 +186,7 @@ void RtabWidget::customMenuRequested(QPoint pos){
     menu->addSeparator();
     menu->addAction("Выборка", this, SLOT(OpenSelectionForm()));
     menu->addAction(tr("Format"));
+    menu->addAction(condFormatAction);
     menu->popup(ptv->viewport()->mapToGlobal(pos));
 
     //ShotCuts (no ru variant :(  ...)
@@ -195,6 +202,10 @@ void RtabWidget::customMenuRequested(QPoint pos){
     //connect(cutAction, &QAction::triggered, this, &ExtendedTableWidget::cut);
     connect(copyWithHeadersAction, &QAction::triggered, this, [&]() {
         copy(true, false);
+    });
+
+    connect(condFormatAction, &QAction::triggered, this, [&]() {
+        emit editCondFormats(index.column());
     });
 }
 
@@ -317,6 +328,26 @@ void RtabWidget::changeColumnVisible(QListWidgetItem *item)
             hh->hideSection(i);
             m_UIForm.Fields().remove_if([&](const CUIFormField Field){return (Field.Name() == item_rname);});
         }
+    }
+}
+
+void RtabWidget::editCondFormats(size_t column)
+{
+    std::vector<CondFormat> condFormats;
+    CondFormat condFormat;
+   // CondFormatManager condFormatDialog(m_settings[currentlyBrowsedTableName()].condFormats[column],
+    //                                  m_model->encoding(), this);
+    CondFormatManager condFormatDialog(condFormats,
+                                      "UTF-8", this);
+    //this->m
+    QString title= prm->headerData(static_cast<int>(column), Qt::Horizontal, Qt::DisplayRole).toString();
+    condFormatDialog.setWindowTitle(tr("Conditional formats for \"%1\"").
+                                    arg(prm->headerData(static_cast<int>(column), Qt::Horizontal, Qt::DisplayRole).toString()));
+    if (condFormatDialog.exec()) {
+        std::vector<CondFormat> condFormatVector = condFormatDialog.getCondFormats();
+        //prm->setCondFormats(false, column, condFormatVector);
+        //m_settings[currentlyBrowsedTableName()].condFormats[column] = condFormatVector;
+        //emit projectModified();
     }
 }
 

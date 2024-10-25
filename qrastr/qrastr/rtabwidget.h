@@ -133,6 +133,7 @@ public slots:
     void onFileLoad();
     void update_data();
     void SetSelection(std::string Selection);
+    void editCondFormats(size_t column);
 
 private slots:
     void CreateModel(QAstra* pqastra,CUIForm* pUIForm);

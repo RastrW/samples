@@ -214,6 +214,9 @@ set(PROJECT_SOURCES
     CondFormatManager.h
     CondFormatManager.cpp
     CondFormatManager.ui
+    formselection.h
+    formselection.cpp
+    formselection.ui
     Palette.h
     Palette.cpp
     Settings.h
