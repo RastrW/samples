@@ -38,6 +38,7 @@ using WrapperExceptionType = std::runtime_error;
 #include "params.h"
 #include "formfilenew.h"
 #include "testmodel.h"
+#include "formprotocol.h"
 
 
 MainWindow::MainWindow(){
@@ -59,13 +60,13 @@ MainWindow::MainWindow(){
         now->widget()->setFocus();
     });
     m_pMcrWnd = new McrWnd( this, McrWnd::_en_role::global_protocol );
+    m_pFormProtocol = new FormProtocol(this);
     if(false){
         QDockWidget *dock = new QDockWidget( "protocol", this);
         dock->setWidget(m_pMcrWnd);
         dock->setAllowedAreas(Qt::LeftDockWidgetArea | Qt::RightDockWidgetArea | Qt::TopDockWidgetArea | Qt::BottomDockWidgetArea | Qt::AllDockWidgetAreas);
         addDockWidget(Qt::TopDockWidgetArea, dock);
     }else{
-        static int i = 0;
         auto dw = new ads::CDockWidget( "protocol", this);
         dw->setWidget(m_pMcrWnd);
         int f = ads::CDockWidget::CustomCloseHandling;
@@ -74,11 +75,25 @@ MainWindow::MainWindow(){
         auto container = m_DockManager->addDockWidgetFloating(dw);
         container->move(QPoint(2100, 20));
         container->resize(1200,800);
+
+        auto pdwProtocol = new ads::CDockWidget( "protocolMain", this );
+        pdwProtocol->setWidget(m_pFormProtocol);
+        //int f = ads::CDockWidget::CustomCloseHandling;
+        pdwProtocol->setFeature( static_cast<ads::CDockWidget::DockWidgetFeature>(f), true );
+        //auto area = m_DockManager->addDockWidgetTab(ads::NoDockWidgetArea, dw);
+        auto pfdc = m_DockManager->addDockWidgetFloating(pdwProtocol);
+        //pfdc->move(QPoint(2100, 20));
+        pfdc->resize(600,400);
+
+
     }
     auto qt_sink = std::make_shared<spdlog::sinks::qt_sink_mt>(m_pMcrWnd, "onQStringAppendProtocol");
     auto logg = spdlog::default_logger();
     logg->sinks().push_back(qt_sink);
-    //m_pMcrWnd->show();
+
+    auto qsinkProtocol = std::make_shared<spdlog::sinks::qt_sink_mt>(m_pFormProtocol, "onAppendProtocol");
+    //auto logg = spdlog::default_logger();
+    logg->sinks().push_back(qsinkProtocol);
 
     setAcceptDrops(true);
 
@@ -197,7 +212,9 @@ void MainWindow::setQAstra(const std::shared_ptr<QAstra>& sp_qastra){
     m_sp_qastra = sp_qastra;
     m_RTDM.setQAstra(sp_qastra.get());
 
-    connect( m_sp_qastra.get(), SIGNAL(onRastrLog(const _log_data&) ), m_pMcrWnd, SLOT(onRastrLog(const _log_data&)));
+    connect( m_sp_qastra.get(), SIGNAL(onRastrLog(const _log_data&) ), m_pFormProtocol, SLOT(onRastrLog(const _log_data&)) );
+    connect( m_sp_qastra.get(), SIGNAL(onRastrLog(const _log_data&) ), m_pMcrWnd,       SLOT(onRastrLog(const _log_data&)) );
+
 
     if(true){
         //vetv

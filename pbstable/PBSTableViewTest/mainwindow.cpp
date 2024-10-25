@@ -108,7 +108,7 @@ void createTempTable()
     inBuffer.open( QIODevice::WriteOnly );
     inPixmap.save( &inBuffer, "PNG" ); // write inPixmap into inByteArray in PNG format
 
-    for(int y = 0; y < 24; y++)
+    for(int y = 0; y < 2400; y++)
     {
         for(int i = 0; i < 5; i++)
         {
