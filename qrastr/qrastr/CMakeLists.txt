@@ -208,6 +208,16 @@ set(PROJECT_SOURCES
     protocoltreeitem.cpp
     protocoltreemodel.h
     protocoltreemodel.cpp
+    formselection.h
+    formselection.cpp
+    formselection.ui
+    CondFormatManager.h
+    CondFormatManager.cpp
+    CondFormatManager.ui
+    Palette.h
+    Palette.cpp
+    Settings.h
+    Settings.cpp
 )
 if(${QT_VERSION_MAJOR} GREATER_EQUAL 6)
     qt_add_executable( ${PROJECT_NAME}
