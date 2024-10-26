@@ -8,7 +8,8 @@ ProtocolTreeItem::ProtocolTreeItem(QVariantList data, ProtocolTreeItem* parent)
 //void ProtocolTreeItem::appendChild(std::unique_ptr<ProtocolTreeItem>&& child){
 void ProtocolTreeItem::appendChild( _vsptis::value_type& child){
     //m_childItems.emplace_back(std::move(child));
-    vsptis_.emplace_back(std::move(child));
+    //vsptis_.emplace_back(std::move(child));
+    vsptis_.emplace_back(child);
 }
 ProtocolTreeItem* ProtocolTreeItem::child(int row){
     //return row >= 0 && row < childCount() ? m_childItems.at(row).get() : nullptr;

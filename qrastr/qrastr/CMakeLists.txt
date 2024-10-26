@@ -58,7 +58,7 @@ endif()
 find_package( Metakit REQUIRED )
 find_package( fmt     REQUIRED )
 #find_package(cryptopp REQUIRED)
-find_package( QT NAMES Qt6 Qt5 COMPONENTS REQUIRED )
+find_package( QT NAMES Qt6 Qt5 Test COMPONENTS REQUIRED )
 find_package( Qt${QT_VERSION_MAJOR} COMPONENTS
     Core
     Widgets
@@ -66,6 +66,7 @@ find_package( Qt${QT_VERSION_MAJOR} COMPONENTS
     PrintSupport
     Xml
     #widgets-private
+    Test
     REQUIRED
 )
 
@@ -255,6 +256,7 @@ target_link_libraries( ${PROJECT_NAME} PRIVATE
     Qt${QT_VERSION_MAJOR}::Widgets
     Qt${QT_VERSION_MAJOR}::PrintSupport
     Qt${QT_VERSION_MAJOR}::Xml
+    Qt${QT_VERSION_MAJOR}::Test
 )
 target_include_directories( ${PROJECT_NAME} PRIVATE
   ${INCLUDES}

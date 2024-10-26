@@ -6,7 +6,7 @@
 
 ProtocolTreeModel::ProtocolTreeModel(QObject *parent)
     : QAbstractItemModel{parent}{
-    rootItem = std::make_unique<ProtocolTreeItem>( QVariantList{tr("Title"), tr("Summary"), tr("чя")} );
+    rootItem = std::make_unique<ProtocolTreeItem>( QVariantList{tr("Title"), tr("Summary")} );
     //setupModelData(QStringView{data}.split(u'\n'), rootItem.get());
 }
 int ProtocolTreeModel::columnCount(const QModelIndex &parent) const{
