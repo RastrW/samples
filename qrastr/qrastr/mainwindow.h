@@ -19,6 +19,7 @@ struct _hint_data;
 class rmodel;
 namespace ads{ class CDockManager; }
 class RtabWidget;
+class FormProtocol;
 
 namespace spdlog{namespace level{enum level_enum;}}
 class MainWindow
@@ -106,6 +107,7 @@ private:
     void closeEvent(QCloseEvent *event)override;
     QMdiArea*          m_workspace     = nullptr;
     McrWnd*            m_pMcrWnd       = nullptr;
+    FormProtocol*      m_pFormProtocol = nullptr;
     QSignalMapper*     m_windowMapper  = nullptr;
     QMenu*             m_menuOpen      = nullptr;
     QHBoxLayout*       m_layoutActions = nullptr;                 // actions: rgm,opf,...

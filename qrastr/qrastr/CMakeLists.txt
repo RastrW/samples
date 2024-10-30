@@ -58,7 +58,7 @@ endif()
 find_package( Metakit REQUIRED )
 find_package( fmt     REQUIRED )
 #find_package(cryptopp REQUIRED)
-find_package( QT NAMES Qt6 Qt5 COMPONENTS REQUIRED )
+find_package( QT NAMES Qt6 Qt5 Test COMPONENTS REQUIRED )
 find_package( Qt${QT_VERSION_MAJOR} COMPONENTS
     Core
     Widgets
@@ -66,6 +66,7 @@ find_package( Qt${QT_VERSION_MAJOR} COMPONENTS
     PrintSupport
     Xml
     #widgets-private
+    Test
     REQUIRED
 )
 
@@ -198,20 +199,34 @@ set(PROJECT_SOURCES
     formfilenew.h
     formfilenew.cpp
     formfilenew.ui
+    formselection.h
+    formselection.cpp
+    formselection.ui
+    formprotocol.h
+    formprotocol.cpp
+    formprotocol.ui
+    protocoltreeitem.h
+    protocoltreeitem.cpp
+    protocoltreemodel.h
+    protocoltreemodel.cpp
+    formselection.h
+    formselection.cpp
+    formselection.ui
+    CondFormatManager.h
+    CondFormatManager.cpp
+    CondFormatManager.ui
+    formselection.h
+    formselection.cpp
+    formselection.ui
+    Palette.h
+    Palette.cpp
+    Settings.h
+    Settings.cpp
 )
 if(${QT_VERSION_MAJOR} GREATER_EQUAL 6)
     qt_add_executable( ${PROJECT_NAME}
         MANUAL_FINALIZATION
         ${PROJECT_SOURCES}
-        formselection.h formselection.cpp formselection.ui
-        CondFormatManager.h
-        CondFormatManager.cpp
-        CondFormatManager.ui
-        Palette.h
-        Palette.cpp
-        Settings.h
-        Settings.cpp
-
     )
     qt_create_translation( QM_FILES ${CMAKE_SOURCE_DIR} ${TS_FILES} )
 else()
@@ -241,6 +256,7 @@ target_link_libraries( ${PROJECT_NAME} PRIVATE
     Qt${QT_VERSION_MAJOR}::Widgets
     Qt${QT_VERSION_MAJOR}::PrintSupport
     Qt${QT_VERSION_MAJOR}::Xml
+    Qt${QT_VERSION_MAJOR}::Test
 )
 target_include_directories( ${PROJECT_NAME} PRIVATE
   ${INCLUDES}

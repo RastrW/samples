@@ -85,6 +85,7 @@ bool PBSDatabase::open()
 
     pDatabase = pbsOpenDB(sConnectionName, sDriver, sDBName, sUserName, sPassword, sHostName, iPort);
 
+
     if(!pDatabase.isValid())
     {
         qDebug() << "Database Oluşturulamadı";
