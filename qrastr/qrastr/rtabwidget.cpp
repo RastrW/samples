@@ -125,6 +125,10 @@ void RtabWidget::CreateModel(QAstra* pqastra, CUIForm* pUIForm)
     for (RCol& rcol : *prm->getRdata())
         ptv->setColumnHidden(rcol.index,rcol.hidden);
 
+     // Заливка колонок цветом по правилам
+    for (RCol& rcol : *prm->getRdata())
+        m_MapcondFormatVector.emplace(rcol.index, std::vector<CondFormat>());
+
     this->update();
     this->repaint();
 }
@@ -337,15 +341,24 @@ void RtabWidget::editCondFormats(size_t column)
     CondFormat condFormat;
    // CondFormatManager condFormatDialog(m_settings[currentlyBrowsedTableName()].condFormats[column],
     //                                  m_model->encoding(), this);
-    CondFormatManager condFormatDialog(condFormats,
-                                      "UTF-8", this);
-    //this->m
+    CondFormatManager condFormatDialog(m_MapcondFormatVector[column],
+                                            "UTF-8", this);
+    //CondFormatManager condFormatDialog(condFormats,
+    //                                  "UTF-8", this);
+
     QString title= prm->headerData(static_cast<int>(column), Qt::Horizontal, Qt::DisplayRole).toString();
     condFormatDialog.setWindowTitle(tr("Conditional formats for \"%1\"").
                                     arg(prm->headerData(static_cast<int>(column), Qt::Horizontal, Qt::DisplayRole).toString()));
     if (condFormatDialog.exec()) {
         std::vector<CondFormat> condFormatVector = condFormatDialog.getCondFormats();
-        //prm->setCondFormats(false, column, condFormatVector);
+        prm->setCondFormats(false, column, condFormatVector);
+        /*if (m_MapcondFormatVector.find(static_cast<int>(column)) != m_MapcondFormatVector.end())
+            m_MapcondFormatVector.at(static_cast<int>(column)) = condFormatVector;
+        else
+            m_MapcondFormatVector.insert(std::pair(static_cast<int>(column),condFormatVector));
+        */
+        m_MapcondFormatVector.at(column) = condFormatVector;
+
         //m_settings[currentlyBrowsedTableName()].condFormats[column] = condFormatVector;
         //emit projectModified();
     }

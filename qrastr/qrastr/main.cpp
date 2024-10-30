@@ -49,7 +49,7 @@ int main(int argc, char *argv[]){
     }
     w.setForms(app.GetForms());
     w.setQAstra(app.getQAstraPtr());
-    w.resize(800,500);
+    w.resize(1200,800);
     w.show();
     //w.windowHandle()->setScreen(qApp->screens().last());
     //w.showNormal();

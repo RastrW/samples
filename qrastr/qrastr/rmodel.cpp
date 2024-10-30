@@ -1,8 +1,11 @@
 #include "rmodel.h"
+#include "CondFormat.h"
 #include <QFont>
 #include <QBrush>
 #include <QTime>
 #include <QDebug>
+//#include <QJSEngine>
+#include <QRegularExpression>
 
 //#include "fmt/format.h"
 
@@ -40,8 +43,24 @@ struct ToQVariant {
     QVariant operator()(const double& value) { return value; }
     QVariant operator()(const bool& value) { return value; }
     QVariant operator()(const std::string& value) { return std::string(value).c_str(); }
-
 };
+struct ToDouble {
+    double operator()(std::monostate) { return  0.0; }
+    double operator()(const long& value) { return (double)value; }
+    double operator()(const uint64_t& value) { return value; }
+    double operator()(const double& value) { return value; }
+    double operator()(const bool& value) { return value; }
+    double operator()(const std::string& value) { return std::stod(value); }
+};
+/*struct ToString2 {
+    QVariant operator()(std::monostate) { return { QVariant() }; }
+    QVariant operator()(const long& value) { return (qlonglong)value; }
+    QVariant operator()(const uint64_t& value) { return value; }
+    QVariant operator()(const double& value) { return value; }
+    QVariant operator()(const bool& value) { return value; }
+    QVariant operator()(const std::string& value) { return std::string(value).c_str(); }
+};*/
+
 
 QVariant RModel::data(const QModelIndex &index, int role) const
 {
@@ -49,6 +68,8 @@ QVariant RModel::data(const QModelIndex &index, int role) const
     int col = index.column();
 
     QVariant item;
+    std::string item_str;
+    QVariant condFormatColor;
     //RData::const_iterator iter_col = up_rdata->begin() + col;
     //_col_data::const_iterator iter_data = (*iter_col).begin() + row;
     // auto datablock_item = up_rdata->nparray_.Data()[row * up_rdata->nparray_.ColumnsCount() + col];
@@ -58,6 +79,10 @@ QVariant RModel::data(const QModelIndex &index, int role) const
         case Qt::BackgroundRole:
             if (row == 1 && col == 2)  //change background only for cell(1,2)
                 return QBrush(Qt::red);
+            item_str = std::visit(ToString(),up_rdata->pnparray_->Get(row,col));
+            condFormatColor = getMatchingCondFormat(row, col, item_str.c_str(), role);
+            if (condFormatColor.isValid())
+                return condFormatColor;
         /*case Qt::CheckStateRole:
             if (row == 1 && col == 0) //add a checkbox to cell(1,0)
                 return Qt::Checked;*/
@@ -256,6 +281,124 @@ bool RModel::setData(const QModelIndex &index, const QVariant &value, int role)
 
     return false;
 }
+
+static void addCondFormatToMap(std::map<size_t, std::vector<CondFormat>>& mCondFormats, size_t column, const CondFormat& condFormat)
+{
+    // If the condition is already present in the vector, update that entry and respect the order, since two entries with the same
+    // condition do not make sense.
+    auto it = std::find_if(mCondFormats[column].begin(), mCondFormats[column].end(), [condFormat](const CondFormat& format) {
+        return format.sqlCondition() == condFormat.sqlCondition();
+    });
+    // Replace cond-format if present. push it back if it's a conditionless format (apply to every cell in column) or insert
+    // as first element otherwise.
+    if(it != mCondFormats[column].end()) {
+        *it = condFormat;
+    } else if (condFormat.filter().isEmpty())
+        mCondFormats[column].push_back(condFormat);
+    else
+        mCondFormats[column].insert(mCondFormats[column].begin(), condFormat);
+}
+void RModel::addCondFormat(const bool isRowIdFormat, size_t column, const CondFormat& condFormat)
+{
+    if(isRowIdFormat)
+        addCondFormatToMap(m_mRowIdFormats, column, condFormat);
+    else
+        addCondFormatToMap(m_mCondFormats, column, condFormat);
+    emit layoutChanged();
+}
+
+void RModel::setCondFormats(const bool isRowIdFormat, size_t column, const std::vector<CondFormat>& condFormats)
+{
+    if(isRowIdFormat)
+        m_mRowIdFormats[column] = condFormats;
+    else if (!contains(m_mCondFormats, column))
+    {
+        m_mCondFormats.insert(make_pair(column,condFormats));
+    }
+    else
+        m_mCondFormats[column] = condFormats;
+   // emit layoutChanged();
+}
+QVariant RModel::getMatchingCondFormat(const std::map<size_t, std::vector<CondFormat>>& mCondFormats, size_t row,size_t column, const QString& value, int role) const
+{
+    if (!mCondFormats.count(column))
+        return QVariant();
+
+    bool isNumber;
+    value.toDouble(&isNumber);
+    std::string sql;
+
+    if (!isNumber)
+        return QVariant();
+
+    // For each conditional format for this column,
+    // if the condition matches the current data, return the associated format.
+    for (const CondFormat& eachCondFormat : mCondFormats.at(column)) {
+        if (isNumber && !contains(eachCondFormat.sqlCondition(), '\''))
+            //sql = "SELECT " + value.toStdString() + " " + eachCondFormat.sqlCondition();
+            sql = value.toStdString() + " " + eachCondFormat.sqlCondition();
+        else
+            //sql = "SELECT " + sqlb::escapeString(value.toStdString()) + " " + eachCondFormat.sqlCondition();
+            //sql = "SELECT " + value.toStdString() + " " + eachCondFormat.sqlCondition();
+            sql = value.toStdString() + " " + eachCondFormat.sqlCondition();
+
+        // Empty filter means: apply format to any row.
+        // Query the DB for the condition, waiting in case there is a loading in progress.
+        //if (eachCondFormat.filter().isEmpty() || m_db.querySingleValueFromDb(sql, false, DBBrowserDB::Wait) == "1")
+        /*
+         * Похоже тут стоит попробовать написать парсер string to bool
+        */
+        STRING_BOOL SB(sql);
+        std::vector<std::string> replace_vals = SB.Check();
+        for (std::string &op : replace_vals )
+        {
+            if (contains(up_rdata->mCols_,op))
+            {
+                int cind = this->up_rdata->mCols_.at(op);
+                up_rdata->pnparray_->Get(row,cind);
+                double ditem = std::visit(ToDouble(),up_rdata->pnparray_->Get(row,cind));
+                std::string sitem = std::to_string(ditem);
+                SB.replace(op,sitem);
+            }
+        }
+        if (eachCondFormat.filter().isEmpty() || SB.res())
+            switch (role) {
+            case Qt::ForegroundRole:
+                return eachCondFormat.foregroundColor();
+            case Qt::BackgroundRole:
+                return eachCondFormat.backgroundColor();
+            case Qt::FontRole:
+                return eachCondFormat.font();
+            case Qt::TextAlignmentRole:
+                return static_cast<int>(eachCondFormat.alignmentFlag() | Qt::AlignVCenter);
+            }
+    }
+    return QVariant();
+}
+
+QVariant RModel::getMatchingCondFormat(size_t row, size_t column, const QString& value, int role) const
+{
+    QVariant format;
+    // Check first for a row-id format and when there is none, for a conditional format.
+    /*if (m_mRowIdFormats.count(column))
+    {
+        std::unique_lock<std::mutex> lock(m_mutexDataCache);
+        const bool row_available = m_cache.count(row);
+        const QByteArray blank_data("");
+        const QByteArray& row_id_data = row_available ? m_cache.at(row).at(0) : blank_data;
+        lock.unlock();
+
+        format = getMatchingCondFormat(m_mRowIdFormats, column, row_id_data, role);
+        if (format.isValid())
+            return format;
+    }*/
+    if (m_mCondFormats.count(column))
+        return getMatchingCondFormat(m_mCondFormats, row, column,value, role);
+    else
+        return QVariant();
+}
+
+
 
 std::vector<std::tuple<int,int>>  RModel::ColumnsWidth()
 {

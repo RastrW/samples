@@ -157,6 +157,7 @@ private:
     int column;                     // for header
     QPoint MenuRequestedPoint;
     std::string m_selection;
+    std::map<int, std::vector<CondFormat>> m_MapcondFormatVector;   // column , vector<CondFormat>
 protected:
     itemStateMap tItemStateMap;
     QFrame customizeFrame;

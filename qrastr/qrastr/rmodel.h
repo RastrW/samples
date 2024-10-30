@@ -8,6 +8,8 @@
 #include "qastra.h"
 #include "rtablesdatamanager.h"
 
+class CondFormat;
+
 class RModel : public QAbstractTableModel
 {
     Q_OBJECT
@@ -49,9 +51,21 @@ public:
 
     void SetSelection(std::string Selection);
 
+    // Conditional formats are of two kinds: regular conditional formats (including condition-free formats applying to any value in the
+    // column) and formats applying to a particular row-id and which have always precedence over the first kind and whose filter apply
+    // to the row-id column.
+    void addCondFormat(const bool isRowIdFormat, size_t column, const CondFormat& condFormat);
+    void setCondFormats(const bool isRowIdFormat, size_t column, const std::vector<CondFormat>& condFormats);
+
 private:
     bool isBinary(const QByteArray& index) const;
     bool m_emitSignals;
+    // Return matching conditional format color/font or invalid value, otherwise.
+    // Only format roles are expected in role (Qt::ItemDataRole)
+    QVariant getMatchingCondFormat(size_t row, size_t column, const QString& value, int role) const;
+    QVariant getMatchingCondFormat(const std::map<size_t, std::vector<CondFormat>>& mCondFormats, size_t row, size_t column, const QString& value, int role) const;
+    std::map<size_t, std::vector<CondFormat>> m_mRowIdFormats;
+    std::map<size_t, std::vector<CondFormat>> m_mCondFormats;
 signals:
 
     void editCompleted(const QString &);

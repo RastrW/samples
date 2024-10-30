@@ -65,6 +65,8 @@ void RData::Initialize(CUIForm _form, QAstra* _pqastra)
 
         int nRes = AddCol(rc);
         Q_ASSERT(nRes>=0);
+
+        mCols_.insert(std::pair(col_Name,index));
     }
 
     for (CUIFormField &f : _form.Fields())

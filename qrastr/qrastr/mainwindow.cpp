@@ -72,8 +72,10 @@ MainWindow::MainWindow(){
         dw->setFeature( static_cast<ads::CDockWidget::DockWidgetFeature>(f), true);
         //auto area = m_DockManager->addDockWidgetTab(ads::NoDockWidgetArea, dw);
         auto container = m_DockManager->addDockWidgetFloating(dw);
-        container->move(QPoint(2100, 20));
-        container->resize(1200,800);
+        //container->move(QPoint(2100, 20));
+        //container->resize(1200,800);
+        container->move(QPoint(2100, 400));
+        container->resize(1200,600);
     }
     auto qt_sink = std::make_shared<spdlog::sinks::qt_sink_mt>(m_pMcrWnd, "onQStringAppendProtocol");
     auto logg = spdlog::default_logger();
@@ -199,7 +201,7 @@ void MainWindow::setQAstra(const std::shared_ptr<QAstra>& sp_qastra){
 
     connect( m_sp_qastra.get(), SIGNAL(onRastrLog(const _log_data&) ), m_pMcrWnd, SLOT(onRastrLog(const _log_data&)));
 
-    if(true){
+    if(false){
         //vetv
         TstHints* tstHints_vetv = new TstHints(this);
         tstHints_vetv->setQAstra(std::weak_ptr<QAstra>(m_sp_qastra));

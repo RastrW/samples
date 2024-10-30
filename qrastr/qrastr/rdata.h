@@ -735,6 +735,7 @@ public:
   //  std::weak_ptr<IDataBlockBaseT<FieldVariantData>> pnparray_base;
     //std::weak_ptr<QDataBlock> pnparray_;
      std::shared_ptr<QDataBlock> pnparray_;
+    std::map<std::string, int> mCols_;
 private:
     //const int SIZE_STR_BUF = 500'000'000;
     //long n_num_rows_ = 0;
