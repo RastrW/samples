@@ -21,6 +21,7 @@
 #include <QPalette>
 #include "CondFormatManager.h"
 #include "Settings.h"
+#include <QtitanGrid.h>
 
 //std::map<std::string, BrowseDataTableSettings> RtabWidget::m_settings;
 

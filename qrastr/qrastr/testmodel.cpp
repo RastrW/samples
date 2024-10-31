@@ -29,6 +29,7 @@ int TestModel::rowCount(const QModelIndex &parent) const
         return 0;
 
     // FIXME: Implement me!
+     return 0;
 }
 
 int TestModel::columnCount(const QModelIndex &parent) const
@@ -37,6 +38,7 @@ int TestModel::columnCount(const QModelIndex &parent) const
         return 0;
 
     // FIXME: Implement me!
+     return 0;
 }
 
 bool TestModel::hasChildren(const QModelIndex &parent) const

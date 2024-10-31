@@ -39,6 +39,8 @@ using WrapperExceptionType = std::runtime_error;
 #include "formfilenew.h"
 #include "testmodel.h"
 #include "formprotocol.h"
+#include <QtitanDef.h>
+#include <QtitanGrid.h>
 
 
 MainWindow::MainWindow(){
@@ -436,6 +438,24 @@ void MainWindow::onOpenForm( QAction* p_actn ){
     spdlog::info( "Create tab [{}]", stringutils::cp1251ToUtf8(form.Name()) );
     RtabWidget *prtw = new RtabWidget(m_sp_qastra.get(),form,&m_RTDM,this);
 
+    Qtitan::Grid* m_grid = new Qtitan::Grid();
+    m_grid->setViewType(Qtitan::Grid::TableView);
+    //QTRTableView* view = m_grid->view<QTRTableView>();
+    Qtitan::GridTableView* view = m_grid->view< Qtitan::GridTableView>();
+    view->setModel(prtw->prm.get());
+
+    // Видимость колонок
+    for (RCol& rcol : *prtw->prm->getRdata())
+        if (rcol.hidden)
+        {
+            Qtitan::GridTableColumn* column = (Qtitan::GridTableColumn *)view->getColumnByModelColumn(rcol.index);
+            column->setVisible(false);
+        }
+
+
+
+    //m_grid->show();
+
     /*
     connect(this, &MainWindow::file_loaded,  prtw, &RtabWidget::onFileLoad);    //Загрузка файла
     connect(this, &MainWindow::rgm_signal, prtw, &RtabWidget::update_data);     //Расчет УР
@@ -460,18 +480,21 @@ void MainWindow::onOpenForm( QAction* p_actn ){
     // Docking
     if(false){
         QDockWidget *dock = new QDockWidget( stringutils::cp1251ToUtf8(form.Name()).c_str(), this);
-        dock->setWidget(prtw);
+        //dock->setWidget(prtw);
+        dock->setWidget(m_grid);
         dock->setAllowedAreas(Qt::LeftDockWidgetArea | Qt::RightDockWidgetArea | Qt::TopDockWidgetArea | Qt::BottomDockWidgetArea | Qt::AllDockWidgetAreas);
         addDockWidget(Qt::TopDockWidgetArea, dock);
     }else{
         static int i = 0;
         auto dw = new ads::CDockWidget( stringutils::cp1251ToUtf8(form.Name()).c_str(), this);
-        dw->setWidget(prtw);
+        //dw->setWidget(prtw);
+        dw->setWidget(m_grid);
         dw->setFeature(ads::CDockWidget::DockWidgetDeleteOnClose, true);
         auto area = m_DockManager->addDockWidgetTab(ads::CenterDockWidgetArea, dw);
         qDebug() << "doc dock widget created!" << dw << area;
     }
-    prtw->show();
+    //prtw->show();
+    m_grid->show();
 #if(!defined(QICSGRID_NO))
     const nlohmann::json j_form = up_rastr_->GetJForms()[n_indx];
     MdiChild *child = createMdiChild( j_form );

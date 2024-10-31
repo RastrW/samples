@@ -3,6 +3,7 @@
 
 #include <QTableView>
 #include <QtWidgets>
+#include <QtitanGrid.h>
 
 class FilterTableHeader;
 class RTabWidget;
@@ -43,6 +44,11 @@ protected:
      FilterTableHeader* m_tableHeader;
 
      //PBSHeaderView pVertical, pHorizontal;
+};
+
+class QTRTableView : public Qtitan::GridTableView
+{
+    Q_OBJECT
 };
 
 #endif // RTABLEVIEW_H

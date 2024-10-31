@@ -16,6 +16,7 @@ add_compile_definitions(
         $<$<CONFIG:Debug>:q4_INLINE=0>
         $<$<CONFIG:Debug>:YYDEBUG>
 )
+add_compile_definitions( QTN_NAMESPACE ) ## !! IT'S CRYTICAL!!
 
 set(CMAKE_GENERATOR "Ninja")
 message("generator is set to ${CMAKE_GENERATOR}")
@@ -94,6 +95,7 @@ set(INCLUDES
     "${DEPENDENCIES_LOCATION}/Qt-Advanced-Docking-System/src"
     "${DEPENDENCIES_LOCATION}/spdlog/include/"
     "${ASTRA_LOCATION}/../../flytfs/IPlainRastrTest/"
+    "${DEPENDENCIES_LOCATION}/QtitanDataGrid8.2.0_win_qt_6_7/include"
 )
 
 if(MSVC)
@@ -102,6 +104,7 @@ if(MSVC)
     link_directories("${DEPENDENCIES_LOCATION}/metakit/builds/")
     link_directories("${DEPENDENCIES_LOCATION}/Qt-Advanced-Docking-System/build/vs-Debug/lib/")
     link_directories("${DEPENDENCIES_LOCATION}/Qt-Advanced-Docking-System/build/vs-Release/lib/")
+    link_directories("${DEPENDENCIES_LOCATION}/QtitanDataGrid8.2.0_win_qt_6_7/bin/")
 else()
     link_directories("${DEPENDENCIES_LOCATION}/qicstable/lib/")
     link_directories("${ASTRA_LOCATION}/build/")
@@ -244,8 +247,12 @@ if(MSVC)
     target_link_libraries( ${PROJECT_NAME} PRIVATE Qt::WidgetsPrivate)
     if (CMAKE_BUILD_TYPE MATCHES Debug)
         target_link_libraries( ${PROJECT_NAME} PRIVATE qtadvanceddockingd )
+        target_link_libraries( ${PROJECT_NAME} PRIVATE QtitanBased2 )
+        target_link_libraries( ${PROJECT_NAME} PRIVATE QtitanGridd8 )
     else()
         target_link_libraries( ${PROJECT_NAME} PRIVATE qtadvanceddocking  )
+        target_link_libraries( ${PROJECT_NAME} PRIVATE QtitanBase2 )
+        target_link_libraries( ${PROJECT_NAME} PRIVATE QtitanGrid8 )
     endif()
 else()
     target_link_libraries( ${PROJECT_NAME} PRIVATE libqicstable.so  )
