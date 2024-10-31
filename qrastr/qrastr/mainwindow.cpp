@@ -444,6 +444,7 @@ void MainWindow::onOpenForm( QAction* p_actn ){
     Qtitan::GridTableView* view = m_grid->view< Qtitan::GridTableView>();
     view->setModel(prtw->prm.get());
 
+
     // Видимость колонок
     for (RCol& rcol : *prtw->prm->getRdata())
         if (rcol.hidden)
@@ -487,13 +488,18 @@ void MainWindow::onOpenForm( QAction* p_actn ){
     }else{
         static int i = 0;
         auto dw = new ads::CDockWidget( stringutils::cp1251ToUtf8(form.Name()).c_str(), this);
+        auto dw2 = new ads::CDockWidget( stringutils::cp1251ToUtf8(form.Name()).c_str(), this);
         //dw->setWidget(prtw);
         dw->setWidget(m_grid);
+        dw2->setWidget(prtw);
         dw->setFeature(ads::CDockWidget::DockWidgetDeleteOnClose, true);
-        auto area = m_DockManager->addDockWidgetTab(ads::CenterDockWidgetArea, dw);
+        dw2->setFeature(ads::CDockWidget::DockWidgetDeleteOnClose, true);
+        //auto area = m_DockManager->addDockWidgetTab(ads::CenterDockWidgetArea, dw);
+        auto area = m_DockManager->addDockWidgetTab(ads::TopDockWidgetArea, dw);
+        auto area2 = m_DockManager->addDockWidgetTab(ads::BottomDockWidgetArea, dw2);
         qDebug() << "doc dock widget created!" << dw << area;
     }
-    //prtw->show();
+    prtw->show();
     m_grid->show();
 #if(!defined(QICSGRID_NO))
     const nlohmann::json j_form = up_rastr_->GetJForms()[n_indx];
