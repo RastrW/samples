@@ -96,6 +96,7 @@ typedef QMap<int, ItemState> itemStateMap;
 #define RTABLEVIEWCOLINDEXROLE Qt::UserRole + 1
 
 class RtabWidget : public QWidget
+//class RtabWidget : public QTableWidget
 {
     Q_OBJECT
 public:
@@ -109,6 +110,7 @@ private:
     void copyMimeData(const QModelIndexList& fromIndices, QMimeData* mimeData, const bool withHeaders, const bool inSQL);
     void copy(const bool withHeaders, const bool inSQL);
     void copy();
+    std::tuple<int,double> GetSumSelected();
 signals:
     void onCornerButtonPressed();
 public slots:
@@ -134,6 +136,7 @@ public slots:
     void update_data();
     void SetSelection(std::string Selection);
     void editCondFormats(size_t column);
+
 
 private slots:
     void CreateModel(QAstra* pqastra,CUIForm* pUIForm);

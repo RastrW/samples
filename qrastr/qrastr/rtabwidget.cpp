@@ -175,6 +175,10 @@ void RtabWidget::customMenuRequested(QPoint pos){
     QAction* copyAction = new QAction( tr("Copy"), menu);
     QAction* copyWithHeadersAction = new QAction( tr("Copy with Headers"), menu);
     QAction* condFormatAction = new QAction(QIcon(":/icons/edit_cond_formats"), tr("Edit Conditional Formats..."), menu);
+
+    std::tuple<int,double> item_sum = GetSumSelected();
+    menu->addAction("Sum: " + QString::number(std::get<1>(item_sum))+" Items: " + QString::number(std::get<0>(item_sum)),this,SLOT());
+    menu->addSeparator();
     menu->addAction(copyAction);
     menu->addAction(copyWithHeadersAction);
     menu->addAction(QIcon(":/images/Rastr3_grid_insrow_16x16.png"),tr("Insert Row"),this,SLOT(insertRow()),QKeySequence(Qt::CTRL | Qt::Key_I));
@@ -212,6 +216,7 @@ void RtabWidget::customMenuRequested(QPoint pos){
     connect(condFormatAction, &QAction::triggered, this, [&]() {
         emit editCondFormats(index.column());
     });
+
 }
 
 void RtabWidget::customHeaderMenuRequested(QPoint pos){
@@ -833,6 +838,24 @@ void RtabWidget::copy()
     test(this->ptv->selectionModel()->selectedIndexes());
     qApp->clipboard()->setMimeData(mimeData);
 
+}
+std::tuple<int,double> RtabWidget::GetSumSelected()
+{
+    //this->ptv->selectionModel()->selectedIndexes();
+    QModelIndexList selected = this->ptv->selectionModel()->selectedIndexes();
+    int number = 0;
+    double total = 0;
+
+    for (QModelIndex item : selected) {
+        bool ok;
+        double value = item.data().toDouble(&ok);
+
+        if (ok) {
+            total += value;
+            number++;
+        }
+    }
+    return std::make_tuple(number,total);
 }
 
 

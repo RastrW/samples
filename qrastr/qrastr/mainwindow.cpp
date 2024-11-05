@@ -444,6 +444,21 @@ void MainWindow::onOpenForm( QAction* p_actn ){
     Qtitan::GridTableView* view = m_grid->view< Qtitan::GridTableView>();
     view->setModel(prtw->prm.get());
 
+    view->options().setGridLines(Qtitan::LinesBoth);
+    view->options().setGridLineWidth(1);
+    view->tableOptions().setColumnAutoWidth(true);
+    view->options().setSelectionPolicy(GridViewOptions::MultiCellSelection);
+
+    /*QListView *view2 = new QListView;
+    view2->setModel(prtw->prm.get());
+    view2->show();
+
+    QTreeView *view3 = new QTreeView;
+    view3->setModel(prtw->prm.get());
+    view3->show();*/
+
+
+
 
     // Видимость колонок
     for (RCol& rcol : *prtw->prm->getRdata())
