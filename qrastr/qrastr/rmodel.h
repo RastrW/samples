@@ -19,6 +19,8 @@ class RModel : public QAbstractTableModel
     std::vector<QString> vqcols_;                                 // Заголовки столбцов
     CUIForm* pUIForm_;
 public:
+    std::map<size_t,QStringList> mnamerefs_;                      // Хранилище енумов колонок для ComboBox
+public:
     RModel(QObject *parent, QAstra* pqastra,RTablesDataManager* pRTDM);
     int rowCount(const QModelIndex &parent = QModelIndex()) const override;
     int columnCount(const QModelIndex &parent = QModelIndex()) const override;

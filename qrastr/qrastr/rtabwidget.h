@@ -105,6 +105,7 @@ public:
     explicit RtabWidget(QAstra* pqastra, CUIForm UIForm, RTablesDataManager* pRTDM, QWidget *parent = nullptr);
 
     void SetTableView(QTableView& tv, RModel& mm, int myltiplier = 10);
+    void SetTableView(Qtitan::GridTableView& tv, RModel& mm, int myltiplier = 10 );
 private:
     void test(const QModelIndexList& fromIndices);
     void copyMimeData(const QModelIndexList& fromIndices, QMimeData* mimeData, const bool withHeaders, const bool inSQL);
@@ -114,13 +115,16 @@ private:
 signals:
     void onCornerButtonPressed();
 public slots:
+    void contextMenu(ContextMenuEventArgs* args);
     void customMenuRequested(QPoint pos);
     void customHeaderMenuRequested(QPoint pos);
     void onItemPressed(const QModelIndex &index);
     void changeColumnVisible(QListWidgetItem*);
     void cornerButtonPressed();
     void insertRow();
+    void insertRow_qtitan();
     void deleteRow();
+    void deleteRow_qtitan();
     void widebyshabl();
     void widebydata();
     void OpenColPropForm();
@@ -148,6 +152,9 @@ public:
     CUIForm m_UIForm;
     QAstra* m_pqastra;
     RTablesDataManager* m_pRTDM;
+    //QTtitanGrid
+    Qtitan::Grid* m_grid;
+    Qtitan::GridTableView* view;
 
 private:
     using BufferRow = std::vector<QByteArray>;
@@ -160,7 +167,12 @@ private:
     int column;                     // for header
     QPoint MenuRequestedPoint;
     std::string m_selection;
-    std::map<int, std::vector<CondFormat>> m_MapcondFormatVector;   // column , vector<CondFormat>
+    std::map<int, std::vector<CondFormat>> m_MapcondFormatVector;  // column , vector<CondFormat>
+
+    QShortcut *sC_CTRL_I = new QShortcut( QKeySequence(Qt::CTRL | Qt::Key_I), this);
+    QShortcut *sC_CTRL_D = new QShortcut( QKeySequence(Qt::CTRL | Qt::Key_D), this);
+
+
 protected:
     itemStateMap tItemStateMap;
     QFrame customizeFrame;

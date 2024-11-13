@@ -20,6 +20,30 @@ class rmodel;
 namespace ads{ class CDockManager; }
 class RtabWidget;
 class FormProtocol;
+enum MainTheme
+{
+    THEME_0 = -1,
+    THEME_1 = Qt::darkRed,
+    THEME_2 = Qt::darkMagenta,
+    THEME_3 = Qt::darkGray,
+    THEME_4 = Qt::darkGreen,
+    THEME_5 = Qt::darkCyan,
+};
+
+enum StyleSetting
+{
+    DefaultStyleSetting = 0,
+    Windows7ScenicStyleSetting,
+    Office2016ColorfulStyleSetting,
+    Office2016BDarkGrayStyleSetting,
+    Office2016BlackStyleSetting,
+    AdobePhotoshopLightGrayStyleSetting,
+    AdobePhotoshopDarkGrayStyleSetting,
+    VisualSudio2019BlueStyleSetting,
+    VisualSudio2019DarkStyleSetting,
+    FluentLightStyleSetting,
+    FluentDarkStyleSetting
+};
 
 namespace spdlog{namespace level{enum level_enum;}}
 class MainWindow
@@ -78,8 +102,9 @@ public slots:
 #endif//#if(!defined(QICSGRID_NO))
     void setActiveSubWindow(QWidget *window);
     void tst_onRastrHint(const _hint_data&);
-    void dragEnterEvent(QDragEnterEvent *event);
+    void dragEnterEvent(QDragEnterEvent *event) override;
     void dropEvent(QDropEvent *event) override;
+
 
 
 private:
@@ -90,6 +115,8 @@ public:
     void setForms(const std::list<CUIForm>& forms); // https://stackoverflow.com/questions/14151443/how-to-pass-a-qstring-to-a-qt-slot-from-a-qmenu-via-qsignalmapper-or-otherwise
     void setQAstra(const std::shared_ptr<QAstra>& sp_qastra);
 private:
+    QHBoxLayout* createStyleSetting();
+
     int  readSettings();
     int  writeSettings();
     void showEvent( QShowEvent* event ) override;

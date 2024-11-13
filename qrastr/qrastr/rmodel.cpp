@@ -6,6 +6,8 @@
 #include <QDebug>
 //#include <QJSEngine>
 #include <QRegularExpression>
+#include <QtitanGrid.h>
+#include <utils.h>
 
 //#include "fmt/format.h"
 
@@ -24,7 +26,22 @@ int RModel::populateDataFromRastr(){
     up_rdata->populate_qastra(this->pqastra_,pRTDM_);
 
     for (RCol &rcol : *up_rdata)
+    {
         vqcols_.push_back(rcol.title().c_str());
+
+        if (rcol.com_prop_tt == enComPropTT::COM_PR_ENUM)
+        {
+            QStringList list;
+            char delimiter = '|';
+            std::string strItems =  rcol.NameRef();
+            if (strItems.find_first_of(',') != std::variant_npos)
+                delimiter = ',';
+
+            for (auto val : split(strItems,delimiter))
+                list.append(QString(val.c_str()));
+            mnamerefs_.insert(std::make_pair(rcol.index,list));
+        }
+    }
 
     return 1;
 };
@@ -52,15 +69,6 @@ struct ToDouble {
     double operator()(const bool& value) { return value; }
     double operator()(const std::string& value) { return std::stod(value); }
 };
-/*struct ToString2 {
-    QVariant operator()(std::monostate) { return { QVariant() }; }
-    QVariant operator()(const long& value) { return (qlonglong)value; }
-    QVariant operator()(const uint64_t& value) { return value; }
-    QVariant operator()(const double& value) { return value; }
-    QVariant operator()(const bool& value) { return value; }
-    QVariant operator()(const std::string& value) { return std::string(value).c_str(); }
-};*/
-
 
 QVariant RModel::data(const QModelIndex &index, int role) const
 {
@@ -70,62 +78,53 @@ QVariant RModel::data(const QModelIndex &index, int role) const
     QVariant item;
     std::string item_str;
     QVariant condFormatColor;
-    //RData::const_iterator iter_col = up_rdata->begin() + col;
-    //_col_data::const_iterator iter_data = (*iter_col).begin() + row;
-    // auto datablock_item = up_rdata->nparray_.Data()[row * up_rdata->nparray_.ColumnsCount() + col];
-    //auto datablock_item = up_rdata->nparray_.Get(row,col);
 
-    switch (role) {
-        case Qt::BackgroundRole:
+    if (role == Qt::BackgroundRole ) {
             if (row == 1 && col == 2)  //change background only for cell(1,2)
                 return QBrush(Qt::red);
             item_str = std::visit(ToString(),up_rdata->pnparray_->Get(row,col));
             condFormatColor = getMatchingCondFormat(row, col, item_str.c_str(), role);
             if (condFormatColor.isValid())
                 return condFormatColor;
+    }
         /*case Qt::CheckStateRole:
             if (row == 1 && col == 0) //add a checkbox to cell(1,0)
                 return Qt::Checked;*/
         //case Qt::CheckStateRole:
-        case Qt::DisplayRole:
-        case Qt::EditRole:
-
-            // Fill from RData
-            /*
-             switch((*iter_data).index()){
-            //case RCol::_en_data::DATA_BOOL: item =  std::get<bool>(*iter_data)?Qt::Checked: Qt::Unchecked; break;
-                case RCol::_en_data::DATA_BOOL: item =  std::get<bool>(*iter_data); break;
-                case RCol::_en_data::DATA_INT: item =  (qlonglong)std::get<long>(*iter_data) ;                 break;
-                case RCol::_en_data::DATA_STR: item =  std::get<std::string>(*iter_data).c_str() ; break;
-                case RCol::_en_data::DATA_DBL: item =  std::get<double>(*iter_data);               break;
-            default :                      item =  ( "type_unknown" );                         break;
-
-                (*iter_col).emplace<bool>(std::get<bool>(up_rdata->nparray_.Data()[row * up_rdata->nparray_.Columns() + col]));
-              }
-           */
-
-            //Fill from QAstra->DataBlock
-            /*switch( iter_col->en_data_){
-                case RCol::_en_data::DATA_BOOL: item =  std::get<bool>(datablock_item); break;
-                case RCol::_en_data::DATA_INT: item =  (qlonglong)std::get<long>(datablock_item) ;                 break;
-                case RCol::_en_data::DATA_STR: item =  std::get<std::string>(datablock_item).c_str(); break;
-                case RCol::_en_data::DATA_DBL: item =  std::get<double>(datablock_item);               break;
-            default :                      item =  ( "type_unknown" );                         break;
-            */
-
-            //Fill from QAstra->DataBlock new
+    else if ( (role == Qt::DisplayRole ) ||
+              (role == Qt::EditRole ))
+    {
             item = std::visit(ToQVariant(),up_rdata->pnparray_->Get(row,col));
+            if (contains(mnamerefs_,col))
+                return mnamerefs_.at(col).at(item.toInt());
 
-        return item;
+            /*if (contains(maccuracy_,col))
+            {
+                if (item.isNull())
+                     return item;
+                //double dval = item.toDouble()
+                int digits = maccuracy_.at(col);
+                QString str = QString::number(item.toDouble(), 'f', digits);
+                double ditem = std::stod(str.toStdString());
+                return ditem;
+            }*/
 
-        case Qt::ToolTipRole:
+            return item;
+    }
+    else if  (role == Qtitan::ComboBoxRole)
+    {
+            QStringList list = mnamerefs_.at(col);
+            return list;
+    }
+    else if (role ==  Qt::ToolTipRole)
+    {
             return QString("Row %1, Column %2")
                 .arg(index.row() + 1)
                 .arg(index.column() +1);
-
-        default:
-            return QVariant();
     }
+    else
+            return QVariant();
+
 
     // Some old examples , code not reach hear
     switch (role) {
@@ -161,17 +160,11 @@ QVariant RModel::data(const QModelIndex &index, int role) const
 
 QVariant RModel::headerData(int section, Qt::Orientation orientation, int role) const
 {
-    //auto field = std::advance( this->rastr_.GetUIForm(section).Fields().begin(),section);
-    //auto it_field =  this->rastr_.GetUIForm(section).Fields().begin();
-    //this->rastr_.GetUIForm(section).Fields().begin()
-
     if (role == Qt::DisplayRole && orientation == Qt::Horizontal) {
-
         if (section < vqcols_.size() )
             return vqcols_[section];
     }
     if (role == Qt::DisplayRole && orientation == Qt::Vertical) {
-
         return section + 1;
     }
     return QVariant();
@@ -181,7 +174,6 @@ Qt::ItemFlags RModel::flags(const QModelIndex &index) const
 {
     return Qt::ItemIsEditable | Qt::ItemIsEditable |  QAbstractTableModel::flags(index) ;
 }
-
 
 bool RModel::setData(const QModelIndex &index, const QVariant &value, int role)
 {
@@ -202,8 +194,6 @@ bool RModel::setData(const QModelIndex &index, const QVariant &value, int role)
             {
                 bool val =  value.toBool();
                 FieldVariantData vd(val);
-                //up_rdata->nparray_.EmplaceSaveIndChange(row,col,vd);
-                //up_rdata->nparray_.Set(row,col,vd);
                 IRastrResultVerify(col_ptr->SetValue(row,val));
                 qDebug() << "set: "<<up_rdata->t_name_.c_str()<<"."<< (*iter_col).str_name_.c_str() << "(" << row << ")=" <<val;
                 break;
@@ -212,8 +202,6 @@ bool RModel::setData(const QModelIndex &index, const QVariant &value, int role)
             {
                 long val =  value.toInt();
                 FieldVariantData vd(val);
-                //up_rdata->nparray_.EmplaceSaveIndChange(row,col,vd);
-                //up_rdata->nparray_.Set(row,col,vd);
                 IRastrResultVerify(col_ptr->SetValue(row,val));
                 qDebug() << "set: "<<up_rdata->t_name_.c_str()<<"."<< (*iter_col).str_name_.c_str() << "(" << row << ")=" <<val;
                 break;
@@ -222,8 +210,6 @@ bool RModel::setData(const QModelIndex &index, const QVariant &value, int role)
             {
                 std::string val =  value.toString().toStdString().c_str();
                 FieldVariantData vd(val);
-                //up_rdata->nparray_.EmplaceSaveIndChange(row,col,vd);
-                //up_rdata->nparray_.Set(row,col,vd);
                 IRastrResultVerify(col_ptr->SetValue(row,val));
                 qDebug() << "set: "<<up_rdata->t_name_.c_str()<<"."<< (*iter_col).str_name_.c_str() << "(" << row << ")=" <<val;
                 break;
@@ -233,8 +219,6 @@ bool RModel::setData(const QModelIndex &index, const QVariant &value, int role)
             {
                 double val =  value.toDouble();
                 FieldVariantData vd(val);
-                //up_rdata->nparray_.EmplaceSaveIndChange(row,col,vd);
-                //up_rdata->nparray_.Set(row,col,vd);
                 IRastrResultVerify(col_ptr->SetValue(row,val));
                 qDebug() << "set: "<<up_rdata->t_name_.c_str()<<"."<< (*iter_col).str_name_.c_str() << "(" << row << ")=" <<val;
             }
@@ -250,35 +234,6 @@ bool RModel::setData(const QModelIndex &index, const QVariant &value, int role)
         }
         return false;
     }
-
-    // Old version
-    /*
-    _col_data::iterator iter_data = (*iter_col).begin() + row;
-    if (data(index, role) != value)
-    {
-        switch((*iter_data).index()){
-        case RCol::_en_data::DATA_INT:
-            qDebug() << "int: " << value.toInt();
-            (*iter_data).emplace<long> (value.toInt());
-            ValSetInt(up_rdata->id_rastr_,up_rdata->t_name_.c_str(),(*iter_col).str_name_.c_str(),row,value.toInt());
-            qDebug() << "set: "<<up_rdata->t_name_.c_str()<<"."<< (*iter_col).str_name_.c_str() << "(" << row << ")=" <<value.toInt();
-            break;
-        case RCol::_en_data::DATA_STR:
-            qDebug() << "str: " << value.toString();
-            (*iter_data).emplace<std::string>(value.toString().toStdString().c_str());
-            ValSetStr(up_rdata->id_rastr_,up_rdata->t_name_.c_str(),(*iter_col).str_name_.c_str(),row,value.toString().toStdString().c_str());
-            qDebug() << "set: "<<up_rdata->t_name_.c_str()<<"."<< (*iter_col).str_name_.c_str() << "(" << row << ")=" <<value.toString().toStdString().c_str();
-            break;
-        case RCol::_en_data::DATA_DBL:
-            //qDebug() << "double: " << value.toDouble();
-            (*iter_data).emplace<double> (value.toDouble());
-            ValSetDbl(up_rdata->id_rastr_,up_rdata->t_name_.c_str(),(*iter_col).str_name_.c_str(),row,value.toDouble());
-            qDebug() << "set: "<<up_rdata->t_name_.c_str()<<"."<< (*iter_col).str_name_.c_str() << "(" << row << ")=" <<value.toDouble();
-            break;
-        default :                                               break;
-        }
-    */
-
     return false;
 }
 
@@ -298,6 +253,7 @@ static void addCondFormatToMap(std::map<size_t, std::vector<CondFormat>>& mCondF
     else
         mCondFormats[column].insert(mCondFormats[column].begin(), condFormat);
 }
+
 void RModel::addCondFormat(const bool isRowIdFormat, size_t column, const CondFormat& condFormat)
 {
     if(isRowIdFormat)
@@ -319,6 +275,7 @@ void RModel::setCondFormats(const bool isRowIdFormat, size_t column, const std::
         m_mCondFormats[column] = condFormats;
    // emit layoutChanged();
 }
+
 QVariant RModel::getMatchingCondFormat(const std::map<size_t, std::vector<CondFormat>>& mCondFormats, size_t row,size_t column, const QString& value, int role) const
 {
     if (!mCondFormats.count(column))
@@ -398,8 +355,6 @@ QVariant RModel::getMatchingCondFormat(size_t row, size_t column, const QString&
         return QVariant();
 }
 
-
-
 std::vector<std::tuple<int,int>>  RModel::ColumnsWidth()
 {
     std::vector<std::tuple<int,int>> cw;
@@ -409,11 +364,13 @@ std::vector<std::tuple<int,int>>  RModel::ColumnsWidth()
         cw.emplace_back(i++,std::stoi(col.width()));
     return cw;
 }
+
 RCol* RModel::getRCol(int col)
 {
     RData::iterator iter_col = up_rdata->begin() + col;
     return &(*iter_col);
 }
+
 int RModel::getIndexCol(std::string _col)
 {
     for (int i = 0 ; i<this->columnCount(); i++)
@@ -423,10 +380,12 @@ int RModel::getIndexCol(std::string _col)
     }
     return -1;
 }
+
 RData* RModel::getRdata()
 {
     return up_rdata.get();
 }
+
 bool RModel::insertRows(int row, int count, const QModelIndex &parent)
 {
     IRastrTablesPtr tablesx{ this->pqastra_->getRastr()->Tables() };

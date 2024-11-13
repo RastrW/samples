@@ -468,7 +468,8 @@ public:
         IRastrTablesPtr tablesx{ _pqastra->getRastr()->Tables() };
         IRastrTablePtr table{ tablesx->Item(table_name_) };
         IRastrColumnsPtr columns{ table->Columns() };
-        IRastrColumnPtr col_ptr{ columns->Item(str_name_) };
+        //IRastrColumnPtr col_ptr{ columns->Item(str_name_) };
+        IRastrColumnPtr col_ptr{ columns->Item(index) };
 
         //pcol_ptr = _pcol_ptr;
         //j_meta_ = j_meta_in;
@@ -725,20 +726,9 @@ public:
     std::string t_name_ = "";
     std::string t_title_ = "";
     std::string str_cols_ = "";                     // строка имен столбцов ex: "ny,pn,qn,vras"
-    //nlohmann::json j_metas_;                        // Мета информация о таблице (шаблон)
-    //DataBlock<FieldVariantData> nparray_;
-    //MyDenseDataBlock<FieldVariantData> nparray_;
-    //MyDataSet nparray_;
-    //QDenseDataBlock<FieldVariantData> nparray_;
-   // DataBlock<FieldVariantData> nparray_;
-   // std::weak_ptr<QDenseDataBlock<FieldVariantData>> pnparray_;
-  //  std::weak_ptr<IDataBlockBaseT<FieldVariantData>> pnparray_base;
-    //std::weak_ptr<QDataBlock> pnparray_;
-     std::shared_ptr<QDataBlock> pnparray_;
+    std::shared_ptr<QDataBlock> pnparray_;
     std::map<std::string, int> mCols_;
 private:
-    //const int SIZE_STR_BUF = 500'000'000;
-    //long n_num_rows_ = 0;
 
 };// class RData
 

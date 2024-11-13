@@ -51,6 +51,8 @@ MainWindow::MainWindow(){
     createActions();
     createStatusBar();
     updateMenus();
+    this->setAcceptDrops(true);
+
     setWindowTitle(tr("~qrastr~"));
     ads::CDockManager::setConfigFlag(ads::CDockManager::FocusHighlighting, true);
     ads::CDockManager::setConfigFlag(ads::CDockManager::AllTabsHaveCloseButton, true);
@@ -99,9 +101,34 @@ MainWindow::MainWindow(){
 
     setAcceptDrops(true);
 
+
 }
-MainWindow::~MainWindow(){
+MainWindow::~MainWindow()
+{
 }
+QHBoxLayout* MainWindow::createStyleSetting()
+{
+    QHBoxLayout* ret = new QHBoxLayout();
+    QLabel* label = new QLabel(this);
+    label->setText(tr("Style:"));
+    ret->addWidget(label);
+    QComboBox* comboBox = new QComboBox();
+    connect(comboBox, SIGNAL(currentIndexChanged(int)), this, SLOT(styleChanged(int)));
+    comboBox->addItem(tr("Default"), DefaultStyleSetting);
+    comboBox->addItem(tr("Windows 7 Scenic"), Windows7ScenicStyleSetting);
+    comboBox->addItem(tr("Office 2016 Colorfull"), Office2016ColorfulStyleSetting);
+    comboBox->addItem(tr("Office 2016 DarkGray"), Office2016BDarkGrayStyleSetting);
+    comboBox->addItem(tr("Office 2016 Black"), Office2016BlackStyleSetting);
+    comboBox->addItem(tr("Adobe Photoshop White"), AdobePhotoshopLightGrayStyleSetting);
+    comboBox->addItem(tr("Adobe Photoshop DarkGray"), AdobePhotoshopDarkGrayStyleSetting);
+    comboBox->addItem(tr("Visual Sudio 2019 Blue"), VisualSudio2019BlueStyleSetting);
+    comboBox->addItem(tr("Visual Sudio 2019 Dark"), VisualSudio2019DarkStyleSetting);
+    comboBox->addItem(tr("Fluent White"), FluentLightStyleSetting);
+    comboBox->addItem(tr("Fluent Dark"), FluentDarkStyleSetting);
+    ret->addWidget(comboBox);
+    return ret;
+}
+
 int MainWindow::readSettings(){ //it cache log messages to vector, because it called befor logger intialization
     try{
 
@@ -309,7 +336,8 @@ void MainWindow::open(){
     if(QDialog::Accepted == n_res){
         const QString selectedFilter = fileDlg.selectedNameFilter();
         for(const auto& rfile : fileDlg.selectedFiles()){
-            spdlog::info("try load file: ", rfile.toStdString());
+            spdlog::info("try load file: {}", rfile.toStdString());
+            //spdlog::info("try load file: %1", rfile.toUtf8().constData());
             if(qstr_filter_no_template != selectedFilter){
                 bool bl_find_template = false;
                 for(const Params::_v_template_exts::value_type& template_ext : v_template_ext){
@@ -324,8 +352,14 @@ void MainWindow::open(){
                     spdlog::error("Template not found! for: ", rfile.toStdString());
                 }
             }else{
-                m_sp_qastra->Load( eLoadCode::RG_REPL, rfile.toStdString(), "" );
-                break;
+                IPlainRastrRetCode res = m_sp_qastra->Load( eLoadCode::RG_REPL, rfile.toStdString(), "" );
+                if (res ==IPlainRastrRetCode::Ok )
+                    spdlog::info("File loaded {}", rfile.toStdString());
+                else
+                {
+                    spdlog::info("Error File load result = {}", static_cast<int>(res));
+                }
+
             }
         }
     }
@@ -438,66 +472,19 @@ void MainWindow::onOpenForm( QAction* p_actn ){
     spdlog::info( "Create tab [{}]", stringutils::cp1251ToUtf8(form.Name()) );
     RtabWidget *prtw = new RtabWidget(m_sp_qastra.get(),form,&m_RTDM,this);
 
-    Qtitan::Grid* m_grid = new Qtitan::Grid();
-    m_grid->setViewType(Qtitan::Grid::TableView);
-    //QTRTableView* view = m_grid->view<QTRTableView>();
-    Qtitan::GridTableView* view = m_grid->view< Qtitan::GridTableView>();
-    view->setModel(prtw->prm.get());
-
-    view->options().setGridLines(Qtitan::LinesBoth);
-    view->options().setGridLineWidth(1);
-    view->tableOptions().setColumnAutoWidth(true);
-    view->options().setSelectionPolicy(GridViewOptions::MultiCellSelection);
-
-    /*QListView *view2 = new QListView;
-    view2->setModel(prtw->prm.get());
-    view2->show();
-
-    QTreeView *view3 = new QTreeView;
-    view3->setModel(prtw->prm.get());
-    view3->show();*/
-
-
-
-
     // Видимость колонок
     for (RCol& rcol : *prtw->prm->getRdata())
         if (rcol.hidden)
         {
-            Qtitan::GridTableColumn* column = (Qtitan::GridTableColumn *)view->getColumnByModelColumn(rcol.index);
+            Qtitan::GridTableColumn* column = (Qtitan::GridTableColumn *)prtw->view->getColumnByModelColumn(rcol.index);
             column->setVisible(false);
         }
 
-
-
-    //m_grid->show();
-
-    /*
-    connect(this, &MainWindow::file_loaded,  prtw, &RtabWidget::onFileLoad);    //Загрузка файла
-    connect(this, &MainWindow::rgm_signal, prtw, &RtabWidget::update_data);     //Расчет УР
-    //RModel вызывает изменение Data: Запомнить изменение Data в MainWindow и из MainWindow вызывть изменение RModel во всех сущьностях
-    connect(prtw->prm, SIGNAL(dataChanged(std::string,std::string,int,QVariant)),
-                 this, SLOT(ondataChanged(std::string,std::string,int,QVariant)));
-    connect(this,      SIGNAL(rm_change(std::string,std::string,int,QVariant)),
-       prtw->prm,      SLOT(onRModelchange(std::string,std::string,int,QVariant)));
-    //MainWindow: вызывть изменение RModel во всех сущьностях
-    connect(prtw->prm, SIGNAL(RowInserted(std::string,int)),
-                  this,SLOT(onRowInserted(std::string,int)));
-    connect(this,      SIGNAL(rm_RowInserted(std::string,int)),
-       prtw->prm,      SLOT(onrm_RowInserted(std::string,int)));
-    //Удаление строки
-    connect(prtw->prm, SIGNAL(RowDeleted(std::string,int)),
-                  this,SLOT(onRowInserted(std::string,int)));
-    connect(this,      SIGNAL(rm_RowDeleted(std::string,int)),
-       prtw->prm,      SLOT(onrm_RowDeleted(std::string,int)));
-    connect(this,      SIGNAL(rm_update(std::string)),
-            prtw,      SLOT(onUpdate(std::string)));
-*/
     // Docking
     if(false){
         QDockWidget *dock = new QDockWidget( stringutils::cp1251ToUtf8(form.Name()).c_str(), this);
         //dock->setWidget(prtw);
-        dock->setWidget(m_grid);
+        dock->setWidget(prtw->m_grid);
         dock->setAllowedAreas(Qt::LeftDockWidgetArea | Qt::RightDockWidgetArea | Qt::TopDockWidgetArea | Qt::BottomDockWidgetArea | Qt::AllDockWidgetAreas);
         addDockWidget(Qt::TopDockWidgetArea, dock);
     }else{
@@ -505,17 +492,17 @@ void MainWindow::onOpenForm( QAction* p_actn ){
         auto dw = new ads::CDockWidget( stringutils::cp1251ToUtf8(form.Name()).c_str(), this);
         auto dw2 = new ads::CDockWidget( stringutils::cp1251ToUtf8(form.Name()).c_str(), this);
         //dw->setWidget(prtw);
-        dw->setWidget(m_grid);
+        dw->setWidget(prtw->m_grid);
         dw2->setWidget(prtw);
         dw->setFeature(ads::CDockWidget::DockWidgetDeleteOnClose, true);
-        dw2->setFeature(ads::CDockWidget::DockWidgetDeleteOnClose, true);
+        //dw2->setFeature(ads::CDockWidget::DockWidgetDeleteOnClose, true);
         //auto area = m_DockManager->addDockWidgetTab(ads::CenterDockWidgetArea, dw);
         auto area = m_DockManager->addDockWidgetTab(ads::TopDockWidgetArea, dw);
         auto area2 = m_DockManager->addDockWidgetTab(ads::BottomDockWidgetArea, dw2);
         qDebug() << "doc dock widget created!" << dw << area;
     }
     prtw->show();
-    m_grid->show();
+    //prtw->m_grid->show();
 #if(!defined(QICSGRID_NO))
     const nlohmann::json j_form = up_rastr_->GetJForms()[n_indx];
     MdiChild *child = createMdiChild( j_form );

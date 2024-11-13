@@ -73,8 +73,10 @@ void ColPropForm::on_btn_cancel_clicked()
 void ColPropForm::on_btn_ok_clicked()
 {
     //TO DO: need change propertires
+    prdata->pqastra_->getRastr()->SetLockEvent(true);
     prcol->set_prec(prec().toStdString().c_str());
     static_cast<DelegateDoubleItem*>(ptv->itemDelegateForColumn(prcol->index))->set_prec(prec().toInt());
+    prdata->pqastra_->getRastr()->SetLockEvent(false);
     this->close();
 }
 

@@ -4,24 +4,12 @@
 
 void RData::Initialize(CUIForm _form, QAstra* _pqastra)
 {
-    //Мета информация о таблице (по сути шаблон)
-    //std::string str_json;
-    //str_json.resize(CRastrHlp::SIZE_STR_BUF_);
-    //int nRes = GetMeta( id_rastr_, t_name_.c_str(), "", const_cast<char*>(str_json.c_str()), static_cast<long>(str_json.size()) );
-    //if(nRes<0){
-    //    qDebug() << "GetMeta(...)  return error" << nRes;
-    //}
-    //qDebug() << "Meta   : " << str_json.c_str();
-    //str_json.resize(std::strlen(str_json.c_str())+1);
-    //j_metas_ = nlohmann::json::parse(str_json);
-
+    qDebug() << "Start RData::Initialize t_name : " << t_name_.c_str();
 
     IRastrTablesPtr tablesx{ _pqastra->getRastr()->Tables() };
     IRastrTablePtr table{ tablesx->Item(t_name_) };
     IRastrColumnsPtr columns{ table->Columns() };
     //std::string table_Name = IRastrPayload(IRastrVariantPtr(table->Name()));
-
-
 
     // В RData создаем RCol по образу формы
     /*for (CUIFormField &f : _form.Fields()){
@@ -40,18 +28,19 @@ void RData::Initialize(CUIForm _form, QAstra* _pqastra)
             }
         }
     }*/
-      IRastrPayload ColumnsCount{ columns->Count() };
-      //reserve(_form.Fields().size()+5);               // Без reserve RCol данные обнуляются видимио при reallocation  If a reallocation happens, all contained elements are modified.
-      reserve( ColumnsCount.Value()+5);               // Без reserve RCol данные обнуляются видимио при reallocation  If a reallocation happens, all contained elements are modified.
 
-
+    IRastrPayload ColumnsCount{ columns->Count() };
+    qDebug() << "ColumnsCount : " << ColumnsCount.Value()+5;
+    reserve( ColumnsCount.Value()+5);                // Без reserve RCol данные обнуляются видимио при reallocation  If a reallocation happens, all contained elements are modified.
+    qDebug() << "reserve : " << ColumnsCount.Value()+5 <<" ok";
 
     // Берем все колонки таблицы
     for (long index{ 0 }; index < ColumnsCount.Value(); index++)
     {
         IRastrColumnPtr col{ columns->Item(index) };
         std::string col_Type = IRastrPayload(IRastrVariantPtr((col)->Property(FieldProperties::Type))->String()).Value();
-        std::string col_Name = IRastrPayload(IRastrVariantPtr((col)->Property(FieldProperties::Name))->String()).Value();
+        std::string col_Name = IRastrPayload(col->Name()).Value();
+        //qDebug() << "index : " << index << " col_Type " << col_Type << " col_Name " << col_Name;
 
         str_cols_.append(col_Name);
         str_cols_.append(",");
@@ -59,14 +48,14 @@ void RData::Initialize(CUIForm _form, QAstra* _pqastra)
         RCol rc;
         rc.str_name_ = col_Name;
         rc.table_name_ = t_name_;
-        rc.setMeta(_pqastra);
         rc.index = index;
+        rc.setMeta(_pqastra);
         rc.hidden = true;
 
         int nRes = AddCol(rc);
         Q_ASSERT(nRes>=0);
-
-        mCols_.insert(std::pair(col_Name,index));
+        if (mCols_.find(col_Name) == mCols_.end())
+            mCols_.insert(std::pair(col_Name,index));
     }
 
     for (CUIFormField &f : _form.Fields())
@@ -77,29 +66,6 @@ void RData::Initialize(CUIForm _form, QAstra* _pqastra)
                 rc.hidden = false;
         }
     }
-
-
-
-    // В RData создаем RCol по образу формы
-
-   /* int ind = 0;
-    for (CUIFormField &f : _form.Fields()){
-            str_cols_.append(f.Name());
-            str_cols_.append(",");
-            IRastrColumnPtr col{ columns->Item(f.Name()) };
-            std::string str_Type = IRastrPayload(IRastrVariantPtr((col)->Property(FieldProperties::Type))->String()).Value();
-
-            RCol rc;
-            rc.str_name_ = f.Name();
-            rc.table_name_ = _form.TableName();
-            rc.setMeta(_pqastra);
-            rc.index = ind++;
-
-            int nRes = AddCol(rc);
-            Q_ASSERT(nRes>=0);
-        }
-*/
-
 
     if(str_cols_.length()>0)
         str_cols_.pop_back();

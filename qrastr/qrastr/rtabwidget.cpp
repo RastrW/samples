@@ -22,6 +22,7 @@
 #include "CondFormatManager.h"
 #include "Settings.h"
 #include <QtitanGrid.h>
+#include <utils.h>
 
 //std::map<std::string, BrowseDataTableSettings> RtabWidget::m_settings;
 
@@ -30,6 +31,22 @@ RtabWidget::RtabWidget(QWidget *parent) :
       customizeFrame(this, Qt::Popup | Qt::Window)
 {
     ptv = new RTableView(this);
+
+    Grid::loadTranslation();
+    m_grid = new Qtitan::Grid();
+    m_grid->setViewType(Qtitan::Grid::TableView);
+    view = m_grid->view< Qtitan::GridTableView>();
+
+    view->options().setGridLines(Qtitan::LinesBoth);
+    view->options().setGridLineWidth(1);
+    view->tableOptions().setColumnAutoWidth(true);
+    view->options().setSelectionPolicy(GridViewOptions::MultiCellSelection);
+    //view->options().setGestureEnabled(true);
+
+    // TO DO: Вынести в опцию контекстного меню (example MultiSelection)
+    view->tableOptions().setRowFrozenButtonVisible(true);
+    view->tableOptions().setFrozenPlaceQuickSelection(true);
+
 }
 
 RtabWidget::RtabWidget(QAstra* pqastra,CUIForm UIForm,RTablesDataManager* pRTDM, QWidget *parent)
@@ -55,6 +72,9 @@ RtabWidget::RtabWidget(QAstra* pqastra,CUIForm UIForm,RTablesDataManager* pRTDM,
 
     customizeFrame.hide();
 
+    //Connect Grid's context menu handler.
+    connect(view, SIGNAL(contextMenu(ContextMenuEventArgs*)), this, SLOT(contextMenu(ContextMenuEventArgs* )));
+
     connect(m_pRTDM, SIGNAL(RTDM_UpdateModel(std::string)), this, SLOT(onRTDM_UpdateModel(std::string)));
     connect(m_pRTDM, SIGNAL(RTDM_UpdateView(std::string)), this, SLOT(onRTDM_UpdateView(std::string)));
 
@@ -62,12 +82,22 @@ RtabWidget::RtabWidget(QAstra* pqastra,CUIForm UIForm,RTablesDataManager* pRTDM,
 
     connect(this->ptv, SIGNAL(customContextMenuRequested(QPoint)),
             SLOT(customMenuRequested(QPoint)));
+
+    connect(this->ptv, SIGNAL(ContextMenu(QPoint)),
+            SLOT(customMenuRequested(QPoint)));
+
     connect(this->ptv, SIGNAL(pressed(const QModelIndex &)),
             SLOT(onItemPressed(const QModelIndex &)));
     connect(this->ptv->horizontalHeader(),
             SIGNAL(customContextMenuRequested(QPoint)),
             SLOT(customHeaderMenuRequested(QPoint)));
     connect(ptv->horizontalHeader(), SIGNAL(filterChanged(size_t , QString )), this, SLOT(updateFilter(size_t , QString) ));
+
+    //QTitan
+    connect(this->view, SIGNAL(pressed(const QModelIndex &)),
+            SLOT(onItemPressed(const QModelIndex &)));
+
+
     CreateModel(pqastra,&m_UIForm);
 
     //SetTableView(*ptv,*prm);                // ширина по шаблону
@@ -87,18 +117,29 @@ RtabWidget::RtabWidget(QAstra* pqastra,CUIForm UIForm,RTablesDataManager* pRTDM,
 
 void RtabWidget::CreateModel(QAstra* pqastra, CUIForm* pUIForm)
 {
+   // m_grid = new Qtitan::Grid();
+
     prm = std::unique_ptr<RModel>(new RModel(nullptr, pqastra, m_pRTDM ));
     proxyModel = new QSortFilterProxyModel(prm.get()); // used for sorting: create proxy //https://doc.qt.io/qt-5/qsortfilterproxymodel.html#details
     proxyModel->setSourceModel(prm.get());
     prm->setForm(pUIForm);
     prm->populateDataFromRastr();
+    view->setModel(prm.get());
+    ptv->setModel(proxyModel);
 
     for (RCol& rcol : *prm->getRdata())
     {
+        Qtitan::GridTableColumn* column = (Qtitan::GridTableColumn *)view->getColumn(rcol.index);
         if (rcol.com_prop_tt == enComPropTT::COM_PR_ENUM)
         {
             DelegateComboBox* delegate = new DelegateComboBox(this,rcol.NameRef());
             ptv->setItemDelegateForColumn(rcol.index, delegate);
+            column->setEditorType(GridEditor::ComboBox);
+
+            QStringList list = prm->mnamerefs_.at(rcol.index);
+            column->editorRepository()->setDefaultValue(list.at(0), Qt::EditRole);
+            column->editorRepository()->setDefaultValue(list, (Qt::ItemDataRole)Qtitan::ComboBoxRole);
+
             // Make the combo boxes always displayed.
             /*for ( int i = 0; i < prm->rowCount(); ++i )
             {
@@ -111,16 +152,29 @@ void RtabWidget::CreateModel(QAstra* pqastra, CUIForm* pUIForm)
             int prec = std::atoi(rcol.prec().c_str());
             DelegateDoubleItem* delegate = new DelegateDoubleItem(prec,this);
             ptv->setItemDelegateForColumn(rcol.index, delegate);
+
+
+            column->setEditorType(GridEditor::Numeric);
+            //((Qtitan::GridNumericEditorRepository *)column->editorRepository())->setMinimum(-10000);
+            //((Qtitan::GridNumericEditorRepository *)column->editorRepository())->setMaximum(10000);
+            ((Qtitan::GridNumericEditorRepository *)column->editorRepository())->setDecimals(prec);
         }
 
         if (rcol.com_prop_tt == enComPropTT::COM_PR_BOOL)
         {
             DelegateCheckBox* delegate = new DelegateCheckBox(this);
             ptv->setItemDelegateForColumn(rcol.index, delegate);
+
+            column->setEditorType(GridEditor::CheckBox);
+            ((Qtitan::GridCheckBoxEditorRepository *)column->editorRepository())->setAppearance(GridCheckBox::StyledAppearance);
+
+
         }
     }
 
-    ptv->setModel(proxyModel);
+    //Show button menu for all column headers.
+    //for (int i = 0; i < view->getColumnCount(); ++i)
+    //    static_cast<GridTableColumn *>(view->getColumn(i))->setMenuButtonVisible(true);
 
     // Видимость колонок
     for (RCol& rcol : *prm->getRdata())
@@ -155,15 +209,53 @@ void RtabWidget::onRTDM_UpdateView(std::string tname)
    // this->parent()->
 }
 
-
-
-
 void RtabWidget::SetTableView(QTableView& tv, RModel& mm, int myltiplier  )
 {
     // Ширина колонок
-    //int myltiplier = 10;
     for (auto cw : mm.ColumnsWidth())
         tv.setColumnWidth(std::get<0>(cw),std::get<1>(cw)*myltiplier);
+}
+void RtabWidget::SetTableView(Qtitan::GridTableView& tv, RModel& mm, int myltiplier  )
+{
+    view->tableOptions().setColumnAutoWidth(false);
+    // Ширина колонок
+    for (auto cw : mm.ColumnsWidth())
+        tv.getColumn(std::get<0>(cw))->setWidth(std::get<1>(cw)*myltiplier);
+}
+
+void RtabWidget::contextMenu(ContextMenuEventArgs* args)
+{
+    column = args->hitInfo().columnIndex();
+    QString qstr_col_props = "";
+    if (column >= 0)
+    {
+        RCol* prcol = prm->getRCol(column);
+        std::string str_col_prop = prcol->desc() + " |"+ prcol->title() + "| -(" + prcol->name() + "), [" +prcol->unit() + "]";
+        qstr_col_props = str_col_prop.c_str();
+    }
+
+
+    args->contextMenu()->addSeparator();
+    args->contextMenu()->addAction(qstr_col_props, this, SLOT(OpenColPropForm()));
+    std::tuple<int,double> item_sum = GetSumSelected();
+    args->contextMenu()->addAction("Sum: " + QString::number(std::get<1>(item_sum))+" Items: " + QString::number(std::get<0>(item_sum)),this,SLOT());
+    //args->contextMenu()->addAction(tr("Kill all humans"), this, SLOT(printPreview()));
+    //args->contextMenu()->addAction(tr("Exterminate!"), this, SLOT(showCompanyWebSite()));
+    args->contextMenu()->addSeparator();
+    args->contextMenu()->addAction(QIcon(":/images/Rastr3_grid_insrow_16x16.png"),tr("Insert Row"),this,SLOT(insertRow_qtitan()),QKeySequence(Qt::CTRL | Qt::Key_I));
+    args->contextMenu()->addAction(QIcon(":/images/Rastr3_grid_delrow_16x16.png"),tr("Delete Row"),this,SLOT(deleteRow_qtitan()),QKeySequence(Qt::CTRL | Qt::Key_D));
+    //ShotCuts (no ru variant :(  ...)
+   // QShortcut *sC_CTRL_I = new QShortcut( QKeySequence(Qt::CTRL | Qt::Key_I), this);
+   // QShortcut *sC_CTRL_D = new QShortcut( QKeySequence(Qt::CTRL | Qt::Key_D), this);
+    connect(sC_CTRL_I, &QShortcut::activated, this, &RtabWidget::insertRow_qtitan);
+    connect(sC_CTRL_D, &QShortcut::activated, this, &RtabWidget::deleteRow_qtitan);
+    args->contextMenu()->addSeparator();
+    args->contextMenu()->addAction(tr("Выравнивание: по шаблону"),this,SLOT(widebyshabl()));
+    args->contextMenu()->addAction(tr("Выравнивание: по данным"),this,SLOT(widebydata()));
+    args->contextMenu()->addSeparator();
+    args->contextMenu()->addAction("Выборка", this, SLOT(OpenSelectionForm()));
+
+
 }
 
 void RtabWidget::customMenuRequested(QPoint pos){
@@ -199,8 +291,8 @@ void RtabWidget::customMenuRequested(QPoint pos){
     menu->popup(ptv->viewport()->mapToGlobal(pos));
 
     //ShotCuts (no ru variant :(  ...)
-    QShortcut *sC_CTRL_I = new QShortcut( QKeySequence(Qt::CTRL | Qt::Key_I), this);
-    QShortcut *sC_CTRL_D = new QShortcut( QKeySequence(Qt::CTRL | Qt::Key_D), this);
+   // QShortcut *sC_CTRL_I = new QShortcut( QKeySequence(Qt::CTRL | Qt::Key_I), this);
+   // QShortcut *sC_CTRL_D = new QShortcut( QKeySequence(Qt::CTRL | Qt::Key_D), this);
     connect(sC_CTRL_I, &QShortcut::activated, this, &RtabWidget::insertRow);
     connect(sC_CTRL_D, &QShortcut::activated, this, &RtabWidget::deleteRow);
 
@@ -381,19 +473,39 @@ void RtabWidget::insertRow()
 {
     prm->insertRows(index.row(),1,index);
 }
+void RtabWidget::insertRow_qtitan()
+{
+    GridSelection* selection = view->selection();
+    int row = selection->cell().rowIndex();
+    QModelIndex index = selection->cell().modelIndex();
+
+    view->beginUpdate();
+    prm->insertRows(row,1,index);
+    view->endUpdate();
+}
 void RtabWidget::deleteRow()
 {
     prm->removeRows(index.row(),1,index);
+}
+void RtabWidget::deleteRow_qtitan()
+{
+    GridSelection* selection = view->selection();
+    int row = selection->cell().rowIndex();
+    QModelIndex index = selection->cell().modelIndex();
+
+    prm->removeRows(row,1,index);
 }
 // ширина по шаблону
 void RtabWidget::widebyshabl()
 {
     SetTableView(*ptv,*prm);
+    SetTableView(*view,*prm);
 }
 // ширина по контенту
 void RtabWidget::widebydata()
 {
     ptv->resizeColumnsToContents();
+    view->tableOptions().setColumnAutoWidth(true);
 }
 void RtabWidget::OpenColPropForm()
 {
@@ -525,7 +637,10 @@ void RtabWidget::SetSelection(std::string Selection)
     IRastrResultVerify(table->DataBlock(keys.Value(), variant_block));
     auto vind = variant_block.IndexesVector();
     for(int ir = 0 ; ir < prm->rowCount() ; ir++)
+    {
         ptv->setRowHidden(ir,true);
+        // TO DO: add hide rows for view
+    }
 
     for (IndexT &ind : vind)
     {
@@ -617,7 +732,8 @@ void RtabWidget::copyMimeData(const QModelIndexList& fromIndices, QMimeData* mim
 
     // Insert the columns in a set, since they could be non-contiguous.
     std::set<int> colsInIndexes, rowsInIndexes;
-    for(const QModelIndex & idx : qAsConst(indices)) {
+    //for(const QModelIndex & idx : qAsConst(indices)) {
+    for(const QModelIndex & idx : std::as_const(indices)) {
         colsInIndexes.insert(idx.column());
         rowsInIndexes.insert(idx.row());
     }
@@ -841,8 +957,8 @@ void RtabWidget::copy()
 }
 std::tuple<int,double> RtabWidget::GetSumSelected()
 {
-    //this->ptv->selectionModel()->selectedIndexes();
-    QModelIndexList selected = this->ptv->selectionModel()->selectedIndexes();
+    // QModelIndexList selected = this->ptv->selectionModel()->selectedIndexes();
+    QModelIndexList selected = view->selection()->selectedIndexes();
     int number = 0;
     double total = 0;
 

@@ -157,7 +157,7 @@ public:
     virtual   ~QAstra() = default;
     void      setRastr(const _sp_rastr& sp_rastr_in);
     _sp_rastr getRastr() const;
-    void      Load( eLoadCode LoadCode, const std::string_view& FilePath, const std::string_view& TemplatePath );
+    IPlainRastrRetCode      Load( eLoadCode LoadCode, const std::string_view& FilePath, const std::string_view& TemplatePath );
     void      Save( const std::string_view& FilePath, const std::string_view& TemplatePath ) ;
     eASTCode  Rgm(const std::string_view& parameters = {});
     //IPlainRastrResultObject<T>  GetVal( const std::string_view& Table, const std::string_view& Col , const long index );

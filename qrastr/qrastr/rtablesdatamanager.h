@@ -48,9 +48,14 @@ public:
             it = mpTables.find(tname);
             if (it != mpTables.end() )
             {
-                it->second->Clear();
-                GetDataBlock(tname,(*it->second.get()));
-                emit RTDM_UpdateModel(tname);
+                //it->second->Clear();
+                //GetDataBlock(tname,(*it->second.get()));
+                //emit RTDM_UpdateModel(tname);
+
+                // TO DO:
+                // Вызвать чтение свойств столбцов
+                // emit RTDM_UpdateProperties
+
             }
             break;
         case EventHints::ChangeData:

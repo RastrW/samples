@@ -99,8 +99,10 @@ void QAstra::setRastr(const _sp_rastr& sp_rastr_in){
 QAstra::_sp_rastr QAstra::getRastr() const {
     return sp_rastr_;
 }
-void QAstra::Load( eLoadCode LoadCode, const std::string_view& FilePath, const std::string_view& TemplatePath ){
+//void QAstra::Load( eLoadCode LoadCode, const std::string_view& FilePath, const std::string_view& TemplatePath ){
+IPlainRastrRetCode QAstra::Load( eLoadCode LoadCode, const std::string_view& FilePath, const std::string_view& TemplatePath ){
     IRastrResultVerify loadresult{ sp_rastr_->Load( LoadCode, FilePath, TemplatePath ) };
+    return loadresult->Code();
 }
 void QAstra::Save( const std::string_view& FilePath, const std::string_view& TemplatePath ){
     IRastrResultVerify saveresult{ sp_rastr_->Save( FilePath, TemplatePath ) };
