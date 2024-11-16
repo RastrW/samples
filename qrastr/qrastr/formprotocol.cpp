@@ -7,6 +7,8 @@
 #include "protocoltreemodel.h"
 #include "ui_formprotocol.h"
 #include "qastra_events_data.h"
+//#include "QtnTreeGrid.h"
+#include <QtitanGrid.h>
 
 FormProtocol::FormProtocol(QWidget *parent)
     :QWidget(parent)
@@ -15,6 +17,23 @@ FormProtocol::FormProtocol(QWidget *parent)
     p_protocol_tree_model_ = new ProtocolTreeModel();
     ui->twProtocol->setModel(p_protocol_tree_model_);
     s_spti_stages_.emplace( p_protocol_tree_model_->getRootItemSp() );
+ui->twProtocol->hide();
+    ptg_ = new Qtitan::TreeGrid(this);
+
+    this->layout()->addWidget(ptg_);
+ //   ptg_->setFixedHeight(300);
+
+    ptg_->setViewType(Qtitan::TreeGrid::TreeView);
+    Qtitan::GridTreeView* view = ptg_->view<Qtitan::GridTreeView>();
+    view->beginUpdate();
+    view->options().setGestureEnabled(true);
+    view->options().setShowFocusDecoration(true);
+
+    view->setModel(p_protocol_tree_model_);
+    view->endUpdate();
+
+    view->bestFit(Qtitan::FitToHeaderAndContent);
+    view->expandToLevel(3);
 }
 FormProtocol::~FormProtocol(){
     delete ui;
