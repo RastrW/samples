@@ -28,11 +28,16 @@ ui->twProtocol->hide();
     view->beginUpdate();
     view->options().setGestureEnabled(true);
     view->options().setShowFocusDecoration(true);
+    view->options().setAlternatingRowColors(true);
+    view->options().setGroupsHeader(false);// disable up menu
 
     view->setModel(p_protocol_tree_model_);
     view->endUpdate();
 
     view->bestFit(Qtitan::FitToHeaderAndContent);
+    //view->getColumn(0)->setCaption("msg_type");
+    view->getColumn(0)->setMinWidth(70);
+    view->getColumn(1)->setMinWidth(800);
     view->expandToLevel(3);
 }
 FormProtocol::~FormProtocol(){
@@ -47,6 +52,9 @@ void FormProtocol::onAppendProtocol(const QString& qstr){
     return;
 }
 void FormProtocol::onRastrLog(const _log_data& log_data){
+    Qtitan::GridTreeView* view = ptg_->view<Qtitan::GridTreeView>();
+    //view->beginUpdate();
+//    view->bestFit(Qtitan::FitToHeaderAndViewContent);
     QString qstr2 ;
     p_protocol_tree_model_->layoutAboutToBeChanged();
     //https://forum.qt.io/topic/87721/index-for-begininsertrows-with-qtreeview/9
