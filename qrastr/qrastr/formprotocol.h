@@ -4,9 +4,11 @@
 #include <QWidget>
 #include <stack>
 
+
 namespace Ui{
     class FormProtocol;
 }
+namespace Qtitan{ class TreeGrid;}
 struct _log_data;
 class QStringListModel;
 class ProtocolTreeItem;
@@ -25,6 +27,7 @@ private:
     Ui::FormProtocol*  ui = nullptr;
     ProtocolTreeModel* p_protocol_tree_model_;
     std::stack< std::shared_ptr< ProtocolTreeItem > > s_spti_stages_;
+    Qtitan::TreeGrid* ptg_;
 };
 
 #endif // FORMPROTOCOL_H

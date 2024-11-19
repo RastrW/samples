@@ -7,6 +7,8 @@
 #include "protocoltreemodel.h"
 #include "ui_formprotocol.h"
 #include "qastra_events_data.h"
+//#include "QtnTreeGrid.h"
+#include <QtitanGrid.h>
 
 FormProtocol::FormProtocol(QWidget *parent)
     :QWidget(parent)
@@ -15,6 +17,28 @@ FormProtocol::FormProtocol(QWidget *parent)
     p_protocol_tree_model_ = new ProtocolTreeModel();
     ui->twProtocol->setModel(p_protocol_tree_model_);
     s_spti_stages_.emplace( p_protocol_tree_model_->getRootItemSp() );
+ui->twProtocol->hide();
+    ptg_ = new Qtitan::TreeGrid(this);
+
+    this->layout()->addWidget(ptg_);
+ //   ptg_->setFixedHeight(300);
+
+    ptg_->setViewType(Qtitan::TreeGrid::TreeView);
+    Qtitan::GridTreeView* view = ptg_->view<Qtitan::GridTreeView>();
+    view->beginUpdate();
+    view->options().setGestureEnabled(true);
+    view->options().setShowFocusDecoration(true);
+    view->options().setAlternatingRowColors(true);
+    view->options().setGroupsHeader(false);// disable up menu
+
+    view->setModel(p_protocol_tree_model_);
+    view->endUpdate();
+
+    view->bestFit(Qtitan::FitToHeaderAndContent);
+    //view->getColumn(0)->setCaption("msg_type");
+    view->getColumn(0)->setMinWidth(70);
+    view->getColumn(1)->setMinWidth(800);
+    view->expandToLevel(3);
 }
 FormProtocol::~FormProtocol(){
     delete ui;
@@ -28,6 +52,9 @@ void FormProtocol::onAppendProtocol(const QString& qstr){
     return;
 }
 void FormProtocol::onRastrLog(const _log_data& log_data){
+    Qtitan::GridTreeView* view = ptg_->view<Qtitan::GridTreeView>();
+    //view->beginUpdate();
+//    view->bestFit(Qtitan::FitToHeaderAndViewContent);
     QString qstr2 ;
     p_protocol_tree_model_->layoutAboutToBeChanged();
     //https://forum.qt.io/topic/87721/index-for-begininsertrows-with-qtreeview/9
