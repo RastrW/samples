@@ -167,8 +167,8 @@ void RtabWidget::CreateModel(QAstra* pqastra, CUIForm* pUIForm)
 
 
             column_qt->setEditorType(GridEditor::Numeric);
-            //((Qtitan::GridNumericEditorRepository *)column->editorRepository())->setMinimum(-10000);
-            //((Qtitan::GridNumericEditorRepository *)column->editorRepository())->setMaximum(10000);
+            ((Qtitan::GridNumericEditorRepository *)column_qt->editorRepository())->setMinimum(-100000);
+            ((Qtitan::GridNumericEditorRepository *)column_qt->editorRepository())->setMaximum(100000);
             ((Qtitan::GridNumericEditorRepository *)column_qt->editorRepository())->setDecimals(prec);
         }
 

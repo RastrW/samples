@@ -7,7 +7,7 @@
 //#include <QJSEngine>
 #include <QRegularExpression>
 #include <QtitanGrid.h>
-#include <utils.h>
+#include <string_bool.h>
 
 //#include "fmt/format.h"
 
@@ -79,7 +79,8 @@ QVariant RModel::data(const QModelIndex &index, int role) const
     std::string item_str;
     QVariant condFormatColor;
 
-    if (role == Qt::BackgroundRole ) {
+    if (role == Qt::BackgroundRole )
+    {
             if (row == 1 && col == 2)  //change background only for cell(1,2)
                 return QBrush(Qt::red);
             item_str = std::visit(ToString(),up_rdata->pnparray_->Get(row,col));
@@ -87,28 +88,12 @@ QVariant RModel::data(const QModelIndex &index, int role) const
             if (condFormatColor.isValid())
                 return condFormatColor;
     }
-        /*case Qt::CheckStateRole:
-            if (row == 1 && col == 0) //add a checkbox to cell(1,0)
-                return Qt::Checked;*/
-        //case Qt::CheckStateRole:
     else if ( (role == Qt::DisplayRole ) ||
               (role == Qt::EditRole ))
     {
             item = std::visit(ToQVariant(),up_rdata->pnparray_->Get(row,col));
             if (contains(mnamerefs_,col))
                 return mnamerefs_.at(col).at(item.toInt());
-
-            /*if (contains(maccuracy_,col))
-            {
-                if (item.isNull())
-                     return item;
-                //double dval = item.toDouble()
-                int digits = maccuracy_.at(col);
-                QString str = QString::number(item.toDouble(), 'f', digits);
-                double ditem = std::stod(str.toStdString());
-                return ditem;
-            }*/
-
             return item;
     }
     else if  (role == Qtitan::ComboBoxRole)
@@ -127,7 +112,7 @@ QVariant RModel::data(const QModelIndex &index, int role) const
 
 
     // Some old examples , code not reach hear
-    switch (role) {
+    /*switch (role) {
         case Qt::DisplayRole:
             if(row == 0 && col == 1) return QString("<--left");
             if(row == 1 && col == 1) return QString("right-->");
@@ -155,6 +140,8 @@ QVariant RModel::data(const QModelIndex &index, int role) const
                 return Qt::Checked;
         break;
     }
+    */
+
     return QVariant();
 }
 
