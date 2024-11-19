@@ -225,6 +225,8 @@ set(PROJECT_SOURCES
     Palette.cpp
     Settings.h
     Settings.cpp
+    condformatjson.h
+    condformatjson.cpp
 )
 if(${QT_VERSION_MAJOR} GREATER_EQUAL 6)
     qt_add_executable( ${PROJECT_NAME}

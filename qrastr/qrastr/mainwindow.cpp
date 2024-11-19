@@ -22,9 +22,9 @@
 #include <DockManager.h>
 #include "mainwindow.h"
 #include "rtabwidget.h"
-#include "mdiChildTable.h"
-#include "mdiChildGrid.h"
-#include "mdiChildHeaderGrid.h"
+//#include "mdiChildTable.h"
+//#include "mdiChildGrid.h"
+//#include "mdiChildHeaderGrid.h"
 #include "astra_exp.h"
 #include "qmcr/mcrwnd.h"
 #include "plugin_interfaces.h"
@@ -76,18 +76,20 @@ MainWindow::MainWindow(){
         int f = ads::CDockWidget::CustomCloseHandling;
         dw->setFeature( static_cast<ads::CDockWidget::DockWidgetFeature>(f), true);
         //auto area = m_DockManager->addDockWidgetTab(ads::NoDockWidgetArea, dw);
-        auto container = m_DockManager->addDockWidgetFloating(dw);
+        auto container = m_DockManager->addDockWidgetTab(ads::BottomDockWidgetArea,dw);
+       /* auto container = m_DockManager->addDockWidgetFloating(dw);
         container->move(QPoint(2100, 20));
-        container->resize(1200,800);
+        container->resize(1200,800);*/
 
         auto pdwProtocol = new ads::CDockWidget( "protocolMain", this );
         pdwProtocol->setWidget(m_pFormProtocol);
         //int f = ads::CDockWidget::CustomCloseHandling;
         pdwProtocol->setFeature( static_cast<ads::CDockWidget::DockWidgetFeature>(f), true );
         //auto area = m_DockManager->addDockWidgetTab(ads::NoDockWidgetArea, dw);
-        auto pfdc = m_DockManager->addDockWidgetFloating(pdwProtocol);
+        auto pfdc = m_DockManager->addDockWidgetTab(ads::BottomDockWidgetArea,pdwProtocol);
+       // auto pfdc = m_DockManager->addDockWidgetFloating(pdwProtocol);
         //pfdc->move(QPoint(2100, 20));
-        pfdc->resize(600,400);
+       // pfdc->resize(600,400);
 
 
     }
@@ -105,28 +107,6 @@ MainWindow::MainWindow(){
 }
 MainWindow::~MainWindow()
 {
-}
-QHBoxLayout* MainWindow::createStyleSetting()
-{
-    QHBoxLayout* ret = new QHBoxLayout();
-    QLabel* label = new QLabel(this);
-    label->setText(tr("Style:"));
-    ret->addWidget(label);
-    QComboBox* comboBox = new QComboBox();
-    connect(comboBox, SIGNAL(currentIndexChanged(int)), this, SLOT(styleChanged(int)));
-    comboBox->addItem(tr("Default"), DefaultStyleSetting);
-    comboBox->addItem(tr("Windows 7 Scenic"), Windows7ScenicStyleSetting);
-    comboBox->addItem(tr("Office 2016 Colorfull"), Office2016ColorfulStyleSetting);
-    comboBox->addItem(tr("Office 2016 DarkGray"), Office2016BDarkGrayStyleSetting);
-    comboBox->addItem(tr("Office 2016 Black"), Office2016BlackStyleSetting);
-    comboBox->addItem(tr("Adobe Photoshop White"), AdobePhotoshopLightGrayStyleSetting);
-    comboBox->addItem(tr("Adobe Photoshop DarkGray"), AdobePhotoshopDarkGrayStyleSetting);
-    comboBox->addItem(tr("Visual Sudio 2019 Blue"), VisualSudio2019BlueStyleSetting);
-    comboBox->addItem(tr("Visual Sudio 2019 Dark"), VisualSudio2019DarkStyleSetting);
-    comboBox->addItem(tr("Fluent White"), FluentLightStyleSetting);
-    comboBox->addItem(tr("Fluent Dark"), FluentDarkStyleSetting);
-    ret->addWidget(comboBox);
-    return ret;
 }
 
 int MainWindow::readSettings(){ //it cache log messages to vector, because it called befor logger intialization
@@ -471,14 +451,6 @@ void MainWindow::onOpenForm( QAction* p_actn ){
     qDebug() << "\n Open form:" + form.Name();
     spdlog::info( "Create tab [{}]", stringutils::cp1251ToUtf8(form.Name()) );
     RtabWidget *prtw = new RtabWidget(m_sp_qastra.get(),form,&m_RTDM,this);
-
-    // Видимость колонок
-    for (RCol& rcol : *prtw->prm->getRdata())
-        if (rcol.hidden)
-        {
-            Qtitan::GridTableColumn* column = (Qtitan::GridTableColumn *)prtw->view->getColumnByModelColumn(rcol.index);
-            column->setVisible(false);
-        }
 
     // Docking
     if(false){

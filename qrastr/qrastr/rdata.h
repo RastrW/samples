@@ -726,6 +726,7 @@ public:
     std::string t_name_ = "";
     std::string t_title_ = "";
     std::string str_cols_ = "";                     // строка имен столбцов ex: "ny,pn,qn,vras"
+    std::vector<std::string> vCols_;                // вектор имен столбцов
     std::shared_ptr<QDataBlock> pnparray_;
     std::map<std::string, int> mCols_;
 private:

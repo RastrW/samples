@@ -19,10 +19,14 @@
 #include "delegatecheckbox.h"
 #include <QShortcut>
 #include <QPalette>
+#include "CondFormat.h"
 #include "CondFormatManager.h"
+#include "condformatjson.h"
+
 #include "Settings.h"
 #include <QtitanGrid.h>
 #include <utils.h>
+#include "License2/json.hpp"
 
 //std::map<std::string, BrowseDataTableSettings> RtabWidget::m_settings;
 
@@ -41,6 +45,8 @@ RtabWidget::RtabWidget(QWidget *parent) :
     view->options().setGridLineWidth(1);
     view->tableOptions().setColumnAutoWidth(true);
     view->options().setSelectionPolicy(GridViewOptions::MultiCellSelection);
+     //view->options().f
+    //view->tableOptions().fi
     //view->options().setGestureEnabled(true);
 
     // TO DO: Вынести в опцию контекстного меню (example MultiSelection)
@@ -72,9 +78,9 @@ RtabWidget::RtabWidget(QAstra* pqastra,CUIForm UIForm,RTablesDataManager* pRTDM,
 
     customizeFrame.hide();
 
-    //Connect Grid's context menu handler.
-    connect(view, SIGNAL(contextMenu(ContextMenuEventArgs*)), this, SLOT(contextMenu(ContextMenuEventArgs* )));
 
+    //connect(this, SIGNAL(CondFormatsModified),this, SLOT(onCondFormatsModified()));
+    connect(this, &RtabWidget::CondFormatsModified,this, &RtabWidget::onCondFormatsModified);
     connect(m_pRTDM, SIGNAL(RTDM_UpdateModel(std::string)), this, SLOT(onRTDM_UpdateModel(std::string)));
     connect(m_pRTDM, SIGNAL(RTDM_UpdateView(std::string)), this, SLOT(onRTDM_UpdateView(std::string)));
 
@@ -94,6 +100,8 @@ RtabWidget::RtabWidget(QAstra* pqastra,CUIForm UIForm,RTablesDataManager* pRTDM,
     connect(ptv->horizontalHeader(), SIGNAL(filterChanged(size_t , QString )), this, SLOT(updateFilter(size_t , QString) ));
 
     //QTitan
+    //Connect Grid's context menu handler.
+    connect(view, SIGNAL(contextMenu(ContextMenuEventArgs*)), this, SLOT(contextMenu(ContextMenuEventArgs* )));
     connect(this->view, SIGNAL(pressed(const QModelIndex &)),
             SLOT(onItemPressed(const QModelIndex &)));
 
@@ -117,8 +125,6 @@ RtabWidget::RtabWidget(QAstra* pqastra,CUIForm UIForm,RTablesDataManager* pRTDM,
 
 void RtabWidget::CreateModel(QAstra* pqastra, CUIForm* pUIForm)
 {
-   // m_grid = new Qtitan::Grid();
-
     prm = std::unique_ptr<RModel>(new RModel(nullptr, pqastra, m_pRTDM ));
     proxyModel = new QSortFilterProxyModel(prm.get()); // used for sorting: create proxy //https://doc.qt.io/qt-5/qsortfilterproxymodel.html#details
     proxyModel->setSourceModel(prm.get());
@@ -129,16 +135,22 @@ void RtabWidget::CreateModel(QAstra* pqastra, CUIForm* pUIForm)
 
     for (RCol& rcol : *prm->getRdata())
     {
-        Qtitan::GridTableColumn* column = (Qtitan::GridTableColumn *)view->getColumn(rcol.index);
+        column_qt = (Qtitan::GridTableColumn *)view->getColumn(rcol.index);
+
+        //Видимость колонок
+        ptv->setColumnHidden(rcol.index,rcol.hidden);
+        column_qt->setVisible(!rcol.hidden);
+
+        //Настройки отображения колонок по типам
         if (rcol.com_prop_tt == enComPropTT::COM_PR_ENUM)
         {
             DelegateComboBox* delegate = new DelegateComboBox(this,rcol.NameRef());
             ptv->setItemDelegateForColumn(rcol.index, delegate);
-            column->setEditorType(GridEditor::ComboBox);
+            column_qt->setEditorType(GridEditor::ComboBox);
 
             QStringList list = prm->mnamerefs_.at(rcol.index);
-            column->editorRepository()->setDefaultValue(list.at(0), Qt::EditRole);
-            column->editorRepository()->setDefaultValue(list, (Qt::ItemDataRole)Qtitan::ComboBoxRole);
+            column_qt->editorRepository()->setDefaultValue(list.at(0), Qt::EditRole);
+            column_qt->editorRepository()->setDefaultValue(list, (Qt::ItemDataRole)Qtitan::ComboBoxRole);
 
             // Make the combo boxes always displayed.
             /*for ( int i = 0; i < prm->rowCount(); ++i )
@@ -154,10 +166,10 @@ void RtabWidget::CreateModel(QAstra* pqastra, CUIForm* pUIForm)
             ptv->setItemDelegateForColumn(rcol.index, delegate);
 
 
-            column->setEditorType(GridEditor::Numeric);
+            column_qt->setEditorType(GridEditor::Numeric);
             //((Qtitan::GridNumericEditorRepository *)column->editorRepository())->setMinimum(-10000);
             //((Qtitan::GridNumericEditorRepository *)column->editorRepository())->setMaximum(10000);
-            ((Qtitan::GridNumericEditorRepository *)column->editorRepository())->setDecimals(prec);
+            ((Qtitan::GridNumericEditorRepository *)column_qt->editorRepository())->setDecimals(prec);
         }
 
         if (rcol.com_prop_tt == enComPropTT::COM_PR_BOOL)
@@ -165,10 +177,8 @@ void RtabWidget::CreateModel(QAstra* pqastra, CUIForm* pUIForm)
             DelegateCheckBox* delegate = new DelegateCheckBox(this);
             ptv->setItemDelegateForColumn(rcol.index, delegate);
 
-            column->setEditorType(GridEditor::CheckBox);
-            ((Qtitan::GridCheckBoxEditorRepository *)column->editorRepository())->setAppearance(GridCheckBox::StyledAppearance);
-
-
+            column_qt->setEditorType(GridEditor::CheckBox);
+            ((Qtitan::GridCheckBoxEditorRepository *)column_qt->editorRepository())->setAppearance(GridCheckBox::StyledAppearance);
         }
     }
 
@@ -176,13 +186,20 @@ void RtabWidget::CreateModel(QAstra* pqastra, CUIForm* pUIForm)
     //for (int i = 0; i < view->getColumnCount(); ++i)
     //    static_cast<GridTableColumn *>(view->getColumn(i))->setMenuButtonVisible(true);
 
-    // Видимость колонок
-    for (RCol& rcol : *prm->getRdata())
-        ptv->setColumnHidden(rcol.index,rcol.hidden);
-
      // Заливка колонок цветом по правилам
     for (RCol& rcol : *prm->getRdata())
         m_MapcondFormatVector.emplace(rcol.index, std::vector<CondFormat>());
+
+    std::map<int, std::vector<CondFormat>> cfv;
+
+    CondFormatJson cfj(prm->getRdata()->t_name_ , prm->getRdata()->vCols_ ,cfv );
+    cfj.from_json();
+    for (auto &[key,val] : cfj.get_mcf())
+        if (m_MapcondFormatVector.find(key) != m_MapcondFormatVector.end() )
+        {
+            m_MapcondFormatVector.at(key) = val;
+            prm->setCondFormats(false, key, val);
+        }
 
     this->update();
     this->repaint();
@@ -233,20 +250,18 @@ void RtabWidget::contextMenu(ContextMenuEventArgs* args)
         std::string str_col_prop = prcol->desc() + " |"+ prcol->title() + "| -(" + prcol->name() + "), [" +prcol->unit() + "]";
         qstr_col_props = str_col_prop.c_str();
     }
+    QAction* condFormatAction = new QAction(QIcon(":/icons/edit_cond_formats"), tr("Edit Conditional Formats..."),  args->contextMenu());
 
 
     args->contextMenu()->addSeparator();
     args->contextMenu()->addAction(qstr_col_props, this, SLOT(OpenColPropForm()));
+
     std::tuple<int,double> item_sum = GetSumSelected();
     args->contextMenu()->addAction("Sum: " + QString::number(std::get<1>(item_sum))+" Items: " + QString::number(std::get<0>(item_sum)),this,SLOT());
-    //args->contextMenu()->addAction(tr("Kill all humans"), this, SLOT(printPreview()));
-    //args->contextMenu()->addAction(tr("Exterminate!"), this, SLOT(showCompanyWebSite()));
+    //args->contextMenu()->addAction(tr("Скрыть колонку"),this,SLOT(hideColumns()));
     args->contextMenu()->addSeparator();
     args->contextMenu()->addAction(QIcon(":/images/Rastr3_grid_insrow_16x16.png"),tr("Insert Row"),this,SLOT(insertRow_qtitan()),QKeySequence(Qt::CTRL | Qt::Key_I));
     args->contextMenu()->addAction(QIcon(":/images/Rastr3_grid_delrow_16x16.png"),tr("Delete Row"),this,SLOT(deleteRow_qtitan()),QKeySequence(Qt::CTRL | Qt::Key_D));
-    //ShotCuts (no ru variant :(  ...)
-   // QShortcut *sC_CTRL_I = new QShortcut( QKeySequence(Qt::CTRL | Qt::Key_I), this);
-   // QShortcut *sC_CTRL_D = new QShortcut( QKeySequence(Qt::CTRL | Qt::Key_D), this);
     connect(sC_CTRL_I, &QShortcut::activated, this, &RtabWidget::insertRow_qtitan);
     connect(sC_CTRL_D, &QShortcut::activated, this, &RtabWidget::deleteRow_qtitan);
     args->contextMenu()->addSeparator();
@@ -254,6 +269,11 @@ void RtabWidget::contextMenu(ContextMenuEventArgs* args)
     args->contextMenu()->addAction(tr("Выравнивание: по данным"),this,SLOT(widebydata()));
     args->contextMenu()->addSeparator();
     args->contextMenu()->addAction("Выборка", this, SLOT(OpenSelectionForm()));
+    args->contextMenu()->addAction(condFormatAction);
+
+    connect(condFormatAction, &QAction::triggered, this, [&]() {
+        emit editCondFormats(column);
+    });
 
 
 }
@@ -457,9 +477,30 @@ void RtabWidget::editCondFormats(size_t column)
         */
         m_MapcondFormatVector.at(column) = condFormatVector;
 
+        //nlohmann::json j = nlohmann::json::parse(condFormatVector[0]);
+       /* nlohmann::json j;
+        j = {
+            {"node",title.toStdString().c_str(),condFormatVector[0].filter().toStdString()}
+        };
+        std::string jstr = j.dump();
+        std::filesystem::path path_2_json = std::filesystem::current_path() / "HighLightSetting.json";
+        std::ofstream ofs(path_2_json);
+        if(ofs.is_open())
+        {
+            std::string  str_file = j.dump(1, ' ');
+            ofs << str_file;
+            ofs.close();
+        }
+        */
+
         //m_settings[currentlyBrowsedTableName()].condFormats[column] = condFormatVector;
-        //emit projectModified();
+        emit CondFormatsModified();
     }
+}
+void RtabWidget::onCondFormatsModified()
+{
+    CondFormatJson cfj(prm->getRdata()->t_name_ , prm->getRdata()->vCols_ ,m_MapcondFormatVector );
+    cfj.save_json();
 }
 
 void RtabWidget::onItemPressed(const QModelIndex &_index)
@@ -531,6 +572,8 @@ void RtabWidget::hideColumns()
     RCol* prcol = prm->getRCol(column);
     prcol->hidden = true;
     ptv->setColumnHidden(prcol->index,prcol->hidden);
+
+    column_qt->setVisible(!prcol->hidden);
 }
 void RtabWidget::unhideColumns()
 {

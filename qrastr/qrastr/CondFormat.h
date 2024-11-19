@@ -20,6 +20,19 @@ bool contains(const std::map<T1, T2>& container, E element)
     return container.find(element) != container.end();
 }
 
+template<typename C, typename E>
+int find_index(const C& container, E element)
+{
+    int index = 0;
+    for (auto it = container.begin(); it != container.end(); it++)
+    {
+        if ((*it) == element)
+            return index;
+        index++;
+    }
+    return -1;
+}
+
 class STRING_PARSE_BASE
 {
 public:

@@ -114,6 +114,7 @@ private:
     std::tuple<int,double> GetSumSelected();
 signals:
     void onCornerButtonPressed();
+    void CondFormatsModified();
 public slots:
     void contextMenu(ContextMenuEventArgs* args);
     void customMenuRequested(QPoint pos);
@@ -140,6 +141,7 @@ public slots:
     void update_data();
     void SetSelection(std::string Selection);
     void editCondFormats(size_t column);
+    void onCondFormatsModified();
 
 
 private slots:
@@ -164,7 +166,8 @@ private:
     QSortFilterProxyModel *proxyModel;
     QModelIndex index;              // current index (Cell clicked)
     int form_indx;
-    int column;                     // for header
+    int column;                         // for header
+    Qtitan::GridTableColumn* column_qt;
     QPoint MenuRequestedPoint;
     std::string m_selection;
     std::map<int, std::vector<CondFormat>> m_MapcondFormatVector;  // column , vector<CondFormat>
