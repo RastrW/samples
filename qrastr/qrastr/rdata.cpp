@@ -58,6 +58,7 @@ void RData::Initialize(CUIForm _form, QAstra* _pqastra)
             mCols_.insert(std::pair(col_Name,index));
     }
 
+    //Скрыть колонки не входящие в форму
     for (CUIFormField &f : _form.Fields())
     {
         for  (RCol &rc : *this)

@@ -182,6 +182,19 @@ void RtabWidget::CreateModel(QAstra* pqastra, CUIForm* pUIForm)
         }
     }
 
+    int vi = 0;
+    for (auto f : pUIForm->Fields())
+    {
+        for (RCol& rcol : *prm->getRdata())
+        {
+            if (f.Name() == rcol.str_name_)
+            {
+                column_qt = (Qtitan::GridTableColumn *)view->getColumn(rcol.index);
+                column_qt   ->setVisualIndex(vi++);
+            }
+        }
+    }
+
     //Show button menu for all column headers.
     //for (int i = 0; i < view->getColumnCount(); ++i)
     //    static_cast<GridTableColumn *>(view->getColumn(i))->setMenuButtonVisible(true);
