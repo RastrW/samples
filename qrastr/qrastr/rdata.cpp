@@ -41,7 +41,7 @@ void RData::Initialize(CUIForm _form, QAstra* _pqastra)
         std::string col_Type = IRastrPayload(IRastrVariantPtr((col)->Property(FieldProperties::Type))->String()).Value();
         std::string col_Name = IRastrPayload(col->Name()).Value();
         //qDebug() << "index : " << index << " col_Type " << col_Type << " col_Name " << col_Name;
-        vCols_.push_back(col_Name);
+       // vCols_.push_back(col_Name);
         str_cols_.append(col_Name);
         str_cols_.append(",");
 
@@ -335,7 +335,26 @@ void RData::populate_qastra(QAstra* _pqastra, RTablesDataManager* _pRTDM )
     }
 */
 }
+std::string RData::get_cols(bool visible)
+{
+    std::string ret_cols="";
+    if (visible)
+    {
+        for  (RCol &rc : *this)
+            if (!rc.hidden)
+                ret_cols += rc.str_name_ + ",";
+    }
+    else
+    {
+        for  (RCol &rc : *this)
+            ret_cols += rc.str_name_ + ",";
+    }
 
+    if (!ret_cols.empty())
+        ret_cols.pop_back();
+
+    return ret_cols;
+}
 
 void RData::clear_data()
 {

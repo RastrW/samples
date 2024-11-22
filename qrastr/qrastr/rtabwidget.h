@@ -11,6 +11,7 @@
 #include <QSortFilterProxyModel>
 #include "ColPropForm.h"
 #include "formselection.h"
+#include "formexportcsv.h"
 #include "rmodel.h"
 #include "RtableView.h"
 #include "rtablesdatamanager.h"
@@ -130,6 +131,7 @@ public slots:
     void widebydata();
     void OpenColPropForm();
     void OpenSelectionForm();
+    void OpenExportCSVForm();
     void sortAscending();
     void sortDescending();
     void hideColumns();

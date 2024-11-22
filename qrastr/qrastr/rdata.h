@@ -684,6 +684,7 @@ public:
 
     //Заполняем через IRastrPlain
     void populate_qastra(QAstra* _pqastra,RTablesDataManager* _pRTDM);
+    std::string get_cols(bool visible = true);
 
     void clear_data();                                                                          // Удалить данные (стуктура остается)
 

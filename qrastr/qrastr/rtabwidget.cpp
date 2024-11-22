@@ -53,6 +53,7 @@ RtabWidget::RtabWidget(QWidget *parent) :
     view->tableOptions().setRowFrozenButtonVisible(true);
     view->tableOptions().setFrozenPlaceQuickSelection(true);
 
+
 }
 
 RtabWidget::RtabWidget(QAstra* pqastra,CUIForm UIForm,RTablesDataManager* pRTDM, QWidget *parent)
@@ -182,6 +183,9 @@ void RtabWidget::CreateModel(QAstra* pqastra, CUIForm* pUIForm)
         }
     }
 
+    //auto row = view->getRow(2);
+
+    //Порядок колонок как в форме
     int vi = 0;
     for (auto f : pUIForm->Fields())
     {
@@ -190,7 +194,9 @@ void RtabWidget::CreateModel(QAstra* pqastra, CUIForm* pUIForm)
             if (f.Name() == rcol.str_name_)
             {
                 column_qt = (Qtitan::GridTableColumn *)view->getColumn(rcol.index);
+
                 column_qt   ->setVisualIndex(vi++);
+                continue;
             }
         }
     }
@@ -281,6 +287,7 @@ void RtabWidget::contextMenu(ContextMenuEventArgs* args)
     args->contextMenu()->addAction(tr("Выравнивание: по шаблону"),this,SLOT(widebyshabl()));
     args->contextMenu()->addAction(tr("Выравнивание: по данным"),this,SLOT(widebydata()));
     args->contextMenu()->addSeparator();
+    args->contextMenu()->addAction("Экспорт CSV", this, SLOT(OpenExportCSVForm()));
     args->contextMenu()->addAction("Выборка", this, SLOT(OpenSelectionForm()));
     args->contextMenu()->addAction(condFormatAction);
 
@@ -572,6 +579,13 @@ void RtabWidget::OpenSelectionForm()
     FormSelection* Selection = new FormSelection(this->m_selection, this);
     Selection->show();
 }
+void RtabWidget::OpenExportCSVForm()
+{
+
+    formexportcsv* ExportCsv = new formexportcsv( prm->getRdata(),this);
+    ExportCsv->show();
+}
+
 void RtabWidget::sortAscending()
 {
     proxyModel->sort(column,Qt::AscendingOrder);
