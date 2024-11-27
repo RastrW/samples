@@ -19,6 +19,7 @@ class FormProtocol
 public:
     explicit FormProtocol(QWidget *parent = nullptr);
     ~FormProtocol();
+    void setIgnoreAppendProtocol(bool bl_ignore);
 signals:
 private slots:
     void onRastrLog(const _log_data&);
@@ -28,6 +29,7 @@ private:
     ProtocolTreeModel* p_protocol_tree_model_;
     std::stack< std::shared_ptr< ProtocolTreeItem > > s_spti_stages_;
     Qtitan::TreeGrid* ptg_;
+    bool ignore_append_protocol_ = false;
 };
 
 #endif // FORMPROTOCOL_H

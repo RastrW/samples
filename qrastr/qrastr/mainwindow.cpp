@@ -223,7 +223,7 @@ void MainWindow::setQAstra(const std::shared_ptr<QAstra>& sp_qastra){
 
     connect( m_sp_qastra.get(), SIGNAL(onRastrLog(const _log_data&) ), m_pFormProtocol, SLOT(onRastrLog(const _log_data&)) );
     connect( m_sp_qastra.get(), SIGNAL(onRastrLog(const _log_data&) ), m_pMcrWnd,       SLOT(onRastrLog(const _log_data&)) );
-
+    m_pFormProtocol->setIgnoreAppendProtocol(true);
 
     if(false){
         //vetv

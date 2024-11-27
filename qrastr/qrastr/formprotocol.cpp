@@ -43,12 +43,18 @@ ui->twProtocol->hide();
 FormProtocol::~FormProtocol(){
     delete ui;
 }
+void FormProtocol::setIgnoreAppendProtocol(bool bl_ignore){
+    ignore_append_protocol_ = bl_ignore;
+}
 //https://doc.qt.io/qt-5/qtwidgets-itemviews-simpletreemodel-example.html
 void FormProtocol::onAppendProtocol(const QString& qstr){
+    if(ignore_append_protocol_)
+        return;
     auto sp_item = std::make_shared<ProtocolTreeItem>( QVariantList{
         QString("protocol"), qstr
         }, s_spti_stages_.top().get() );
     s_spti_stages_.top().get()->appendChild(sp_item);
+    p_protocol_tree_model_->layoutChanged();
     return;
 }
 void FormProtocol::onRastrLog(const _log_data& log_data){
