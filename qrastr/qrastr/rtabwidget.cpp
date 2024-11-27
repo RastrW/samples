@@ -288,6 +288,7 @@ void RtabWidget::contextMenu(ContextMenuEventArgs* args)
     args->contextMenu()->addAction(tr("Выравнивание: по данным"),this,SLOT(widebydata()));
     args->contextMenu()->addSeparator();
     args->contextMenu()->addAction("Экспорт CSV", this, SLOT(OpenExportCSVForm()));
+    args->contextMenu()->addAction("Импорт CSV", this, SLOT(OpenImportCSVForm()));
     args->contextMenu()->addAction("Выборка", this, SLOT(OpenSelectionForm()));
     args->contextMenu()->addAction(condFormatAction);
 
@@ -584,6 +585,11 @@ void RtabWidget::OpenExportCSVForm()
 
     formexportcsv* ExportCsv = new formexportcsv( prm->getRdata(),this);
     ExportCsv->show();
+}
+void RtabWidget::OpenImportCSVForm()
+{
+    formimportcsv* ImportCsv = new formimportcsv( prm->getRdata(),this);
+    ImportCsv->show();
 }
 
 void RtabWidget::sortAscending()

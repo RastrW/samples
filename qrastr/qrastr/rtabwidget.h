@@ -12,6 +12,7 @@
 #include "ColPropForm.h"
 #include "formselection.h"
 #include "formexportcsv.h"
+#include "formimportcsv.h"
 #include "rmodel.h"
 #include "RtableView.h"
 #include "rtablesdatamanager.h"
@@ -132,6 +133,7 @@ public slots:
     void OpenColPropForm();
     void OpenSelectionForm();
     void OpenExportCSVForm();
+    void OpenImportCSVForm();
     void sortAscending();
     void sortDescending();
     void hideColumns();
