@@ -3,7 +3,6 @@
 
 #include <QMainWindow>
 #include <rtablesdatamanager.h>
-
 #if(!defined(QICSGRID_NO))
     #include <QicsTable.h>
 #endif //#if(!defined(QICSGRID_NO))

@@ -114,6 +114,7 @@ private:
     void copy(const bool withHeaders, const bool inSQL);
     void copy();
     std::tuple<int,double> GetSumSelected();
+    QMenu* CunstructLinkedFormsMenu(std::string form_name);
 signals:
     void onCornerButtonPressed();
     void CondFormatsModified();
@@ -121,6 +122,7 @@ public slots:
     void contextMenu(ContextMenuEventArgs* args);
     void customMenuRequested(QPoint pos);
     void customHeaderMenuRequested(QPoint pos);
+
     void onItemPressed(const QModelIndex &index);
     void changeColumnVisible(QListWidgetItem*);
     void cornerButtonPressed();
@@ -132,6 +134,7 @@ public slots:
     void widebydata();
     void OpenColPropForm();
     void OpenSelectionForm();
+    void OpenLinkedForm(std::string name,std::string selection , std::vector<int> keys );    // ТИ:Каналы ; id1=%d & id2=0 & prv_num<8 ; 801
     void OpenExportCSVForm();
     void OpenImportCSVForm();
     void sortAscending();
@@ -146,6 +149,7 @@ public slots:
     void SetSelection(std::string Selection);
     void editCondFormats(size_t column);
     void onCondFormatsModified();
+    void onOpenLinkedForm(std::string name,std::string selection , std::vector<int> keys );    // ТИ:Каналы ; id1=%d & id2=0 & prv_num<8 ; 801
 
 
 private slots:
@@ -171,6 +175,7 @@ private:
     QModelIndex index;              // current index (Cell clicked)
     int form_indx;
     int column;                         // for header
+    int row;
     Qtitan::GridTableColumn* column_qt;
     QPoint MenuRequestedPoint;
     std::string m_selection;

@@ -53,6 +53,18 @@ RtabWidget::RtabWidget(QWidget *parent) :
     view->tableOptions().setRowFrozenButtonVisible(true);
     view->tableOptions().setFrozenPlaceQuickSelection(true);
 
+    //Кнопка выбор колонок слева сверху, за собой тащит целый пустой бессмысленный столбец в котором указывается стролочка активной строки
+    //view->tableOptions().setColumnsQuickMenuVisible(false);
+    //view->tableOptions().setColumnsQuickCustomization(false);
+
+    //view->tableOptions().set
+
+    //Заполнить строку поиска
+   // view->find("ШАГОЛ",Qt::CaseInsensitive,true);
+    //view->findClear();
+
+
+
 
 }
 
@@ -131,12 +143,21 @@ void RtabWidget::CreateModel(QAstra* pqastra, CUIForm* pUIForm)
     proxyModel->setSourceModel(prm.get());
     prm->setForm(pUIForm);
     prm->populateDataFromRastr();
+
+    view->beginUpdate();
     view->setModel(prm.get());
     ptv->setModel(proxyModel);
+
+
+   // view->tableOptions()->
+    //auto row_qt = view->getRow(3);
+    //row_qt->
 
     for (RCol& rcol : *prm->getRdata())
     {
         column_qt = (Qtitan::GridTableColumn *)view->getColumn(rcol.index);
+
+
 
         //Видимость колонок
         ptv->setColumnHidden(rcol.index,rcol.hidden);
@@ -220,6 +241,7 @@ void RtabWidget::CreateModel(QAstra* pqastra, CUIForm* pUIForm)
             prm->setCondFormats(false, key, val);
         }
 
+    view->endUpdate();
     this->update();
     this->repaint();
 }
@@ -262,6 +284,7 @@ void RtabWidget::SetTableView(Qtitan::GridTableView& tv, RModel& mm, int myltipl
 void RtabWidget::contextMenu(ContextMenuEventArgs* args)
 {
     column = args->hitInfo().columnIndex();
+    row = args->hitInfo().row().rowIndex();
     QString qstr_col_props = "";
     if (column >= 0)
     {
@@ -291,6 +314,38 @@ void RtabWidget::contextMenu(ContextMenuEventArgs* args)
     args->contextMenu()->addAction("Импорт CSV", this, SLOT(OpenImportCSVForm()));
     args->contextMenu()->addAction("Выборка", this, SLOT(OpenSelectionForm()));
     args->contextMenu()->addAction(condFormatAction);
+
+
+    //QMenu *menu_connected_forms;
+    //menu_connected_forms = CunstructLinkedFormsMenu( stringutils::cp1251ToUtf8(m_UIForm.Name()));
+
+    QMenu *menu_connected_forms=new QMenu(this);
+    menu_connected_forms->setTitle("Связанные формы");
+
+    std::vector<int> vbindvals;
+    auto table_context_form = m_pRTDM->Get("formcontext","");
+
+    for (int irow = 0; irow<table_context_form->RowsCount();irow++)
+    {
+        std::string form = std::get<std::string>(table_context_form->Get(irow,0));
+        if ( stringutils::cp1251ToUtf8(m_UIForm.Name()) == form)
+        {
+            std::string linked_form = std::get<std::string>(table_context_form->Get(irow,1));
+            std::string linked_form_menu_name = std::get<std::string>(table_context_form->Get(irow,2));
+            std::string linked_form_selection = std::get<std::string>(table_context_form->Get(irow,3));
+            std::string linked_form_bind = std::get<std::string>(table_context_form->Get(irow,4));
+            QAction* LinkedFormAction = new QAction(linked_form_menu_name.c_str(), args->contextMenu());
+
+            args->contextMenu()->addAction(condFormatAction);
+
+            menu_connected_forms->addAction(LinkedFormAction);
+            connect(LinkedFormAction, &QAction::triggered, this, [&]() {
+                emit onOpenLinkedForm(linked_form,linked_form_selection,vbindvals); });
+        }
+    }
+
+
+    args->contextMenu()->addMenu(menu_connected_forms);
 
     connect(condFormatAction, &QAction::triggered, this, [&]() {
         emit editCondFormats(column);
@@ -375,6 +430,52 @@ void RtabWidget::customHeaderMenuRequested(QPoint pos){
     menu->addAction(tr("Format"));
     menu->popup(ptv->horizontalHeader()->viewport()->mapToGlobal(pos));
 }
+
+QMenu* RtabWidget::CunstructLinkedFormsMenu(std::string form_name)
+{
+    QMenu *menu=new QMenu(this);
+    menu->setTitle("Связанные формы");
+
+    std::vector<int> vbindvals;
+    auto table_context_form = m_pRTDM->Get("formcontext","");
+
+    for (int irow = 0; irow<table_context_form->RowsCount();irow++)
+    {
+        std::string form = std::get<std::string>(table_context_form->Get(irow,0));
+        if (form_name == form)
+        {
+            std::string linked_form = std::get<std::string>(table_context_form->Get(irow,1));
+            std::string linked_form_menu_name = std::get<std::string>(table_context_form->Get(irow,2));
+            std::string linked_form_selection = std::get<std::string>(table_context_form->Get(irow,3));
+            std::string linked_form_bind = std::get<std::string>(table_context_form->Get(irow,4));
+            QAction* LinkedFormAction = new QAction(linked_form_menu_name.c_str(), menu);
+
+            menu->addAction(LinkedFormAction);
+            connect(LinkedFormAction, &QAction::triggered, this, [&]() {
+                emit onOpenLinkedForm(linked_form,linked_form_selection,vbindvals); });
+        }
+    }
+
+
+   /* IRastrTablesPtr tablesx{ m_pqastra->getRastr()->Tables() };
+    IRastrPayload tablecount{ tablesx->Count() };
+    IRastrTablePtr table{ tablesx->Item(prm->getRdata()->t_name_) };
+    IPlainRastrResult* pres = table->SetSelection(Selection);
+
+    DataBlock<FieldVariantData> variant_block;
+    IRastrPayload keys = table->Key();
+    IRastrResultVerify(table->DataBlock(keys.Value(), variant_block));
+    auto vind = variant_block.IndexesVector();*/
+
+    return menu;
+}
+
+void RtabWidget::onOpenLinkedForm(std::string name,std::string selection , std::vector<int> keys )
+{
+    int a = 1;
+    int b = 1;
+}
+
 void RtabWidget::cornerButtonPressed()
 {
     auto hh = ptv->horizontalHeader();
@@ -579,6 +680,11 @@ void RtabWidget::OpenSelectionForm()
 {
     FormSelection* Selection = new FormSelection(this->m_selection, this);
     Selection->show();
+}
+
+void RtabWidget::OpenLinkedForm(std::string name,std::string selection , std::vector<int> keys)
+{
+
 }
 void RtabWidget::OpenExportCSVForm()
 {

@@ -76,6 +76,9 @@ void CondFormatJson::append_json()
 }
 void CondFormatJson::from_json()
 {
+    if (!std::filesystem::exists( path_2_json))
+        return;
+
     m_MapcondFormatVector.clear();
     std::ifstream ifs(path_2_json);
     const nlohmann::json jf = nlohmann::json::parse(ifs);
