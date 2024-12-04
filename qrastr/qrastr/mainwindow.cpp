@@ -191,6 +191,7 @@ void MainWindow::_v_cache_log::add( const spdlog::level::level_enum lev_in, cons
 void MainWindow::setForms(const std::list<CUIForm>& forms){ // https://stackoverflow.com/questions/14151443/how-to-pass-a-qstring-to-a-qt-slot-from-a-qmenu-via-qsignalmapper-or-otherwise
     int i = 0;
     m_lstUIForms = forms;
+    m_RTDM.SetForms(&m_lstUIForms);
     QMap<QString,QMenu *> map_menu;
     for(const auto& j_form : forms){
         std::string str_MenuPath = stringutils::cp1251ToUtf8(j_form.MenuPath());

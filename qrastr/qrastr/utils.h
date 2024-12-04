@@ -72,6 +72,17 @@ inline void replaceAll(std::string& str, const std::string& from, const std::str
         start_pos += to.length(); // In case 'to' contains 'from', like replacing 'x' with 'yx'
     }
 }
+inline void replaceAll(std::string& str, const std::string& from, const std::vector<int>& to) {
+    if (from.empty())
+        return;
+    size_t start_pos = 0;
+    size_t ind(0);
+    while ((start_pos = str.find(from, start_pos)) != std::string::npos) {
+        str.replace(start_pos, from.length(), std::to_string(to[ind]));
+        start_pos += std::to_string(to[ind]).length(); // In case 'to' contains 'from', like replacing 'x' with 'yx'
+        ind++;
+    }
+}
 inline std::string trim(std::string& str)
 {
     str.erase(0, str.find_first_not_of(' '));       //prefixing spaces

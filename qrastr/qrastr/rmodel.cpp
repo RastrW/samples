@@ -53,22 +53,7 @@ int RModel::columnCount(const QModelIndex & /*parent*/) const{
     return static_cast<int>(up_rdata->pnparray_->ColumnsCount());
 }
 
-struct ToQVariant {
-    QVariant operator()(std::monostate) { return { QVariant() }; }
-    QVariant operator()(const long& value) { return (qlonglong)value; }
-    QVariant operator()(const uint64_t& value) { return value; }
-    QVariant operator()(const double& value) { return value; }
-    QVariant operator()(const bool& value) { return value; }
-    QVariant operator()(const std::string& value) { return std::string(value).c_str(); }
-};
-struct ToDouble {
-    double operator()(std::monostate) { return  0.0; }
-    double operator()(const long& value) { return (double)value; }
-    double operator()(const uint64_t& value) { return value; }
-    double operator()(const double& value) { return value; }
-    double operator()(const bool& value) { return value; }
-    double operator()(const std::string& value) { return std::stod(value); }
-};
+
 
 QVariant RModel::data(const QModelIndex &index, int role) const
 {
@@ -299,7 +284,7 @@ QVariant RModel::getMatchingCondFormat(const std::map<size_t, std::vector<CondFo
             if (contains(up_rdata->mCols_,op))
             {
                 int cind = this->up_rdata->mCols_.at(op);
-                up_rdata->pnparray_->Get(row,cind);
+                //up_rdata->pnparray_->Get(row,cind);
                 double ditem = std::visit(ToDouble(),up_rdata->pnparray_->Get(row,cind));
                 std::string sitem = std::to_string(ditem);
                 SB.replace(op,sitem);

@@ -10,6 +10,15 @@
 
 class CondFormat;
 
+struct ToQVariant {
+    QVariant operator()(std::monostate) { return { QVariant() }; }
+    QVariant operator()(const long& value) { return (qlonglong)value; }
+    QVariant operator()(const uint64_t& value) { return value; }
+    QVariant operator()(const double& value) { return value; }
+    QVariant operator()(const bool& value) { return value; }
+    QVariant operator()(const std::string& value) { return std::string(value).c_str(); }
+};
+
 class RModel : public QAbstractTableModel
 {
     Q_OBJECT

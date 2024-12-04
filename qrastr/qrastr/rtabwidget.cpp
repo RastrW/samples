@@ -119,6 +119,15 @@ RtabWidget::RtabWidget(QAstra* pqastra,CUIForm UIForm,RTablesDataManager* pRTDM,
             SLOT(onItemPressed(const QModelIndex &)));
 
 
+   // GridCell cell(row, column);
+   // CellClickEventArgs cellArgs(cell);
+   // emit m_view->cellClicked(&cellArgs);
+
+    connect(this->view, SIGNAL( Qtitan::GridTableView::GridViewBase::cellClicked( CellClickEventArgs* )),
+            SLOT(onItemPressed(const CellClickEventArgs*)));
+
+
+
     CreateModel(pqastra,&m_UIForm);
 
     //SetTableView(*ptv,*prm);                // ширина по шаблону
@@ -316,35 +325,8 @@ void RtabWidget::contextMenu(ContextMenuEventArgs* args)
     args->contextMenu()->addAction(condFormatAction);
 
 
-    //QMenu *menu_connected_forms;
-    //menu_connected_forms = CunstructLinkedFormsMenu( stringutils::cp1251ToUtf8(m_UIForm.Name()));
-
-    QMenu *menu_connected_forms=new QMenu(this);
-    menu_connected_forms->setTitle("Связанные формы");
-
-    std::vector<int> vbindvals;
-    auto table_context_form = m_pRTDM->Get("formcontext","");
-
-    for (int irow = 0; irow<table_context_form->RowsCount();irow++)
-    {
-        std::string form = std::get<std::string>(table_context_form->Get(irow,0));
-        if ( stringutils::cp1251ToUtf8(m_UIForm.Name()) == form)
-        {
-            std::string linked_form = std::get<std::string>(table_context_form->Get(irow,1));
-            std::string linked_form_menu_name = std::get<std::string>(table_context_form->Get(irow,2));
-            std::string linked_form_selection = std::get<std::string>(table_context_form->Get(irow,3));
-            std::string linked_form_bind = std::get<std::string>(table_context_form->Get(irow,4));
-            QAction* LinkedFormAction = new QAction(linked_form_menu_name.c_str(), args->contextMenu());
-
-            args->contextMenu()->addAction(condFormatAction);
-
-            menu_connected_forms->addAction(LinkedFormAction);
-            connect(LinkedFormAction, &QAction::triggered, this, [&]() {
-                emit onOpenLinkedForm(linked_form,linked_form_selection,vbindvals); });
-        }
-    }
-
-
+    QMenu *menu_connected_forms;
+    menu_connected_forms = CunstructLinkedFormsMenu( stringutils::cp1251ToUtf8(m_UIForm.Name()));
     args->contextMenu()->addMenu(menu_connected_forms);
 
     connect(condFormatAction, &QAction::triggered, this, [&]() {
@@ -439,20 +421,29 @@ QMenu* RtabWidget::CunstructLinkedFormsMenu(std::string form_name)
     std::vector<int> vbindvals;
     auto table_context_form = m_pRTDM->Get("formcontext","");
 
+    size_t ind = 0;
     for (int irow = 0; irow<table_context_form->RowsCount();irow++)
     {
         std::string form = std::get<std::string>(table_context_form->Get(irow,0));
         if (form_name == form)
         {
-            std::string linked_form = std::get<std::string>(table_context_form->Get(irow,1));
-            std::string linked_form_menu_name = std::get<std::string>(table_context_form->Get(irow,2));
-            std::string linked_form_selection = std::get<std::string>(table_context_form->Get(irow,3));
-            std::string linked_form_bind = std::get<std::string>(table_context_form->Get(irow,4));
-            QAction* LinkedFormAction = new QAction(linked_form_menu_name.c_str(), menu);
+            LinkedForm lf;
 
+            lf.linkedform = std::visit(ToString(),table_context_form->Get(irow,1));
+            lf.linkedname = std::visit(ToString(),table_context_form->Get(irow,2));
+            lf.selection  = std::visit(ToString(),table_context_form->Get(irow,3));
+            lf.bind       = std::visit(ToString(),table_context_form->Get(irow,4));
+            for (const auto key : split( lf.bind ,','))
+            {
+                int col = prm->getRdata()->mCols_.at(key);
+                long val = std::visit(ToLong(),prm->getRdata()->pnparray_->Get(row,col));
+                lf.vbindvals.push_back(val);
+            }
+
+            QAction* LinkedFormAction = new QAction(lf.linkedname.c_str(), menu);
             menu->addAction(LinkedFormAction);
-            connect(LinkedFormAction, &QAction::triggered, this, [&]() {
-                emit onOpenLinkedForm(linked_form,linked_form_selection,vbindvals); });
+            connect(LinkedFormAction, &QAction::triggered, [this, lf] {
+                onOpenLinkedForm(lf); });
         }
     }
 
@@ -470,10 +461,59 @@ QMenu* RtabWidget::CunstructLinkedFormsMenu(std::string form_name)
     return menu;
 }
 
-void RtabWidget::onOpenLinkedForm(std::string name,std::string selection , std::vector<int> keys )
+
+void RtabWidget::onOpenLinkedForm( LinkedForm _lf)
 {
-    int a = 1;
-    int b = 1;
+    CUIForm* pUIForm   = m_pRTDM->getForm(_lf.linkedform);
+    if (pUIForm == nullptr)
+        return;
+
+    RTableView* plinkview = new RTableView();
+    Qtitan::Grid* linkedgrid = new Qtitan::Grid();
+    RModel* plinkmodel;
+    plinkmodel =  new RModel(nullptr,this->m_pqastra,m_pRTDM);
+    plinkmodel->setForm(pUIForm);
+    plinkmodel->populateDataFromRastr();
+
+    std::string Selection = _lf.get_selection_result();
+    IRastrTablesPtr tablesx{ m_pqastra->getRastr()->Tables() };
+    IRastrPayload tablecount{ tablesx->Count() };
+    IRastrTablePtr table{ tablesx->Item(plinkmodel->getRdata()->t_name_)};
+    IPlainRastrResult* pres = table->SetSelection(Selection);
+
+    DataBlock<FieldVariantData> variant_block;
+    IRastrPayload keys = table->Key();
+    IRastrResultVerify(table->DataBlock(keys.Value(), variant_block));
+    auto vind = variant_block.IndexesVector();
+
+
+    // Configure grid view
+    linkedgrid->setViewType(Qtitan::Grid::TableView);
+    Qtitan::GridTableView* view = linkedgrid->view<Qtitan::GridTableView>();
+    view->setModel(plinkmodel);
+
+    GridFilterGroupCondition* groupCondition = new GridFilterGroupCondition(view->filter());
+    CustomFilterCondition* condition = new CustomFilterCondition(view->filter());
+    groupCondition->addCondition(condition);
+    for (long rind : vind)
+        condition->addRow(rind);
+
+
+    view->filter()->setCondition(groupCondition, true /* add to history */);
+    view->filter()->setActive(true);
+    view->showFilterPanel();
+
+    linkedgrid->show();
+
+
+
+   // plinkview->setModel(plinkmodel);
+   // plinkview->show();
+
+
+
+
+
 }
 
 void RtabWidget::cornerButtonPressed()
@@ -625,6 +665,14 @@ void RtabWidget::onCondFormatsModified()
     cfj.save_json();
 }
 
+void RtabWidget::onItemPressed(const CellClickEventArgs &_index)
+{
+    int a= 1;
+    //index = _index;
+    //int row = index.row();
+    //int column = index.column();
+    //qDebug()<<"Pressed:" <<row<< ","<<column;
+}
 void RtabWidget::onItemPressed(const QModelIndex &_index)
 {
     index = _index;

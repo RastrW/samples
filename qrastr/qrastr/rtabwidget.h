@@ -16,10 +16,29 @@
 #include "rmodel.h"
 #include "RtableView.h"
 #include "rtablesdatamanager.h"
+#include "utils.h"
 
 
 class QMimeData;
 class QAstra;
+class LinkedForm
+{
+public:
+    std::string linkedform;
+    std::string linkedname;
+    std::string selection;
+    std::string bind;
+    long row;
+    std::vector<int> vbindvals;
+    std::string get_selection_result()
+    {
+        selection_result = selection;
+        replaceAll(selection_result,"%d",vbindvals);
+        return selection_result;
+    }
+private:
+    std::string selection_result;
+};
 
 typedef enum {ifNone, ifCheckBox } modelFlag;
 typedef enum {skNone = 0, skCount = 1, skSum = 2, skMin = 3, skMax = 4, skAvg = 5} footerEvent;
@@ -124,6 +143,7 @@ public slots:
     void customHeaderMenuRequested(QPoint pos);
 
     void onItemPressed(const QModelIndex &index);
+    void onItemPressed(const CellClickEventArgs &_index);
     void changeColumnVisible(QListWidgetItem*);
     void cornerButtonPressed();
     void insertRow();
@@ -149,7 +169,8 @@ public slots:
     void SetSelection(std::string Selection);
     void editCondFormats(size_t column);
     void onCondFormatsModified();
-    void onOpenLinkedForm(std::string name,std::string selection , std::vector<int> keys );    // ТИ:Каналы ; id1=%d & id2=0 & prv_num<8 ; 801
+    void onOpenLinkedForm(LinkedForm _lf );    // ТИ:Каналы ; id1=%d & id2=0 & prv_num<8 ; 801
+
 
 
 private slots:
@@ -178,13 +199,10 @@ private:
     int row;
     Qtitan::GridTableColumn* column_qt;
     QPoint MenuRequestedPoint;
-    std::string m_selection;
-    std::map<int, std::vector<CondFormat>> m_MapcondFormatVector;  // column , vector<CondFormat>
-
+    std::string m_selection;                                                            // Текущая выборка
+    std::map<int, std::vector<CondFormat>> m_MapcondFormatVector;                       // column , vector<CondFormat>
     QShortcut *sC_CTRL_I = new QShortcut( QKeySequence(Qt::CTRL | Qt::Key_I), this);
     QShortcut *sC_CTRL_D = new QShortcut( QKeySequence(Qt::CTRL | Qt::Key_D), this);
-
-
 protected:
     itemStateMap tItemStateMap;
     QFrame customizeFrame;

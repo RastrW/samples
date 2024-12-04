@@ -20,6 +20,23 @@ struct ToString {
     std::string operator()(const std::string& value) { return value; }
 };
 
+struct ToDouble {
+    double operator()(std::monostate) { return  0.0; }
+    double operator()(const long& value) { return (double)value; }
+    double operator()(const uint64_t& value) { return value; }
+    double operator()(const double& value) { return value; }
+    double operator()(const bool& value) { return value; }
+    double operator()(const std::string& value) { return std::stod(value); }
+};
+struct ToLong {
+    long operator()(std::monostate) { return  0.0; }
+    long operator()(const long& value) { return (long)value; }
+    long operator()(const uint64_t& value) { return value; }
+    long operator()(const double& value) { return value; }
+    long operator()(const bool& value) { return value; }
+    long operator()(const std::string& value) { return std::stol(value); }
+};
+
 template<typename T>
 struct MapFieldVariantType
 {

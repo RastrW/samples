@@ -6,6 +6,9 @@
 #include "QVector"
 #include <QObject>
 #include "qastra.h"
+#include "UIForms.h"
+
+//class CUIForm;
 
 template<typename T>
 class ITablesDataManagerT
@@ -26,6 +29,19 @@ public:
     {
          m_pqastra = _pqastra;
          connect(m_pqastra, &QAstra::onRastrHint, this, &RTablesDataManager::onRastrHint);
+    }
+    void SetForms ( std::list<CUIForm>* _lstUIForms)
+    {
+        m_plstUIForms = _lstUIForms;
+    }
+    CUIForm* getForm ( std::string _name)
+    {
+        for (CUIForm &form : *m_plstUIForms)
+        {
+            if (stringutils::cp1251ToUtf8(form.Name()) == _name)
+                return &form;
+        }
+        return nullptr;
     }
     void onRastrHint(const _hint_data& hint_data)
     {
@@ -190,6 +206,8 @@ signals:
 
 private:
     QAstra* m_pqastra;
+    std::list<CUIForm>* m_plstUIForms;
+
      /* Хранилище данных для моделей
       * 1:n то есть на 10 окон узлы -> 1 DataBlock
       * из overhead'а наверно только обновление данных если была открыта таблица , а потом
