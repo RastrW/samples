@@ -18,6 +18,7 @@ QVariant ProtocolTreeModel::data(const QModelIndex &index, int role) const{
     if (!index.isValid() || role != Qt::DisplayRole)
         return {};
     const auto *item = static_cast<const ProtocolTreeItem*>(index.internalPointer());
+    //if (Qt::DisplayRole == role && 0 == index.column())        return {"werewr"};
     return item->data(index.column());
 }
 Qt::ItemFlags ProtocolTreeModel::flags(const QModelIndex &index) const{

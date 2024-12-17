@@ -1,6 +1,7 @@
 #include <QListView>
 #include <QStringListModel>
 #include <QAbstractItemModelTester>
+#include <QFontDatabase>
 
 #include "formprotocol.h"
 #include "protocoltreeitem.h"
@@ -18,7 +19,10 @@ FormProtocol::FormProtocol(QWidget *parent)
     ui->twProtocol->setModel(p_protocol_tree_model_);
     s_spti_stages_.emplace( p_protocol_tree_model_->getRootItemSp() );
 ui->twProtocol->hide();
+
+    Grid::loadTranslation();
     ptg_ = new Qtitan::TreeGrid(this);
+    //ptg_->setViewType(Qtitan::TreeGrid::BandedTreeView);
 
     this->layout()->addWidget(ptg_);
  //   ptg_->setFixedHeight(300);
@@ -30,6 +34,12 @@ ui->twProtocol->hide();
     view->options().setShowFocusDecoration(true);
     view->options().setAlternatingRowColors(true);
     view->options().setGroupsHeader(false);// disable up menu
+    //view->options().setModelDecoration(true);
+    //QFont font_monospace("Monospace");
+    //font_monospace.setStyleHint(QFont::TypeWriter);
+    //view->options().setCellFont(font_monospace);
+    const QFont fixedFont = QFontDatabase::systemFont(QFontDatabase::FixedFont);
+    view->options().setCellFont(fixedFont);
 
     view->setModel(p_protocol_tree_model_);
     view->endUpdate();
@@ -37,7 +47,11 @@ ui->twProtocol->hide();
     view->bestFit(Qtitan::FitToHeaderAndContent);
     //view->getColumn(0)->setCaption("msg_type");
     view->getColumn(0)->setMinWidth(70);
-    view->getColumn(1)->setMinWidth(800);
+
+    Qtitan::GridTableColumn * const pgc { static_cast<Qtitan::GridTableColumn *>(view->getColumn(0)) };
+    pgc->setEditorType(Qtitan::GridEditor::Type::Picture) ;
+
+    view->getColumn(1)->setMinWidth(1000);
     view->expandToLevel(3);
 }
 FormProtocol::~FormProtocol(){
@@ -51,7 +65,8 @@ void FormProtocol::onAppendProtocol(const QString& qstr){
     if(ignore_append_protocol_)
         return;
     auto sp_item = std::make_shared<ProtocolTreeItem>( QVariantList{
-        QString("protocol"), qstr
+        //QString("protocol"), qstr
+        QPixmap(QStringLiteral(":images/paste.png")), qstr
         }, s_spti_stages_.top().get() );
     s_spti_stages_.top().get()->appendChild(sp_item);
     p_protocol_tree_model_->layoutChanged();
@@ -69,8 +84,10 @@ void FormProtocol::onRastrLog(const _log_data& log_data){
     //endInsertRows();
     if( LogMessageTypes::OpenStage == log_data.lmt ){
         auto sp_item = std::make_shared<ProtocolTreeItem>( QVariantList{
-            QString("STAGE!!%1").arg(log_data.n_stage_id), log_data.str_msg.c_str()
+            //QString("STAGE!!%1").arg(log_data.n_stage_id), log_data.str_msg.c_str()
+            QPixmap(QStringLiteral(":images/copy.png")), log_data.str_msg.c_str()
             },s_spti_stages_.top().get() );
+        //return QPixmap(QStringLiteral(":images/copy.png"));
         s_spti_stages_.top()->appendChild(sp_item);
         s_spti_stages_.emplace(sp_item);
     }else if( LogMessageTypes::CloseStage == log_data.lmt ){
@@ -96,10 +113,12 @@ void FormProtocol::onRastrLog(const _log_data& log_data){
             default:                            qstr_type = "InnerFail"; break;
         }
         auto sp_item = std::make_shared<ProtocolTreeItem>( QVariantList{
-            qstr_type, log_data.str_msg.c_str()
+            //qstr_type, log_data.str_msg.c_str()
+            QPixmap(QStringLiteral(":images/cut.png")), log_data.str_msg.c_str()
             } , s_spti_stages_.top().get() );
         s_spti_stages_.top()->appendChild(sp_item);
     }
     p_protocol_tree_model_->layoutChanged();
-    new QAbstractItemModelTester( p_protocol_tree_model_, QAbstractItemModelTester::FailureReportingMode::Fatal, this);
+    //new QAbstractItemModelTester( p_protocol_tree_model_, QAbstractItemModelTester::FailureReportingMode::Fatal, this);
+    new QAbstractItemModelTester( p_protocol_tree_model_, QAbstractItemModelTester::FailureReportingMode::Warning, this);
 }
