@@ -451,7 +451,7 @@ void MainWindow::onOpenForm( QAction* p_actn ){
     auto form  =*it;
     qDebug() << "\n Open form:" + form.Name();
     spdlog::info( "Create tab [{}]", stringutils::cp1251ToUtf8(form.Name()) );
-    RtabWidget *prtw = new RtabWidget(m_sp_qastra.get(),form,&m_RTDM,this);
+    RtabWidget *prtw = new RtabWidget(m_sp_qastra.get(),form,&m_RTDM,m_DockManager,this);
 
     // Docking
     if(false){

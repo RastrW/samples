@@ -17,28 +17,17 @@
 #include "RtableView.h"
 #include "rtablesdatamanager.h"
 #include "utils.h"
+#include "linkedform.h"
 
 
+
+namespace ads{ class CDockManager; }
+
+class RtabWidget;
 class QMimeData;
 class QAstra;
-class LinkedForm
-{
-public:
-    std::string linkedform;
-    std::string linkedname;
-    std::string selection;
-    std::string bind;
-    long row;
-    std::vector<int> vbindvals;
-    std::string get_selection_result()
-    {
-        selection_result = selection;
-        replaceAll(selection_result,"%d",vbindvals);
-        return selection_result;
-    }
-private:
-    std::string selection_result;
-};
+class LinkedForm;
+
 
 typedef enum {ifNone, ifCheckBox } modelFlag;
 typedef enum {skNone = 0, skCount = 1, skSum = 2, skMin = 3, skMax = 4, skAvg = 5} footerEvent;
@@ -122,8 +111,15 @@ class RtabWidget : public QWidget
     Q_OBJECT
 public:
     explicit RtabWidget(QWidget *parent = nullptr);
-    explicit RtabWidget(QAstra* pqastra, CUIForm UIForm, QWidget *parent = nullptr);
-    explicit RtabWidget(QAstra* pqastra, CUIForm UIForm, RTablesDataManager* pRTDM, QWidget *parent = nullptr);
+    //explicit RtabWidget(QAstra* pqastra, CUIForm UIForm, QWidget *parent = nullptr);
+    //explicit RtabWidget(QAstra* pqastra, CUIForm UIForm, RTablesDataManager* pRTDM, QWidget *parent = nullptr);
+    explicit RtabWidget(QAstra* pqastra, CUIForm UIForm, RTablesDataManager* pRTDM, ads::CDockManager* pDockManager ,QWidget *parent = nullptr);
+    /*~RtabWidget() //C2036
+    {
+        //qDebug()<<"RtabWidget::Destructor "<< "[" <<m_UIForm.Name().c_str() << "]";
+    };*/
+
+
 
     void SetTableView(QTableView& tv, RModel& mm, int myltiplier = 10);
     void SetTableView(Qtitan::GridTableView& tv, RModel& mm, int myltiplier = 10 );
@@ -134,16 +130,24 @@ private:
     void copy();
     std::tuple<int,double> GetSumSelected();
     QMenu* CunstructLinkedFormsMenu(std::string form_name);
+protected:
+    //void closeEvent(QCloseEvent *event) override ;
+    //void closeEvent(QCloseEvent *event)  ;
+    virtual void closeEvent(QCloseEvent* event);    // not work
+
 signals:
     void onCornerButtonPressed();
     void CondFormatsModified();
 public slots:
+    //void cellClicked( CellClickEventArgs* );
     void contextMenu(ContextMenuEventArgs* args);
     void customMenuRequested(QPoint pos);
     void customHeaderMenuRequested(QPoint pos);
 
     void onItemPressed(const QModelIndex &index);
-    void onItemPressed(const CellClickEventArgs &_index);
+    void onItemPressed(CellClickEventArgs* _index);
+    void onLinkedFormUpdate(CellClickEventArgs* _index);
+
     void changeColumnVisible(QListWidgetItem*);
     void cornerButtonPressed();
     void insertRow();
@@ -169,6 +173,7 @@ public slots:
     void SetSelection(std::string Selection);
     void editCondFormats(size_t column);
     void onCondFormatsModified();
+    void SetLinkedForm( LinkedForm _lf);
     void onOpenLinkedForm(LinkedForm _lf );    // ТИ:Каналы ; id1=%d & id2=0 & prv_num<8 ; 801
 
 
@@ -183,9 +188,11 @@ public:
     CUIForm m_UIForm;
     QAstra* m_pqastra;
     RTablesDataManager* m_pRTDM;
+    ads::CDockManager* m_DockManager;
     //QTtitanGrid
     Qtitan::Grid* m_grid;
     Qtitan::GridTableView* view;
+    LinkedForm m_lf;
 
 private:
     using BufferRow = std::vector<QByteArray>;
