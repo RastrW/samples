@@ -26,6 +26,10 @@ int main(int argc, char *argv[]){
     long n_res = 0;
     App app(argc, argv);
 
+#if (QT_VERSION >= QT_VERSION_CHECK(6, 0, 0))
+    app.setHighDpiScaleFactorRoundingPolicy(Qt::HighDpiScaleFactorRoundingPolicy::Round);
+#endif
+
     n_res = app.init();
     if(n_res<0){
         return 100;

@@ -83,7 +83,7 @@ public:
         dh.str_table  = Event.DBLocation().Table();
         dh.str_column = Event.DBLocation().Column();
         dh.n_indx     = Event.DBLocation().Index();
-        spdlog::info( "OnEvent.Hint: [{:10}] [{:1}] Table: {:10} Column: {:5} Index: {}"
+        spdlog::debug( "OnEvent.Hint: [{:10}] [{:1}] Table: {:10} Column: {:5} Index: {}"
             , getHintName(Event.Hint())
             , static_cast<std::underlying_type<EventHints>::type>(Event.Hint())
             , Event.DBLocation().Table()
