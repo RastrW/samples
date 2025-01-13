@@ -30,6 +30,7 @@
 #include "License2/json.hpp"
 
 #include <DockManager.h>
+#include <QCloseEvent>
 
 namespace ads{ class CDockManager; }
 
@@ -94,6 +95,10 @@ RtabWidget::RtabWidget(QAstra* pqastra,CUIForm UIForm,RTablesDataManager* pRTDM,
 
     customizeFrame.hide();
 
+    resize(800,500);
+    setWindowFlags(Qt::WindowMinimizeButtonHint | Qt::WindowMinMaxButtonsHint | Qt::WindowCloseButtonHint);
+    setWindowModality(Qt::ApplicationModal);
+
 
     //connect(this, SIGNAL(CondFormatsModified),this, SLOT(onCondFormatsModified()));
     connect(this, &RtabWidget::CondFormatsModified,this, &RtabWidget::onCondFormatsModified);
@@ -138,9 +143,12 @@ RtabWidget::RtabWidget(QAstra* pqastra,CUIForm UIForm,RTablesDataManager* pRTDM,
     setLayout(layout);
 }
 
+
 void RtabWidget::closeEvent(QCloseEvent *event)
 {
-    // Здесь наверно нужно disconnect onLinkedFormUpdate
+    qDebug()<<"RtabWidget::Destructor "<< "[" <<m_UIForm.Name().c_str() << "]";
+    QWidget::closeEvent(event);
+    disconnect(m_lf.conn);
     if (event->spontaneous()) {
         qDebug("The close button was clicked");
         // do event->ignore();
@@ -148,10 +156,16 @@ void RtabWidget::closeEvent(QCloseEvent *event)
     } else {
         QWidget::closeEvent(event);
     }
-    qDebug()<<"RtabWidget::Destructor "<< "[" <<m_UIForm.Name().c_str() << "]";
 };
-
-
+void RtabWidget::onvisibilityChanged(bool visible)
+{
+   // if (!visible)
+   //     this->close();
+}
+void RtabWidget::OnClose()
+{
+    this->close();
+}
 void RtabWidget::CreateModel(QAstra* pqastra, CUIForm* pUIForm)
 {
     prm = std::unique_ptr<RModel>(new RModel(nullptr, pqastra, m_pRTDM ));
@@ -195,7 +209,6 @@ void RtabWidget::CreateModel(QAstra* pqastra, CUIForm* pUIForm)
             int prec = std::atoi(rcol.prec().c_str());
             DelegateDoubleItem* delegate = new DelegateDoubleItem(prec,this);
             ptv->setItemDelegateForColumn(rcol.index, delegate);
-
 
             column_qt->setEditorType(GridEditor::Numeric);
             ((Qtitan::GridNumericEditorRepository *)column_qt->editorRepository())->setMinimum(-100000);
@@ -271,7 +284,6 @@ void RtabWidget::onRTDM_UpdateView(std::string tname)
 
     this->repaint();
     this->update();
-   // this->parent()->
 }
 
 void RtabWidget::SetTableView(QTableView& tv, RModel& mm, int myltiplier  )
@@ -288,10 +300,7 @@ void RtabWidget::SetTableView(Qtitan::GridTableView& tv, RModel& mm, int myltipl
         tv.getColumn(std::get<0>(cw))->setWidth(std::get<1>(cw)*myltiplier);
 }
 
-/*void RtabWidget::cellClicked( CellClickEventArgs* args )
-{
-    int a = 1;
-}*/
+// QTitanGrid: ContextMenu
 void RtabWidget::contextMenu(ContextMenuEventArgs* args)
 {
     column = args->hitInfo().columnIndex();
@@ -304,7 +313,6 @@ void RtabWidget::contextMenu(ContextMenuEventArgs* args)
         qstr_col_props = str_col_prop.c_str();
     }
     QAction* condFormatAction = new QAction(QIcon(":/icons/edit_cond_formats"), tr("Edit Conditional Formats..."),  args->contextMenu());
-
 
     args->contextMenu()->addSeparator();
     args->contextMenu()->addAction(qstr_col_props, this, SLOT(OpenColPropForm()));
@@ -326,6 +334,8 @@ void RtabWidget::contextMenu(ContextMenuEventArgs* args)
     args->contextMenu()->addAction("Выборка", this, SLOT(OpenSelectionForm()));
     args->contextMenu()->addAction(condFormatAction);
 
+    //connect(sC_CTRL_I, &QShortcut::activated, this, &RtabWidget::insertRow);
+    //connect(sC_CTRL_D, &QShortcut::activated, this, &RtabWidget::deleteRow);
 
     QMenu *menu_connected_forms;
     menu_connected_forms = CunstructLinkedFormsMenu( stringutils::cp1251ToUtf8(m_UIForm.Name()));
@@ -334,8 +344,6 @@ void RtabWidget::contextMenu(ContextMenuEventArgs* args)
     connect(condFormatAction, &QAction::triggered, this, [&]() {
         emit editCondFormats(column);
     });
-
-
 }
 
 void RtabWidget::customMenuRequested(QPoint pos){
@@ -457,12 +465,7 @@ QMenu* RtabWidget::CunstructLinkedFormsMenu(std::string form_name)
 void RtabWidget::SetLinkedForm( LinkedForm _lf)
 {
     m_lf = _lf;
-    try {
-         GridFilterGroupCondition* groupCondition = new GridFilterGroupCondition(view->filter());
-    } catch (...)
-    {
-        return;
-    }
+    // GridFilterGroupCondition* groupCondition = new GridFilterGroupCondition(view->filter());
 
     std::string Selection = _lf.get_selection_result();
     IRastrTablesPtr tablesx{ m_pqastra->getRastr()->Tables() };
@@ -477,6 +480,7 @@ void RtabWidget::SetLinkedForm( LinkedForm _lf)
 
     GridFilterGroupCondition* groupCondition = new GridFilterGroupCondition(view->filter());
     CustomFilterCondition* condition = new CustomFilterCondition(view->filter());
+
     groupCondition->addCondition(condition);
     for (long rind : vind)
         condition->addRow(rind);
@@ -494,16 +498,20 @@ void RtabWidget::onOpenLinkedForm( LinkedForm _lf)
         return;
 
     RtabWidget *prtw = new RtabWidget(m_pqastra,*pUIForm,m_pRTDM,m_DockManager,this);
-    prtw->SetLinkedForm(_lf);
+    //prtw->SetLinkedForm(_lf);
 
     // connect(button, &QPushButton::clicked, [this, text] { clicked(text); });
     //connect(view, &GridTableView::cellClicked, [this] { FillBindVals(); });
 
-    connect(this->view, SIGNAL(cellClicked( CellClickEventArgs* )), prtw,
+    _lf.conn = connect(this->view, SIGNAL(cellClicked( CellClickEventArgs* )), prtw,
             SLOT(onLinkedFormUpdate( CellClickEventArgs*)));
+
+    prtw->SetLinkedForm(_lf);
 
     auto dw = new ads::CDockWidget( stringutils::cp1251ToUtf8(pUIForm->Name()).c_str(), this);
     dw->setWidget(prtw->m_grid);
+    connect( dw, SIGNAL( closed() ),
+            prtw, SLOT( OnClose() ) );                    // emit RtabWidget->closeEvent
 
     auto area = m_DockManager->addDockWidgetTab(ads::BottomAutoHideArea, dw);
     dw->setFeature(ads::CDockWidget::DockWidgetDeleteOnClose, true);
@@ -695,6 +703,9 @@ void RtabWidget::insertRow_qtitan()
     view->beginUpdate();
     prm->insertRows(row,1,index);
     view->endUpdate();
+
+    this->update(0,0,1000,1000);
+    this->repaint(0,0,1000,1000);
 }
 void RtabWidget::deleteRow()
 {

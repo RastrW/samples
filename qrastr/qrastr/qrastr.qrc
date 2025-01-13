@@ -11,5 +11,6 @@
         <file>images/sortdesc.png</file>
         <file>images/Rastr3_grid_insrow_16x16.png</file>
         <file>images/Rastr3_grid_delrow_16x16.png</file>
+        <file>images/Bee.png</file>
     </qresource>
 </RCC>

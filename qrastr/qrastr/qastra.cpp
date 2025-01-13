@@ -111,6 +111,11 @@ eASTCode QAstra::Rgm(const std::string_view& parameters){
     IRastrPayload  rgmresult{ sp_rastr_->Rgm("") };
     return rgmresult.Value();
 }
+eASTCode QAstra::Opf(const std::string_view& parameters){
+    //IRastrPayload  opfresult{ sp_rastr_->OPF("") };
+    IRastrPayload  opfresult{ sp_rastr_->OPF(parameters) };
+    return opfresult.Value();
+}
 std::string QAstra::GetVal( const std::string_view& Table, const std::string_view& Col , const long row ){
     IRastrTablesPtr tablesx{ sp_rastr_->Tables() };
     IRastrPayload tablecount{ tablesx->Count() };

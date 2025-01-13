@@ -80,6 +80,7 @@ private slots:
     void showFormSettings();
     void about();
     void rgm_wrap();
+    void oc_wrap();
     void onDlgMcr();
     void onOpenForm(QAction* p_actn);
     void onButton2Click();
@@ -126,11 +127,12 @@ private:
     void createCalcLayout();
     void createStatusBar();
     void logCacheFlush();
+    bool maybeSave();
 #if(!defined(QICSGRID_NO))
     MdiChild *activeMdiChild();
     QMdiSubWindow *findMdiChild(const QString &fileName);
 #endif
-    void closeEvent(QCloseEvent *event)override;
+    void closeEvent(QCloseEvent *event) override;
     QMdiArea*          m_workspace     = nullptr;
     McrWnd*            m_pMcrWnd       = nullptr;
     FormProtocol*      m_pFormProtocol = nullptr;

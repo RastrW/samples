@@ -268,6 +268,14 @@ void MainWindow::setQAstra(const std::shared_ptr<QAstra>& sp_qastra){
     }
 }
 void MainWindow::closeEvent(QCloseEvent *event){
+
+   /* if (maybeSave()) {
+        writeSettings();
+        event->accept();
+    } else {
+        event->ignore();
+    }*/
+
     QMainWindow::closeEvent(event);
     writeSettings();
     spdlog::warn( "MainWindow::closeEvent");
@@ -435,6 +443,19 @@ void MainWindow::rgm_wrap(){
     statusBar()->showMessage( str_msg.c_str(), 0 );
     emit rgm_signal();
 }
+void MainWindow::oc_wrap(){
+    eASTCode code = m_sp_qastra->Opf("s");
+    std::string str_msg = "";
+    if (code == eASTCode::AST_OK){
+        str_msg = "Оценка состояния выполнена успешно";
+        spdlog::info("{}", str_msg);
+    }else{
+        str_msg = "Расчет оценки состояния завершился аварийно!";
+        spdlog::error("{} : {}", static_cast<int>(code), str_msg);
+    }
+    statusBar()->showMessage( str_msg.c_str(), 0 );
+    emit rgm_signal();
+}
 void MainWindow::onDlgMcr(){
     McrWnd* pMcrWnd = new McrWnd(this) ;
     pMcrWnd->show();
@@ -456,26 +477,32 @@ void MainWindow::onOpenForm( QAction* p_actn ){
     // Docking
     if(false){
         QDockWidget *dock = new QDockWidget( stringutils::cp1251ToUtf8(form.Name()).c_str(), this);
-        //dock->setWidget(prtw);
-        dock->setWidget(prtw->m_grid);
+        dock->setWidget(prtw);
+        //dock->setWidget(prtw->m_grid);
         dock->setAllowedAreas(Qt::LeftDockWidgetArea | Qt::RightDockWidgetArea | Qt::TopDockWidgetArea | Qt::BottomDockWidgetArea | Qt::AllDockWidgetAreas);
         addDockWidget(Qt::TopDockWidgetArea, dock);
     }else{
         static int i = 0;
         auto dw = new ads::CDockWidget( stringutils::cp1251ToUtf8(form.Name()).c_str(), this);
         auto dw2 = new ads::CDockWidget( stringutils::cp1251ToUtf8(form.Name()).c_str(), this);
-        //dw->setWidget(prtw);
+
         dw->setWidget(prtw->m_grid);
         dw2->setWidget(prtw);
         dw->setFeature(ads::CDockWidget::DockWidgetDeleteOnClose, true);
-        //dw2->setFeature(ads::CDockWidget::DockWidgetDeleteOnClose, true);
-        //auto area = m_DockManager->addDockWidgetTab(ads::CenterDockWidgetArea, dw);
+        dw2->setFeature(ads::CDockWidget::DockWidgetDeleteOnClose, true);
+        dw2->setFeature(ads::CDockWidget::DockWidgetForceCloseWithArea, true);
+
         auto area = m_DockManager->addDockWidgetTab(ads::TopDockWidgetArea, dw);
         auto area2 = m_DockManager->addDockWidgetTab(ads::BottomDockWidgetArea, dw2);
+
+        connect( dw2, SIGNAL( closed() ),
+                prtw, SLOT( OnClose() ) );                    // emit RtabWidget->closeEvent
+        connect( dw, SIGNAL( closed() ),
+                prtw, SLOT( OnClose() ) );                    // emit RtabWidget->closeEvent
+
         qDebug() << "doc dock widget created!" << dw << area;
     }
-    prtw->show();
-    //prtw->m_grid->show();
+    //prtw->show();
 #if(!defined(QICSGRID_NO))
     const nlohmann::json j_form = up_rastr_->GetJForms()[n_indx];
     MdiChild *child = createMdiChild( j_form );
@@ -567,6 +594,10 @@ void MainWindow::createActions(){
     actRGM->setShortcut(tr("F5"));
     actRGM->setStatusTip(tr("Calc rgm"));
     connect(actRGM, SIGNAL(triggered()), this, SLOT(rgm_wrap()));
+    QAction* actOC = new QAction(QIcon(":/images/Bee.png"),tr("&oc"), this);
+    actOC->setShortcut(tr("F6"));
+    actOC->setStatusTip(tr("Calc oc"));
+    connect(actOC, SIGNAL(triggered()), this, SLOT(oc_wrap()));
     //windows
     QAction* closeAct = new QAction(tr("Cl&ose"), this);
     closeAct->setShortcut(tr("Ctrl+F4"));
@@ -608,6 +639,7 @@ void MainWindow::createActions(){
     menuMacro->addAction(ActMacro);
     QMenu* menuCalc = menuBar()->addMenu(tr("&Calc"));
     menuCalc->addAction(actRGM);
+    menuCalc->addAction(actOC);
     m_menuOpen = menuBar()->addMenu(tr("&Open") );
     menuBar()->addSeparator();
     QMenu* menuWindow = menuBar()->addMenu(tr("&Window"));
@@ -653,6 +685,7 @@ void MainWindow::createActions(){
     toolbarFile->addAction(saveAct);
     m_toolbarCalc = addToolBar(tr("Calc"));
     m_toolbarCalc->addAction(actRGM);
+    m_toolbarCalc->addAction(actOC);
 
     //XZ
     createCalcLayout();
@@ -727,61 +760,25 @@ void MainWindow::createCalcLayout(){
 void MainWindow::createStatusBar(){
     statusBar()->showMessage(tr("Ready"));
 }
-#if(!defined(QICSGRID_NO))
-MdiChild *MainWindow::createMdiChild( nlohmann::json j_form ){
-    //MdiChild* child = new MdiChild(id_rastr_, j_form ,mdiChildGrid::createGrid,mdiChildHeaderGrid::createHeaderGrid,this);
-    MdiChild* child = new MdiChild( up_rastr_->GetRastrId(), j_form, mdiChildGrid::createGrid,mdiChildHeaderGrid::createHeaderGrid,this);
-    QObject::connect(this, SIGNAL(rgm_signal()), child, SLOT(update_data()));
-    //QObject::connect(child, SIGNAL(rowsDeleted()), child, SLOT(update_data()));
-    m_workspace->addSubWindow(child);
-    return child;
-}
-MdiChild *MainWindow::activeMdiChild(){
-    if (m_workspace->activeSubWindow())
-        return qobject_cast<MdiChild *>(m_workspace->activeSubWindow()->widget());
-    return 0;
-}
-QicsTable* MainWindow::activeTable(){
-    QMdiSubWindow* activeWindow = m_workspace->activeSubWindow();
-    if(!activeWindow)
-        return 0;
-    QicsTable *table = static_cast<QicsTable*>(activeMdiChild());
-    return table;
-}
-QMdiSubWindow *MainWindow::findMdiChild(const QString &fileName){
-    QString canonicalFilePath = QFileInfo(fileName).canonicalFilePath();
-    foreach (QMdiSubWindow *subWindow, m_workspace->subWindowList()) {
-        MdiChild *mdiChild = qobject_cast<MdiChild *>(subWindow->widget());
-        if (mdiChild->currentFile() == canonicalFilePath)
-            return subWindow;
+
+bool MainWindow::maybeSave()
+{
+   // if (!textEdit->document()->isModified())
+   //     return true;
+    const QMessageBox::StandardButton ret
+        = QMessageBox::warning(this, tr("Application"),
+                               tr("The document has been modified.\n"
+                                  "Do you want to save your changes?"),
+                               QMessageBox::Save | QMessageBox::Discard | QMessageBox::Cancel);
+    switch (ret) {
+    case QMessageBox::Save:
+        //return save();
+        return true;
+    case QMessageBox::Cancel:
+        return false;
+    default:
+        break;
     }
-    return 0;
+    return true;
 }
-void MainWindow::sortAscending(){
-    QicsTable *table = activeTable();
-    if (table) {
-        QicsSelectionList *list = table->selectionList(true);
-        if (!list)
-            return;
-        QVector<int> selectedCols = list->columns().toVector();
-        if (selectedCols.size() <= 0) selectedCols << 0;
-        //QicsRegion reg = list->region();
-        //table->sortRows(selectedCols, Qics::Ascending, reg.startRow(), reg.endRow());
-        table->sortRows(selectedCols, Qics::Ascending);
-    }
-}
-void MainWindow::sortDescending(){
-    QicsTable *table = activeTable();
-    if (table) {
-        QicsSelectionList *list = table->selectionList(true);
-        if (!list)
-            return;
-        QVector<int> selectedCols = list->columns().toVector();
-        if (selectedCols.size() <= 0) selectedCols << 0;
-        //QicsRegion reg = list->region();
-        //table->sortRows(selectedCols, Qics::Ascending, reg.startRow(), reg.endRow());
-        table->sortRows(selectedCols, Qics::Descending);
-    }
-}
-#endif //#if(!defined(QICSGRID_NO))
 

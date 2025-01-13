@@ -88,7 +88,6 @@ public :
             auto operands = split2(_str, op.first);
             if (operands.size() == 2)
             {
-
                 bfindop = true;
                 double v1 = res(trim(operands[0]));
                 double v2 = res(trim(operands[1]));
@@ -103,6 +102,7 @@ public :
             std::cout << "val: " << _str << std::endl;
             return _str.empty()?0.0: std::stod(trim(_str).c_str());
         }
+        return 0.0;
 
     }
     double perform_operation(double v1, double v2, op operation)

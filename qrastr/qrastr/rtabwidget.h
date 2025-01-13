@@ -106,23 +106,20 @@ typedef QMap<int, ItemState> itemStateMap;
 #define RTABLEVIEWCOLINDEXROLE Qt::UserRole + 1
 
 class RtabWidget : public QWidget
-//class RtabWidget : public QTableWidget
 {
     Q_OBJECT
 public:
     explicit RtabWidget(QWidget *parent = nullptr);
-    //explicit RtabWidget(QAstra* pqastra, CUIForm UIForm, QWidget *parent = nullptr);
-    //explicit RtabWidget(QAstra* pqastra, CUIForm UIForm, RTablesDataManager* pRTDM, QWidget *parent = nullptr);
     explicit RtabWidget(QAstra* pqastra, CUIForm UIForm, RTablesDataManager* pRTDM, ads::CDockManager* pDockManager ,QWidget *parent = nullptr);
-    /*~RtabWidget() //C2036
+    /*~RtabWidget(){}; //C2036
     {
         //qDebug()<<"RtabWidget::Destructor "<< "[" <<m_UIForm.Name().c_str() << "]";
     };*/
 
-
-
     void SetTableView(QTableView& tv, RModel& mm, int myltiplier = 10);
     void SetTableView(Qtitan::GridTableView& tv, RModel& mm, int myltiplier = 10 );
+    void closeEvent(QCloseEvent* event) override;
+
 private:
     void test(const QModelIndexList& fromIndices);
     void copyMimeData(const QModelIndexList& fromIndices, QMimeData* mimeData, const bool withHeaders, const bool inSQL);
@@ -130,16 +127,13 @@ private:
     void copy();
     std::tuple<int,double> GetSumSelected();
     QMenu* CunstructLinkedFormsMenu(std::string form_name);
-protected:
-    //void closeEvent(QCloseEvent *event) override ;
-    //void closeEvent(QCloseEvent *event)  ;
-    virtual void closeEvent(QCloseEvent* event);    // not work
 
 signals:
     void onCornerButtonPressed();
     void CondFormatsModified();
 public slots:
-    //void cellClicked( CellClickEventArgs* );
+    void OnClose();
+    void onvisibilityChanged(bool visible);
     void contextMenu(ContextMenuEventArgs* args);
     void customMenuRequested(QPoint pos);
     void customHeaderMenuRequested(QPoint pos);
@@ -176,8 +170,6 @@ public slots:
     void SetLinkedForm( LinkedForm _lf);
     void onOpenLinkedForm(LinkedForm _lf );    // ТИ:Каналы ; id1=%d & id2=0 & prv_num<8 ; 801
 
-
-
 private slots:
     void CreateModel(QAstra* pqastra,CUIForm* pUIForm);
     void onRTDM_UpdateModel(std::string tname);
@@ -189,6 +181,7 @@ public:
     QAstra* m_pqastra;
     RTablesDataManager* m_pRTDM;
     ads::CDockManager* m_DockManager;
+
     //QTtitanGrid
     Qtitan::Grid* m_grid;
     Qtitan::GridTableView* view;
@@ -214,9 +207,6 @@ protected:
     itemStateMap tItemStateMap;
     QFrame customizeFrame;
     QListWidget customizeListWidget;
-
-signals:
-
 };
 
 #endif // RTABWIDGET_H
