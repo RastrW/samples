@@ -94,6 +94,7 @@ QAstra::QAstra(QObject *parent)
 }
 void QAstra::setRastr(const _sp_rastr& sp_rastr_in){
     sp_rastr_     = sp_rastr_in;
+    sp_rastr_->SetOutEnumAsInt(true);
     IRastrResultVerify(sp_rastr_->SubscribeEvents(this));
 }
 QAstra::_sp_rastr QAstra::getRastr() const {
@@ -116,7 +117,7 @@ eASTCode QAstra::Opf(const std::string_view& parameters){
     IRastrPayload  opfresult{ sp_rastr_->OPF(parameters) };
     return opfresult.Value();
 }
-std::string QAstra::GetVal( const std::string_view& Table, const std::string_view& Col , const long row ){
+std::string QAstra::GetStringVal( const std::string_view& Table, const std::string_view& Col , const long row ){
     IRastrTablesPtr tablesx{ sp_rastr_->Tables() };
     IRastrPayload tablecount{ tablesx->Count() };
     IRastrTablePtr table{ tablesx->Item(Table) };
@@ -128,6 +129,46 @@ std::string QAstra::GetVal( const std::string_view& Table, const std::string_vie
     return str_val;
 }
 
+FieldVariantData QAstra::GetVal( const std::string_view& Table, const std::string_view& Col , const long row )
+{
+
+    IRastrTablesPtr tablesx{ sp_rastr_->Tables() };
+    IRastrPayload tablecount{ tablesx->Count() };
+    IRastrTablePtr table{ tablesx->Item(Table) };
+    IRastrObjectPtr<IPlainRastrColumns> columns{ table->Columns() };
+    IRastrColumnPtr col {columns->Item(Col)};
+    IRastrVariantPtr v_ptr{ col->Value(row) };
+
+    ePropType col_type = IRastrPayload(col->Type()).Value();
+
+    switch (col_type)
+    {
+    case ePropType::Bool:
+        return IRastrPayload(v_ptr->Bool()).Value();
+    case ePropType::Double:
+        return IRastrPayload(v_ptr->Double()).Value();
+        break;
+    case ePropType::Int:
+    case ePropType::Enpic:
+    case ePropType::Color:
+    //case ePropType::Enum:
+    //case ePropType::Superenum:
+        return IRastrPayload(v_ptr->Long()).Value();
+        break;
+    case ePropType::String:
+        return IRastrPayload(v_ptr->String()).Value();
+        break;
+    case ePropType::Enum:
+    case ePropType::Superenum:
+       // return IRastrPayload(v_ptr->String()).Value();
+        return IRastrPayload(v_ptr->Long()).Value();
+        break;
+
+
+    default:
+        break;
+    }
+}
 
 
 

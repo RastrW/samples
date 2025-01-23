@@ -5,6 +5,7 @@
 //#include "IPlainRastr.h"
 #include "common_qrastr.h"
 #include "qastra_events_data.h"
+//#include "IPlainRastrWrappers.h"
 
 class CUIFormsCollection;
 class QAstra
@@ -161,9 +162,10 @@ public:
     void      Save( const std::string_view& FilePath, const std::string_view& TemplatePath ) ;
     eASTCode  Rgm(const std::string_view& parameters = {});
     eASTCode  Opf(const std::string_view& parameters = {});
-    //IPlainRastrResultObject<T>  GetVal( const std::string_view& Table, const std::string_view& Col , const long index );
+    //IPlainRastrResultObject<T>  GetStringVal( const std::string_view& Table, const std::string_view& Col , const long index );
     //IRastrVariantPtr
-    std::string GetVal( const std::string_view& Table, const std::string_view& Col , const long row );
+    FieldVariantData GetVal( const std::string_view& Table, const std::string_view& Col , const long row );
+    std::string GetStringVal( const std::string_view& Table, const std::string_view& Col , const long row );
 signals:
     void onRastrHint( const _hint_data& );
     void onRastrLog ( const _log_data&  );

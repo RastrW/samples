@@ -70,3 +70,11 @@ void formimportcsv::on_pushButton_2_clicked()
     File = (fileDlg.selectedFiles())[0].toStdString();
 }
 
+
+void formimportcsv::on_pushButton_3_clicked()
+{
+    int a = 1;
+    int b = 2;
+
+}
+

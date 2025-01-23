@@ -248,6 +248,9 @@ if(${QT_VERSION_MAJOR} GREATER_EQUAL 6)
 qt_add_executable( ${PROJECT_NAME}
         MANUAL_FINALIZATION
         ${PROJECT_SOURCES}
+        formgroupcorrection.h formgroupcorrection.cpp formgroupcorrection.ui
+        formimportcsv2.h formimportcsv2.cpp formimportcsv2.ui
+
 
 
     )

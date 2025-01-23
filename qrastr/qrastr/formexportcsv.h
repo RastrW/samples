@@ -19,6 +19,8 @@ private slots:
     void on_pushButton_clicked();
     void accept();
 
+    void on_formexportcsv_accepted();
+
 private:
     Ui::formexportcsv *ui;
     RData* prdata_;

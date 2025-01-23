@@ -332,6 +332,7 @@ void RtabWidget::contextMenu(ContextMenuEventArgs* args)
     args->contextMenu()->addAction("Экспорт CSV", this, SLOT(OpenExportCSVForm()));
     args->contextMenu()->addAction("Импорт CSV", this, SLOT(OpenImportCSVForm()));
     args->contextMenu()->addAction("Выборка", this, SLOT(OpenSelectionForm()));
+    args->contextMenu()->addAction("Групповая коррекция", this, SLOT(OpenGroupCorrection()));
     args->contextMenu()->addAction(condFormatAction);
 
     //connect(sC_CTRL_I, &QShortcut::activated, this, &RtabWidget::insertRow);
@@ -344,6 +345,8 @@ void RtabWidget::contextMenu(ContextMenuEventArgs* args)
     connect(condFormatAction, &QAction::triggered, this, [&]() {
         emit editCondFormats(column);
     });
+
+
 }
 
 void RtabWidget::customMenuRequested(QPoint pos){
@@ -742,6 +745,12 @@ void RtabWidget::OpenSelectionForm()
     FormSelection* Selection = new FormSelection(this->m_selection, this);
     Selection->show();
 }
+void RtabWidget::OpenGroupCorrection()
+{
+    RCol* prcol = prm->getRCol(column);
+    formgroupcorrection* fgc =  new formgroupcorrection(prm->getRdata(),prcol,this);
+    fgc->show();
+}
 
 void RtabWidget::OpenLinkedForm(std::string name,std::string selection , std::vector<int> keys)
 {
@@ -749,13 +758,13 @@ void RtabWidget::OpenLinkedForm(std::string name,std::string selection , std::ve
 }
 void RtabWidget::OpenExportCSVForm()
 {
-
     formexportcsv* ExportCsv = new formexportcsv( prm->getRdata(),this);
     ExportCsv->show();
 }
 void RtabWidget::OpenImportCSVForm()
 {
-    formimportcsv* ImportCsv = new formimportcsv( prm->getRdata(),this);
+    //formimportcsv* ImportCsv = new formimportcsv( prm->getRdata(),this);
+    formimportcsv2* ImportCsv = new formimportcsv2( prm->getRdata(),this);
     ImportCsv->show();
 }
 

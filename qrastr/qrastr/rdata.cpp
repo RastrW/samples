@@ -9,6 +9,10 @@ void RData::Initialize(CUIForm _form, QAstra* _pqastra)
     IRastrTablesPtr tablesx{ _pqastra->getRastr()->Tables() };
     IRastrTablePtr table{ tablesx->Item(t_name_) };
     IRastrColumnsPtr columns{ table->Columns() };
+    //table->Title(); ??
+    t_title_ = stringutils::cp1251ToUtf8(_form.Name().c_str());
+
+
     //std::string table_Name = IRastrPayload(IRastrVariantPtr(table->Name()));
 
     // В RData создаем RCol по образу формы
@@ -40,6 +44,8 @@ void RData::Initialize(CUIForm _form, QAstra* _pqastra)
         IRastrColumnPtr col{ columns->Item(index) };
         std::string col_Type = IRastrPayload(IRastrVariantPtr((col)->Property(FieldProperties::Type))->String()).Value();
         std::string col_Name = IRastrPayload(col->Name()).Value();
+        std::string col_Title = IRastrPayload(IRastrVariantPtr((col)->Property(FieldProperties::Title))->String()).Value();
+
         //qDebug() << "index : " << index << " col_Type " << col_Type << " col_Name " << col_Name;
         vCols_.push_back(col_Name);
         str_cols_.append(col_Name);
@@ -48,6 +54,7 @@ void RData::Initialize(CUIForm _form, QAstra* _pqastra)
         RCol rc;
         rc.str_name_ = col_Name;
         rc.table_name_ = t_name_;
+        rc.title_ = col_Title;
         rc.index = index;
         rc.setMeta(_pqastra);
         rc.hidden = true;

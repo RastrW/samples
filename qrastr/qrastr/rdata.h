@@ -635,13 +635,20 @@ public:
         return str_unit;
     }
 
+    void calc(std::string expression , std::string selection) const{
+        IRastrTablesPtr tablesx{ pqastra_->getRastr()->Tables() };
+        IRastrTablePtr table{ tablesx->Item(table_name_) };
+        IRastrResultVerify(table->SetSelection(selection));
+        IRastrColumnsPtr columns{ table->Columns() };
+        IRastrColumnPtr col_ptr{ columns->Item(str_name_) };
+        IRastrResultVerify( col_ptr->Calculate(expression));
+    }
 
     enComPropTT com_prop_tt;
     std::string    str_name_;
     std::string    table_name_;
     _en_data       en_data_;
-    //std::string nameref;
-    //std::string title_;
+    std::string title_;
     long    index;
     bool hidden ;
 private:

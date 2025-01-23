@@ -38,6 +38,8 @@ private:
     void GetDataBlock(std::string tname , QDataBlock& QDB);
     std::string GetTCols(std::string tname);
     long GetColIndex(std::string tname,std::string cname);
+    ePropType GetColType(std::string tname,std::string cname);
+
 
 signals:
     void RTDM_UpdateModel(std::string tname);

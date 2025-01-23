@@ -11,8 +11,10 @@
 #include <QSortFilterProxyModel>
 #include "ColPropForm.h"
 #include "formselection.h"
+#include "formgroupcorrection.h"
 #include "formexportcsv.h"
 #include "formimportcsv.h"
+#include "formimportcsv2.h"
 #include "rmodel.h"
 #include "RtableView.h"
 #include "rtablesdatamanager.h"
@@ -152,6 +154,7 @@ public slots:
     void widebydata();
     void OpenColPropForm();
     void OpenSelectionForm();
+    void OpenGroupCorrection();
     void OpenLinkedForm(std::string name,std::string selection , std::vector<int> keys );    // ТИ:Каналы ; id1=%d & id2=0 & prv_num<8 ; 801
     void OpenExportCSVForm();
     void OpenImportCSVForm();

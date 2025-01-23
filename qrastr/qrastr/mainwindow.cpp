@@ -482,23 +482,23 @@ void MainWindow::onOpenForm( QAction* p_actn ){
         dock->setAllowedAreas(Qt::LeftDockWidgetArea | Qt::RightDockWidgetArea | Qt::TopDockWidgetArea | Qt::BottomDockWidgetArea | Qt::AllDockWidgetAreas);
         addDockWidget(Qt::TopDockWidgetArea, dock);
     }else{
-        static int i = 0;
+        //QTitanGrid
         auto dw = new ads::CDockWidget( stringutils::cp1251ToUtf8(form.Name()).c_str(), this);
-        auto dw2 = new ads::CDockWidget( stringutils::cp1251ToUtf8(form.Name()).c_str(), this);
-
         dw->setWidget(prtw->m_grid);
-        dw2->setWidget(prtw);
         dw->setFeature(ads::CDockWidget::DockWidgetDeleteOnClose, true);
-        dw2->setFeature(ads::CDockWidget::DockWidgetDeleteOnClose, true);
-        dw2->setFeature(ads::CDockWidget::DockWidgetForceCloseWithArea, true);
-
         auto area = m_DockManager->addDockWidgetTab(ads::TopDockWidgetArea, dw);
-        auto area2 = m_DockManager->addDockWidgetTab(ads::BottomDockWidgetArea, dw2);
-
-        connect( dw2, SIGNAL( closed() ),
-                prtw, SLOT( OnClose() ) );                    // emit RtabWidget->closeEvent
         connect( dw, SIGNAL( closed() ),
                 prtw, SLOT( OnClose() ) );                    // emit RtabWidget->closeEvent
+
+        // Stock QT grid
+        /*auto dw2 = new ads::CDockWidget( stringutils::cp1251ToUtf8(form.Name()).c_str(), this);
+        dw2->setWidget(prtw);
+        dw2->setFeature(ads::CDockWidget::DockWidgetDeleteOnClose, true);
+        dw2->setFeature(ads::CDockWidget::DockWidgetForceCloseWithArea, true);
+        auto area2 = m_DockManager->addDockWidgetTab(ads::BottomDockWidgetArea, dw2);
+        connect( dw2, SIGNAL( closed() ),
+                prtw, SLOT( OnClose() ) );                    // emit RtabWidget->closeEvent
+        */
 
         qDebug() << "doc dock widget created!" << dw << area;
     }

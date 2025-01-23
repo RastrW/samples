@@ -51,15 +51,86 @@ void  RTablesDataManager::onRastrHint(const _hint_data& hint_data)
 
         }
         break;
+    case EventHints::ChangeColumn:
+        it = mpTables.find(tname);
+        if (it != mpTables.end() )
+        {
+            IRastrTablesPtr tables{ m_pqastra->getRastr()->Tables() };
+            IRastrTablePtr table{ tables->Item(tname) };
+            DataBlock<FieldVariantData> variant_block;
+            IRastrResultVerify(table->DataBlock(cname, variant_block));
+
+            long col_ind = GetColIndex(tname,cname);
+            ePropType col_type = GetColType(tname,cname);
+            for (size_t i = 0; i < (*it).second->RowsCount() ; i++)
+            {
+                switch (col_type)
+                {
+                    case ePropType::Double:
+                        it->second->Set(i,col_ind,  std::visit(ToDouble(),variant_block.Get(i,0)));
+                    break;
+                    case ePropType::Int:
+                    case ePropType::Enum:
+                    case ePropType::Superenum:
+                    case ePropType::Enpic:
+                    case ePropType::Color:
+                        it->second->Set(i,col_ind,  std::visit(ToLong(),variant_block.Get(i,0)));
+                        break;
+                    case ePropType::String:
+                        it->second->Set(i,col_ind,  std::visit(ToString(),variant_block.Get(i,0)));
+                        break;
+                    default:
+                        break;
+                }
+            }
+        }
+        break;
+
     case EventHints::ChangeData:
         it = mpTables.find(tname);
         if (it != mpTables.end() )
         {
+            long col_ind = GetColIndex(tname,cname);
+            IRastrTablesPtr tablesx{ m_pqastra->getRastr()->Tables() };
+            IRastrPayload tablecount{ tablesx->Count() };
+            IRastrTablePtr table{ tablesx->Item(tname) };
+            IRastrObjectPtr<IPlainRastrColumns> columns{ table->Columns() };
+            IRastrColumnPtr col {columns->Item(cname)};
+            IRastrVariantPtr v_ptr{ col->Value(row) };
+
             FieldVariantData val = m_pqastra->GetVal(tname,cname,row);
-            long ind = GetColIndex(tname,cname);
-            it->second->Set(row,ind,val);
+            it->second->Set(row,col_ind,val);
+            break;
+
+            /*ePropType col_type = GetColType(tname,cname);
+            //double dval = IRastrPayload(v_ptr->Double()).Value();
+            switch (col_type)
+            {
+            case ePropType::Double:
+                it->second->Set(row,col_ind, IRastrPayload(v_ptr->Double()).Value());
+                break;
+            case ePropType::Int:
+            case ePropType::Enpic:
+            case ePropType::Color:
+            case ePropType::Enum:
+            case ePropType::Superenum:
+                it->second->Set(row,col_ind,  IRastrPayload(v_ptr->Long()).Value());
+                break;
+            case ePropType::String:
+                it->second->Set(row,col_ind, IRastrPayload(v_ptr->String()).Value());
+                break;
+            /*case ePropType::Enum:
+            case ePropType::Superenum:
+                it->second->Set(row,col_ind,IRastrPayload(v_ptr->String()).Value());
+                break;
+
+            default:
+                break;
+            }
+            */
         }
         break;
+
     case EventHints::InsertRow:
     case EventHints::DeleteRow:
         it = mpTables.find(tname);
@@ -184,6 +255,17 @@ long  RTablesDataManager::GetColIndex(std::string tname,std::string cname)
     IRastrColumnsPtr columns{ table->Columns() };
     IRastrColumnPtr col{ columns->Item(cname) };
     long res = IRastrPayload(col->Index()).Value();
+
+    return res;
+}
+ePropType  RTablesDataManager::GetColType(std::string tname,std::string cname)
+{
+    std::string str_cols_ = "";
+    IRastrTablesPtr tablesx{ m_pqastra->getRastr()->Tables() };
+    IRastrTablePtr table{ tablesx->Item(tname) };
+    IRastrColumnsPtr columns{ table->Columns() };
+    IRastrColumnPtr col{ columns->Item(cname) };
+    ePropType res = IRastrPayload(col->Type()).Value();
 
     return res;
 }
