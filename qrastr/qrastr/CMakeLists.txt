@@ -235,9 +235,9 @@ set(PROJECT_SOURCES
     formexportcsv.ui
     qtitangrid.h
     qtitangrid.cpp
-    formimportcsv.h
-    formimportcsv.cpp
-    formimportcsv.ui
+
+
+
 
 
     linkedform.h
