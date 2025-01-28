@@ -51,6 +51,7 @@ RtabWidget::RtabWidget(QWidget *parent) :
     view->options().setGridLineWidth(1);
     view->tableOptions().setColumnAutoWidth(true);
     view->options().setSelectionPolicy(GridViewOptions::MultiCellSelection);
+    //view->options().setNewRowPlace(Qtitan::AtEnd);                        // кнока добавления строки
      //view->options().f
     //view->tableOptions().fi
     //view->options().setGestureEnabled(true);
@@ -110,8 +111,8 @@ RtabWidget::RtabWidget(QAstra* pqastra,CUIForm UIForm,RTablesDataManager* pRTDM,
     connect(this->ptv, SIGNAL(customContextMenuRequested(QPoint)),
             SLOT(customMenuRequested(QPoint)));
 
-    connect(this->ptv, SIGNAL(ContextMenu(QPoint)),
-            SLOT(customMenuRequested(QPoint)));
+    //connect(this->ptv, SIGNAL(ContextMenu(QPoint)),
+    //        SLOT(customMenuRequested(QPoint)));
 
     connect(this->ptv, SIGNAL(pressed(const QModelIndex &)),
             SLOT(onItemPressed(const QModelIndex &)));
@@ -130,7 +131,7 @@ RtabWidget::RtabWidget(QAstra* pqastra,CUIForm UIForm,RTablesDataManager* pRTDM,
 
     CreateModel(pqastra,&m_UIForm);
 
-    //SetTableView(*ptv,*prm);                // ширина по шаблону
+    SetTableView(*ptv,*prm);                // ширина по шаблону
     ptv->resizeColumnsToContents();         // ширина по контенту
     ptv->setParent(this);
 
@@ -156,6 +157,8 @@ void RtabWidget::closeEvent(QCloseEvent *event)
     } else {
         QWidget::closeEvent(event);
     }
+
+    this->prm->getRdata()->pnparray_.reset();
 };
 void RtabWidget::onvisibilityChanged(bool visible)
 {
@@ -174,6 +177,7 @@ void RtabWidget::CreateModel(QAstra* pqastra, CUIForm* pUIForm)
     prm->setForm(pUIForm);
     prm->populateDataFromRastr();
 
+
     view->beginUpdate();
     view->setModel(prm.get());
     ptv->setModel(proxyModel);
@@ -181,6 +185,8 @@ void RtabWidget::CreateModel(QAstra* pqastra, CUIForm* pUIForm)
     for (RCol& rcol : *prm->getRdata())
     {
         column_qt = (Qtitan::GridTableColumn *)view->getColumn(rcol.index);
+        if (column_qt == nullptr)
+            continue;
 
         //Видимость колонок
         ptv->setColumnHidden(rcol.index,rcol.hidden);
@@ -322,8 +328,10 @@ void RtabWidget::contextMenu(ContextMenuEventArgs* args)
     //args->contextMenu()->addAction(tr("Скрыть колонку"),this,SLOT(hideColumns()));
     args->contextMenu()->addSeparator();
     args->contextMenu()->addAction(QIcon(":/images/Rastr3_grid_insrow_16x16.png"),tr("Insert Row"),this,SLOT(insertRow_qtitan()),QKeySequence(Qt::CTRL | Qt::Key_I));
+    args->contextMenu()->addAction(QIcon(":/images/Rastr3_grid_insrow_16x16.png"),tr("Add Row"),this,SLOT(AddRow()),QKeySequence(Qt::CTRL | Qt::Key_A));
     args->contextMenu()->addAction(QIcon(":/images/Rastr3_grid_delrow_16x16.png"),tr("Delete Row"),this,SLOT(deleteRow_qtitan()),QKeySequence(Qt::CTRL | Qt::Key_D));
     connect(sC_CTRL_I, &QShortcut::activated, this, &RtabWidget::insertRow_qtitan);
+    connect(sC_CTRL_A, &QShortcut::activated, this, &RtabWidget::AddRow);
     connect(sC_CTRL_D, &QShortcut::activated, this, &RtabWidget::deleteRow_qtitan);
     args->contextMenu()->addSeparator();
     args->contextMenu()->addAction(tr("Выравнивание: по шаблону"),this,SLOT(widebyshabl()));
@@ -697,6 +705,17 @@ void RtabWidget::insertRow()
 {
     prm->insertRows(index.row(),1,index);
 }
+
+void RtabWidget::AddRow()
+{
+    view->beginUpdate();
+    prm->AddRow();
+    view->endUpdate();
+
+    this->update(0,0,1000,1000);
+    this->repaint(0,0,1000,1000);
+
+}
 void RtabWidget::insertRow_qtitan()
 {
     GridSelection* selection = view->selection();
@@ -737,7 +756,7 @@ void RtabWidget::widebydata()
 void RtabWidget::OpenColPropForm()
 {
     RCol* prcol = prm->getRCol(column);
-    ColPropForm* PropForm = new ColPropForm(prm->getRdata(),ptv, prcol);
+    ColPropForm* PropForm = new ColPropForm(prm->getRdata(),ptv,view, prcol);
     PropForm->show();
 }
 void RtabWidget::OpenSelectionForm()

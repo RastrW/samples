@@ -3,11 +3,12 @@
 #include "delegatedoubleitem.h"
 
 
-ColPropForm::ColPropForm(RData* _prdata, RTableView* _ptv,RCol* _prcol,QWidget *parent) :
+ColPropForm::ColPropForm(RData* _prdata, RTableView* _ptv, Qtitan::GridTableView* _view, RCol* _prcol,QWidget *parent) :
     QWidget(parent),
     ui(new Ui::ColPropForm)
 {
     ptv = _ptv;
+    view = _view;
     prdata = _prdata;
 
     prcol = _prcol;
@@ -77,6 +78,10 @@ void ColPropForm::on_btn_ok_clicked()
     prcol->set_prec(prec().toStdString().c_str());
     static_cast<DelegateDoubleItem*>(ptv->itemDelegateForColumn(prcol->index))->set_prec(prec().toInt());
     prdata->pqastra_->getRastr()->SetLockEvent(false);
+
+    Qtitan::GridTableColumn* column_qt = (Qtitan::GridTableColumn *)view->getColumn(prcol->index);
+    ((Qtitan::GridNumericEditorRepository *)column_qt->editorRepository())->setDecimals(prec().toInt());
+
     this->close();
 }
 

@@ -665,6 +665,66 @@ class QDenseDataBlock : public MyDenseDataBlock<T>
             return IPlainRastrRetCode::Failed;
         }
     }
+    IPlainRastrRetCode AddRow(IndexT count = 1) noexcept
+    {
+        try {
+
+            IndexT NewRowsCount_ = this->RowsCount() + count;
+            std::unique_ptr<T[]> NewData_ = std::make_unique<T[]>(NewRowsCount_ * this->ColumnsCount());
+            for (int row = 0 ; row < this->RowsCount() ; row++)
+            {
+                for (int col = 0 ; col < this->ColumnsCount() ; col++)
+                {
+                    size_t indx = row * this->ColumnsCount() + col;
+                    NewData_[indx]  = this->Data()[indx];
+                }
+            }
+
+            //size_t sz_0 = sizeof(this->Data()[0]);
+            //std::memcpy(NewData_.get(),this->Data(),NewRowsCount_ * this->ColumnsCount() * 4);
+            //std::memmove(NewData_.get(),this->Data(),)
+
+            this->RowsCount_ = NewRowsCount_;
+            this->Data_ = std::move( NewData_);
+
+            return IPlainRastrRetCode::Ok;
+        } catch (...) {
+            return IPlainRastrRetCode::Failed;
+        }
+    }
+    IPlainRastrRetCode InsertRow(IndexT insrow ) noexcept
+    {
+        try {
+
+            IndexT NewRowsCount_ = this->RowsCount() + 1;
+            std::unique_ptr<T[]> NewData_ = std::make_unique<T[]>(NewRowsCount_ * this->ColumnsCount());
+            for (int row = 0 ; row < insrow ; row++)
+            {
+                for (int col = 0 ; col < this->ColumnsCount() ; col++)
+                {
+                    size_t indx = row * this->ColumnsCount() + col;
+                    NewData_[indx]  = this->Data()[indx];
+                }
+            }
+
+            for (int row = insrow + 1 ; row < NewRowsCount_ ; row++)
+            {
+                for (int col = 0 ; col < this->ColumnsCount() ; col++)
+                {
+                    size_t indx_old = (row - 1) * this->ColumnsCount() + col;
+                    size_t indx_new = row * this->ColumnsCount() + col;
+                    NewData_[indx_new]  = this->Data()[indx_old];
+                }
+            }
+
+            this->RowsCount_ = NewRowsCount_;
+            this->Data_ = std::move( NewData_);
+
+            return IPlainRastrRetCode::Ok;
+        } catch (...) {
+            return IPlainRastrRetCode::Failed;
+        }
+    }
 };
 
 //template<typename T>

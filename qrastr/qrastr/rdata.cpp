@@ -34,19 +34,22 @@ void RData::Initialize(CUIForm _form, QAstra* _pqastra)
     }*/
 
     IRastrPayload ColumnsCount{ columns->Count() };
-    qDebug() << "ColumnsCount : " << ColumnsCount.Value()+5;
-    reserve( ColumnsCount.Value()+5);                // Без reserve RCol данные обнуляются видимио при reallocation  If a reallocation happens, all contained elements are modified.
-    qDebug() << "reserve : " << ColumnsCount.Value()+5 <<" ok";
+    long n_reserve = ColumnsCount.Value()+5;
+    qDebug() << "ColumnsCount : " << ColumnsCount.Value();
+    reserve( n_reserve);                // Без reserve RCol данные обнуляются видимио при reallocation  If a reallocation happens, all contained elements are modified.
+    qDebug() << "reserve : " << n_reserve <<" ok";
 
+    str_cols_ = "";
     // Берем все колонки таблицы
     for (long index{ 0 }; index < ColumnsCount.Value(); index++)
     {
+        qDebug() << "col_index:"<< index;
         IRastrColumnPtr col{ columns->Item(index) };
         std::string col_Type = IRastrPayload(IRastrVariantPtr((col)->Property(FieldProperties::Type))->String()).Value();
         std::string col_Name = IRastrPayload(col->Name()).Value();
         std::string col_Title = IRastrPayload(IRastrVariantPtr((col)->Property(FieldProperties::Title))->String()).Value();
 
-        //qDebug() << "index : " << index << " col_Type " << col_Type << " col_Name " << col_Name;
+        qDebug() << "index : " << index << " col_Type " << col_Type << " col_Name " << col_Name;
         vCols_.push_back(col_Name);
         str_cols_.append(col_Name);
         str_cols_.append(",");
@@ -244,6 +247,15 @@ void RData::populate_qastra(QAstra* _pqastra, RTablesDataManager* _pRTDM )
      * тогда создаем в менеджере и отдаем указатель
     */
     pnparray_ = _pRTDM->Get(t_name_,str_cols_);
+
+
+    //TEST
+    //long val = 1;
+    //long sz_cols= pnparray_->ColumnsCount();
+    //long sz_rows= pnparray_->RowsCount();
+    //auto val_get = pnparray_->Get(197,118);
+
+    //pnparray_->Set(197,118,val);
 
    /* FieldDataOptions Options;
     Options.SetEnumAsInt(TriBool::True);

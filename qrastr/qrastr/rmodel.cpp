@@ -33,9 +33,10 @@ int RModel::populateDataFromRastr(){
         {
             QStringList list;
             char delimiter = '|';
+            //std::string delimiter = "|";
             std::string strItems =  rcol.NameRef();
-            if (strItems.find_first_of(',') != std::variant_npos)
-                delimiter = ',';
+            //if (strItems.find_first_of(',') != std::variant_npos)
+            //   delimiter = ",";
 
             for (auto val : split(strItems,delimiter))
                 list.append(QString(val.c_str()));
@@ -358,12 +359,26 @@ RData* RModel::getRdata()
     return up_rdata.get();
 }
 
+bool RModel::AddRow(size_t count )
+{
+  //  beginInsertRows(parent,row,row + count -1);
+    IRastrTablesPtr tablesx{ this->pqastra_->getRastr()->Tables() };
+    IRastrPayload tablecount{ tablesx->Count() };
+    IRastrTablePtr table{ tablesx->Item(getRdata()->t_name_) };
+    for (size_t i = 0 ; i < count ; i++ )
+        IPlainRastrResult* pres = table->AddRow();
+   // endInsertRows();
+
+    return true;
+}
 bool RModel::insertRows(int row, int count, const QModelIndex &parent)
 {
+    beginInsertRows(parent,row,row + count -1);
     IRastrTablesPtr tablesx{ this->pqastra_->getRastr()->Tables() };
     IRastrPayload tablecount{ tablesx->Count() };
     IRastrTablePtr table{ tablesx->Item(getRdata()->t_name_) };
     IPlainRastrResult* pres = table->InsertRow(row);
+    endInsertRows();
 
     return true;
 }

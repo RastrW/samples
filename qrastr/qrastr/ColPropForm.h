@@ -17,7 +17,7 @@ class ColPropForm : public QWidget
 
 public:
 //#if(!defined(QICSGRID_NO))
-    explicit ColPropForm(RData* prdata,RTableView* ptv, RCol* prcol, QWidget *parent = nullptr);
+    explicit ColPropForm(RData* prdata,RTableView* ptv,Qtitan::GridTableView* view, RCol* prcol, QWidget *parent = nullptr);
     //explicit ColPropForm(RModel* prmodel,RCol* prcol, QWidget *parent = nullptr);
 //#endif//#if(!defined(QICSGRID_NO))
     ~ColPropForm();
@@ -38,6 +38,7 @@ private slots:
 
 private:
     RTableView* ptv;
+    Qtitan::GridTableView* view;
     Ui::ColPropForm *ui;
     RData* prdata;
     RCol* prcol;

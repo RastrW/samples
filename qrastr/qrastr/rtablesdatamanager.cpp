@@ -86,6 +86,27 @@ void  RTablesDataManager::onRastrHint(const _hint_data& hint_data)
         }
         break;
 
+    case EventHints::AddRow:
+        it = mpTables.find(tname);
+        if (it != mpTables.end() )
+        {
+            QDataBlock* pqdb = it->second.get();
+            IRastrTablesPtr tablesx{ m_pqastra->getRastr()->Tables() };
+            IRastrPayload tablecount{ tablesx->Count() };
+            IRastrTablePtr table{ tablesx->Item(tname) };
+            IRastrObjectPtr<IPlainRastrColumns> columns{ table->Columns() };
+            IRastrPayload rowscount{table->Size()};
+            IRastrPayload columnscount{columns->Count()};
+            long cols_cnt = columnscount.Value();
+            long rows_cnt = rowscount.Value();
+
+            long pnparr_nrows = it->second->RowsCount();
+            long pnparr_ncols = it->second->ColumnsCount();
+
+            //pqdb->SetBlockSize(rows_cnt,cols_cnt,false);
+            pqdb->AddRow();
+        }
+        break;
     case EventHints::ChangeData:
         it = mpTables.find(tname);
         if (it != mpTables.end() )
@@ -95,8 +116,26 @@ void  RTablesDataManager::onRastrHint(const _hint_data& hint_data)
             IRastrPayload tablecount{ tablesx->Count() };
             IRastrTablePtr table{ tablesx->Item(tname) };
             IRastrObjectPtr<IPlainRastrColumns> columns{ table->Columns() };
+            IRastrPayload rowscount{table->Size()};
             IRastrColumnPtr col {columns->Item(cname)};
             IRastrVariantPtr v_ptr{ col->Value(row) };
+            IRastrPayload columnscount{columns->Count()};
+            long cols_cnt = columnscount.Value();
+            long rows_cnt = rowscount.Value();
+
+            long pnparr_nrows = it->second->RowsCount();
+            long pnparr_ncols = it->second->ColumnsCount();
+
+            if (col_ind >= pnparr_ncols )
+            {
+                qDebug()<<"EventHints::ChangeData: col_ind > cols_cnt " <<col_ind << ">" <<cols_cnt;
+                break;
+            }
+            if (row >= pnparr_nrows )
+            {
+                qDebug()<<"EventHints::ChangeData: row > rows_cnt " <<row << ">" <<rows_cnt;
+                break;
+            }
 
             FieldVariantData val = m_pqastra->GetVal(tname,cname,row);
             it->second->Set(row,col_ind,val);
@@ -132,6 +171,27 @@ void  RTablesDataManager::onRastrHint(const _hint_data& hint_data)
         break;
 
     case EventHints::InsertRow:
+        it = mpTables.find(tname);
+        if (it != mpTables.end() )
+        {
+            QDataBlock* pqdb = it->second.get();
+            IRastrTablesPtr tablesx{ m_pqastra->getRastr()->Tables() };
+            IRastrPayload tablecount{ tablesx->Count() };
+            IRastrTablePtr table{ tablesx->Item(tname) };
+            IRastrObjectPtr<IPlainRastrColumns> columns{ table->Columns() };
+            IRastrPayload rowscount{table->Size()};
+            IRastrPayload columnscount{columns->Count()};
+            long cols_cnt = columnscount.Value();
+            long rows_cnt = rowscount.Value();
+
+            long pnparr_nrows = it->second->RowsCount();
+            long pnparr_ncols = it->second->ColumnsCount();
+
+            //pqdb->SetBlockSize(rows_cnt,cols_cnt,false);
+            pqdb->InsertRow(row);
+            //pqdb->Dump();
+        }
+        break;
     case EventHints::DeleteRow:
         it = mpTables.find(tname);
         if (it != mpTables.end() )
@@ -145,7 +205,7 @@ void  RTablesDataManager::onRastrHint(const _hint_data& hint_data)
 
             it->second->Clear();
             GetDataBlock(tname,Cols,(*it->second.get()),Options);
-            emit RTDM_UpdateView(tname);
+            //emit RTDM_UpdateView(tname);
         }
         break;
         //case EventHints::DeleteRow:
@@ -171,6 +231,7 @@ std::shared_ptr<QDataBlock>  RTablesDataManager::Get(std::string tname, std::str
             qDebug()<<"RTDM: delete table with use_count() = 1 -> "<<iter->first;
             iter = mpTables.erase(iter);
         } else {
+            qDebug()<<"RTDM: " << iter->first <<" use_count() =  "<<iter->second.use_count();
             ++iter;
         }
     }
@@ -197,6 +258,7 @@ void  RTablesDataManager::GetDataBlock(std::string tname , std::string Cols , QD
     Options.SetEnumAsInt(TriBool::True);
     Options.SetSuperEnumAsInt(TriBool::True);
     Options.SetUseChangedIndices(true);
+    Options.SetEditatableColumnsOnly(true);
     IRastrTablesPtr tablesx{ m_pqastra->getRastr()->Tables() };
     IRastrTablePtr table{ tablesx->Item(tname) };
     IRastrResultVerify(table->DataBlock(Cols, QDB, Options));
@@ -221,6 +283,7 @@ void  RTablesDataManager::GetDataBlock(std::string tname , QDataBlock& QDB)
     Options.SetEnumAsInt(TriBool::True);
     Options.SetSuperEnumAsInt(TriBool::True);
     Options.SetUseChangedIndices(true);
+    Options.SetEditatableColumnsOnly(true);
     GetDataBlock(tname,QDB,Options);
 }
 
