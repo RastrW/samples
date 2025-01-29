@@ -359,26 +359,48 @@ RData* RModel::getRdata()
     return up_rdata.get();
 }
 
-bool RModel::AddRow(size_t count )
+bool RModel::AddRow(size_t count ,const QModelIndex &parent)
 {
-  //  beginInsertRows(parent,row,row + count -1);
     IRastrTablesPtr tablesx{ this->pqastra_->getRastr()->Tables() };
     IRastrPayload tablecount{ tablesx->Count() };
     IRastrTablePtr table{ tablesx->Item(getRdata()->t_name_) };
+    IRastrPayload sz{table->Size()};
+
+    beginInsertRows(parent,sz.Value(),sz.Value() + count -1);
     for (size_t i = 0 ; i < count ; i++ )
         IPlainRastrResult* pres = table->AddRow();
-   // endInsertRows();
+    endInsertRows();
 
     return true;
 }
 bool RModel::insertRows(int row, int count, const QModelIndex &parent)
 {
-    beginInsertRows(parent,row,row + count -1);
     IRastrTablesPtr tablesx{ this->pqastra_->getRastr()->Tables() };
     IRastrPayload tablecount{ tablesx->Count() };
     IRastrTablePtr table{ tablesx->Item(getRdata()->t_name_) };
-    IPlainRastrResult* pres = table->InsertRow(row);
+    IRastrPayload sz{table->Size()};
+
+    beginInsertRows(parent,sz.Value(),sz.Value() + count -1);
+    for (size_t i = 0 ; i < count ; i++ )
+        IPlainRastrResult* pres = table->InsertRow(row);
     endInsertRows();
+
+    return true;
+}
+bool RModel::DuplicateRow(int row, const QModelIndex &parent)
+{
+    IRastrTablesPtr tablesx{ this->pqastra_->getRastr()->Tables() };
+    IRastrPayload tablecount{ tablesx->Count() };
+    IRastrTablePtr table{ tablesx->Item(getRdata()->t_name_) };
+    IRastrPayload sz{table->Size()};
+
+    beginInsertRows(parent,sz.Value(),sz.Value());
+    IPlainRastrResult* pres = table->DuplicateRow(row); // send EventHints::InsertRow
+    endInsertRows();
+
+    //Дублируем данные в клиенте
+    this->up_rdata->pnparray_->DuplicateRow(row);
+
 
     return true;
 }
@@ -396,7 +418,13 @@ bool RModel::removeRows(int row, int count, const QModelIndex &parent)
     IRastrTablesPtr tablesx{ this->pqastra_->getRastr()->Tables() };
     IRastrPayload tablecount{ tablesx->Count() };
     IRastrTablePtr table{ tablesx->Item(getRdata()->t_name_) };
-    IPlainRastrResult* pres = table->DeleteRow(row);
+    IRastrPayload sz{table->Size()};
+
+    //beginRemoveRows(parent,sz.Value(),sz.Value() + count -1);
+    beginRemoveRows(parent,row,row + count -1);
+    for (size_t i = 0 ; i < count ; i++ )
+        IPlainRastrResult* pres = table->DeleteRow(row);
+    endRemoveRows();
 
     return true;
 }

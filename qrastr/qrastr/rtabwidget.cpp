@@ -318,7 +318,7 @@ void RtabWidget::contextMenu(ContextMenuEventArgs* args)
         std::string str_col_prop = prcol->desc() + " |"+ prcol->title() + "| -(" + prcol->name() + "), [" +prcol->unit() + "]";
         qstr_col_props = str_col_prop.c_str();
     }
-    QAction* condFormatAction = new QAction(QIcon(":/icons/edit_cond_formats"), tr("Edit Conditional Formats..."),  args->contextMenu());
+    QAction* condFormatAction = new QAction(QIcon(":/icons/edit_cond_formats"), tr("Условное форматирование"),  args->contextMenu());
 
     args->contextMenu()->addSeparator();
     args->contextMenu()->addAction(qstr_col_props, this, SLOT(OpenColPropForm()));
@@ -327,20 +327,23 @@ void RtabWidget::contextMenu(ContextMenuEventArgs* args)
     args->contextMenu()->addAction("Sum: " + QString::number(std::get<1>(item_sum))+" Items: " + QString::number(std::get<0>(item_sum)),this,SLOT());
     //args->contextMenu()->addAction(tr("Скрыть колонку"),this,SLOT(hideColumns()));
     args->contextMenu()->addSeparator();
-    args->contextMenu()->addAction(QIcon(":/images/Rastr3_grid_insrow_16x16.png"),tr("Insert Row"),this,SLOT(insertRow_qtitan()),QKeySequence(Qt::CTRL | Qt::Key_I));
-    args->contextMenu()->addAction(QIcon(":/images/Rastr3_grid_insrow_16x16.png"),tr("Add Row"),this,SLOT(AddRow()),QKeySequence(Qt::CTRL | Qt::Key_A));
-    args->contextMenu()->addAction(QIcon(":/images/Rastr3_grid_delrow_16x16.png"),tr("Delete Row"),this,SLOT(deleteRow_qtitan()),QKeySequence(Qt::CTRL | Qt::Key_D));
+    args->contextMenu()->addAction(QIcon(":/images/Rastr3_grid_insrow_16x16.png"),tr("Вставить"),this,SLOT(insertRow_qtitan()),QKeySequence(Qt::CTRL | Qt::Key_I));
+    args->contextMenu()->addAction(QIcon(":/images/Rastr3_grid_addrow_16x16.png"),tr("Добавить"),this,SLOT(AddRow()),QKeySequence(Qt::CTRL | Qt::Key_A));
+    args->contextMenu()->addAction(QIcon(":/images/Rastr3_grid_duprow_16x161.png"),tr("Дублировать"),this,SLOT(DuplicateRow_qtitan()),QKeySequence(Qt::CTRL | Qt::Key_R));
+    args->contextMenu()->addAction(QIcon(":/images/Rastr3_grid_delrow_16x16.png"),tr("Удалить"),this,SLOT(deleteRow_qtitan()),QKeySequence(Qt::CTRL | Qt::Key_D));
+    args->contextMenu()->addAction(QIcon(":/images/column_edit.png"),tr("Групповая коррекция"), this, SLOT(OpenGroupCorrection()));
     connect(sC_CTRL_I, &QShortcut::activated, this, &RtabWidget::insertRow_qtitan);
     connect(sC_CTRL_A, &QShortcut::activated, this, &RtabWidget::AddRow);
+    connect(sC_CTRL_R, &QShortcut::activated, this, &RtabWidget::DuplicateRow_qtitan);
     connect(sC_CTRL_D, &QShortcut::activated, this, &RtabWidget::deleteRow_qtitan);
     args->contextMenu()->addSeparator();
     args->contextMenu()->addAction(tr("Выравнивание: по шаблону"),this,SLOT(widebyshabl()));
     args->contextMenu()->addAction(tr("Выравнивание: по данным"),this,SLOT(widebydata()));
     args->contextMenu()->addSeparator();
-    args->contextMenu()->addAction("Экспорт CSV", this, SLOT(OpenExportCSVForm()));
-    args->contextMenu()->addAction("Импорт CSV", this, SLOT(OpenImportCSVForm()));
-    args->contextMenu()->addAction("Выборка", this, SLOT(OpenSelectionForm()));
-    args->contextMenu()->addAction("Групповая коррекция", this, SLOT(OpenGroupCorrection()));
+    args->contextMenu()->addAction(tr("Экспорт CSV"), this, SLOT(OpenExportCSVForm()));
+    args->contextMenu()->addAction(tr("Импорт CSV"), this, SLOT(OpenImportCSVForm()));
+    args->contextMenu()->addAction(tr("Выборка"), this, SLOT(OpenSelectionForm()));
+
     args->contextMenu()->addAction(condFormatAction);
 
     //connect(sC_CTRL_I, &QShortcut::activated, this, &RtabWidget::insertRow);
@@ -711,23 +714,22 @@ void RtabWidget::AddRow()
     view->beginUpdate();
     prm->AddRow();
     view->endUpdate();
-
-    this->update(0,0,1000,1000);
-    this->repaint(0,0,1000,1000);
-
 }
 void RtabWidget::insertRow_qtitan()
 {
-    GridSelection* selection = view->selection();
-    int row = selection->cell().rowIndex();
-    QModelIndex index = selection->cell().modelIndex();
+    int row = view->selection()->cell().rowIndex();
 
     view->beginUpdate();
-    prm->insertRows(row,1,index);
+    prm->insertRows(row,1);
     view->endUpdate();
+}
+void RtabWidget::DuplicateRow_qtitan()
+{
+    int row = view->selection()->cell().rowIndex();
 
-    this->update(0,0,1000,1000);
-    this->repaint(0,0,1000,1000);
+    view->beginUpdate();
+    prm->DuplicateRow(row);
+    view->endUpdate();
 }
 void RtabWidget::deleteRow()
 {
@@ -735,11 +737,11 @@ void RtabWidget::deleteRow()
 }
 void RtabWidget::deleteRow_qtitan()
 {
-    GridSelection* selection = view->selection();
-    int row = selection->cell().rowIndex();
-    QModelIndex index = selection->cell().modelIndex();
+    int row = view->selection()->cell().rowIndex();
 
-    prm->removeRows(row,1,index);
+    view->beginUpdate();
+    prm->removeRows(row,1);
+    view->endUpdate();
 }
 // ширина по шаблону
 void RtabWidget::widebyshabl()

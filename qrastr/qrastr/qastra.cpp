@@ -131,7 +131,6 @@ std::string QAstra::GetStringVal( const std::string_view& Table, const std::stri
 
 FieldVariantData QAstra::GetVal( const std::string_view& Table, const std::string_view& Col , const long row )
 {
-
     IRastrTablesPtr tablesx{ sp_rastr_->Tables() };
     IRastrPayload tablecount{ tablesx->Count() };
     IRastrTablePtr table{ tablesx->Item(Table) };

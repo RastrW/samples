@@ -43,13 +43,13 @@ void RData::Initialize(CUIForm _form, QAstra* _pqastra)
     // Берем все колонки таблицы
     for (long index{ 0 }; index < ColumnsCount.Value(); index++)
     {
-        qDebug() << "col_index:"<< index;
+        //qDebug() << "col_index:"<< index;
         IRastrColumnPtr col{ columns->Item(index) };
         std::string col_Type = IRastrPayload(IRastrVariantPtr((col)->Property(FieldProperties::Type))->String()).Value();
         std::string col_Name = IRastrPayload(col->Name()).Value();
         std::string col_Title = IRastrPayload(IRastrVariantPtr((col)->Property(FieldProperties::Title))->String()).Value();
 
-        qDebug() << "index : " << index << " col_Type " << col_Type << " col_Name " << col_Name;
+        //qDebug() << "index : " << index << " col_Type " << col_Type << " col_Name " << col_Name;
         vCols_.push_back(col_Name);
         str_cols_.append(col_Name);
         str_cols_.append(",");

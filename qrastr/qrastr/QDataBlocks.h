@@ -656,6 +656,43 @@ template<typename T>
 class QDenseDataBlock : public MyDenseDataBlock<T>
 {
     public :
+    void QDump(long LimitRows = (std::numeric_limits<long>::max)() , long LimitCols = (std::numeric_limits<long>::max)())
+    {
+        // Нам в дампере пригодится возможность показывать тип
+        //qDebug() << "DataBlock dense [" << MapFieldVariantType<T>::VerbalType() << "] " << this->RowsCount() << "x" << this->ColumnsCount() << std::endl;
+        qDebug() << "DataBlock dense [" << "] " << this->RowsCount() << "x" << this->ColumnsCount();
+        if (this->Indexes_.size())
+            qDebug() << "#;";
+        qDebug()<<"LimitRows = "<<LimitRows;
+        qDebug()<<"LimitCols = "<<LimitCols;
+
+        // А также то, что мы собрали имена полей
+        std::string str_columns_all = stringutils::join(this->Columns_,';');        // все столбцы
+        std::string str_columns = "";
+        for (IndexT column = 0; column < this->ColumnsCount() && column < LimitCols; column++)
+        {
+            str_columns.append(this->Columns_[column]);
+            str_columns.append(";");
+        }
+
+        qDebug() << str_columns.c_str();
+
+        // Функции преобразования в строки я использую готовые
+        for (IndexT row = 0; row < this->RowsCount() && row < LimitRows; row++)
+        {
+            std::string str_row_vals = "";
+            for (IndexT column = 0; column < this->ColumnsCount() && column < LimitCols; column++)
+            {
+                if (column) str_row_vals.append(";");
+                else if (row < static_cast<IndexT>(this->Indexes_.size()))
+                    qDebug() << "row_index: "<< std::to_string(this->Indexes_[row]);
+
+                str_row_vals.append(std::visit(ToString(),this->Data()[row * this->ColumnsCount() + column]));
+            }
+            qDebug().noquote() << str_row_vals.c_str();
+        }
+    }
+
     IPlainRastrRetCode Set(IndexT RowIndex, IndexT ColumnIndex, const T& Value) noexcept override
     {
         try {
@@ -668,7 +705,6 @@ class QDenseDataBlock : public MyDenseDataBlock<T>
     IPlainRastrRetCode AddRow(IndexT count = 1) noexcept
     {
         try {
-
             IndexT NewRowsCount_ = this->RowsCount() + count;
             std::unique_ptr<T[]> NewData_ = std::make_unique<T[]>(NewRowsCount_ * this->ColumnsCount());
             for (int row = 0 ; row < this->RowsCount() ; row++)
@@ -683,6 +719,9 @@ class QDenseDataBlock : public MyDenseDataBlock<T>
             //size_t sz_0 = sizeof(this->Data()[0]);
             //std::memcpy(NewData_.get(),this->Data(),NewRowsCount_ * this->ColumnsCount() * 4);
             //std::memmove(NewData_.get(),this->Data(),)
+
+            //Нужно добавить индекс для еще одной строки
+            this->Indexes_.push_back(NewRowsCount_ - 1);
 
             this->RowsCount_ = NewRowsCount_;
             this->Data_ = std::move( NewData_);
@@ -716,6 +755,56 @@ class QDenseDataBlock : public MyDenseDataBlock<T>
                     NewData_[indx_new]  = this->Data()[indx_old];
                 }
             }
+            //Нужно добавить индекс для еще одной строки
+            this->Indexes_.push_back(NewRowsCount_ - 1);
+
+            this->RowsCount_ = NewRowsCount_;
+            this->Data_ = std::move( NewData_);
+
+            return IPlainRastrRetCode::Ok;
+        } catch (...) {
+            return IPlainRastrRetCode::Failed;
+        }
+    }
+    IPlainRastrRetCode DuplicateRow(IndexT duprow ) noexcept
+    {
+        try {
+            for (int col = 0 ; col < this->ColumnsCount() ; col++)
+            {
+                size_t indx = duprow * this->ColumnsCount() + col;
+                size_t indx2 = (duprow+1) * this->ColumnsCount() + col;
+                this->Data()[indx] = this->Data()[indx2];
+            }
+            return IPlainRastrRetCode::Ok;
+        } catch (...) {
+            return IPlainRastrRetCode::Failed;
+        }
+    }
+    IPlainRastrRetCode DeleteRow(IndexT delrow ) noexcept
+    {
+        try {
+            IndexT NewRowsCount_ = this->RowsCount() - 1;
+            std::unique_ptr<T[]> NewData_ = std::make_unique<T[]>(NewRowsCount_ * this->ColumnsCount());
+            for (int row = 0 ; row < delrow ; row++)
+            {
+                for (int col = 0 ; col < this->ColumnsCount() ; col++)
+                {
+                    size_t indx = row * this->ColumnsCount() + col;
+                    NewData_[indx]  = this->Data()[indx];
+                }
+            }
+
+            for (int row = delrow ; row < NewRowsCount_ ; row++)
+            {
+                for (int col = 0 ; col < this->ColumnsCount() ; col++)
+                {
+                    size_t indx_old = (row + 1) * this->ColumnsCount() + col;
+                    size_t indx_new = row * this->ColumnsCount() + col;
+                    NewData_[indx_new]  = this->Data()[indx_old];
+                }
+            }
+            //Нужно удалить индекс последней строки
+            this->Indexes_.pop_back();
 
             this->RowsCount_ = NewRowsCount_;
             this->Data_ = std::move( NewData_);

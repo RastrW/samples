@@ -12,5 +12,8 @@
         <file>images/Rastr3_grid_insrow_16x16.png</file>
         <file>images/Rastr3_grid_delrow_16x16.png</file>
         <file>images/Bee.png</file>
+        <file>images/column_edit.png</file>
+        <file>images/Rastr3_grid_addrow_16x16.png</file>
+        <file>images/Rastr3_grid_duprow_16x161.png</file>
     </qresource>
 </RCC>

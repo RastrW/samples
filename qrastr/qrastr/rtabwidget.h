@@ -148,6 +148,7 @@ public slots:
     void insertRow();
     void AddRow();
     void insertRow_qtitan();
+    void DuplicateRow_qtitan();
     void deleteRow();
     void deleteRow_qtitan();
     void widebyshabl();
@@ -206,6 +207,7 @@ private:
     std::map<int, std::vector<CondFormat>> m_MapcondFormatVector;                       // column , vector<CondFormat>
     QShortcut *sC_CTRL_I = new QShortcut( QKeySequence(Qt::CTRL | Qt::Key_I), this);
     QShortcut *sC_CTRL_D = new QShortcut( QKeySequence(Qt::CTRL | Qt::Key_D), this);
+    QShortcut *sC_CTRL_R = new QShortcut( QKeySequence(Qt::CTRL | Qt::Key_R), this);
     QShortcut *sC_CTRL_A = new QShortcut( QKeySequence(Qt::CTRL | Qt::Key_A), this);
 protected:
     itemStateMap tItemStateMap;

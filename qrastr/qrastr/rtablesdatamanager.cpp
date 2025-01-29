@@ -85,8 +85,7 @@ void  RTablesDataManager::onRastrHint(const _hint_data& hint_data)
             }
         }
         break;
-
-    case EventHints::AddRow:
+    case EventHints::ChangeRow:
         it = mpTables.find(tname);
         if (it != mpTables.end() )
         {
@@ -95,22 +94,22 @@ void  RTablesDataManager::onRastrHint(const _hint_data& hint_data)
             IRastrPayload tablecount{ tablesx->Count() };
             IRastrTablePtr table{ tablesx->Item(tname) };
             IRastrObjectPtr<IPlainRastrColumns> columns{ table->Columns() };
-            IRastrPayload rowscount{table->Size()};
             IRastrPayload columnscount{columns->Count()};
-            long cols_cnt = columnscount.Value();
-            long rows_cnt = rowscount.Value();
+            for (int i = 0 ; i < columnscount.Value(); i++)
+            {
+                IRastrColumnPtr col {columns->Item(i)};
+                IRastrVariantPtr value_ptr{ col->Value(row) };
+                pqdb->Set(row,i,value_ptr);
+            }
 
-            long pnparr_nrows = it->second->RowsCount();
-            long pnparr_ncols = it->second->ColumnsCount();
-
-            //pqdb->SetBlockSize(rows_cnt,cols_cnt,false);
-            pqdb->AddRow();
         }
+        break;
         break;
     case EventHints::ChangeData:
         it = mpTables.find(tname);
         if (it != mpTables.end() )
         {
+            QDataBlock* pqdb = it->second.get();
             long col_ind = GetColIndex(tname,cname);
             IRastrTablesPtr tablesx{ m_pqastra->getRastr()->Tables() };
             IRastrPayload tablecount{ tablesx->Count() };
@@ -138,7 +137,7 @@ void  RTablesDataManager::onRastrHint(const _hint_data& hint_data)
             }
 
             FieldVariantData val = m_pqastra->GetVal(tname,cname,row);
-            it->second->Set(row,col_ind,val);
+            pqdb->Set(row,col_ind,val);
             break;
 
             /*ePropType col_type = GetColType(tname,cname);
@@ -170,45 +169,33 @@ void  RTablesDataManager::onRastrHint(const _hint_data& hint_data)
         }
         break;
 
+    case EventHints::AddRow:
+        it = mpTables.find(tname);
+        if (it != mpTables.end() )
+        {
+            QDataBlock* pqdb = it->second.get();
+            pqdb->AddRow();
+        }
+        break;
+
     case EventHints::InsertRow:
         it = mpTables.find(tname);
         if (it != mpTables.end() )
         {
             QDataBlock* pqdb = it->second.get();
-            IRastrTablesPtr tablesx{ m_pqastra->getRastr()->Tables() };
-            IRastrPayload tablecount{ tablesx->Count() };
-            IRastrTablePtr table{ tablesx->Item(tname) };
-            IRastrObjectPtr<IPlainRastrColumns> columns{ table->Columns() };
-            IRastrPayload rowscount{table->Size()};
-            IRastrPayload columnscount{columns->Count()};
-            long cols_cnt = columnscount.Value();
-            long rows_cnt = rowscount.Value();
-
-            long pnparr_nrows = it->second->RowsCount();
-            long pnparr_ncols = it->second->ColumnsCount();
-
-            //pqdb->SetBlockSize(rows_cnt,cols_cnt,false);
             pqdb->InsertRow(row);
-            //pqdb->Dump();
+            //pqdb->QDump(10,20);
         }
         break;
     case EventHints::DeleteRow:
         it = mpTables.find(tname);
         if (it != mpTables.end() )
         {
-            std::string Cols = (*it).second->Columns();
-            FieldDataOptions Options;
-            Options.SetEnumAsInt(TriBool::True);
-            Options.SetSuperEnumAsInt(TriBool::True);
-            Options.SetUseChangedIndices(true);
-            Options.SetEditatableColumnsOnly(true);                             // Без этого падает где то а разборке формул
-
-            it->second->Clear();
-            GetDataBlock(tname,Cols,(*it->second.get()),Options);
-            //emit RTDM_UpdateView(tname);
+            QDataBlock* pqdb = it->second.get();
+            pqdb->DeleteRow(row);
         }
         break;
-        //case EventHints::DeleteRow:
+
 
     default:
         break;

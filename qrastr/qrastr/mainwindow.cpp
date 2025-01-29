@@ -590,13 +590,13 @@ void MainWindow::createActions(){
     ActMacro->setStatusTip(tr("Run macro"));
     connect(ActMacro, SIGNAL(triggered()), this, SLOT(onDlgMcr()));
     //calc
-    QAction* actRGM = new QAction(QIcon(":/images/Rastr3_rgm_16x16.png"),tr("&rgm"), this);
+    QAction* actRGM = new QAction(QIcon(":/images/Rastr3_rgm_16x16.png"),tr("&Режим"), this);
     actRGM->setShortcut(tr("F5"));
     actRGM->setStatusTip(tr("Calc rgm"));
     connect(actRGM, SIGNAL(triggered()), this, SLOT(rgm_wrap()));
-    QAction* actOC = new QAction(QIcon(":/images/Bee.png"),tr("&oc"), this);
+    QAction* actOC = new QAction(QIcon(":/images/Bee.png"),tr("&ОС"), this);
     actOC->setShortcut(tr("F6"));
-    actOC->setStatusTip(tr("Calc oc"));
+    actOC->setStatusTip(tr("Оценка состояния"));
     connect(actOC, SIGNAL(triggered()), this, SLOT(oc_wrap()));
     //windows
     QAction* closeAct = new QAction(tr("Cl&ose"), this);
@@ -623,26 +623,27 @@ void MainWindow::createActions(){
     QAction* separatorAct = new QAction(this);
     separatorAct->setSeparator(true);
     //help
-    QAction* aboutAct = new QAction(tr("&About"), this);
+    QAction* aboutAct = new QAction(tr("&О программе"), this);
     aboutAct->setStatusTip(tr("Show the application's About box"));
     connect(aboutAct, SIGNAL(triggered()), this, SLOT(about()));
 
     //MENU's
-    QMenu* menuFile = menuBar()->addMenu(tr("&File"));
+    //QMenu* menuFile = menuBar()->addMenu(tr("&File"));
+    QMenu* menuFile = menuBar()->addMenu(tr("&Файлы"));
     menuFile->addAction(newAct);
     menuFile->addAction(openAct);
     menuFile->addAction(saveAct);
     menuFile->addAction(actShowFormSettings);
     menuFile->addSeparator();
     menuFile->addAction(exitAct);
-    QMenu* menuMacro = menuBar()->addMenu(tr("&Macro"));
+    QMenu* menuMacro = menuBar()->addMenu(tr("&Макро"));
     menuMacro->addAction(ActMacro);
-    QMenu* menuCalc = menuBar()->addMenu(tr("&Calc"));
+    QMenu* menuCalc = menuBar()->addMenu(tr("&Расчеты"));
     menuCalc->addAction(actRGM);
     menuCalc->addAction(actOC);
-    m_menuOpen = menuBar()->addMenu(tr("&Open") );
+    m_menuOpen = menuBar()->addMenu(tr("&Открыть") );
     menuBar()->addSeparator();
-    QMenu* menuWindow = menuBar()->addMenu(tr("&Window"));
+    QMenu* menuWindow = menuBar()->addMenu(tr("Окна"));
     //connect(m_windowMenu, SIGNAL(aboutToShow()), this, SLOT(updateWindowMenu()));// ustas about: not understend for a what this? (have fall on it)
     menuWindow->clear();
     menuWindow->addAction(closeAct);
@@ -675,15 +676,15 @@ void MainWindow::createActions(){
         m_windowMapper->setMapping(action, windows.at(i));
     }
 #endif
-    QMenu* menuHelp = menuBar()->addMenu(tr("&Help"));
+    QMenu* menuHelp = menuBar()->addMenu(tr("&Помощь"));
     menuHelp->addAction(aboutAct);
 
     //ToolBars
-    QToolBar* toolbarFile = addToolBar(tr("File"));
+    QToolBar* toolbarFile = addToolBar(tr("Файл"));
     toolbarFile->addAction(newAct);
     toolbarFile->addAction(openAct);
     toolbarFile->addAction(saveAct);
-    m_toolbarCalc = addToolBar(tr("Calc"));
+    m_toolbarCalc = addToolBar(tr("Расчеты"));
     m_toolbarCalc->addAction(actRGM);
     m_toolbarCalc->addAction(actOC);
 

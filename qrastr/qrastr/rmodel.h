@@ -52,7 +52,8 @@ public:
     Qt::ItemFlags flags(const QModelIndex &index) const override;
 
     // Add data:
-    bool AddRow(size_t count = 1);
+    bool AddRow(size_t count = 1,const QModelIndex &parent = QModelIndex());
+    bool DuplicateRow(int row, const QModelIndex &parent = QModelIndex());
     bool insertRows(int row, int count, const QModelIndex &parent = QModelIndex()) override;
     bool insertColumns(int column, int count, const QModelIndex &parent = QModelIndex()) override;
 
