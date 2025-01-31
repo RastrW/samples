@@ -320,6 +320,16 @@ void RtabWidget::contextMenu(ContextMenuEventArgs* args)
     }
     QAction* condFormatAction = new QAction(QIcon(":/icons/edit_cond_formats"), tr("Условное форматирование"),  args->contextMenu());
 
+    /*
+
+    QAction* openAct = new QAction(QIcon(":/images/open.png"), tr("&Open..."), this);
+    openAct->setShortcut(tr("Ctrl+O"));
+    openAct->setStatusTip(tr("Open an existing file"));
+    connect(openAct, SIGNAL(triggered()), this, SLOT(open()));
+*/
+
+
+
     args->contextMenu()->addSeparator();
     args->contextMenu()->addAction(qstr_col_props, this, SLOT(OpenColPropForm()));
 
@@ -327,7 +337,16 @@ void RtabWidget::contextMenu(ContextMenuEventArgs* args)
     args->contextMenu()->addAction("Sum: " + QString::number(std::get<1>(item_sum))+" Items: " + QString::number(std::get<0>(item_sum)),this,SLOT());
     //args->contextMenu()->addAction(tr("Скрыть колонку"),this,SLOT(hideColumns()));
     args->contextMenu()->addSeparator();
-    args->contextMenu()->addAction(QIcon(":/images/Rastr3_grid_insrow_16x16.png"),tr("Вставить"),this,SLOT(insertRow_qtitan()),QKeySequence(Qt::CTRL | Qt::Key_I));
+
+    QAction* insRowAct = new QAction(QIcon(":/images/Rastr3_grid_insrow_16x16.png"),tr("Вставить"),this);
+    insRowAct->setShortcut(tr("Ctrl+I"));
+    insRowAct->setStatusTip(tr("Вставить строку"));
+
+    // TO DO
+    // В Qtitane не работают шорткаты, хотя del встроенный работает.
+
+    //args->contextMenu()->addAction(QIcon(":/images/Rastr3_grid_insrow_16x16.png"),tr("Вставить"),this,SLOT(insertRow_qtitan()),QKeySequence(Qt::CTRL | Qt::Key_I));
+    args->contextMenu()->addAction(QIcon(":/images/Rastr3_grid_insrow_16x16.png"),tr("Вставить"),tr("Ctrl+I"),this,SLOT(insertRow_qtitan()));
     args->contextMenu()->addAction(QIcon(":/images/Rastr3_grid_addrow_16x16.png"),tr("Добавить"),this,SLOT(AddRow()),QKeySequence(Qt::CTRL | Qt::Key_A));
     args->contextMenu()->addAction(QIcon(":/images/Rastr3_grid_duprow_16x161.png"),tr("Дублировать"),this,SLOT(DuplicateRow_qtitan()),QKeySequence(Qt::CTRL | Qt::Key_R));
     args->contextMenu()->addAction(QIcon(":/images/Rastr3_grid_delrow_16x16.png"),tr("Удалить"),this,SLOT(deleteRow_qtitan()),QKeySequence(Qt::CTRL | Qt::Key_D));

@@ -18,6 +18,7 @@ set(PROJECT_SOURCES
     pluginrastr.h
     pluginrastr.cpp
 )
+
 qt_add_plugin( rastr
     CLASS_NAME PluginRastr
     ${PROJECT_SOURCES}

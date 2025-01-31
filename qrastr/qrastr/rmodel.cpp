@@ -43,6 +43,7 @@ int RModel::populateDataFromRastr(){
             mnamerefs_.insert(std::make_pair(rcol.index,list));
         }
     }
+   // up_rdata->pnparray_->QDump(20,20);
 
     return 1;
 };

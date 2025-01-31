@@ -245,7 +245,7 @@ void  RTablesDataManager::GetDataBlock(std::string tname , std::string Cols , QD
     Options.SetEnumAsInt(TriBool::True);
     Options.SetSuperEnumAsInt(TriBool::True);
     Options.SetUseChangedIndices(true);
-    Options.SetEditatableColumnsOnly(true);
+    //Options.SetEditatableColumnsOnly(true);
     IRastrTablesPtr tablesx{ m_pqastra->getRastr()->Tables() };
     IRastrTablePtr table{ tablesx->Item(tname) };
     IRastrResultVerify(table->DataBlock(Cols, QDB, Options));
