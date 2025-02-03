@@ -6,7 +6,7 @@
 #include <QDebug>
 //#include <QJSEngine>
 #include <QRegularExpression>
-#include <QtitanGrid.h>
+#include "QtitanGrid.h"
 #include <string_bool.h>
 
 //#include "fmt/format.h"

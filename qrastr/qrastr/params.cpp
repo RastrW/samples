@@ -5,9 +5,11 @@
 #include "License2/json.hpp"
 #include "UIForms.h"
 
+
 Params::Params(){
+    std::experimental::filesystem::path d;
 }
-int Params::readJsonFile(const std::filesystem::path& path_2_json){
+int Params::readJsonFile(const fs::path& path_2_json){
     try{
         //spdlog::info("read JSON file: [{}]", path_2_json.string());
         v_start_load_file_templates_.clear();
@@ -47,7 +49,7 @@ int Params::readJsonFile(const std::filesystem::path& path_2_json){
     }
     return 1;
 }
-int Params::writeJsonFile(const std::filesystem::path& path_2_json)const {
+int Params::writeJsonFile(const fs::path& path_2_json)const {
     try{
         nlohmann::json jarr_load;
         for(const _v_file_templates::value_type& file_template : v_start_load_file_templates_){
@@ -90,11 +92,11 @@ int Params::writeJsonFile(const std::filesystem::path& path_2_json)const {
     }
     return 1;
 }
-int Params::readTemplates(const std::filesystem::path& path_dir_templates){
+int Params::readTemplates(const fs::path& path_dir_templates){
     try{
         v_template_exts_.clear();
-        for(const auto& entry : std::filesystem::directory_iterator(path_dir_templates)){
-            std::filesystem::path path_template = entry.path();
+        for(const auto& entry : fs::directory_iterator(path_dir_templates)){
+            fs::path path_template = entry.path();
             std::string str_templ_name = path_template.stem().u8string();
             std::string str_templ_ext  = path_template.extension().u8string();
             //spdlog::info("{}:{}", str_templ_name, str_templ_ext);
@@ -109,7 +111,7 @@ int Params::readTemplates(const std::filesystem::path& path_dir_templates){
     }
     return 1;
 }
-int Params::readForms(const std::filesystem::path& path_forms){
+int Params::readForms(const fs::path& path_forms){
     try{
         /*
     #if(defined(_MSC_VER))
@@ -128,7 +130,7 @@ int Params::readForms(const std::filesystem::path& path_forms){
     */
         upCUIFormsCollection_ = std::make_unique<CUIFormsCollection>();
         for(const Params::_v_forms::value_type &form : v_start_load_forms_){
-            std::filesystem::path path_file_form  {path_forms};
+            fs::path path_file_form  {path_forms};
             path_file_form /= stringutils::utf8_decode(form);
             CUIFormsCollection* CUIFormsCollection_ = new CUIFormsCollection ;
             if (path_file_form.extension() == ".fm")
@@ -148,11 +150,11 @@ int Params::readForms(const std::filesystem::path& path_forms){
     }
     return 1;
 }
-int Params::readFormsExists(const std::filesystem::path& path_dir_forms){
+int Params::readFormsExists(const fs::path& path_dir_forms){
     try{
         v_forms_exists_.clear();
-        for(const auto& entry : std::filesystem::directory_iterator(path_dir_forms)){
-            std::filesystem::path path_form = entry.path();
+        for(const auto& entry : fs::directory_iterator(path_dir_forms)){
+            fs::path path_form = entry.path();
             std::string str_form_name = path_form.filename().u8string();
             v_forms_exists_.emplace_back(str_form_name);
         }

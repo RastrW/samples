@@ -2,8 +2,15 @@
 #define PARAMS_H
 
 #include <QDir>
-
 #include <singleton_dclp.hpp>
+
+#if(defined(MSVC))
+    #include <filesystem>
+    namespace fs = std::filesystem;   
+#else
+    #include <experimental/filesystem>
+    namespace fs = std::experimental::filesystem;   
+#endif
 class CUIFormsCollection;
 class Params
     : public SingletonDclp<Params>{
@@ -14,18 +21,20 @@ public:
     using _v_template_exts = std::vector<std::pair< std::string, std::string > >;
     Params();
     virtual ~Params() = default;
-    int readJsonFile (const std::filesystem::path& path_2_json);
-    int writeJsonFile(const std::filesystem::path& path_2_json)const;
-    int readTemplates(const std::filesystem::path& path_dir_templates);
-    int readForms(const std::filesystem::path& path_form_load);
-    int readFormsExists(const std::filesystem::path& path_dir_forms);
+
+    std::experimental::filesystem::path d;
+    int readJsonFile (const fs::path& path_2_json);
+    int writeJsonFile(const fs::path& path_2_json)const;
+    int readTemplates(const fs::path& path_dir_templates);
+    int readForms(const fs::path& path_form_load);
+    int readFormsExists(const fs::path& path_dir_forms);
     const _v_forms& getFormsExists()const{
         return v_forms_exists_;
     }
-    void setFileAppsettings(const std::filesystem::path& path_appsettings){
+    void setFileAppsettings(const fs::path& path_appsettings){
         path_appsettings_ = path_appsettings;
     }
-    const std::filesystem::path& getFileAppsettings()const{
+    const fs::path& getFileAppsettings()const{
         return path_appsettings_;
     }
     void setDirData(const QDir& dir){
@@ -65,7 +74,7 @@ public:
 private:
     QDir                  dir_Data_;
     QDir                  dir_SHABLON_;
-    std::filesystem::path path_appsettings_;
+    fs::path              path_appsettings_;
     _v_templates          v_start_load_templates_;
     _v_forms              v_start_load_forms_;
     _v_file_templates     v_start_load_file_templates_;

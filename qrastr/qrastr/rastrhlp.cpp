@@ -3,6 +3,14 @@
 #include "utils.h"
 #include "License2/json.hpp"
 
+#if(defined(MSVC))
+    #include <filesystem>
+    namespace fs = fs;   
+#else
+    #include <experimental/filesystem>
+    namespace fs = std::experimental::filesystem;   
+#endif
+
 CRastrHlp::CRastrHlp(){
 
 }
@@ -28,9 +36,9 @@ CRastrHlp::~CRastrHlp(){
 int CRastrHlp::Load(std::string str_path_to_file){
     try{
         int nRes = 0;
-        std::cout << "Current path is " << std::filesystem::current_path() << '\n'; // (1)
-        std::filesystem::path path_file_load;
-        if( !std::filesystem::exists(str_path_to_file.c_str())) {
+        std::cout << "Current path is " << fs::current_path() << '\n'; // (1)
+        fs::path path_file_load;
+        if( !fs::exists(str_path_to_file.c_str())) {
             spdlog::error( "File rastr  not exist : [{}]!", str_path_to_file );
             return -1;
         }
@@ -56,7 +64,7 @@ int CRastrHlp::Load(std::string str_path_to_file){
 int CRastrHlp::Save(std::string str_path_to_file){
     try{
         int nRes = 0;
-        std::filesystem::path path_file_save;
+        fs::path path_file_save;
         //on Windows, you MUST use 8bit ANSI (and it must match the user's locale) or UTF-16 !! Unicode!
         //!!! https://stackoverflow.com/questions/30829364/open-utf8-encoded-filename-in-c-windows  !!!
         path_file_save = stringutils::utf8_decode(str_path_to_file);
@@ -79,9 +87,9 @@ int CRastrHlp::ReadForms(std::string str_path_forms){
     try{
         std::vector<std::string> forms = split(str_path_forms, ',');
 
-        std::filesystem::path path_forms ("form");
-        //std::filesystem::path path_forms_load;
-        std::filesystem::path path_form_load;
+        fs::path path_forms ("form");
+        //fs::path path_forms_load;
+        fs::path path_form_load;
 #if(defined(_MSC_VER))
         //str_path_forms_load = R"(C:\Users\ustas\Documents\RastrWin3\form\poisk.fm)";
         //str_path_forms_load = R"(C:\Users\ustas\Documents\RastrWin3\form\Общие.fm)";
@@ -95,7 +103,7 @@ int CRastrHlp::ReadForms(std::string str_path_forms){
         upCUIFormsCollection_ = std::make_unique<CUIFormsCollection>();
         for (std::string &form : forms)
         {
-            std::filesystem::path path_file_form = stringutils::utf8_decode(form);
+            fs::path path_file_form = stringutils::utf8_decode(form);
             path_form_load =  path_forms / path_file_form;
 
             qDebug() << "read form from file : " << path_form_load.wstring();

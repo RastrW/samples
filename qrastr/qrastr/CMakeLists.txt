@@ -1,10 +1,10 @@
 cmake_minimum_required(VERSION 3.23) # 3.20 min version for "astra" build
 project( qrastr VERSION 0.1 LANGUAGES CXX )
 
+add_compile_definitions( QICSGRID_NO )
 if(MSVC)
     add_compile_definitions( COMPILE_WIN )
     add_compile_definitions( _SILENCE_ALL_MS_EXT_DEPRECATION_WARNINGS )
-    add_compile_definitions( QICSGRID_NO )
     add_compile_definitions( NOMINMAX )
     if (CMAKE_BUILD_TYPE MATCHES Debug)
     else()
@@ -18,7 +18,7 @@ add_compile_definitions(
 )
 add_compile_definitions( QTN_NAMESPACE ) ## !! IT'S CRYTICAL!!
 
-set(CMAKE_GENERATOR "Ninja")
+#set(CMAKE_GENERATOR "Ninja")
 message("generator is set to ${CMAKE_GENERATOR}")
 set( CMAKE_INCLUDE_CURRENT_DIR ON )
 set( CMAKE_AUTOUIC ON )
@@ -49,7 +49,8 @@ if(MSVC)
 else()
     set( DEPENDENCIES_LOCATION "/home/ustas/projects/compile/" )
     #set( ASTRA_LOCATION        "/home/ustas/projects/git_r/rastr/RastrWin/astra/" )
-    set( DEPENDENCIES_GIT      "/home/ustas/projects/git_r/" )
+    #set( DEPENDENCIES_GIT      "/home/ustas/projects/git_r/" )
+    set( DEPENDENCIES_GIT      "/home/ustas/projects/git_main/" )
 endif()
 if( NOT IS_DIRECTORY ${ASTRA_LOCATION} )
     message(FATAL_ERROR "Not defined ASTRA_LOCATION !") # example "c:/projects/rastr/RastrWin/astra"  "c:/projects/tfs/rastr/RastrWin/astra/"
@@ -72,7 +73,9 @@ find_package( Qt${QT_VERSION_MAJOR} COMPONENTS
     REQUIRED
 )
 
-qt_standard_project_setup()
+if(QT_VERSION_MAJOR EQUAL 6)
+    qt_standard_project_setup()
+endif()
 add_subdirectory("plugins/rastr")
 add_subdirectory(
     "${CMAKE_CURRENT_SOURCE_DIR}/qmcr/"
@@ -96,7 +99,8 @@ set(INCLUDES
     "${DEPENDENCIES_LOCATION}/Qt-Advanced-Docking-System/src"
     "${DEPENDENCIES_LOCATION}/spdlog/include/"
     "${ASTRA_LOCATION}/../../flytfs/IPlainRastrTest/"
-    "${DEPENDENCIES_LOCATION}/QtitanDataGrid8.2.0_win_qt_6_7/include"
+    "${DEPENDENCIES_LOCATION}/QtitanDataGrid8.2.0_win_qt_6_7/include" #win
+    "${DEPENDENCIES_LOCATION}/QtitanDataGrid8.2.0/include" #lin Qtitan
 )
 
 if(MSVC)

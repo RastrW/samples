@@ -4,8 +4,9 @@
 #include <QApplication>
 #include <QDir>
 #include <QObject>
+#include <spdlog/spdlog.h>
 
-namespace spdlog{namespace level{enum level_enum;}}
+//namespace spdlog{namespace level{enum level_enum;}}
 class QAstra;
 class CUIFormsCollection;
 class CUIForm;

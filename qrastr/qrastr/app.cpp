@@ -222,8 +222,8 @@ long App::readForms(){
             path_form_load =  path_forms / path_file_form;
             qDebug() << "read form from file : " << path_form_load.wstring();
     #else
-            path_forms_load = str_path_to_file_forms;
-            qDebug() << "read form from file : " << path_forms_load.c_str();
+            //path_forms_load = str_path_to_file_forms;
+            //qDebug() << "read form from file : " << path_forms_load.c_str();
     #endif
             CUIFormsCollection* CUIFormsCollection_ = new CUIFormsCollection ;
             if (path_form_load.extension() == ".fm")

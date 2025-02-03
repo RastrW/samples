@@ -1,5 +1,5 @@
 #include "filtertableheader.h"
-#include "FilterLineEdit.h"
+#include "filterlineedit.h"
 #include <QTableView>
 #include <QScrollBar>
 

@@ -1,8 +1,10 @@
 #include "rtableview.h"
 #include "rtabwidget.h"
-#include "FilterTableHeader.h"
+#include "filtertableheader.h"
 #include <QScrollBar>
-#include <private/qtableview_p.h>
+#if(defined(MSVC))
+    #include <private/qtableview_p.h>
+#endif
 
 
 RTableCornerButton::RTableCornerButton(QWidget *parent)

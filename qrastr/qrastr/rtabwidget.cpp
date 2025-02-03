@@ -3,7 +3,7 @@
 #include <QRegularExpression>
 #include <QLineEdit>
 #include <QScrollBar>
-#include "FilterTableHeader.h"
+#include "filtertableheader.h"
 #include <QMimeData>
 #include <QApplication>
 #include <QClipboard>
