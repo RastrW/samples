@@ -3,14 +3,9 @@
 
 #include <QDir>
 #include <singleton_dclp.hpp>
+#include <filesystem>
+namespace fs = std::filesystem;   
 
-#if(defined(_MSC_VER))
-    #include <filesystem>
-    namespace fs = std::filesystem;   
-#else
-    #include <experimental/filesystem>
-    namespace fs = std::experimental::filesystem;   
-#endif
 class CUIFormsCollection;
 class Params
     : public SingletonDclp<Params>{

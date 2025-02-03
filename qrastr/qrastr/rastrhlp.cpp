@@ -3,13 +3,8 @@
 #include "utils.h"
 #include "License2/json.hpp"
 
-#if(defined(_MSC_VER))
-    #include <filesystem>
-    namespace fs = fs;   
-#else
-    #include <experimental/filesystem>
-    namespace fs = std::experimental::filesystem;   
-#endif
+#include <filesystem>
+namespace fs = std::filesystem;   
 
 CRastrHlp::CRastrHlp(){
 

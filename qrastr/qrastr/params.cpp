@@ -5,7 +5,6 @@
 #include "License2/json.hpp"
 #include "UIForms.h"
 
-
 Params::Params(){
 }
 int Params::readJsonFile(const fs::path& path_2_json){
