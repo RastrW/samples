@@ -4,7 +4,7 @@
 #include <QDir>
 #include <singleton_dclp.hpp>
 
-#if(defined(MSVC))
+#if(defined(_MSC_VER))
     #include <filesystem>
     namespace fs = std::filesystem;   
 #else
@@ -21,12 +21,10 @@ public:
     using _v_template_exts = std::vector<std::pair< std::string, std::string > >;
     Params();
     virtual ~Params() = default;
-
-    std::experimental::filesystem::path d;
     int readJsonFile (const fs::path& path_2_json);
     int writeJsonFile(const fs::path& path_2_json)const;
     int readTemplates(const fs::path& path_dir_templates);
-    int readForms(const fs::path& path_form_load);
+    int readForms    (const fs::path& path_form_load);
     int readFormsExists(const fs::path& path_dir_forms);
     const _v_forms& getFormsExists()const{
         return v_forms_exists_;

@@ -443,7 +443,7 @@ void McrWnd::encode(std::string& data_out, const QString& qstr_in){
     for(size_t pos = 0; pos != qstr_in.length(); ++pos) {
         if      (QLatin1Char('&')  == qstr_in[static_cast<int>(pos)]){
             data_out.append("&amp;");
-        }else if(QLatin1Char('\"') == qstr_in[static_cast<int>(pos])){
+        }else if(QLatin1Char('\"') == qstr_in[static_cast<int>(pos)]){
             data_out.append("&quot;");
         }else if(QLatin1Char('\'') == qstr_in[static_cast<int>(pos)]){
             data_out.append("&apos;");

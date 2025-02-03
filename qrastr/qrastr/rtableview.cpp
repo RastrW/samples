@@ -2,7 +2,7 @@
 #include "rtabwidget.h"
 #include "filtertableheader.h"
 #include <QScrollBar>
-#if(defined(MSVC))
+#if(defined(_MSC_VER))
     #include <private/qtableview_p.h>
 #endif
 

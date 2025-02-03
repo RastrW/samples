@@ -3,7 +3,7 @@
 #include "utils.h"
 #include "License2/json.hpp"
 
-#if(defined(MSVC))
+#if(defined(_MSC_VER))
     #include <filesystem>
     namespace fs = fs;   
 #else

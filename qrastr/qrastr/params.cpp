@@ -7,7 +7,6 @@
 
 
 Params::Params(){
-    std::experimental::filesystem::path d;
 }
 int Params::readJsonFile(const fs::path& path_2_json){
     try{
