@@ -162,8 +162,6 @@ public:
     void      Save( const std::string_view& FilePath, const std::string_view& TemplatePath ) ;
     eASTCode  Rgm(const std::string_view& parameters = {});
     eASTCode  Opf(const std::string_view& parameters = {});
-    //IPlainRastrResultObject<T>  GetStringVal( const std::string_view& Table, const std::string_view& Col , const long index );
-    //IRastrVariantPtr
     FieldVariantData GetVal( const std::string_view& Table, const std::string_view& Col , const long row );
     std::string GetStringVal( const std::string_view& Table, const std::string_view& Col , const long row );
 signals:
@@ -172,7 +170,6 @@ signals:
 private:
     _sp_rastr sp_rastr_;
      std::unique_ptr<CUIFormsCollection> upCUIFormsCollection_;
-
 };
 
 #endif // QASTRA_H

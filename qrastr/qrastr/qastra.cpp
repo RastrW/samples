@@ -129,6 +129,7 @@ std::string QAstra::GetStringVal( const std::string_view& Table, const std::stri
     return str_val;
 }
 
+
 FieldVariantData QAstra::GetVal( const std::string_view& Table, const std::string_view& Col , const long row )
 {
     IRastrTablesPtr tablesx{ sp_rastr_->Tables() };
@@ -137,6 +138,9 @@ FieldVariantData QAstra::GetVal( const std::string_view& Table, const std::strin
     IRastrObjectPtr<IPlainRastrColumns> columns{ table->Columns() };
     IRastrColumnPtr col {columns->Item(Col)};
     IRastrVariantPtr v_ptr{ col->Value(row) };
+
+    if (IRastrPayload(v_ptr->Type()).Value() == eFieldVariantType::Monostate )
+        return std::monostate();
 
     ePropType col_type = IRastrPayload(col->Type()).Value();
 

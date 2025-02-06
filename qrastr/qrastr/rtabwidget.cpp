@@ -28,7 +28,7 @@
 #include <QtitanGrid.h>
 #include <utils.h>
 #include "License2/json.hpp"
-
+#include <QAbstractItemModelTester>
 #include <DockManager.h>
 #include <QCloseEvent>
 
@@ -52,7 +52,7 @@ RtabWidget::RtabWidget(QWidget *parent) :
     view->tableOptions().setColumnAutoWidth(true);
     view->options().setSelectionPolicy(GridViewOptions::MultiCellSelection);
     //view->options().setNewRowPlace(Qtitan::AtEnd);                        // кнока добавления строки
-     //view->options().f
+    //view->options().setRowRemoveEnabled(false);                           // кнока DEL в контекстном меню
     //view->tableOptions().fi
     //view->options().setGestureEnabled(true);
 
@@ -103,45 +103,42 @@ RtabWidget::RtabWidget(QAstra* pqastra,CUIForm UIForm,RTablesDataManager* pRTDM,
 
     //connect(this, SIGNAL(CondFormatsModified),this, SLOT(onCondFormatsModified()));
     connect(this, &RtabWidget::CondFormatsModified,this, &RtabWidget::onCondFormatsModified);
-    connect(m_pRTDM, SIGNAL(RTDM_UpdateModel(std::string)), this, SLOT(onRTDM_UpdateModel(std::string)));
-    connect(m_pRTDM, SIGNAL(RTDM_UpdateView(std::string)), this, SLOT(onRTDM_UpdateView(std::string)));
 
-    connect(ptv, SIGNAL(onCornerButtonPressed()), SLOT(cornerButtonPressed()));
 
-    connect(this->ptv, SIGNAL(customContextMenuRequested(QPoint)),
-            SLOT(customMenuRequested(QPoint)));
+    //connect(m_pRTDM, SIGNAL(RTDM_UpdateModel(std::string)), this, SLOT(onRTDM_UpdateModel(std::string)));
+    //connect(m_pRTDM, SIGNAL(RTDM_UpdateView(std::string)), this, SLOT(onRTDM_UpdateView(std::string)));
 
+    //connect(ptv, SIGNAL(onCornerButtonPressed()), SLOT(cornerButtonPressed()));
+    //connect(this->ptv, SIGNAL(customContextMenuRequested(QPoint)),SLOT(customMenuRequested(QPoint)));
     //connect(this->ptv, SIGNAL(ContextMenu(QPoint)),
     //        SLOT(customMenuRequested(QPoint)));
+    //connect(this->ptv, SIGNAL(pressed(const QModelIndex &)), SLOT(onItemPressed(const QModelIndex &)));
+    //connect(this->ptv->horizontalHeader(), SIGNAL(customContextMenuRequested(QPoint)), SLOT(customHeaderMenuRequested(QPoint)));
+    //connect(ptv->horizontalHeader(), SIGNAL(filterChanged(size_t , QString )), this, SLOT(updateFilter(size_t , QString) ));
 
-    connect(this->ptv, SIGNAL(pressed(const QModelIndex &)),
-            SLOT(onItemPressed(const QModelIndex &)));
-    connect(this->ptv->horizontalHeader(),
-            SIGNAL(customContextMenuRequested(QPoint)),
-            SLOT(customHeaderMenuRequested(QPoint)));
-    connect(ptv->horizontalHeader(), SIGNAL(filterChanged(size_t , QString )), this, SLOT(updateFilter(size_t , QString) ));
 
     //QTitan
     //Connect Grid's context menu handler.
     connect(view, SIGNAL(contextMenu(ContextMenuEventArgs*)), this, SLOT(contextMenu(ContextMenuEventArgs* )));
-
-    connect(this->view, SIGNAL(cellClicked( CellClickEventArgs* )), this,
-            SLOT(onItemPressed( CellClickEventArgs*)));
+    connect(this->view, SIGNAL(cellClicked( CellClickEventArgs* )), this, SLOT(onItemPressed( CellClickEventArgs*)));
 
 
     CreateModel(pqastra,&m_UIForm);
 
-    SetTableView(*ptv,*prm);                // ширина по шаблону
-    ptv->resizeColumnsToContents();         // ширина по контенту
-    ptv->setParent(this);
+    connect(m_pRTDM, &RTablesDataManager::RTDM_BeginResetModel,this->prm.get(), &RModel::onrm_BeginResetModel);
+    connect(m_pRTDM, &RTablesDataManager::RTDM_EndResetModel,this->prm.get(), &RModel::onrm_EndResetModel);
 
-    int ncols = prm->columnCount();
-    ptv->generateFilters(ncols);
-    ptv->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
+    //SetTableView(*ptv,*prm);                // ширина по шаблону
+    //ptv->resizeColumnsToContents();         // ширина по контенту
+    //ptv->setParent(this);
 
-    QVBoxLayout *layout = new QVBoxLayout(this);
-    layout->addWidget(ptv);
-    setLayout(layout);
+    //int ncols = prm->columnCount();
+    //ptv->generateFilters(ncols);
+    //ptv->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
+
+    //QVBoxLayout *layout = new QVBoxLayout(this);
+    //layout->addWidget(ptv);
+    //setLayout(layout);
 }
 
 
@@ -172,15 +169,15 @@ void RtabWidget::OnClose()
 void RtabWidget::CreateModel(QAstra* pqastra, CUIForm* pUIForm)
 {
     prm = std::unique_ptr<RModel>(new RModel(nullptr, pqastra, m_pRTDM ));
-    proxyModel = new QSortFilterProxyModel(prm.get()); // used for sorting: create proxy //https://doc.qt.io/qt-5/qsortfilterproxymodel.html#details
-    proxyModel->setSourceModel(prm.get());
+    //proxyModel = new QSortFilterProxyModel(prm.get()); // used for sorting: create proxy //https://doc.qt.io/qt-5/qsortfilterproxymodel.html#details
+    //proxyModel->setSourceModel(prm.get());
     prm->setForm(pUIForm);
     prm->populateDataFromRastr();
 
 
     view->beginUpdate();
     view->setModel(prm.get());
-    ptv->setModel(proxyModel);
+    //ptv->setModel(proxyModel);
 
     for (RCol& rcol : *prm->getRdata())
     {
@@ -189,16 +186,16 @@ void RtabWidget::CreateModel(QAstra* pqastra, CUIForm* pUIForm)
             continue;
 
         //Видимость колонок
-        ptv->setColumnHidden(rcol.index,rcol.hidden);
+        //ptv->setColumnHidden(rcol.index,rcol.hidden);
         column_qt->setVisible(!rcol.hidden);
 
         //Настройки отображения колонок по типам
         if (rcol.com_prop_tt == enComPropTT::COM_PR_ENUM)
         {
-            DelegateComboBox* delegate = new DelegateComboBox(this,rcol.NameRef());
-            ptv->setItemDelegateForColumn(rcol.index, delegate);
-            column_qt->setEditorType(GridEditor::ComboBox);
+            //DelegateComboBox* delegate = new DelegateComboBox(this,rcol.NameRef());
+            //ptv->setItemDelegateForColumn(rcol.index, delegate);
 
+            column_qt->setEditorType(GridEditor::ComboBox);
             QStringList list = prm->mnamerefs_.at(rcol.index);
             column_qt->editorRepository()->setDefaultValue(list.at(0), Qt::EditRole);
             column_qt->editorRepository()->setDefaultValue(list, (Qt::ItemDataRole)Qtitan::ComboBoxRole);
@@ -213,8 +210,8 @@ void RtabWidget::CreateModel(QAstra* pqastra, CUIForm* pUIForm)
         if (rcol.com_prop_tt == enComPropTT::COM_PR_REAL)
         {
             int prec = std::atoi(rcol.prec().c_str());
-            DelegateDoubleItem* delegate = new DelegateDoubleItem(prec,this);
-            ptv->setItemDelegateForColumn(rcol.index, delegate);
+            //DelegateDoubleItem* delegate = new DelegateDoubleItem(prec,this);
+            //ptv->setItemDelegateForColumn(rcol.index, delegate);
 
             column_qt->setEditorType(GridEditor::Numeric);
             ((Qtitan::GridNumericEditorRepository *)column_qt->editorRepository())->setMinimum(-100000);
@@ -224,8 +221,8 @@ void RtabWidget::CreateModel(QAstra* pqastra, CUIForm* pUIForm)
 
         if (rcol.com_prop_tt == enComPropTT::COM_PR_BOOL)
         {
-            DelegateCheckBox* delegate = new DelegateCheckBox(this);
-            ptv->setItemDelegateForColumn(rcol.index, delegate);
+            //DelegateCheckBox* delegate = new DelegateCheckBox(this);
+            //ptv->setItemDelegateForColumn(rcol.index, delegate);
 
             column_qt->setEditorType(GridEditor::CheckBox);
             ((Qtitan::GridCheckBoxEditorRepository *)column_qt->editorRepository())->setAppearance(GridCheckBox::StyledAppearance);
@@ -268,10 +265,28 @@ void RtabWidget::CreateModel(QAstra* pqastra, CUIForm* pUIForm)
         }
 
     view->endUpdate();
+
+
+    //new QAbstractItemModelTester( prm.get(), QAbstractItemModelTester::FailureReportingMode::Warning, this);
+
+
     this->update();
     this->repaint();
 }
 
+void RtabWidget::on_calc_begin()
+{
+    //view->beginUpdate();
+}
+void RtabWidget::on_calc_end()
+{
+   // view->beginUpdate();
+    // не знаю как по другому заставить перерисовать grid view после расчета, но надо узнать!
+    //prm->beginresetmodel();
+   // prm->AddRow();
+   // prm->removeRows(prm->rowCount()-1,1);
+   // view->endUpdate();
+}
 void RtabWidget::onRTDM_UpdateModel(std::string tname)
 {
     CreateModel(m_pqastra,&m_UIForm);
@@ -290,6 +305,13 @@ void RtabWidget::onRTDM_UpdateView(std::string tname)
 
     this->repaint();
     this->update();
+}
+
+void RtabWidget::onRTDM_BeginResetModel(std::string tname)
+{
+    // Не работает, при добавлении строки вторая таблица не обновляется пока не ткнешь в нее мышь
+    //prm->
+
 }
 
 void RtabWidget::SetTableView(QTableView& tv, RModel& mm, int myltiplier  )
@@ -346,7 +368,7 @@ void RtabWidget::contextMenu(ContextMenuEventArgs* args)
     // В Qtitane не работают шорткаты, хотя del встроенный работает.
 
     //args->contextMenu()->addAction(QIcon(":/images/Rastr3_grid_insrow_16x16.png"),tr("Вставить"),this,SLOT(insertRow_qtitan()),QKeySequence(Qt::CTRL | Qt::Key_I));
-    args->contextMenu()->addAction(QIcon(":/images/Rastr3_grid_insrow_16x16.png"),tr("Вставить"),tr("Ctrl+I"),this,SLOT(insertRow_qtitan()));
+    args->contextMenu()->addAction(QIcon(":/images/Rastr3_grid_insrow_16x16.png"),tr("Вставить"),QKeySequence(Qt::CTRL | Qt::Key_I),this,SLOT(insertRow_qtitan()));
     args->contextMenu()->addAction(QIcon(":/images/Rastr3_grid_addrow_16x16.png"),tr("Добавить"),this,SLOT(AddRow()),QKeySequence(Qt::CTRL | Qt::Key_A));
     args->contextMenu()->addAction(QIcon(":/images/Rastr3_grid_duprow_16x161.png"),tr("Дублировать"),this,SLOT(DuplicateRow_qtitan()),QKeySequence(Qt::CTRL | Qt::Key_R));
     args->contextMenu()->addAction(QIcon(":/images/Rastr3_grid_delrow_16x16.png"),tr("Удалить"),this,SLOT(deleteRow_qtitan()),QKeySequence(Qt::CTRL | Qt::Key_D));
@@ -390,7 +412,7 @@ void RtabWidget::customMenuRequested(QPoint pos){
     QAction* condFormatAction = new QAction(QIcon(":/icons/edit_cond_formats"), tr("Edit Conditional Formats..."), menu);
 
     std::tuple<int,double> item_sum = GetSumSelected();
-    menu->addAction("Sum: " + QString::number(std::get<1>(item_sum))+" Items: " + QString::number(std::get<0>(item_sum)),this,SLOT());
+    menu->addAction("Сумма: " + QString::number(std::get<1>(item_sum))+" Элементов: " + QString::number(std::get<0>(item_sum)),this,SLOT());
     menu->addSeparator();
     menu->addAction(copyAction);
     menu->addAction(copyWithHeadersAction);

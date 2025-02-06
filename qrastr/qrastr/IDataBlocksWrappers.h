@@ -177,22 +177,24 @@ public:
         }*/
 
     }
-    void QDump(long LimitRows = (std::numeric_limits<long>::max)())
+    void QDump(long LimitRows = (std::numeric_limits<long>::max)() , long LimitCols = (std::numeric_limits<long>::max)())
     {
-         for (IndexT row = 0; row < RowsCount() && row < LimitRows; row++)
+        std::string str_row_vals = "";
+        for (IndexT row = 0; row < RowsCount() && row < LimitRows; row++)
         {
-            for (IndexT column = 0; column < ColumnsCount(); column++)
+            for (IndexT column = 0; column < ColumnsCount() && column < LimitCols; column++)
             {
                 if (column)
-                      qDebug() << ";";
+                    str_row_vals.append( ";");
                 else if (row < BaseT::IndexesVector().size())
-                    qDebug() << BaseT::IndexesVector()[row] << ";";
-                //qDebug() << VariantToString<T>::String(Data()[row * ColumnsCount() + column]);
-                //qDebug() << (Data()[row * ColumnsCount() + column]);
+                {
+                    //str_row_vals.append(BaseT::IndexesVector()[row]);
+                    str_row_vals.append(";");
+                }
+               str_row_vals.append(std::visit(ToString(),Data()[row * ColumnsCount() + column]));
             }
-            qDebug() << "\n";
+            qDebug() <<str_row_vals.c_str();
         }
-
     }
 
     IPlainRastrRetCode Get(IDataBlockSetter<T>& Setter) const noexcept override

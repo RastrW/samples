@@ -32,9 +32,10 @@ void  RTablesDataManager::onRastrHint(const _hint_data& hint_data)
     case EventHints::ChangeAll:
         for (auto [tname,sp_QDB] :  mpTables)
         {
+            emit RTDM_BeginResetModel(tname);
             sp_QDB->Clear();
             GetDataBlock(tname,(*sp_QDB.get()));
-            emit RTDM_UpdateModel(tname);
+            emit RTDM_EndResetModel(tname);
         }
         break;
     case EventHints::ChangeTable:
@@ -55,6 +56,7 @@ void  RTablesDataManager::onRastrHint(const _hint_data& hint_data)
         it = mpTables.find(tname);
         if (it != mpTables.end() )
         {
+            emit RTDM_BeginResetModel(tname);
             IRastrTablesPtr tables{ m_pqastra->getRastr()->Tables() };
             IRastrTablePtr table{ tables->Item(tname) };
             DataBlock<FieldVariantData> variant_block;
@@ -83,12 +85,15 @@ void  RTablesDataManager::onRastrHint(const _hint_data& hint_data)
                         break;
                 }
             }
+            emit RTDM_EndResetModel(tname);
         }
         break;
+
     case EventHints::ChangeRow:
         it = mpTables.find(tname);
         if (it != mpTables.end() )
         {
+            emit RTDM_BeginResetModel(tname);
             QDataBlock* pqdb = it->second.get();
             IRastrTablesPtr tablesx{ m_pqastra->getRastr()->Tables() };
             IRastrPayload tablecount{ tablesx->Count() };
@@ -101,16 +106,18 @@ void  RTablesDataManager::onRastrHint(const _hint_data& hint_data)
                 IRastrVariantPtr value_ptr{ col->Value(row) };
                 pqdb->Set(row,i,value_ptr);
             }
-
+            emit RTDM_EndResetModel(tname);
         }
         break;
-        break;
+
     case EventHints::ChangeData:
         it = mpTables.find(tname);
         if (it != mpTables.end() )
         {
+            emit RTDM_BeginResetModel(tname);
             QDataBlock* pqdb = it->second.get();
             long col_ind = GetColIndex(tname,cname);
+
             IRastrTablesPtr tablesx{ m_pqastra->getRastr()->Tables() };
             IRastrPayload tablecount{ tablesx->Count() };
             IRastrTablePtr table{ tablesx->Item(tname) };
@@ -136,36 +143,23 @@ void  RTablesDataManager::onRastrHint(const _hint_data& hint_data)
                 break;
             }
 
-            FieldVariantData val = m_pqastra->GetVal(tname,cname,row);
-            pqdb->Set(row,col_ind,val);
-            break;
+            //Было
+            //FieldVariantData val = m_pqastra->GetVal(tname,cname,row);
+            //pqdb->Set(row,col_ind,val);
 
-            /*ePropType col_type = GetColType(tname,cname);
-            //double dval = IRastrPayload(v_ptr->Double()).Value();
-            switch (col_type)
+            //Стало: обновляем всю строку
+            DataBlock<FieldVariantData> VDB;
+            VDB.IndexesVector() = {row};
+            IRastrResultVerify(table->DataBlock("", VDB));
+            //VDB.QDump();
+
+            for (int i = 0 ; i < columnscount.Value(); i++)
             {
-            case ePropType::Double:
-                it->second->Set(row,col_ind, IRastrPayload(v_ptr->Double()).Value());
-                break;
-            case ePropType::Int:
-            case ePropType::Enpic:
-            case ePropType::Color:
-            case ePropType::Enum:
-            case ePropType::Superenum:
-                it->second->Set(row,col_ind,  IRastrPayload(v_ptr->Long()).Value());
-                break;
-            case ePropType::String:
-                it->second->Set(row,col_ind, IRastrPayload(v_ptr->String()).Value());
-                break;
-            /*case ePropType::Enum:
-            case ePropType::Superenum:
-                it->second->Set(row,col_ind,IRastrPayload(v_ptr->String()).Value());
-                break;
-
-            default:
-                break;
+                size_t ind = row * columnscount.Value() + i;
+                size_t ind_vdb = 0 * columnscount.Value() + i;
+                pqdb->Data()[ind] = VDB.Data()[ind_vdb];
             }
-            */
+            emit RTDM_EndResetModel(tname);
         }
         break;
 
@@ -173,8 +167,10 @@ void  RTablesDataManager::onRastrHint(const _hint_data& hint_data)
         it = mpTables.find(tname);
         if (it != mpTables.end() )
         {
+            emit RTDM_BeginResetModel(tname);
             QDataBlock* pqdb = it->second.get();
             pqdb->AddRow();
+            emit RTDM_EndResetModel(tname);
         }
         break;
 
@@ -182,8 +178,10 @@ void  RTablesDataManager::onRastrHint(const _hint_data& hint_data)
         it = mpTables.find(tname);
         if (it != mpTables.end() )
         {
+            emit RTDM_BeginResetModel(tname);
             QDataBlock* pqdb = it->second.get();
             pqdb->InsertRow(row);
+            emit RTDM_EndResetModel(tname);
             //pqdb->QDump(10,20);
         }
         break;
@@ -191,8 +189,10 @@ void  RTablesDataManager::onRastrHint(const _hint_data& hint_data)
         it = mpTables.find(tname);
         if (it != mpTables.end() )
         {
+            emit RTDM_BeginResetModel(tname);
             QDataBlock* pqdb = it->second.get();
             pqdb->DeleteRow(row);
+            emit RTDM_EndResetModel(tname);
         }
         break;
 
@@ -270,7 +270,7 @@ void  RTablesDataManager::GetDataBlock(std::string tname , QDataBlock& QDB)
     Options.SetEnumAsInt(TriBool::True);
     Options.SetSuperEnumAsInt(TriBool::True);
     Options.SetUseChangedIndices(true);
-    Options.SetEditatableColumnsOnly(true);
+    //Options.SetEditatableColumnsOnly(true);
     GetDataBlock(tname,QDB,Options);
 }
 

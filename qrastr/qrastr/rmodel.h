@@ -34,7 +34,6 @@ public:
     int rowCount(const QModelIndex &parent = QModelIndex()) const override;
     int columnCount(const QModelIndex &parent = QModelIndex()) const override;
     QVariant data(const QModelIndex &index, int role = Qt::DisplayRole) const override;
-    //void setFormIndx(int n_form_indx) { n_form_indx_ = n_form_indx; };
     void setForm( CUIForm* _pUIForm) { pUIForm_ = _pUIForm; };
     int populateDataFromRastr();
     std::vector<std::tuple<int,int>>  ColumnsWidth ();
@@ -79,22 +78,16 @@ private:
     QVariant getMatchingCondFormat(const std::map<size_t, std::vector<CondFormat>>& mCondFormats, size_t row, size_t column, const QString& value, int role) const;
     std::map<size_t, std::vector<CondFormat>> m_mRowIdFormats;
     std::map<size_t, std::vector<CondFormat>> m_mCondFormats;
+
 signals:
-
     void editCompleted(const QString &);
-     //QModelIndex &index, const QVariant &value
+    //void dataChanged(std::string _t_name, QModelIndex index, QVariant value);
+   // void dataChanged(std::string _t_name, std::string _col_name, int _row, QVariant _value);
 
-    //void dataChanged2(std::string _t_name);
-    void dataChanged(std::string _t_name, QModelIndex index, QVariant value);
-    void dataChanged(std::string _t_name, std::string _col_name, int _row, QVariant _value);
-    void RowInserted(std::string _t_name, int _row);
-    void RowDeleted(std::string _t_name, int _row);
-//private slots:
-    public slots:
-    //void onRModelchange(std::string _t_name, QModelIndex index, QVariant value);
-    void onRModelchange(std::string _t_name, std::string _col_name, int _row, QVariant _value);
-    void onrm_RowInserted(std::string _t_name, int _row);
-    void onrm_RowDeleted(std::string _t_name, int _row);
+public slots:
+    //void onRModelchange(std::string _t_name, std::string _col_name, int _row, QVariant _value);
+    void onrm_BeginResetModel(std::string _t_name);
+    void onrm_EndResetModel(std::string _t_name);
 };
 
 #endif // RMODEL_H

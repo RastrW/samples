@@ -150,6 +150,7 @@ void MainWindow::dropEvent(QDropEvent *dropEvent){
        std::string fileName = url.toLocalFile().toStdString();
        filePathList << url.toLocalFile();
        m_sp_qastra->Load( eLoadCode::RG_REPL, fileName, "" );
+       setWindowTitle(tr(fileName.c_str()));
    }
    dropEvent->acceptProposedAction();
 }
@@ -334,6 +335,7 @@ void MainWindow::open(){
                         bl_find_template = true;
                         const std::string str_path_to_shablon = Params::GetInstance()->getDirSHABLON().absolutePath().toStdString() + "//" +template_ext.first +template_ext.second;
                         m_sp_qastra->Load( eLoadCode::RG_REPL, rfile.toStdString(), str_path_to_shablon );
+                        setWindowTitle(rfile);
                         break;
                     }
                 }
@@ -342,6 +344,7 @@ void MainWindow::open(){
                 }
             }else{
                 IPlainRastrRetCode res = m_sp_qastra->Load( eLoadCode::RG_REPL, rfile.toStdString(), "" );
+                setWindowTitle(rfile);
                 if (res ==IPlainRastrRetCode::Ok )
                     spdlog::info("File loaded {}", rfile.toStdString());
                 else
@@ -364,6 +367,7 @@ void MainWindow::open(){
         }
 #endif//#if(!defined(QICSGRID_NO))
         m_sp_qastra->Load(eLoadCode::RG_REPL, fileName.toStdString(),"");
+        setWindowTitle(fileName);
         m_cur_file = fileName.toStdString();
     }
 }
@@ -431,6 +435,7 @@ void MainWindow::saveAs(){
     }
 }
 void MainWindow::rgm_wrap(){
+    emit signal_calc_begin();
     eASTCode code = m_sp_qastra->Rgm("");
     std::string str_msg = "";
     if (code == eASTCode::AST_OK){
@@ -441,10 +446,13 @@ void MainWindow::rgm_wrap(){
         spdlog::error("{} : {}", static_cast<int>(code), str_msg);
     }
     statusBar()->showMessage( str_msg.c_str(), 0 );
-    emit rgm_signal();
+    emit signal_calc_end();
+    //emit rgm_signal();
 }
 void MainWindow::oc_wrap(){
+    emit signal_calc_begin();
     eASTCode code = m_sp_qastra->Opf("s");
+
     std::string str_msg = "";
     if (code == eASTCode::AST_OK){
         str_msg = "Оценка состояния выполнена успешно";
@@ -454,7 +462,8 @@ void MainWindow::oc_wrap(){
         spdlog::error("{} : {}", static_cast<int>(code), str_msg);
     }
     statusBar()->showMessage( str_msg.c_str(), 0 );
-    emit rgm_signal();
+    emit signal_calc_end();
+    //emit rgm_signal();
 }
 void MainWindow::onDlgMcr(){
     McrWnd* pMcrWnd = new McrWnd(this) ;
@@ -473,6 +482,9 @@ void MainWindow::onOpenForm( QAction* p_actn ){
     qDebug() << "\n Open form:" + form.Name();
     spdlog::info( "Create tab [{}]", stringutils::cp1251ToUtf8(form.Name()) );
     RtabWidget *prtw = new RtabWidget(m_sp_qastra.get(),form,&m_RTDM,m_DockManager,this);
+
+    QObject::connect(this, &MainWindow::signal_calc_begin, prtw, &RtabWidget::on_calc_begin);
+    QObject::connect(this, &MainWindow::signal_calc_end, prtw, &RtabWidget::on_calc_end);
 
     // Docking
     if(false){

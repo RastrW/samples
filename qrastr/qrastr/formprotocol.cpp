@@ -120,5 +120,6 @@ void FormProtocol::onRastrLog(const _log_data& log_data){
     }
     p_protocol_tree_model_->layoutChanged();
     //new QAbstractItemModelTester( p_protocol_tree_model_, QAbstractItemModelTester::FailureReportingMode::Fatal, this);
-    new QAbstractItemModelTester( p_protocol_tree_model_, QAbstractItemModelTester::FailureReportingMode::Warning, this);
+
+    //new QAbstractItemModelTester( p_protocol_tree_model_, QAbstractItemModelTester::FailureReportingMode::Warning, this);
 }

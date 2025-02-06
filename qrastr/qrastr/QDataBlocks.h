@@ -702,6 +702,25 @@ class QDenseDataBlock : public MyDenseDataBlock<T>
             return IPlainRastrRetCode::Failed;
         }
     }
+    IPlainRastrRetCode Set(IndexT RowIndex, std::string_view ColumnName, const T& Value) noexcept
+    {
+        IndexT ColumnIndex = -1;
+        for (int i = 0 ; i < this->ColumnsCount() ; i++ )
+            if (this->Columns_[i] == ColumnName)
+            {
+                ColumnIndex = i;
+                break;
+            }
+        if (ColumnIndex < 0)
+            return IPlainRastrRetCode::Failed;
+
+        try {
+            this->Data()[RowIndex * this->ColumnsCount() + ColumnIndex] = Value;
+            return IPlainRastrRetCode::Ok;
+        } catch (...) {
+            return IPlainRastrRetCode::Failed;
+        }
+    }
     IPlainRastrRetCode AddRow(IndexT count = 1) noexcept
     {
         try {

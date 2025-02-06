@@ -133,6 +133,8 @@ signals:
     void onCornerButtonPressed();
     void CondFormatsModified();
 public slots:
+    void on_calc_begin();
+    void on_calc_end();
     void OnClose();
     void onvisibilityChanged(bool visible);
     void contextMenu(ContextMenuEventArgs* args);
@@ -178,6 +180,8 @@ private slots:
     void CreateModel(QAstra* pqastra,CUIForm* pUIForm);
     void onRTDM_UpdateModel(std::string tname);
     void onRTDM_UpdateView(std::string tname);
+    void onRTDM_BeginResetModel(std::string tname);
+
 
 public:
     std::unique_ptr<RModel> prm;

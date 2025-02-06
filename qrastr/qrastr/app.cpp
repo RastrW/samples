@@ -197,6 +197,7 @@ void App::loadPlugins(){
                     //m_sp_qastra = std::move( std::make_shared<QAstra>());
                     m_sp_qastra = std::make_shared<QAstra>();
                     m_sp_qastra->setRastr(rastr);
+
                 }catch(const std::exception& ex){
                     exclog(ex);
                 }catch(...){

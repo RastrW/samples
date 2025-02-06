@@ -44,6 +44,9 @@ private:
 signals:
     void RTDM_UpdateModel(std::string tname);
     void RTDM_UpdateView(std::string tname);
+    void RTDM_BeginResetModel(std::string tname);
+    void RTDM_EndResetModel(std::string tname);
+
 
 private:
     QAstra* m_pqastra;

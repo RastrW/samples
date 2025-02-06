@@ -201,12 +201,12 @@ bool RModel::setData(const QModelIndex &index, const QVariant &value, int role)
                 break;
         }
 
-        if (emitSignals())
+        /*if (emitSignals())
         {
             emit dataChanged(getRdata()->t_name_,getRCol(col)->name(),row,value );
             return true;
-        }
-        return false;
+        }*/
+        return true;
     }
     return false;
 }
@@ -438,7 +438,7 @@ bool RModel::removeColumns(int column, int count, const QModelIndex &parent)
     return true;
 }
 
-void RModel::onRModelchange(std::string _t_name, std::string _col_name, int row, QVariant value)
+/*void RModel::onRModelchange(std::string _t_name, std::string _col_name, int row, QVariant value)
 {
     if (_t_name != this->getRdata()->t_name_)
         return;
@@ -483,38 +483,19 @@ void RModel::onRModelchange(std::string _t_name, std::string _col_name, int row,
             break;
     }
 }
+*/
 
-void RModel::onrm_RowInserted(std::string _t_name, int _row)
+void RModel::onrm_BeginResetModel(std::string _t_name)
 {
-    // видимо проще всего получить новый DataBlock
+    if (this->getRdata()->t_name_ == _t_name)
+        beginResetModel();
+}
+void RModel::onrm_EndResetModel(std::string _t_name)
+{
+    if (this->getRdata()->t_name_ == _t_name)
+        endResetModel();
+}
 
-    /*
-     * Плоская dll
-     _vt val;
-    if ( (_row < 0) || (_row > (this->getRdata()[0]).size() )) // add at end
-    {
-        for( RCol& col : *this->getRdata() )
-        {
-            col.push_back(val);
-        }
-    }
-    else
-    {
-        for( RCol& col : *this->getRdata() )
-        {
-            col.insert(col.begin()+_row,val);
-        }
-    }
-    */
-}
-void RModel::onrm_RowDeleted(std::string _t_name, int _row)
-{
-    /*for( RCol& col : *this->getRdata() )
-    {
-        col.erase(col.begin()+_row);
-    }
-    */
-}
 
 bool RModel::isBinary(const QModelIndex& index) const
 {

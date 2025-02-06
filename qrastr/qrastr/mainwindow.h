@@ -71,6 +71,8 @@ signals:
     void rm_RowInserted(std::string _t_name, int _row);
     void rm_RowDeleted(std::string _t_name, int _row);
     void rm_update(std::string _t_name);
+    void signal_calc_begin();
+    void signal_calc_end();
 ///slots.begin
 private slots:
     void newFile();
