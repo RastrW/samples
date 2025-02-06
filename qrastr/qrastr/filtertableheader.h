@@ -2,6 +2,7 @@
 #define FILTERTABLEHEADER_H
 
 #include <QHeaderView>
+#include <QTableView>
 class FilterLineEdit;
 
 class FilterTableHeader : public QHeaderView

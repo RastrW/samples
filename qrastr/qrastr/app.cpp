@@ -153,9 +153,11 @@ long App::init(){
         //const bool bl_res = QDir::setCurrent(qdirData_.path()); assert(bl_res==true);
         const bool bl_res = QDir::setCurrent(Params::GetInstance()->getDirData().path()); assert(bl_res==true);
         //std::filesystem::path path_log{ qdirData_.absolutePath().toStdString() };
-        std::filesystem::path path_log{ Params::GetInstance()->getDirData().absolutePath().toStdString() };
+        fs::path path_log{ Params::GetInstance()->getDirData().absolutePath().toStdString() };
         path_log /= L"qrastr_log.txt";
-        auto rotating_sink = std::make_shared<spdlog::sinks::rotating_file_sink_mt>( path_log.c_str(), 1024*1024*1, 3);
+        auto rotating_sink = std::make_shared<spdlog::sinks::rotating_file_sink_mt>( path_log.string(), 1024*1024*1, 3);
+        //auto rotating_sink = std::make_shared<spdlog::sinks::rotating_file_sink_mt>( "sdfdsf", 1024*1024*1, 3);
+        //auto rotating_sink =            spdlog::rotating_logger_mt("some_logger_name", "logs/rotating.txt", 1048576 * 5, 3);
         std::vector<spdlog::sink_ptr> sinks{ console_sink, rotating_sink };
         logg->sinks().push_back(rotating_sink);
         spdlog::info( "ReadSetting: {}", n_res );
@@ -223,8 +225,8 @@ long App::readForms(){
             path_form_load =  path_forms / path_file_form;
             qDebug() << "read form from file : " << path_form_load.wstring();
     #else
-            path_forms_load = str_path_to_file_forms;
-            qDebug() << "read form from file : " << path_forms_load.c_str();
+            //path_forms_load = str_path_to_file_forms;
+            //qDebug() << "read form from file : " << path_forms_load.c_str();
     #endif
             CUIFormsCollection* CUIFormsCollection_ = new CUIFormsCollection ;
             if (path_form_load.extension() == ".fm")

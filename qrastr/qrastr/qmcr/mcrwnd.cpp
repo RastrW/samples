@@ -441,15 +441,15 @@ void McrWnd::encode(std::string& data){
 void McrWnd::encode(std::string& data_out, const QString& qstr_in){
     data_out.reserve(qstr_in.length() + 50);
     for(size_t pos = 0; pos != qstr_in.length(); ++pos) {
-        if      (QLatin1Char('&')  == qstr_in[pos]){
+        if      (QLatin1Char('&')  == qstr_in[static_cast<int>(pos)]){
             data_out.append("&amp;");
-        }else if(QLatin1Char('\"') == qstr_in[pos]){
+        }else if(QLatin1Char('\"') == qstr_in[static_cast<int>(pos)]){
             data_out.append("&quot;");
-        }else if(QLatin1Char('\'') == qstr_in[pos]){
+        }else if(QLatin1Char('\'') == qstr_in[static_cast<int>(pos)]){
             data_out.append("&apos;");
-        }else if(QLatin1Char('<')  == qstr_in[pos]){
+        }else if(QLatin1Char('<')  == qstr_in[static_cast<int>(pos)]){
             data_out.append("&lt;");
-        }else if(QLatin1Char('>')  == qstr_in[pos]){
+        }else if(QLatin1Char('>')  == qstr_in[static_cast<int>(pos)]){
             data_out.append("&gt;");
         }else{
             data_out.append("x", 1);

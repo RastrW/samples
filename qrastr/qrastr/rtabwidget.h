@@ -15,7 +15,7 @@
 #include "formexportcsv.h"
 #include "formimportcsv2.h"
 #include "rmodel.h"
-#include "RtableView.h"
+#include "rtableview.h"
 #include "rtablesdatamanager.h"
 #include "utils.h"
 #include "linkedform.h"
