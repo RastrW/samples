@@ -167,10 +167,10 @@ void  RTablesDataManager::onRastrHint(const _hint_data& hint_data)
         it = mpTables.find(tname);
         if (it != mpTables.end() )
         {
-            emit RTDM_BeginResetModel(tname);
+            emit RTDM_BeginInsertRow(tname,row,row);
             QDataBlock* pqdb = it->second.get();
             pqdb->AddRow();
-            emit RTDM_EndResetModel(tname);
+            emit RTDM_EndInsertRow(tname);
         }
         break;
 
@@ -178,10 +178,10 @@ void  RTablesDataManager::onRastrHint(const _hint_data& hint_data)
         it = mpTables.find(tname);
         if (it != mpTables.end() )
         {
-            emit RTDM_BeginResetModel(tname);
+            emit RTDM_BeginInsertRow(tname,row,row);
             QDataBlock* pqdb = it->second.get();
             pqdb->InsertRow(row);
-            emit RTDM_EndResetModel(tname);
+            emit RTDM_EndInsertRow(tname);
             //pqdb->QDump(10,20);
         }
         break;

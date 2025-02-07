@@ -46,6 +46,8 @@ signals:
     void RTDM_UpdateView(std::string tname);
     void RTDM_BeginResetModel(std::string tname);
     void RTDM_EndResetModel(std::string tname);
+    void RTDM_BeginInsertRow(std::string tname,int first,int last);
+    void RTDM_EndInsertRow(std::string tname);
 
 
 private:

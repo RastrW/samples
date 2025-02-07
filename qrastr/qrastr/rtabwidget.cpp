@@ -127,6 +127,8 @@ RtabWidget::RtabWidget(QAstra* pqastra,CUIForm UIForm,RTablesDataManager* pRTDM,
 
     connect(m_pRTDM, &RTablesDataManager::RTDM_BeginResetModel,this->prm.get(), &RModel::onrm_BeginResetModel);
     connect(m_pRTDM, &RTablesDataManager::RTDM_EndResetModel,this->prm.get(), &RModel::onrm_EndResetModel);
+    connect(m_pRTDM, &RTablesDataManager::RTDM_BeginInsertRow,this->prm.get(), &RModel::onrm_BeginInsertRow);
+    connect(m_pRTDM, &RTablesDataManager::RTDM_EndInsertRow,this->prm.get(), &RModel::onrm_EndInsertRow);
 
     //SetTableView(*ptv,*prm);                // ширина по шаблону
     //ptv->resizeColumnsToContents();         // ширина по контенту

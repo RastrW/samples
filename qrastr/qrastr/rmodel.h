@@ -88,6 +88,8 @@ public slots:
     //void onRModelchange(std::string _t_name, std::string _col_name, int _row, QVariant _value);
     void onrm_BeginResetModel(std::string _t_name);
     void onrm_EndResetModel(std::string _t_name);
+    void onrm_BeginInsertRow(std::string _t_name,int first, int last);
+    void onrm_EndInsertRow(std::string _t_name);
 };
 
 #endif // RMODEL_H

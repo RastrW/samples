@@ -201,11 +201,11 @@ bool RModel::setData(const QModelIndex &index, const QVariant &value, int role)
                 break;
         }
 
-        /*if (emitSignals())
+        if (emitSignals())
         {
-            emit dataChanged(getRdata()->t_name_,getRCol(col)->name(),row,value );
-            return true;
-        }*/
+            //emit dataChanged(getRdata()->t_name_,getRCol(col)->name(),row,value );
+            emit dataChanged(index,index );
+        }
         return true;
     }
     return false;
@@ -367,10 +367,8 @@ bool RModel::AddRow(size_t count ,const QModelIndex &parent)
     IRastrTablePtr table{ tablesx->Item(getRdata()->t_name_) };
     IRastrPayload sz{table->Size()};
 
-    beginInsertRows(parent,sz.Value(),sz.Value() + count -1);
     for (size_t i = 0 ; i < count ; i++ )
         IPlainRastrResult* pres = table->AddRow();
-    endInsertRows();
 
     return true;
 }
@@ -381,10 +379,8 @@ bool RModel::insertRows(int row, int count, const QModelIndex &parent)
     IRastrTablePtr table{ tablesx->Item(getRdata()->t_name_) };
     IRastrPayload sz{table->Size()};
 
-    beginInsertRows(parent,sz.Value(),sz.Value() + count -1);
     for (size_t i = 0 ; i < count ; i++ )
         IPlainRastrResult* pres = table->InsertRow(row);
-    endInsertRows();
 
     return true;
 }
@@ -395,9 +391,9 @@ bool RModel::DuplicateRow(int row, const QModelIndex &parent)
     IRastrTablePtr table{ tablesx->Item(getRdata()->t_name_) };
     IRastrPayload sz{table->Size()};
 
-    beginInsertRows(parent,sz.Value(),sz.Value());
+    //beginInsertRows(parent,sz.Value(),sz.Value());
     IPlainRastrResult* pres = table->DuplicateRow(row); // send EventHints::InsertRow
-    endInsertRows();
+    //endInsertRows();
 
     //Дублируем данные в клиенте
     this->up_rdata->pnparray_->DuplicateRow(row);
@@ -494,6 +490,17 @@ void RModel::onrm_EndResetModel(std::string _t_name)
 {
     if (this->getRdata()->t_name_ == _t_name)
         endResetModel();
+}
+void RModel::onrm_BeginInsertRow(std::string _t_name,int first, int last)
+{
+    const QModelIndex parent = QModelIndex();
+    if (this->getRdata()->t_name_ == _t_name)
+        beginInsertRows(parent,first,last);
+}
+void RModel::onrm_EndInsertRow(std::string _t_name)
+{
+    if (this->getRdata()->t_name_ == _t_name)
+        endInsertRows();
 }
 
 
