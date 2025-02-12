@@ -20,7 +20,7 @@ public:
     long row;
     std::vector<int> vbindvals;
     RtabWidget* pbaseform;
-    QMetaObject::Connection conn;
+    std::vector<QMetaObject::Connection> vconn;
 
    /* {
         for (const auto key : split( bind ,','))

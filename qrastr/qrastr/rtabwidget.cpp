@@ -3,7 +3,7 @@
 #include <QRegularExpression>
 #include <QLineEdit>
 #include <QScrollBar>
-#include "filtertableheader.h"
+//#include "filtertableheader.h"
 #include <QMimeData>
 #include <QApplication>
 #include <QClipboard>
@@ -15,8 +15,8 @@
 //using WrapperExceptionType = std::runtime_error;
 //#include "IPlainRastrWrappers.h"
 #include "delegatecombobox.h"
-#include "delegatedoubleitem.h"
-#include "delegatecheckbox.h"
+//#include "delegatedoubleitem.h"
+//#include "delegatecheckbox.h"
 #include <QShortcut>
 #include <QPalette>
 #include "CondFormat.h"
@@ -24,10 +24,10 @@
 #include "condformatjson.h"
 #include "linkedform.h"
 
-#include "Settings.h"
+//#include "Settings.h"
 #include <QtitanGrid.h>
 #include <utils.h>
-#include "License2/json.hpp"
+//#include "License2/json.hpp"
 #include <QAbstractItemModelTester>
 #include <DockManager.h>
 #include <QCloseEvent>
@@ -106,8 +106,6 @@ RtabWidget::RtabWidget(QAstra* pqastra,CUIForm UIForm,RTablesDataManager* pRTDM,
 
 
     //connect(m_pRTDM, SIGNAL(RTDM_UpdateModel(std::string)), this, SLOT(onRTDM_UpdateModel(std::string)));
-    //connect(m_pRTDM, SIGNAL(RTDM_UpdateView(std::string)), this, SLOT(onRTDM_UpdateView(std::string)));
-
     //connect(ptv, SIGNAL(onCornerButtonPressed()), SLOT(cornerButtonPressed()));
     //connect(this->ptv, SIGNAL(customContextMenuRequested(QPoint)),SLOT(customMenuRequested(QPoint)));
     //connect(this->ptv, SIGNAL(ContextMenu(QPoint)),
@@ -148,7 +146,9 @@ void RtabWidget::closeEvent(QCloseEvent *event)
 {
     qDebug()<<"RtabWidget::Destructor "<< "[" <<m_UIForm.Name().c_str() << "]";
     QWidget::closeEvent(event);
-    disconnect(m_lf.conn);
+    for(auto conn : m_lf.vconn)
+        disconnect(conn);
+
     if (event->spontaneous()) {
         qDebug("The close button was clicked");
         // do event->ignore();
@@ -175,7 +175,6 @@ void RtabWidget::CreateModel(QAstra* pqastra, CUIForm* pUIForm)
     //proxyModel->setSourceModel(prm.get());
     prm->setForm(pUIForm);
     prm->populateDataFromRastr();
-
 
     view->beginUpdate();
     view->setModel(prm.get());
@@ -229,6 +228,22 @@ void RtabWidget::CreateModel(QAstra* pqastra, CUIForm* pUIForm)
             column_qt->setEditorType(GridEditor::CheckBox);
             ((Qtitan::GridCheckBoxEditorRepository *)column_qt->editorRepository())->setAppearance(GridCheckBox::StyledAppearance);
         }
+        /*if (rcol.com_prop_tt == enComPropTT::COM_PR_ENPIC)
+        {
+            // TO DO: сделать комбобокс из картинок
+           // column_qt->setEditorType(GridEditor::ComboBoxPicture);
+           // ((Qtitan::GridPictureComboBoxEditorRepository*)column_qt->editorRepository())->setIcon( QPixmap(QStringLiteral(":images/cut.png")));
+
+            column_qt->setEditorType(GridEditor::ComboBoxPicture);
+            QList<QPixmap> qpixmaplist;
+            qpixmaplist.push_back( QPixmap(QStringLiteral(":images/cut.png")));
+            qpixmaplist.push_back( QPixmap(QStringLiteral(":images/copy.png")));
+            QStringList list = prm->mnamerefs_.at(rcol.index);
+            //qtn_pixmap_to_qvariant(1,qpixmaplist.at(0))
+            column_qt->editorRepository()->setDefaultValue(qpixmaplist.at(0), Qt::EditRole);
+            column_qt->editorRepository()->setDefaultValue(list, (Qt::ItemDataRole)Qtitan::ComboBoxRole);
+
+        }*/
     }
 
     //Порядок колонок как в форме
@@ -278,42 +293,16 @@ void RtabWidget::CreateModel(QAstra* pqastra, CUIForm* pUIForm)
 
 void RtabWidget::on_calc_begin()
 {
-    //view->beginUpdate();
+    // TO DO something
 }
 void RtabWidget::on_calc_end()
 {
-   // view->beginUpdate();
-    // не знаю как по другому заставить перерисовать grid view после расчета, но надо узнать!
-    //prm->beginresetmodel();
-   // prm->AddRow();
-   // prm->removeRows(prm->rowCount()-1,1);
-   // view->endUpdate();
+    // TO DO something
 }
 void RtabWidget::onRTDM_UpdateModel(std::string tname)
 {
     CreateModel(m_pqastra,&m_UIForm);
     ptv->update();
-}
-void RtabWidget::onRTDM_UpdateView(std::string tname)
-{
-    // Не работает, при добавлении строки вторая таблица не обновляется пока не ткнешь в нее мышь
-    ptv->update();
-    ptv->repaint();
-    QPalette paletteBGColor;
-    QBrush brush;
-    brush.setColor(Qt::black);
-    paletteBGColor.setBrush(QPalette::Base, brush);
-    this->setPalette(paletteBGColor);
-
-    this->repaint();
-    this->update();
-}
-
-void RtabWidget::onRTDM_BeginResetModel(std::string tname)
-{
-    // Не работает, при добавлении строки вторая таблица не обновляется пока не ткнешь в нее мышь
-    //prm->
-
 }
 
 void RtabWidget::SetTableView(QTableView& tv, RModel& mm, int myltiplier  )
@@ -352,13 +341,11 @@ void RtabWidget::contextMenu(ContextMenuEventArgs* args)
     connect(openAct, SIGNAL(triggered()), this, SLOT(open()));
 */
 
-
-
     args->contextMenu()->addSeparator();
     args->contextMenu()->addAction(qstr_col_props, this, SLOT(OpenColPropForm()));
 
     std::tuple<int,double> item_sum = GetSumSelected();
-    args->contextMenu()->addAction("Sum: " + QString::number(std::get<1>(item_sum))+" Items: " + QString::number(std::get<0>(item_sum)),this,SLOT());
+    args->contextMenu()->addAction("Сумма: " + QString::number(std::get<1>(item_sum))+" Элементов: " + QString::number(std::get<0>(item_sum)),this,nullptr);
     //args->contextMenu()->addAction(tr("Скрыть колонку"),this,SLOT(hideColumns()));
     args->contextMenu()->addSeparator();
 
@@ -371,9 +358,9 @@ void RtabWidget::contextMenu(ContextMenuEventArgs* args)
 
     //args->contextMenu()->addAction(QIcon(":/images/Rastr3_grid_insrow_16x16.png"),tr("Вставить"),this,SLOT(insertRow_qtitan()),QKeySequence(Qt::CTRL | Qt::Key_I));
     args->contextMenu()->addAction(QIcon(":/images/Rastr3_grid_insrow_16x16.png"),tr("Вставить"),QKeySequence(Qt::CTRL | Qt::Key_I),this,SLOT(insertRow_qtitan()));
-    args->contextMenu()->addAction(QIcon(":/images/Rastr3_grid_addrow_16x16.png"),tr("Добавить"),this,SLOT(AddRow()),QKeySequence(Qt::CTRL | Qt::Key_A));
-    args->contextMenu()->addAction(QIcon(":/images/Rastr3_grid_duprow_16x161.png"),tr("Дублировать"),this,SLOT(DuplicateRow_qtitan()),QKeySequence(Qt::CTRL | Qt::Key_R));
-    args->contextMenu()->addAction(QIcon(":/images/Rastr3_grid_delrow_16x16.png"),tr("Удалить"),this,SLOT(deleteRow_qtitan()),QKeySequence(Qt::CTRL | Qt::Key_D));
+    args->contextMenu()->addAction(QIcon(":/images/Rastr3_grid_addrow_16x16.png"),tr("Добавить"),QKeySequence(Qt::CTRL | Qt::Key_A),this,SLOT(AddRow()));
+    args->contextMenu()->addAction(QIcon(":/images/Rastr3_grid_duprow_16x161.png"),tr("Дублировать"),QKeySequence(Qt::CTRL | Qt::Key_R),this,SLOT(DuplicateRow_qtitan()));
+    args->contextMenu()->addAction(QIcon(":/images/Rastr3_grid_delrow_16x16.png"),tr("Удалить"),QKeySequence(Qt::CTRL | Qt::Key_D),this,SLOT(deleteRow_qtitan()));
     args->contextMenu()->addAction(QIcon(":/images/column_edit.png"),tr("Групповая коррекция"), this, SLOT(OpenGroupCorrection()));
     connect(sC_CTRL_I, &QShortcut::activated, this, &RtabWidget::insertRow_qtitan);
     connect(sC_CTRL_A, &QShortcut::activated, this, &RtabWidget::AddRow);
@@ -414,12 +401,12 @@ void RtabWidget::customMenuRequested(QPoint pos){
     QAction* condFormatAction = new QAction(QIcon(":/icons/edit_cond_formats"), tr("Edit Conditional Formats..."), menu);
 
     std::tuple<int,double> item_sum = GetSumSelected();
-    menu->addAction("Сумма: " + QString::number(std::get<1>(item_sum))+" Элементов: " + QString::number(std::get<0>(item_sum)),this,SLOT());
+    menu->addAction("Сумма: " + QString::number(std::get<1>(item_sum))+" Элементов: " + QString::number(std::get<0>(item_sum)),this,nullptr);
     menu->addSeparator();
     menu->addAction(copyAction);
     menu->addAction(copyWithHeadersAction);
-    menu->addAction(QIcon(":/images/Rastr3_grid_insrow_16x16.png"),tr("Insert Row"),this,SLOT(insertRow()),QKeySequence(Qt::CTRL | Qt::Key_I));
-    menu->addAction(QIcon(":/images/Rastr3_grid_delrow_16x16.png"),tr("Delete Row"),this,SLOT(deleteRow()),QKeySequence(Qt::CTRL | Qt::Key_D));
+    menu->addAction(QIcon(":/images/Rastr3_grid_insrow_16x16.png"),tr("Insert Row"),QKeySequence(Qt::CTRL | Qt::Key_I),this,SLOT(insertRow()));
+    menu->addAction(QIcon(":/images/Rastr3_grid_delrow_16x16.png"),tr("Delete Row"),QKeySequence(Qt::CTRL | Qt::Key_D),this,SLOT(deleteRow()));
     //menu->addAction(tr("Hide Rows"),this,SLOT(hideRows()));
     //menu->addAction(tr("Unhide Rows"),this,SLOT(unhideRows()));
     menu->addSeparator();
@@ -555,20 +542,16 @@ void RtabWidget::onOpenLinkedForm( LinkedForm _lf)
         return;
 
     RtabWidget *prtw = new RtabWidget(m_pqastra,*pUIForm,m_pRTDM,m_DockManager,this);
-    //prtw->SetLinkedForm(_lf);
 
-    // connect(button, &QPushButton::clicked, [this, text] { clicked(text); });
-    //connect(view, &GridTableView::cellClicked, [this] { FillBindVals(); });
-
-    _lf.conn = connect(this->view, SIGNAL(cellClicked( CellClickEventArgs* )), prtw,
-            SLOT(onLinkedFormUpdate( CellClickEventArgs*)));
+    //_lf.vconn.push_back(connect(this->view, SIGNAL(cellClicked( CellClickEventArgs* )), prtw,
+    //        SLOT(onLinkedFormUpdate( CellClickEventArgs*))));
+    _lf.vconn.push_back(connect(view, &GridTableView::focusRowChanged, prtw, &RtabWidget::onfocusRowChanged));
 
     prtw->SetLinkedForm(_lf);
 
     auto dw = new ads::CDockWidget( stringutils::cp1251ToUtf8(pUIForm->Name()).c_str(), this);
     dw->setWidget(prtw->m_grid);
-    connect( dw, SIGNAL( closed() ),
-            prtw, SLOT( OnClose() ) );                    // emit RtabWidget->closeEvent
+    connect( dw, SIGNAL( closed() ), prtw, SLOT( OnClose() ) );                    // emit RtabWidget->closeEvent
 
     auto area = m_DockManager->addDockWidgetTab(ads::BottomAutoHideArea, dw);
     dw->setFeature(ads::CDockWidget::DockWidgetDeleteOnClose, true);
@@ -726,14 +709,20 @@ void RtabWidget::onCondFormatsModified()
 
 void RtabWidget::onLinkedFormUpdate( CellClickEventArgs* _args)
 {
-    int row = _args->cell().rowIndex();
+    /*int row = _args->cell().rowIndex();
     int col = _args->cell().columnIndex();
-    qDebug()<<"Linked form catch Pressed:" <<row<< ","<<col;
+    qDebug()<<"Linked form catch Cell catch Pressed:" <<row<< ","<<col;*/
+}
 
-    m_lf.row = row;
+void RtabWidget::onfocusRowChanged( int _row_old,int _row_new)
+{
+    qDebug()<<"Linked form catch rowchanged: old row" <<_row_old<< ", row new"<<_row_new;
+
+    m_lf.row = _row_new;
     m_lf.FillBindVals();
     SetLinkedForm(m_lf);
 }
+
 void RtabWidget::onItemPressed( CellClickEventArgs* _args)
 {
     int row = _args->cell().rowIndex();

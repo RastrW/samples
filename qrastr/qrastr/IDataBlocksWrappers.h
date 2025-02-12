@@ -120,7 +120,7 @@ public:
     eFieldVariantType Type() const noexcept override { return MapFieldVariantType<T>::Type(); }
     const T* const Data() const noexcept override { return data_; }
     T* Data() noexcept override { return data_; }
-    IndexT DataSize() const noexcept { return ColumnsCount() * RowsCount(); };
+    IndexT DataSize() const noexcept override { return ColumnsCount() * RowsCount(); };
     IPlainRastrRetCode SetBlockSize(IndexT RowsCount, IndexT ColumnsCount, bool UseIndexes) noexcept override
     {
         try

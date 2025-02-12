@@ -47,7 +47,7 @@ void formexportcsv::accept()
     IRastrTablesPtr tablesx{ prdata_->pqastra_->getRastr()->Tables() };
     IRastrTablePtr table{ tablesx->Item(table_name) };
     if (!selection.empty())
-        table->SetSelection(selection);
+        IRastrResultVerify{table->SetSelection(selection)};
 
     eCSVCode kod = eCSVCode::Replace;
     if (ui->radioButton->isChecked())
@@ -57,7 +57,7 @@ void formexportcsv::accept()
     if (ui->radioButton_2->isChecked())
         kod = eCSVCode::ReplaceName;
 
-    table->ToCsv(kod,File,cols,div);
+    IRastrResultVerify{table->ToCsv(kod,File,cols,div)};
 
     this->close();
 }

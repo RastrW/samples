@@ -144,6 +144,7 @@ public slots:
     void onItemPressed(const QModelIndex &index);
     void onItemPressed(CellClickEventArgs* _index);
     void onLinkedFormUpdate(CellClickEventArgs* _index);
+    void onfocusRowChanged( int _row_old,int _row_new);
 
     void changeColumnVisible(QListWidgetItem*);
     void cornerButtonPressed();
@@ -179,9 +180,6 @@ public slots:
 private slots:
     void CreateModel(QAstra* pqastra,CUIForm* pUIForm);
     void onRTDM_UpdateModel(std::string tname);
-    void onRTDM_UpdateView(std::string tname);
-    void onRTDM_BeginResetModel(std::string tname);
-
 
 public:
     std::unique_ptr<RModel> prm;

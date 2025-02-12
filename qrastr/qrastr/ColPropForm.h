@@ -28,8 +28,12 @@ public:
     void setWidth(const QString& width);
     void setPrec(const QString& acc);
     void setExpr(const QString& expr);
-    QString name() const;
-    QString prec() const;
+    QString getName();
+    QString getTitle();
+    QString getDesc();
+    QString getWidth();
+    QString getPrec();
+    QString getExpr();
 
 private slots:
 

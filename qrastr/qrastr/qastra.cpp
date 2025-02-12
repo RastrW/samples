@@ -94,7 +94,7 @@ QAstra::QAstra(QObject *parent)
 }
 void QAstra::setRastr(const _sp_rastr& sp_rastr_in){
     sp_rastr_     = sp_rastr_in;
-    sp_rastr_->SetOutEnumAsInt(true);
+    IRastrResultVerify{sp_rastr_->SetOutEnumAsInt(true)};
     IRastrResultVerify(sp_rastr_->SubscribeEvents(this));
 }
 QAstra::_sp_rastr QAstra::getRastr() const {
@@ -167,10 +167,10 @@ FieldVariantData QAstra::GetVal( const std::string_view& Table, const std::strin
         return IRastrPayload(v_ptr->Long()).Value();
         break;
 
-
     default:
         break;
     }
+    return std::monostate();
 }
 
 

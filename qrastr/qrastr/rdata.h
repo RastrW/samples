@@ -559,6 +559,14 @@ public:
         IRastrResultVerify{col_ptr->SetProperty(FieldProperties::Precision,str_prec)};
         return str_prec;
     }
+    std::string set_prop(FieldProperties _prop, std::string _str_prop) const{
+        IRastrTablesPtr tablesx{ pqastra_->getRastr()->Tables() };
+        IRastrTablePtr table{ tablesx->Item(table_name_) };
+        IRastrColumnsPtr columns{ table->Columns() };
+        IRastrColumnPtr col_ptr{ columns->Item(str_name_) };
+        IRastrResultVerify{col_ptr->SetProperty(_prop,_str_prop)};
+        return _str_prop;
+    }
     std::string expr() const{
         IRastrTablesPtr tablesx{ pqastra_->getRastr()->Tables() };
         IRastrTablePtr table{ tablesx->Item(table_name_) };
@@ -633,6 +641,14 @@ public:
         IRastrColumnPtr col_ptr{ columns->Item(str_name_) };
         std::string str_unit = IRastrPayload(IRastrVariantPtr(col_ptr->Property(FieldProperties::Unit))->String()).Value();
         return str_unit;
+    }
+    std::string Prop(FieldProperties _Prop) const{
+        IRastrTablesPtr tablesx{ pqastra_->getRastr()->Tables() };
+        IRastrTablePtr table{ tablesx->Item(table_name_) };
+        IRastrColumnsPtr columns{ table->Columns() };
+        IRastrColumnPtr col_ptr{ columns->Item(str_name_) };
+        std::string str_prop = IRastrPayload(IRastrVariantPtr(col_ptr->Property(_Prop))->String()).Value();
+        return str_prop;
     }
 
     void calc(std::string expression , std::string selection) const{

@@ -54,7 +54,7 @@ void formimportcsv2::on_buttonBox_accepted()
         kod = eCSVCode::Key;
 
     std::string file =  ui->lineEdit_file->text().toStdString();
-    table->ReadCsv(kod,file,cols,div,"");
+    IRastrResultVerify{table->ReadCsv(kod,file,cols,div,"")};
 
     this->close();
 }

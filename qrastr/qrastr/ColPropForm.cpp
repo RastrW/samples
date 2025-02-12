@@ -56,13 +56,29 @@ void ColPropForm::setExpr(const QString &expr)
 }
 
 //Getter
-QString ColPropForm::name() const
+QString ColPropForm::getName()
 {
-    return ui->te_name->toPlainText();
+   return ui->te_name->toPlainText();
 }
-QString ColPropForm::prec() const
+QString ColPropForm::getTitle()
+{
+    return ui->te_title->toPlainText();
+}
+QString ColPropForm::getDesc()
+{
+    return ui->te_descr->toPlainText();
+}
+QString ColPropForm::getWidth()
+{
+    return ui->te_width->toPlainText();
+}
+QString ColPropForm::getPrec()
 {
     return ui->te_precision->toPlainText();
+}
+QString ColPropForm::getExpr()
+{
+    return ui->te_expression->toPlainText();
 }
 
 //Slots
@@ -74,13 +90,20 @@ void ColPropForm::on_btn_cancel_clicked()
 void ColPropForm::on_btn_ok_clicked()
 {
     //TO DO: need change propertires
-    prdata->pqastra_->getRastr()->SetLockEvent(true);
-    prcol->set_prec(prec().toStdString().c_str());
-    static_cast<DelegateDoubleItem*>(ptv->itemDelegateForColumn(prcol->index))->set_prec(prec().toInt());
-    prdata->pqastra_->getRastr()->SetLockEvent(false);
+
+    IRastrResultVerify{prdata->pqastra_->getRastr()->SetLockEvent(true)};
+    prcol->set_prec(getPrec().toStdString().c_str());
+    //prcol->set_prop(FieldProperties::Name, getName().toStdString());
+    prcol->set_prop(FieldProperties::Description, getDesc().toStdString());
+    prcol->set_prop(FieldProperties::Expression, getExpr().toStdString());
+    prcol->set_prop(FieldProperties::Title, getTitle().toStdString());
+    prcol->set_prop(FieldProperties::Width, getWidth().toStdString());
+
+    //static_cast<DelegateDoubleItem*>(ptv->itemDelegateForColumn(prcol->index))->set_prec(prec().toInt());
+    IRastrResultVerify{prdata->pqastra_->getRastr()->SetLockEvent(false)};
 
     Qtitan::GridTableColumn* column_qt = (Qtitan::GridTableColumn *)view->getColumn(prcol->index);
-    ((Qtitan::GridNumericEditorRepository *)column_qt->editorRepository())->setDecimals(prec().toInt());
+    ((Qtitan::GridNumericEditorRepository *)column_qt->editorRepository())->setDecimals(getPrec().toInt());
 
     this->close();
 }
