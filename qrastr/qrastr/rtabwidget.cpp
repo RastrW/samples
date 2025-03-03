@@ -197,7 +197,11 @@ void RtabWidget::CreateModel(QAstra* pqastra, CUIForm* pUIForm)
             //ptv->setItemDelegateForColumn(rcol.index, delegate);
 
             column_qt->setEditorType(GridEditor::ComboBox);
+
             QStringList list = prm->mnamerefs_.at(rcol.index);
+            /*QStringList list;
+            for (auto val : prm->mmnamerefs_.at(rcol.index))
+                list.append(val.second.c_str());*/
             column_qt->editorRepository()->setDefaultValue(list.at(0), Qt::EditRole);
             column_qt->editorRepository()->setDefaultValue(list, (Qt::ItemDataRole)Qtitan::ComboBoxRole);
 
@@ -207,6 +211,17 @@ void RtabWidget::CreateModel(QAstra* pqastra, CUIForm* pUIForm)
                 ptv->openPersistentEditor( prm->index(i, rcol.index) );
             }*/
         }
+        /*if (rcol.com_prop_tt == enComPropTT::COM_PR_INT && !rcol.nameref_.empty())
+        {
+            column_qt->setEditorType(GridEditor::ComboBox);
+            //QStringList list = prm->mnamerefs_.at(rcol.index);
+            QStringList list;
+            for (auto val : prm->mmnamerefs_.at(rcol.index))
+                list.append(val.second.c_str());
+            //column_qt->editorRepository()->setDefaultValue(list.at(0), Qt::EditRole);
+            column_qt->editorRepository()->setDefaultValue(list, (Qt::ItemDataRole)Qtitan::ComboBoxRole);
+
+        }*/
 
         if (rcol.com_prop_tt == enComPropTT::COM_PR_REAL)
         {
@@ -349,14 +364,18 @@ void RtabWidget::contextMenu(ContextMenuEventArgs* args)
     //args->contextMenu()->addAction(tr("Скрыть колонку"),this,SLOT(hideColumns()));
     args->contextMenu()->addSeparator();
 
-    QAction* insRowAct = new QAction(QIcon(":/images/Rastr3_grid_insrow_16x16.png"),tr("Вставить"),this);
+    QAction* insRowAct = new QAction((QIcon(":/images/Rastr3_grid_insrow_16x16.png"),tr("Вставить"),this));
     insRowAct->setShortcut(tr("Ctrl+I"));
     insRowAct->setStatusTip(tr("Вставить строку"));
+    insRowAct->setShortcutContext(Qt::WidgetWithChildrenShortcut);
+
+
 
     // TO DO
     // В Qtitane не работают шорткаты, хотя del встроенный работает.
 
     //args->contextMenu()->addAction(QIcon(":/images/Rastr3_grid_insrow_16x16.png"),tr("Вставить"),this,SLOT(insertRow_qtitan()),QKeySequence(Qt::CTRL | Qt::Key_I));
+
     args->contextMenu()->addAction(QIcon(":/images/Rastr3_grid_insrow_16x16.png"),tr("Вставить"),QKeySequence(Qt::CTRL | Qt::Key_I),this,SLOT(insertRow_qtitan()));
     args->contextMenu()->addAction(QIcon(":/images/Rastr3_grid_addrow_16x16.png"),tr("Добавить"),QKeySequence(Qt::CTRL | Qt::Key_A),this,SLOT(AddRow()));
     args->contextMenu()->addAction(QIcon(":/images/Rastr3_grid_duprow_16x161.png"),tr("Дублировать"),QKeySequence(Qt::CTRL | Qt::Key_R),this,SLOT(DuplicateRow_qtitan()));

@@ -660,11 +660,12 @@ public:
         IRastrResultVerify( col_ptr->Calculate(expression));
     }
 
-    enComPropTT com_prop_tt;
+    enComPropTT    com_prop_tt;
     std::string    str_name_;
     std::string    table_name_;
     _en_data       en_data_;
-    std::string title_;
+    std::string    title_;
+    std::string    nameref_;
     long    index;
     bool hidden ;
 private:

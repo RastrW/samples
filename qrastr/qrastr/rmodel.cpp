@@ -28,20 +28,54 @@ int RModel::populateDataFromRastr(){
     for (RCol &rcol : *up_rdata)
     {
         vqcols_.push_back(rcol.title().c_str());
+        rcol.nameref_ =  rcol.NameRef();
 
         if (rcol.com_prop_tt == enComPropTT::COM_PR_ENUM)
         {
             QStringList list;
+            std::map<size_t,std::string> map_string;
             char delimiter = '|';
-            //std::string delimiter = "|";
-            std::string strItems =  rcol.NameRef();
-            //if (strItems.find_first_of(',') != std::variant_npos)
-            //   delimiter = ",";
 
-            for (auto val : split(strItems,delimiter))
+            int i = 0;
+            for (auto val : split(rcol.nameref_,delimiter))
+            {
                 list.append(QString(val.c_str()));
+                map_string.insert(std::make_pair(i++,val));
+            }
             mnamerefs_.insert(std::make_pair(rcol.index,list));
+            //mmnamerefs_.insert(std::make_pair(rcol.index,map_string));
         }
+        /*if (rcol.com_prop_tt == enComPropTT::COM_PR_INT && !rcol.nameref_.empty())
+        {
+            std::map<size_t,std::string> map_string;
+            int nopen = rcol.nameref_.find_first_of('[');
+            int nclose = rcol.nameref_.find_first_of(']');
+            std::string table = rcol.nameref_.substr(0,nopen);
+            std::string col = rcol.nameref_.substr(nopen+1,rcol.nameref_.length() - nopen - 2);
+            std::shared_ptr<QDataBlock> QDB_ind = pRTDM_->Get(table,col);
+            std::shared_ptr<QDataBlock> QDB_name;
+            std::shared_ptr<QDataBlock> QDB;
+            try{
+                QDB_name = pRTDM_->Get(table,"name");
+                QDB = QDB_name;
+            }
+            catch(...)
+            {
+                QDB = QDB_ind;
+            }
+            QStringList list;
+            for ( int i = 0 ; i < QDB->RowsCount() ; i++)
+            {
+                std::string str_ref_val = std::visit(ToString(),(QDB->Get(i,0)));
+                long ind_ref_val = std::visit(ToLong(),(QDB_ind->Get(i,0)));
+                list.append(str_ref_val.c_str());
+                map_string.insert(std::make_pair(ind_ref_val,str_ref_val));
+            }
+
+            //mmnamerefs_.insert(std::make_pair(rcol.index,list));
+             mmnamerefs_.insert(std::make_pair(rcol.index,map_string));
+        }*/
+
     }
    // up_rdata->pnparray_->QDump(20,20);
 
@@ -79,14 +113,24 @@ QVariant RModel::data(const QModelIndex &index, int role) const
               (role == Qt::EditRole ))
     {
             item = std::visit(ToQVariant(),up_rdata->pnparray_->Get(row,col));
-            if (contains(mnamerefs_,col))
-                return mnamerefs_.at(col).at(item.toInt());
+
+            if (contains(mnamerefs_,col) )
+                 return mnamerefs_.at(col).at(item.toInt());
+
+            //if (contains(mmnamerefs_,col) && item.isValid() )
+            //    return mmnamerefs_.at(col).at(item.toInt()).c_str();
+
             return item;
     }
     else if  (role == Qtitan::ComboBoxRole)
     {
-            QStringList list = mnamerefs_.at(col);
-            return list;
+        QStringList list = mnamerefs_.at(col);
+
+        /*QStringList list;
+        for (auto val : mmnamerefs_.at(col))
+            list.append(val.second.c_str());*/
+
+        return list;
     }
     else if (role ==  Qt::ToolTipRole)
     {

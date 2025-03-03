@@ -29,6 +29,7 @@ class RModel : public QAbstractTableModel
     CUIForm* pUIForm_;
 public:
     std::map<size_t,QStringList> mnamerefs_;                      // Хранилище енумов колонок для ComboBox
+    std::map<size_t, std::map<size_t,std::string>> mmnamerefs_;    // Хранилище енумов и ссылок колонок для ComboBox
 public:
     RModel(QObject *parent, QAstra* pqastra,RTablesDataManager* pRTDM);
     int rowCount(const QModelIndex &parent = QModelIndex()) const override;
