@@ -198,7 +198,7 @@ void RtabWidget::CreateModel(QAstra* pqastra, CUIForm* pUIForm)
 
             column_qt->setEditorType(GridEditor::ComboBox);
 
-            QStringList list = prm->mnamerefs_.at(rcol.index);
+            QStringList list = prm->m_enum_.at(rcol.index);
             /*QStringList list;
             for (auto val : prm->mmnamerefs_.at(rcol.index))
                 list.append(val.second.c_str());*/
@@ -211,17 +211,25 @@ void RtabWidget::CreateModel(QAstra* pqastra, CUIForm* pUIForm)
                 ptv->openPersistentEditor( prm->index(i, rcol.index) );
             }*/
         }
-        /*if (rcol.com_prop_tt == enComPropTT::COM_PR_INT && !rcol.nameref_.empty())
+        if (rcol.com_prop_tt == enComPropTT::COM_PR_INT && !rcol.nameref_.empty() && contains(prm->mm_nameref_,rcol.index))
         {
             column_qt->setEditorType(GridEditor::ComboBox);
             //QStringList list = prm->mnamerefs_.at(rcol.index);
             QStringList list;
-            for (auto val : prm->mmnamerefs_.at(rcol.index))
+            for (auto val : prm->mm_nameref_.at(rcol.index))
                 list.append(val.second.c_str());
-            //column_qt->editorRepository()->setDefaultValue(list.at(0), Qt::EditRole);
+            column_qt->editorRepository()->setDefaultValue(list.at(0), Qt::EditRole);
             column_qt->editorRepository()->setDefaultValue(list, (Qt::ItemDataRole)Qtitan::ComboBoxRole);
-
-        }*/
+        }
+        if (rcol.com_prop_tt == enComPropTT::COM_PR_SUPERENUM && !rcol.nameref_.empty() && contains(prm->mm_superenum_,rcol.index) )
+        {
+            column_qt->setEditorType(GridEditor::ComboBox);
+            QStringList list;
+            for (auto val : prm->mm_superenum_.at(rcol.index))
+                list.append(val.second.c_str());
+            column_qt->editorRepository()->setDefaultValue(list.at(0), Qt::EditRole);
+            column_qt->editorRepository()->setDefaultValue(list, (Qt::ItemDataRole)Qtitan::ComboBoxRole);
+        }
 
         if (rcol.com_prop_tt == enComPropTT::COM_PR_REAL)
         {

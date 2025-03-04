@@ -28,8 +28,9 @@ class RModel : public QAbstractTableModel
     std::vector<QString> vqcols_;                                 // Заголовки столбцов
     CUIForm* pUIForm_;
 public:
-    std::map<size_t,QStringList> mnamerefs_;                      // Хранилище енумов колонок для ComboBox
-    std::map<size_t, std::map<size_t,std::string>> mmnamerefs_;    // Хранилище енумов и ссылок колонок для ComboBox
+    std::map<size_t,QStringList> m_enum_;                           // ENUM -> БАЗА|Ген|Нагр|Ген+
+    std::map<size_t, std::map<size_t,std::string>> mm_nameref_;     // RefCol -> node[na]
+    std::map<size_t, std::map<size_t,std::string>> mm_superenum_;   // SUPER_ENUM -> ti_prv.Name.Num
 public:
     RModel(QObject *parent, QAstra* pqastra,RTablesDataManager* pRTDM);
     int rowCount(const QModelIndex &parent = QModelIndex()) const override;

@@ -30,7 +30,7 @@ int RModel::populateDataFromRastr(){
         vqcols_.push_back(rcol.title().c_str());
         rcol.nameref_ =  rcol.NameRef();
 
-        if (rcol.com_prop_tt == enComPropTT::COM_PR_ENUM)
+        if (rcol.com_prop_tt == enComPropTT::COM_PR_ENUM)   // ex: Нет|Квадр.|Лин.|Комбинир.
         {
             QStringList list;
             std::map<size_t,std::string> map_string;
@@ -42,54 +42,71 @@ int RModel::populateDataFromRastr(){
                 list.append(QString(val.c_str()));
                 map_string.insert(std::make_pair(i++,val));
             }
-            mnamerefs_.insert(std::make_pair(rcol.index,list));
-            //mmnamerefs_.insert(std::make_pair(rcol.index,map_string));
+            m_enum_.insert(std::make_pair(rcol.index,list));
         }
-        /*if (rcol.com_prop_tt == enComPropTT::COM_PR_INT && !rcol.nameref_.empty())
+        if (rcol.com_prop_tt == enComPropTT::COM_PR_SUPERENUM && !rcol.nameref_.empty()) // ex: ti_prv.Name.Num
         {
-            std::map<size_t,std::string> map_string;
+            QStringList list;
+            std::map<size_t,std::string> map_string ;
+            map_string.insert(std::make_pair(0,"не задано"));
+            std::vector<std::string> vsuperenum;
+            char delimiter = '.';
+
+            int i = 0;
+            for (auto val : split(rcol.nameref_,delimiter))
+                vsuperenum.push_back(val);
+            if (vsuperenum.size() > 2)
+            {
+                std::shared_ptr<QDataBlock> QDB = pRTDM_->Get(vsuperenum[0],vsuperenum[2]+","+vsuperenum[1]);
+                for ( int i = 0 ; i < QDB->RowsCount() ; i++)
+                {
+                    long ind_ref_val = std::visit(ToLong(),(QDB->Get(i,0)));
+                    std::string str_ref_val = std::visit(ToString(),(QDB->Get(i,1)));
+                    list.append(str_ref_val.c_str());
+                    map_string.insert(std::make_pair(ind_ref_val,str_ref_val));
+                }
+                mm_superenum_.insert(std::make_pair(rcol.index,map_string));
+            }
+        }
+        if (rcol.com_prop_tt == enComPropTT::COM_PR_INT && !rcol.nameref_.empty())  // ex: node[na]
+        {
+            std::map<size_t,std::string> map_string ;
+            map_string.insert(std::make_pair(0,"не задано"));
+
             int nopen = rcol.nameref_.find_first_of('[');
             int nclose = rcol.nameref_.find_first_of(']');
             std::string table = rcol.nameref_.substr(0,nopen);
             std::string col = rcol.nameref_.substr(nopen+1,rcol.nameref_.length() - nopen - 2);
-            std::shared_ptr<QDataBlock> QDB_ind = pRTDM_->Get(table,col);
-            std::shared_ptr<QDataBlock> QDB_name;
             std::shared_ptr<QDataBlock> QDB;
             try{
-                QDB_name = pRTDM_->Get(table,"name");
-                QDB = QDB_name;
+                QDB = pRTDM_->Get(table,col+",name");
             }
             catch(...)
             {
-                QDB = QDB_ind;
+                QDB = pRTDM_->Get(table,col+","+col);   //ex: nsx not contains name
             }
+            QDB->QDump();
+
             QStringList list;
             for ( int i = 0 ; i < QDB->RowsCount() ; i++)
             {
-                std::string str_ref_val = std::visit(ToString(),(QDB->Get(i,0)));
-                long ind_ref_val = std::visit(ToLong(),(QDB_ind->Get(i,0)));
+                long ind_ref_val = std::visit(ToLong(),(QDB->Get(i,0)));
+                std::string str_ref_val = std::visit(ToString(),(QDB->Get(i,1)));
                 list.append(str_ref_val.c_str());
                 map_string.insert(std::make_pair(ind_ref_val,str_ref_val));
             }
-
-            //mmnamerefs_.insert(std::make_pair(rcol.index,list));
-             mmnamerefs_.insert(std::make_pair(rcol.index,map_string));
-        }*/
-
+            mm_nameref_.insert(std::make_pair(rcol.index,map_string));
+        }
     }
-   // up_rdata->pnparray_->QDump(20,20);
 
     return 1;
 };
 int RModel::rowCount(const QModelIndex & /*parent*/) const{
     return static_cast<int>(up_rdata->pnparray_->RowsCount());
-    //return static_cast<int>(pRTDM_->Add("node","cols")->RowsCount());
 }
 int RModel::columnCount(const QModelIndex & /*parent*/) const{
     return static_cast<int>(up_rdata->pnparray_->ColumnsCount());
 }
-
-
 
 QVariant RModel::data(const QModelIndex &index, int role) const
 {
@@ -114,21 +131,27 @@ QVariant RModel::data(const QModelIndex &index, int role) const
     {
             item = std::visit(ToQVariant(),up_rdata->pnparray_->Get(row,col));
 
-            if (contains(mnamerefs_,col) )
-                 return mnamerefs_.at(col).at(item.toInt());
+            if (contains(m_enum_,col) )
+                 return m_enum_.at(col).at(item.toInt());
 
-            //if (contains(mmnamerefs_,col) && item.isValid() )
-            //    return mmnamerefs_.at(col).at(item.toInt()).c_str();
+            if (contains(mm_superenum_,col))
+                return mm_superenum_.at(col).at(item.toInt()).c_str();
 
             return item;
     }
     else if  (role == Qtitan::ComboBoxRole)
     {
-        QStringList list = mnamerefs_.at(col);
+        QStringList list;
+        if (contains(m_enum_,col) )
+            list = m_enum_.at(col);
 
-        /*QStringList list;
-        for (auto val : mmnamerefs_.at(col))
-            list.append(val.second.c_str());*/
+        if (contains(mm_nameref_,col) )
+            for (auto val : mm_nameref_.at(col))
+                list.append(val.second.c_str());
+
+        if (contains(mm_superenum_,col) )
+            for (auto val : mm_superenum_.at(col))
+                list.append(val.second.c_str());
 
         return list;
     }
@@ -218,10 +241,38 @@ bool RModel::setData(const QModelIndex &index, const QVariant &value, int role)
              }
             case RCol::_en_data::DATA_INT:
             {
-                long val =  value.toInt();
+                long val = 0;
+                if (contains(m_enum_,col))       // ENUM
+                {
+                    int i =0;
+                    for (auto mval : m_enum_.at(col))
+                    {
+                        if (mval == value)
+                            val = i;
+                        i++;
+                    }
+                }
+                else if (contains(mm_superenum_,col))     // SUPER_ENUM
+                {
+                    for (auto [mkey,mval] : mm_superenum_.at(col) )
+                        if (mval == value.toString().toStdString())
+                            val = mkey;
+                }
+                else if (contains(mm_nameref_,col))     // RefCol: node[na]
+                {
+                    for (auto [mkey,mval] : mm_nameref_.at(col) )
+                        if (mval == value.toString().toStdString())
+                            val = mkey;
+                }
+                else
+                {
+                    val =  value.toInt();
+                }
+
                 FieldVariantData vd(val);
                 IRastrResultVerify(col_ptr->SetValue(row,val));
                 qDebug() << "set: "<<up_rdata->t_name_.c_str()<<"."<< (*iter_col).str_name_.c_str() << "(" << row << ")=" <<val;
+
                 break;
             }
             case RCol::_en_data::DATA_STR:
@@ -411,8 +462,10 @@ bool RModel::AddRow(size_t count ,const QModelIndex &parent)
     IRastrTablePtr table{ tablesx->Item(getRdata()->t_name_) };
     IRastrPayload sz{table->Size()};
 
+    //IPlainRastrResult* pres = this->pqastra_->getRastr()->SetLockEvent(true);
     for (size_t i = 0 ; i < count ; i++ )
         IPlainRastrResult* pres = table->AddRow();
+    //pres = this->pqastra_->getRastr()->SetLockEvent(false);
 
     return true;
 }
