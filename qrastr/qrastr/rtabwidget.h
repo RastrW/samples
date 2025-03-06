@@ -110,7 +110,7 @@ class RtabWidget : public QWidget
 {
     Q_OBJECT
 public:
-    explicit RtabWidget(QWidget *parent = nullptr);
+    explicit RtabWidget(CUIForm UIForm,QWidget *parent = nullptr);
     explicit RtabWidget(QAstra* pqastra, CUIForm UIForm, RTablesDataManager* pRTDM, ads::CDockManager* pDockManager ,QWidget *parent = nullptr);
     /*~RtabWidget(){}; //C2036
     {
@@ -146,8 +146,8 @@ public slots:
     void onLinkedFormUpdate(CellClickEventArgs* _index);
     void onfocusRowChanged( int _row_old,int _row_new);
 
-    void changeColumnVisible(QListWidgetItem*);
-    void cornerButtonPressed();
+   // void changeColumnVisible(QListWidgetItem*);
+   // void cornerButtonPressed();
     void insertRow();
     void AddRow();
     void insertRow_qtitan();
@@ -165,7 +165,7 @@ public slots:
     void sortAscending();
     void sortDescending();
     void hideColumns();
-    void unhideColumns();
+    //void unhideColumns();
     void showAllColumns();
     void onUpdate(std::string _t_name);
     void updateFilter(size_t column, QString value);
@@ -213,9 +213,9 @@ private:
     QShortcut *sC_CTRL_R = new QShortcut( QKeySequence(Qt::CTRL | Qt::Key_R), this);
     QShortcut *sC_CTRL_A = new QShortcut( QKeySequence(Qt::CTRL | Qt::Key_A), this);
 protected:
-    itemStateMap tItemStateMap;
-    QFrame customizeFrame;
-    QListWidget customizeListWidget;
+    //itemStateMap tItemStateMap;
+    //QFrame customizeFrame;
+    //QListWidget customizeListWidget;
 };
 
 #endif // RTABWIDGET_H

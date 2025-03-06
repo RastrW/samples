@@ -147,6 +147,7 @@ private:
     QSignalMapper*     m_windowMapper  = nullptr;
     QMenu*             m_menuOpen      = nullptr;
     QMenu*             m_recentFilesMenu=nullptr;
+    QMenu*             m_menuCalcParameters = nullptr;
     QAction     *separatorAct;
     QHBoxLayout*       m_layoutActions = nullptr;                 // actions: rgm,opf,...
     QToolBar*          m_toolbarCalc   = nullptr;

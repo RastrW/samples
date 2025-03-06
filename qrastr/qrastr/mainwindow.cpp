@@ -196,20 +196,42 @@ void MainWindow::setForms(const std::list<CUIForm>& forms){ // https://stackover
     QMap<QString,QMenu *> map_menu;
     for(const auto& j_form : forms){
         std::string str_MenuPath = stringutils::cp1251ToUtf8(j_form.MenuPath());
-        if (!str_MenuPath.empty() && str_MenuPath.at(0) == '_')
+        auto vmenu = split(str_MenuPath,'\\');
+        std::string str_Name = stringutils::cp1251ToUtf8(j_form.Name());
+        //if (!str_MenuPath.empty() && str_MenuPath.at(0) == '_')
+        if (str_MenuPath.empty())
             continue;
-        QString qstr_MenuPath = str_MenuPath.c_str();
-        if (!str_MenuPath.empty() && !map_menu.contains(qstr_MenuPath))
-            map_menu.insert(qstr_MenuPath,m_menuOpen->addMenu(str_MenuPath.c_str()));
+        if (j_form.AddToMenuIndex() >= vmenu.size() )
+            continue;
+
+        QString qstr_MenuPath = vmenu[j_form.AddToMenuIndex()].c_str();
+        if (!map_menu.contains(qstr_MenuPath))
+            map_menu.insert(qstr_MenuPath,m_menuOpen->addMenu(qstr_MenuPath.isEmpty()?"Остальное":qstr_MenuPath));
     }
     for(const auto& j_form : forms){
         std::string str_Name = stringutils::cp1251ToUtf8(j_form.Name());
         std::string str_TableName = j_form.TableName();
         std::string str_MenuPath = stringutils::cp1251ToUtf8(j_form.MenuPath());
-        QString qstr_MenuPath = str_MenuPath.c_str();
+        auto vmenu = split(str_MenuPath,'\\');
+        //QString qstr_MenuPath = str_MenuPath.c_str();
+        if (!str_MenuPath.empty() && j_form.AddToMenuIndex() >= vmenu.size() )
+        {
+            i++;
+            continue;
+        }
+        QString qstr_MenuPath;
+        if (str_MenuPath.empty())
+            qstr_MenuPath = "";
+        else
+            qstr_MenuPath = vmenu[j_form.AddToMenuIndex()].c_str();
+
         QMenu* cur_menu = m_menuOpen;
         if (map_menu.contains(qstr_MenuPath))
             cur_menu = map_menu[qstr_MenuPath];
+
+        if (j_form.AddToMenuIndex() == 2)
+            cur_menu = m_menuCalcParameters;
+
         if (!str_Name.empty() && str_Name.at(0) != '_'){
             QAction* p_actn = cur_menu->addAction(str_Name.c_str());
             p_actn->setData(i);
@@ -217,6 +239,7 @@ void MainWindow::setForms(const std::list<CUIForm>& forms){ // https://stackover
         i++;
     }
     connect( m_menuOpen, SIGNAL(triggered(QAction *)), this, SLOT(onOpenForm(QAction *)), Qt::UniqueConnection);
+    connect( m_menuCalcParameters, SIGNAL(triggered(QAction *)), this, SLOT(onOpenForm(QAction *)), Qt::UniqueConnection);
 }
 void MainWindow::setQAstra(const std::shared_ptr<QAstra>& sp_qastra){
     assert(nullptr!=sp_qastra);
@@ -703,6 +726,8 @@ void MainWindow::createActions(){
     QMenu* menuCalc = menuBar()->addMenu(tr("&Расчеты"));
     menuCalc->addAction(actRGM);
     menuCalc->addAction(actOC);
+    m_menuCalcParameters =  menuCalc->addMenu(tr("&Параметры"));
+
     m_menuOpen = menuBar()->addMenu(tr("&Открыть") );
     menuBar()->addSeparator();
     QMenu* menuWindow = menuBar()->addMenu(tr("Окна"));
@@ -747,6 +772,7 @@ void MainWindow::createActions(){
     toolbarFile->addAction(openAct);
     toolbarFile->addAction(saveAct);
     m_toolbarCalc = addToolBar(tr("Расчеты"));
+
     m_toolbarCalc->addAction(actRGM);
     m_toolbarCalc->addAction(actOC);
 

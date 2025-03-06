@@ -36,19 +36,28 @@ namespace ads{ class CDockManager; }
 
 //std::map<std::string, BrowseDataTableSettings> RtabWidget::m_settings;
 
-RtabWidget::RtabWidget(QWidget *parent) :
-      QWidget(parent),
-      customizeFrame(this, Qt::Popup | Qt::Window)
+RtabWidget::RtabWidget(CUIForm UIForm,QWidget *parent) :
+      QWidget(parent)
+      //customizeFrame(this, Qt::Popup | Qt::Window)
 {
+    m_UIForm = UIForm;
     ptv = new RTableView(this);
 
     Grid::loadTranslation();
     m_grid = new Qtitan::Grid();
-    m_grid->setViewType(Qtitan::Grid::TableView);
+    //m_grid->setViewType(Qtitan::Grid::TableView);
+    //m_grid->setViewType(Qtitan::Grid::TableViewVertical);
+    if (m_UIForm.Vertical())
+        m_grid->setViewType(Qtitan::Grid::TableViewVertical);
+    else
+        m_grid->setViewType(Qtitan::Grid::TableView);
+
     view = m_grid->view< Qtitan::GridTableView>();
+
 
     view->options().setGridLines(Qtitan::LinesBoth);
     view->options().setGridLineWidth(1);
+
     view->tableOptions().setColumnAutoWidth(true);
     view->options().setSelectionPolicy(GridViewOptions::MultiCellSelection);
     //view->options().setNewRowPlace(Qtitan::AtEnd);                        // кнока добавления строки
@@ -73,14 +82,17 @@ RtabWidget::RtabWidget(QWidget *parent) :
 }
 
 RtabWidget::RtabWidget(QAstra* pqastra,CUIForm UIForm,RTablesDataManager* pRTDM, ads::CDockManager* pDockManager, QWidget *parent)
-    : RtabWidget{parent}
+    : RtabWidget{UIForm,parent}
 {
     m_selection = "";
-    m_UIForm = UIForm;
+   // m_UIForm = UIForm;
     m_pqastra = pqastra;
     m_pRTDM = pRTDM;
     m_DockManager = pDockManager;
 
+
+
+    /*
     customizeFrame.setObjectName("RTABLEVIEWCUSTOMIZEFRAME");
     customizeFrame.setFrameShape(QFrame::StyledPanel);
     customizeFrame.raise();
@@ -95,6 +107,7 @@ RtabWidget::RtabWidget(QAstra* pqastra,CUIForm UIForm,RTablesDataManager* pRTDM,
     customizeListWidget.setResizeMode(QListView::Adjust);
 
     customizeFrame.hide();
+*/
 
     resize(800,500);
     setWindowFlags(Qt::WindowMinimizeButtonHint | Qt::WindowMinMaxButtonsHint | Qt::WindowCloseButtonHint);
@@ -592,6 +605,7 @@ void RtabWidget::onOpenLinkedForm( LinkedForm _lf)
     prtw->show();
 }
 
+/*
 void RtabWidget::cornerButtonPressed()
 {
     auto hh = ptv->horizontalHeader();
@@ -649,16 +663,13 @@ void RtabWidget::cornerButtonPressed()
     emit onCornerButtonPressed();
 
 }
+*/
 
+/*
 void RtabWidget::changeColumnVisible(QListWidgetItem *item)
 {
     //PBSHeaderView *hdr = static_cast<PBSHeaderView*>(pTableWidget.horizontalHeader());
-    /*
-     * Чтобы при загрузке файла сохранялась форма нужно
-     * редактировать m_UIForm при изменении настроек отображения стобцов
-     * --   Работает, но теперь вопрос если загрузили файл в котором нет
-     * исходных полей, при попытке изменить значение ошибка конечно же
-    */
+
 
     auto hh = this->ptv->horizontalHeader();
 
@@ -690,6 +701,7 @@ void RtabWidget::changeColumnVisible(QListWidgetItem *item)
         }
     }
 }
+*/
 
 void RtabWidget::editCondFormats(size_t column)
 {
@@ -871,6 +883,7 @@ void RtabWidget::hideColumns()
 
     column_qt->setVisible(!prcol->hidden);
 }
+/*
 void RtabWidget::unhideColumns()
 {
     RCol* prcol = prm->getRCol(column);
@@ -928,6 +941,7 @@ void RtabWidget::unhideColumns()
     customizeFrame.setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
     customizeFrame.show();
 }
+*/
 void RtabWidget::showAllColumns()
 {
     for (auto &rcol : *this->prm->getRdata())
