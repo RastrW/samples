@@ -36,6 +36,7 @@ void  RTablesDataManager::onRastrHint(const _hint_data& hint_data)
             sp_QDB->Clear();
             GetDataBlock(tname,(*sp_QDB.get()));
             emit RTDM_EndResetModel(tname);
+            //emit RTDM_ResetModel(tname);
         }
         break;
     case EventHints::ChangeTable:
@@ -56,7 +57,7 @@ void  RTablesDataManager::onRastrHint(const _hint_data& hint_data)
         it = mpTables.find(tname);
         if (it != mpTables.end() )
         {
-            emit RTDM_BeginResetModel(tname);
+            //emit RTDM_BeginResetModel(tname);
             IRastrTablesPtr tables{ m_pqastra->getRastr()->Tables() };
             IRastrTablePtr table{ tables->Item(tname) };
             DataBlock<FieldVariantData> variant_block;
@@ -85,7 +86,7 @@ void  RTablesDataManager::onRastrHint(const _hint_data& hint_data)
                         break;
                 }
             }
-            emit RTDM_EndResetModel(tname);
+           // emit RTDM_EndResetModel(tname);
         }
         break;
 
@@ -93,7 +94,8 @@ void  RTablesDataManager::onRastrHint(const _hint_data& hint_data)
         it = mpTables.find(tname);
         if (it != mpTables.end() )
         {
-            emit RTDM_BeginResetModel(tname);
+            //emit RTDM_BeginResetModel(tname);
+
             QDataBlock* pqdb = it->second.get();
             IRastrTablesPtr tablesx{ m_pqastra->getRastr()->Tables() };
             IRastrPayload tablecount{ tablesx->Count() };
@@ -106,7 +108,8 @@ void  RTablesDataManager::onRastrHint(const _hint_data& hint_data)
                 IRastrVariantPtr value_ptr{ col->Value(row) };
                 pqdb->Set(row,i,value_ptr);
             }
-            emit RTDM_EndResetModel(tname);
+            emit RTDM_dataChanged(tname,row,0,row,columnscount.Value());
+           // emit RTDM_EndResetModel(tname);
         }
         break;
 
@@ -114,7 +117,7 @@ void  RTablesDataManager::onRastrHint(const _hint_data& hint_data)
         it = mpTables.find(tname);
         if (it != mpTables.end() )
         {
-            emit RTDM_BeginResetModel(tname);
+            //emit RTDM_BeginResetModel(tname);
             QDataBlock* pqdb = it->second.get();
             long col_ind = GetColIndex(tname,cname);
 
@@ -148,9 +151,20 @@ void  RTablesDataManager::onRastrHint(const _hint_data& hint_data)
             //pqdb->Set(row,col_ind,val);
 
             //Стало: обновляем всю строку
+            // ERROR: При добавлении строки в таблицу узлы и при попытке получить это строку в VDB падает где то в разюоршике формул
             DataBlock<FieldVariantData> VDB;
             VDB.IndexesVector() = {row};
-            IRastrResultVerify(table->DataBlock("", VDB));
+            try {
+                IRastrResultVerify(table->DataBlock("", VDB));
+            }
+            catch (...) {
+                FieldDataOptions Options;
+                Options.SetEnumAsInt(TriBool::True);
+                Options.SetSuperEnumAsInt(TriBool::True);
+                Options.SetEditatableColumnsOnly(true);
+                IRastrResultVerify(table->DataBlock("", VDB, Options));
+            }
+
             //VDB.QDump();
 
             for (int i = 0 ; i < columnscount.Value(); i++)
@@ -159,7 +173,8 @@ void  RTablesDataManager::onRastrHint(const _hint_data& hint_data)
                 size_t ind_vdb = 0 * columnscount.Value() + i;
                 pqdb->Data()[ind] = VDB.Data()[ind_vdb];
             }
-            emit RTDM_EndResetModel(tname);
+            emit RTDM_dataChanged(tname,row,0,row,cols_cnt);
+            //emit RTDM_EndResetModel(tname);
         }
         break;
 
@@ -215,10 +230,10 @@ std::shared_ptr<QDataBlock>  RTablesDataManager::Get(std::string tname, std::str
     auto endIter = mpTables.end();
     for(; iter != endIter; ) {
         if (iter->second.use_count() == 1) {
-            qDebug()<<"RTDM: delete table with use_count() = 1 -> ";qDebug()<<iter->first.c_str();
+            qDebug()<<"RTDM: delete table with use_count() = 1 -> " <<iter->first.c_str();
             iter = mpTables.erase(iter);
         } else {
-            qDebug()<<"RTDM: " << iter->first <<" use_count() =  "; qDebug()<<iter->second.use_count();
+            qDebug()<<"RTDM: " << iter->first <<" use_count() =  " <<iter->second.use_count();
             ++iter;
         }
     }

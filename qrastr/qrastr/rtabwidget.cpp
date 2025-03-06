@@ -123,6 +123,8 @@ RtabWidget::RtabWidget(QAstra* pqastra,CUIForm UIForm,RTablesDataManager* pRTDM,
 
     CreateModel(pqastra,&m_UIForm);
 
+    //connect(m_pRTDM, &RTablesDataManager::RTDM_ResetModel,this, &RtabWidget::onRTDM_ResetModel);
+    connect(m_pRTDM, &RTablesDataManager::RTDM_dataChanged,this->prm.get(), &RModel::onrm_DataChanged);
     connect(m_pRTDM, &RTablesDataManager::RTDM_BeginResetModel,this->prm.get(), &RModel::onrm_BeginResetModel);
     connect(m_pRTDM, &RTablesDataManager::RTDM_EndResetModel,this->prm.get(), &RModel::onrm_EndResetModel);
     connect(m_pRTDM, &RTablesDataManager::RTDM_BeginInsertRow,this->prm.get(), &RModel::onrm_BeginInsertRow);
@@ -180,6 +182,54 @@ void RtabWidget::CreateModel(QAstra* pqastra, CUIForm* pUIForm)
     view->setModel(prm.get());
     //ptv->setModel(proxyModel);
 
+    SetEditors();
+
+    //Порядок колонок как в форме
+    int vi = 0;
+    for (auto f : pUIForm->Fields())
+    {
+        for (RCol& rcol : *prm->getRdata())
+        {
+            if (f.Name() == rcol.str_name_)
+            {
+                column_qt = (Qtitan::GridTableColumn *)view->getColumn(rcol.index);
+
+                column_qt   ->setVisualIndex(vi++);
+                continue;
+            }
+        }
+    }
+
+    //Show button menu for all column headers.
+    //for (int i = 0; i < view->getColumnCount(); ++i)
+    //    static_cast<GridTableColumn *>(view->getColumn(i))->setMenuButtonVisible(true);
+
+    // Заливка колонок цветом по правилам CondFormat
+    for (RCol& rcol : *prm->getRdata())
+        m_MapcondFormatVector.emplace(rcol.index, std::vector<CondFormat>());
+
+    std::map<int, std::vector<CondFormat>> cfv;
+
+    CondFormatJson cfj(prm->getRdata()->t_name_ , prm->getRdata()->vCols_ ,cfv );
+    cfj.from_json();
+    for (auto &[key,val] : cfj.get_mcf())
+        if (m_MapcondFormatVector.find(key) != m_MapcondFormatVector.end() )
+        {
+            m_MapcondFormatVector.at(key) = val;
+            prm->setCondFormats(false, key, val);
+        }
+
+    view->endUpdate();
+
+
+    //new QAbstractItemModelTester( prm.get(), QAbstractItemModelTester::FailureReportingMode::Warning, this);
+
+
+    this->update();
+    this->repaint();
+}
+void RtabWidget::SetEditors()
+{
     for (RCol& rcol : *prm->getRdata())
     {
         column_qt = (Qtitan::GridTableColumn *)view->getColumn(rcol.index);
@@ -268,50 +318,6 @@ void RtabWidget::CreateModel(QAstra* pqastra, CUIForm* pUIForm)
 
         }*/
     }
-
-    //Порядок колонок как в форме
-    int vi = 0;
-    for (auto f : pUIForm->Fields())
-    {
-        for (RCol& rcol : *prm->getRdata())
-        {
-            if (f.Name() == rcol.str_name_)
-            {
-                column_qt = (Qtitan::GridTableColumn *)view->getColumn(rcol.index);
-
-                column_qt   ->setVisualIndex(vi++);
-                continue;
-            }
-        }
-    }
-
-    //Show button menu for all column headers.
-    //for (int i = 0; i < view->getColumnCount(); ++i)
-    //    static_cast<GridTableColumn *>(view->getColumn(i))->setMenuButtonVisible(true);
-
-    // Заливка колонок цветом по правилам CondFormat
-    for (RCol& rcol : *prm->getRdata())
-        m_MapcondFormatVector.emplace(rcol.index, std::vector<CondFormat>());
-
-    std::map<int, std::vector<CondFormat>> cfv;
-
-    CondFormatJson cfj(prm->getRdata()->t_name_ , prm->getRdata()->vCols_ ,cfv );
-    cfj.from_json();
-    for (auto &[key,val] : cfj.get_mcf())
-        if (m_MapcondFormatVector.find(key) != m_MapcondFormatVector.end() )
-        {
-            m_MapcondFormatVector.at(key) = val;
-            prm->setCondFormats(false, key, val);
-        }
-
-    view->endUpdate();
-
-
-    //new QAbstractItemModelTester( prm.get(), QAbstractItemModelTester::FailureReportingMode::Warning, this);
-
-
-    this->update();
-    this->repaint();
 }
 
 void RtabWidget::on_calc_begin()
@@ -322,10 +328,11 @@ void RtabWidget::on_calc_end()
 {
     // TO DO something
 }
-void RtabWidget::onRTDM_UpdateModel(std::string tname)
+void RtabWidget::onRTDM_ResetModel(std::string tname)
 {
+    //prm->beginResetModel();
     CreateModel(m_pqastra,&m_UIForm);
-    ptv->update();
+    //ptv->update();
 }
 
 void RtabWidget::SetTableView(QTableView& tv, RModel& mm, int myltiplier  )

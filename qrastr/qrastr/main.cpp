@@ -26,6 +26,9 @@ int main(int argc, char *argv[]){
     long n_res = 0;
     App app(argc, argv);
 
+    app.setOrganizationName("Trolltech");
+    app.setApplicationName("QRastr");
+
 #if (QT_VERSION >= QT_VERSION_CHECK(6, 0, 0))
     app.setHighDpiScaleFactorRoundingPolicy(Qt::HighDpiScaleFactorRoundingPolicy::Round);
 #endif

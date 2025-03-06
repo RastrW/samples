@@ -90,6 +90,10 @@ int Params::writeJsonFile(const fs::path& path_2_json)const {
     }
     return 1;
 }
+bool Params::templ_sort_func(const std::pair<std::string,std::string>& p1,const std::pair<std::string,std::string>& p2)
+{
+    return (p1.first.length() < p2.first.length());
+}
 int Params::readTemplates(const fs::path& path_dir_templates){
     try{
         v_template_exts_.clear();
@@ -100,6 +104,7 @@ int Params::readTemplates(const fs::path& path_dir_templates){
             //spdlog::info("{}:{}", str_templ_name, str_templ_ext);
             v_template_exts_.emplace_back(std::make_pair(str_templ_name, str_templ_ext));
         }
+        std::sort(v_template_exts_.begin(),v_template_exts_.end(),templ_sort_func);
     }catch(const std::exception& ex){
         exclog(ex);
         return -1;

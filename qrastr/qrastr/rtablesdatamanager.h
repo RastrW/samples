@@ -42,8 +42,10 @@ private:
 
 
 signals:
+    void RTDM_dataChanged(std::string tname,int row_from , int col_from , int row_to, int col_to);
     void RTDM_UpdateModel(std::string tname);
     void RTDM_UpdateView(std::string tname);
+    void RTDM_ResetModel(std::string tname);
     void RTDM_BeginResetModel(std::string tname);
     void RTDM_EndResetModel(std::string tname);
     void RTDM_BeginInsertRow(std::string tname,int first,int last);

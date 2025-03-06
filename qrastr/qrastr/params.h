@@ -18,6 +18,7 @@ public:
     virtual ~Params() = default;
     int readJsonFile (const fs::path& path_2_json);
     int writeJsonFile(const fs::path& path_2_json)const;
+    static bool templ_sort_func(const std::pair<std::string,std::string> &p1,const std::pair<std::string,std::string> &p2);
     int readTemplates(const fs::path& path_dir_templates);
     int readForms    (const fs::path& path_form_load);
     int readFormsExists(const fs::path& path_dir_forms);

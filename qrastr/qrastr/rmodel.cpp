@@ -21,9 +21,14 @@ RModel::RModel(QObject *parent, QAstra* pqastra, RTablesDataManager* pRTDM)
 
 int RModel::populateDataFromRastr(){
 
+    //beginResetModel();
     up_rdata = std::unique_ptr<RData>(new RData(pqastra_,pUIForm_->TableName()));
     up_rdata->Initialize(*pUIForm_,pqastra_);
     up_rdata->populate_qastra(this->pqastra_,pRTDM_);
+
+    m_enum_.clear();
+    mm_superenum_.clear();
+    mm_nameref_.clear();
 
     for (RCol &rcol : *up_rdata)
     {
@@ -58,6 +63,7 @@ int RModel::populateDataFromRastr(){
             if (vsuperenum.size() > 2)
             {
                 std::shared_ptr<QDataBlock> QDB = pRTDM_->Get(vsuperenum[0],vsuperenum[2]+","+vsuperenum[1]);
+                //QDB->QDump();
                 for ( int i = 0 ; i < QDB->RowsCount() ; i++)
                 {
                     long ind_ref_val = std::visit(ToLong(),(QDB->Get(i,0)));
@@ -85,7 +91,7 @@ int RModel::populateDataFromRastr(){
             {
                 QDB = pRTDM_->Get(table,col+","+col);   //ex: nsx not contains name
             }
-            QDB->QDump();
+            //QDB->QDump();
 
             QStringList list;
             for ( int i = 0 ; i < QDB->RowsCount() ; i++)
@@ -98,6 +104,7 @@ int RModel::populateDataFromRastr(){
             mm_nameref_.insert(std::make_pair(rcol.index,map_string));
         }
     }
+    //endResetModel();
 
     return 1;
 };
@@ -298,8 +305,8 @@ bool RModel::setData(const QModelIndex &index, const QVariant &value, int role)
 
         if (emitSignals())
         {
-            //emit dataChanged(getRdata()->t_name_,getRCol(col)->name(),row,value );
             emit dataChanged(index,index );
+            emit changePersistentIndex(index,index);
         }
         return true;
     }
@@ -578,6 +585,15 @@ bool RModel::removeColumns(int column, int count, const QModelIndex &parent)
 }
 */
 
+void RModel::onrm_DataChanged(std::string _t_name, int row_from,int col_from ,int row_to,int col_to)
+{
+    if (this->getRdata()->t_name_ == _t_name)
+    {
+        QModelIndex top_left = this->index(row_from,col_from);
+        QModelIndex bottom_right = this->index(row_to,col_to);
+        emit dataChanged(top_left,bottom_right);
+    }
+}
 void RModel::onrm_BeginResetModel(std::string _t_name)
 {
     if (this->getRdata()->t_name_ == _t_name)
@@ -586,7 +602,10 @@ void RModel::onrm_BeginResetModel(std::string _t_name)
 void RModel::onrm_EndResetModel(std::string _t_name)
 {
     if (this->getRdata()->t_name_ == _t_name)
+    {
+        populateDataFromRastr();
         endResetModel();
+    }
 }
 void RModel::onrm_BeginInsertRow(std::string _t_name,int first, int last)
 {

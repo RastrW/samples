@@ -179,7 +179,8 @@ public slots:
 
 private slots:
     void CreateModel(QAstra* pqastra,CUIForm* pUIForm);
-    void onRTDM_UpdateModel(std::string tname);
+    void SetEditors();
+    void onRTDM_ResetModel(std::string tname);
 
 public:
     std::unique_ptr<RModel> prm;

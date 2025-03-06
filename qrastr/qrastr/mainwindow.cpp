@@ -335,6 +335,7 @@ void MainWindow::open(){
                         bl_find_template = true;
                         const std::string str_path_to_shablon = Params::GetInstance()->getDirSHABLON().absolutePath().toStdString() + "//" +template_ext.first +template_ext.second;
                         m_sp_qastra->Load( eLoadCode::RG_REPL, rfile.toStdString(), str_path_to_shablon );
+                        setCurrentFile(rfile, str_path_to_shablon);
                         setWindowTitle(rfile);
                         break;
                     }
@@ -345,6 +346,7 @@ void MainWindow::open(){
             }else{
                 IPlainRastrRetCode res = m_sp_qastra->Load( eLoadCode::RG_REPL, rfile.toStdString(), "" );
                 setWindowTitle(rfile);
+                setCurrentFile(rfile);
                 if (res ==IPlainRastrRetCode::Ok )
                     spdlog::info("File loaded {}", rfile.toStdString());
                 else
@@ -355,6 +357,7 @@ void MainWindow::open(){
             }
         }
     }
+
     return;
 
     QString fileName = QFileDialog::getOpenFileName(this);
@@ -371,7 +374,7 @@ void MainWindow::open(){
         m_cur_file = fileName.toStdString();
     }
 }
-void MainWindow::save(){
+void MainWindow::saveAs(){
     QFileDialog fileDlg( this, tr("Save Rastr file") );
     fileDlg.setAcceptMode(QFileDialog::AcceptSave);
     fileDlg.setOption(QFileDialog::DontUseNativeDialog, true);
@@ -393,6 +396,7 @@ void MainWindow::save(){
         const std::string str_path_to_shablon = Params::GetInstance()->getDirSHABLON().absolutePath().toStdString() + "//" +qstr_template.toStdString();
         //m_sp_qastra->LoadFile( eLoadCode::RG_REPL, "", str_path_to_shablon );
         m_sp_qastra->Save( qstr_rfile.toStdString(), str_path_to_shablon );
+        setCurrentFile(qstr_rfile);
         qDebug() << "templ: "<< qstr_template << "  file : " << qstr_rfile ;
     }
 
@@ -403,7 +407,9 @@ void MainWindow::save(){
     if (!m_cur_file.empty()){
         int nRes = 0;
         const std::string& f = m_cur_file;
-        assert(!"not implemented");
+        //assert(!"not implemented");
+
+
         if(nRes>0){
             std::string str_msg = fmt::format( "{}: {}", "File saved", f);
             statusBar()->showMessage( str_msg.c_str(), 2000 );
@@ -414,24 +420,48 @@ void MainWindow::save(){
         }
     }
 }
-void MainWindow::saveAs(){
-#if(!defined(QICSGRID_NO))
-    if (activeMdiChild()->saveAs())
-        statusBar()->showMessage(tr("File saved"), 2000);
-#endif
+void MainWindow::save(){
+
+    m_sp_qastra->Save( m_cur_file, "" );
+    std::string str_msg = fmt::format( "{}: {}", "Сохранен файл", m_cur_file);
+    return;
+
     QString fileName = QFileDialog::getSaveFileName(this);
     if (!fileName.isEmpty()){
         int nRes = 0;
         std::string f = fileName.toUtf8().constData(); //  it works!!!
+        m_sp_qastra->Save( f, "" );
         assert(!"not implemented");
         if(nRes>0){
             std::string str_msg = fmt::format( "{}: {}", "File saved", f);
             statusBar()->showMessage( str_msg.c_str(), 2000 );
         } else {
-            std::string str_msg = fmt::format( "{}: {}", "File not saved", f);
+           std::string str_msg = fmt::format( "{}: {}", "File not saved", f);
             QMessageBox msgBox;
             msgBox.critical( this, tr("File not saved"), str_msg.c_str() );
         }
+    }
+}
+void MainWindow::openRecentFile()
+{
+    QAction *action = qobject_cast<QAction *>(sender());
+    if (action)
+    {
+        //loadFile(action->data().toString());
+        QString _fileshabl = action->data().toString();
+        QStringList qslist = _fileshabl.split(" ");
+        std::string file = qslist[0].toStdString();
+        std::string shabl = "";
+        if (qslist.size() > 1)
+        {
+            shabl = qslist[1].toStdString();
+            shabl.erase(shabl.begin());
+            shabl.erase(shabl.end()-1);
+        }
+
+        //m_sp_qastra->Load( eLoadCode::RG_REPL, action->data().toString().toStdString(), "" );
+        m_sp_qastra->Load( eLoadCode::RG_REPL, file, shabl );
+        setWindowTitle(action->data().toString());
     }
 }
 void MainWindow::rgm_wrap(){
@@ -574,28 +604,36 @@ void MainWindow::showFormSettings(){
 }
 void MainWindow::createActions(){
     //file
-    QAction* newAct = new QAction(QIcon(":/images/new.png"), tr("&New"), this);
+    QAction* newAct = new QAction(QIcon(":/images/new.png"), tr("&Новый"), this);
     newAct->setShortcut(tr("Ctrl+N"));
     newAct->setStatusTip(tr("Create a new file"));
     connect(newAct, SIGNAL(triggered()), this, SLOT(newFile()));
-    QAction* openAct = new QAction(QIcon(":/images/open.png"), tr("&Open..."), this);
+    QAction* openAct = new QAction(QIcon(":/images/open.png"), tr("&Загрузить"), this);
     openAct->setShortcut(tr("Ctrl+O"));
     openAct->setStatusTip(tr("Open an existing file"));
     connect(openAct, SIGNAL(triggered()), this, SLOT(open()));
-    QAction* saveAct = new QAction(QIcon(":/images/save.png"), tr("&Save"), this);
+    QAction* saveAct = new QAction(QIcon(":/images/save.png"), tr("&Сохранить"), this);
     saveAct->setShortcut(tr("Ctrl+S"));
     saveAct->setStatusTip(tr("Save the document to disk"));
     connect(saveAct, SIGNAL(triggered()), this, SLOT(save()));
-    QAction* saveAsAct = new QAction(tr("Save &As..."), this);
+    QAction* saveAsAct = new QAction(tr("&Сохранить как"), this);
     saveAsAct->setStatusTip(tr("Save the document under a new name"));
     connect(saveAsAct, SIGNAL(triggered()), this, SLOT(saveAs()));
-    QAction* actShowFormSettings = new QAction(tr("S&ettings..."), this);
+    QAction* actShowFormSettings = new QAction(tr("&Настройки программы"), this);
     actShowFormSettings->setStatusTip(tr("Open settings form."));
     connect(actShowFormSettings, SIGNAL(triggered()), this, SLOT(showFormSettings()));
     QAction* exitAct = new QAction(tr("E&xit"), this);
     exitAct->setShortcut(tr("Ctrl+Q"));
     exitAct->setStatusTip(tr("Exit the application"));
     connect(exitAct, SIGNAL(triggered()), qApp, SLOT(closeAllWindows()));
+
+    for (int i = 0; i < MaxRecentFiles; ++i) {
+        recentFileActs[i] = new QAction(this);
+        recentFileActs[i]->setVisible(false);
+        connect(recentFileActs[i], SIGNAL(triggered()),
+                this, SLOT(openRecentFile()));
+    }
+
     //macro
     QAction* ActMacro = new QAction(QIcon(":/images/cut.png"),tr("&macro"), this);
     ActMacro->setShortcut(tr("F11"));
@@ -632,12 +670,14 @@ void MainWindow::createActions(){
     previousAct->setShortcut(tr("Ctrl+Shift+F6"));
     previousAct->setStatusTip(tr("Move the focus to the previous window"));
     connect(previousAct, SIGNAL(triggered()), m_workspace, SLOT(activatePreviousSubWindow()));
-    QAction* separatorAct = new QAction(this);
+    //QAction* separatorAct = new QAction(this);
+    separatorAct = new QAction(this);
     separatorAct->setSeparator(true);
     //help
     QAction* aboutAct = new QAction(tr("&О программе"), this);
     aboutAct->setStatusTip(tr("Show the application's About box"));
     connect(aboutAct, SIGNAL(triggered()), this, SLOT(about()));
+
 
     //MENU's
     //QMenu* menuFile = menuBar()->addMenu(tr("&File"));
@@ -645,9 +685,19 @@ void MainWindow::createActions(){
     menuFile->addAction(newAct);
     menuFile->addAction(openAct);
     menuFile->addAction(saveAct);
+    menuFile->addAction(saveAsAct);
     menuFile->addAction(actShowFormSettings);
     menuFile->addSeparator();
+    separatorAct = menuFile->addSeparator();
+    QMenu* menuFileLast = menuFile->addMenu(tr("&Последние"));
+    menuFile->addSeparator();
+    for (int i = 0; i < MaxRecentFiles; ++i)
+        menuFileLast->addAction(recentFileActs[i]);
+    menuFile->addSeparator();
     menuFile->addAction(exitAct);
+    updateRecentFileActions();
+    menuBar()->addSeparator();
+
     QMenu* menuMacro = menuBar()->addMenu(tr("&Макро"));
     menuMacro->addAction(ActMacro);
     QMenu* menuCalc = menuBar()->addMenu(tr("&Расчеты"));
@@ -702,6 +752,70 @@ void MainWindow::createActions(){
 
     //XZ
     createCalcLayout();
+}
+void MainWindow::setCurrentFile(const QString &fileName, const std::string Shablon)
+{
+    curFile = fileName;
+    setWindowFilePath(curFile);
+
+    QSettings settings;
+    QString _fileshabl = fileName;
+    if (!Shablon.empty())
+        _fileshabl.append(" <").append(Shablon).append(">");
+    QStringList files = settings.value("recentFileList").toStringList();
+    files.removeAll(_fileshabl);
+    files.prepend(_fileshabl);
+    while (files.size() > MaxRecentFiles)
+        files.removeLast();
+
+    settings.setValue("recentFileList", files);
+
+    foreach (QWidget *widget, QApplication::topLevelWidgets()) {
+        MainWindow *mainWin = qobject_cast<MainWindow *>(widget);
+        if (mainWin)
+            mainWin->updateRecentFileActions();
+    }
+}
+
+void MainWindow::updateRecentFileActions()
+{
+    QSettings settings;
+    QStringList files = settings.value("recentFileList").toStringList();
+
+    int numRecentFiles = qMin(files.size(), (int)MaxRecentFiles);
+
+    for (int i = 0; i < numRecentFiles; ++i) {
+        //QString text = tr("&%1 %2").arg(i + 1).arg(strippedName(files[i]));
+
+        QStringList qslist = files[i].split(" ");
+        std::string file = qslist[0].toStdString();
+        std::string shabl = "";
+        QString stripshabl = "";
+        if (qslist.size() > 1)
+        {
+            shabl = qslist[1].toStdString();
+            shabl.erase(shabl.begin());
+            shabl.erase(shabl.end()-1);
+            stripshabl = strippedName(shabl.c_str());
+        }
+        QString text;
+        if (stripshabl.isEmpty())
+            text = tr("&%1 %2").arg(i + 1).arg(qslist[0]);
+        else
+            text = tr("&%1 %2 %3").arg(i + 1).arg(qslist[0]).arg("<"+stripshabl+">");
+
+        recentFileActs[i]->setText(text);
+        recentFileActs[i]->setData(files[i]);
+        recentFileActs[i]->setVisible(true);
+    }
+    for (int j = numRecentFiles; j < MaxRecentFiles; ++j)
+        recentFileActs[j]->setVisible(false);
+
+    separatorAct->setVisible(numRecentFiles > 0);
+}
+QString MainWindow::strippedName(const QString &fullFileName)
+{
+    return QFileInfo(fullFileName).fileName();
 }
 void MainWindow::Btn1_onClick(){
 

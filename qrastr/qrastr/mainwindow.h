@@ -79,6 +79,7 @@ private slots:
     void open();
     void save();
     void saveAs();
+    void openRecentFile();
     void showFormSettings();
     void about();
     void rgm_wrap();
@@ -118,6 +119,11 @@ public:
     void setQAstra(const std::shared_ptr<QAstra>& sp_qastra);
 private:
     QHBoxLayout* createStyleSetting();
+    void setCurrentFile(const QString &fileName, const std::string Shablon = "");
+    void updateRecentFileActions();
+    QString strippedName(const QString &fullFileName);
+
+    QString curFile;
 
     int  readSettings();
     int  writeSettings();
@@ -140,6 +146,8 @@ private:
     FormProtocol*      m_pFormProtocol = nullptr;
     QSignalMapper*     m_windowMapper  = nullptr;
     QMenu*             m_menuOpen      = nullptr;
+    QMenu*             m_recentFilesMenu=nullptr;
+    QAction     *separatorAct;
     QHBoxLayout*       m_layoutActions = nullptr;                 // actions: rgm,opf,...
     QToolBar*          m_toolbarCalc   = nullptr;
     RtabWidget*        m_prtw_current  = nullptr;                  // current table
@@ -153,5 +161,7 @@ private:
     RTablesDataManager m_RTDM;
 
     std::list<CUIForm> m_lstUIForms;
+    enum { MaxRecentFiles = 5 };
+    QAction *recentFileActs[MaxRecentFiles];
 };
 #endif // MAINWINDOW_H
