@@ -23,7 +23,7 @@ void formexportcsv::on_pushButton_clicked()
     QFileDialog fileDlg( this );
     fileDlg.setAcceptMode( QFileDialog::AcceptSave );
     fileDlg.setWindowTitle( "Сохранение" );
-    fileDlg.setDirectory( std::filesystem::current_path() );
+    fileDlg.setDirectory( std::filesystem::current_path().c_str() );
     fileDlg.setAcceptMode( QFileDialog::AcceptSave );
 
     if ( fileDlg.exec() == QDialog::Rejected )

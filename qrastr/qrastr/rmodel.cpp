@@ -287,7 +287,7 @@ bool RModel::setData(const QModelIndex &index, const QVariant &value, int role)
                 std::string val =  value.toString().toStdString().c_str();
                 FieldVariantData vd(val);
                 IRastrResultVerify(col_ptr->SetValue(row,val));
-                qDebug() << "set: "<<up_rdata->t_name_.c_str()<<"."<< (*iter_col).str_name_.c_str() << "(" << row << ")=" <<val;
+                qDebug() << "set: "<<up_rdata->t_name_.c_str()<<"."<< (*iter_col).str_name_.c_str() ;//<< "(" << row << ")=" <<  val;
                 break;
             }
                 break;

@@ -35,7 +35,8 @@ public:
     // with other values present in the flag (e.g. vertical alignment).
     static Alignment fromCombinedAlignment(Qt::Alignment align);
 
-    CondFormat() {}
+    CondFormat() = default;
+    ~CondFormat() = default;
     CondFormat(const QString& filter,
                const QColor& foreground,
                const QColor& background,

@@ -9,6 +9,12 @@ using WrapperExceptionType = std::runtime_error;
 #include "IPlainRastrWrappers.h"
 #include "pluginrastr.h"
 
+#if(!defined(_MSC_VER))
+    int main(int argc, char *argv[]){
+        return 1;
+    }
+#endif
+
 /*
 class EventSink : public IRastrEventsSinkBase
 {

@@ -65,7 +65,12 @@ void ProtocolTreeModel::setupModelData(const QList<QStringView> &lines, Protocol
         qsizetype position = 0;
         for ( ; position < line.length() && line.at(position).isSpace(); ++position){
         }
+#if(defined(_MSC_VER))
         const QStringView lineData = line.sliced(position).trimmed();
+#else
+        const QStringView lineData = line.trimmed();
+        assert(!"nix: Notimpl");
+#endif
         if (!lineData.isEmpty()) {
             // Read the column data from the rest of the line.
             const auto columnStrings = lineData.split(u'\t', Qt::SkipEmptyParts);

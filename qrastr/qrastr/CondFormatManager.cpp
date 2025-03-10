@@ -2,7 +2,7 @@
 #include "ui_CondFormatManager.h"
 #include "CondFormat.h"
 #include "Settings.h"
-#include "FilterLineEdit.h"
+#include "filterlineedit.h"
 
 #include <QColorDialog>
 #include <QDesktopServices>
