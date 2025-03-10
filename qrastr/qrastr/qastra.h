@@ -160,6 +160,7 @@ public:
     _sp_rastr getRastr() const;
     IPlainRastrRetCode      Load( eLoadCode LoadCode, const std::string_view& FilePath, const std::string_view& TemplatePath );
     void      Save( const std::string_view& FilePath, const std::string_view& TemplatePath ) ;
+    eASTCode  Kdd(const std::string_view& parameters = {});
     eASTCode  Rgm(const std::string_view& parameters = {});
     eASTCode  Opf(const std::string_view& parameters = {});
     FieldVariantData GetVal( const std::string_view& Table, const std::string_view& Col , const long row );

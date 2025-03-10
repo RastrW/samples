@@ -54,8 +54,8 @@ int main(int argc, char *argv[]){
     if(n_res<0){
         return 200;
     }
-    w.setForms(app.GetForms());
     w.setQAstra(app.getQAstraPtr());
+    w.setForms(app.GetForms());
     w.resize(1200,800);
     w.show();
     //w.windowHandle()->setScreen(qApp->screens().last());

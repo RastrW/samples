@@ -240,6 +240,57 @@ void MainWindow::setForms(const std::list<CUIForm>& forms){ // https://stackover
     }
     connect( m_menuOpen, SIGNAL(triggered(QAction *)), this, SLOT(onOpenForm(QAction *)), Qt::UniqueConnection);
     connect( m_menuCalcParameters, SIGNAL(triggered(QAction *)), this, SLOT(onOpenForm(QAction *)), Qt::UniqueConnection);
+   // connect( m_menuProperties,  SIGNAL(m_menuProperties->aboutToShow()), this, SLOT(setSettingsForms()), Qt::UniqueConnection);
+    connect(m_menuProperties, &QMenu::aboutToShow, this, &MainWindow::setSettingsForms);
+   // m_menuProperties->aboutToShow()
+}
+void MainWindow::setSettingsForms()
+{
+    m_menuProperties->clear();
+    IRastrTablesPtr tablesx{ m_sp_qastra->getRastr()->Tables() };
+    IRastrPayload cnt{tablesx->Count()};
+    for (int i = 0 ; i< cnt.Value() ; i++)
+    {
+        IRastrTablePtr table{ tablesx->Item(i) };
+        IRastrPayload tab_name{table->Name()};
+        IRastrPayload templ_name{table->TemplateName()};
+        IRastrPayload tab_desc{table->Description()};
+        std::string str_tab_name = tab_name.Value();
+        std::string str_templ_name = templ_name.Value();
+
+        //m_menuProperties->actions().clear();
+        //m_menuProperties
+        if ( QFileInfo(str_templ_name.c_str()).suffix() == "form")
+        {
+            CUIForm _form;
+            //_form.SetName(stringutils::cp1251ToUtf8(tab_desc.Value().c_str()));
+            //_form.SetTableName(stringutils::cp1251ToUtf8(tab_name.Value().c_str()));
+            _form.SetName(tab_desc.Value().c_str());
+            _form.SetTableName(tab_name.Value().c_str());
+            QAction* p_actn = m_menuProperties->addAction(_form.Name().c_str());
+
+            IRastrColumnsPtr columns{ table->Columns() };
+            size_t nrows = IRastrPayload{table->Size()}.Value();
+            size_t ncols = IRastrPayload{columns->Count()}.Value();
+
+
+            if (nrows == 1)
+                _form.SetVertical(true);
+
+            for (size_t i = 0 ; i < ncols; i++ )
+            {
+                IRastrColumnPtr column{columns->Item(i)};
+                CUIFormField* _field;
+                _form.Fields().emplace_back(IRastrPayload{column->Name()}.Value());
+            }
+
+            connect(p_actn, &QAction::triggered, [this, _form] {
+                onOpenForm(_form); });
+        }
+
+        //qDebug() <<"TabName: " << str_tab_name.c_str() << "Templ name: " << str_templ_name.c_str();
+    }
+
 }
 void MainWindow::setQAstra(const std::shared_ptr<QAstra>& sp_qastra){
     assert(nullptr!=sp_qastra);
@@ -502,6 +553,18 @@ void MainWindow::rgm_wrap(){
     emit signal_calc_end();
     //emit rgm_signal();
 }
+void MainWindow::kdd_wrap(){
+    eASTCode code = m_sp_qastra->Kdd("");
+    std::string str_msg = "";
+    if (code == eASTCode::AST_OK){
+        str_msg = "Контроль исходных данных выполнен успешно";
+        spdlog::info("{}", str_msg);
+    }else{
+        str_msg = "Контроль исходных данных завершился аварийно!";
+        spdlog::error("{} : {}", static_cast<int>(code), str_msg);
+    }
+    statusBar()->showMessage( str_msg.c_str(), 0 );
+}
 void MainWindow::oc_wrap(){
     emit signal_calc_begin();
     eASTCode code = m_sp_qastra->Opf("s");
@@ -532,8 +595,16 @@ void MainWindow::onOpenForm( QAction* p_actn ){
     auto it = forms.begin();
     std::advance(it,n_indx);
     auto form  =*it;
+    form.SetName(stringutils::cp1251ToUtf8(form.Name()));
+
+    onOpenForm(form);
+}
+void MainWindow::onOpenForm(CUIForm _uiform)
+{
+    CUIForm form  = _uiform;
     qDebug() << "\n Open form:" + form.Name();
-    spdlog::info( "Create tab [{}]", stringutils::cp1251ToUtf8(form.Name()) );
+    //spdlog::info( "Create tab [{}]", stringutils::cp1251ToUtf8(form.Name()) );
+    spdlog::info( "Create tab [{}]", form.Name() );
     RtabWidget *prtw = new RtabWidget(m_sp_qastra.get(),form,&m_RTDM,m_DockManager,this);
 
     QObject::connect(this, &MainWindow::signal_calc_begin, prtw, &RtabWidget::on_calc_begin);
@@ -548,7 +619,8 @@ void MainWindow::onOpenForm( QAction* p_actn ){
         addDockWidget(Qt::TopDockWidgetArea, dock);
     }else{
         //QTitanGrid
-        auto dw = new ads::CDockWidget( stringutils::cp1251ToUtf8(form.Name()).c_str(), this);
+        //auto dw = new ads::CDockWidget( stringutils::cp1251ToUtf8(form.Name()).c_str(), this);
+        auto dw = new ads::CDockWidget(form.Name().c_str(), this);
         dw->setWidget(prtw->m_grid);
         dw->setFeature(ads::CDockWidget::DockWidgetDeleteOnClose, true);
         auto area = m_DockManager->addDockWidgetTab(ads::TopDockWidgetArea, dw);
@@ -567,14 +639,8 @@ void MainWindow::onOpenForm( QAction* p_actn ){
 
         qDebug() << "doc dock widget created!" << dw << area;
     }
-    //prtw->show();
-#if(!defined(QICSGRID_NO))
-    const nlohmann::json j_form = up_rastr_->GetJForms()[n_indx];
-    MdiChild *child = createMdiChild( j_form );
-    //child->newFile();
-    child->show();
-#endif // #if(!defined(QICSGRID_NO))
 }
+
 void MainWindow::onItemPressed(const QModelIndex &index){
     //prtw_current = qobject_cast<RtabWidget*>(index.);
     int row = index.row();
@@ -642,7 +708,7 @@ void MainWindow::createActions(){
     QAction* saveAsAct = new QAction(tr("&Сохранить как"), this);
     saveAsAct->setStatusTip(tr("Save the document under a new name"));
     connect(saveAsAct, SIGNAL(triggered()), this, SLOT(saveAs()));
-    QAction* actShowFormSettings = new QAction(tr("&Настройки программы"), this);
+    QAction* actShowFormSettings = new QAction(tr("&Параметры"), this);
     actShowFormSettings->setStatusTip(tr("Open settings form."));
     connect(actShowFormSettings, SIGNAL(triggered()), this, SLOT(showFormSettings()));
     QAction* exitAct = new QAction(tr("E&xit"), this);
@@ -663,6 +729,9 @@ void MainWindow::createActions(){
     ActMacro->setStatusTip(tr("Run macro"));
     connect(ActMacro, SIGNAL(triggered()), this, SLOT(onDlgMcr()));
     //calc
+    QAction* actKDD = new QAction(tr("&Контроль"), this);
+    actKDD->setStatusTip(tr("Контроль исходных данных"));
+    connect(actKDD, SIGNAL(triggered()), this, SLOT(kdd_wrap()));
     QAction* actRGM = new QAction(QIcon(":/images/Rastr3_rgm_16x16.png"),tr("&Режим"), this);
     actRGM->setShortcut(tr("F5"));
     actRGM->setStatusTip(tr("Calc rgm"));
@@ -709,7 +778,10 @@ void MainWindow::createActions(){
     menuFile->addAction(openAct);
     menuFile->addAction(saveAct);
     menuFile->addAction(saveAsAct);
-    menuFile->addAction(actShowFormSettings);
+    m_menuProgrammProperties = menuFile->addMenu(tr("&Настройки программы"));
+    m_menuProgrammProperties->addAction(actShowFormSettings);
+    m_menuProperties = m_menuProgrammProperties->addMenu(tr("&Настройки"));
+
     menuFile->addSeparator();
     separatorAct = menuFile->addSeparator();
     QMenu* menuFileLast = menuFile->addMenu(tr("&Последние"));
@@ -724,6 +796,7 @@ void MainWindow::createActions(){
     QMenu* menuMacro = menuBar()->addMenu(tr("&Макро"));
     menuMacro->addAction(ActMacro);
     QMenu* menuCalc = menuBar()->addMenu(tr("&Расчеты"));
+    menuCalc->addAction(actKDD);
     menuCalc->addAction(actRGM);
     menuCalc->addAction(actOC);
     m_menuCalcParameters =  menuCalc->addMenu(tr("&Параметры"));
@@ -776,8 +849,8 @@ void MainWindow::createActions(){
     m_toolbarCalc->addAction(actRGM);
     m_toolbarCalc->addAction(actOC);
 
-    //XZ
-    createCalcLayout();
+    //TEST BUTTONS
+    //createCalcLayout();
 }
 void MainWindow::setCurrentFile(const QString &fileName, const std::string Shablon)
 {

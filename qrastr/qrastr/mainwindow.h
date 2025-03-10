@@ -82,10 +82,12 @@ private slots:
     void openRecentFile();
     void showFormSettings();
     void about();
+    void kdd_wrap();
     void rgm_wrap();
     void oc_wrap();
     void onDlgMcr();
     void onOpenForm(QAction* p_actn);
+    void onOpenForm(CUIForm _uiform);
     void onButton2Click();
     void Btn1_onClick();
     void Btn3_onClick();
@@ -116,6 +118,7 @@ public:
     MainWindow();
     virtual ~MainWindow();
     void setForms(const std::list<CUIForm>& forms); // https://stackoverflow.com/questions/14151443/how-to-pass-a-qstring-to-a-qt-slot-from-a-qmenu-via-qsignalmapper-or-otherwise
+    void setSettingsForms();                         // Настройки программы - настройки (.form)
     void setQAstra(const std::shared_ptr<QAstra>& sp_qastra);
 private:
     QHBoxLayout* createStyleSetting();
@@ -146,23 +149,24 @@ private:
     FormProtocol*      m_pFormProtocol = nullptr;
     QSignalMapper*     m_windowMapper  = nullptr;
     QMenu*             m_menuOpen      = nullptr;
-    QMenu*             m_recentFilesMenu=nullptr;
-    QMenu*             m_menuCalcParameters = nullptr;
+    QMenu*             m_recentFilesMenu=nullptr;               // Файлы - последние
+    QMenu*             m_menuCalcParameters = nullptr;          // Расчеты
+    QMenu*             m_menuProgrammProperties = nullptr;      // Файлы - Настройки программы
+    QMenu*             m_menuProperties = nullptr;              // Файлы - Настройки программы - Настройки
     QAction     *separatorAct;
-    QHBoxLayout*       m_layoutActions = nullptr;                 // actions: rgm,opf,...
+    QHBoxLayout*       m_layoutActions = nullptr;               // actions: rgm,opf,...
     QToolBar*          m_toolbarCalc   = nullptr;
-    RtabWidget*        m_prtw_current  = nullptr;                  // current table
-    std::string        m_cur_file;                      // current file
+    RtabWidget*        m_prtw_current  = nullptr;               // current table
+    std::string        m_cur_file;                              // current file
     QDockWidget*       m_dock        = nullptr;
     ads::CDockManager* m_DockManager = nullptr; // The main container for docking
     _v_cache_log       m_v_cache_log;
     std::shared_ptr<QAstra> m_sp_qastra;
 
-    //RTablesDataManager<QDenseDataBlock<FieldVariantData>> m_RTDM;
     RTablesDataManager m_RTDM;
 
     std::list<CUIForm> m_lstUIForms;
-    enum { MaxRecentFiles = 5 };
+    enum { MaxRecentFiles = 10 };
     QAction *recentFileActs[MaxRecentFiles];
 };
 #endif // MAINWINDOW_H

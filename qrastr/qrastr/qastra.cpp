@@ -108,12 +108,15 @@ IPlainRastrRetCode QAstra::Load( eLoadCode LoadCode, const std::string_view& Fil
 void QAstra::Save( const std::string_view& FilePath, const std::string_view& TemplatePath ){
     IRastrResultVerify saveresult{ sp_rastr_->Save( FilePath, TemplatePath ) };
 }
+eASTCode QAstra::Kdd(const std::string_view& parameters){
+    IRastrPayload  kddresult{ sp_rastr_->Kdd(parameters) };
+    return kddresult.Value();
+}
 eASTCode QAstra::Rgm(const std::string_view& parameters){
-    IRastrPayload  rgmresult{ sp_rastr_->Rgm("") };
+    IRastrPayload  rgmresult{ sp_rastr_->Rgm(parameters) };
     return rgmresult.Value();
 }
 eASTCode QAstra::Opf(const std::string_view& parameters){
-    //IRastrPayload  opfresult{ sp_rastr_->OPF("") };
     IRastrPayload  opfresult{ sp_rastr_->OPF(parameters) };
     return opfresult.Value();
 }
