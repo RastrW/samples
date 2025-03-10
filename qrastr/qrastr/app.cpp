@@ -146,7 +146,9 @@ long App::init(){
     try{
         auto logg = std::make_shared<spdlog::logger>( "qrastr" );
         spdlog::set_default_logger(logg);
+#if(defined(_MSC_VER))
         SetConsoleOutputCP(CP_UTF8);
+#endif
         auto console_sink = std::make_shared<spdlog::sinks::stdout_color_sink_mt>();
         logg->sinks().push_back(console_sink);
         int n_res = readSettings();
@@ -216,13 +218,14 @@ long App::readForms(){
         //std::vector<std::string> forms = split(str_path_forms, ',');
         std::filesystem::path path_forms ("form");
         std::filesystem::path path_form_load;
-    #if(defined(_MSC_VER))
+
         //on Windows, you MUST use 8bit ANSI (and it must match the user's locale) or UTF-16 !! Unicode!
         //!!! https://stackoverflow.com/questions/30829364/open-utf8-encoded-filename-in-c-windows  !!!
         //for (std::string &form : forms){
         for(const Params::_v_forms::value_type &form : Params::GetInstance()->getStartLoadForms()){
             std::filesystem::path path_file_form = stringutils::utf8_decode(form);
             path_form_load =  path_forms / path_file_form;
+    #if(defined(_MSC_VER))
             qDebug() << "read form from file : " << path_form_load.wstring();
     #else
             //path_forms_load = str_path_to_file_forms;
@@ -259,7 +262,12 @@ long App::start(){
         if(nullptr!=m_sp_qastra){
             const QDir dir = Params::GetInstance()->getDirSHABLON();
             //std::filesystem::path path_templates = Params::GetInstance()->getDirSHABLON().canonicalPath().toStdString();
+#if(QT_VERSION > QT_VERSION_CHECK(5, 16, 0))
             const std::filesystem::path path_templates = Params::GetInstance()->getDirSHABLON().filesystemCanonicalPath();
+#else
+            std::filesystem::path path_templates = Params::GetInstance()->getDirSHABLON().canonicalPath().toStdString();
+            assert(!"what?");
+#endif
             const Params::_v_templates v_templates{ Params::GetInstance()->getStartLoadTemplates() };
             for(const Params::_v_templates::value_type& templ_to_load : v_templates){
                 std::filesystem::path path_template = path_templates;

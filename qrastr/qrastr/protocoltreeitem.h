@@ -1,6 +1,7 @@
 #ifndef PROTOCOLTREEITEM_H
 #define PROTOCOLTREEITEM_H
 
+#include <memory>
 #include <QVariant>
 #include <QList>
 

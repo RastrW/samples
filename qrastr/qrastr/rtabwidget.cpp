@@ -26,6 +26,7 @@
 
 //#include "Settings.h"
 #include <QtitanGrid.h>
+#include "qtitangrid.h"
 #include <utils.h>
 //#include "License2/json.hpp"
 #include <QAbstractItemModelTester>
@@ -388,7 +389,12 @@ void RtabWidget::contextMenu(ContextMenuEventArgs* args)
     args->contextMenu()->addAction(qstr_col_props, this, SLOT(OpenColPropForm()));
 
     std::tuple<int,double> item_sum = GetSumSelected();
+#if(defined(_MSC_VER))
     args->contextMenu()->addAction("Сумма: " + QString::number(std::get<1>(item_sum))+" Элементов: " + QString::number(std::get<0>(item_sum)),this,nullptr);
+#else
+    args->contextMenu()->addAction( QString("Сумма: ") + QString::number(std::get<1>(item_sum))+QString(" Элементов: ") + QString::number(std::get<0>(item_sum)) );
+#endif
+
     //args->contextMenu()->addAction(tr("Скрыть колонку"),this,SLOT(hideColumns()));
     args->contextMenu()->addSeparator();
 
@@ -404,10 +410,14 @@ void RtabWidget::contextMenu(ContextMenuEventArgs* args)
 
     //args->contextMenu()->addAction(QIcon(":/images/Rastr3_grid_insrow_16x16.png"),tr("Вставить"),this,SLOT(insertRow_qtitan()),QKeySequence(Qt::CTRL | Qt::Key_I));
 
-    args->contextMenu()->addAction(QIcon(":/images/Rastr3_grid_insrow_16x16.png"),tr("Вставить"),QKeySequence(Qt::CTRL | Qt::Key_I),this,SLOT(insertRow_qtitan()));
-    args->contextMenu()->addAction(QIcon(":/images/Rastr3_grid_addrow_16x16.png"),tr("Добавить"),QKeySequence(Qt::CTRL | Qt::Key_A),this,SLOT(AddRow()));
-    args->contextMenu()->addAction(QIcon(":/images/Rastr3_grid_duprow_16x161.png"),tr("Дублировать"),QKeySequence(Qt::CTRL | Qt::Key_R),this,SLOT(DuplicateRow_qtitan()));
-    args->contextMenu()->addAction(QIcon(":/images/Rastr3_grid_delrow_16x16.png"),tr("Удалить"),QKeySequence(Qt::CTRL | Qt::Key_D),this,SLOT(deleteRow_qtitan()));
+    args->contextMenu()->addAction( QIcon(":/images/Rastr3_grid_insrow_16x16.png"), tr("Вставить"), this, SLOT(insertRow_qtitan()) )
+            ->setShortcut( QKeySequence(Qt::CTRL | Qt::Key_I) );
+    args->contextMenu()->addAction(QIcon(":/images/Rastr3_grid_addrow_16x16.png"),tr("Добавить"),this,SLOT(AddRow()))
+            ->setShortcut( QKeySequence(Qt::CTRL | Qt::Key_A) );
+    args->contextMenu()->addAction(QIcon(":/images/Rastr3_grid_duprow_16x161.png"),tr("Дублировать"),this,SLOT(DuplicateRow_qtitan()))
+            ->setShortcut( QKeySequence(Qt::CTRL | Qt::Key_R) );
+    args->contextMenu()->addAction(QIcon(":/images/Rastr3_grid_delrow_16x16.png"),tr("Удалить"),this,SLOT(deleteRow_qtitan()))
+            ->setShortcut( QKeySequence(Qt::CTRL | Qt::Key_D) );
     args->contextMenu()->addAction(QIcon(":/images/column_edit.png"),tr("Групповая коррекция"), this, SLOT(OpenGroupCorrection()));
     connect(sC_CTRL_I, &QShortcut::activated, this, &RtabWidget::insertRow_qtitan);
     connect(sC_CTRL_A, &QShortcut::activated, this, &RtabWidget::AddRow);
@@ -448,12 +458,18 @@ void RtabWidget::customMenuRequested(QPoint pos){
     QAction* condFormatAction = new QAction(QIcon(":/icons/edit_cond_formats"), tr("Edit Conditional Formats..."), menu);
 
     std::tuple<int,double> item_sum = GetSumSelected();
+#if(defined(_MSC_VER))
     menu->addAction("Сумма: " + QString::number(std::get<1>(item_sum))+" Элементов: " + QString::number(std::get<0>(item_sum)),this,nullptr);
+#else
+    menu->addAction("Сумма: " + QString::number(std::get<1>(item_sum))+" Элементов: " + QString::number(std::get<0>(item_sum)));
+#endif
     menu->addSeparator();
     menu->addAction(copyAction);
     menu->addAction(copyWithHeadersAction);
-    menu->addAction(QIcon(":/images/Rastr3_grid_insrow_16x16.png"),tr("Insert Row"),QKeySequence(Qt::CTRL | Qt::Key_I),this,SLOT(insertRow()));
-    menu->addAction(QIcon(":/images/Rastr3_grid_delrow_16x16.png"),tr("Delete Row"),QKeySequence(Qt::CTRL | Qt::Key_D),this,SLOT(deleteRow()));
+    menu->addAction(QIcon(":/images/Rastr3_grid_insrow_16x16.png"),tr("Insert Row"),this,SLOT(insertRow()))
+            ->setShortcut( QKeySequence(Qt::CTRL | Qt::Key_I) );
+    menu->addAction(QIcon(":/images/Rastr3_grid_delrow_16x16.png"),tr("Delete Row"),this,SLOT(deleteRow()))
+            ->setShortcut( QKeySequence(Qt::CTRL | Qt::Key_D) );
     //menu->addAction(tr("Hide Rows"),this,SLOT(hideRows()));
     //menu->addAction(tr("Unhide Rows"),this,SLOT(unhideRows()));
     menu->addSeparator();
@@ -1125,8 +1141,8 @@ void RtabWidget::copyMimeData(const QModelIndexList& fromIndices, QMimeData* mim
                 //sqlInsertStatement.append(sqlb::escapeIdentifier(headerText));
             }
             else {
-                result.append(headerText);
-                htmlResult.append(headerText);
+                result.append(headerText.c_str());
+                htmlResult.append(headerText.c_str());
             }
         }
         if (inSQL)
@@ -1272,10 +1288,18 @@ void RtabWidget::copyMimeData(const QModelIndexList& fromIndices, QMimeData* mim
         htmlResult.append("</table></body></html>");
         mimeData->setHtml(htmlResult);
     }
+#if(defined(_MSC_VER))
     result.removeLast();
+#else
+    result.chop(1);
+#endif
     QString test = "test str\r\n";
     QString test2 = "test str\r\n";
+#if(defined(_MSC_VER))
     test.removeLast();
+#else
+    test.chop(1);
+#endif
     test2.remove(test2.length()-2,2);
     //result.remove(result.length()-2,2);
 

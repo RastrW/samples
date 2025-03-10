@@ -41,7 +41,11 @@ int CRastrHlp::Load(std::string str_path_to_file){
         //!!! https://stackoverflow.com/questions/30829364/open-utf8-encoded-filename-in-c-windows  !!!
 
         path_file_load = stringutils::utf8_decode(str_path_to_file);
+#if(defined(_MSC_VER))
         nRes = ::Load(id_rastr_, path_file_load.c_str(), L"");
+#else
+        nRes = ::Load(id_rastr_, path_file_load.wstring().c_str(), L"");
+#endif
         if(nRes<0){
             throw CException("Can't read Rastr file: {}", str_path_to_file);
         }else{
@@ -85,7 +89,7 @@ int CRastrHlp::ReadForms(std::string str_path_forms){
         fs::path path_forms ("form");
         //fs::path path_forms_load;
         fs::path path_form_load;
-#if(defined(_MSC_VER))
+
         //str_path_forms_load = R"(C:\Users\ustas\Documents\RastrWin3\form\poisk.fm)";
         //str_path_forms_load = R"(C:\Users\ustas\Documents\RastrWin3\form\Общие.fm)";
         //str_path_forms_load = R"(C:\projects\astra\Общие.fm)";
@@ -100,12 +104,11 @@ int CRastrHlp::ReadForms(std::string str_path_forms){
         {
             fs::path path_file_form = stringutils::utf8_decode(form);
             path_form_load =  path_forms / path_file_form;
-
+#if(defined(_MSC_VER))
             qDebug() << "read form from file : " << path_form_load.wstring();
-    #else
-            path_forms_load = str_path_to_file_forms;
-            qDebug() << "read form from file : " << path_forms_load.c_str();
-    #endif
+#else
+            qDebug() << "read form from file : " << path_form_load.c_str();
+#endif
             CUIFormsCollection* CUIFormsCollection_ = new CUIFormsCollection ;
             if (path_form_load.extension() == ".fm")
                 *CUIFormsCollection_ = CUIFormCollectionSerializerBinary(path_form_load).Deserialize();

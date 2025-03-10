@@ -639,6 +639,13 @@ void MainWindow::onOpenForm(CUIForm _uiform)
 
         qDebug() << "doc dock widget created!" << dw << area;
     }
+    //prtw->show();
+#if(!defined(QICSGRID_NO))
+    const nlohmann::json j_form = up_rastr_->GetJForms()[n_indx];
+    MdiChild *child = createMdiChild( j_form );
+    //child->newFile();
+    child->show();
+#endif // #if(!defined(QICSGRID_NO))
 }
 
 void MainWindow::onItemPressed(const QModelIndex &index){

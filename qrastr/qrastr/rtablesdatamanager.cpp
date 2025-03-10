@@ -233,7 +233,7 @@ std::shared_ptr<QDataBlock>  RTablesDataManager::Get(std::string tname, std::str
             qDebug()<<"RTDM: delete table with use_count() = 1 -> " <<iter->first.c_str();
             iter = mpTables.erase(iter);
         } else {
-            qDebug()<<"RTDM: " << iter->first <<" use_count() =  " <<iter->second.use_count();
+            qDebug()<<"RTDM: " << iter->first.c_str() <<" use_count() =  " <<iter->second.use_count();
             ++iter;
         }
     }

@@ -103,12 +103,16 @@ void CondFormatJson::from_json()
                 std::string str_filter = j_col_condformat[j_cf_filter_];
                 std::string str_bgc = j_col_condformat[j_cf_bgcolor_];
                 std::string str_fgc = j_col_condformat[j_cf_fgcolor_];
+#if(defined(_MSC_VER))
                 vcf.emplace_back(   QString(str_filter.c_str()),
                                     QColor::fromString(str_fgc.c_str()),
                                     QColor::fromString(str_bgc.c_str()),
                                     QFont(),
                                     CondFormat::Alignment::AlignLeft,
                                     "UTF-8");
+#else
+                assert(!"nix: in qt5 no QColor::fromString()!");
+#endif
             }
             m_MapcondFormatVector.at(index) = vcf;
         }

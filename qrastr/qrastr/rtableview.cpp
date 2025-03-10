@@ -66,9 +66,12 @@ RTableView::RTableView(QWidget *parent) :
     horizontalHeader()->setSectionsMovable(true);
     setAlternatingRowColors(true);
     setAutoFillBackground(true);
-
+#if(defined(_MSC_VER))
     Q_D(QTableView);
     d->cornerWidget = (QTableCornerButton*)&cornerButton;
+#else
+    assert(!"nix: not understend howto compile.");
+#endif
 
     cornerButton.setText("*");
     disconnect(&cornerButton, SIGNAL(clicked()), this, SLOT(selectAll()));

@@ -13,7 +13,7 @@ class PluginRastr
     Q_PLUGIN_METADATA( IID "Rastr.Plugins.InterfaceRastr" FILE "pluginrastr.json" )
     Q_INTERFACES(InterfaceRastr)
 public:
-    typedef IPlainRastr* (__cdecl* _prf)() ;
+    typedef IPlainRastr* (*_prf)() ;
     virtual void setLoggerPtr(std::shared_ptr<spdlog::logger> spLoger) override;
     virtual std::shared_ptr<IPlainRastr> getIPlainRastrPtr() override;
 };
