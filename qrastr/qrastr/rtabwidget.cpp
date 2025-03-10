@@ -436,9 +436,10 @@ void RtabWidget::contextMenu(ContextMenuEventArgs* args)
     //connect(sC_CTRL_I, &QShortcut::activated, this, &RtabWidget::insertRow);
     //connect(sC_CTRL_D, &QShortcut::activated, this, &RtabWidget::deleteRow);
 
-    QMenu *menu_connected_forms;
-    menu_connected_forms = CunstructLinkedFormsMenu( stringutils::cp1251ToUtf8(m_UIForm.Name()));
-    args->contextMenu()->addMenu(menu_connected_forms);
+    QMenu *menu_linked_forms;
+    //menu_connected_forms = CunstructLinkedFormsMenu( stringutils::cp1251ToUtf8(m_UIForm.Name()));
+    menu_linked_forms = CunstructLinkedFormsMenu( m_UIForm.Name());
+    args->contextMenu()->addMenu(menu_linked_forms);
 
     connect(condFormatAction, &QAction::triggered, this, [&]() {
         emit editCondFormats(column);

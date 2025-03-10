@@ -62,14 +62,20 @@ int RModel::populateDataFromRastr(){
                 vsuperenum.push_back(val);
             if (vsuperenum.size() > 2)
             {
-                std::shared_ptr<QDataBlock> QDB = pRTDM_->Get(vsuperenum[0],vsuperenum[2]+","+vsuperenum[1]);
-                //QDB->QDump();
-                for ( int i = 0 ; i < QDB->RowsCount() ; i++)
+                try{
+                    std::shared_ptr<QDataBlock> QDB = pRTDM_->Get(vsuperenum[0],vsuperenum[2]+","+vsuperenum[1]);
+                    //QDB->QDump();
+                    for ( int i = 0 ; i < QDB->RowsCount() ; i++)
+                    {
+                        long ind_ref_val = std::visit(ToLong(),(QDB->Get(i,0)));
+                        std::string str_ref_val = std::visit(ToString(),(QDB->Get(i,1)));
+                        list.append(str_ref_val.c_str());
+                        map_string.insert(std::make_pair(ind_ref_val,str_ref_val));
+                    }
+                }
+                catch(...)
                 {
-                    long ind_ref_val = std::visit(ToLong(),(QDB->Get(i,0)));
-                    std::string str_ref_val = std::visit(ToString(),(QDB->Get(i,1)));
-                    list.append(str_ref_val.c_str());
-                    map_string.insert(std::make_pair(ind_ref_val,str_ref_val));
+                    qDebug()<<up_rdata->t_name_.c_str()<<"->"<<rcol.nameref_.c_str()<< " : ParseError !";
                 }
                 mm_superenum_.insert(std::make_pair(rcol.index,map_string));
             }
