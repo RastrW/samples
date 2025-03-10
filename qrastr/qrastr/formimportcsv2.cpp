@@ -22,7 +22,7 @@ void formimportcsv2::on_pushButton_clicked()
     QFileDialog fileDlg( this );
     fileDlg.setAcceptMode( QFileDialog::AcceptOpen );
     fileDlg.setWindowTitle( "Открытие" );
-    fileDlg.setDirectory( std::filesystem::current_path().c_str() );
+    fileDlg.setDirectory( QString::fromStdString(std::filesystem::current_path().string()) );
     if ( fileDlg.exec() == QDialog::Rejected )
         return;
 
