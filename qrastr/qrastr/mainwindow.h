@@ -79,6 +79,7 @@ private slots:
     void open();
     void save();
     void saveAs();
+    void saveAll();
     void openRecentFile();
     void showFormSettings();
     void about();
