@@ -130,6 +130,9 @@ QVariant RModel::data(const QModelIndex &index, int role) const
     std::string item_str;
     QVariant condFormatColor;
 
+    RData::iterator iter_col = up_rdata->begin() + col;
+    RCol* prc =  &(*iter_col);
+
     if (role == Qt::BackgroundRole )
     {
             if (row == 1 && col == 2)  //change background only for cell(1,2)
@@ -144,13 +147,16 @@ QVariant RModel::data(const QModelIndex &index, int role) const
     {
             item = std::visit(ToQVariant(),up_rdata->pnparray_->Get(row,col));
 
+        if (!prc->directcode)
+        {
             if (contains(m_enum_,col) )
                  return m_enum_.at(col).at(item.toInt());
 
             if (contains(mm_superenum_,col))
                 return mm_superenum_.at(col).at(item.toInt()).c_str();
+        }
 
-            return item;
+        return item;
     }
     else if  (role == Qtitan::ComboBoxRole)
     {
@@ -226,7 +232,7 @@ QVariant RModel::headerData(int section, Qt::Orientation orientation, int role) 
 
 Qt::ItemFlags RModel::flags(const QModelIndex &index) const
 {
-    return Qt::ItemIsEditable | Qt::ItemIsEditable |  QAbstractTableModel::flags(index) ;
+    return Qt::ItemIsEditable | Qt::ItemIsSelectable |  QAbstractTableModel::flags(index) ;
 }
 
 bool RModel::setData(const QModelIndex &index, const QVariant &value, int role)
@@ -235,6 +241,7 @@ bool RModel::setData(const QModelIndex &index, const QVariant &value, int role)
     int row = index.row();
 
     RData::iterator iter_col = up_rdata->begin() + col;
+    //RCol rcol = *iter_col;
 
     IRastrTablesPtr tablesx{this->pqastra_->getRastr()->Tables()};
     IRastrTablePtr table{ tablesx->Item(iter_col->table_name_) };
@@ -255,32 +262,35 @@ bool RModel::setData(const QModelIndex &index, const QVariant &value, int role)
             case RCol::_en_data::DATA_INT:
             {
                 long val = 0;
-                if (contains(m_enum_,col))       // ENUM
+                if (!(*iter_col).directcode)
                 {
-                    int i =0;
-                    for (auto mval : m_enum_.at(col))
+                    if (contains(m_enum_,col))       // ENUM
                     {
-                        if (mval == value)
-                            val = i;
-                        i++;
+                        int i =0;
+                        for (auto mval : m_enum_.at(col))
+                        {
+                            if (mval == value)
+                                val = i;
+                            i++;
+                        }
                     }
-                }
-                else if (contains(mm_superenum_,col))     // SUPER_ENUM
-                {
-                    for (auto [mkey,mval] : mm_superenum_.at(col) )
-                        if (mval == value.toString().toStdString())
-                            val = mkey;
-                }
-                else if (contains(mm_nameref_,col))     // RefCol: node[na]
-                {
-                    for (auto [mkey,mval] : mm_nameref_.at(col) )
-                        if (mval == value.toString().toStdString())
-                            val = mkey;
+                    else if (contains(mm_superenum_,col))     // SUPER_ENUM
+                    {
+                        for (auto [mkey,mval] : mm_superenum_.at(col) )
+                            if (mval == value.toString().toStdString())
+                                val = mkey;
+                    }
+                    else if (contains(mm_nameref_,col))     // RefCol: node[na]
+                    {
+                        for (auto [mkey,mval] : mm_nameref_.at(col) )
+                            if (mval == value.toString().toStdString())
+                                val = mkey;
+                    }
+                    else
+                        val =  value.toInt();
                 }
                 else
-                {
                     val =  value.toInt();
-                }
 
                 FieldVariantData vd(val);
                 IRastrResultVerify(col_ptr->SetValue(row,val));

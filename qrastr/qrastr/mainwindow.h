@@ -85,6 +85,7 @@ private slots:
     void kdd_wrap();
     void rgm_wrap();
     void oc_wrap();
+    void idop_wrap();
     void onDlgMcr();
     void onOpenForm(QAction* p_actn);
     void onOpenForm(CUIForm _uiform);
@@ -125,7 +126,6 @@ private:
     void setCurrentFile(const QString &fileName, const std::string Shablon = "");
     void updateRecentFileActions();
     QString strippedName(const QString &fullFileName);
-
     QString curFile;
 
     int  readSettings();
@@ -157,7 +157,6 @@ private:
     QHBoxLayout*       m_layoutActions = nullptr;               // actions: rgm,opf,...
     QToolBar*          m_toolbarCalc   = nullptr;
     RtabWidget*        m_prtw_current  = nullptr;               // current table
-    std::string        m_cur_file;                              // current file
     QDockWidget*       m_dock        = nullptr;
     ads::CDockManager* m_DockManager = nullptr; // The main container for docking
     _v_cache_log       m_v_cache_log;

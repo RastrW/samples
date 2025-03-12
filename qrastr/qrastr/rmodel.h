@@ -29,7 +29,7 @@ class RModel : public QAbstractTableModel
     std::vector<QString> vqcols_;                                 // Заголовки столбцов
     CUIForm* pUIForm_;
 public:
-    std::map<std::size_t,QStringList> m_enum_;                           // ENUM -> БАЗА|Ген|Нагр|Ген+
+    std::map<std::size_t,QStringList> m_enum_;                                 // ENUM -> БАЗА|Ген|Нагр|Ген+
     std::map<std::size_t, std::map<std::size_t, std::string>> mm_nameref_;     // RefCol -> node[na]
     std::map<std::size_t, std::map<std::size_t, std::string>> mm_superenum_;   // SUPER_ENUM -> ti_prv.Name.Num
 public:

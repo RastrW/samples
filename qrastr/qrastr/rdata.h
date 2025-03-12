@@ -455,6 +455,7 @@ public:
     RCol(Args&&... args)
         : _col_data{args...} {
         hidden = true;
+        directcode = false;
     }
 
     virtual ~RCol() = default;
@@ -666,6 +667,7 @@ public:
     _en_data       en_data_;
     std::string    title_;
     std::string    nameref_;
+    bool directcode;                // Прямой ввод кода
     long    index;
     bool hidden ;
 private:

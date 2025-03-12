@@ -172,6 +172,7 @@ public slots:
     void onFileLoad();
     void update_data();
     void SetSelection(std::string Selection);
+    void SetDirectCodeEntry(size_t column);
     void editCondFormats(size_t column);
     void onCondFormatsModified();
     void SetLinkedForm( LinkedForm _lf);
@@ -180,6 +181,7 @@ public slots:
 private slots:
     void CreateModel(QAstra* pqastra,CUIForm* pUIForm);
     void SetEditors();
+    void SetEditor(RCol& _prcol);
     void onRTDM_ResetModel(std::string tname);
 
 public:

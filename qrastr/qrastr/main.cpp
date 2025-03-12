@@ -56,7 +56,7 @@ int main(int argc, char *argv[]){
     }
     w.setQAstra(app.getQAstraPtr());
     w.setForms(app.GetForms());
-    w.resize(1200,800);
+    //w.resize(1200,800);
     w.show();
     //w.windowHandle()->setScreen(qApp->screens().last());
     //w.showNormal();

@@ -39,6 +39,8 @@ using WrapperExceptionType = std::runtime_error;
 #include "formfilenew.h"
 #include "testmodel.h"
 #include "formprotocol.h"
+#include "formcalcidop.h"
+
 #include <QtitanDef.h>
 #include <QtitanGrid.h>
 
@@ -102,8 +104,7 @@ MainWindow::MainWindow(){
     logg->sinks().push_back(qsinkProtocol);
 
     setAcceptDrops(true);
-
-
+    readSettings();
 }
 MainWindow::~MainWindow()
 {
@@ -112,8 +113,16 @@ MainWindow::~MainWindow()
 int MainWindow::readSettings(){ //it cache log messages to vector, because it called befor logger intialization
     try{
 
-        //move(pos);
-        //resize(size);
+        QSettings settings;
+
+        settings.beginGroup("MainWindow");
+        const auto geometry = settings.value("geometry", QByteArray()).toByteArray();
+        if (geometry.isEmpty())
+            setGeometry(200, 200, 800, 800);
+        else
+            restoreGeometry(geometry);
+        settings.endGroup();
+
     }catch(const std::exception& ex){
         m_v_cache_log.add( spdlog::level::err,"Exception: {} ", ex.what());
         return -4;
@@ -125,6 +134,11 @@ int MainWindow::readSettings(){ //it cache log messages to vector, because it ca
 }
 int MainWindow::writeSettings(){
 
+    QSettings settings;
+
+    settings.beginGroup("MainWindow");
+    settings.setValue("geometry", saveGeometry());
+    settings.endGroup();
     return 1;
 }
 void MainWindow::tst_onRastrHint(const _hint_data& dh){
@@ -394,6 +408,12 @@ void MainWindow::open(){
     qstr_filter += ");;";
     const QString qstr_filter_no_template {"No template (*)"};
     qstr_filter += qstr_filter_no_template; //qstr_filter += QString("xz (*.rg2 *.os)");
+    const QString qstr_filter_regim {";;режим (*.rg2)"};
+    qstr_filter += qstr_filter_regim;
+    const QString qstr_filter_poiskos {";;poisk (*.os)"};
+    qstr_filter += qstr_filter_poiskos;
+    const QString qstr_filter_graf {";;графика (*.grf)"};
+    qstr_filter += qstr_filter_graf;
     fileDlg.setNameFilter(qstr_filter);
     fileDlg.setFileMode(QFileDialog::ExistingFiles); //ExistingFile
     int n_res = fileDlg.exec();
@@ -427,7 +447,6 @@ void MainWindow::open(){
                 {
                     spdlog::info("Error File load result = {}", static_cast<int>(res));
                 }
-
             }
         }
     }
@@ -445,7 +464,7 @@ void MainWindow::open(){
 #endif//#if(!defined(QICSGRID_NO))
         m_sp_qastra->Load(eLoadCode::RG_REPL, fileName.toStdString(),"");
         setWindowTitle(fileName);
-        m_cur_file = fileName.toStdString();
+        curFile = fileName;
     }
 }
 void MainWindow::saveAs(){
@@ -478,9 +497,9 @@ void MainWindow::saveAs(){
     if (activeMdiChild()->save())
         statusBar()->showMessage(tr("File saved"), 2000);
 #endif//#if(!defined(QICSGRID_NO))
-    if (!m_cur_file.empty()){
+    if (!curFile.isEmpty()){
         int nRes = 0;
-        const std::string& f = m_cur_file;
+        const std::string& f = curFile.toStdString();
         //assert(!"not implemented");
 
 
@@ -496,8 +515,8 @@ void MainWindow::saveAs(){
 }
 void MainWindow::save(){
 
-    m_sp_qastra->Save( m_cur_file, "" );
-    std::string str_msg = fmt::format( "{}: {}", "Сохранен файл", m_cur_file);
+    m_sp_qastra->Save( curFile.toStdString().c_str(), "" );
+    std::string str_msg = fmt::format( "{}: {}", "Сохранен файл", curFile.toStdString().c_str());
     return;
 
     QString fileName = QFileDialog::getSaveFileName(this);
@@ -580,6 +599,15 @@ void MainWindow::oc_wrap(){
     statusBar()->showMessage( str_msg.c_str(), 0 );
     emit signal_calc_end();
     //emit rgm_signal();
+}
+void MainWindow::idop_wrap(){
+    emit signal_calc_begin();
+    eASTCode code = eASTCode::AST_OK;
+    formcalcidop* pformcalcidop = new formcalcidop(m_sp_qastra.get(),this);
+    pformcalcidop->show();
+    //eASTCode code = m_sp_qastra->CalcIdop(ctrl.Temperature, ctrl.Tolerance, ctrl.Query);
+
+    emit signal_calc_end();
 }
 void MainWindow::onDlgMcr(){
     McrWnd* pMcrWnd = new McrWnd(this) ;
@@ -747,6 +775,10 @@ void MainWindow::createActions(){
     actOC->setShortcut(tr("F6"));
     actOC->setStatusTip(tr("Оценка состояния"));
     connect(actOC, SIGNAL(triggered()), this, SLOT(oc_wrap()));
+    QAction* actIdop = new QAction(tr("&Доп. ток от Т"), this);
+    actIdop->setShortcut(tr("F9"));
+    actIdop->setStatusTip(tr("Расчет допустимых токов от температуры"));
+    connect(actIdop, SIGNAL(triggered()), this, SLOT(idop_wrap()));
     //windows
     QAction* closeAct = new QAction(tr("Cl&ose"), this);
     closeAct->setShortcut(tr("Ctrl+F4"));
@@ -806,6 +838,7 @@ void MainWindow::createActions(){
     menuCalc->addAction(actKDD);
     menuCalc->addAction(actRGM);
     menuCalc->addAction(actOC);
+    menuCalc->addAction(actIdop);
     m_menuCalcParameters =  menuCalc->addMenu(tr("&Параметры"));
 
     m_menuOpen = menuBar()->addMenu(tr("&Открыть") );

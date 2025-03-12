@@ -248,12 +248,14 @@ set(PROJECT_SOURCES
     formimportcsv2.ui
     linkedform.h
     linkedform.cpp
+
 )
 if(${QT_VERSION_MAJOR} GREATER_EQUAL 6)
 
 qt_add_executable( ${PROJECT_NAME}
         MANUAL_FINALIZATION
         ${PROJECT_SOURCES}
+        formcalcidop.h formcalcidop.cpp formcalcidop.ui
     )
     qt_create_translation( QM_FILES ${CMAKE_SOURCE_DIR} ${TS_FILES} )
 else()
