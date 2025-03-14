@@ -34,6 +34,7 @@ using WrapperExceptionType = std::runtime_error;
 #include "tsthints.h"
 #include "delegatecombobox.h"
 #include "formsettings.h"
+#include "formsaveall.h"
 #include "rtabwidget.h"
 #include "params.h"
 #include "formfilenew.h"
@@ -514,72 +515,13 @@ void MainWindow::saveAs(){
     }
 }
 void MainWindow::save(){
-
     m_sp_qastra->Save( curFile.toStdString().c_str(), "" );
     std::string str_msg = fmt::format( "{}: {}", "Сохранен файл", curFile.toStdString().c_str());
     return;
-
-    QString fileName = QFileDialog::getSaveFileName(this);
-    if (!fileName.isEmpty()){
-        int nRes = 0;
-        std::string f = fileName.toUtf8().constData(); //  it works!!!
-        m_sp_qastra->Save( f, "" );
-        assert(!"not implemented");
-        if(nRes>0){
-            std::string str_msg = fmt::format( "{}: {}", "File saved", f);
-            statusBar()->showMessage( str_msg.c_str(), 2000 );
-        } else {
-           std::string str_msg = fmt::format( "{}: {}", "File not saved", f);
-            QMessageBox msgBox;
-            msgBox.critical( this, tr("File not saved"), str_msg.c_str() );
-        }
-    }
 }
 void MainWindow::saveAll(){
-    QFileDialog fileDlg( this, tr("Save Rastr file") );
-    fileDlg.setAcceptMode(QFileDialog::AcceptSave);
-    fileDlg.setOption(QFileDialog::DontUseNativeDialog, true);
-    fileDlg.setViewMode(QFileDialog::Detail);
-    QString qstr_filter;
-    const Params::_v_template_exts v_template_ext{ Params::GetInstance()->getTemplateExts() };
-    for(const Params::_v_template_exts::value_type& template_ext : v_template_ext){
-        qstr_filter += QString("%1 (*%2);;").arg(template_ext.first.c_str()).arg(template_ext.second.c_str());
-    }
-    const QString qstr_filter_no_template {"No template (*)"};
-    qstr_filter += qstr_filter_no_template; //qstr_filter += QString("xz (*.rg2 *.os)");
-    fileDlg.setNameFilter(qstr_filter);
-    fileDlg.selectNameFilter("режим (*.rg2)");
-    fileDlg.setFileMode(QFileDialog::AnyFile);
-    int n_res = fileDlg.exec();
-    if(QDialog::Accepted == n_res){
-        const QString qstr_template = fileDlg.selectedNameFilter();
-        const QString qstr_rfile    = fileDlg.selectedFiles()[0];
-        const std::string str_path_to_shablon = Params::GetInstance()->getDirSHABLON().absolutePath().toStdString() + "//" +qstr_template.toStdString();
-        //m_sp_qastra->LoadFile( eLoadCode::RG_REPL, "", str_path_to_shablon );
-        m_sp_qastra->Save( qstr_rfile.toStdString(), str_path_to_shablon );
-        setCurrentFile(qstr_rfile);
-        qDebug() << "templ: "<< qstr_template << "  file : " << qstr_rfile ;
-    }
-
-#if(!defined(QICSGRID_NO))
-    if (activeMdiChild()->save())
-        statusBar()->showMessage(tr("File saved"), 2000);
-#endif//#if(!defined(QICSGRID_NO))
-    if (!curFile.isEmpty()){
-        int nRes = 0;
-        const std::string& f = curFile.toStdString();
-        //assert(!"not implemented");
-
-
-        if(nRes>0){
-            std::string str_msg = fmt::format( "{}: {}", "File saved", f);
-            statusBar()->showMessage( str_msg.c_str(), 2000 );
-        } else {
-            std::string str_msg = fmt::format( "{}: {}", "File not saved", f);
-            QMessageBox msgBox;
-            msgBox.critical( this, tr("File not saved"), str_msg.c_str() );
-        }
-    }
+    formsaveall* fsaveall = new formsaveall(m_sp_qastra.get(),mFilesLoad);
+    fsaveall->show();
 }
 void MainWindow::openRecentFile()
 {
@@ -601,6 +543,7 @@ void MainWindow::openRecentFile()
         //m_sp_qastra->Load( eLoadCode::RG_REPL, action->data().toString().toStdString(), "" );
         m_sp_qastra->Load( eLoadCode::RG_REPL, file, shabl );
         setWindowTitle(action->data().toString());
+        mFilesLoad[shabl.c_str()] = file.c_str();
     }
 }
 void MainWindow::rgm_wrap(){
@@ -789,7 +732,7 @@ void MainWindow::createActions(){
     QAction* saveAsAct = new QAction(tr("&Сохранить как"), this);
     saveAsAct->setStatusTip(tr("Save the document under a new name"));
     connect(saveAsAct, SIGNAL(triggered()), this, SLOT(saveAs()));
-    QAction* saveAllAct = new QAction(tr("&Сохранить все"), this);
+    QAction* saveAllAct = new QAction(QIcon(":/images/Save_all.png"),tr("&Сохранить все"), this);
     saveAllAct->setStatusTip(tr("Save all the document"));
     connect(saveAllAct, SIGNAL(triggered()), this, SLOT(saveAll()));
     QAction* actShowFormSettings = new QAction(tr("&Параметры"), this);
@@ -946,6 +889,7 @@ void MainWindow::setCurrentFile(const QString &fileName, const std::string Shabl
 {
     curFile = fileName;
     setWindowFilePath(curFile);
+    mFilesLoad[Shablon.c_str()] = fileName;
 
     QSettings settings;
     QString _fileshabl = fileName;

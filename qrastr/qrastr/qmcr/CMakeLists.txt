@@ -38,6 +38,7 @@ include_directories(
 if(QRASTR_BUILD_WITH_MCR)
     include_directories(
         "${ASTRA_LOCATION}/"
+        "${ASTRA_LOCATION}/../../astra/"
     )
 endif()
 

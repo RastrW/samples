@@ -2,6 +2,7 @@
 #define MAINWINDOW_H
 
 #include <QMainWindow>
+#include <QMap>
 #include <rtablesdatamanager.h>
 #if(!defined(QICSGRID_NO))
     #include <QicsTable.h>
@@ -128,6 +129,7 @@ private:
     void updateRecentFileActions();
     QString strippedName(const QString &fullFileName);
     QString curFile;
+    QMap<QString,QString> mFilesLoad;
 
     int  readSettings();
     int  writeSettings();

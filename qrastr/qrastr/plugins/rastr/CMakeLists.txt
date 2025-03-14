@@ -12,6 +12,7 @@ set( INCLUDES
     "${DEPENDENCIES_LOCATION}/spdlog/include/"
 #    "${ASTRA_LOCATION}/../../flytfs/IPlainRastrTest/"
     "${ASTRA_LOCATION}/"
+    "${ASTRA_LOCATION}/../../astra/"
     "../../"
 )
 set(PROJECT_SOURCES
