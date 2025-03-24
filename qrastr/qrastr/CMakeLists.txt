@@ -56,10 +56,9 @@ if( NOT IS_DIRECTORY ${ASTRA_LOCATION} )
     message(FATAL_ERROR "Not defined ASTRA_LOCATION !") # example "c:/projects/rastr/RastrWin/astra"  "c:/projects/tfs/rastr/RastrWin/astra/"
 else()
     message(NOTICE "ASTRA_LOCATION= ${ASTRA_LOCATION}")
-    set( ASTRA_SRC "${ASTRA_LOCATION}/../../astra/" )
-    cmake_path(SET ASTRA_SRC NORMALIZE "${ASTRA_SRC}")
-    message(NOTICE "ASTRA_SRC= ${ASTRA_SRC}")
-
+    #set( ASTRA_SRC "${ASTRA_LOCATION}/../../astra/" )
+    #cmake_path(SET ASTRA_SRC NORMALIZE "${ASTRA_SRC}")
+    #message(NOTICE "ASTRA_SRC= ${ASTRA_SRC}")
 endif()
 
 find_package( Metakit REQUIRED )
@@ -87,7 +86,7 @@ add_subdirectory(
 )
 
 set(INCLUDES
-    "${ASTRA_SRC}"
+    "${ASTRA_LOCATION}"
     #"${DEPENDENCIES_LOCATION}/fmt/include"
     "${ASTRA_LOCATION}/fmt/include/"
     "${DEPENDENCIES_LOCATION}/qicstable/include"
@@ -102,19 +101,16 @@ set(INCLUDES
     "${DEPENDENCIES_LOCATION}/sci/scintilla/qt/ScintillaEdit"
     "${DEPENDENCIES_LOCATION}/Qt-Advanced-Docking-System/src"
     "${DEPENDENCIES_LOCATION}/spdlog/include/"
-    "${ASTRA_SRC}/../../flytfs/IPlainRastrTest/"
+    "${ASTRA_LOCATION}/../../flytfs/IPlainRastrTest/"
     "${DEPENDENCIES_LOCATION}/QtitanDataGrid8.2.0_win_qt_6_7/include" #win
     "${DEPENDENCIES_LOCATION}/QtitanDataGrid8.2.0/include" #lin Qtitan
-    #"C:/Projects/tfs/rastr/RastrWin/astra/"
 )
 #message("INCLUDES is set to ${INCLUDES}")
 
 if(MSVC)
     link_directories("${CMAKE_LIBRARY_OUTPUT_DIRECTORY}")
-    #link_directories("${ASTRA_LOCATION}/build/${CMAKE_BUILD_TYPE}/")
-    link_directories("${ASTRA_LOCATION}/${CMAKE_BUILD_TYPE}/")
+    link_directories("${ASTRA_LOCATION}/../build/astra/${CMAKE_BUILD_TYPE}/")
     link_directories("${DEPENDENCIES_LOCATION}/metakit/builds/")
-    #link_directories("${ASTRA_LOCATION}/../build-astra-vs-Release/")
     link_directories("${DEPENDENCIES_LOCATION}/Qt-Advanced-Docking-System/build/vs-Debug/lib/")
     link_directories("${DEPENDENCIES_LOCATION}/Qt-Advanced-Docking-System/build/vs-Release/lib/")
     link_directories("${DEPENDENCIES_LOCATION}/QtitanDataGrid8.2.0_win_qt_6_7/bin/")
@@ -150,7 +146,7 @@ set(PROJECT_SOURCES
     params.cpp
     common_qrastr.h
     common_qrastr.cpp
-    ${ASTRA_SRC}/ResourceManager.cpp
+    ${ASTRA_LOCATION}/ResourceManager.cpp
     appsettings.json
     params.h
     params.cpp

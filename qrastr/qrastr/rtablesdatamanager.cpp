@@ -173,7 +173,7 @@ void  RTablesDataManager::onRastrHint(const _hint_data& hint_data)
                 size_t ind_vdb = 0 * columnscount.Value() + i;
                 pqdb->Data()[ind] = VDB.Data()[ind_vdb];
             }
-            emit RTDM_dataChanged(tname,row,0,row,cols_cnt);
+           // emit RTDM_dataChanged(tname,row,0,row,cols_cnt);
             //emit RTDM_EndResetModel(tname);
         }
         break;

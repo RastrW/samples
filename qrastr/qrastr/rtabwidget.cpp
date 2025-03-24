@@ -46,8 +46,6 @@ RtabWidget::RtabWidget(CUIForm UIForm,QWidget *parent) :
 
     Grid::loadTranslation();
     m_grid = new Qtitan::Grid();
-    //m_grid->setViewType(Qtitan::Grid::TableView);
-    //m_grid->setViewType(Qtitan::Grid::TableViewVertical);
     if (m_UIForm.Vertical())
         m_grid->setViewType(Qtitan::Grid::TableViewVertical);
     else
@@ -60,11 +58,18 @@ RtabWidget::RtabWidget(CUIForm UIForm,QWidget *parent) :
     view->options().setGridLineWidth(1);
 
     view->tableOptions().setColumnAutoWidth(true);
-    view->options().setSelectionPolicy(GridViewOptions::MultiCellSelection);
+    view->options().setSelectionPolicy(GridViewOptions::MultiCellSelection);    //user can select several cells at time. Hold shift key to select multiple cells.
     //view->options().setNewRowPlace(Qtitan::AtEnd);                        // кнока добавления строки
     //view->options().setRowRemoveEnabled(false);                           // кнока DEL в контекстном меню
-    //view->tableOptions().fi
     //view->options().setGestureEnabled(true);
+    view->options().setColumnHidingOnGroupingEnabled(false);
+    //view->options().setFastScrollEffect(true);                   //  If the option is true, then a special fade effect is enabled, which on fast data scrolling shows the frame of the rows without data inside the cells only. This allows you to increase the number of frames per second when rendering and avoid lag on large data.
+    view->options().setFilterAutoHide(true);                     // Sets the value that indicates whether the filter panel can automatically hide or not.
+    view->options().setFocusFrameEnabled(true);                  // Sets the painting the doted frame around the cell with focus to the enabled. By default frame is enabled.
+    view->options().setGroupsHeader(false);                      // Sets the visibility status of the grid grouping panel to groupsHeader.
+    //view->options().setMainMenuDisabled(true);
+    view->options().setScrollRowStyle(Qtitan::ScrollItemStyle::ScrollByItem);
+    view->options().setShowWaitCursor(true);                    // Enables or disables wait cursor if grid is busy for lengthy operations with data like sorting or grouping.
 
     // TO DO: Вынести в опцию контекстного меню (example MultiSelection)
     view->tableOptions().setRowFrozenButtonVisible(true);
@@ -73,8 +78,6 @@ RtabWidget::RtabWidget(CUIForm UIForm,QWidget *parent) :
     //Кнопка выбор колонок слева сверху, за собой тащит целый пустой бессмысленный столбец в котором указывается стролочка активной строки
     //view->tableOptions().setColumnsQuickMenuVisible(false);
     //view->tableOptions().setColumnsQuickCustomization(false);
-
-    //view->tableOptions().set
 
     //Заполнить строку поиска
    // view->find("ШАГОЛ",Qt::CaseInsensitive,true);
@@ -90,7 +93,6 @@ RtabWidget::RtabWidget(QAstra* pqastra,CUIForm UIForm,RTablesDataManager* pRTDM,
     m_pqastra = pqastra;
     m_pRTDM = pRTDM;
     m_DockManager = pDockManager;
-
 
 
     /*
@@ -393,6 +395,9 @@ void RtabWidget::contextMenu(ContextMenuEventArgs* args)
         std::string str_col_prop = prcol->desc() + " |"+ prcol->title() + "| -(" + prcol->name() + "), [" +prcol->unit() + "]";
         qstr_col_props = str_col_prop.c_str();
     }
+    if (!prcol)
+        return;
+
     QAction* condFormatAction = new QAction(QIcon(":/icons/edit_cond_formats"), tr("Условное форматирование"),  args->contextMenu());
 
     args->contextMenu()->addSeparator();
