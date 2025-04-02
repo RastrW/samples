@@ -163,6 +163,7 @@ public:
     eASTCode  Kdd(const std::string_view& parameters = {});
     eASTCode  Rgm(const std::string_view& parameters = {});
     eASTCode  Opf(const std::string_view& parameters = {});
+    eASTCode  Smzu_tst(long parameter);
     FieldVariantData GetVal( const std::string_view& Table, const std::string_view& Col , const long row );
     std::string GetStringVal( const std::string_view& Table, const std::string_view& Col , const long row );
 signals:

@@ -587,7 +587,22 @@ void MainWindow::oc_wrap(){
     }
     statusBar()->showMessage( str_msg.c_str(), 0 );
     emit signal_calc_end();
-    //emit rgm_signal();
+}
+void MainWindow::smzu_tst_wrap(){
+    emit signal_calc_begin();
+    long i =2;
+    eASTCode code = m_sp_qastra->Smzu_tst(i);
+
+    std::string str_msg = "";
+    if (code == eASTCode::AST_OK){
+        str_msg = "Расчет МДП выполнен успешно";
+        spdlog::info("{}", str_msg);
+    }else{
+        str_msg = "Расчет МДП завершился аварийно!";
+        spdlog::error("{} : {}", static_cast<int>(code), str_msg);
+    }
+    statusBar()->showMessage( str_msg.c_str(), 0 );
+    emit signal_calc_end();
 }
 void MainWindow::idop_wrap(){
     emit signal_calc_begin();
@@ -767,6 +782,10 @@ void MainWindow::createActions(){
     actOC->setShortcut(tr("F6"));
     actOC->setStatusTip(tr("Оценка состояния"));
     connect(actOC, SIGNAL(triggered()), this, SLOT(oc_wrap()));
+    QAction* actMDP = new QAction(QIcon(":/images/mdp_16.png"),tr("&МДП"), this);
+    actOC->setShortcut(tr("F7"));
+    actOC->setStatusTip(tr("Расчет МДП"));
+    connect(actMDP, SIGNAL(triggered()), this, SLOT(smzu_tst_wrap()));
     QAction* actIdop = new QAction(tr("&Доп. ток от Т"), this);
     actIdop->setShortcut(tr("F9"));
     actIdop->setStatusTip(tr("Расчет допустимых токов от температуры"));
@@ -831,6 +850,7 @@ void MainWindow::createActions(){
     menuCalc->addAction(actKDD);
     menuCalc->addAction(actRGM);
     menuCalc->addAction(actOC);
+    menuCalc->addAction(actMDP);
     menuCalc->addAction(actIdop);
     m_menuCalcParameters =  menuCalc->addMenu(tr("&Параметры"));
 
@@ -881,6 +901,7 @@ void MainWindow::createActions(){
 
     m_toolbarCalc->addAction(actRGM);
     m_toolbarCalc->addAction(actOC);
+    m_toolbarCalc->addAction(actMDP);
 
     //TEST BUTTONS
     //createCalcLayout();

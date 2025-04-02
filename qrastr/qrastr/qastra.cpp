@@ -120,6 +120,14 @@ eASTCode QAstra::Opf(const std::string_view& parameters){
     IRastrPayload  opfresult{ sp_rastr_->OPF(parameters) };
     return opfresult.Value();
 }
+eASTCode QAstra::Smzu_tst(long parameter){
+
+    long par = static_cast<long>(std::get<double>(GetVal("com_optim","koef_kt",0)));
+
+    IRastrPayload  smzu_tst_result{ sp_rastr_->Smzu_tst(par) };
+    return smzu_tst_result.Value();
+}
+
 std::string QAstra::GetStringVal( const std::string_view& Table, const std::string_view& Col , const long row ){
     IRastrTablesPtr tablesx{ sp_rastr_->Tables() };
     IRastrPayload tablecount{ tablesx->Count() };

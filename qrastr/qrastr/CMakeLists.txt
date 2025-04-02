@@ -109,7 +109,7 @@ set(INCLUDES
 
 if(MSVC)
     link_directories("${CMAKE_LIBRARY_OUTPUT_DIRECTORY}")
-    link_directories("${ASTRA_LOCATION}/../build/astra/${CMAKE_BUILD_TYPE}/")
+    link_directories("${ASTRA_LOCATION}/build/${CMAKE_BUILD_TYPE}/")
     link_directories("${DEPENDENCIES_LOCATION}/metakit/builds/")
     link_directories("${DEPENDENCIES_LOCATION}/Qt-Advanced-Docking-System/build/vs-Debug/lib/")
     link_directories("${DEPENDENCIES_LOCATION}/Qt-Advanced-Docking-System/build/vs-Release/lib/")
