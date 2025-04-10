@@ -1,9 +1,9 @@
 #ifndef IDATABLOCKSWRAPPERS_H
 #define IDATABLOCKSWRAPPERS_H
 #pragma once
+
 #include "iostream"
 #include <QDebug>
-
 
 using WrapperExceptionType = std::runtime_error;
 #include "IPlainRastrWrappers.h"

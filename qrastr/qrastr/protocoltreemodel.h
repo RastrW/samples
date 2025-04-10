@@ -1,5 +1,6 @@
 #ifndef PROTOCOLTREEMODEL_H
 #define PROTOCOLTREEMODEL_H
+#pragma once
 
 #include <QAbstractItemModel>
 #include <QModelIndex>

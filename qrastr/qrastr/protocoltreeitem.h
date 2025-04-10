@@ -1,5 +1,6 @@
 #ifndef PROTOCOLTREEITEM_H
 #define PROTOCOLTREEITEM_H
+#pragma once
 
 #include <memory>
 #include <QVariant>

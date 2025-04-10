@@ -1,5 +1,6 @@
 #ifndef MCRWND_H
 #define MCRWND_H
+#pragma once
 
 #include <QWidget>
 #include <QDialog>

@@ -1,5 +1,6 @@
 #ifndef FILTERTABLEHEADER_H
 #define FILTERTABLEHEADER_H
+#pragma once
 
 #include <QHeaderView>
 #include <QTableView>

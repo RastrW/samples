@@ -1,5 +1,6 @@
 #ifndef FORMEXPORTCSV_H
 #define FORMEXPORTCSV_H
+#pragma once
 
 #include <QDialog>
 #include "rmodel.h"

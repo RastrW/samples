@@ -1,5 +1,6 @@
 #ifndef FORMSELECTION_H
 #define FORMSELECTION_H
+#pragma once
 
 #include <QDialog>
 

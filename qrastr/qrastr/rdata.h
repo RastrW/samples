@@ -1,6 +1,7 @@
 #ifndef RDATA_H
 #define RDATA_H
 #pragma once
+
 #include "rastrhlp.h"
 #include "astra_exp.h"
 #include "astra_shared.h"

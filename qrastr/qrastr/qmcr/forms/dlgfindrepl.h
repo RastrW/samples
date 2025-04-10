@@ -1,5 +1,6 @@
 #ifndef DLGFINDREPL_H
 #define DLGFINDREPL_H
+#pragma once
 
 #include <QDialog>
 #include "../scihlp.h"

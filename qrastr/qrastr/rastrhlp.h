@@ -1,5 +1,6 @@
 #ifndef CRASTRHLP_H
 #define CRASTRHLP_H
+#pragma once
 
 #include "common_qrastr.h"
 #include "astra_exp.h"

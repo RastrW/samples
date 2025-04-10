@@ -1,5 +1,6 @@
 #ifndef PLUGIN_INTERFACES_H
 #define PLUGIN_INTERFACES_H
+#pragma once
 
 QT_BEGIN_NAMESPACE
 #include <QtPlugin>

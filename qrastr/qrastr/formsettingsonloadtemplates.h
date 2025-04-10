@@ -1,5 +1,6 @@
 #ifndef FORMSETTINGSONLOADTEMPLATES_H
 #define FORMSETTINGSONLOADTEMPLATES_H
+#pragma once
 
 #include <QDialog>
 

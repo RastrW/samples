@@ -1,5 +1,6 @@
 #ifndef SINGLETON_DCLP_HPP_
 #define SINGLETON_DCLP_HPP_
+#pragma once
 //from https://github.com/jimmy-park/singleton/tree/main
 
 #include <atomic>

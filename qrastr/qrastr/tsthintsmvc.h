@@ -1,9 +1,8 @@
 #ifndef TSTHINTSMVC_H
 #define TSTHINTSMVC_H
+#pragma once
 
 #include <QObject>
-
-
 #include <QAbstractTableModel>
 #include <QString>
 

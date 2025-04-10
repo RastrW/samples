@@ -1,5 +1,6 @@
 #ifndef TESTMODEL_H
 #define TESTMODEL_H
+#pragma once
 
 #include <QAbstractTableModel>
 

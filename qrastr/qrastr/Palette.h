@@ -1,5 +1,6 @@
 #ifndef PALETTE_H
 #define PALETTE_H
+#pragma once
 
 #include <QColor>
 

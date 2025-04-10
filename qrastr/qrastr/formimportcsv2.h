@@ -1,5 +1,6 @@
 #ifndef FORMIMPORTCSV2_H
 #define FORMIMPORTCSV2_H
+#pragma once
 
 #include <QDialog>
 #include "rmodel.h"

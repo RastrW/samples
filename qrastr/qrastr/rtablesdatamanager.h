@@ -1,5 +1,7 @@
 #ifndef RTABLESDATAMANAGER_H
 #define RTABLESDATAMANAGER_H
+#pragma once
+
 #include <map>
 #include <string>
 #include "QDataBlocks.h"

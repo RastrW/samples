@@ -1,5 +1,6 @@
 #ifndef RTABLEVIEW_H
 #define RTABLEVIEW_H
+#pragma once
 
 #include <QTableView>
 #include <QtWidgets>

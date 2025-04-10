@@ -1,5 +1,6 @@
 #ifndef CONDFORMATMANAGER_H
 #define CONDFORMATMANAGER_H
+#pragma once
 
 #include <QDialog>
 #include <vector>

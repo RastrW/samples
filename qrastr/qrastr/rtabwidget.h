@@ -1,5 +1,6 @@
 #ifndef RTABWIDGET_H
 #define RTABWIDGET_H
+#pragma once
 
 #include <QObject>
 #include <QWidget>

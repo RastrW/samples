@@ -1,5 +1,7 @@
 #ifndef CONDFORMATJSON_H
 #define CONDFORMATJSON_H
+#pragma once
+
 #include "CondFormat.h"
 #include <fstream>
 #include <filesystem>

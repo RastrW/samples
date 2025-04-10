@@ -1,16 +1,12 @@
 #ifndef CONDFORMAT_H
 #define CONDFORMAT_H
+#pragma once
 
 #include <QString>
 #include <QColor>
 #include <QFont>
 #include <QModelIndex>
 #include <regex>
-
-
-
-
-
 
 class QAbstractTableModel;
 

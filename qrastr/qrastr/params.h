@@ -1,5 +1,6 @@
 #ifndef PARAMS_H
 #define PARAMS_H
+#pragma once
 
 #include <QDir>
 #include <singleton_dclp.hpp>

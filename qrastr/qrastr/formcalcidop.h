@@ -1,5 +1,6 @@
 #ifndef FORMCALCIDOP_H
 #define FORMCALCIDOP_H
+#pragma once
 
 #include <QDialog>
 #include "qastra.h"

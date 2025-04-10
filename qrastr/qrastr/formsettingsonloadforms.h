@@ -1,5 +1,6 @@
 #ifndef FORMSETTINGSONLOADFORMS_H
 #define FORMSETTINGSONLOADFORMS_H
+#pragma once
 
 #include <QWidget>
 

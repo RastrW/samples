@@ -1,5 +1,6 @@
 #ifndef FORMSETTINGSONLOADFILES_H
 #define FORMSETTINGSONLOADFILES_H
+#pragma once
 
 #include <QWidget>
 #include "formsettingsstackeditem.h"

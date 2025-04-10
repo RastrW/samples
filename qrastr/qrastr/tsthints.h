@@ -1,5 +1,6 @@
 #ifndef TSTHINTS_H
 #define TSTHINTS_H
+#pragma once
 
 #include <QObject>
 #include <QWidget>

@@ -1,5 +1,6 @@
 #ifndef UTILS_H
 #define UTILS_H
+#pragma once
 
 #include <sstream>      // std::istringstream
 #include <iostream>     // std::cerr
@@ -7,6 +8,21 @@
 #include <vector>
 #include <map>
 #include <regex>
+
+template<typename T> class KeyValueRange { //from https://stackoverflow.com/questions/8517853/iterating-over-a-qmap-with-for/77994379#77994379
+private:
+    T iterable; // This is either a reference or a moved-in value. The map data isn't copied.
+public:
+    KeyValueRange(T &iterable) : iterable(iterable) { }
+    KeyValueRange(std::remove_reference_t<T> &&iterable) noexcept : iterable(std::move(iterable)) { }
+    auto begin() const { return iterable.keyValueBegin(); }
+    auto end() const { return iterable.keyValueEnd(); }
+};
+
+template <typename T> auto asKeyValueRange(T &iterable) { return KeyValueRange<T &>(iterable); }
+template <typename T> auto asKeyValueRange(const T &iterable) { return KeyValueRange<const T &>(iterable); }
+template <typename T> auto asKeyValueRange(T &&iterable) noexcept { return KeyValueRange<T>(std::move(iterable)); }
+
 
 template<typename C, typename E>
 bool contains(const C& container, E element)
@@ -32,6 +48,7 @@ int find_index(const C& container, E element)
     }
     return -1;
 }
+
 inline std::vector<std::string> split(const std::string& s, char delimiter)
 {
     std::vector<std::string> tokens;
@@ -43,6 +60,7 @@ inline std::vector<std::string> split(const std::string& s, char delimiter)
     }
     return tokens;
 }
+
 inline std::vector<std::string> split2(std::string& s, const std::string& delimiter) {
 
     std::vector<std::string> tokens;
@@ -57,12 +75,14 @@ inline std::vector<std::string> split2(std::string& s, const std::string& delimi
 
     return tokens;
 }
+
 inline std::vector<std::string> split3(const std::string str,
                                 const std::string regex_str) {
     std::regex regexz(regex_str);
     return { std::sregex_token_iterator(str.begin(), str.end(), regexz, -1),
             std::sregex_token_iterator() };
 }
+
 inline void replaceAll(std::string& str, const std::string& from, const std::string& to) {
     if (from.empty())
         return;
@@ -72,6 +92,7 @@ inline void replaceAll(std::string& str, const std::string& from, const std::str
         start_pos += to.length(); // In case 'to' contains 'from', like replacing 'x' with 'yx'
     }
 }
+
 inline void replaceAll(std::string& str, const std::string& from, const std::vector<int>& to) {
     if (from.empty())
         return;
@@ -83,6 +104,7 @@ inline void replaceAll(std::string& str, const std::string& from, const std::vec
         ind++;
     }
 }
+
 inline std::string trim(std::string& str)
 {
     str.erase(0, str.find_first_not_of(' '));       //prefixing spaces

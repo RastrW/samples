@@ -1,5 +1,6 @@
 #ifndef DELEGATEDOUBLEITEM_H
 #define DELEGATEDOUBLEITEM_H
+#pragma once
 
 #include <QObject>
 #include <QStyledItemDelegate>

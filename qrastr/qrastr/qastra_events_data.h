@@ -1,5 +1,6 @@
 #ifndef QASTRA_EVENTS_DATA_H
 #define QASTRA_EVENTS_DATA_H
+#pragma once
 
 #include "IPlainRastr.h"
 ///////////////////////////////////////////////////////////////////////

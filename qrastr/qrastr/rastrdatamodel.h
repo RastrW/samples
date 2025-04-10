@@ -1,12 +1,10 @@
 #ifndef RASTRDATAMODEL_H
 #define RASTRDATAMODEL_H
-
+#pragma once
 
 //#include "astra_exp.h"
 #include "License2/json.hpp"
 #include "astra_shared.h"
-
-
 
 #if(!defined(QICSGRID_NO))
 typedef std::variant< int, double, std::string >  _vt ;

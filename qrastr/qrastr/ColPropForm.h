@@ -1,5 +1,6 @@
 #ifndef COLPROPFORM_H
 #define COLPROPFORM_H
+#pragma once
 
 #include <QWidget>
 #include <QString>

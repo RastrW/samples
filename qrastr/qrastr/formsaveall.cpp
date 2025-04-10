@@ -3,6 +3,7 @@
 #include <QSettings>
 #include <QFileInfo>
 #include <QDir>
+#include "utils.h"
 
 formsaveall::formsaveall( QAstra* _pqastra, QMap<QString,QString> _mFilesLoad,QWidget *parent)
     : QDialog(parent)
@@ -38,8 +39,11 @@ void formsaveall::showEvent( QShowEvent* event )
 {
     ui->twSaveFiles->setRowCount(0);
     int n_row_num = 0;
-    for (auto [_shabl,_file] : mFilesLoad.asKeyValueRange())
-    {
+#if QT_VERSION < QT_VERSION_CHECK(6, 0, 0)
+    for (auto [_shabl,_file] : asKeyValueRange(mFilesLoad) ) {
+#else
+    for (auto [_shabl,_file] : mFilesLoad.asKeyValueRange() ) {
+#endif
         dir_shabl = QFileInfo(_shabl).path();   // assume all templates at one directory
         ui->twSaveFiles->insertRow(n_row_num);
         QTableWidgetItem* ptwi_checkbox = new QTableWidgetItem();

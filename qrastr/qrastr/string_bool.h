@@ -1,5 +1,7 @@
 #ifndef STRING_BOOL_H
 #define STRING_BOOL_H
+#pragma once
+
 #include <utils.h>
 
 class STRING_PARSE_BASE

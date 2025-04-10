@@ -1,8 +1,9 @@
 #ifndef FORMSAVEALL_H
 #define FORMSAVEALL_H
+#pragma once
 
 #include <QDialog>
-#include "QAstra.h"
+#include "qastra.h"
 #include <QDir>
 
 class QAstra;

@@ -1,5 +1,6 @@
 #ifndef FORMFILENEW_H
 #define FORMFILENEW_H
+#pragma once
 
 #include <QDialog>
 #include <set>

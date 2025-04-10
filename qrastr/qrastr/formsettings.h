@@ -1,5 +1,6 @@
 #ifndef FORMSETTINGS_H
 #define FORMSETTINGS_H
+#pragma once
 
 #include <QtWidgets>
 class QAstra;

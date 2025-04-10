@@ -1,5 +1,6 @@
 #ifndef DELEGATECHECKBOX_H
 #define DELEGATECHECKBOX_H
+#pragma once
 
 #include <QItemDelegate>
 #include <QObject>

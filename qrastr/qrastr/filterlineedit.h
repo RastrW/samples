@@ -1,5 +1,6 @@
 #ifndef FILTERLINEEDIT_H
 #define FILTERLINEEDIT_H
+#pragma once
 
 #include <QLineEdit>
 

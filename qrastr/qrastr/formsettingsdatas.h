@@ -1,5 +1,6 @@
 #ifndef FORMSETTINGSDATAS_H
 #define FORMSETTINGSDATAS_H
+#pragma once
 
 #include <QWidget>
 

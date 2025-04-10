@@ -1,5 +1,6 @@
 #ifndef FORMGROUPCORRECTION_H
 #define FORMGROUPCORRECTION_H
+#pragma once
 
 #include <QDialog>
 #include "rmodel.h"

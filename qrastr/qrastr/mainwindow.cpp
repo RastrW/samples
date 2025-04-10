@@ -634,7 +634,7 @@ void MainWindow::onOpenForm( QAction* p_actn ){
 void MainWindow::onOpenForm(CUIForm _uiform)
 {
     CUIForm form  = _uiform;
-    qDebug() << "\n Open form:" + form.Name();
+    qDebug() << "\n Open form:" << form.Name().c_str();
     //spdlog::info( "Create tab [{}]", stringutils::cp1251ToUtf8(form.Name()) );
     spdlog::info( "Create tab [{}]", form.Name() );
     RtabWidget *prtw = new RtabWidget(m_sp_qastra.get(),form,&m_RTDM,m_DockManager,this);
@@ -915,7 +915,7 @@ void MainWindow::setCurrentFile(const QString &fileName, const std::string Shabl
     QSettings settings;
     QString _fileshabl = fileName;
     if (!Shablon.empty())
-        _fileshabl.append(" <").append(Shablon).append(">");
+        _fileshabl.append(" <").append(Shablon.c_str()).append(">");
     QStringList files = settings.value("recentFileList").toStringList();
     files.removeAll(_fileshabl);
     files.prepend(_fileshabl);

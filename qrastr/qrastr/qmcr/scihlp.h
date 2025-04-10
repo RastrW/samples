@@ -1,5 +1,6 @@
 #ifndef SCIHLP_H
 #define SCIHLP_H
+#pragma once
 
 #include <QFileInfo>
 //#include "C:\Projects\compile\sci\scintilla\qt\ScintillaEdit\ScintillaEdit.h"

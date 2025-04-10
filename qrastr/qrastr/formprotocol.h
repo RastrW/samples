@@ -1,5 +1,6 @@
 #ifndef FORMPROTOCOL_H
 #define FORMPROTOCOL_H
+#pragma once
 
 #include <QWidget>
 #include <stack>

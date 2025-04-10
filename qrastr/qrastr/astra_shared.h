@@ -1,5 +1,6 @@
 #ifndef ASTRA_SHARED_H
 #define ASTRA_SHARED_H
+#pragma once
 
 enum class enComPropTT
 {

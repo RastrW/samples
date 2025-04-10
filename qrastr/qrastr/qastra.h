@@ -1,11 +1,10 @@
 #ifndef QASTRA_H
 #define QASTRA_H
+#pragma once
 
 #include <QObject>
-//#include "IPlainRastr.h"
 #include "common_qrastr.h"
 #include "qastra_events_data.h"
-//#include "IPlainRastrWrappers.h"
 
 class CUIFormsCollection;
 class QAstra

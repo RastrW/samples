@@ -1,13 +1,13 @@
 #ifndef LINKEDFORM_H
 #define LINKEDFORM_H
+#pragma once
 
 #include <QObject>
-//#include "rtabwidget.h"
 #include "utils.h"
 
 
 class RtabWidget;
-//class LinkedForm: public QObject
+
 class LinkedForm
 {
     //Q_OBJECT

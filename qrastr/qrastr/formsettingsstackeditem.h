@@ -1,5 +1,6 @@
 #ifndef FORMSETTINGSSTACKEDITEM_H
 #define FORMSETTINGSSTACKEDITEM_H
+#pragma once
 
 class FormSettings;
 class FormSettingsStackedItem

@@ -1,5 +1,6 @@
 #ifndef QTITANGRID_H
 #define QTITANGRID_H
+#pragma once
 
 #include <DevMachines/QtitanGrid>
 

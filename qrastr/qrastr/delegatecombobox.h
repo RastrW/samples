@@ -1,5 +1,6 @@
 #ifndef DELEGATECOMBOBOX_H
 #define DELEGATECOMBOBOX_H
+#pragma once
 
 #include <string>
 #include <vector>

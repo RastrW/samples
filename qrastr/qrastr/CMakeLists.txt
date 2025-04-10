@@ -2,6 +2,7 @@ cmake_minimum_required(VERSION 3.23) # 3.20 min version for "astra" build
 project( qrastr VERSION 0.1 LANGUAGES CXX )
 
 add_compile_definitions( QICSGRID_NO )
+
 if(MSVC)
     add_compile_definitions( COMPILE_WIN )
     add_compile_definitions( _SILENCE_ALL_MS_EXT_DEPRECATION_WARNINGS )
@@ -11,6 +12,7 @@ if(MSVC)
         set(CMAKE_MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>") # Debug was fall on this with "__acrt_first_block == header", beacuse Qt have MtD heap but this have Mt heap
     endif()
 endif()
+
 add_compile_definitions(ASTRA_NIX)
 add_compile_definitions(
         $<$<CONFIG:Debug>:q4_INLINE=0>
@@ -44,21 +46,15 @@ list( PREPEND CMAKE_PREFIX_PATH "${CMAKE_CURRENT_SOURCE_DIR}/qmcr/" )
 set( TS_FILES qrastr_ru_RU.ts )
 if(MSVC)
     set( DEPENDENCIES_LOCATION "c:/projects/compile/" )
-    #set( ASTRA_LOCATION        "c:/projects/tfs/rastr/RastrWin/astra/" )
-    #set( ASTRA_LOCATION        "c:/projects/rastr/RastrWin/astra" )
 else()
     set( DEPENDENCIES_LOCATION "/home/ustas/projects/compile/" )
-    #set( ASTRA_LOCATION        "/home/ustas/projects/git_r/rastr/RastrWin/astra/" )
-    #set( DEPENDENCIES_GIT      "/home/ustas/projects/git_r/" )
     set( DEPENDENCIES_GIT      "/home/ustas/projects/git_main/" )
 endif()
+
 if( NOT IS_DIRECTORY ${ASTRA_LOCATION} )
     message(FATAL_ERROR "Not defined ASTRA_LOCATION !") # example "c:/projects/rastr/RastrWin/astra"  "c:/projects/tfs/rastr/RastrWin/astra/"
 else()
     message(NOTICE "ASTRA_LOCATION= ${ASTRA_LOCATION}")
-    #set( ASTRA_SRC "${ASTRA_LOCATION}/../../astra/" )
-    #cmake_path(SET ASTRA_SRC NORMALIZE "${ASTRA_SRC}")
-    #message(NOTICE "ASTRA_SRC= ${ASTRA_SRC}")
 endif()
 
 find_package( Metakit REQUIRED )
@@ -79,6 +75,7 @@ find_package( Qt${QT_VERSION_MAJOR} COMPONENTS
 if(QT_VERSION_MAJOR EQUAL 6)
     qt_standard_project_setup()
 endif()
+
 add_subdirectory("plugins/rastr")
 add_subdirectory(
     "${CMAKE_CURRENT_SOURCE_DIR}/qmcr/"
@@ -102,8 +99,7 @@ set(INCLUDES
     "${DEPENDENCIES_LOCATION}/Qt-Advanced-Docking-System/src"
     "${DEPENDENCIES_LOCATION}/spdlog/include/"
     "${ASTRA_LOCATION}/../../flytfs/IPlainRastrTest/"
-    "${DEPENDENCIES_LOCATION}/QtitanDataGrid8.2.0_win_qt_6_7/include" #win
-    "${DEPENDENCIES_LOCATION}/QtitanDataGrid8.2.0/include" #lin Qtitan
+    "${DEPENDENCIES_LOCATION}/qtitan8_lin_5_15/include/" #lin Qtitan
 )
 #message("INCLUDES is set to ${INCLUDES}")
 
@@ -117,6 +113,9 @@ if(MSVC)
 else()
     link_directories("${DEPENDENCIES_LOCATION}/qicstable/lib/")
     link_directories("${ASTRA_LOCATION}/build/")
+    link_directories("${DEPENDENCIES_LOCATION}/qtitan8_lin_5_15/bin/")
+    link_directories("${DEPENDENCIES_LOCATION}/build-ads-Desktop-Release/lib/")
+    link_directories("${ASTRA_LOCATION}/../../build-RastrWin-Desktop-Release/astra/")
 endif()
 
 set(PROJECT_SOURCES
@@ -257,14 +256,12 @@ set(PROJECT_SOURCES
     formsaveall.h
     formsaveall.cpp
     formsaveall.ui
-
-
 )
-if(${QT_VERSION_MAJOR} GREATER_EQUAL 6)
 
-qt_add_executable( ${PROJECT_NAME}
-        MANUAL_FINALIZATION
-        ${PROJECT_SOURCES}
+if(${QT_VERSION_MAJOR} GREATER_EQUAL 6)
+    qt_add_executable( ${PROJECT_NAME}
+            MANUAL_FINALIZATION
+            ${PROJECT_SOURCES}
     )
     qt_create_translation( QM_FILES ${CMAKE_SOURCE_DIR} ${TS_FILES} )
 else()
@@ -290,10 +287,20 @@ if(MSVC)
         target_link_libraries( ${PROJECT_NAME} PRIVATE QtitanGrid8 )
     endif()
 else()
-    target_link_libraries( ${PROJECT_NAME} PRIVATE libqicstable.so  )
-    target_link_libraries( ${PROJECT_NAME} PRIVATE libastra_shrd.so )
-    target_link_libraries( ${PROJECT_NAME} PRIVATE libqmcr.co       )
+    if (CMAKE_BUILD_TYPE MATCHES Debug)
+        target_link_libraries( ${PROJECT_NAME} PRIVATE qtadvanceddockingd )
+        target_link_libraries( ${PROJECT_NAME} PRIVATE QtitanBased2 )
+        target_link_libraries( ${PROJECT_NAME} PRIVATE QtitanGridd8 )
+    else()
+        target_link_libraries( ${PROJECT_NAME} PRIVATE Qt::WidgetsPrivate)
+        target_link_libraries( ${PROJECT_NAME} PRIVATE qmcr       )
+        target_link_libraries( ${PROJECT_NAME} PRIVATE qtadvanceddocking )
+        target_link_libraries( ${PROJECT_NAME} PRIVATE QtitanBase )
+        target_link_libraries( ${PROJECT_NAME} PRIVATE QtitanGrid )
+        target_link_libraries( ${PROJECT_NAME} PRIVATE astra_exp  ) # need for few obsolet functions in astra_exp.cpp!
+    endif()
 endif()
+
 target_link_libraries( ${PROJECT_NAME} PRIVATE
     Qt${QT_VERSION_MAJOR}::Widgets
     Qt${QT_VERSION_MAJOR}::PrintSupport

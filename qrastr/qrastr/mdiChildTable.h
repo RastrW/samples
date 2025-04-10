@@ -1,5 +1,6 @@
 #ifndef MDICHILD_H
 #define MDICHILD_H
+#pragma once
 
 #if(!defined(QICSGRID_NO))
 
