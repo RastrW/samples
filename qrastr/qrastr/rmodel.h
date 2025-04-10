@@ -1,6 +1,6 @@
 #ifndef RMODEL_H
 #define RMODEL_H
-#pragma oncev
+#pragma once
 
 #include <QAbstractTableModel>
 #include <QTimer>

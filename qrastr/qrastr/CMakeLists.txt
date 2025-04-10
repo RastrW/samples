@@ -100,6 +100,7 @@ set(INCLUDES
     "${DEPENDENCIES_LOCATION}/spdlog/include/"
     "${ASTRA_LOCATION}/../../flytfs/IPlainRastrTest/"
     "${DEPENDENCIES_LOCATION}/qtitan8_lin_5_15/include/" #lin Qtitan
+    "${DEPENDENCIES_LOCATION}/QtitanDataGrid8.2.0_win_qt_6_7/include/" #win Qtitan
 )
 #message("INCLUDES is set to ${INCLUDES}")
 
