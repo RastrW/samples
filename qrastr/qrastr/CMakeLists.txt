@@ -106,7 +106,8 @@ set(INCLUDES
 
 if(MSVC)
     link_directories("${CMAKE_LIBRARY_OUTPUT_DIRECTORY}")
-    link_directories("${ASTRA_LOCATION}/build/${CMAKE_BUILD_TYPE}/")
+    #link_directories("${ASTRA_LOCATION}/build/${CMAKE_BUILD_TYPE}/")
+    link_directories("${ASTRA_LOCATION}/../build/vs-${CMAKE_BUILD_TYPE}/astra") #C:\projects\rastr\RastrWin\build\vs-Debug\astra
     link_directories("${DEPENDENCIES_LOCATION}/metakit/builds/")
     link_directories("${DEPENDENCIES_LOCATION}/Qt-Advanced-Docking-System/build/vs-Debug/lib/")
     link_directories("${DEPENDENCIES_LOCATION}/Qt-Advanced-Docking-System/build/vs-Release/lib/")
@@ -275,7 +276,8 @@ target_link_libraries( ${PROJECT_NAME} PRIVATE Metakit::mk4         )
 target_link_libraries( ${PROJECT_NAME} PRIVATE fmt::fmt-header-only )
 #target_link_libraries( ${PROJECT_NAME} PRIVATE cryptopp::cryptopp )
 if(MSVC)
-    target_link_libraries( ${PROJECT_NAME} PRIVATE astra_py     ) # when build with pybind11
+    #target_link_libraries( ${PROJECT_NAME} PRIVATE astra_py     ) # when build with pybind11
+    target_link_libraries( ${PROJECT_NAME} PRIVATE astra     )
     target_link_libraries( ${PROJECT_NAME} PRIVATE qmcr         )
     target_link_libraries( ${PROJECT_NAME} PRIVATE Qt::WidgetsPrivate)
     if (CMAKE_BUILD_TYPE MATCHES Debug)

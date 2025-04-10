@@ -14,71 +14,78 @@ bool CRastrHlp::IsIdValid( _idRastr id ){
     if(id<0)
         return false;
     return true;
-};
+}
 
 int CRastrHlp::CreateRastr(){
-    id_rastr_ = RastrCreate();
-    if(!IsIdValid(id_rastr_))
-        throw CException("invalid rastr id: {}",id_rastr_);
-    return id_rastr_;
+    throw CException("called obsolet function CRastrHlp::CreateRastr()");
+    return -1;
+    // id_rastr_ = RastrCreate();
+    // if(!IsIdValid(id_rastr_))
+    //     throw CException("invalid rastr id: {}",id_rastr_);
+    //return id_rastr_;
 }
 
 CRastrHlp::~CRastrHlp(){
-    if(IsIdValid(id_rastr_))
-        ::RastrExterminate(id_rastr_);
+    throw CException("called obsolet function CRastrHlp::~CRastrHlp()");
+    // if(IsIdValid(id_rastr_))
+    //     ::RastrExterminate(id_rastr_);
 }
 
 int CRastrHlp::Load(std::string str_path_to_file){
-    try{
-        int nRes = 0;
-        std::cout << "Current path is " << fs::current_path() << '\n'; // (1)
-        fs::path path_file_load;
-        if( !fs::exists(str_path_to_file.c_str())) {
-            spdlog::error( "File rastr  not exist : [{}]!", str_path_to_file );
-            return -1;
-        }
-        //on Windows, you MUST use 8bit ANSI (and it must match the user's locale) or UTF-16 !! Unicode!
-        //!!! https://stackoverflow.com/questions/30829364/open-utf8-encoded-filename-in-c-windows  !!!
-
-        path_file_load = stringutils::utf8_decode(str_path_to_file);
-#if(defined(_MSC_VER))
-        nRes = ::Load(id_rastr_, path_file_load.c_str(), L"");
-#else
-        nRes = ::Load(id_rastr_, path_file_load.wstring().c_str(), L"");
-#endif
-        if(nRes<0){
-            throw CException("Can't read Rastr file: {}", str_path_to_file);
-        }else{
-            qDebug() << "File : [" <<str_path_to_file.c_str() << "] loaded.";
-        }
-    }catch(const std::exception& ex){
-        exclog(ex);
+    throw CException("called obsolet function CRastrHlp::Load()");
         return -1;
-    }catch(...){
-        exclog();
-        return -2;
-    }
-    return 1;
+//     try{
+//         int nRes = 0;
+//         std::cout << "Current path is " << fs::current_path() << '\n'; // (1)
+//         fs::path path_file_load;
+//         if( !fs::exists(str_path_to_file.c_str())) {
+//             spdlog::error( "File rastr  not exist : [{}]!", str_path_to_file );
+//             return -1;
+//         }
+//         //on Windows, you MUST use 8bit ANSI (and it must match the user's locale) or UTF-16 !! Unicode!
+//         //!!! https://stackoverflow.com/questions/30829364/open-utf8-encoded-filename-in-c-windows  !!!
+
+//         path_file_load = stringutils::utf8_decode(str_path_to_file);
+// #if(defined(_MSC_VER))
+//         nRes = ::Load(id_rastr_, path_file_load.c_str(), L"");
+// #else
+//         nRes = ::Load(id_rastr_, path_file_load.wstring().c_str(), L"");
+// #endif
+//         if(nRes<0){
+//             throw CException("Can't read Rastr file: {}", str_path_to_file);
+//         }else{
+//             qDebug() << "File : [" <<str_path_to_file.c_str() << "] loaded.";
+//         }
+//     }catch(const std::exception& ex){
+//         exclog(ex);
+//         return -1;
+//     }catch(...){
+//         exclog();
+//         return -2;
+//     }
+//    return 1;
 }
 int CRastrHlp::Save(std::string str_path_to_file){
-    try{
-        int nRes = 0;
-        fs::path path_file_save;
-        //on Windows, you MUST use 8bit ANSI (and it must match the user's locale) or UTF-16 !! Unicode!
-        //!!! https://stackoverflow.com/questions/30829364/open-utf8-encoded-filename-in-c-windows  !!!
-        path_file_save = stringutils::utf8_decode(str_path_to_file);
-        nRes = ::Save(id_rastr_, str_path_to_file.c_str(), "");
-        if(nRes<0){
-            throw CException("can't save Rastr file: {}", str_path_to_file);
-        }
-    }catch(const std::exception& ex){
-        exclog(ex);
+    throw CException("called obsolet function CRastrHlp::Save(");
         return -1;
-    }catch(...){
-        exclog();
-        return -2;
-    }
-    return 1;
+    // try{
+    //     int nRes = 0;
+    //     fs::path path_file_save;
+    //     //on Windows, you MUST use 8bit ANSI (and it must match the user's locale) or UTF-16 !! Unicode!
+    //     //!!! https://stackoverflow.com/questions/30829364/open-utf8-encoded-filename-in-c-windows  !!!
+    //     path_file_save = stringutils::utf8_decode(str_path_to_file);
+    //     nRes = ::Save(id_rastr_, str_path_to_file.c_str(), "");
+    //     if(nRes<0){
+    //         throw CException("can't save Rastr file: {}", str_path_to_file);
+    //     }
+    // }catch(const std::exception& ex){
+    //     exclog(ex);
+    //     return -1;
+    // }catch(...){
+    //     exclog();
+    //     return -2;
+    // }
+    // return 1;
 }
 
 // form files are deployed in form catalog near qrastr.exe

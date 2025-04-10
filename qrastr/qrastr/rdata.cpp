@@ -107,6 +107,8 @@ void RData::Initialize(nlohmann::json _j_Fields , nlohmann::json _j_metas,_vstr 
 
 void RData::populate()
 {
+    throw  std::runtime_error("called absolete function");
+    /*
     std::string str_json;
     str_json.resize(CRastrHlp::SIZE_STR_BUF_);
     GetJSON(id_rastr_,t_name_.c_str(), str_cols_.c_str(),"","",const_cast<char*>(str_json.c_str()), static_cast<long>(str_json.length()));
@@ -151,6 +153,7 @@ void RData::populate()
         }//for(col)
         n_row++;
     }//for(j_data_arr)
+    */
 }
 
 //obsolete
