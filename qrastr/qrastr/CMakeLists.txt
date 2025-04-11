@@ -116,8 +116,8 @@ else()
     link_directories("${DEPENDENCIES_LOCATION}/qicstable/lib/")
     link_directories("${ASTRA_LOCATION}/build/")
     link_directories("${DEPENDENCIES_LOCATION}/qtitan8_lin_5_15/bin/")
-    link_directories("${DEPENDENCIES_LOCATION}/build-ads-Desktop-Release/lib/")
-    link_directories("${ASTRA_LOCATION}/../../build-RastrWin-Desktop-Release/astra/")
+    link_directories("${DEPENDENCIES_LOCATION}/build-ads-Desktop-${CMAKE_BUILD_TYPE}/lib/")
+    link_directories("${ASTRA_LOCATION}/../../build-RastrWin-Desktop-${CMAKE_BUILD_TYPE}/astra/")
 endif()
 
 set(PROJECT_SOURCES
@@ -176,7 +176,7 @@ set(PROJECT_SOURCES
     utils.h
     CondFormat.h
     CondFormat.cpp
-    plugin_interfaces.h
+    plugins/rastr/plugin_interfaces.h
     qastra.h
     qastra.cpp
     tsthints.h
@@ -291,16 +291,20 @@ if(MSVC)
     endif()
 else()
     if (CMAKE_BUILD_TYPE MATCHES Debug)
-        target_link_libraries( ${PROJECT_NAME} PRIVATE qtadvanceddockingd )
-        target_link_libraries( ${PROJECT_NAME} PRIVATE QtitanBased2 )
-        target_link_libraries( ${PROJECT_NAME} PRIVATE QtitanGridd8 )
+        target_link_libraries( ${PROJECT_NAME} PRIVATE Qt::WidgetsPrivate)
+        target_link_libraries( ${PROJECT_NAME} PRIVATE qmcr       )
+        target_link_libraries( ${PROJECT_NAME} PRIVATE qtadvanceddocking )
+        target_link_libraries( ${PROJECT_NAME} PRIVATE QtitanBased )
+        target_link_libraries( ${PROJECT_NAME} PRIVATE QtitanGridd )
+        target_link_libraries( ${PROJECT_NAME} PRIVATE astra  )
     else()
         target_link_libraries( ${PROJECT_NAME} PRIVATE Qt::WidgetsPrivate)
         target_link_libraries( ${PROJECT_NAME} PRIVATE qmcr       )
         target_link_libraries( ${PROJECT_NAME} PRIVATE qtadvanceddocking )
         target_link_libraries( ${PROJECT_NAME} PRIVATE QtitanBase )
         target_link_libraries( ${PROJECT_NAME} PRIVATE QtitanGrid )
-        target_link_libraries( ${PROJECT_NAME} PRIVATE astra_exp  ) # need for few obsolet functions in astra_exp.cpp!
+        #target_link_libraries( ${PROJECT_NAME} PRIVATE astra_exp  ) # need for few obsolet functions in astra_exp.cpp!
+        target_link_libraries( ${PROJECT_NAME} PRIVATE astra  )
     endif()
 endif()
 

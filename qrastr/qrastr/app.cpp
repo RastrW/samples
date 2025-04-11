@@ -10,7 +10,7 @@
 #include "params.h"
 using WrapperExceptionType = std::runtime_error;
 #include "IPlainRastrWrappers.h"
-#include "plugin_interfaces.h"
+#include "plugins/rastr/plugin_interfaces.h"
 #include "qastra.h"
 #include "utils.h"
 #include "UIForms.h"
@@ -79,8 +79,9 @@ long App::readSettings(){ //it cache log messages to vector, because it called b
 #if(defined(COMPILE_WIN))
         str_path_2_conf = qstr_curr_path.toStdString()+ "/../"+Params::pch_dir_data_ +"/"+ Params::pch_fname_appsettings;
 #else
-        str_path_2_conf = R"(/home/ustas/projects/git_web/samples/qrastr/qrastr/appsettings.json)";
-        QMessageBox mb( QMessageBox::Icon::Critical, QObject::tr("Error"), QString("In lin not implemented!") );  mb.exec();
+        //str_path_2_conf = R"(/home/ustas/projects/git_web/samples/qrastr/qrastr/appsettings.json)";
+        str_path_2_conf = qstr_curr_path.toStdString()+ "/../"+Params::pch_dir_data_ +"/"+ Params::pch_fname_appsettings;
+       // QMessageBox mb( QMessageBox::Icon::Critical, QObject::tr("Error"), QString("In lin not implemented!") );  mb.exec();
 #endif
         QFileInfo fi_appsettings(str_path_2_conf.c_str());
         Params* const p_params = Params::GetInstance();
@@ -92,8 +93,8 @@ long App::readSettings(){ //it cache log messages to vector, because it called b
             }else{
                 v_cache_log_.add(spdlog::level::err, "Can't set DataDir: {}", p_params->getDirData().path().toStdString());
             }
-            p_params->readJsonFile(str_path_2_conf);
-            if(nRes<0){
+            nRes = p_params->readJsonFile(str_path_2_conf);
+            if(nRes < 0){
                 QMessageBox mb;
                 // так лучше не делать ,смешение строк qt и std это боль.
                 QString qstr = QObject::tr("Can't load on_start_file: ");
@@ -266,7 +267,7 @@ long App::start(){
             const std::filesystem::path path_templates = Params::GetInstance()->getDirSHABLON().filesystemCanonicalPath();
 #else
             std::filesystem::path path_templates = Params::GetInstance()->getDirSHABLON().canonicalPath().toStdString();
-            assert(!"what?");
+            //assert(!"what?");
 #endif
             const Params::_v_templates v_templates{ Params::GetInstance()->getStartLoadTemplates() };
             for(const Params::_v_templates::value_type& templ_to_load : v_templates){

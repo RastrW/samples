@@ -1,7 +1,7 @@
 #include <assert.h>
 #include <QDebug>
 #include <QPluginLoader>
-#include "test-plugin.hpp"
+#include "test-plugin.h"
 
 constexpr auto ABSOLUTE_PATH_TO_PLUGIN =
 #if(!defined(Q_OS_WIN))

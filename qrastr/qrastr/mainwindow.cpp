@@ -27,7 +27,7 @@
 //#include "mdiChildHeaderGrid.h"
 #include "astra_exp.h"
 #include "qmcr/mcrwnd.h"
-#include "plugin_interfaces.h"
+#include "plugins/rastr/plugin_interfaces.h"
 using WrapperExceptionType = std::runtime_error;
 #include "IPlainRastrWrappers.h"
 #include "qastra.h"

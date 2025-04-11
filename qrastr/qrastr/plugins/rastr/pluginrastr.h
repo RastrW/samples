@@ -1,9 +1,9 @@
 #ifndef PLUGINRASTR_H
 #define PLUGINRASTR_H
+#pragma once
 
 #include <QObject>
 #include <QtPlugin>
-
 #include "plugin_interfaces.h"
 
 class PluginRastr 

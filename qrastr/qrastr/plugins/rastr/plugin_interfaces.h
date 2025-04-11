@@ -2,9 +2,9 @@
 #define PLUGIN_INTERFACES_H
 #pragma once
 
-QT_BEGIN_NAMESPACE
+//QT_BEGIN_NAMESPACE
 #include <QtPlugin>
-QT_END_NAMESPACE
+//QT_END_NAMESPACE
 
 class IPlainRastr;
 namespace spdlog{ class logger;}

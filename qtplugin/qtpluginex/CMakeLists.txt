@@ -24,7 +24,7 @@ find_package(Qt${QT_VERSION_MAJOR} COMPONENTS
 #set(COMPILE_OPTIONS -std=c++11)
 
 #add_library(test-plugin SHARED test-plugin-interface.hpp test-plugin.hpp  test-plugin.cpp )
-add_library(test-plugin SHARED test-plugin.hpp  test-plugin.cpp )
+add_library(test-plugin SHARED test-plugin.h  test-plugin.cpp )
 target_link_libraries(test-plugin PRIVATE Qt${QT_VERSION_MAJOR}::Widgets)
 target_compile_options(test-plugin PRIVATE ${COMPILE_OPTIONS})
 
