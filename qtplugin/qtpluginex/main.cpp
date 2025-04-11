@@ -1,20 +1,14 @@
-//#include <iostream>
-
-//using namespace std;
-
-//int main()
-//{
-//    cout << "Hello World!" << endl;
-//    return 0;
-//}
-
 #include <assert.h>
 #include <QDebug>
 #include <QPluginLoader>
 #include "test-plugin.hpp"
 
 constexpr auto ABSOLUTE_PATH_TO_PLUGIN =
+#if(!defined(Q_OS_WIN))
     "/home/ustas/projects/git_web/samples/qtplugin/build-qtpluginex-Desktop-Debug/libtest-plugin.so";
+#else
+    R"(C:\projects\git_web\samples\qtplugin\qtpluginex\build\vs-Debug\test-plugin.dll)";
+#endif
     //"/path/to/build/libtest-plugin.so";
 
 int main(int argc, char* argv[])

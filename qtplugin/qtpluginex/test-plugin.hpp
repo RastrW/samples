@@ -1,5 +1,6 @@
 #ifndef TEST_PLUGIN_HPP
 #define TEST_PLUGIN_HPP
+#pragma once
 #include <QObject>
 #include <QtPlugin>
 #include "test-plugin-interface.hpp"
