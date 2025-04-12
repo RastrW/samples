@@ -89,6 +89,7 @@ private slots:
     void rgm_wrap();
     void oc_wrap();
     void smzu_tst_wrap();
+    void tkz_wrap();
     void idop_wrap();
     void onDlgMcr();
     void onOpenForm(QAction* p_actn);

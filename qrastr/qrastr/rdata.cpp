@@ -11,7 +11,8 @@ void RData::Initialize(CUIForm _form, QAstra* _pqastra)
     IRastrColumnsPtr columns{ table->Columns() };
     //table->Title(); ??
     //t_title_ = stringutils::cp1251ToUtf8(_form.Name().c_str());
-    t_title_ = _form.Name().c_str();
+    //t_title_ = _form.Name().c_str();
+    t_title_ = stringutils::MkToUtf8(_form.Name().c_str());
 
 
     //std::string table_Name = IRastrPayload(IRastrVariantPtr(table->Name()));

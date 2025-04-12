@@ -17,5 +17,7 @@
         <file>images/Rastr3_grid_duprow_16x161.png</file>
         <file>images/Save_all.png</file>
         <file>images/mdp_16.png</file>
+        <file>images/TKZ_16.png</file>
+        <file>images/TKZ_48.png</file>
     </qresource>
 </RCC>

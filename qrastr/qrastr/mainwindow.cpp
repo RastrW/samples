@@ -41,10 +41,8 @@ using WrapperExceptionType = std::runtime_error;
 #include "testmodel.h"
 #include "formprotocol.h"
 #include "formcalcidop.h"
-
 #include <QtitanDef.h>
 #include <QtitanGrid.h>
-
 
 MainWindow::MainWindow(){
     m_workspace = new QMdiArea;
@@ -93,8 +91,6 @@ MainWindow::MainWindow(){
        // auto pfdc = m_DockManager->addDockWidgetFloating(pdwProtocol);
         //pfdc->move(QPoint(2100, 20));
        // pfdc->resize(600,400);
-
-
     }
     auto qt_sink = std::make_shared<spdlog::sinks::qt_sink_mt>(m_pMcrWnd, "onQStringAppendProtocol");
     auto logg = spdlog::default_logger();
@@ -107,15 +103,13 @@ MainWindow::MainWindow(){
     setAcceptDrops(true);
     readSettings();
 }
-MainWindow::~MainWindow()
-{
+
+MainWindow::~MainWindow(){
 }
 
 int MainWindow::readSettings(){ //it cache log messages to vector, because it called befor logger intialization
     try{
-
         QSettings settings;
-
         settings.beginGroup("MainWindow");
         const auto geometry = settings.value("geometry", QByteArray()).toByteArray();
         if (geometry.isEmpty())
@@ -123,7 +117,6 @@ int MainWindow::readSettings(){ //it cache log messages to vector, because it ca
         else
             restoreGeometry(geometry);
         settings.endGroup();
-
     }catch(const std::exception& ex){
         m_v_cache_log.add( spdlog::level::err,"Exception: {} ", ex.what());
         return -4;
@@ -133,17 +126,16 @@ int MainWindow::readSettings(){ //it cache log messages to vector, because it ca
     }
     return 1;
 }
+
 int MainWindow::writeSettings(){
-
     QSettings settings;
-
     settings.beginGroup("MainWindow");
     settings.setValue("geometry", saveGeometry());
     settings.endGroup();
     return 1;
 }
-void MainWindow::tst_onRastrHint(const _hint_data& dh){
 
+void MainWindow::tst_onRastrHint(const _hint_data& dh){
     spdlog::info("XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX");
     spdlog::info("XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX");
     spdlog::info("XXX MainWindow::tst_onRastrHint about {} {} {} {} {} XXX"
@@ -156,9 +148,11 @@ void MainWindow::tst_onRastrHint(const _hint_data& dh){
     spdlog::info("XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX");
     spdlog::info("XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX");
 }
+
 void MainWindow::dragEnterEvent(QDragEnterEvent *event){
    event->acceptProposedAction();
 }
+
 void MainWindow::dropEvent(QDropEvent *dropEvent){
    QStringList filePathList;
    foreach (QUrl url, dropEvent->mimeData()->urls()){
@@ -169,68 +163,79 @@ void MainWindow::dropEvent(QDropEvent *dropEvent){
    }
    dropEvent->acceptProposedAction();
 }
+
 void MainWindow::logCacheFlush(){
     for( const auto& cache_log : m_v_cache_log){
         spdlog::log(cache_log.lev, cache_log.str_log);
     }
     m_v_cache_log.clear();
 }
+
 void MainWindow::showEvent( QShowEvent* event ){
         QWidget::showEvent( event );
         //your code here
         // https://stackoverflow.com/questions/14161100/which-qt-widget-should-i-use-for-message-display
 }
+
 MainWindow::_cache_log::_cache_log( const spdlog::level::level_enum lev_in, std::string_view sv_in )
     : lev{lev_in}
     , str_log{sv_in}{
 }
+
 MainWindow::_cache_log& MainWindow::_cache_log::operator=(const MainWindow::_cache_log& cache_log){
     lev     = cache_log.lev;
     str_log = cache_log.str_log;
     return *this;
 }
+
 MainWindow::_cache_log& MainWindow::_cache_log::operator=(const MainWindow::_cache_log&& cache_log){
     operator=(cache_log);
     return *this;
 }
+
 MainWindow::_cache_log::_cache_log(const MainWindow::_cache_log& cache_log){
     operator=(cache_log);
 }
+
 MainWindow::_cache_log::_cache_log(const MainWindow::_cache_log&& cache_log){
     operator=(cache_log);
 }
+
 template <typename... Args>
 void MainWindow::_v_cache_log::add( const spdlog::level::level_enum lev_in, const std::string_view sv_format, Args&&... args ){
     _cache_log cache_log{lev_in, fmt::format(sv_format, args...)};
     emplace_back(cache_log);
 }
+
 void MainWindow::setForms(const std::list<CUIForm>& forms){ // https://stackoverflow.com/questions/14151443/how-to-pass-a-qstring-to-a-qt-slot-from-a-qmenu-via-qsignalmapper-or-otherwise
     int i = 0;
     m_lstUIForms = forms;
     m_RTDM.SetForms(&m_lstUIForms);
     QMap<QString,QMenu *> map_menu;
     for(const auto& j_form : forms){
-        std::string str_MenuPath = stringutils::cp1251ToUtf8(j_form.MenuPath());
+        //std::string str_MenuPath = stringutils::cp1251ToUtf8(j_form.MenuPath());
+        std::string str_MenuPath = stringutils::MkToUtf8(j_form.MenuPath());
         auto vmenu = split(str_MenuPath,'\\');
-        std::string str_Name = stringutils::cp1251ToUtf8(j_form.Name());
+        //std::string str_Name = stringutils::cp1251ToUtf8(j_form.Name());
+        std::string str_Name = stringutils::MkToUtf8(j_form.Name());
         //if (!str_MenuPath.empty() && str_MenuPath.at(0) == '_')
         if (str_MenuPath.empty())
             continue;
         if (j_form.AddToMenuIndex() >= vmenu.size() )
             continue;
-
         QString qstr_MenuPath = vmenu[j_form.AddToMenuIndex()].c_str();
         if (!map_menu.contains(qstr_MenuPath))
             map_menu.insert(qstr_MenuPath,m_menuOpen->addMenu(qstr_MenuPath.isEmpty()?"Остальное":qstr_MenuPath));
     }
     for(const auto& j_form : forms){
-        std::string str_Name = stringutils::cp1251ToUtf8(j_form.Name());
+        //std::string str_Name = stringutils::cp1251ToUtf8(j_form.Name());
+        std::string str_Name = stringutils::MkToUtf8(j_form.Name());
         std::string str_TableName = j_form.TableName();
-        std::string str_MenuPath = stringutils::cp1251ToUtf8(j_form.MenuPath());
+        //std::string str_MenuPath = stringutils::cp1251ToUtf8(j_form.MenuPath());
+        std::string str_MenuPath = stringutils::MkToUtf8(j_form.MenuPath());
         auto vmenu = split(str_MenuPath,'\\');
         //QString qstr_MenuPath = str_MenuPath.c_str();
-        if (!str_MenuPath.empty() && j_form.AddToMenuIndex() >= vmenu.size() )
-        {
+        if (!str_MenuPath.empty() && j_form.AddToMenuIndex() >= vmenu.size() ){
             i++;
             continue;
         }
@@ -259,24 +264,21 @@ void MainWindow::setForms(const std::list<CUIForm>& forms){ // https://stackover
     connect(m_menuProperties, &QMenu::aboutToShow, this, &MainWindow::setSettingsForms);
    // m_menuProperties->aboutToShow()
 }
-void MainWindow::setSettingsForms()
-{
+
+void MainWindow::setSettingsForms(){
     m_menuProperties->clear();
     IRastrTablesPtr tablesx{ m_sp_qastra->getRastr()->Tables() };
     IRastrPayload cnt{tablesx->Count()};
-    for (int i = 0 ; i< cnt.Value() ; i++)
-    {
+    for (int i = 0 ; i< cnt.Value() ; i++){
         IRastrTablePtr table{ tablesx->Item(i) };
         IRastrPayload tab_name{table->Name()};
         IRastrPayload templ_name{table->TemplateName()};
         IRastrPayload tab_desc{table->Description()};
         std::string str_tab_name = tab_name.Value();
         std::string str_templ_name = templ_name.Value();
-
         //m_menuProperties->actions().clear();
         //m_menuProperties
-        if ( QFileInfo(str_templ_name.c_str()).suffix() == "form")
-        {
+        if ( QFileInfo(str_templ_name.c_str()).suffix() == "form"){
             CUIForm _form;
             //_form.SetName(stringutils::cp1251ToUtf8(tab_desc.Value().c_str()));
             //_form.SetTableName(stringutils::cp1251ToUtf8(tab_name.Value().c_str()));
@@ -287,26 +289,21 @@ void MainWindow::setSettingsForms()
             IRastrColumnsPtr columns{ table->Columns() };
             size_t nrows = IRastrPayload{table->Size()}.Value();
             size_t ncols = IRastrPayload{columns->Count()}.Value();
-
-
             if (nrows == 1)
                 _form.SetVertical(true);
 
-            for (size_t i = 0 ; i < ncols; i++ )
-            {
+            for (size_t i = 0 ; i < ncols; i++ ) {
                 IRastrColumnPtr column{columns->Item(i)};
                 CUIFormField* _field;
                 _form.Fields().emplace_back(IRastrPayload{column->Name()}.Value());
             }
-
             connect(p_actn, &QAction::triggered, [this, _form] {
                 onOpenForm(_form); });
         }
-
         //qDebug() <<"TabName: " << str_tab_name.c_str() << "Templ name: " << str_templ_name.c_str();
     }
-
 }
+
 void MainWindow::setQAstra(const std::shared_ptr<QAstra>& sp_qastra){
     assert(nullptr!=sp_qastra);
     m_sp_qastra = sp_qastra;
@@ -357,6 +354,7 @@ void MainWindow::setQAstra(const std::shared_ptr<QAstra>& sp_qastra){
 */
     }
 }
+
 void MainWindow::closeEvent(QCloseEvent *event){
 
    /* if (maybeSave()) {
@@ -381,6 +379,7 @@ void MainWindow::closeEvent(QCloseEvent *event){
     }
 #endif// #if(!defined(QICSGRID_NO))
 }
+
 void MainWindow::newFile(){
     FormFileNew* pformFileNew = new FormFileNew(this);
     if(QDialog::Accepted == pformFileNew->exec()){
@@ -396,6 +395,7 @@ void MainWindow::newFile(){
     child->show();
 #endif
 }
+
 void MainWindow::open(){
     QFileDialog fileDlg( this, tr("Open Rastr files") );
     fileDlg.setOption(QFileDialog::DontUseNativeDialog, true);
@@ -468,6 +468,7 @@ void MainWindow::open(){
         curFile = fileName;
     }
 }
+
 void MainWindow::saveAs(){
     QFileDialog fileDlg( this, tr("Save Rastr file") );
     fileDlg.setAcceptMode(QFileDialog::AcceptSave);
@@ -493,7 +494,6 @@ void MainWindow::saveAs(){
         setCurrentFile(qstr_rfile);
         qDebug() << "templ: "<< qstr_template << "  file : " << qstr_rfile ;
     }
-
 #if(!defined(QICSGRID_NO))
     if (activeMdiChild()->save())
         statusBar()->showMessage(tr("File saved"), 2000);
@@ -502,8 +502,6 @@ void MainWindow::saveAs(){
         int nRes = 0;
         const std::string& f = curFile.toStdString();
         //assert(!"not implemented");
-
-
         if(nRes>0){
             std::string str_msg = fmt::format( "{}: {}", "File saved", f);
             statusBar()->showMessage( str_msg.c_str(), 2000 );
@@ -514,38 +512,39 @@ void MainWindow::saveAs(){
         }
     }
 }
+
 void MainWindow::save(){
     m_sp_qastra->Save( curFile.toStdString().c_str(), "" );
     std::string str_msg = fmt::format( "{}: {}", "Сохранен файл", curFile.toStdString().c_str());
     return;
 }
+
 void MainWindow::saveAll(){
     formsaveall* fsaveall = new formsaveall(m_sp_qastra.get(),mFilesLoad);
     fsaveall->show();
 }
+
 void MainWindow::openRecentFile()
 {
     QAction *action = qobject_cast<QAction *>(sender());
-    if (action)
-    {
+    if (action){
         //loadFile(action->data().toString());
         QString _fileshabl = action->data().toString();
         QStringList qslist = _fileshabl.split(" ");
         std::string file = qslist[0].toStdString();
         std::string shabl = "";
-        if (qslist.size() > 1)
-        {
+        if (qslist.size() > 1) {
             shabl = qslist[1].toStdString();
             shabl.erase(shabl.begin());
             shabl.erase(shabl.end()-1);
         }
-
         //m_sp_qastra->Load( eLoadCode::RG_REPL, action->data().toString().toStdString(), "" );
         m_sp_qastra->Load( eLoadCode::RG_REPL, file, shabl );
         setWindowTitle(action->data().toString());
         mFilesLoad[shabl.c_str()] = file.c_str();
     }
 }
+
 void MainWindow::rgm_wrap(){
     emit signal_calc_begin();
     eASTCode code = m_sp_qastra->Rgm("");
@@ -561,6 +560,7 @@ void MainWindow::rgm_wrap(){
     emit signal_calc_end();
     //emit rgm_signal();
 }
+
 void MainWindow::kdd_wrap(){
     eASTCode code = m_sp_qastra->Kdd("");
     std::string str_msg = "";
@@ -573,6 +573,7 @@ void MainWindow::kdd_wrap(){
     }
     statusBar()->showMessage( str_msg.c_str(), 0 );
 }
+
 void MainWindow::oc_wrap(){
     emit signal_calc_begin();
     eASTCode code = m_sp_qastra->Opf("s");
@@ -588,6 +589,7 @@ void MainWindow::oc_wrap(){
     statusBar()->showMessage( str_msg.c_str(), 0 );
     emit signal_calc_end();
 }
+
 void MainWindow::smzu_tst_wrap(){
     emit signal_calc_begin();
     long i =2;
@@ -604,6 +606,23 @@ void MainWindow::smzu_tst_wrap(){
     statusBar()->showMessage( str_msg.c_str(), 0 );
     emit signal_calc_end();
 }
+
+void MainWindow::tkz_wrap(){
+    emit signal_calc_begin();
+    std::string str_msg = "Implement me in IplainRastr";
+//    long i =2;
+//    eASTCode code = m_sp_qastra->Smzu_tst(i);
+//    if (code == eASTCode::AST_OK){
+//        str_msg = "Расчет МДП выполнен успешно";
+//        spdlog::info("{}", str_msg);
+//    }else{
+//        str_msg = "Расчет МДП завершился аварийно!";
+//        spdlog::error("{} : {}", static_cast<int>(code), str_msg);
+//    }
+    statusBar()->showMessage( str_msg.c_str(), 0 );
+    emit signal_calc_end();
+}
+
 void MainWindow::idop_wrap(){
     emit signal_calc_begin();
     eASTCode code = eASTCode::AST_OK;
@@ -613,13 +632,16 @@ void MainWindow::idop_wrap(){
 
     emit signal_calc_end();
 }
+
 void MainWindow::onDlgMcr(){
     McrWnd* pMcrWnd = new McrWnd(this) ;
     pMcrWnd->show();
 }
+
 void MainWindow::about(){
    QMessageBox::about( this, tr("About QRastr"), tr("About the <b>QRastr</b>.") );
 }
+
 void MainWindow::onOpenForm( QAction* p_actn ){
     const int n_indx = p_actn->data().toInt();
     const auto& forms = m_lstUIForms;
@@ -627,12 +649,11 @@ void MainWindow::onOpenForm( QAction* p_actn ){
     auto it = forms.begin();
     std::advance(it,n_indx);
     auto form  =*it;
-    form.SetName(stringutils::cp1251ToUtf8(form.Name()));
-
+    form.SetName(stringutils::MkToUtf8(form.Name()));
     onOpenForm(form);
 }
-void MainWindow::onOpenForm(CUIForm _uiform)
-{
+
+void MainWindow::onOpenForm(CUIForm _uiform){
     CUIForm form  = _uiform;
     qDebug() << "\n Open form:" << form.Name().c_str();
     //spdlog::info( "Create tab [{}]", stringutils::cp1251ToUtf8(form.Name()) );
@@ -644,7 +665,7 @@ void MainWindow::onOpenForm(CUIForm _uiform)
 
     // Docking
     if(false){
-        QDockWidget *dock = new QDockWidget( stringutils::cp1251ToUtf8(form.Name()).c_str(), this);
+        QDockWidget *dock = new QDockWidget( stringutils::MkToUtf8(form.Name()).c_str(), this);
         dock->setWidget(prtw);
         //dock->setWidget(prtw->m_grid);
         dock->setAllowedAreas(Qt::LeftDockWidgetArea | Qt::RightDockWidgetArea | Qt::TopDockWidgetArea | Qt::BottomDockWidgetArea | Qt::AllDockWidgetAreas);
@@ -652,7 +673,8 @@ void MainWindow::onOpenForm(CUIForm _uiform)
     }else{
         //QTitanGrid
         //auto dw = new ads::CDockWidget( stringutils::cp1251ToUtf8(form.Name()).c_str(), this);
-        auto dw = new ads::CDockWidget(form.Name().c_str(), this);
+        //auto dw = new ads::CDockWidget(form.Name().c_str(), this);
+        auto dw = new ads::CDockWidget(stringutils::MkToUtf8(form.Name()).c_str(), this);
         dw->setWidget(prtw->m_grid);
         dw->setFeature(ads::CDockWidget::DockWidgetDeleteOnClose, true);
         auto area = m_DockManager->addDockWidgetTab(ads::TopDockWidgetArea, dw);
@@ -687,26 +709,32 @@ void MainWindow::onItemPressed(const QModelIndex &index){
     //QTableView* t = index.parent();
     qDebug()<<"Pressed:" <<row<< ","<<column;
 }
+
 void MainWindow::ondataChanged(std::string _t_name, QModelIndex index, QVariant value ){
     std::string tname = _t_name;
     //emit rm_change(_t_name,index,value);
 }
+
 void MainWindow::ondataChanged(std::string _t_name, std::string _col_name, int _row, QVariant _value){
     //emit rm_change(_t_name,_col_name,_row,_value);
 }
+
 void MainWindow::onRowInserted(std::string _t_name, int _row){
     emit rm_RowInserted(_t_name,_row);
     emit rm_update(_t_name);
 }
+
 void MainWindow::onRowDeleted(std::string _t_name, int _row){
     emit rm_RowDeleted(_t_name,_row);
     emit rm_update(_t_name);
 }
+
 void MainWindow::onButton2Click(){
     const long num_chars = 10000;
     char* pch_JSON_out = new char[num_chars];
     //long n_res = PyRunMacro( L"", L"", pch_JSON_out, num_chars );
 }
+
 void MainWindow::updateMenus(){
 #if(!defined(QICSGRID_NO))
     bool hasMdiChild = (activeMdiChild() != 0);
@@ -722,14 +750,17 @@ void MainWindow::updateMenus(){
     m_separatorAct->setVisible(hasMdiChild);
 #endif //#if(!defined(QICSGRID_NO))
 }
+
 void MainWindow::setActiveSubWindow(QWidget *window){
     m_workspace->setActiveSubWindow(qobject_cast<QMdiSubWindow *>(window));
 }
+
 void MainWindow::showFormSettings(){
     FormSettings* pformSettings = new FormSettings();
     pformSettings->init(m_sp_qastra);
     pformSettings->show();
 }
+
 void MainWindow::createActions(){
     //file
     QAction* newAct = new QAction(QIcon(":/images/new.png"), tr("&Новый"), this);
@@ -757,14 +788,12 @@ void MainWindow::createActions(){
     exitAct->setShortcut(tr("Ctrl+Q"));
     exitAct->setStatusTip(tr("Exit the application"));
     connect(exitAct, SIGNAL(triggered()), qApp, SLOT(closeAllWindows()));
-
     for (int i = 0; i < MaxRecentFiles; ++i) {
         recentFileActs[i] = new QAction(this);
         recentFileActs[i]->setVisible(false);
         connect(recentFileActs[i], SIGNAL(triggered()),
                 this, SLOT(openRecentFile()));
     }
-
     //macro
     QAction* ActMacro = new QAction(QIcon(":/images/cut.png"),tr("&macro"), this);
     ActMacro->setShortcut(tr("F11"));
@@ -783,9 +812,13 @@ void MainWindow::createActions(){
     actOC->setStatusTip(tr("Оценка состояния"));
     connect(actOC, SIGNAL(triggered()), this, SLOT(oc_wrap()));
     QAction* actMDP = new QAction(QIcon(":/images/mdp_16.png"),tr("&МДП"), this);
-    actOC->setShortcut(tr("F7"));
-    actOC->setStatusTip(tr("Расчет МДП"));
-    connect(actMDP, SIGNAL(triggered()), this, SLOT(smzu_tst_wrap()));
+    actMDP->setShortcut(tr("F7"));
+    actMDP->setStatusTip(tr("Расчет МДП"));
+    connect( actMDP, SIGNAL(triggered()), this, SLOT(smzu_tst_wrap()));
+    QAction* actTkz = new QAction(QIcon(":/images/TKZ_48.png"),tr("&ТКЗ"), this);
+    actTkz->setShortcut(tr("F8"));
+    actTkz->setStatusTip(tr("Расчет ТКЗ"));
+    connect( actTkz, SIGNAL(triggered()), this, SLOT(tkz_wrap()));
     QAction* actIdop = new QAction(tr("&Доп. ток от Т"), this);
     actIdop->setShortcut(tr("F9"));
     actIdop->setStatusTip(tr("Расчет допустимых токов от температуры"));
@@ -820,7 +853,6 @@ void MainWindow::createActions(){
     aboutAct->setStatusTip(tr("Show the application's About box"));
     connect(aboutAct, SIGNAL(triggered()), this, SLOT(about()));
 
-
     //MENU's
     //QMenu* menuFile = menuBar()->addMenu(tr("&File"));
     QMenu* menuFile = menuBar()->addMenu(tr("&Файлы"));
@@ -851,6 +883,7 @@ void MainWindow::createActions(){
     menuCalc->addAction(actRGM);
     menuCalc->addAction(actOC);
     menuCalc->addAction(actMDP);
+    menuCalc->addAction(actTkz);
     menuCalc->addAction(actIdop);
     m_menuCalcParameters =  menuCalc->addMenu(tr("&Параметры"));
 
@@ -902,12 +935,13 @@ void MainWindow::createActions(){
     m_toolbarCalc->addAction(actRGM);
     m_toolbarCalc->addAction(actOC);
     m_toolbarCalc->addAction(actMDP);
+    m_toolbarCalc->addAction(actTkz);
 
     //TEST BUTTONS
     //createCalcLayout();
 }
-void MainWindow::setCurrentFile(const QString &fileName, const std::string Shablon)
-{
+
+void MainWindow::setCurrentFile(const QString &fileName, const std::string Shablon){
     curFile = fileName;
     setWindowFilePath(curFile);
     mFilesLoad[Shablon.c_str()] = fileName;
@@ -931,22 +965,17 @@ void MainWindow::setCurrentFile(const QString &fileName, const std::string Shabl
     }
 }
 
-void MainWindow::updateRecentFileActions()
-{
+void MainWindow::updateRecentFileActions(){
     QSettings settings;
     QStringList files = settings.value("recentFileList").toStringList();
-
     int numRecentFiles = qMin(files.size(), (int)MaxRecentFiles);
-
-    for (int i = 0; i < numRecentFiles; ++i) {
+    for( int i = 0; i < numRecentFiles; ++i ){
         //QString text = tr("&%1 %2").arg(i + 1).arg(strippedName(files[i]));
-
         QStringList qslist = files[i].split(" ");
         std::string file = qslist[0].toStdString();
         std::string shabl = "";
         QString stripshabl = "";
-        if (qslist.size() > 1)
-        {
+        if (qslist.size() > 1){
             shabl = qslist[1].toStdString();
             shabl.erase(shabl.begin());
             shabl.erase(shabl.end()-1);
@@ -967,12 +996,12 @@ void MainWindow::updateRecentFileActions()
 
     separatorAct->setVisible(numRecentFiles > 0);
 }
-QString MainWindow::strippedName(const QString &fullFileName)
-{
+
+QString MainWindow::strippedName(const QString &fullFileName){
     return QFileInfo(fullFileName).fileName();
 }
-void MainWindow::Btn1_onClick(){
 
+void MainWindow::Btn1_onClick(){
     QTableView* view = new QTableView;
     view->setWindowTitle("charttest");
     view->setWindowFlags(Qt::Tool);
@@ -994,6 +1023,7 @@ void MainWindow::Btn1_onClick(){
     ptv->show();
     */
 }
+
 void MainWindow::Btn3_onClick(){
     //Show test ComboBox item at grid column
 
@@ -1021,6 +1051,7 @@ void MainWindow::Btn3_onClick(){
     ptableView->setModel(model);
     ptableView->show();
 }
+
 void MainWindow::createCalcLayout(){
     // набор вложенных виджетов - кнопок
     QPushButton *btn1 = new QPushButton("Stock grid");
@@ -1038,12 +1069,12 @@ void MainWindow::createCalcLayout(){
     m_layoutActions->addWidget(btn3);
     m_toolbarCalc->addWidget(widget);
 }
+
 void MainWindow::createStatusBar(){
     statusBar()->showMessage(tr("Ready"));
 }
 
-bool MainWindow::maybeSave()
-{
+bool MainWindow::maybeSave(){
    // if (!textEdit->document()->isModified())
    //     return true;
     const QMessageBox::StandardButton ret

@@ -70,7 +70,11 @@ RTableView::RTableView(QWidget *parent) :
     Q_D(QTableView);
     d->cornerWidget = (QTableCornerButton*)&cornerButton;
 #else
-    assert(!"nix: not understend howto compile.");
+  //  Q_D(QTableView);
+    //d->cornerWidget = nullptr;//(QTableCornerButton*)&cornerButton;
+    QMessageBox mb( QMessageBox::Icon::Critical, QObject::tr("Error"), QObject::tr("!fixme rtablview:75")  );
+    mb.exec();
+   // assert(!"nix: not understend howto compile.");
 #endif
 
     cornerButton.setText("*");

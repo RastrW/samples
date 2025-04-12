@@ -19,20 +19,23 @@ App::App(int &argc, char **argv)
     :QApplication(argc, argv){
     upCUIFormsCollection_ = std::make_unique<CUIFormsCollection>();
 }
+
 App::~App() {
     Params::Destruct();
 }
+
 bool App::event( QEvent *event ){
     const bool done = QApplication::event( event);
     return done;
 }
+
 bool App::notify(QObject* receiver, QEvent* event){
     bool done = false;
     try {
         done = QApplication::notify(receiver, event);
     }catch(std::exception& ex){
         exclog(ex);
-        std::string str{fmt::format("std::exception: {}",ex.what())};
+        const std::string str{fmt::format("std::exception: {}",ex.what())};
         //spdlog::error("ERROR: {}", ex.what());
         assert(!str.c_str());
     }catch (...){
@@ -40,30 +43,37 @@ bool App::notify(QObject* receiver, QEvent* event){
     }
     return done;
 }
+
 App::_cache_log::_cache_log( const spdlog::level::level_enum lev_in, std::string_view sv_in )
     : lev{lev_in}
     , str_log{sv_in}{
 }
+
 App::_cache_log& App::_cache_log::operator=(const App::_cache_log& cache_log){
     lev     = cache_log.lev;
     str_log = cache_log.str_log;
     return *this;
 }
+
 App::_cache_log& App::_cache_log::operator=(const App::_cache_log&& cache_log){
     operator=(cache_log);
     return *this;
 }
+
 App::_cache_log::_cache_log(const App::_cache_log& cache_log){
     operator=(cache_log);
 }
+
 App::_cache_log::_cache_log(const App::_cache_log&& cache_log){
     operator=(cache_log);
 }
+
 template <typename... Args>
 void App::_v_cache_log::add( const spdlog::level::level_enum lev_in, const std::string_view sv_format, Args&&... args ){
     _cache_log cache_log{lev_in, fmt::format(sv_format, args...)};
     emplace_back(cache_log);
 }
+
 long App::readSettings(){ //it cache log messages to vector, because it called befor logger intialization
     try{
         Params::Construct();
@@ -137,12 +147,14 @@ long App::readSettings(){ //it cache log messages to vector, because it called b
     }
     return 1;
 }
+
 long App::writeSettings(){
     QSettings settings(Params::pch_org_qrastr_);
     //QSettings::IniFormat
     QString qstr = settings.fileName();
     return 1;
 }
+
 long App::init(){
     try{
         auto logg = std::make_shared<spdlog::logger>( "qrastr" );
@@ -174,6 +186,7 @@ long App::init(){
     }
     return 1;
 }
+
 void App::loadPlugins(){
     QDir pluginsDir{QDir{QCoreApplication::applicationDirPath()}};
     pluginsDir.cd("plugins");
@@ -213,6 +226,7 @@ void App::loadPlugins(){
         }
     }
 }
+
 // form files are deployed in form catalog near qrastr.exe
 long App::readForms(){
     try{
@@ -251,10 +265,12 @@ long App::readForms(){
     }
     return 1;
 }
+
 std::list<CUIForm>& App::GetForms() const {
     assert(nullptr!=upCUIFormsCollection_);
     return upCUIFormsCollection_->Forms();
 }
+
 long App::start(){
     try{
         long n_res =0;

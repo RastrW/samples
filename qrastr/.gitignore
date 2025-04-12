@@ -78,3 +78,6 @@ Thumbs.db
 build*
 debug*
 release*
+
+Debug
+Release

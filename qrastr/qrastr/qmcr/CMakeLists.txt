@@ -14,12 +14,14 @@ if (CMAKE_CONFIGURATION_TYPES)
 )
 endif()
 
-if(MSVC)
-    set(SCI_DIR C:/projects/compile/sci/)
-    #set (SCI_DIR C:/Projects/compile/sci/)
-else()
-    set(SCI_DIR /home/ustas/projects/compile/sci)
-endif()
+#if(MSVC)
+#    set(SCI_DIR C:/projects/compile/sci/)
+#    #set (SCI_DIR C:/Projects/compile/sci/)
+#else()
+#    set(SCI_DIR "${DEPENDENCIES_LOCATION}/sci")
+#endif()
+
+set(SCI_DIR "${DEPENDENCIES_LOCATION}/sci")
 
 set(CMAKE_WINDOWS_EXPORT_ALL_SYMBOLS ON)#visual studio not generate .lib without exported from .dll!
 
