@@ -665,11 +665,7 @@ void MainWindow::onOpenForm(CUIForm _uiform){
 
     // Docking
     if(false){
-#ifdef _MSC_VER
         QDockWidget *dock = new QDockWidget( form.Name().c_str(), this);
-#else
-        QDockWidget *dock = new QDockWidget( stringutils::MkToUtf8(form.Name()).c_str(), this);
-#endif
         dock->setWidget(prtw);
         //dock->setWidget(prtw->m_grid);
         dock->setAllowedAreas(Qt::LeftDockWidgetArea | Qt::RightDockWidgetArea | Qt::TopDockWidgetArea | Qt::BottomDockWidgetArea | Qt::AllDockWidgetAreas);
@@ -677,17 +673,12 @@ void MainWindow::onOpenForm(CUIForm _uiform){
     }else{
         //QTitanGrid
         //auto dw = new ads::CDockWidget( stringutils::cp1251ToUtf8(form.Name()).c_str(), this);
-#ifdef _MSC_VER
         auto dw = new ads::CDockWidget(form.Name().c_str(), this);
-#else
-        auto dw = new ads::CDockWidget(stringutils::MkToUtf8(form.Name()).c_str(), this);
-#endif
         dw->setWidget(prtw->m_grid);
         dw->setFeature(ads::CDockWidget::DockWidgetDeleteOnClose, true);
         auto area = m_DockManager->addDockWidgetTab(ads::TopDockWidgetArea, dw);
         connect( dw, SIGNAL( closed() ),
                 prtw, SLOT( OnClose() ) );                    // emit RtabWidget->closeEvent
-
         // Stock QT grid
         /*auto dw2 = new ads::CDockWidget( stringutils::cp1251ToUtf8(form.Name()).c_str(), this);
         dw2->setWidget(prtw);
