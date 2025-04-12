@@ -19,7 +19,7 @@ using WrapperExceptionType = std::runtime_error;
 //#include "IDataBlocksWrappers.h"
 
 
-typedef std::variant< bool,long, double, std::string >  _vt ;
+using _vt = std::variant< bool,long, double, std::string >;
 typedef std::vector< _vt > _col_data ;
 typedef std::vector<std::string> _vstr;
 
