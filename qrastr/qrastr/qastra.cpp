@@ -9,9 +9,12 @@ using WrapperExceptionType = std::runtime_error;
 class EventSink
         : public IRastrEventsSinkBase{
 public:
+
     EventSink(const QAstra* pqa){
     }
+
     virtual ~EventSink() = default;
+
     IPlainRastrRetCode OnEvent(const IRastrEventLog& Event) noexcept override {
         spdlog::info( "Log Status: {:3}  StageId: {:2} EventMsg: {:40} Table: {:10}  Column: {:5} Index: {:5} UIForm: {:10}"
             , static_cast<std::underlying_type<LogMessageTypes>::type>(Event.Status())
@@ -24,6 +27,7 @@ public:
         );
         return IPlainRastrRetCode::Ok;
     }
+
     IPlainRastrRetCode OnEvent(const IRastrEventHint& Event) noexcept override {
         spdlog::info( "Hint: [{:10}] [{:1}] Table: {:10} Column: {:5} Index: {}"
             , getHintName(Event.Hint())
@@ -34,12 +38,14 @@ public:
         );
         return IPlainRastrRetCode::Ok;
     }
+
     IPlainRastrRetCode OnEvent(const IRastrEventBase& Event) noexcept override {
         if(Event.Type() == EventTypes::Print)
             //std::cout << "Print: " << static_cast<const IRastrEventPrint&>(Event).Message() << std::endl;
             spdlog::info( "Print: {}", static_cast<const IRastrEventPrint&>(Event).Message() );
         return IPlainRastrRetCode::Ok;
     }
+
     IPlainRastrRetCode OnUICommand(const IRastrEventBase& Event, IPlainRastrVariant* Result) noexcept override {
         EventTypes et = Event.Type();
         std::string str;
@@ -68,6 +74,7 @@ public:
         Result->String("Done");
         return IPlainRastrRetCode::Ok;
     }
+
     static const char* const getHintName(EventHints eh){
         switch(eh){
             case EventHints::None:             return "hint_None";
@@ -92,40 +99,52 @@ public:
 QAstra::QAstra(QObject *parent)
     : QObject{parent}{
 }
+
 void QAstra::setRastr(const _sp_rastr& sp_rastr_in){
     sp_rastr_     = sp_rastr_in;
     IRastrResultVerify{sp_rastr_->SetOutEnumAsInt(true)};
     IRastrResultVerify(sp_rastr_->SubscribeEvents(this));
 }
+
 QAstra::_sp_rastr QAstra::getRastr() const {
     return sp_rastr_;
 }
+
 //void QAstra::Load( eLoadCode LoadCode, const std::string_view& FilePath, const std::string_view& TemplatePath ){
 IPlainRastrRetCode QAstra::Load( eLoadCode LoadCode, const std::string_view& FilePath, const std::string_view& TemplatePath ){
     IRastrResultVerify loadresult{ sp_rastr_->Load( LoadCode, FilePath, TemplatePath ) };
     return loadresult->Code();
 }
+
 void QAstra::Save( const std::string_view& FilePath, const std::string_view& TemplatePath ){
     IRastrResultVerify saveresult{ sp_rastr_->Save( FilePath, TemplatePath ) };
 }
+
 eASTCode QAstra::Kdd(const std::string_view& parameters){
     IRastrPayload  kddresult{ sp_rastr_->Kdd(parameters) };
     return kddresult.Value();
 }
+
 eASTCode QAstra::Rgm(const std::string_view& parameters){
     IRastrPayload  rgmresult{ sp_rastr_->Rgm(parameters) };
     return rgmresult.Value();
 }
+
 eASTCode QAstra::Opf(const std::string_view& parameters){
     IRastrPayload  opfresult{ sp_rastr_->OPF(parameters) };
     return opfresult.Value();
 }
+
 eASTCode QAstra::Smzu_tst(long parameter){
 
     long par = static_cast<long>(std::get<double>(GetVal("com_optim","koef_kt",0)));
-
     IRastrPayload  smzu_tst_result{ sp_rastr_->Smzu_tst(par) };
     return smzu_tst_result.Value();
+}
+
+eASTCode QAstra::Kz(const std::string_view& parameters, eNonsym Nonsym, long p1, long p2, long p3, double LengthFromP1InProc, double rd, double z_re, double z_im){
+    IRastrPayload  kz_result{ sp_rastr_->Kz( parameters, Nonsym, p1, p2, p3, LengthFromP1InProc, rd, z_re, z_im) };
+    return kz_result.Value();
 }
 
 std::string QAstra::GetStringVal( const std::string_view& Table, const std::string_view& Col , const long row ){
@@ -140,9 +159,7 @@ std::string QAstra::GetStringVal( const std::string_view& Table, const std::stri
     return str_val;
 }
 
-
-FieldVariantData QAstra::GetVal( const std::string_view& Table, const std::string_view& Col , const long row )
-{
+FieldVariantData QAstra::GetVal( const std::string_view& Table, const std::string_view& Col , const long row ){
     IRastrTablesPtr tablesx{ sp_rastr_->Tables() };
     IRastrPayload tablecount{ tablesx->Count() };
     IRastrTablePtr table{ tablesx->Item(Table) };

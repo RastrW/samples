@@ -610,15 +610,23 @@ void MainWindow::smzu_tst_wrap(){
 void MainWindow::tkz_wrap(){
     emit signal_calc_begin();
     std::string str_msg = "Implement me in IplainRastr";
-//    long i =2;
-//    eASTCode code = m_sp_qastra->Smzu_tst(i);
-//    if (code == eASTCode::AST_OK){
-//        str_msg = "Расчет МДП выполнен успешно";
-//        spdlog::info("{}", str_msg);
-//    }else{
-//        str_msg = "Расчет МДП завершился аварийно!";
-//        spdlog::error("{} : {}", static_cast<int>(code), str_msg);
-//    }
+    const std::string parameters = "";
+    eNonsym Nonsym = eNonsym::KZ_1;
+    long    p1 = 1;
+    long    p2 =0;
+    long    p3 = 0;
+    double  LengthFromP1InProc = 0;
+    double  rd = 0;
+    double  z_re = 0;
+    double  z_im = 0;
+    const eASTCode code{ m_sp_qastra->Kz( parameters, Nonsym, p1, p2, p3, LengthFromP1InProc, rd = 0, z_re, z_im ) };
+    if (code == eASTCode::AST_OK){
+        str_msg = "Расчет ТКЗ выполнен успешно";
+        spdlog::info("{}", str_msg);
+    }else{
+        str_msg = "Расчет ТКЗ завершился аварийно!";
+        spdlog::error("{} : {}", static_cast<int>(code), str_msg);
+    }
     statusBar()->showMessage( str_msg.c_str(), 0 );
     emit signal_calc_end();
 }
