@@ -210,6 +210,7 @@ void App::loadPlugins(){
                     const std::shared_ptr<IPlainRastr> rastr = iRastr->getIPlainRastrPtr(); // Destroyable rastr{ iRastr };
                     if(nullptr==rastr){
                         spdlog::error( "rastr==null" );
+                        assert(!"may be u haven't license!");
                         continue;
                     }
                     //m_sp_qastra = std::move( std::make_shared<QAstra>());
