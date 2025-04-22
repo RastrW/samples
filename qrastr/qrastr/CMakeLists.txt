@@ -47,9 +47,11 @@ set( TS_FILES qrastr_ru_RU.ts )
 if(MSVC)
     set( DEPENDENCIES_LOCATION "c:/projects/compile/" )
 else()
-    set( DEPENDENCIES_LOCATION "/home/ustas/projects/compile/" )
+    set( DEPENDENCIES_LOCATION "~/projects/compile/" )
     set( DEPENDENCIES_GIT      "/home/ustas/projects/git_main/" )
 endif()
+
+set(  ASTRA_LOCATION  ${COMPILE_DIR}/../../../astra  CACHE PATH "sdsd" FORCE )
 
 if( NOT IS_DIRECTORY ${ASTRA_LOCATION} )
     message(FATAL_ERROR "Not defined ASTRA_LOCATION !") # example "c:/projects/rastr/RastrWin/astra"  "c:/projects/tfs/rastr/RastrWin/astra/"
