@@ -133,6 +133,7 @@ target_link_libraries( qmcr PRIVATE Qt${QT_VERSION_MAJOR}::QuickWidgets)
 ##target_link_libraries( qmcr PRIVATE Python3::Python)
 #target_link_libraries( qmcr PRIVATE python3)
 #target_compile_definitions( qmcr PRIVATE Py_LIMITED_API=0x030A0000 ) #minimal version Python 3.10
+target_link_libraries(qmcr PRIVATE Python3::Python) # lin
 
 if(MSVC)
     #set_target_properties(Python3::Python PROPERTIES MAP_IMPORTED_CONFIG_DEBUG ";RELEASE")

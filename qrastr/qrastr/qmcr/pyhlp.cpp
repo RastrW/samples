@@ -59,7 +59,11 @@ bool PyHlp::Initialize()
         //PySys_SetPath(L"C:/projects/rastr/RastrWin/build/vs-Debug/pyastra/)");
         //astraModule_ = PyImport_ImportModule("astra");
         PyObject *sys_path = PySys_GetObject("path");
+#if(defined(_MSC_VER))
         PyList_Append(sys_path, PyUnicode_FromString("C:/projects/rastr/RastrWin/build/vs-Debug/pyastra/"));
+#else
+        PyList_Append(sys_path, PyUnicode_FromString("/home/ustas/projects/git_main/rastr/build-RastrWin-Desktop-Debug/pyastra"));
+#endif
         //astraModule_ = PyImport_ImportModule("astra_py.cp310-win_amd64.pyd");
         astraModule_ = PyImport_ImportModule("astra_py");
         assert(nullptr != astraModule_);
