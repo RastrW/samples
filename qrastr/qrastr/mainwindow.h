@@ -47,6 +47,7 @@ enum StyleSetting
 };
 
 namespace spdlog{namespace level{enum level_enum;}}
+class PyHlp;
 class MainWindow
     : public QMainWindow{
     Q_OBJECT
@@ -159,14 +160,15 @@ private:
     QMenu*             m_menuCalcParameters = nullptr;          // Расчеты
     QMenu*             m_menuProgrammProperties = nullptr;      // Файлы - Настройки программы
     QMenu*             m_menuProperties = nullptr;              // Файлы - Настройки программы - Настройки
-    QAction     *separatorAct;
+    QAction*           separatorAct;
     QHBoxLayout*       m_layoutActions = nullptr;               // actions: rgm,opf,...
     QToolBar*          m_toolbarCalc   = nullptr;
     RtabWidget*        m_prtw_current  = nullptr;               // current table
-    QDockWidget*       m_dock        = nullptr;
-    ads::CDockManager* m_DockManager = nullptr; // The main container for docking
+    QDockWidget*       m_dock          = nullptr;
+    ads::CDockManager* m_DockManager   = nullptr; // The main container for docking
     _v_cache_log       m_v_cache_log;
     std::shared_ptr<QAstra> m_sp_qastra;
+    std::unique_ptr<PyHlp> m_up_PyHlp;
 
     RTablesDataManager m_RTDM;
 

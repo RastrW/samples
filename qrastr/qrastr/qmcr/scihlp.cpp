@@ -6,6 +6,23 @@
 #include "SciLexer.h"
 #include "scihlp.h"
 
+/*
+#pragma push_macro("slots")
+#undef slots // because it defined in Qt
+//#include "pyscript.h"
+#define Py_LIMITED_API  0x030A0000 //minimal version Python 3.10
+#define PY_SSIZE_T_CLEAN
+#include <Python.h>
+    //#ifdef _DEBUG
+    //#undef _DEBUG
+    //#include <Python.h>
+    //#define _DEBUG 1
+    //#else
+    //#include <Python.h>
+    //#endif
+#pragma pop_macro("slots")
+*/
+
 //all of wrapped shit can be found in -> ScintillaEdit.cpp <-
 //https://www.scintilla.org/PaneAPI.html
 //interesting scintilla use https://github.com/SolarAquarion/wxglterm/tree/master/src/external_plugins

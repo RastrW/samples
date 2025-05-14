@@ -37,6 +37,7 @@ set(PROJECT_SOURCES
     pluginrastr.h
     pluginrastr.cpp
 )
+
 if(QT_VERSION_MAJOR EQUAL 6)
     qt_add_plugin( rastr
         CLASS_NAME PluginRastr
@@ -50,6 +51,7 @@ else()
         ${PROJECT_SOURCES}
     )
 endif()
+
 target_link_libraries( rastr PRIVATE
     Qt${QT_VERSION_MAJOR}::Core
     Qt${QT_VERSION_MAJOR}::Gui
