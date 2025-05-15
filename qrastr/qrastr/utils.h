@@ -8,6 +8,7 @@
 #include <vector>
 #include <map>
 #include <regex>
+#include <chrono>
 
 template<typename T> class KeyValueRange { //from https://stackoverflow.com/questions/8517853/iterating-over-a-qmap-with-for/77994379#77994379
 private:
@@ -111,4 +112,37 @@ inline std::string trim(std::string& str)
     str.erase(str.find_last_not_of(' ') + 1);         //surfixing spaces
     return str;
 }
+
+template <class DT = std::chrono::milliseconds,
+         class ClockT = std::chrono::steady_clock>
+class Timer
+{
+    using timep_t = typename ClockT::time_point;
+    timep_t _start = ClockT::now(), _end = {};
+
+public:
+    Timer()
+    {
+        tick();
+    }
+    template <class T = DT>
+    auto duration() const {
+        tock();
+        //gsl_Expects(_end != timep_t{} && "toc before reporting");
+        return std::chrono::duration_cast<T>(_end - _start);
+    }
+    double seconds()
+    {
+        tock();
+        double dur =  std::chrono::duration_cast<DT>(_end - _start).count();
+        return dur/1000;
+    }
+private:
+    void tick() {
+        _end = timep_t{};
+        _start = ClockT::now();
+    }
+    void tock() { _end = ClockT::now(); }
+};
+
 #endif // UTILS_H

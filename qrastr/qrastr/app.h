@@ -9,6 +9,7 @@
 
 //namespace spdlog{namespace level{enum level_enum;}}
 class QAstra;
+class QTI;
 class CUIFormsCollection;
 class CUIForm;
 class App final
@@ -40,10 +41,12 @@ public:
     long readForms();
     std::list<CUIForm>& GetForms() const;
     std::shared_ptr<QAstra> getQAstraPtr(){ return m_sp_qastra;}
+    std::shared_ptr<QTI> getQTIPtr(){ return m_sp_qti;}
     long start();
 
     _v_cache_log v_cache_log_;
     std::shared_ptr<QAstra> m_sp_qastra;
+    std::shared_ptr<QTI> m_sp_qti;
     std::unique_ptr<CUIFormsCollection> upCUIFormsCollection_;
 };
 

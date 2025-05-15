@@ -10,8 +10,11 @@
 #include "params.h"
 using WrapperExceptionType = std::runtime_error;
 #include "IPlainRastrWrappers.h"
+//#include "C:\Projects\tfs\rastr\RastrWin\KC\IPlainTI.h"
 #include "plugins/rastr/plugin_interfaces.h"
+#include "plugins/ti/plugin_ti_interfaces.h"
 #include "qastra.h"
+#include "qti.h"
 #include "utils.h"
 #include "UIForms.h"
 
@@ -214,6 +217,7 @@ void App::loadPlugins(){
                         continue;
                     }
                     //m_sp_qastra = std::move( std::make_shared<QAstra>());
+
                     m_sp_qastra = std::make_shared<QAstra>();
                     m_sp_qastra->setRastr(rastr);
 
@@ -223,6 +227,36 @@ void App::loadPlugins(){
                     exclog();
                 }
                 spdlog::info( "it is Rastr.test.finished");
+            }
+            auto iTI = qobject_cast<InterfaceTI *>(plugin);
+            if(iTI){
+                try{
+                    spdlog::info( "it is TI" );
+                    const std::shared_ptr<spdlog::logger> sp_logger = spdlog::default_logger();
+                    iTI->setLoggerPtr( sp_logger );
+                    const std::shared_ptr<IPlainTI> TI = iTI->getIPlainTIPtr(); // Destroyable  TI{ iTI };
+                    if(nullptr==TI){
+                        spdlog::error( "TI==null" );
+                        continue;
+                    }
+
+                    TI->Set_Rastr(m_sp_qastra->getRastr().get());
+                    /*TI->Hello();
+                    long ret_long = TI->test_ret_long();
+                    std::string rfile = "C:/Projects/Python/Tests/roc_debug_before_OC";
+                    m_sp_qastra->Load(eLoadCode::RG_REPL, rfile, "" );
+                    TI->Set_Rastr(m_sp_qastra->getRastr().get());
+                    TI->CalcPTI();*/
+
+                    m_sp_qti = std::make_shared<QTI>();
+                    m_sp_qti->setTI(TI);
+
+                }catch(const std::exception& ex){
+                    exclog(ex);
+                }catch(...){
+                    exclog();
+                }
+                spdlog::info( "it is TI.test.finished");
             }
         }
     }

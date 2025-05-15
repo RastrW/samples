@@ -51,9 +51,10 @@ else()
     set( DEPENDENCIES_GIT      "/home/ustas/projects/git_main/" )
 endif()
 
-set(  ASTRA_LOCATION  ${COMPILE_DIR}/../../../astra  CACHE PATH "sdsd" FORCE )
+#set(  ASTRA_LOCATION  ${COMPILE_DIR}/../../../astra  CACHE PATH "sdsd" FORCE )
 
 if( NOT IS_DIRECTORY ${ASTRA_LOCATION} )
+    message(NOTICE "ASTRA_LOCATION= ${ASTRA_LOCATION}")
     message(FATAL_ERROR "Not defined ASTRA_LOCATION !") # example "c:/projects/rastr/RastrWin/astra"  "c:/projects/tfs/rastr/RastrWin/astra/"
 else()
     message(NOTICE "ASTRA_LOCATION= ${ASTRA_LOCATION}")
@@ -79,6 +80,7 @@ if(QT_VERSION_MAJOR EQUAL 6)
 endif()
 
 add_subdirectory("plugins/rastr")
+add_subdirectory("plugins/ti")
 add_subdirectory(
     "${CMAKE_CURRENT_SOURCE_DIR}/qmcr/"
     "${CMAKE_CURRENT_BINARY_DIR}/generated/qmcr"
@@ -103,13 +105,16 @@ set(INCLUDES
     "${ASTRA_LOCATION}/../../flytfs/IPlainRastrTest/"
     "${DEPENDENCIES_LOCATION}/qtitan8_lin_5_15/include/" #lin Qtitan
     "${DEPENDENCIES_LOCATION}/QtitanDataGrid8.2.0_win_qt_6_7/include/" #win Qtitan
+    "${ASTRA_LOCATION}/../KC/"
 )
 #message("INCLUDES is set to ${INCLUDES}")
 
 if(MSVC)
     link_directories("${CMAKE_LIBRARY_OUTPUT_DIRECTORY}")
     #link_directories("${ASTRA_LOCATION}/build/${CMAKE_BUILD_TYPE}/")
-    link_directories("${ASTRA_LOCATION}/../build/vs-${CMAKE_BUILD_TYPE}/astra") #C:\projects\rastr\RastrWin\build\vs-Debug\astra
+    #link_directories("${ASTRA_LOCATION}/../build/vs-${CMAKE_BUILD_TYPE}/astra") #C:\projects\rastr\RastrWin\build\vs-Debug\astra
+    link_directories("${ASTRA_LOCATION}/../build/astra/${CMAKE_BUILD_TYPE}") #C:\Projects\tfs\rastr\RastrWin\build\astra\Debug
+    link_directories("${ASTRA_LOCATION}/../KC/build/vs-${CMAKE_BUILD_TYPE}") #C:\Projects\tfs\rastr\RastrWin\KC\build\vs-Debug   -> COMCK by cmake. Надо будет переделать по аналогии с астрой, видимо добавить install
     link_directories("${DEPENDENCIES_LOCATION}/metakit/builds/")
     link_directories("${DEPENDENCIES_LOCATION}/Qt-Advanced-Docking-System/build/vs-Debug/lib/")
     link_directories("${DEPENDENCIES_LOCATION}/Qt-Advanced-Docking-System/build/vs-Release/lib/")
@@ -181,6 +186,8 @@ set(PROJECT_SOURCES
     plugins/rastr/plugin_interfaces.h
     qastra.h
     qastra.cpp
+    qti.h
+    qti.cpp
     tsthints.h
     tsthints.cpp
     delegatecombobox.cpp
@@ -266,6 +273,7 @@ if(${QT_VERSION_MAJOR} GREATER_EQUAL 6)
     qt_add_executable( ${PROJECT_NAME}
             MANUAL_FINALIZATION
             ${PROJECT_SOURCES}
+
     )
     qt_create_translation( QM_FILES ${CMAKE_SOURCE_DIR} ${TS_FILES} )
 else()
@@ -329,3 +337,4 @@ endif()
 
 # To Start qrastr.exe it is need to copy the QT directory "platforms" found in the QT plugins directory
 # https://forum.qt.io/topic/119488/this-application-failed-to-start-because-no-qt-platform-plugin-could-be-initialsed/3
+

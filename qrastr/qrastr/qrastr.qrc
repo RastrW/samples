@@ -19,5 +19,7 @@
         <file>images/mdp_16.png</file>
         <file>images/TKZ_16.png</file>
         <file>images/TKZ_48.png</file>
+        <file>images/calc_PTI.png</file>
+        <file>images/filtr_1.png</file>
     </qresource>
 </RCC>

@@ -94,7 +94,7 @@ public:
         return IPlainRastrRetCode::Ok;
     }
     IPlainRastrRetCode OnEvent(const IRastrEventBase& Event) noexcept override {
-        spdlog::info( "OnEvent.Base: [{}]", static_cast<std::underlying_type<EventTypes>::type>(Event.Type()) );
+        //spdlog::info( "OnEvent.Base: [{}]", static_cast<std::underlying_type<EventTypes>::type>(Event.Type()) );
         //emit onEvent( static_cast<std::underlying_type<EventTypes>::type>(Event.Type()) );
         if(Event.Type() == EventTypes::Print)
             spdlog::info( "OnEvent.Print: {}", static_cast<const IRastrEventPrint&>(Event).Message() );

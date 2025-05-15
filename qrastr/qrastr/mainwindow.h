@@ -14,6 +14,7 @@ class QSignalMapper;
 class QHBoxLayout;
 
 class QAstra;
+class QTI;
 class CUIForm;
 class McrWnd;
 struct _hint_data;
@@ -91,6 +92,7 @@ private slots:
     void smzu_tst_wrap();
     void tkz_wrap();
     void idop_wrap();
+    void ti_calcpti_wrap();
     void onDlgMcr();
     void onOpenForm(QAction* p_actn);
     void onOpenForm(CUIForm _uiform);
@@ -126,6 +128,7 @@ public:
     void setForms(const std::list<CUIForm>& forms); // https://stackoverflow.com/questions/14151443/how-to-pass-a-qstring-to-a-qt-slot-from-a-qmenu-via-qsignalmapper-or-otherwise
     void setSettingsForms();                         // Настройки программы - настройки (.form)
     void setQAstra(const std::shared_ptr<QAstra>& sp_qastra);
+    void setQTI(const std::shared_ptr<QTI>& sp_qti);
 private:
     QHBoxLayout* createStyleSetting();
     void setCurrentFile(const QString &fileName, const std::string Shablon = "");
@@ -167,6 +170,7 @@ private:
     ads::CDockManager* m_DockManager = nullptr; // The main container for docking
     _v_cache_log       m_v_cache_log;
     std::shared_ptr<QAstra> m_sp_qastra;
+    std::shared_ptr<QTI> m_sp_qti;
 
     RTablesDataManager m_RTDM;
 

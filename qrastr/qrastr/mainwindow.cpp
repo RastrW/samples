@@ -31,6 +31,7 @@
 using WrapperExceptionType = std::runtime_error;
 #include "IPlainRastrWrappers.h"
 #include "qastra.h"
+#include "qti.h"
 #include "tsthints.h"
 #include "delegatecombobox.h"
 #include "formsettings.h"
@@ -43,6 +44,7 @@ using WrapperExceptionType = std::runtime_error;
 #include "formcalcidop.h"
 #include <QtitanDef.h>
 #include <QtitanGrid.h>
+
 
 MainWindow::MainWindow(){
     m_workspace = new QMdiArea;
@@ -354,6 +356,10 @@ void MainWindow::setQAstra(const std::shared_ptr<QAstra>& sp_qastra){
 */
     }
 }
+void MainWindow::setQTI(const std::shared_ptr<QTI>& sp_qti){
+    assert(nullptr!=sp_qti);
+    m_sp_qti = sp_qti;
+}
 
 void MainWindow::closeEvent(QCloseEvent *event){
 
@@ -641,6 +647,42 @@ void MainWindow::idop_wrap(){
     emit signal_calc_end();
 }
 
+void MainWindow::ti_calcpti_wrap(){
+    if (m_sp_qti == nullptr)
+    {
+        spdlog::warn("{}", "Plugin TI not initialized! Function is unavailable.");
+        return;
+    }
+
+    emit signal_calc_begin();
+    Timer t_calc_pti;
+
+    long code = m_sp_qti->CalcPTI();
+    std::string str_msg = "";
+    double a = 1.1;
+    if (code == 1){
+        str_msg = fmt::format("Расчет ПТИ выполнен за {} сек.",t_calc_pti.seconds());
+        spdlog::info("{}", str_msg);
+    }else{
+        str_msg = "Расчет ПТИ завершился аварийно!";
+        spdlog::error("{} : {}", static_cast<int>(code), str_msg);
+    }
+
+    Timer t_add_pti;
+    code = m_sp_qti->DobavPTI();
+    if (code == 1){
+        str_msg = fmt::format("ПТИ записаны в ТИ:Каналы за {} сек. ",t_add_pti.seconds());
+        spdlog::info("{}", str_msg);
+    }else{
+        str_msg = "Ошибка записи ПТИ в ТИ:Каналы!";
+        spdlog::error("{} : {}", static_cast<int>(code), str_msg);
+    }
+
+    statusBar()->showMessage( str_msg.c_str(), 0 );
+    emit signal_calc_end();
+}
+
+
 void MainWindow::onDlgMcr(){
     McrWnd* pMcrWnd = new McrWnd(this) ;
     pMcrWnd->show();
@@ -829,6 +871,13 @@ void MainWindow::createActions(){
     actIdop->setShortcut(tr("F9"));
     actIdop->setStatusTip(tr("Расчет допустимых токов от температуры"));
     connect(actIdop, SIGNAL(triggered()), this, SLOT(idop_wrap()));
+    // TI
+    separatorAct = new QAction(this);
+    separatorAct->setSeparator(true);
+    QAction* actPTI = new QAction(QIcon(":/images/calc_PTI.png"),tr("&ПТИ"), this);
+    //actPTI->setShortcut(tr("F8"));
+    actPTI->setStatusTip(tr("Расчет ПТИ"));
+    connect( actPTI, SIGNAL(triggered()), this, SLOT(ti_calcpti_wrap()));
     //windows
     QAction* closeAct = new QAction(tr("Cl&ose"), this);
     closeAct->setShortcut(tr("Ctrl+F4"));
@@ -891,6 +940,7 @@ void MainWindow::createActions(){
     menuCalc->addAction(actMDP);
     menuCalc->addAction(actTkz);
     menuCalc->addAction(actIdop);
+    menuCalc->addAction(actPTI);
     m_menuCalcParameters =  menuCalc->addMenu(tr("&Параметры"));
 
     m_menuOpen = menuBar()->addMenu(tr("&Открыть") );
@@ -942,6 +992,8 @@ void MainWindow::createActions(){
     m_toolbarCalc->addAction(actOC);
     m_toolbarCalc->addAction(actMDP);
     m_toolbarCalc->addAction(actTkz);
+
+    m_toolbarCalc->addAction(actPTI);
 
     //TEST BUTTONS
     //createCalcLayout();

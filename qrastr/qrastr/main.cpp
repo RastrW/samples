@@ -55,6 +55,7 @@ int main(int argc, char *argv[]){
         return 200;
     }
     w.setQAstra(app.getQAstraPtr());
+    w.setQTI(app.getQTIPtr());
     w.setForms(app.GetForms());
     //w.resize(1200,800);
     w.show();
