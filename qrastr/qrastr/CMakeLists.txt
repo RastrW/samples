@@ -51,7 +51,7 @@ else()
     set( DEPENDENCIES_GIT      "/home/ustas/projects/git_main/" )
 endif()
 
-set(  ASTRA_LOCATION  ${COMPILE_DIR}/../../../astra  CACHE PATH "sdsd" FORCE )
+#set(  ASTRA_LOCATION  ${COMPILE_DIR}/../../../astra  CACHE PATH "sdsd" FORCE )
 
 if( NOT IS_DIRECTORY ${ASTRA_LOCATION} )
     message(FATAL_ERROR "Not defined ASTRA_LOCATION !") # example "c:/projects/rastr/RastrWin/astra"  "c:/projects/tfs/rastr/RastrWin/astra/"
