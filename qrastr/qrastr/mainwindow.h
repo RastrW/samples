@@ -94,6 +94,7 @@ private slots:
     void tkz_wrap();
     void idop_wrap();
     void ti_calcpti_wrap();
+    void ti_filtrti_wrap();
     void onDlgMcr();
     void onOpenForm(QAction* p_actn);
     void onOpenForm(CUIForm _uiform);
@@ -160,12 +161,14 @@ private:
     QSignalMapper*     m_windowMapper  = nullptr;
     QMenu*             m_menuOpen      = nullptr;
     QMenu*             m_recentFilesMenu=nullptr;               // Файлы - последние
-    QMenu*             m_menuCalcParameters = nullptr;          // Расчеты
+    QMenu*             m_menuCalcParameters = nullptr;          // Расчеты - Параметры
+    QMenu*             m_menuCalcTI = nullptr;                  // Расчеты - ТИ
     QMenu*             m_menuProgrammProperties = nullptr;      // Файлы - Настройки программы
     QMenu*             m_menuProperties = nullptr;              // Файлы - Настройки программы - Настройки
     QAction*           separatorAct;
     QHBoxLayout*       m_layoutActions = nullptr;               // actions: rgm,opf,...
     QToolBar*          m_toolbarCalc   = nullptr;
+    QToolBar*          m_toolbarTI     = nullptr;               // Панель ТИ
     RtabWidget*        m_prtw_current  = nullptr;               // current table
     QDockWidget*       m_dock        = nullptr;
     ads::CDockManager* m_DockManager = nullptr; // The main container for docking

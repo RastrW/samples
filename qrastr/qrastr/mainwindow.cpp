@@ -660,7 +660,7 @@ void MainWindow::ti_calcpti_wrap(){
 
     long code = m_sp_qti->CalcPTI();
     std::string str_msg = "";
-    double a = 1.1;
+
     if (code == 1){
         str_msg = fmt::format("Расчет ПТИ выполнен за {} сек.",t_calc_pti.seconds());
         spdlog::info("{}", str_msg);
@@ -676,6 +676,30 @@ void MainWindow::ti_calcpti_wrap(){
         spdlog::info("{}", str_msg);
     }else{
         str_msg = "Ошибка записи ПТИ в ТИ:Каналы!";
+        spdlog::error("{} : {}", static_cast<int>(code), str_msg);
+    }
+
+    statusBar()->showMessage( str_msg.c_str(), 0 );
+    emit signal_calc_end();
+}
+void MainWindow::ti_filtrti_wrap()
+{
+    if (m_sp_qti == nullptr)
+    {
+        spdlog::warn("{}", "Plugin TI not initialized! Function is unavailable.");
+        return;
+    }
+
+    emit signal_calc_begin();
+    Timer t_filtr_ti;
+
+    long code = m_sp_qti->FiltrTI();
+    std::string str_msg = "";
+    if (code == 1){
+        str_msg = fmt::format("Расчет Фильтра ТИ выполнен за {} сек.",t_filtr_ti.seconds());
+        spdlog::info("{}", str_msg);
+    }else{
+        str_msg = "Расчет Фильтра ТИ завершился аварийно!";
         spdlog::error("{} : {}", static_cast<int>(code), str_msg);
     }
 
@@ -860,7 +884,7 @@ void MainWindow::createActions(){
     connect(actKDD, SIGNAL(triggered()), this, SLOT(kdd_wrap()));
     QAction* actRGM = new QAction(QIcon(":/images/Rastr3_rgm_16x16.png"),tr("&Режим"), this);
     actRGM->setShortcut(tr("F5"));
-    actRGM->setStatusTip(tr("Calc rgm"));
+    actRGM->setStatusTip(tr("Расчет УР"));
     connect(actRGM, SIGNAL(triggered()), this, SLOT(rgm_wrap()));
     QAction* actOC = new QAction(QIcon(":/images/Bee.png"),tr("&ОС"), this);
     actOC->setShortcut(tr("F6"));
@@ -882,9 +906,11 @@ void MainWindow::createActions(){
     separatorAct = new QAction(this);
     separatorAct->setSeparator(true);
     QAction* actPTI = new QAction(QIcon(":/images/calc_PTI.png"),tr("&ПТИ"), this);
-    //actPTI->setShortcut(tr("F8"));
     actPTI->setStatusTip(tr("Расчет ПТИ"));
     connect( actPTI, SIGNAL(triggered()), this, SLOT(ti_calcpti_wrap()));
+    QAction* actFiltrTI = new QAction(QIcon(":/images/filtr_1.png"),tr("&Фильтр ТИ"), this);
+    actFiltrTI->setStatusTip(tr("Расчет Фильтр ТИ"));
+    connect( actFiltrTI, SIGNAL(triggered()), this, SLOT(ti_filtrti_wrap()));
     //windows
     QAction* closeAct = new QAction(tr("Cl&ose"), this);
     closeAct->setShortcut(tr("Ctrl+F4"));
@@ -947,8 +973,12 @@ void MainWindow::createActions(){
     menuCalc->addAction(actMDP);
     menuCalc->addAction(actTkz);
     menuCalc->addAction(actIdop);
-    menuCalc->addAction(actPTI);
+    //menuCalc->addAction(actPTI);
+    //menuCalc->addAction(actFiltrTI);
     m_menuCalcParameters =  menuCalc->addMenu(tr("&Параметры"));
+    m_menuCalcTI =  menuCalc->addMenu(tr("&ТИ"));
+    m_menuCalcTI->addAction(actPTI);
+    m_menuCalcTI->addAction(actFiltrTI);
 
     m_menuOpen = menuBar()->addMenu(tr("&Открыть") );
     menuBar()->addSeparator();
@@ -993,14 +1023,17 @@ void MainWindow::createActions(){
     toolbarFile->addAction(newAct);
     toolbarFile->addAction(openAct);
     toolbarFile->addAction(saveAct);
-    m_toolbarCalc = addToolBar(tr("Расчеты"));
 
+    m_toolbarCalc = addToolBar(tr("Расчеты"));
     m_toolbarCalc->addAction(actRGM);
-    m_toolbarCalc->addAction(actOC);
     m_toolbarCalc->addAction(actMDP);
     m_toolbarCalc->addAction(actTkz);
 
-    m_toolbarCalc->addAction(actPTI);
+    m_toolbarTI = addToolBar(tr("Телеизмерения"));
+    m_toolbarTI->addAction(actPTI);
+    m_toolbarTI->addAction(actFiltrTI);
+    m_toolbarTI->addAction(actOC);
+
 
     //TEST BUTTONS
     //createCalcLayout();

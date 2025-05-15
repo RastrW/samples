@@ -16,6 +16,7 @@ public:
     _sp_ti  getTI() const;
     long CalcPTI() const;
     long DobavPTI() const;
+    long FiltrTI() const;
 private:
     _sp_ti sp_ti_;
 };

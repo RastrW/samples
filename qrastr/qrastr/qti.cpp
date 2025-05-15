@@ -23,3 +23,7 @@ long QTI::DobavPTI() const
 {
     return sp_ti_->DobavPTI();
 }
+long QTI::FiltrTI() const
+{
+    return sp_ti_->FiltrTI();
+}
