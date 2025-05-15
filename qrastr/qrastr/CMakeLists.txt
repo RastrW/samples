@@ -51,10 +51,9 @@ else()
     set( DEPENDENCIES_GIT      "/home/ustas/projects/git_main/" )
 endif()
 
-#set(  ASTRA_LOCATION  ${COMPILE_DIR}/../../../astra  CACHE PATH "sdsd" FORCE )
+set(  ASTRA_LOCATION  ${COMPILE_DIR}/../../../astra  CACHE PATH "sdsd" FORCE )
 
 if( NOT IS_DIRECTORY ${ASTRA_LOCATION} )
-    message(NOTICE "ASTRA_LOCATION= ${ASTRA_LOCATION}")
     message(FATAL_ERROR "Not defined ASTRA_LOCATION !") # example "c:/projects/rastr/RastrWin/astra"  "c:/projects/tfs/rastr/RastrWin/astra/"
 else()
     message(NOTICE "ASTRA_LOCATION= ${ASTRA_LOCATION}")
@@ -273,7 +272,6 @@ if(${QT_VERSION_MAJOR} GREATER_EQUAL 6)
     qt_add_executable( ${PROJECT_NAME}
             MANUAL_FINALIZATION
             ${PROJECT_SOURCES}
-
     )
     qt_create_translation( QM_FILES ${CMAKE_SOURCE_DIR} ${TS_FILES} )
 else()
@@ -285,9 +283,12 @@ endif()
 target_link_libraries( ${PROJECT_NAME} PRIVATE Metakit::mk4         )
 target_link_libraries( ${PROJECT_NAME} PRIVATE fmt::fmt-header-only )
 #target_link_libraries( ${PROJECT_NAME} PRIVATE cryptopp::cryptopp )
+#target_link_libraries( ${PROJECT_NAME} PRIVATE Python3::Python )
+#target_link_libraries(${PROJECT_NAME} ${PYTHON3_LIBRARIES})
 if(MSVC)
-    #target_link_libraries( ${PROJECT_NAME} PRIVATE astra_py     ) # when build with pybind11
-    target_link_libraries( ${PROJECT_NAME} PRIVATE astra     )
+  #link_directories("${ASTRA_LOCATION}/../build/vs-${CMAKE_BUILD_TYPE}/pyastra") #C:\projects\rastr\RastrWin\build\vs-Debug\pyastra
+  #target_link_libraries( ${PROJECT_NAME} PRIVATE astra_py     ) # when build with pybind11
+    #target_link_libraries( ${PROJECT_NAME} PRIVATE astra     )
     target_link_libraries( ${PROJECT_NAME} PRIVATE qmcr         )
     target_link_libraries( ${PROJECT_NAME} PRIVATE Qt::WidgetsPrivate)
     if (CMAKE_BUILD_TYPE MATCHES Debug)
@@ -337,4 +338,3 @@ endif()
 
 # To Start qrastr.exe it is need to copy the QT directory "platforms" found in the QT plugins directory
 # https://forum.qt.io/topic/119488/this-application-failed-to-start-because-no-qt-platform-plugin-could-be-initialsed/3
-

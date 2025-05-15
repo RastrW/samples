@@ -29,6 +29,28 @@ find_package(QT NAMES Qt6 Qt5 REQUIRED COMPONENTS Widgets LinguistTools)
 find_package(Qt${QT_VERSION_MAJOR} REQUIRED COMPONENTS Widgets LinguistTools)
 find_package( Qt${QT_VERSION_MAJOR} REQUIRED COMPONENTS QuickWidgets)
 
+
+set(PYTHON_MIN 3.10)
+#old CMake if(CMAKE_VERSION VERSION_LESS "3.12.0")
+#find_package(PythonLibs ${PYTHON_MIN} REQUIRED)
+#message("PYTHON_INCLUDE_DIRS:${PYTHON_INCLUDE_DIRS}")
+#message("PYTHON_LIBRARIES:${PYTHON_LIBRARIES}")
+#include_directories(${PYTHON_INCLUDE_DIRS})
+
+#new CMake
+find_package (Python3 ${PYTHON_MIN} REQUIRED COMPONENTS Interpreter Development)
+message( "Python3_FOUND:             ${Python3_FOUND}")
+message( "Python3_VERSION:           ${Python3_VERSION}")
+message( "Python3_Development_FOUND: ${Python3_Development_FOUND}")
+message( "Python3_LIBRARIES:         ${Python3_LIBRARIES}")
+message( "Python3_LIBRARY_DIRS:      ${Python3_LIBRARY_DIRS}")
+message( "Python3_INCLUDE_DIR:       ${Python3_INCLUDE_DIRS}")
+message( "Python3_EXECUTABLE:        ${Python3_EXECUTABLE}")
+link_directories    ( ${Python3_LIBRARY_DIRS} )
+include_directories ( ${Python3_INCLUDE_DIRS} )
+
+include_directories("${ASTRA_LOCATION}/fmt/include/")
+
 include_directories(
         ${SCI_DIR}/scintilla/include
         ${SCI_DIR}/scintilla/src #ustas
@@ -57,6 +79,8 @@ list (APPEND PROJECT_SOURCES
     forms/dlgfindrepl.h
     forms/dlgfindrepl.cpp
     forms/dlgfindrepl.ui
+    pyhlp.h
+    pyhlp.cpp
 )
 if(QRASTR_BUILD_WITH_MCR)
     list(APPEND PROJECT_SOURCES
@@ -105,8 +129,16 @@ endif()
 
 target_link_libraries( qmcr PRIVATE Qt${QT_VERSION_MAJOR}::Widgets)
 target_link_libraries( qmcr PRIVATE Qt${QT_VERSION_MAJOR}::QuickWidgets)
+#target_link_libraries( qmcr PRIVATE ${PYTHON_LIBRARIES})
+##target_link_libraries( qmcr PRIVATE Python3::Python)
+#target_link_libraries( qmcr PRIVATE python3)
+#target_compile_definitions( qmcr PRIVATE Py_LIMITED_API=0x030A0000 ) #minimal version Python 3.10
+if(NOT MSVC)
+  target_link_libraries(qmcr PRIVATE Python3::Python) # lin
+endif()
 
 if(MSVC)
+    #set_target_properties(Python3::Python PROPERTIES MAP_IMPORTED_CONFIG_DEBUG ";RELEASE")
     if (CMAKE_BUILD_TYPE MATCHES Debug)
         target_link_libraries( qmcr PRIVATE ScintillaEdit_d5 Lexilla_d5 )
     else()
@@ -115,6 +147,7 @@ if(MSVC)
 else()
     target_link_libraries( qmcr PRIVATE libScintillaEdit.so libLexilla.so )
 endif()
+
 
 # Qt for iOS sets MACOSX_BUNDLE_GUI_IDENTIFIER automatically since Qt 6.1.
 # If you are developing for iOS or macOS you should consider setting an

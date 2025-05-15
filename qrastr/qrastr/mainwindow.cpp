@@ -44,6 +44,7 @@ using WrapperExceptionType = std::runtime_error;
 #include "formcalcidop.h"
 #include <QtitanDef.h>
 #include <QtitanGrid.h>
+#include "qmcr/pyhlp.h"
 
 
 MainWindow::MainWindow(){
@@ -684,7 +685,13 @@ void MainWindow::ti_calcpti_wrap(){
 
 
 void MainWindow::onDlgMcr(){
-    McrWnd* pMcrWnd = new McrWnd(this) ;
+    if(m_up_PyHlp == nullptr){
+        m_up_PyHlp = std::move( std::make_unique<PyHlp>( *m_sp_qastra->getRastr().get() ) );
+        const std::string str_macro = {"print ('hello world21323')"};
+        m_up_PyHlp->Run(str_macro);
+
+    }
+    McrWnd* pMcrWnd = new McrWnd(this);
     pMcrWnd->show();
 }
 
