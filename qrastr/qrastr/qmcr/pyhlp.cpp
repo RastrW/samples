@@ -11,6 +11,8 @@
     #include <Python.h>
 #endif
 
+#include <QDebug>
+
 namespace PyUtils
 {
     struct PyObjRaii
@@ -33,7 +35,11 @@ namespace PyUtils
         }
 
         virtual ~PyObjRaii(){
-            Py_XDECREF(pPyObj_);
+            if(pPyObj_ != nullptr){
+                assert( pPyObj_->ob_refcnt > 0);
+                qDebug()<<"pPyObj_->ob_refcnt== "<<pPyObj_->ob_refcnt<<"\n";
+                Py_XDECREF(pPyObj_);
+            }
         }
 
         operator PyObject*()
@@ -58,20 +64,6 @@ namespace PyUtils
             }
         }
         return str;
-    }
-}
-
-PyHlp::PyHlp(const IPlainRastr& ipr)
-    :IPlainRastr_(ipr)
-{
-}
-
-PyHlp::~PyHlp()
-{
-    if(isInitialized_){
-        Py_XDECREF(rastrPyObject_);
-        Py_XDECREF(astraModule_);
-        Py_FinalizeEx();
     }
 }
 
@@ -238,12 +230,27 @@ long PyHlp::getErrorOffset() const noexcept
     return nerrorOffset_;
 }
 
+PyHlp::PyHlp(const IPlainRastr& ipr)
+    :IPlainRastr_(ipr)
+{
+}
+
+PyHlp::~PyHlp()
+{
+    if(isInitialized_){
+        Py_XDECREF(rastrPyObject_);
+        Py_XDECREF(astraModule_);
+        Py_FinalizeEx();
+    }
+}
+
 bool PyHlp::Initialize()
 {
     int nRes = 0;
     if(!Py_IsInitialized()){
         Py_InitializeEx(0);
-        PyUtils::PyObjRaii sys_path = PySys_GetObject("path"); assert(nullptr != sys_path);
+        //PyUtils::PyObjRaii sys_path = PySys_GetObject("path"); assert(nullptr != sys_path);
+        PyObject* sys_path = PySys_GetObject("path"); assert(nullptr != sys_path);//Borrowed reference!
         std::string str_path1 = PyUtils::PyObjToStr(sys_path);
 #if(defined(_MSC_VER))
         //nRes = PyList_Append(sys_path, PyUnicode_FromString(R"(C:/projects/rastr/RastrWin/build/vs-Debug/pyastra/)")); assert(0 == nRes);
@@ -251,7 +258,8 @@ bool PyHlp::Initialize()
 #else
         nRes = PyList_Append(sys_path, PyUnicode_FromString("/home/ustas/projects/git_main/rastr/build-RastrWin-Desktop-Debug/pyastra")); assert(0 == nRes);
 #endif
-        PyUtils::PyObjRaii sys_path2 = PySys_GetObject("path"); assert(nullptr != sys_path);
+        //PyUtils::PyObjRaii sys_path2 = PySys_GetObject("path"); assert(nullptr != sys_path);
+        PyObject* sys_path2 = PySys_GetObject("path"); assert(nullptr != sys_path);
         std::string str_path2 = PyUtils::PyObjToStr(sys_path2);
         //astraModule_ = PyImport_ImportModule("astra_py.cp310-win_amd64.pyd");
         astraModule_ = PyImport_ImportModule("astra_py");
