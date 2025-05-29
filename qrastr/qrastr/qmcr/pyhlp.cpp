@@ -244,11 +244,15 @@ bool PyHlp::Initialize()
     if(!Py_IsInitialized()){
         Py_InitializeEx(0);
         PyUtils::PyObjRaii sys_path = PySys_GetObject("path"); assert(nullptr != sys_path);
+        std::string str_path1 = PyUtils::PyObjToStr(sys_path);
 #if(defined(_MSC_VER))
-        nRes = PyList_Append(sys_path, PyUnicode_FromString("C:/projects/rastr/RastrWin/build/vs-Debug/pyastra/")); assert(0 == nRes);
+        //nRes = PyList_Append(sys_path, PyUnicode_FromString(R"(C:/projects/rastr/RastrWin/build/vs-Debug/pyastra/)")); assert(0 == nRes);
+        nRes = PyList_Append(sys_path, PyUnicode_FromString(R"(C:\projects\rastr\RastrWin\build\vs-Debug\pyastra\)")); assert(0 == nRes);
 #else
         nRes = PyList_Append(sys_path, PyUnicode_FromString("/home/ustas/projects/git_main/rastr/build-RastrWin-Desktop-Debug/pyastra")); assert(0 == nRes);
 #endif
+        PyUtils::PyObjRaii sys_path2 = PySys_GetObject("path"); assert(nullptr != sys_path);
+        std::string str_path2 = PyUtils::PyObjToStr(sys_path2);
         //astraModule_ = PyImport_ImportModule("astra_py.cp310-win_amd64.pyd");
         astraModule_ = PyImport_ImportModule("astra_py");
         assert(nullptr != astraModule_);

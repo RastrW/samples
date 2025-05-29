@@ -463,7 +463,7 @@ void McrWnd::onRun()
   qDebug("McrWnd::onRun()");
   if(nullptr != pPyHlp_){
     /*
-          if(m_up_PyHlp == nullptr){
+      if(m_up_PyHlp == nullptr){
         m_up_PyHlp = std::move( std::make_unique<PyHlp>( *m_sp_qastra->getRastr().get() ) );
         //const std::string str_macro = {"print ('hello world21323')"};
         const std::string str_macro = {
@@ -472,28 +472,20 @@ void McrWnd::onRun()
 "root.mainloop()\n"
 "rs=astra.Rastr()\n"
 "rs.opf (\"s\")"
-                                       };
-
+};
         m_up_PyHlp->Run(str_macro);
-
     }
      */
     const QByteArray qbaTxt{ shEdit_->getText( shEdit_->textLength() ) };
     const PyHlp::enPythonResult PythonResult{ pPyHlp_->Run( qbaTxt.data() ) };
-
-
-    if( PyHlp::enPythonResult::Ok != PythonResult){/*
-        const QMessageBox::StandardButton ret {
-          QMessageBox::critical(
-            this,
-            tr("Macro"),
-            tr("The document has been modified.\n",
-            QMessageBox::Cancel )
-        };
-                                          //QMessageBox::Save | QMessageBox::Discard | QMessageBox::Cancel};
-                                          */
+    if( PyHlp::enPythonResult::Ok != PythonResult){
+        QString qstrErr;
+        if(pPyHlp_->getErrorMessage().length() > 0){
+          qstrErr = pPyHlp_->getErrorMessage().c_str();
+        } else {
+          qstrErr = "UnknownError";
+        }
         QMessageBox msgBox;
-        QString qstrErr { pPyHlp_->getErrorMessage().c_str() };
         msgBox.setText(qstrErr);
         msgBox.setIcon(QMessageBox::Critical);
         msgBox.setDefaultButton(QMessageBox::Yes);
@@ -508,7 +500,6 @@ void McrWnd::onRun()
           msgBox.exec();
           //msgBox.setStandardButtons( QMessageBox::Yes | QMessageBox::Cancel );
         }
-
     }
     shProt_->my_appendTect("Run \n");
   }else{
