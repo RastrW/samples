@@ -200,7 +200,8 @@ void PyHlp::SetErrorMessage()
                sstr <<pretty << "\n";
                //sstr << std::string(convert_from_python(item)) << std::endl;
             }
-            throw std::exception(sstr.str().c_str());
+            //throw std::exception(sstr.str().c_str());
+            throw std::runtime_error(sstr.str().c_str());
         }
 
         const char* nameExeption = PyExceptionClass_Name(type);

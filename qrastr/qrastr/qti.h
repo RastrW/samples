@@ -1,6 +1,7 @@
 #ifndef QTI_H
 #define QTI_H
 
+#include <memory>
 #include <QObject>
 #include "IPlainTI.h"
 //#include "C:\Projects\tfs\rastr\RastrWin\KC\IPlainTI.h"
