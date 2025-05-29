@@ -19,6 +19,7 @@ QQmlDebuggingEnabler enabler;
 #include "forms/dlgfindrepl.h"
 //#include "IPlainRastr.h"
 #include "../qastra_events_data.h"
+#include "pyhlp.h"
 
 McrWnd::McrWnd(QWidget* parent, const _en_role en_role)
     : QDialog(parent,
@@ -97,6 +98,46 @@ current_time = datetime.now(new_york_tz)
 print(current_time)
 
 pet.bark()
+
+from tkinter import * #sudo apt-get install python3-tk
+
+
+def about():
+    a = Toplevel()
+    a.geometry('200x150')
+    a['bg'] = 'grey'
+    a.overrideredirect(True)
+    Label(a, text="About this").pack(expand=1)
+    a.after(5000, lambda: a.destroy())
+
+root = Tk()
+root.title("Главное окно")
+Button(text="Button", width=20).pack()
+Label(text="Label", width=20, height=3).pack()
+Button(text="About", width=20, command=about).pack()
+
+root.mainloop()
+
+"""
+for x in range(6):
+  if x == 3: break
+  print(x)
+else:
+  print("Finally finished!")
+"""
+)");
+
+        shEdit_->setContent(R"(
+import os
+#print(os.get_exec_path())
+print(os.getcwd())
+
+#if from python!
+#from astra_py import Rastr, FieldProperties as FP, PropType
+#rastr = Rastr()
+
+rastr.rgm('p1')
+#rastr.new_file('')
 
 from tkinter import * #sudo apt-get install python3-tk
 
@@ -269,11 +310,22 @@ for d3VG for d3VG for d3VG for d3VG for d3VG for d3
     //tst2_dlg_->show();
 */
 }
-McrWnd::~McrWnd(){
+
+McrWnd::~McrWnd()
+{
 }
-void McrWnd::showEvent(QShowEvent *event) {
+
+void McrWnd::showEvent(QShowEvent *event)
+{
 }
-std::pair<bool,bool> McrWnd::checkSaveModified(){
+
+void McrWnd::setPyHlp(PyHlp* pPyHlp)
+{
+  pPyHlp_ = pPyHlp;
+}
+
+std::pair<bool,bool> McrWnd::checkSaveModified()
+{
     std::pair<bool,bool> pair_saved_cancelled{false,false};
     if(true==shEdit_->getContentModified()){
         QMessageBox msgBox;
@@ -299,7 +351,9 @@ std::pair<bool,bool> McrWnd::checkSaveModified(){
     }
     return pair_saved_cancelled;
 }
-void McrWnd::closeEvent(QCloseEvent *event) {
+
+void McrWnd::closeEvent(QCloseEvent *event)
+{
     if(pdlgFindRepl_!=nullptr){
         pdlgFindRepl_->close();
         pdlgFindRepl_ = nullptr;
@@ -319,10 +373,14 @@ void McrWnd::closeEvent(QCloseEvent *event) {
         return;
     }
 }
-void McrWnd::onChngEditFileInfo( const QFileInfo& fiNew){
+
+void McrWnd::onChngEditFileInfo( const QFileInfo& fiNew)
+{
     setWindowTitle(fiNew.absoluteFilePath());
 }
-bool McrWnd::onFileNew(){
+
+bool McrWnd::onFileNew()
+{
     qDebug("McrWnd::onFileNew()");
     std::pair<bool,bool> pair_saved_cancelled = checkSaveModified();
     QMessageBox msgBox;
@@ -337,7 +395,9 @@ bool McrWnd::onFileNew(){
     shEdit_->setContent("");
     return true;
 }
-void McrWnd::onFileOpen(){
+
+void McrWnd::onFileOpen()
+{
     qDebug("McrWnd::onFileOpen()");
     bool blContentCleared = true;
     if(true==shEdit_->getContentModified()){
@@ -368,7 +428,9 @@ void McrWnd::onFileOpen(){
         return ;
     }
 }
-bool McrWnd::onFileSave(bool blSaveAs){
+
+bool McrWnd::onFileSave(bool blSaveAs)
+{
     qDebug().nospace() << "McrWnd::onFileSave("<< blSaveAs<<")";
     if(blSaveAs == true){
         QString qstrPathToFile = QFileDialog::getSaveFileName(this, tr("Save file as"));
@@ -395,13 +457,67 @@ bool McrWnd::onFileSave(bool blSaveAs){
     }
     return false;
 }
-void McrWnd::onRun(){
-    qDebug("McrWnd::onRun()");
-    for( int i = 1 ; i < 100000 ; i++ ){
-        shProt_->my_appendTect( "<ываываыва> ЫВАЫВА фывfdsfsdafsd ываыв [" + std::to_string(i)+  "] ыввввЁЁЁ  ываывпике \n  </ываываыва> \n");
+
+void McrWnd::onRun()
+{
+  qDebug("McrWnd::onRun()");
+  if(nullptr != pPyHlp_){
+    /*
+          if(m_up_PyHlp == nullptr){
+        m_up_PyHlp = std::move( std::make_unique<PyHlp>( *m_sp_qastra->getRastr().get() ) );
+        //const std::string str_macro = {"print ('hello world21323')"};
+        const std::string str_macro = {
+"import tkinter as tk\n"
+"root = tk.Tk()\n"
+"root.mainloop()\n"
+"rs=astra.Rastr()\n"
+"rs.opf (\"s\")"
+                                       };
+
+        m_up_PyHlp->Run(str_macro);
+
     }
+     */
+    const QByteArray qbaTxt{ shEdit_->getText( shEdit_->textLength() ) };
+    const PyHlp::enPythonResult PythonResult{ pPyHlp_->Run( qbaTxt.data() ) };
+
+
+    if( PyHlp::enPythonResult::Ok != PythonResult){/*
+        const QMessageBox::StandardButton ret {
+          QMessageBox::critical(
+            this,
+            tr("Macro"),
+            tr("The document has been modified.\n",
+            QMessageBox::Cancel )
+        };
+                                          //QMessageBox::Save | QMessageBox::Discard | QMessageBox::Cancel};
+                                          */
+        QMessageBox msgBox;
+        QString qstrErr { pPyHlp_->getErrorMessage().c_str() };
+        msgBox.setText(qstrErr);
+        msgBox.setIcon(QMessageBox::Critical);
+        msgBox.setDefaultButton(QMessageBox::Yes);
+        if(pPyHlp_->getErrorLine() > -1){
+          qstrErr += QString("\n Go to line: %1 ?").arg(pPyHlp_->getErrorLine());
+          msgBox.setText(qstrErr);
+          msgBox.setStandardButtons( QMessageBox::Yes | QMessageBox::Cancel );
+          if(QMessageBox::Yes == msgBox.exec()){
+            shEdit_->gotoLine(pPyHlp_->getErrorLine()-1);
+          }
+        }else{
+          msgBox.exec();
+          //msgBox.setStandardButtons( QMessageBox::Yes | QMessageBox::Cancel );
+        }
+
+    }
+    shProt_->my_appendTect("Run \n");
+  }else{
+    shProt_->my_appendTect("No PyHlp! \n");
+  }
 }
-void McrWnd::onGoToLine(){
+
+void McrWnd::onGoToLine()
+{
     const sptr_t n_num_lines = shEdit_->lineCount();
     bool bl_ok = false;
     const int n_go_to_line = QInputDialog::getInt(this, tr("Go to line"), QString(tr("Go to line (1..%1) ")).arg(n_num_lines), 1, 1, n_num_lines + 1, 1, &bl_ok);
@@ -409,7 +525,9 @@ void McrWnd::onGoToLine(){
         shEdit_->gotoLine(n_go_to_line - 1);
     }
 }
-void McrWnd::onFind(){
+
+void McrWnd::onFind()
+{
     qDebug("McrWnd::onFindRepl()");
     if(pdlgFindRepl_==nullptr){
         pdlgFindRepl_ = new DlgFindRepl(this);
@@ -419,11 +537,15 @@ void McrWnd::onFind(){
     pdlgFindRepl_->raise();
     pdlgFindRepl_->activateWindow();
 }
-void McrWnd::Find(SciHlp::_params_find params_find){
+
+void McrWnd::Find(SciHlp::_params_find params_find)
+{
     qDebug()<<"Find()-> "<<params_find.qstrFind_  << "\n";
     const SciHlp::_ret_vals rv = shEdit_->Find(params_find);
 }
-void McrWnd::encode(std::string& data){
+
+void McrWnd::encode(std::string& data)
+{
     std::string buffer;
     buffer.reserve(data.size()+30);
     for(size_t pos = 0; pos != data.size(); ++pos){
@@ -438,7 +560,9 @@ void McrWnd::encode(std::string& data){
     }
     data.swap(buffer);
 }
-void McrWnd::encode(std::string& data_out, const QString& qstr_in){
+
+void McrWnd::encode(std::string& data_out, const QString& qstr_in)
+{
     data_out.reserve(qstr_in.length() + 50);
     for(size_t pos = 0; pos != qstr_in.length(); ++pos) {
         if      (QLatin1Char('&')  == qstr_in[static_cast<int>(pos)]){
@@ -457,7 +581,9 @@ void McrWnd::encode(std::string& data_out, const QString& qstr_in){
     }
     data_out.append("\n");
 }
-void McrWnd::onQStringAppendProtocol(const QString& qstr){
+
+void McrWnd::onQStringAppendProtocol(const QString& qstr)
+{
     //std::string str{qstr.toStdString()};
     std::string str{""};
     for(int i = 0; i < n_stage_max_id_ ; i++){
@@ -468,7 +594,9 @@ void McrWnd::onQStringAppendProtocol(const QString& qstr){
     str += "\n";
     shProt_->my_appendTect(str);
 }
-void McrWnd::onRastrLog(const _log_data& log_data){
+
+void McrWnd::onRastrLog(const _log_data& log_data)
+{
     std::string str = "";
     for(int i = 0; i < log_data.n_stage_id-1 ; i++){
         str += "\t";

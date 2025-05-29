@@ -87,6 +87,7 @@ add_subdirectory(
 
 set(INCLUDES
     "${ASTRA_LOCATION}"
+    "${ASTRA_LOCATION}/../KC/"
     #"${DEPENDENCIES_LOCATION}/fmt/include"
     "${ASTRA_LOCATION}/fmt/include/"
     "${DEPENDENCIES_LOCATION}/qicstable/include"
@@ -104,7 +105,6 @@ set(INCLUDES
     "${ASTRA_LOCATION}/../../flytfs/IPlainRastrTest/"
     "${DEPENDENCIES_LOCATION}/qtitan8_lin_5_15/include/" #lin Qtitan
     "${DEPENDENCIES_LOCATION}/QtitanDataGrid8.2.0_win_qt_6_7/include/" #win Qtitan
-    "${ASTRA_LOCATION}/../KC/"
 )
 #message("INCLUDES is set to ${INCLUDES}")
 

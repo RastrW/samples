@@ -19,14 +19,20 @@ public:
      PyHlp(const IPlainRastr& ipr);
      ~PyHlp();
      void SetErrorMessage();
+     std::string getErrorMessage() const noexcept;
+     long        getErrorLine() const noexcept;
+     long        getErrorOffset() const noexcept;
      bool Initialize();
      enPythonResult Run(const std::string_view macroText);
 private:
      _object* astraModule_ = nullptr;
      _object* rastrPyObject_ = nullptr;
-     std::string errorMessage_;
      bool isInitialized_ = false;
      const IPlainRastr& IPlainRastr_;
+     std::string errorMessage_;
+     long nerrorLineno_ = -1;
+     long nerrorOffset_ = -1;
+     static constexpr const char* const pch_run_fname_= "rastr-py-embeded";
 };//class PyHlp
 
 #endif // PYHLP_H

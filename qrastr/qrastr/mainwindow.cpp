@@ -315,6 +315,8 @@ void MainWindow::setQAstra(const std::shared_ptr<QAstra>& sp_qastra){
     connect( m_sp_qastra.get(), SIGNAL(onRastrLog(const _log_data&) ), m_pFormProtocol, SLOT(onRastrLog(const _log_data&)) );
     connect( m_sp_qastra.get(), SIGNAL(onRastrLog(const _log_data&) ), m_pMcrWnd,       SLOT(onRastrLog(const _log_data&)) );
     m_pFormProtocol->setIgnoreAppendProtocol(true);
+    assert(nullptr == m_up_PyHlp);
+    m_up_PyHlp = std::move( std::make_unique<PyHlp>( *m_sp_qastra->getRastr().get() ) );
 
     if(false){
         //vetv
@@ -707,15 +709,9 @@ void MainWindow::ti_filtrti_wrap()
     emit signal_calc_end();
 }
 
-
 void MainWindow::onDlgMcr(){
-    if(m_up_PyHlp == nullptr){
-        m_up_PyHlp = std::move( std::make_unique<PyHlp>( *m_sp_qastra->getRastr().get() ) );
-        const std::string str_macro = {"print ('hello world21323')"};
-        m_up_PyHlp->Run(str_macro);
-
-    }
-    McrWnd* pMcrWnd = new McrWnd(this);
+    McrWnd* pMcrWnd = new McrWnd( this, McrWnd::_en_role::macro_dlg );
+    pMcrWnd->setPyHlp(m_up_PyHlp.get());
     pMcrWnd->show();
 }
 

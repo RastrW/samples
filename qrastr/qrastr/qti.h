@@ -2,8 +2,10 @@
 #define QTI_H
 
 #include <QObject>
-//#include "IPlainTI.h"
-#include "C:\Projects\tfs\rastr\RastrWin\KC\IPlainTI.h"
+#include "IPlainTI.h"
+//#include "C:\Projects\tfs\rastr\RastrWin\KC\IPlainTI.h"
+//#include "C:\projects\rastr\RastrWin\KC\IPlainTI.h"
+
 
 class QTI  : public QObject
 {

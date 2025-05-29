@@ -28,10 +28,8 @@ endif ()
 
 set( INCLUDES
     "${DEPENDENCIES_LOCATION}/spdlog/include/"
-    #"${COMCK_LOCATION}/"
     "${ASTRA_LOCATION}/"
-    "${ASTRA_LOCATION}/../KC/IPlainTI.h"
-    #"C:/Projects/tfs/rastr/RastrWin/KC/IPlainTI.h"
+    "${ASTRA_LOCATION}/../KC/"
     "../../"
 )
 set(PROJECT_SOURCES

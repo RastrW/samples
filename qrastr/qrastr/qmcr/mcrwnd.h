@@ -11,6 +11,7 @@
 class  Tst_ToolBox;
 class  Tst2_Dialog;
 class  DlgFindRepl;
+class  PyHlp;
 struct _log_data;
 class McrWnd : public QDialog{
     Q_OBJECT
@@ -19,12 +20,13 @@ public:
         macro_dlg       = 1,
         global_protocol = 2
     };
-    explicit McrWnd(QWidget *parent = nullptr, const _en_role en_role = _en_role::macro_dlg);
+    explicit McrWnd(QWidget *parent, const _en_role en_role);
     virtual ~McrWnd();
     void showEvent(QShowEvent *event) override;
     void closeEvent(QCloseEvent *event) override;
     void encode(std::string& data);
     void encode(std::string& data_out, const QString& qstr_in);
+    void setPyHlp(PyHlp* pPyHlp);
 signals:
 private slots:
     std::pair<bool,bool> checkSaveModified();
@@ -46,6 +48,7 @@ private:
     Tst2_Dialog*   tst2_dlg_{ nullptr};
     DlgFindRepl*   pdlgFindRepl_{ nullptr};
     long           n_stage_max_id_ = 0;
+    PyHlp*         pPyHlp_{nullptr};
 };
 
 #endif // MCRWND_H
