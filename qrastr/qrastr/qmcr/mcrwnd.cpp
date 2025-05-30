@@ -136,6 +136,10 @@ print(os.getcwd())
 #from astra_py import Rastr, FieldProperties as FP, PropType
 #rastr = Rastr()
 
+# для отладки, test.py лежит рядом с  astra.pyd
+#sys.path.append(os.getcwd())
+sys.path.append(os.path.join(os.path.dirname(__file__),'.'))
+
 rastr.rgm('p1')
 #rastr.new_file('')
 

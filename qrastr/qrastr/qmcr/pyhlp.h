@@ -25,7 +25,7 @@ public:
      bool Initialize();
      enPythonResult Run(const std::string_view macroText);
 private:
-     _object* astraModule_ = nullptr;
+     _object* astraModule_ = nullptr;//PyObject
      _object* rastrPyObject_ = nullptr;
      bool isInitialized_ = false;
      const IPlainRastr& IPlainRastr_;

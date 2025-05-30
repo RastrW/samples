@@ -2,6 +2,7 @@
 
 #define Py_LIMITED_API  0x030A0000 //minimal version Python 3.10
 #define PY_SSIZE_T_CLEAN
+//Py_REF_DEBUG
 
 #ifdef _DEBUG
     #undef _DEBUG
@@ -68,7 +69,8 @@ namespace PyUtils
 }
 
 #include <sstream>
-//pyerrors.h
+#include <pyerrors.h>
+#include <frameobject.h>
 //https://habr.com/ru/articles/167261/
 //https://github.com/shira-374/rstpad // qt python editor
 void PyHlp::SetErrorMessage()
@@ -79,7 +81,7 @@ void PyHlp::SetErrorMessage()
     PyObject *ptype, *pvalue, *ptraceback;
     PyErr_Fetch( &ptype, &pvalue, &ptraceback );
     if(pvalue){
-        PyErr_NormalizeException(&ptype, &pvalue, &ptraceback);
+        PyErr_NormalizeException( &ptype, &pvalue, &ptraceback );
         const char* nameExeption = PyExceptionClass_Name(ptype);
         if(nameExeption){
             //errorMessage_ = std::string(nameExeption).append(": ");
@@ -95,13 +97,46 @@ void PyHlp::SetErrorMessage()
             std::string str_filename = PyUtils::PyObjToStr(pyFileName);
             std::string str_lineno   = PyUtils::PyObjToStr(pyLineNo);
             std::string str_offset   = PyUtils::PyObjToStr(pyOffset);
-        }else if(PyExc_ModuleNotFoundError == ptype){
-            PyUtils::PyObjRaii pyFileName = PyObject_GetAttrString(pvalue, "name");
-            PyUtils::PyObjRaii pyPath     = PyObject_GetAttrString(pvalue, "path");
-            std::string str_filename      = PyUtils::PyObjToStr(pyFileName);
-            std::string str_path     = PyUtils::PyObjToStr(pyPath);
-        }else if(PyExc_ImportError == ptype){
-            //printf("hell owrorld 33\n");
+        //}else if(PyExc_ModuleNotFoundError == ptype){
+        //    PyUtils::PyObjRaii pyFileName = PyObject_GetAttrString(pvalue, "name");
+        //    PyUtils::PyObjRaii pyPath     = PyObject_GetAttrString(pvalue, "path");
+        //    std::string str_filename      = PyUtils::PyObjToStr(pyFileName);
+        //    std::string str_path     = PyUtils::PyObjToStr(pyPath);
+        }else{
+            PyObject* traceback_module = PyImport_ImportModule("traceback");
+            if(nullptr != traceback_module){
+                PyUtils::PyObjRaii format_exception = PyObject_GetAttrString(traceback_module, "format_exception");
+                if(format_exception && PyCallable_Check(format_exception)) {
+                     PyUtils::PyObjRaii pyth_val = PyObject_CallFunctionObjArgs(format_exception, ptype, pvalue, ptraceback, NULL);
+                      errorMessage_ = PyUtils::PyObjToStr(pyth_val);
+                }
+                //get from https://github.com/unbit/uwsgi/blob/1eb8615057fb6045e0ce06cd5a617946f50e813b/plugins/python/pyutils.c#L67
+                PyObject *traceback_dict = PyModule_GetDict(traceback_module);
+                PyObject *extract_tb = PyDict_GetItemString(traceback_dict, "extract_tb");
+                if(nullptr != extract_tb){
+                    PyUtils::PyObjRaii args1 = PyTuple_New(1);
+                    if(nullptr != ptraceback){
+                        Py_INCREF(ptraceback); //without it failed on destructor
+                        PyTuple_SetItem(args1, 0, ptraceback);
+                    }else{
+                        PyTuple_SetItem(args1, 0, Py_None); // experimental
+                    }
+                    PyUtils::PyObjRaii result = PyObject_CallObject(extract_tb, args1);
+                    if(nullptr != result){
+                        for( Py_ssize_t i = 0 ; i < PySequence_Size(result) ; i++ ){
+                            PyUtils::PyObjRaii t           = PySequence_GetItem(result, i);
+                            PyUtils::PyObjRaii tb_filename = PySequence_GetItem(t, 0);
+                            PyUtils::PyObjRaii tb_lineno   = PySequence_GetItem(t, 1);
+                            PyUtils::PyObjRaii tb_function = PySequence_GetItem(t, 2);
+                            PyUtils::PyObjRaii tb_text     = PySequence_GetItem(t, 3);
+                            nerrorLineno_ = PyLong_AsLong(tb_lineno);
+                            std::string str_lineno = PyUtils::PyObjToStr(tb_lineno);
+                            if(i == 0)//get only first
+                                break;
+                        }
+                    }
+                }
+            }
         }
     }
     PyErr_Restore(ptype, pvalue, ptraceback);

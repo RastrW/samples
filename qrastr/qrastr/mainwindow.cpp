@@ -838,31 +838,31 @@ void MainWindow::showFormSettings(){
 
 void MainWindow::createActions(){
     //file
-    QAction* newAct = new QAction(QIcon(":/images/new.png"), tr("&Новый"), this);
-    newAct->setShortcut(tr("Ctrl+N"));
-    newAct->setStatusTip(tr("Create a new file"));
-    connect(newAct, SIGNAL(triggered()), this, SLOT(newFile()));
-    QAction* openAct = new QAction(QIcon(":/images/open.png"), tr("&Загрузить"), this);
-    openAct->setShortcut(tr("Ctrl+O"));
-    openAct->setStatusTip(tr("Open an existing file"));
-    connect(openAct, SIGNAL(triggered()), this, SLOT(open()));
-    QAction* saveAct = new QAction(QIcon(":/images/save.png"), tr("&Сохранить"), this);
-    saveAct->setShortcut(tr("Ctrl+S"));
-    saveAct->setStatusTip(tr("Save the document to disk"));
-    connect(saveAct, SIGNAL(triggered()), this, SLOT(save()));
-    QAction* saveAsAct = new QAction(tr("&Сохранить как"), this);
-    saveAsAct->setStatusTip(tr("Save the document under a new name"));
-    connect(saveAsAct, SIGNAL(triggered()), this, SLOT(saveAs()));
-    QAction* saveAllAct = new QAction(QIcon(":/images/Save_all.png"),tr("&Сохранить все"), this);
-    saveAllAct->setStatusTip(tr("Save all the document"));
-    connect(saveAllAct, SIGNAL(triggered()), this, SLOT(saveAll()));
+    QAction* actNewFile = new QAction(QIcon(":/images/new.png"), tr("&Новый"), this);
+    actNewFile->setShortcut(tr("Ctrl+N"));
+    actNewFile->setStatusTip(tr("Create a new file"));
+    connect(actNewFile, SIGNAL(triggered()), this, SLOT(newFile()));
+    QAction* actOpenfile = new QAction(QIcon(":/images/open.png"), tr("&Загрузить"), this);
+    actOpenfile->setShortcut(tr("Ctrl+O"));
+    actOpenfile->setStatusTip(tr("Open an existing file"));
+    connect(actOpenfile, SIGNAL(triggered()), this, SLOT(open()));
+    QAction* actSaveFile = new QAction(QIcon(":/images/save.png"), tr("&Сохранить"), this);
+    actSaveFile->setShortcut(tr("Ctrl+S"));
+    actSaveFile->setStatusTip(tr("Save the document to disk"));
+    connect(actSaveFile, SIGNAL(triggered()), this, SLOT(save()));
+    QAction* actSaveFileAs = new QAction(tr("&Сохранить как"), this);
+    actSaveFileAs->setStatusTip(tr("Save the document under a new name"));
+    connect(actSaveFileAs, SIGNAL(triggered()), this, SLOT(saveAs()));
+    QAction* actSaveAllFiles = new QAction(QIcon(":/images/Save_all.png"),tr("&Сохранить все"), this);
+    actSaveAllFiles->setStatusTip(tr("Save all the document"));
+    connect(actSaveAllFiles, SIGNAL(triggered()), this, SLOT(saveAll()));
     QAction* actShowFormSettings = new QAction(tr("&Параметры"), this);
     actShowFormSettings->setStatusTip(tr("Open settings form."));
     connect(actShowFormSettings, SIGNAL(triggered()), this, SLOT(showFormSettings()));
-    QAction* exitAct = new QAction(tr("E&xit"), this);
-    exitAct->setShortcut(tr("Ctrl+Q"));
-    exitAct->setStatusTip(tr("Exit the application"));
-    connect(exitAct, SIGNAL(triggered()), qApp, SLOT(closeAllWindows()));
+    QAction* actExit = new QAction(tr("E&xit"), this);
+    actExit->setShortcut(tr("Ctrl+Q"));
+    actExit->setStatusTip(tr("Exit the application"));
+    connect(actExit, SIGNAL(triggered()), qApp, SLOT(closeAllWindows()));
     for (int i = 0; i < MaxRecentFiles; ++i) {
         recentFileActs[i] = new QAction(this);
         recentFileActs[i]->setVisible(false);
@@ -870,10 +870,10 @@ void MainWindow::createActions(){
                 this, SLOT(openRecentFile()));
     }
     //macro
-    QAction* ActMacro = new QAction(QIcon(":/images/cut.png"),tr("&macro"), this);
-    ActMacro->setShortcut(tr("F11"));
-    ActMacro->setStatusTip(tr("Run macro"));
-    connect(ActMacro, SIGNAL(triggered()), this, SLOT(onDlgMcr()));
+    QAction* actMacro = new QAction(QIcon(":/images/cut.png"),tr("&macro"), this);
+    actMacro->setShortcut(tr("F11"));
+    actMacro->setStatusTip(tr("Run macro"));
+    connect(actMacro, SIGNAL(triggered()), this, SLOT(onDlgMcr()));
     //calc
     QAction* actKDD = new QAction(tr("&Контроль"), this);
     actKDD->setStatusTip(tr("Контроль исходных данных"));
@@ -940,11 +940,11 @@ void MainWindow::createActions(){
     //MENU's
     //QMenu* menuFile = menuBar()->addMenu(tr("&File"));
     QMenu* menuFile = menuBar()->addMenu(tr("&Файлы"));
-    menuFile->addAction(newAct);
-    menuFile->addAction(openAct);
-    menuFile->addAction(saveAct);
-    menuFile->addAction(saveAsAct);
-    menuFile->addAction(saveAllAct);
+    menuFile->addAction(actNewFile);
+    menuFile->addAction(actOpenfile);
+    menuFile->addAction(actSaveFile);
+    menuFile->addAction(actSaveFileAs);
+    menuFile->addAction(actSaveAllFiles);
     m_menuProgrammProperties = menuFile->addMenu(tr("&Настройки программы"));
     m_menuProgrammProperties->addAction(actShowFormSettings);
     m_menuProperties = m_menuProgrammProperties->addMenu(tr("&Настройки"));
@@ -956,12 +956,12 @@ void MainWindow::createActions(){
     for (int i = 0; i < MaxRecentFiles; ++i)
         menuFileLast->addAction(recentFileActs[i]);
     menuFile->addSeparator();
-    menuFile->addAction(exitAct);
+    menuFile->addAction(actExit);
     updateRecentFileActions();
     menuBar()->addSeparator();
 
     QMenu* menuMacro = menuBar()->addMenu(tr("&Макро"));
-    menuMacro->addAction(ActMacro);
+    menuMacro->addAction(actMacro);
     QMenu* menuCalc = menuBar()->addMenu(tr("&Расчеты"));
     menuCalc->addAction(actKDD);
     menuCalc->addAction(actRGM);
@@ -1016,20 +1016,20 @@ void MainWindow::createActions(){
 
     //ToolBars
     QToolBar* toolbarFile = addToolBar(tr("Файл"));
-    toolbarFile->addAction(newAct);
-    toolbarFile->addAction(openAct);
-    toolbarFile->addAction(saveAct);
+    toolbarFile->addAction(actNewFile);
+    toolbarFile->addAction(actOpenfile);
+    toolbarFile->addAction(actSaveFile);
 
     m_toolbarCalc = addToolBar(tr("Расчеты"));
     m_toolbarCalc->addAction(actRGM);
     m_toolbarCalc->addAction(actMDP);
     m_toolbarCalc->addAction(actTkz);
+    m_toolbarCalc->addAction(actMacro);
 
     m_toolbarTI = addToolBar(tr("Телеизмерения"));
     m_toolbarTI->addAction(actPTI);
     m_toolbarTI->addAction(actFiltrTI);
     m_toolbarTI->addAction(actOC);
-
 
     //TEST BUTTONS
     //createCalcLayout();
