@@ -868,11 +868,10 @@ void MainWindow::createActions(){
     for (int i = 0; i < MaxRecentFiles; ++i) {
         recentFileActs[i] = new QAction(this);
         recentFileActs[i]->setVisible(false);
-        connect(recentFileActs[i], SIGNAL(triggered()),
-                this, SLOT(openRecentFile()));
+        connect( recentFileActs[i], SIGNAL(triggered()), this, SLOT(openRecentFile()) );
     }
     //macro
-    QAction* actMacro = new QAction(QIcon(":/images/cut.png"),tr("&macro"), this);
+    QAction* actMacro = new QAction( QIcon(QApplication::style()->standardIcon(QStyle::SP_MediaPlay)), tr("&macro"), this );
     actMacro->setShortcut(tr("F11"));
     actMacro->setStatusTip(tr("Run macro"));
     connect(actMacro, SIGNAL(triggered()), this, SLOT(onDlgMcr()));

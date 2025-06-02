@@ -36,6 +36,7 @@ private slots:
     void onRun();
     void onGoToLine();
     void onFind();
+    void onProtClear();
     void onChngEditFileInfo(const QFileInfo& fiNew);
     void Find(SciHlp::_params_find params_find);
     void onQStringAppendProtocol(const QString& qstr);

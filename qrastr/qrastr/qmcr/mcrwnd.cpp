@@ -25,52 +25,37 @@ QQmlDebuggingEnabler enabler;
 const std::string g_str_tst_rastr_events {
 R"(
 
-def clr_value(msg):
-  return '\x1b[0;33;40m' + str(msg) +'\x1b[0m'
+from turtle import Turtle
+from random import random
 
-def print_header(msg, i=[1]):
-  print(f'\x1b[0;32;40m{i[0]}. {msg }\x1b[0m')
-  i[0]+=1
+t = Turtle()
+for i in range(100):
+    steps = int(random() * 100)
+    angle = int(random() * 360)
+    t.right(angle)
+    t.fd(steps)
+
+t.screen.mainloop()
+
+import time
+import struct
+import socket
+import sys
 
 file_test = "C:\\Users\\ustas\\Documents\\RastrWin3\\test-rastr\\cx195.rg2"
 file_test_templ = "C:\\Users\\ustas\\Documents\\RastrWin3\\SHABLON\\режим.rg2"
 
 #import astra_py as astra
-rastr = astra.Rastr()
-
-print_header('Astra created')
-print_header('Test Event')
-
-class EventRastr(astra.EventSink):
-  def on_event(self, Event):
-      if Event.type == astra.EventTypes.LOG:
-          if Event.status == astra.LogMessageTypes.OPEN_STAGE:
-              print(f'>   \x1b[0;32;40m{Event.message}\x1b[0m')
-          elif Event.status == astra.LogMessageTypes.INFO:
-              print(f'>   \x1b[0;33;40m{Event.message}\x1b[0m')
-          elif Event.status == astra.LogMessageTypes.MESSAGE:
-              print(f'>   {Event.message}')
-          elif Event.status == astra.LogMessageTypes.ERROR:
-              print(f'>   \x1b[0;31;40m{Event.message}\x1b[0m')
-      elif Event.type == astra.EventTypes.HINT:
-          print(f'>   \x1b[0;35;40m{Event.hint}  {Event.db_location.table} {Event.db_location.column} {Event.db_location.index}\x1b[0m')
-
-
-ev = EventRastr()
-rastr.subscribe(ev)
+rastr2 = astra.Rastr()
 
 rastr.load(astra.LoadCode.REPL, file_test, file_test_templ)
-print('    Loaded file:', clr_value(file_test))
-print('    Template:', clr_value(file_test_templ))
 
 try:
-  print_header('Test rgm')
   ret = rastr.rgm("p")
-  print('   Run rgm(p):', clr_value( str(ret) ))
+  rastr.print('   Run rgm(p):', str(ret) )
 except Exception  as err:
-  print('Handling run-time error:', err)
+  rastr.print('Handling run-time error:', err)
 
-rastr.unsubscribe(ev)
 
 for i in range(0,10,1):
     rastr.print( f"{i} : dfdsf")
@@ -231,13 +216,16 @@ McrWnd::McrWnd(QWidget* parent, const _en_role en_role)
                 ->setShortcuts( {QKeySequence(Qt::CTRL+Qt::Key_S)});
         pToolBar->addAction( QIcon(QApplication::style()->standardIcon(QStyle::SP_DriveFDIcon)),      tr("Save as"),  [this] { onFileSave(true); }  )
                 ->setShortcut({QKeySequence(Qt::CTRL+Qt::Key_W)});
-        pToolBar->addAction( QIcon(QApplication::style()->standardIcon(QStyle::SP_MediaPlay)),        tr("Run (F5)"),  this, SLOT( onRun() )        )
-                ->setShortcut({QKeySequence(Qt::Key_F5)});
+        pToolBar->addAction( QIcon(QApplication::style()->standardIcon(QStyle::SP_MediaPlay)),        tr("Run (F10)"), this, SLOT( onRun() )        )
+                ->setShortcut({QKeySequence(Qt::Key_F10)});
         //pToolBar->addWidget(leFind);
         pToolBar->addAction( QIcon(QApplication::style()->standardIcon(QStyle::SP_BrowserReload)),    tr("&Find"),     this, SLOT( onFind() )       )
                 ->setShortcut({QKeySequence(Qt::CTRL+Qt::Key_F)});
         pToolBar->addAction( QIcon(QApplication::style()->standardIcon(QStyle::SP_CommandLink)),      tr("&Go to line"), this, SLOT( onGoToLine() ) )
                 ->setShortcut({QKeySequence(Qt::CTRL+Qt::Key_G)});
+        pToolBar->addAction( QIcon(QApplication::style()->standardIcon(QStyle::SP_DialogResetButton)), tr("&Clear"), this, SLOT( onProtClear() ) );
+
+
         container_layout->addWidget(pToolBar);
         shEdit_ = new SciHlp(this, SciHlp::_en_role::editor_python);
         splitter->addWidget(shEdit_);
@@ -586,6 +574,11 @@ void McrWnd::Find(SciHlp::_params_find params_find)
 {
     qDebug()<<"Find()-> "<<params_find.qstrFind_  << "\n";
     const SciHlp::_ret_vals rv = shEdit_->Find(params_find);
+}
+
+void McrWnd::onProtClear()
+{
+    shProt_->setContent("");
 }
 
 void McrWnd::encode(std::string& data)

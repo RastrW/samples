@@ -13,6 +13,7 @@
 #endif
 
 #include <QDebug>
+#include <regex>
 
 namespace PyUtils
 {
@@ -107,8 +108,10 @@ void PyHlp::SetErrorMessage()
             if(nullptr != traceback_module){
                 PyUtils::PyObjRaii format_exception = PyObject_GetAttrString(traceback_module, "format_exception");
                 if(format_exception && PyCallable_Check(format_exception)) {
-                     PyUtils::PyObjRaii pyth_val = PyObject_CallFunctionObjArgs(format_exception, ptype, pvalue, ptraceback, NULL);
-                      errorMessage_ = PyUtils::PyObjToStr(pyth_val);
+                    PyUtils::PyObjRaii pyth_val = PyObject_CallFunctionObjArgs(format_exception, ptype, pvalue, ptraceback, NULL);
+                    errorMessage_ += "\n";
+                    errorMessage_ += PyUtils::PyObjToStr(pyth_val);
+                    errorMessage_ = std::regex_replace(errorMessage_, std::regex(R"(\\n', ' )"), "\n");
                 }
                 //get from https://github.com/unbit/uwsgi/blob/1eb8615057fb6045e0ce06cd5a617946f50e813b/plugins/python/pyutils.c#L67
                 PyObject *traceback_dict = PyModule_GetDict(traceback_module);
@@ -129,10 +132,14 @@ void PyHlp::SetErrorMessage()
                             PyUtils::PyObjRaii tb_lineno   = PySequence_GetItem(t, 1);
                             PyUtils::PyObjRaii tb_function = PySequence_GetItem(t, 2);
                             PyUtils::PyObjRaii tb_text     = PySequence_GetItem(t, 3);
-                            nerrorLineno_ = PyLong_AsLong(tb_lineno);
                             std::string str_lineno = PyUtils::PyObjToStr(tb_lineno);
-                            if(i == 0)//get only first
-                                break;
+                            std::string str_filename { PyUtils::PyObjToStr(tb_filename) };
+                            if(str_filename.length() > 2){
+                                str_filename = str_filename.substr( 1, str_filename.length()-2 ); // name returned in braces "fname"
+                                if(0 == str_filename.compare(pch_run_fname_)){
+                                    nerrorLineno_ = PyLong_AsLong(tb_lineno);
+                                }
+                            }
                         }
                     }
                 }
