@@ -711,6 +711,8 @@ void MainWindow::ti_filtrti_wrap()
 
 void MainWindow::onDlgMcr(){
     McrWnd* pMcrWnd = new McrWnd( this, McrWnd::_en_role::macro_dlg );
+    //connect( m_sp_qastra.get(), SIGNAL(onRastrLog(const _log_data&) ), m_pMcrWnd,       SLOT(onRastrLog(const _log_data&)) );
+    connect( m_sp_qastra.get(), SIGNAL( onRastrPrint(const std::string&) ), pMcrWnd, SLOT( onRastrPrint(const std::string&) ) );
     pMcrWnd->setPyHlp(m_up_PyHlp.get());
     pMcrWnd->show();
 }

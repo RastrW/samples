@@ -40,6 +40,7 @@ private slots:
     void Find(SciHlp::_params_find params_find);
     void onQStringAppendProtocol(const QString& qstr);
     void onRastrLog(const _log_data&);
+    void onRastrPrint(const std::string&);
 private:
     const _en_role en_role_;
     SciHlp*        shEdit_{nullptr};

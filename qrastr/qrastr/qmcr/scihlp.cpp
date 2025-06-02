@@ -278,6 +278,7 @@ head
         setStyleHlp( SCE_HPHP_OPERATOR , c_xz );
     }
 }
+
 const char* SciHlp::MonospaceFont(){
     static char fontNameDefault[200] = "";
     if (!fontNameDefault[0]) {
@@ -286,6 +287,7 @@ const char* SciHlp::MonospaceFont(){
     }
     return fontNameDefault;
 }
+
 void SciHlp::tstSci(){
 #if _WIN32 //https://www.scintilla.org/LexillaDoc.html
     typedef int ( __stdcall* _pfGetLexerCount)(void);
@@ -308,13 +310,16 @@ void SciHlp::tstSci(){
     }
 #endif
 }
+
 void SciHlp::showEvent(QShowEvent *event){
 }
+
 void SciHlp::onMarginClicked(Scintilla::Position position, Scintilla::KeyMod modifiers, int margin) {
     if(margin == 1) {
         toggleFold(lineFromPosition(position));
     }
 }
+
 void SciHlp::onNotify(Scintilla::NotificationData* pnd){
     switch (pnd->nmhdr.code) {
         case Scintilla::Notification::CharAdded:   { // I try https://www.scintilla.org/ScintillaUsage.html - "Implementing Auto-Indent" - but it's not work properly and I remake:
@@ -352,6 +357,7 @@ void SciHlp::onNotify(Scintilla::NotificationData* pnd){
         break;
     }
 }
+
 void SciHlp::setStyleHlp(sptr_t style, sptr_t fore, bool bold, bool italic, sptr_t back, bool underline, bool eolfilled){
     styleSetFore      ( style, fore      );
     styleSetBold      ( style, bold      );
@@ -360,6 +366,7 @@ void SciHlp::setStyleHlp(sptr_t style, sptr_t fore, bool bold, bool italic, sptr
     styleSetUnderline ( style, underline );
     styleSetEOLFilled ( style, eolfilled );
 }
+
 SciHlp::_ret_vals SciHlp::setContent(const std::string& str_text){
     bool bl_read_only_prev = false;
     if(canPaste() == false){
@@ -373,7 +380,8 @@ SciHlp::_ret_vals SciHlp::setContent(const std::string& str_text){
         setReadOnly(true);
     return _ret_vals::ok;
 }
-SciHlp::_ret_vals SciHlp::my_appendTect(const std::string_view svTxt){
+
+SciHlp::_ret_vals SciHlp::my_appendText(const std::string_view svTxt){
     bool bl_read_only_prev = false;
     if(canPaste() == false){
         bl_read_only_prev = true;
@@ -385,17 +393,21 @@ SciHlp::_ret_vals SciHlp::my_appendTect(const std::string_view svTxt){
         setReadOnly(true);
     return _ret_vals::ok;
 }
+
 bool SciHlp::getContentModified() const {
     return modify();
 }
+
 SciHlp::_ret_vals SciHlp::setFileInfo(const QFileInfo& fiNew ){
     fiFileSource_ = fiNew;
     emit chngFileInfo(fiNew);
     return _ret_vals::ok;
 }
+
 const QFileInfo& SciHlp::getFileInfo() const {
     return fiFileSource_;
 }
+
 SciHlp::_ret_vals SciHlp::ContentToFile(){
     try{
         QFile qFile{ fiFileSource_.absoluteFilePath() };
@@ -413,6 +425,7 @@ SciHlp::_ret_vals SciHlp::ContentToFile(){
     }
     return _ret_vals::ok;
 }
+
 SciHlp::_ret_vals SciHlp::ContentFromFile(){
     try{
         QFile qFile{ fiFileSource_.absoluteFilePath() };
@@ -430,6 +443,7 @@ SciHlp::_ret_vals SciHlp::ContentFromFile(){
     }
     return _ret_vals::ok;
 }
+
 SciHlp::_ret_vals SciHlp::Find(_params_find params_find){
     //SCFIND_NONE	    Default setting is case-insensitive literal match.
     //SCFIND_MATCHCASE	A match only occurs with text that matches the case of the search string.

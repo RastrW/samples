@@ -58,7 +58,7 @@ public:
     void showEvent(QShowEvent *event) override;
     void setStyleHlp( sptr_t style, sptr_t fore, bool bold=false, bool italic=false, sptr_t back=_colors::white, bool underline=false, bool eolfilled=false );
     _ret_vals setContent(const std::string& str_text);
-    _ret_vals my_appendTect(const std::string_view svTxt);
+    _ret_vals my_appendText(const std::string_view svTxt);
     bool getContentModified() const;
     _ret_vals setFileInfo(const QFileInfo& fiNew);
     const QFileInfo& getFileInfo()const;
