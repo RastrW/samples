@@ -1,9 +1,10 @@
 #ifndef PYHLP_H
 #define PYHLP_H
 #pragma once
-
+//#include <QCoreApplication>
 #include <string>
-
+#include <filesystem>
+namespace fs = std::filesystem;
 class IPlainRastr;
 struct _object;
 class PyHlp

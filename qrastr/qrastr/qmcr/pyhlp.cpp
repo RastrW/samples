@@ -1,5 +1,6 @@
 #include "pyhlp.h"
 
+
 #define Py_LIMITED_API  0x030A0000 //minimal version Python 3.10
 #define PY_SSIZE_T_CLEAN
 //Py_REF_DEBUG
@@ -14,6 +15,7 @@
 
 #include <QDebug>
 #include <regex>
+#include <QCoreApplication>
 
 namespace PyUtils
 {
@@ -294,9 +296,13 @@ bool PyHlp::Initialize()
         //PyUtils::PyObjRaii sys_path = PySys_GetObject("path"); assert(nullptr != sys_path);
         PyObject* sys_path = PySys_GetObject("path"); assert(nullptr != sys_path);//Borrowed reference!
         std::string str_path1 = PyUtils::PyObjToStr(sys_path);
+        QString qstr_plugin_path{QCoreApplication::applicationDirPath()};
+        qstr_plugin_path += "/plugins/";    // MaxiMal: там находятся все внешние dll предлагаю там и держать astra_py.cp312-win_amd64.pyd
+        nRes = PyList_Append(sys_path, PyUnicode_FromString(qstr_plugin_path.toStdString().c_str())); assert(0 == nRes);
 #if(defined(_MSC_VER))
         //nRes = PyList_Append(sys_path, PyUnicode_FromString(R"(C:/projects/rastr/RastrWin/build/vs-Debug/pyastra/)")); assert(0 == nRes);
         nRes = PyList_Append(sys_path, PyUnicode_FromString(R"(C:\projects\rastr\RastrWin\build\vs-Debug\pyastra\)")); assert(0 == nRes);
+        //nRes = PyList_Append(sys_path, PyUnicode_FromString(R"(C:\projects\tfs\rastr\RastrWin\build\pyastra\Debug\)")); assert(0 == nRes);
 #else
         nRes = PyList_Append(sys_path, PyUnicode_FromString("/home/ustas/projects/git_main/rastr/build-RastrWin-Desktop-Debug/pyastra")); assert(0 == nRes);
 #endif
