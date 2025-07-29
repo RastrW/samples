@@ -24,9 +24,6 @@ QQmlDebuggingEnabler enabler;
 
 const std::string g_str_tst_rastr_events {
 R"(
-
-
-
 import time
 import struct
 import socket
