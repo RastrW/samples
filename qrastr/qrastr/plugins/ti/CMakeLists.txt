@@ -29,7 +29,7 @@ endif ()
 set( INCLUDES
     "${DEPENDENCIES_LOCATION}/spdlog/include/"
     "${ASTRA_LOCATION}/"
-    "${ASTRA_LOCATION}/../KC/"
+    "${ASTRA_LOCATION}/../comck/"
     "../../"
 )
 set(PROJECT_SOURCES

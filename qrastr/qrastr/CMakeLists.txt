@@ -87,7 +87,7 @@ add_subdirectory(
 
 set(INCLUDES
     "${ASTRA_LOCATION}"
-    "${ASTRA_LOCATION}/../KC/"
+    "${ASTRA_LOCATION}/../comck/"
     #"${DEPENDENCIES_LOCATION}/fmt/include"
     "${ASTRA_LOCATION}/fmt/include/"
     "${DEPENDENCIES_LOCATION}/qicstable/include"

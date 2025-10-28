@@ -601,8 +601,12 @@ void MainWindow::oc_wrap(){
 
 void MainWindow::smzu_tst_wrap(){
     emit signal_calc_begin();
-    long i =2;
-    eASTCode code = m_sp_qastra->Smzu_tst(i);
+
+    const std::time_t time_now{ std::time(0) };
+    const std::tm*    ptm_now{ std::localtime(&time_now) };
+    const std::string str_parameters{ std::to_string(ptm_now->tm_mday) };
+    //eASTCode code = m_sp_qastra->SMZU(str_parameters);
+    eASTCode code = m_sp_qastra->SMZU("33");
 
     std::string str_msg = "";
     if (code == eASTCode::AST_OK){
