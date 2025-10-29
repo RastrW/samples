@@ -190,10 +190,9 @@ eASTCode QAstra::Opf(const std::string_view& parameters){
     return opfresult.Value();
 }
 
-eASTCode QAstra::Smzu_tst(long parameter){
+eASTCode QAstra::Smzu_tst(const std::string_view& parameters){
 
-    long par = static_cast<long>(std::get<double>(GetVal("com_optim","koef_kt",0)));
-    IRastrPayload  smzu_tst_result{ sp_rastr_->Smzu_tst(par) };
+    IRastrPayload  smzu_tst_result{ sp_rastr_->SMZU(parameters) };
     return smzu_tst_result.Value();
 }
 

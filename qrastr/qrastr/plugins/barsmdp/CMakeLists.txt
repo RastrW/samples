@@ -1,6 +1,4 @@
-# Copyright (C) 2022 The Qt Company Ltd.
-# SPDX-License-Identifier: LicenseRef-Qt-Commercial OR BSD-3-Clause
-project(ti)
+project(barsmdp)
 cmake_minimum_required(VERSION 3.23) # 3.20 min version for "astra" build
 set( CMAKE_CXX_STANDARD 17 )
 set( CMAKE_CXX_STANDARD_REQUIRED ON )
@@ -32,30 +30,35 @@ set( INCLUDES
     "${ASTRA_LOCATION}/../comck/"
     "../../"
 )
+
 set(PROJECT_SOURCES
-    plugin_ti_interfaces.h
-    pluginti.h
-    pluginti.cpp
+  plugin_barsmdp.cpp
+  plugin_barsmdp.h
+  plugin_barsmdp_interfaces.h
 )
+
+
 if(QT_VERSION_MAJOR EQUAL 6)
-    qt_add_plugin( ti
-        CLASS_NAME PluginTI
+    qt_add_plugin( barsmdp
+        CLASS_NAME PluginBarsMDP
         ${PROJECT_SOURCES}
     )
 else()
 #    add_executable( rastr-exexc
 #        ${PROJECT_SOURCES}
 #    )
-    add_library( ti SHARED
+    add_library( barmdp SHARED
         ${PROJECT_SOURCES}
     )
 endif()
-target_link_libraries( ti PRIVATE
+
+target_link_libraries( barsmdp PRIVATE
     Qt${QT_VERSION_MAJOR}::Core
     Qt${QT_VERSION_MAJOR}::Gui
     Qt${QT_VERSION_MAJOR}::Widgets
 )
-target_compile_options(ti PRIVATE ${COMPILE_OPTIONS})
-target_include_directories( ti PRIVATE
+target_compile_options(barsmdp PRIVATE ${COMPILE_OPTIONS})
+target_include_directories( barsmdp PRIVATE
   ${INCLUDES}
 )
+

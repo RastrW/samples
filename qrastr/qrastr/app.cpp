@@ -13,8 +13,10 @@ using WrapperExceptionType = std::runtime_error;
 //#include "C:\Projects\tfs\rastr\RastrWin\KC\IPlainTI.h"
 #include "plugins/rastr/plugin_interfaces.h"
 #include "plugins/ti/plugin_ti_interfaces.h"
+#include "plugins/barsmdp/plugin_barsmdp_interfaces.h"
 #include "qastra.h"
 #include "qti.h"
+#include "qbarsmdp.h"
 #include "utils.h"
 #include "UIForms.h"
 
@@ -195,10 +197,15 @@ void App::loadPlugins(){
     pluginsDir.cd("plugins");
     spdlog::info("Plugins dir: {}", pluginsDir.absolutePath().toStdString());
 #if(COMPILE_WIN)
-    const auto entryList = pluginsDir.entryList(QStringList() << "*.dll", QDir::Files);
+    //const   auto entryList = pluginsDir.entryList(QStringList() << "*.dll", QDir::Files);
+    auto entryList = pluginsDir.entryList(QStringList() << "*.dll", QDir::Files);
 #else
-    const auto entryList = pluginsDir.entryList(QDir::Files);
+    auto entryList = pluginsDir.entryList(QDir::Files);
 #endif
+    //move rastr.dll at top
+    int ind_rastr = entryList.indexOf("rastr.dll");
+    auto item = entryList.takeAt(ind_rastr);
+    entryList.insert(0,item);
     for( const QString &fileName : entryList ){
         QPluginLoader loader(pluginsDir.absoluteFilePath(fileName));
         QObject *plugin = loader.instance();
@@ -214,6 +221,7 @@ void App::loadPlugins(){
                     if(nullptr==rastr){
                         spdlog::error( "rastr==null" );
                         assert(!"may be u haven't license!");
+                        qDebug( "Plugin Rastr no load (rastr==null)! may be u haven't license!" );
                         continue;
                     }
                     //m_sp_qastra = std::move( std::make_shared<QAstra>());
@@ -227,6 +235,7 @@ void App::loadPlugins(){
                     exclog();
                 }
                 spdlog::info( "it is Rastr.test.finished");
+                qDebug( "Plugin Rastr is loaded" );
             }
             auto iTI = qobject_cast<InterfaceTI *>(plugin);
             if(iTI){
@@ -241,13 +250,6 @@ void App::loadPlugins(){
                     }
 
                     TI->Set_Rastr(m_sp_qastra->getRastr().get());
-                    /*TI->Hello();
-                    long ret_long = TI->test_ret_long();
-                    std::string rfile = "C:/Projects/Python/Tests/roc_debug_before_OC";
-                    m_sp_qastra->Load(eLoadCode::RG_REPL, rfile, "" );
-                    TI->Set_Rastr(m_sp_qastra->getRastr().get());
-                    TI->CalcPTI();*/
-
                     m_sp_qti = std::make_shared<QTI>();
                     m_sp_qti->setTI(TI);
 
@@ -257,6 +259,31 @@ void App::loadPlugins(){
                     exclog();
                 }
                 spdlog::info( "it is TI.test.finished");
+            }
+
+            auto iBarsMDP = qobject_cast<InterfaceBarsMDP *>(plugin);
+            if(iBarsMDP){
+                try{
+                    spdlog::info( "it is BarsMDP" );
+                    const std::shared_ptr<spdlog::logger> sp_logger = spdlog::default_logger();
+                    iBarsMDP->setLoggerPtr( sp_logger );
+                    const std::shared_ptr<IPlainBarsMDP> BarsMDP = iBarsMDP->getIPlainBarsMDPPtr();
+                    if(nullptr==BarsMDP){
+                        spdlog::error( "BarsMDP==null" );
+                        continue;
+                    }
+
+                    BarsMDP->Set_Rastr(m_sp_qastra->getRastr().get());
+                    auto ret =BarsMDP->Hello();
+                    m_sp_qbarsmdp = std::make_shared<QBarsMDP>();
+                    m_sp_qbarsmdp->setBarsMDP(BarsMDP);
+
+                }catch(const std::exception& ex){
+                    exclog(ex);
+                }catch(...){
+                    exclog();
+                }
+                spdlog::info( "it is BarsMDP.test.finished");
             }
         }
     }

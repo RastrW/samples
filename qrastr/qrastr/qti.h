@@ -4,7 +4,7 @@
 #include <memory>
 #include <QObject>
 #include "IPlainTI.h"
-//#include "C:\Projects\tfs\rastr\RastrWin\KC\IPlainTI.h"
+//#include "C:\Projects\tfs\rastr\RastrWin\comck\IPlainTI.h"
 //#include "C:\projects\rastr\RastrWin\KC\IPlainTI.h"
 
 

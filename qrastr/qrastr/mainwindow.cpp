@@ -13,6 +13,7 @@
 #include <QListView>
 #include <QDockWidget>
 #include <QAbstractTableModel>
+#include <QInputDialog>
 
 #include "common_qrastr.h"
 #include <spdlog/sinks/stdout_color_sinks.h>
@@ -21,6 +22,7 @@
 #include <iostream>
 #include <DockManager.h>
 #include "mainwindow.h"
+#include "qbarsmdp.h"
 #include "rtabwidget.h"
 //#include "mdiChildTable.h"
 //#include "mdiChildGrid.h"
@@ -261,10 +263,12 @@ void MainWindow::setForms(const std::list<CUIForm>& forms){ // https://stackover
         }
         i++;
     }
+    qDebug()<<"Msg1";
     connect( m_menuOpen, SIGNAL(triggered(QAction *)), this, SLOT(onOpenForm(QAction *)), Qt::UniqueConnection);
     connect( m_menuCalcParameters, SIGNAL(triggered(QAction *)), this, SLOT(onOpenForm(QAction *)), Qt::UniqueConnection);
-   // connect( m_menuProperties,  SIGNAL(m_menuProperties->aboutToShow()), this, SLOT(setSettingsForms()), Qt::UniqueConnection);
     connect(m_menuProperties, &QMenu::aboutToShow, this, &MainWindow::setSettingsForms);
+   qDebug()<<"Msg2";
+    // connect( m_menuProperties,  SIGNAL(m_menuProperties->aboutToShow()), this, SLOT(setSettingsForms()), Qt::UniqueConnection);
    // m_menuProperties->aboutToShow()
 }
 
@@ -362,6 +366,10 @@ void MainWindow::setQAstra(const std::shared_ptr<QAstra>& sp_qastra){
 void MainWindow::setQTI(const std::shared_ptr<QTI>& sp_qti){
     assert(nullptr!=sp_qti);
     m_sp_qti = sp_qti;
+}
+void MainWindow::setQBarsMDP(const std::shared_ptr<QBarsMDP>& sp_qbarsmdp){
+    assert(nullptr!=sp_qbarsmdp);
+    m_sp_qbarsmdp = sp_qbarsmdp;
 }
 
 void MainWindow::closeEvent(QCloseEvent *event){
@@ -475,6 +483,7 @@ void MainWindow::open(){
         m_sp_qastra->Load(eLoadCode::RG_REPL, fileName.toStdString(),"");
         setWindowTitle(fileName);
         curFile = fileName;
+        setCurrentFile(curFile);
     }
 }
 
@@ -493,38 +502,35 @@ void MainWindow::saveAs(){
     fileDlg.setNameFilter(qstr_filter);
     fileDlg.selectNameFilter("режим (*.rg2)");
     fileDlg.setFileMode(QFileDialog::AnyFile);
+
+    fileDlg.setDirectory(curDir);
     int n_res = fileDlg.exec();
     if(QDialog::Accepted == n_res){
         const QString qstr_template = fileDlg.selectedNameFilter();
         const QString qstr_rfile    = fileDlg.selectedFiles()[0];
-        const std::string str_path_to_shablon = Params::GetInstance()->getDirSHABLON().absolutePath().toStdString() + "//" +qstr_template.toStdString();
-        //m_sp_qastra->LoadFile( eLoadCode::RG_REPL, "", str_path_to_shablon );
-        m_sp_qastra->Save( qstr_rfile.toStdString(), str_path_to_shablon );
+        QString qstr_template_name =qstr_template;
+        qstr_template_name.remove('(');
+        qstr_template_name.remove(')');
+        qstr_template_name.remove('*');
+        qstr_template_name.remove(' ');
+
+        const std::string str_path_to_shablon = Params::GetInstance()->getDirSHABLON().absolutePath().toStdString() + "/" +qstr_template_name.toStdString();
+        m_sp_qastra->Save( qstr_rfile.toStdString(), str_path_to_shablon.c_str() );
         setCurrentFile(qstr_rfile);
         qDebug() << "templ: "<< qstr_template << "  file : " << qstr_rfile ;
     }
-#if(!defined(QICSGRID_NO))
-    if (activeMdiChild()->save())
-        statusBar()->showMessage(tr("File saved"), 2000);
-#endif//#if(!defined(QICSGRID_NO))
     if (!curFile.isEmpty()){
         int nRes = 0;
         const std::string& f = curFile.toStdString();
-        //assert(!"not implemented");
-        if(nRes>0){
-            std::string str_msg = fmt::format( "{}: {}", "File saved", f);
-            statusBar()->showMessage( str_msg.c_str(), 2000 );
-        } else {
-            std::string str_msg = fmt::format( "{}: {}", "File not saved", f);
-            QMessageBox msgBox;
-            msgBox.critical( this, tr("File not saved"), str_msg.c_str() );
-        }
+        std::string str_msg = fmt::format( "{}: {}", "File saved", f);
+        statusBar()->showMessage( str_msg.c_str(), 2000 );
     }
 }
 
 void MainWindow::save(){
     m_sp_qastra->Save( curFile.toStdString().c_str(), "" );
     std::string str_msg = fmt::format( "{}: {}", "Сохранен файл", curFile.toStdString().c_str());
+    statusBar()->showMessage( str_msg.c_str(), 2000 );
     return;
 }
 
@@ -539,18 +545,18 @@ void MainWindow::openRecentFile()
     if (action){
         //loadFile(action->data().toString());
         QString _fileshabl = action->data().toString();
-        QStringList qslist = _fileshabl.split(" ");
+        QStringList qslist = _fileshabl.split("<");
         std::string file = qslist[0].toStdString();
         std::string shabl = "";
         if (qslist.size() > 1) {
             shabl = qslist[1].toStdString();
-            shabl.erase(shabl.begin());
             shabl.erase(shabl.end()-1);
         }
         //m_sp_qastra->Load( eLoadCode::RG_REPL, action->data().toString().toStdString(), "" );
         m_sp_qastra->Load( eLoadCode::RG_REPL, file, shabl );
         setWindowTitle(action->data().toString());
         mFilesLoad[shabl.c_str()] = file.c_str();
+        setCurrentFile(qslist[0]);
     }
 }
 
@@ -601,8 +607,8 @@ void MainWindow::oc_wrap(){
 
 void MainWindow::smzu_tst_wrap(){
     emit signal_calc_begin();
-    long i =2;
-    eASTCode code = m_sp_qastra->Smzu_tst(i);
+    //long i =2;
+    eASTCode code = m_sp_qastra->Smzu_tst("");
 
     std::string str_msg = "";
     if (code == eASTCode::AST_OK){
@@ -707,6 +713,20 @@ void MainWindow::ti_filtrti_wrap()
 
     statusBar()->showMessage( str_msg.c_str(), 0 );
     emit signal_calc_end();
+}
+
+void MainWindow::bars_mdp_prepare_wrap()
+{
+    bool ok{};
+    QString text = QInputDialog::getText(this, tr("Подготовка для расчета МДП"),
+                                         tr("Сечения:"), QLineEdit::Normal,
+                                         QDir::home().dirName(), &ok);
+    if (ok && !text.isEmpty())
+    {
+        m_sp_qbarsmdp->Init(text.toStdString().c_str());
+        m_sp_qbarsmdp->UpdateMDPFields();
+        m_sp_qbarsmdp->UpdateAUTOFields();
+    }
 }
 
 void MainWindow::onDlgMcr(){
@@ -908,6 +928,13 @@ void MainWindow::createActions(){
     QAction* actFiltrTI = new QAction(QIcon(":/images/filtr_1.png"),tr("&Фильтр ТИ"), this);
     actFiltrTI->setStatusTip(tr("Расчет Фильтр ТИ"));
     connect( actFiltrTI, SIGNAL(triggered()), this, SLOT(ti_filtrti_wrap()));
+    //BarsMDP
+    separatorAct = new QAction(this);
+    separatorAct->setSeparator(true);
+    QAction* actPrepare_MDP = new QAction(tr("&Подг. МДП"), this);
+    actPrepare_MDP->setStatusTip(tr("Подг. МДП"));
+    connect( actPrepare_MDP, SIGNAL(triggered()), this, SLOT(bars_mdp_prepare_wrap()));
+
     //windows
     QAction* closeAct = new QAction(tr("Cl&ose"), this);
     closeAct->setShortcut(tr("Ctrl+F4"));
@@ -968,6 +995,7 @@ void MainWindow::createActions(){
     menuCalc->addAction(actRGM);
     menuCalc->addAction(actOC);
     menuCalc->addAction(actMDP);
+    menuCalc->addAction(actPrepare_MDP);
     menuCalc->addAction(actTkz);
     menuCalc->addAction(actIdop);
     //menuCalc->addAction(actPTI);
@@ -975,7 +1003,7 @@ void MainWindow::createActions(){
     m_menuCalcParameters =  menuCalc->addMenu(tr("&Параметры"));
     m_menuCalcTI =  menuCalc->addMenu(tr("&ТИ"));
     m_menuCalcTI->addAction(actPTI);
-    m_menuCalcTI->addAction(actFiltrTI);
+    m_menuCalcTI->addAction(actPrepare_MDP);
 
     m_menuOpen = menuBar()->addMenu(tr("&Открыть") );
     menuBar()->addSeparator();
@@ -1024,6 +1052,7 @@ void MainWindow::createActions(){
     m_toolbarCalc = addToolBar(tr("Расчеты"));
     m_toolbarCalc->addAction(actRGM);
     m_toolbarCalc->addAction(actMDP);
+    m_toolbarCalc->addAction(actPrepare_MDP);
     m_toolbarCalc->addAction(actTkz);
     m_toolbarCalc->addAction(actMacro);
 
@@ -1037,7 +1066,10 @@ void MainWindow::createActions(){
 }
 
 void MainWindow::setCurrentFile(const QString &fileName, const std::string Shablon){
+    QFileInfo fileInfo(fileName);
     curFile = fileName;
+    curDir = fileInfo.absolutePath();
+
     setWindowFilePath(curFile);
     mFilesLoad[Shablon.c_str()] = fileName;
 

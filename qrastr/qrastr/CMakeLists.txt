@@ -87,7 +87,7 @@ add_subdirectory(
 
 set(INCLUDES
     "${ASTRA_LOCATION}"
-    "${ASTRA_LOCATION}/../KC/"
+    "${ASTRA_LOCATION}/../comck/"
     #"${DEPENDENCIES_LOCATION}/fmt/include"
     "${ASTRA_LOCATION}/fmt/include/"
     "${DEPENDENCIES_LOCATION}/qicstable/include"
@@ -272,6 +272,8 @@ if(${QT_VERSION_MAJOR} GREATER_EQUAL 6)
     qt_add_executable( ${PROJECT_NAME}
             MANUAL_FINALIZATION
             ${PROJECT_SOURCES}
+            qbarsmdp.h
+            qbarsmdp.cpp
     )
     qt_create_translation( QM_FILES ${CMAKE_SOURCE_DIR} ${TS_FILES} )
 else()
@@ -338,3 +340,4 @@ endif()
 
 # To Start qrastr.exe it is need to copy the QT directory "platforms" found in the QT plugins directory
 # https://forum.qt.io/topic/119488/this-application-failed-to-start-because-no-qt-platform-plugin-could-be-initialsed/3
+add_subdirectory(plugins/barsmdp)

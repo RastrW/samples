@@ -15,6 +15,7 @@ class QHBoxLayout;
 
 class QAstra;
 class QTI;
+class QBarsMDP;
 class CUIForm;
 class McrWnd;
 struct _hint_data;
@@ -95,6 +96,8 @@ private slots:
     void idop_wrap();
     void ti_calcpti_wrap();
     void ti_filtrti_wrap();
+    void bars_mdp_prepare_wrap();
+
     void onDlgMcr();
     void onOpenForm(QAction* p_actn);
     void onOpenForm(CUIForm _uiform);
@@ -131,12 +134,14 @@ public:
     void setSettingsForms();                         // Настройки программы - настройки (.form)
     void setQAstra(const std::shared_ptr<QAstra>& sp_qastra);
     void setQTI(const std::shared_ptr<QTI>& sp_qti);
+    void setQBarsMDP(const std::shared_ptr<QBarsMDP>& sp_qbarsmdp);
 private:
     QHBoxLayout* createStyleSetting();
     void setCurrentFile(const QString &fileName, const std::string Shablon = "");
     void updateRecentFileActions();
     QString strippedName(const QString &fullFileName);
-    QString curFile;
+    QString curFile;                             // текущий загруженный или сохраненный файл
+    QString curDir;                              // директория текущего загруженного или сохраненного файла
     QMap<QString,QString> mFilesLoad;
 
     int  readSettings();
@@ -175,6 +180,7 @@ private:
     _v_cache_log       m_v_cache_log;
     std::shared_ptr<QAstra> m_sp_qastra;
     std::shared_ptr<QTI> m_sp_qti;
+    std::shared_ptr<QBarsMDP> m_sp_qbarsmdp;
     std::unique_ptr<PyHlp> m_up_PyHlp;
 
     RTablesDataManager m_RTDM;
