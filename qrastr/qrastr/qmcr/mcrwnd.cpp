@@ -29,8 +29,8 @@ import struct
 import socket
 import sys
 
-file_test = "..\\Data\\Files\\cx195.rg2"
-file_test_templ = "..\\Data\\SHABLON\\режим.rg2"
+file_test = "../Data/Files/cx195.rg2"
+file_test_templ = "../Data/SHABLON/режим.rg2"
 
 #import astra_py as astra
 rastr2 = astra.Rastr()
@@ -65,7 +65,7 @@ file = "c:/tmp/a.csv"
 vetv = rastr["vetv"]
 vetv.set_selection("x>100") # по условию
 #vetv.set_selection("sta")  # отключенных линий
-vetv.to_csv(astra.CSVCode.REPLACE, file, "ip,iq,name", ";")
+#!lin not work! vetv.to_csv(astra.CSVCode.REPLACE, file, "ip,iq,name", ";")
 
 #доступ к данным
 rastr.print( f"")
@@ -103,7 +103,7 @@ from turtle import Turtle
 from random import random
 
 t = Turtle()
-for i in range(100):
+for i in range(30):
     steps = int(random() * 100)
     angle = int(random() * 360)
     t.right(angle)

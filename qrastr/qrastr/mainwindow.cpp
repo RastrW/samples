@@ -266,6 +266,7 @@ void MainWindow::setForms(const std::list<CUIForm>& forms){ // https://stackover
     qDebug()<<"Msg1";
     connect( m_menuOpen, SIGNAL(triggered(QAction *)), this, SLOT(onOpenForm(QAction *)), Qt::UniqueConnection);
     connect( m_menuCalcParameters, SIGNAL(triggered(QAction *)), this, SLOT(onOpenForm(QAction *)), Qt::UniqueConnection);
+   // connect( m_menuProperties,  SIGNAL(m_menuProperties->aboutToShow()), this, SLOT(setSettingsForms()), Qt::UniqueConnection);
     connect(m_menuProperties, &QMenu::aboutToShow, this, &MainWindow::setSettingsForms);
    qDebug()<<"Msg2";
     // connect( m_menuProperties,  SIGNAL(m_menuProperties->aboutToShow()), this, SLOT(setSettingsForms()), Qt::UniqueConnection);
@@ -519,11 +520,22 @@ void MainWindow::saveAs(){
         setCurrentFile(qstr_rfile);
         qDebug() << "templ: "<< qstr_template << "  file : " << qstr_rfile ;
     }
+#if(!defined(QICSGRID_NO))
+    if (activeMdiChild()->save())
+        statusBar()->showMessage(tr("File saved"), 2000);
+#endif//#if(!defined(QICSGRID_NO))
     if (!curFile.isEmpty()){
         int nRes = 0;
         const std::string& f = curFile.toStdString();
-        std::string str_msg = fmt::format( "{}: {}", "File saved", f);
-        statusBar()->showMessage( str_msg.c_str(), 2000 );
+        //assert(!"not implemented");
+        if(nRes>0){
+            std::string str_msg = fmt::format( "{}: {}", "File saved", f);
+            statusBar()->showMessage( str_msg.c_str(), 2000 );
+        } else {
+            std::string str_msg = fmt::format( "{}: {}", "File not saved", f);
+            QMessageBox msgBox;
+            msgBox.critical( this, tr("File not saved"), str_msg.c_str() );
+        }
     }
 }
 
@@ -607,8 +619,12 @@ void MainWindow::oc_wrap(){
 
 void MainWindow::smzu_tst_wrap(){
     emit signal_calc_begin();
-    //long i =2;
-    eASTCode code = m_sp_qastra->Smzu_tst("");
+
+    const std::time_t time_now{ std::time(0) };
+    const std::tm*    ptm_now{ std::localtime(&time_now) };
+    const std::string str_parameters{ std::to_string(ptm_now->tm_mday) };
+    //eASTCode code = m_sp_qastra->SMZU(str_parameters);
+    eASTCode code = m_sp_qastra->SMZU("33");
 
     std::string str_msg = "";
     if (code == eASTCode::AST_OK){
