@@ -368,10 +368,10 @@ void MainWindow::setQTI(const std::shared_ptr<QTI>& sp_qti){
     assert(nullptr!=sp_qti);
     m_sp_qti = sp_qti;
 }
-void MainWindow::setQBarsMDP(const std::shared_ptr<QBarsMDP>& sp_qbarsmdp){
+/*void MainWindow::setQBarsMDP(const std::shared_ptr<QBarsMDP>& sp_qbarsmdp){
     assert(nullptr!=sp_qbarsmdp);
     m_sp_qbarsmdp = sp_qbarsmdp;
-}
+}*/
 
 void MainWindow::closeEvent(QCloseEvent *event){
 
@@ -731,7 +731,7 @@ void MainWindow::ti_filtrti_wrap()
     emit signal_calc_end();
 }
 
-void MainWindow::bars_mdp_prepare_wrap()
+/*void MainWindow::bars_mdp_prepare_wrap()
 {
     bool ok{};
     QString text = QInputDialog::getText(this, tr("Подготовка для расчета МДП"),
@@ -743,7 +743,7 @@ void MainWindow::bars_mdp_prepare_wrap()
         m_sp_qbarsmdp->UpdateMDPFields();
         m_sp_qbarsmdp->UpdateAUTOFields();
     }
-}
+}*/
 
 void MainWindow::onDlgMcr(){
     McrWnd* pMcrWnd = new McrWnd( this, McrWnd::_en_role::macro_dlg );
@@ -945,11 +945,11 @@ void MainWindow::createActions(){
     actFiltrTI->setStatusTip(tr("Расчет Фильтр ТИ"));
     connect( actFiltrTI, SIGNAL(triggered()), this, SLOT(ti_filtrti_wrap()));
     //BarsMDP
-    separatorAct = new QAction(this);
+   /* separatorAct = new QAction(this);
     separatorAct->setSeparator(true);
     QAction* actPrepare_MDP = new QAction(tr("&Подг. МДП"), this);
     actPrepare_MDP->setStatusTip(tr("Подг. МДП"));
-    connect( actPrepare_MDP, SIGNAL(triggered()), this, SLOT(bars_mdp_prepare_wrap()));
+    connect( actPrepare_MDP, SIGNAL(triggered()), this, SLOT(bars_mdp_prepare_wrap()));*/
 
     //windows
     QAction* closeAct = new QAction(tr("Cl&ose"), this);
@@ -1011,7 +1011,7 @@ void MainWindow::createActions(){
     menuCalc->addAction(actRGM);
     menuCalc->addAction(actOC);
     menuCalc->addAction(actMDP);
-    menuCalc->addAction(actPrepare_MDP);
+  //  menuCalc->addAction(actPrepare_MDP);
     menuCalc->addAction(actTkz);
     menuCalc->addAction(actIdop);
     //menuCalc->addAction(actPTI);
@@ -1019,7 +1019,7 @@ void MainWindow::createActions(){
     m_menuCalcParameters =  menuCalc->addMenu(tr("&Параметры"));
     m_menuCalcTI =  menuCalc->addMenu(tr("&ТИ"));
     m_menuCalcTI->addAction(actPTI);
-    m_menuCalcTI->addAction(actPrepare_MDP);
+   // m_menuCalcTI->addAction(actPrepare_MDP);
 
     m_menuOpen = menuBar()->addMenu(tr("&Открыть") );
     menuBar()->addSeparator();
@@ -1068,7 +1068,7 @@ void MainWindow::createActions(){
     m_toolbarCalc = addToolBar(tr("Расчеты"));
     m_toolbarCalc->addAction(actRGM);
     m_toolbarCalc->addAction(actMDP);
-    m_toolbarCalc->addAction(actPrepare_MDP);
+  //  m_toolbarCalc->addAction(actPrepare_MDP);
     m_toolbarCalc->addAction(actTkz);
     m_toolbarCalc->addAction(actMacro);
 

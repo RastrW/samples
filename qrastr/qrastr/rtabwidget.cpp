@@ -247,7 +247,10 @@ void RtabWidget::CreateModel(QAstra* pqastra, CUIForm* pUIForm)
 void RtabWidget::SetEditors()
 {
     for (RCol& rcol : *prm->getRdata())
+    {
+        qDebug()<<"Col index"<<rcol.index<<"Col Name:"<<rcol.name().c_str();
         SetEditor(rcol);
+    }
 }
 void RtabWidget::SetEditor(RCol& rcol)
 {
@@ -301,6 +304,8 @@ void RtabWidget::SetEditor(RCol& rcol)
     }
     if (rcol.com_prop_tt == enComPropTT::COM_PR_SUPERENUM && !rcol.nameref_.empty() && contains(prm->mm_superenum_,rcol.index) )
     {
+        rcol.directcode = true;         // DEBUG
+
         if (!rcol.directcode)
         {
             column_qt->setEditorType(GridEditor::ComboBox);

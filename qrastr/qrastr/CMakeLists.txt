@@ -80,6 +80,8 @@ endif()
 
 add_subdirectory("plugins/rastr")
 add_subdirectory("plugins/ti")
+#add_subdirectory("plugins/barsmdp")
+#add_subdirectory("plugins/barsmdp")
 add_subdirectory(
     "${CMAKE_CURRENT_SOURCE_DIR}/qmcr/"
     "${CMAKE_CURRENT_BINARY_DIR}/generated/qmcr"
@@ -340,4 +342,4 @@ endif()
 
 # To Start qrastr.exe it is need to copy the QT directory "platforms" found in the QT plugins directory
 # https://forum.qt.io/topic/119488/this-application-failed-to-start-because-no-qt-platform-plugin-could-be-initialsed/3
-add_subdirectory(plugins/barsmdp)
+#add_subdirectory(plugins/barsmdp)

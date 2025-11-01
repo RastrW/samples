@@ -13,7 +13,7 @@ using WrapperExceptionType = std::runtime_error;
 //#include "C:\Projects\tfs\rastr\RastrWin\KC\IPlainTI.h"
 #include "plugins/rastr/plugin_interfaces.h"
 #include "plugins/ti/plugin_ti_interfaces.h"
-#include "plugins/barsmdp/plugin_barsmdp_interfaces.h"
+//#include "plugins/barsmdp/plugin_barsmdp_interfaces.h"
 #include "qastra.h"
 #include "qti.h"
 #include "qbarsmdp.h"
@@ -203,7 +203,8 @@ void App::loadPlugins(){
     auto entryList = pluginsDir.entryList(QDir::Files);
 #endif
     //move rastr.dll at top
-    int ind_rastr = entryList.indexOf("rastr.dll");
+    //int ind_rastr = entryList.indexOf("rastr.dll");
+    int ind_rastr = entryList.indexOf("libastra.so");
     auto item = entryList.takeAt(ind_rastr);
     entryList.insert(0,item);
     for( const QString &fileName : entryList ){
@@ -261,7 +262,7 @@ void App::loadPlugins(){
                 spdlog::info( "it is TI.test.finished");
             }
 
-            auto iBarsMDP = qobject_cast<InterfaceBarsMDP *>(plugin);
+            /*auto iBarsMDP = qobject_cast<InterfaceBarsMDP *>(plugin);
             if(iBarsMDP){
                 try{
                     spdlog::info( "it is BarsMDP" );
@@ -284,7 +285,7 @@ void App::loadPlugins(){
                     exclog();
                 }
                 spdlog::info( "it is BarsMDP.test.finished");
-            }
+            }*/
         }
     }
 }

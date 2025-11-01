@@ -96,7 +96,7 @@ private slots:
     void idop_wrap();
     void ti_calcpti_wrap();
     void ti_filtrti_wrap();
-    void bars_mdp_prepare_wrap();
+   // void bars_mdp_prepare_wrap();
 
     void onDlgMcr();
     void onOpenForm(QAction* p_actn);
@@ -134,7 +134,7 @@ public:
     void setSettingsForms();                         // Настройки программы - настройки (.form)
     void setQAstra(const std::shared_ptr<QAstra>& sp_qastra);
     void setQTI(const std::shared_ptr<QTI>& sp_qti);
-    void setQBarsMDP(const std::shared_ptr<QBarsMDP>& sp_qbarsmdp);
+   // void setQBarsMDP(const std::shared_ptr<QBarsMDP>& sp_qbarsmdp);
 private:
     QHBoxLayout* createStyleSetting();
     void setCurrentFile(const QString &fileName, const std::string Shablon = "");
