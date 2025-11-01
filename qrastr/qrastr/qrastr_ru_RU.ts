@@ -1008,7 +1008,6 @@ Do you want to save your changes?</source>
         <location filename="qmcr/scihlp.cpp" line="73"/>
         <location filename="qmcr/scihlp.cpp" line="84"/>
         <location filename="qmcr/scihlp.cpp" line="144"/>
-        <location filename="rtableview.cpp" line="75"/>
         <source>Error</source>
         <translation type="unfinished"></translation>
     </message>
@@ -1040,11 +1039,6 @@ Do you want to save your changes?</source>
     <message>
         <location filename="qtitangrid.cpp" line="22"/>
         <source>custom filter: row in (</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="rtableview.cpp" line="75"/>
-        <source>!fixme rtablview:75</source>
         <translation type="unfinished"></translation>
     </message>
     <message>

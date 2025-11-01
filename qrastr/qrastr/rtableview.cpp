@@ -72,8 +72,8 @@ RTableView::RTableView(QWidget *parent) :
 #else
   //  Q_D(QTableView);
     //d->cornerWidget = nullptr;//(QTableCornerButton*)&cornerButton;
-    QMessageBox mb( QMessageBox::Icon::Critical, QObject::tr("Error"), QObject::tr("!fixme rtablview:75")  );
-    mb.exec();
+   // QMessageBox mb( QMessageBox::Icon::Critical, QObject::tr("Error"), QObject::tr("!fixme rtablview:75")  );
+   // mb.exec();
    // assert(!"nix: not understend howto compile.");
 #endif
 

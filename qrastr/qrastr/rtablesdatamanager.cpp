@@ -15,7 +15,8 @@ CUIForm*  RTablesDataManager::getForm ( std::string _name)
 {
     for (CUIForm &form : *m_plstUIForms)
     {
-        if (stringutils::cp1251ToUtf8(form.Name()) == _name)
+        //if (stringutils::cp1251ToUtf8(form.Name()) == _name)
+        if (stringutils::MkToUtf8(form.Name()) == _name)
             return &form;
     }
     return nullptr;

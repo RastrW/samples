@@ -638,7 +638,7 @@ void RtabWidget::onOpenLinkedForm( LinkedForm _lf)
 
     prtw->SetLinkedForm(_lf);
 
-    auto dw = new ads::CDockWidget( stringutils::cp1251ToUtf8(pUIForm->Name()).c_str(), this);
+    auto dw = new ads::CDockWidget( stringutils::MkToUtf8(pUIForm->Name()).c_str(), this);
     dw->setWidget(prtw->m_grid);
     connect( dw, SIGNAL( closed() ), prtw, SLOT( OnClose() ) );                    // emit RtabWidget->closeEvent
 
