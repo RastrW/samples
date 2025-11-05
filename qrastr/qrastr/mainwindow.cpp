@@ -1019,7 +1019,7 @@ void MainWindow::createActions(){
     m_menuCalcParameters =  menuCalc->addMenu(tr("&Параметры"));
     m_menuCalcTI =  menuCalc->addMenu(tr("&ТИ"));
     m_menuCalcTI->addAction(actPTI);
-    m_menuCalcTI->addAction(actPrepare_MDP);
+   // m_menuCalcTI->addAction(actPrepare_MDP);
 
     m_menuOpen = menuBar()->addMenu(tr("&Открыть") );
     menuBar()->addSeparator();

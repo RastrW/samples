@@ -41,6 +41,7 @@ Thumbs.db
 
 # cmake local settings files
 *.txt.user*
+CMakeLists.txt.user
 
 # xemacs temporary files
 *.flc
