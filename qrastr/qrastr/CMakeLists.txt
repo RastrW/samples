@@ -80,6 +80,7 @@ endif()
 
 add_subdirectory("plugins/rastr")
 add_subdirectory("plugins/ti")
+add_subdirectory("plugins/barsmdp")
 add_subdirectory(
     "${CMAKE_CURRENT_SOURCE_DIR}/qmcr/"
     "${CMAKE_CURRENT_BINARY_DIR}/generated/qmcr"
@@ -112,8 +113,8 @@ if(MSVC)
     link_directories("${CMAKE_LIBRARY_OUTPUT_DIRECTORY}")
     #link_directories("${ASTRA_LOCATION}/build/${CMAKE_BUILD_TYPE}/")
     #link_directories("${ASTRA_LOCATION}/../build/vs-${CMAKE_BUILD_TYPE}/astra") #C:\projects\rastr\RastrWin\build\vs-Debug\astra
-    link_directories("${ASTRA_LOCATION}/../build/astra/${CMAKE_BUILD_TYPE}") #C:\Projects\tfs\rastr\RastrWin\build\astra\Debug
-    link_directories("${ASTRA_LOCATION}/../KC/build/vs-${CMAKE_BUILD_TYPE}") #C:\Projects\tfs\rastr\RastrWin\KC\build\vs-Debug   -> COMCK by cmake. Надо будет переделать по аналогии с астрой, видимо добавить install
+   # link_directories("${ASTRA_LOCATION}/../build/astra/${CMAKE_BUILD_TYPE}") #C:\Projects\tfs\rastr\RastrWin\build\astra\Debug
+    #link_directories("${ASTRA_LOCATION}/../KC/build/vs-${CMAKE_BUILD_TYPE}") #C:\Projects\tfs\rastr\RastrWin\KC\build\vs-Debug   -> COMCK by cmake. Надо будет переделать по аналогии с астрой, видимо добавить install
     link_directories("${DEPENDENCIES_LOCATION}/metakit/builds/")
     link_directories("${DEPENDENCIES_LOCATION}/Qt-Advanced-Docking-System/build/vs-Debug/lib/")
     link_directories("${DEPENDENCIES_LOCATION}/Qt-Advanced-Docking-System/build/vs-Release/lib/")
@@ -187,6 +188,8 @@ set(PROJECT_SOURCES
     qastra.cpp
     qti.h
     qti.cpp
+    qbarsmdp.h
+    qbarsmdp.cpp
     tsthints.h
     tsthints.cpp
     delegatecombobox.cpp
@@ -272,8 +275,6 @@ if(${QT_VERSION_MAJOR} GREATER_EQUAL 6)
     qt_add_executable( ${PROJECT_NAME}
             MANUAL_FINALIZATION
             ${PROJECT_SOURCES}
-            qbarsmdp.h
-            qbarsmdp.cpp
     )
     qt_create_translation( QM_FILES ${CMAKE_SOURCE_DIR} ${TS_FILES} )
 else()
@@ -282,6 +283,7 @@ else()
     )
     qt5_create_translation(QM_FILES ${CMAKE_SOURCE_DIR} ${TS_FILES})
 endif()
+
 target_link_libraries( ${PROJECT_NAME} PRIVATE Metakit::mk4         )
 target_link_libraries( ${PROJECT_NAME} PRIVATE fmt::fmt-header-only )
 #target_link_libraries( ${PROJECT_NAME} PRIVATE cryptopp::cryptopp )
@@ -340,4 +342,4 @@ endif()
 
 # To Start qrastr.exe it is need to copy the QT directory "platforms" found in the QT plugins directory
 # https://forum.qt.io/topic/119488/this-application-failed-to-start-because-no-qt-platform-plugin-could-be-initialsed/3
-add_subdirectory(plugins/barsmdp)
+#add_subdirectory(plugins/barsmdp)

@@ -10,7 +10,7 @@ using WrapperExceptionType = std::runtime_error;
 
 #include "pluginti.h"
 
-template<class T>
+/*template<class T>
 class DestroyableTI
 {
 protected:
@@ -26,7 +26,7 @@ public:
     virtual ~DestroyableTI() { if (ptr_) ptr_->Destroy(); }
     const T operator -> () const { return ptr_; }
     T operator -> () { return ptr_; }
-};
+};*/
 
 void PluginTI::setLoggerPtr(std::shared_ptr<spdlog::logger> spLoger){
     spdlog::set_default_logger(spLoger);

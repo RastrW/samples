@@ -1120,9 +1120,12 @@ void MainWindow::updateRecentFileActions(){
         QString stripshabl = "";
         if (qslist.size() > 1){
             shabl = qslist[1].toStdString();
-            shabl.erase(shabl.begin());
-            shabl.erase(shabl.end()-1);
-            stripshabl = strippedName(shabl.c_str());
+            if (!shabl.empty())
+            {
+                shabl.erase(shabl.begin());
+                shabl.erase(shabl.end()-1);
+                stripshabl = strippedName(shabl.c_str());
+            }
         }
         QString text;
         if (stripshabl.isEmpty())

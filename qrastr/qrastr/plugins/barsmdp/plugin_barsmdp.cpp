@@ -5,7 +5,7 @@
 #include <iostream>
 #include <spdlog/spdlog.h>
 using WrapperExceptionType = std::runtime_error;
-#include "qti.h"
+#include "qbarsmdp.h"
 #include "IPlainRastrWrappers.h"
 
 #include "plugin_barsmdp.h"

@@ -47,7 +47,7 @@ else()
 #    add_executable( rastr-exexc
 #        ${PROJECT_SOURCES}
 #    )
-    add_library( barmdp SHARED
+    add_library( barsmdp SHARED
         ${PROJECT_SOURCES}
     )
 endif()

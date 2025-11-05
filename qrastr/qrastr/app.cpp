@@ -203,7 +203,12 @@ void App::loadPlugins(){
     auto entryList = pluginsDir.entryList(QDir::Files);
 #endif
     //move rastr.dll at top
-    int ind_rastr = entryList.indexOf("rastr.dll");
+    #if(COMPILE_WIN)
+        int ind_rastr = entryList.indexOf("rastr.dll");
+    #else
+        int ind_rastr = entryList.indexOf("libastra.so");
+    #endif
+
     auto item = entryList.takeAt(ind_rastr);
     entryList.insert(0,item);
     for( const QString &fileName : entryList ){
