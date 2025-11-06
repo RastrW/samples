@@ -304,7 +304,7 @@ void RtabWidget::SetEditor(RCol& rcol)
     }
     if (rcol.com_prop_tt == enComPropTT::COM_PR_SUPERENUM && !rcol.nameref_.empty() && contains(prm->mm_superenum_,rcol.index) )
     {
-        rcol.directcode = true;         // DEBUG
+        //rcol.directcode = true;         // DEBUG
 
         if (!rcol.directcode)
         {

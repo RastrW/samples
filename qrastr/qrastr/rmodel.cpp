@@ -153,7 +153,8 @@ QVariant RModel::data(const QModelIndex &index, int role) const
                  return m_enum_.at(col).at(item.toInt());
 
             if (contains(mm_superenum_,col))
-                return mm_superenum_.at(col).at(item.toInt()).c_str();
+                if (contains(mm_superenum_.at(col),item.toInt()))
+                    return mm_superenum_.at(col).at(item.toInt()).c_str();
         }
 
         return item;
