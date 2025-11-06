@@ -206,7 +206,7 @@ void App::loadPlugins(){
     #if(COMPILE_WIN)
         int ind_rastr = entryList.indexOf("rastr.dll");
     #else
-        int ind_rastr = entryList.indexOf("libastra.so");
+        int ind_rastr = entryList.indexOf("librastr.so");
     #endif
 
     auto item = entryList.takeAt(ind_rastr);

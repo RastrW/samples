@@ -56,7 +56,7 @@ int main(int argc, char *argv[]){
     }
     w.setQAstra(app.getQAstraPtr());
     w.setQTI(app.getQTIPtr());
-    //w.setQBarsMDP(app.getQBarsMDPPtr());
+    w.setQBarsMDP(app.getQBarsMDPPtr());
     w.setForms(app.GetForms());
     //w.resize(1200,800);
     w.show();
