@@ -666,9 +666,7 @@ void MainWindow::idop_wrap(){
     emit signal_calc_begin();
     eASTCode code = eASTCode::AST_OK;
     formcalcidop* pformcalcidop = new formcalcidop(m_sp_qastra.get(),this);
-    pformcalcidop->show();
-    //eASTCode code = m_sp_qastra->CalcIdop(ctrl.Temperature, ctrl.Tolerance, ctrl.Query);
-
+    pformcalcidop->show();  // on OK call -> calcIdop
     emit signal_calc_end();
 }
 

@@ -29,6 +29,7 @@ public:
     eASTCode  Rgm(const std::string_view& parameters = {});
     eASTCode  Opf(const std::string_view& parameters = {});
     eASTCode  SMZU(const std::string_view& parameters = {});
+    void  CalcIdop(double Temp, double Pcab , const std::string_view& selection = {} , bool IgnoreTTables = false);
     eASTCode  Kz(const std::string_view& parameters, eNonsym Nonsym, long p1, long p2, long p3, double LengthFromP1InProc, double rd, double z_re, double z_im);
     FieldVariantData GetVal( const std::string_view& Table, const std::string_view& Col , const long row );
     std::string GetStringVal( const std::string_view& Table, const std::string_view& Col , const long row );

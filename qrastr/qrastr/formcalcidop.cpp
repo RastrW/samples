@@ -19,9 +19,9 @@ void formcalcidop::on_buttonBox_accepted()
 {
     double T = ui->lineEdit->text().toDouble();
     double AV = ui->lineEdit_2->text().toDouble();
-    std::string sel = ui->lineEdit_2->text().toStdString();
-    // NOT IMPLEMENTED
-    //pqastra->CalcIdop(T,AV,sel);
+    std::string sel = ui->lineEdit_3->text().toStdString();
+
+    pqastra->CalcIdop(T,AV,sel);
 }
 
 
