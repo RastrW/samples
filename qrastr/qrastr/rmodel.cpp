@@ -150,7 +150,8 @@ QVariant RModel::data(const QModelIndex &index, int role) const
         if (!prc->directcode)
         {
             if (contains(m_enum_,col) )
-                 return m_enum_.at(col).at(item.toInt());
+                //if (contains(m_enum_.at(col),item.toInt()) )  // win not compile
+                    return m_enum_.at(col).at(item.toInt());
 
             if (contains(mm_superenum_,col))
                 if (contains(mm_superenum_.at(col),item.toInt()))

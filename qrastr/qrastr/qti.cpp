@@ -25,6 +25,5 @@ long QTI::DobavPTI() const
 }
 long QTI::FiltrTI() const
 {
-    //return sp_ti_->FiltrTI();
-    return 100500;
+    return sp_ti_->FiltrTI();
 }
