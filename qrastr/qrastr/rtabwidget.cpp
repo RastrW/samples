@@ -383,8 +383,12 @@ void RtabWidget::SetTableView(Qtitan::GridTableView& tv, RModel& mm, int myltipl
 {
     view->tableOptions().setColumnAutoWidth(false);
     // Ширина колонок
+    // Выравнивание
     for (auto cw : mm.ColumnsWidth())
+    {
         tv.getColumn(std::get<0>(cw))->setWidth(std::get<1>(cw)*myltiplier);
+        tv.getColumn(std::get<0>(cw))->setTextAlignment(Qt::AlignLeft);
+    }
 }
 
 // QTitanGrid: ContextMenu

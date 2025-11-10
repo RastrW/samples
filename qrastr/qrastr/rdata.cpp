@@ -6,17 +6,22 @@ void RData::Initialize(CUIForm _form, QAstra* _pqastra)
 {
     qDebug() << "Start RData::Initialize t_name : " << t_name_.c_str();
 
-    IRastrTablesPtr tablesx{ _pqastra->getRastr()->Tables() };
-    IRastrTablePtr table{ tablesx->Item(t_name_) };
-    IRastrColumnsPtr columns{ table->Columns() };
     //table->Title(); ??
     //t_title_ = stringutils::cp1251ToUtf8(_form.Name().c_str());
     t_title_ = _form.Name().c_str();
     //t_title_ = stringutils::MkToUtf8(_form.Name().c_str());
 
+    IRastrTablesPtr tablesx{ _pqastra->getRastr()->Tables() };
+    IRastrPayload res{ tablesx->FindIndex(t_name_) };
+    int t_ind = res.Value();
+    if (t_ind < 0)
+        return;
+
+    IRastrTablePtr table{ tablesx->Item(t_name_) };
+    IRastrColumnsPtr columns{ table->Columns() };
+
 
     //std::string table_Name = IRastrPayload(IRastrVariantPtr(table->Name()));
-
     // В RData создаем RCol по образу формы
     /*for (CUIFormField &f : _form.Fields()){
         for(const nlohmann::json& j_meta : j_metas_ ){

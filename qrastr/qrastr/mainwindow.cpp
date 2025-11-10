@@ -769,11 +769,24 @@ void MainWindow::onOpenForm( QAction* p_actn ){
 void MainWindow::onOpenForm(CUIForm _uiform){
     CUIForm form  = _uiform;
     qDebug() << "\n Open form:" << form.Name().c_str();
+    //Проверка существования таблицы
+    IRastrTablesPtr tablesx{  m_sp_qastra->getRastr()->Tables() };
+    IRastrPayload res{ tablesx->FindIndex(_uiform.TableName()) };
+    int t_ind = res.Value();
+    if (t_ind < 0)
+    {
+        qDebug() << "\n Table:" << form.Name().c_str() << " not exist!";
+        spdlog::info( "Таблица [{}] - [{}] не существует! ", form.Name(), form.TableName());
+        return;
+    }
+
+
+
     //spdlog::info( "Create tab [{}]", stringutils::cp1251ToUtf8(form.Name()) );
-    spdlog::info( "Create tab [{}]", form.Name() );
+    spdlog::info( "Прочитана таблица [{}] - [{}]", form.Name(),form.TableName() );
     RtabWidget *prtw = new RtabWidget(m_sp_qastra.get(),form,&m_RTDM,m_DockManager,this);
 
-    //Выравнивание даных по шаблону
+    //Выравнивание даных по шаблону , выравнивание текста по левому краю
     prtw->widebyshabl();
 
     QObject::connect(this, &MainWindow::signal_calc_begin, prtw, &RtabWidget::on_calc_begin);
