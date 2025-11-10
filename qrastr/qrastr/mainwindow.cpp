@@ -634,6 +634,15 @@ void MainWindow::smzu_tst_wrap(){
         str_msg = "Расчет МДП завершился аварийно!";
         spdlog::error("{} : {}", static_cast<int>(code), str_msg);
     }
+    //onRastrLog(const _log_data& log_data){
+    _log_data log_data;
+    log_data.lmt = LogMessageTypes::Error;
+    log_data.str_msg = str_msg;
+    log_data.n_indx = -1;
+    log_data.n_stage_id = -1;
+    m_sp_qastra->onRastrLog(log_data);
+    //m_sp_qastra->onRastrPrint(str_msg);
+    //m_sp_qastra->onRastrPrint(str_msg);
     statusBar()->showMessage( str_msg.c_str(), 0 );
     emit signal_calc_end();
 }
@@ -734,7 +743,7 @@ void MainWindow::bars_mdp_prepare_wrap()
     bool ok{};
     QString text = QInputDialog::getText(this, tr("Подготовка для расчета МДП"),
                                          tr("Сечения:"), QLineEdit::Normal,
-                                         QDir::home().dirName(), &ok);
+                                         "0", &ok);
     if (ok && !text.isEmpty())
     {
         m_sp_qbarsmdp->Init(text.toStdString().c_str());
