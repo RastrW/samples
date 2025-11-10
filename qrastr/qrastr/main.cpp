@@ -10,7 +10,7 @@ int main23(int argc, char *argv[]){
     //QApplication app(argc, argv);
     App app(argc, argv);
     n_res = app.init(); assert(n_res>0);
-    app.setWindowIcon(QIcon(":/images/new.png"));
+    app.setWindowIcon(QIcon(":/images/rastr.png"));
 
     n_res = app.start();
     if(n_res<0){
@@ -37,7 +37,7 @@ int main(int argc, char *argv[]){
     if(n_res<0){
         return 100;
     }
-    app.setWindowIcon(QIcon(":/images/new.png"));
+    app.setWindowIcon(QIcon(":/images/rastr.png"));
 /*
     QTranslator translator;
     const QStringList uiLanguages = QLocale::system().uiLanguages();

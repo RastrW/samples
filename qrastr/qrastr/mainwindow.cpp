@@ -899,15 +899,15 @@ void MainWindow::showFormSettings(){
 
 void MainWindow::createActions(){
     //file
-    QAction* actNewFile = new QAction(QIcon(":/images/new.png"), tr("&Новый"), this);
+    QAction* actNewFile = new QAction(QIcon(":/images/document_new.png"), tr("&Новый"), this);
     actNewFile->setShortcut(tr("Ctrl+N"));
     actNewFile->setStatusTip(tr("Create a new file"));
     connect(actNewFile, SIGNAL(triggered()), this, SLOT(newFile()));
-    QAction* actOpenfile = new QAction(QIcon(":/images/open.png"), tr("&Загрузить"), this);
+    QAction* actOpenfile = new QAction(QIcon(":/images/folder_out.png"), tr("&Загрузить"), this);
     actOpenfile->setShortcut(tr("Ctrl+O"));
     actOpenfile->setStatusTip(tr("Open an existing file"));
     connect(actOpenfile, SIGNAL(triggered()), this, SLOT(open()));
-    QAction* actSaveFile = new QAction(QIcon(":/images/save.png"), tr("&Сохранить"), this);
+    QAction* actSaveFile = new QAction(QIcon(":/images/disk_blue.png"), tr("&Сохранить"), this);
     actSaveFile->setShortcut(tr("Ctrl+S"));
     actSaveFile->setStatusTip(tr("Save the document to disk"));
     connect(actSaveFile, SIGNAL(triggered()), this, SLOT(save()));
