@@ -773,6 +773,9 @@ void MainWindow::onOpenForm(CUIForm _uiform){
     spdlog::info( "Create tab [{}]", form.Name() );
     RtabWidget *prtw = new RtabWidget(m_sp_qastra.get(),form,&m_RTDM,m_DockManager,this);
 
+    //Выравнивание даных по шаблону
+    prtw->widebyshabl();
+
     QObject::connect(this, &MainWindow::signal_calc_begin, prtw, &RtabWidget::on_calc_begin);
     QObject::connect(this, &MainWindow::signal_calc_end, prtw, &RtabWidget::on_calc_end);
 
