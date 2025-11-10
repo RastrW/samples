@@ -111,7 +111,12 @@ void CondFormatJson::from_json()
                                     CondFormat::Alignment::AlignLeft,
                                     "UTF-8");
 #else
-                assert(!"nix: in qt5 no QColor::fromString()!");
+                vcf.emplace_back(   QString(str_filter.c_str()),
+                                    QColor(str_fgc.c_str()), // nix: in qt5 no QColor::fromString()
+                                    QColor(str_bgc.c_str()), // nix: in qt5 no QColor::fromString()
+                                    QFont(),
+                                    CondFormat::Alignment::AlignLeft,
+                                    "UTF-8");
 #endif
             }
             m_MapcondFormatVector.at(index) = vcf;
