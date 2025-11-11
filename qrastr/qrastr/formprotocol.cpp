@@ -66,7 +66,7 @@ void FormProtocol::onAppendProtocol(const QString& qstr){
         return;
     auto sp_item = std::make_shared<ProtocolTreeItem>( QVariantList{
         //QString("protocol"), qstr
-        QPixmap(QStringLiteral(":images/paste.png")), qstr
+        QPixmap(QStringLiteral(":images/about.png")), qstr
         }, s_spti_stages_.top().get() );
     s_spti_stages_.top().get()->appendChild(sp_item);
     p_protocol_tree_model_->layoutChanged();
@@ -85,7 +85,7 @@ void FormProtocol::onRastrLog(const _log_data& log_data){
     if( LogMessageTypes::OpenStage == log_data.lmt ){
         auto sp_item = std::make_shared<ProtocolTreeItem>( QVariantList{
             //QString("STAGE!!%1").arg(log_data.n_stage_id), log_data.str_msg.c_str()
-            QPixmap(QStringLiteral(":images/copy.png")), log_data.str_msg.c_str()
+            QPixmap(QStringLiteral(":images/book_yellow.png")), log_data.str_msg.c_str()
             },s_spti_stages_.top().get() );
         //return QPixmap(QStringLiteral(":images/copy.png"));
         s_spti_stages_.top()->appendChild(sp_item);
@@ -113,9 +113,33 @@ void FormProtocol::onRastrLog(const _log_data& log_data){
             default:                            qstr_type = "InnerFail"; break;
         }
         auto sp_item = std::make_shared<ProtocolTreeItem>( QVariantList{
-            //qstr_type, log_data.str_msg.c_str()
-            QPixmap(QStringLiteral(":images/cut.png")), log_data.str_msg.c_str()
-            } , s_spti_stages_.top().get() );
+            QPixmap(QStringLiteral(":images/lightbulb_on.png")), log_data.str_msg.c_str()
+            }, s_spti_stages_.top().get()
+        );
+        switch(log_data.lmt){
+            case LogMessageTypes::SystemError:
+            case LogMessageTypes::Failed:
+            case LogMessageTypes::Error:
+                sp_item = std::make_shared<ProtocolTreeItem>( QVariantList{
+                        QPixmap(QStringLiteral(":images/delete.png")), log_data.str_msg.c_str()
+                        }, s_spti_stages_.top().get()
+                );
+            break;
+            case LogMessageTypes::Warning:      qstr_type = "Warning";
+                sp_item = std::make_shared<ProtocolTreeItem>( QVariantList{
+                        QPixmap(QStringLiteral(":images/warning.png")), log_data.str_msg.c_str()
+                        }, s_spti_stages_.top().get()
+                );
+            break;
+            case LogMessageTypes::Message:      qstr_type = "msg"; break;
+            case LogMessageTypes::Info:         qstr_type = "inf"; break;
+            case LogMessageTypes::EnterDefault: qstr_type = "EnterDefault"; break;
+            case LogMessageTypes::Reset:        qstr_type = "RESET!"; break;
+            case LogMessageTypes::None:         qstr_type = "None"; break;
+            case LogMessageTypes::OpenStage:
+            case LogMessageTypes::CloseStage:
+            default:                            qstr_type = "InnerFail"; break;
+        }
         s_spti_stages_.top()->appendChild(sp_item);
     }
     p_protocol_tree_model_->layoutChanged();

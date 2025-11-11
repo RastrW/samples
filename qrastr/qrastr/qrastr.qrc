@@ -25,5 +25,10 @@
         <file>images/document_new.png</file>
         <file>images/disk_blue.png</file>
         <file>images/folder_out.png</file>
+        <file>images/about.png</file>
+        <file>images/book_yellow.png</file>
+        <file>images/lightbulb_on.png</file>
+        <file>images/delete.png</file>
+        <file>images/warning.png</file>
     </qresource>
 </RCC>
