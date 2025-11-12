@@ -68,14 +68,14 @@ vetv.set_selection("x>100") # по условию
 #!lin not work! vetv.to_csv(astra.CSVCode.REPLACE, file, "ip,iq,name", ";")
 
 #доступ к данным
-rastr.print( f"")
-tnode = rastr["node"]
-ss = tnode.set_selection("=1,2,3")
-data = tnode.data(["ny", "name", "uhom"])
-rastr.print(data["ny"])
-rastr.print(data["name"])
-rastr.print(data["uhom"])
-rastr.print(data["index"])
+#rastr.print( f"")
+#tnode = rastr["node"]
+#ss = tnode.set_selection("=1,2,3")
+#data = tnode.data(["ny", "name", "uhom"])
+#rastr.print(data["ny"])
+#rastr.print(data["name"])
+#rastr.print(data["uhom"])
+#rastr.print(data["index"])
 
 #Пересчет реактивного сопротивления ЛЭП пропорционально активному.
 tvetv = rastr["vetv"]
