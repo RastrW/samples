@@ -94,6 +94,8 @@ private slots:
     void smzu_tst_wrap();
     void tkz_wrap();
     void idop_wrap();
+    void ti_recalcdor_wrap();
+    void ti_updatetables_wrap();
     void ti_calcpti_wrap();
     void ti_filtrti_wrap();
     void bars_mdp_prepare_wrap();

@@ -679,6 +679,50 @@ void MainWindow::idop_wrap(){
     emit signal_calc_end();
 }
 
+void MainWindow::ti_recalcdor_wrap()
+{
+    if (m_sp_qti == nullptr)
+    {
+        spdlog::warn("{}", "Plugin TI not initialized! Function is unavailable.");
+        return;
+    }
+    emit signal_calc_begin();
+    Timer t_calc_recalcdor;
+
+    long code = m_sp_qti->RecalcDor();
+    std::string str_msg = "";
+
+    if (code == 1){
+        str_msg = fmt::format("Пересчет дорасчетных измерений выполнен за {} сек.",t_calc_recalcdor.seconds());
+        spdlog::info("{}", str_msg);
+    }else{
+        str_msg = "Пересчет дорасчетных измерений завершился аварийно!";
+        spdlog::error("{} : {}", static_cast<int>(code), str_msg);
+    }
+}
+
+void MainWindow::ti_updatetables_wrap()
+{
+    if (m_sp_qti == nullptr)
+    {
+        spdlog::warn("{}", "Plugin TI not initialized! Function is unavailable.");
+        return;
+    }
+    emit signal_calc_begin();
+    Timer _timer;
+
+    long code = m_sp_qti->UpdateTables();
+    std::string str_msg = "";
+
+    if (code == 1){
+        str_msg = fmt::format("Обновление данных по ТМ (Привязка->T) выполнено за {} сек.",_timer.seconds());
+        spdlog::info("{}", str_msg);
+    }else{
+        str_msg = "Пересчет дорасчетных измерений завершился аварийно!";
+        spdlog::error("{} : {}", static_cast<int>(code), str_msg);
+    }
+}
+
 void MainWindow::ti_calcpti_wrap(){
     if (m_sp_qti == nullptr)
     {
@@ -740,15 +784,34 @@ void MainWindow::ti_filtrti_wrap()
 
 void MainWindow::bars_mdp_prepare_wrap()
 {
+    if (m_sp_qbarsmdp == nullptr)
+    {
+        spdlog::warn("{}", "Plugin TI not initialized! Function is unavailable.");
+        return;
+    }
+    emit signal_calc_begin();
+    Timer t_barsmdp;
+
     bool ok{};
+    std::string str_msg = "";
     QString text = QInputDialog::getText(this, tr("Подготовка для расчета МДП"),
                                          tr("Сечения:"), QLineEdit::Normal,
                                          "0", &ok);
     if (ok && !text.isEmpty())
     {
-        m_sp_qbarsmdp->Init(text.toStdString().c_str());
-        m_sp_qbarsmdp->UpdateMDPFields();
-        m_sp_qbarsmdp->UpdateAUTOFields();
+        try
+        {
+            m_sp_qbarsmdp->Init(text.toStdString().c_str());
+            m_sp_qbarsmdp->UpdateMDPFields();
+            m_sp_qbarsmdp->UpdateAUTOFields();
+            str_msg = fmt::format("Подготовка для расчета МДП для сечений {} за {} сек.",text.toStdString().c_str(),t_barsmdp.seconds());
+            spdlog::info("{}", str_msg);
+        }
+        catch(...)
+        {
+            str_msg = fmt::format("Ошибка в ходе подготовки для расчета МДП для сечений {}!",text.toStdString().c_str());
+            spdlog::error("{}", str_msg);
+        }
     }
 }
 
@@ -958,15 +1021,26 @@ void MainWindow::createActions(){
     actIdop->setShortcut(tr("F9"));
     actIdop->setStatusTip(tr("Расчет допустимых токов от температуры"));
     connect(actIdop, SIGNAL(triggered()), this, SLOT(idop_wrap()));
+
     // TI
     separatorAct = new QAction(this);
     separatorAct->setSeparator(true);
+
+    QAction* actRecalcDor = new QAction(QIcon(":/images/RecalcDor.png"),tr("&Пересчет дорасчетной ТМ"), this);
+    actRecalcDor->setStatusTip(tr("Пересчет дорасчетной ТМ"));
+    connect( actRecalcDor, SIGNAL(triggered()), this, SLOT(ti_recalcdor_wrap()));
+
+    QAction* actUpdateTables = new QAction(QIcon(":/images/UpdateTablesTI.png"),tr("&Обновить таблицы по ТМ"), this);
+    actUpdateTables->setStatusTip(tr("Обновить таблицы по ТМ"));
+    connect( actUpdateTables, SIGNAL(triggered()), this, SLOT(ti_updatetables_wrap()));
+
     QAction* actPTI = new QAction(QIcon(":/images/calc_PTI.png"),tr("&ПТИ"), this);
     actPTI->setStatusTip(tr("Расчет ПТИ"));
     connect( actPTI, SIGNAL(triggered()), this, SLOT(ti_calcpti_wrap()));
     QAction* actFiltrTI = new QAction(QIcon(":/images/filtr_1.png"),tr("&Фильтр ТИ"), this);
     actFiltrTI->setStatusTip(tr("Расчет Фильтр ТИ"));
     connect( actFiltrTI, SIGNAL(triggered()), this, SLOT(ti_filtrti_wrap()));
+
     //BarsMDP
     separatorAct = new QAction(this);
     separatorAct->setSeparator(true);
@@ -1042,6 +1116,8 @@ void MainWindow::createActions(){
     m_menuCalcParameters =  menuCalc->addMenu(tr("&Параметры"));
     m_menuCalcTI =  menuCalc->addMenu(tr("&ТИ"));
     m_menuCalcTI->addAction(actPTI);
+    m_menuCalcTI->addAction(actRecalcDor);
+    m_menuCalcTI->addAction(actUpdateTables);
    // m_menuCalcTI->addAction(actPrepare_MDP);
 
     m_menuOpen = menuBar()->addMenu(tr("&Открыть") );
@@ -1099,6 +1175,8 @@ void MainWindow::createActions(){
     m_toolbarTI->addAction(actPTI);
     m_toolbarTI->addAction(actFiltrTI);
     m_toolbarTI->addAction(actOC);
+    m_toolbarTI->addAction(actRecalcDor);
+    m_toolbarTI->addAction(actUpdateTables);
 
     //TEST BUTTONS
     //createCalcLayout();

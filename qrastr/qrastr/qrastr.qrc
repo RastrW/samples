@@ -30,5 +30,7 @@
         <file>images/lightbulb_on.png</file>
         <file>images/delete.png</file>
         <file>images/warning.png</file>
+        <file>images/RecalcDor.png</file>
+        <file>images/UpdateTablesTI.png</file>
     </qresource>
 </RCC>

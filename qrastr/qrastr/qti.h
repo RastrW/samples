@@ -17,6 +17,9 @@ public:
     typedef std::shared_ptr<IPlainTI> _sp_ti;
     void    setTI(const _sp_ti& sp_ti_in);
     _sp_ti  getTI() const;
+    long Init() const;
+    long RecalcDor() const;
+    long UpdateTables() const;
     long CalcPTI() const;
     long DobavPTI() const;
     long FiltrTI() const;
