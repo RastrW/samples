@@ -437,6 +437,7 @@ void MainWindow::open(){
     fileDlg.setFileMode(QFileDialog::ExistingFiles); //ExistingFile
     int n_res = fileDlg.exec();
     if(QDialog::Accepted == n_res){
+        QApplication::setOverrideCursor(Qt::WaitCursor);
         const QString selectedFilter = fileDlg.selectedNameFilter();
         for(const auto& rfile : fileDlg.selectedFiles()){
             spdlog::info("try load file: {}", rfile.toStdString());
@@ -468,6 +469,7 @@ void MainWindow::open(){
                 }
             }
         }
+        QApplication::restoreOverrideCursor();
     }
 
     return;
