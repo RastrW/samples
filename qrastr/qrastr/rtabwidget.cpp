@@ -361,12 +361,12 @@ void RtabWidget::SetEditor(RCol& rcol)
 void RtabWidget::on_calc_begin()
 {
     // TO DO something
-    view->beginUpdate();
+    //view->beginUpdate();
 }
 void RtabWidget::on_calc_end()
 {
     // TO DO something
-    view->endUpdate();
+   // view->endUpdate();
 }
 void RtabWidget::onRTDM_ResetModel(std::string tname)
 {
