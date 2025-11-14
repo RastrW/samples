@@ -361,10 +361,12 @@ void RtabWidget::SetEditor(RCol& rcol)
 void RtabWidget::on_calc_begin()
 {
     // TO DO something
+    view->beginUpdate();
 }
 void RtabWidget::on_calc_end()
 {
     // TO DO something
+    view->endUpdate();
 }
 void RtabWidget::onRTDM_ResetModel(std::string tname)
 {
@@ -899,7 +901,9 @@ void RtabWidget::OpenGroupCorrection()
 {
     RCol* prcol = prm->getRCol(column);
     formgroupcorrection* fgc =  new formgroupcorrection(prm->getRdata(),prcol,this);
+    this->on_calc_begin();
     fgc->show();
+    this->on_calc_end();
 }
 
 void RtabWidget::OpenLinkedForm(std::string name,std::string selection , std::vector<int> keys)

@@ -37,7 +37,6 @@ void  RTablesDataManager::onRastrHint(const _hint_data& hint_data)
             sp_QDB->Clear();
             GetDataBlock(tname,(*sp_QDB.get()));
             emit RTDM_EndResetModel(tname);
-            //emit RTDM_ResetModel(tname);
         }
         break;
     case EventHints::ChangeTable:
@@ -58,7 +57,7 @@ void  RTablesDataManager::onRastrHint(const _hint_data& hint_data)
         it = mpTables.find(tname);
         if (it != mpTables.end() )
         {
-            //emit RTDM_BeginResetModel(tname);
+            emit RTDM_BeginResetModel(tname);
             IRastrTablesPtr tables{ m_pqastra->getRastr()->Tables() };
             IRastrTablePtr table{ tables->Item(tname) };
             DataBlock<FieldVariantData> variant_block;
@@ -87,7 +86,7 @@ void  RTablesDataManager::onRastrHint(const _hint_data& hint_data)
                         break;
                 }
             }
-           // emit RTDM_EndResetModel(tname);
+            emit RTDM_EndResetModel(tname);
         }
         break;
 

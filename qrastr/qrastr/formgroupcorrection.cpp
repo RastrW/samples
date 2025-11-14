@@ -33,6 +33,7 @@ void formgroupcorrection::on_buttonBox_accepted()
 {
     selection_ = ui->lineEdit_selection->text().toStdString();
     expression_ = ui->lineEdit_expression->text().toStdString();
+    //emit signal_calc_begin();
     prcol_->calc(expression_,selection_);
     this->close();
 }

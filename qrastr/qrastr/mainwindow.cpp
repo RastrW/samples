@@ -673,6 +673,7 @@ void MainWindow::tkz_wrap(){
 
 void MainWindow::idop_wrap(){
     emit signal_calc_begin();
+
     eASTCode code = eASTCode::AST_OK;
     formcalcidop* pformcalcidop = new formcalcidop(m_sp_qastra.get(),this);
     pformcalcidop->show();  // on OK call -> calcIdop
@@ -801,6 +802,7 @@ void MainWindow::bars_mdp_prepare_wrap()
     {
         try
         {
+
             m_sp_qbarsmdp->Init(text.toStdString().c_str());
             m_sp_qbarsmdp->UpdateMDPFields();
             m_sp_qbarsmdp->UpdateAUTOFields();
