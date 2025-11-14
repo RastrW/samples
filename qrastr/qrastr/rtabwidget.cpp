@@ -378,11 +378,14 @@ void RtabWidget::onRTDM_ResetModel(std::string tname)
 void RtabWidget::SetTableView(QTableView& tv, RModel& mm, int myltiplier  )
 {
     // Ширина колонок
+    view->beginUpdate();
     for (auto cw : mm.ColumnsWidth())
         tv.setColumnWidth(std::get<0>(cw),std::get<1>(cw)*myltiplier);
+    view->endUpdate();
 }
 void RtabWidget::SetTableView(Qtitan::GridTableView& tv, RModel& mm, int myltiplier  )
 {
+    tv.beginUpdate();
     view->tableOptions().setColumnAutoWidth(false);
     // Ширина колонок
     // Выравнивание
@@ -391,6 +394,7 @@ void RtabWidget::SetTableView(Qtitan::GridTableView& tv, RModel& mm, int myltipl
         tv.getColumn(std::get<0>(cw))->setWidth(std::get<1>(cw)*myltiplier);
         tv.getColumn(std::get<0>(cw))->setTextAlignment(Qt::AlignLeft);
     }
+    tv.endUpdate();
 }
 
 // QTitanGrid: ContextMenu
