@@ -40,6 +40,7 @@ void  RTablesDataManager::onRastrHint(const _hint_data& hint_data)
         }
         break;
     case EventHints::ChangeTable:
+        emit RTDM_BeginResetModel(tname);
         it = mpTables.find(tname);
         if (it != mpTables.end() )
         {
@@ -52,6 +53,7 @@ void  RTablesDataManager::onRastrHint(const _hint_data& hint_data)
             // emit RTDM_UpdateProperties
 
         }
+        emit RTDM_EndResetModel(tname);
         break;
     case EventHints::ChangeColumn:
         it = mpTables.find(tname);
