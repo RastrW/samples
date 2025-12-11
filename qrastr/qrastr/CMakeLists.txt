@@ -2,6 +2,7 @@ cmake_minimum_required(VERSION 3.23) # 3.20 min version for "astra" build
 project( qrastr VERSION 0.1 LANGUAGES CXX )
 
 add_compile_definitions( QICSGRID_NO )
+add_compile_definitions( SDL_NO )
 
 if(MSVC)
     add_compile_definitions( COMPILE_WIN )
@@ -89,7 +90,6 @@ add_subdirectory(
 set(INCLUDES
     "${ASTRA_LOCATION}"
     "${ASTRA_LOCATION}/../comck/"
-    #"${DEPENDENCIES_LOCATION}/fmt/include"
     "${ASTRA_LOCATION}/fmt/include/"
     "${DEPENDENCIES_LOCATION}/qicstable/include"
     "${DEPENDENCIES_LOCATION}/metakit/include" #-win
@@ -106,6 +106,8 @@ set(INCLUDES
     "${ASTRA_LOCATION}/../../flytfs/IPlainRastrTest/"
     "${DEPENDENCIES_LOCATION}/qtitan8_lin_5_15/include/" #lin Qtitan
     "${DEPENDENCIES_LOCATION}/QtitanDataGrid8.2.0_win_qt_6_7/include/" #win Qtitan
+    "${DEPENDENCIES_LOCATION}/SDL3-3.2.28/include/" #win SDL
+    "${DEPENDENCIES_LOCATION}/SDL3_image-3.2.4/include/" #win SDL Image
 )
 #message("INCLUDES is set to ${INCLUDES}")
 
@@ -119,6 +121,8 @@ if(MSVC)
     link_directories("${DEPENDENCIES_LOCATION}/Qt-Advanced-Docking-System/build/vs-Debug/lib/")
     link_directories("${DEPENDENCIES_LOCATION}/Qt-Advanced-Docking-System/build/vs-Release/lib/")
     link_directories("${DEPENDENCIES_LOCATION}/QtitanDataGrid8.2.0_win_qt_6_7/bin/")
+    link_directories("${DEPENDENCIES_LOCATION}/SDL3-3.2.28/lib/x64/")                   #win SDL
+    link_directories("${DEPENDENCIES_LOCATION}/SDL3_image-3.2.4/lib/x64/")              #win SDL Image  https://github.com/libsdl-org/SDL_image/releases
 else()
     link_directories("${DEPENDENCIES_LOCATION}/qicstable/lib/")
     link_directories("${ASTRA_LOCATION}/build/")
@@ -269,6 +273,8 @@ set(PROJECT_SOURCES
     formsaveall.h
     formsaveall.cpp
     formsaveall.ui
+    SDLChild.h
+    SDLChild.cpp
 )
 
 if(${QT_VERSION_MAJOR} GREATER_EQUAL 6)
@@ -290,19 +296,19 @@ target_link_libraries( ${PROJECT_NAME} PRIVATE fmt::fmt-header-only )
 #target_link_libraries( ${PROJECT_NAME} PRIVATE Python3::Python )
 #target_link_libraries(${PROJECT_NAME} ${PYTHON3_LIBRARIES})
 if(MSVC)
-  #link_directories("${ASTRA_LOCATION}/../build/vs-${CMAKE_BUILD_TYPE}/pyastra") #C:\projects\rastr\RastrWin\build\vs-Debug\pyastra
-  #target_link_libraries( ${PROJECT_NAME} PRIVATE astra_py     ) # when build with pybind11
-    #target_link_libraries( ${PROJECT_NAME} PRIVATE astra     )
     target_link_libraries( ${PROJECT_NAME} PRIVATE qmcr         )
     target_link_libraries( ${PROJECT_NAME} PRIVATE Qt::WidgetsPrivate)
     if (CMAKE_BUILD_TYPE MATCHES Debug)
         target_link_libraries( ${PROJECT_NAME} PRIVATE qtadvanceddockingd )
         target_link_libraries( ${PROJECT_NAME} PRIVATE QtitanBased2 )
         target_link_libraries( ${PROJECT_NAME} PRIVATE QtitanGridd8 )
+        target_link_libraries( ${PROJECT_NAME} PRIVATE SDL3 )
+        target_link_libraries( ${PROJECT_NAME} PRIVATE SDL3_image )
     else()
         target_link_libraries( ${PROJECT_NAME} PRIVATE qtadvanceddocking  )
         target_link_libraries( ${PROJECT_NAME} PRIVATE QtitanBase2 )
         target_link_libraries( ${PROJECT_NAME} PRIVATE QtitanGrid8 )
+
     endif()
 else()
     if (CMAKE_BUILD_TYPE MATCHES Debug)

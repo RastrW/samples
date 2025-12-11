@@ -4,6 +4,7 @@
 #include "mainwindow.h"
 #include "app.h"
 #include "formsettings.h"
+//#include <SDL3\SDL.h>
 
 int main23(int argc, char *argv[]){
     int n_res = 0;
@@ -49,7 +50,9 @@ int main(int argc, char *argv[]){
         }
     }
 */
+   // SDL_Init(SDL_INIT_VIDEO); // Basics of SDL, init what you need to use
     MainWindow w;
+
     n_res = app.start();
     if(n_res<0){
         return 200;

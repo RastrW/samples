@@ -80,6 +80,7 @@ signals:
     void signal_calc_end();
 ///slots.begin
 private slots:
+    void open_graph();
     void newFile();
     void open();
     void save();

@@ -4,7 +4,6 @@
 
 #include <QWidget>
 #include <QString>
-//#include "rastrdatamodel.h"
 #include "rmodel.h"
 #include "rtableview.h"
 

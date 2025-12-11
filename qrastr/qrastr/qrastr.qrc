@@ -32,5 +32,6 @@
         <file>images/warning.png</file>
         <file>images/RecalcDor.png</file>
         <file>images/UpdateTablesTI.png</file>
+        <file>images/cx195.svg</file>
     </qresource>
 </RCC>

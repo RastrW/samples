@@ -47,6 +47,8 @@ using WrapperExceptionType = std::runtime_error;
 #include <QtitanDef.h>
 #include <QtitanGrid.h>
 #include "qmcr/pyhlp.h"
+#include "SDLChild.h"
+
 
 
 MainWindow::MainWindow(){
@@ -411,6 +413,22 @@ void MainWindow::newFile(){
     MdiChild *child = createMdiChild(  j_forms_[0] );
     child->newFile();
     child->show();
+#endif
+}
+void MainWindow::open_graph(){
+
+#if(!defined(SDL_NO))
+    SDL_Init(SDL_INIT_VIDEO); // Basics of SDL, init what you need to use
+
+    auto dw = new ads::CDockWidget( "Графика", this);
+    SDLChild * SdlChild = new SDLChild(dw);	// Creating the SDL Window and initializing it.
+
+    dw->setWidget(SdlChild);
+    connect( dw, SIGNAL( closed() ), SdlChild, SLOT( OnClose() ) );
+    auto area = m_DockManager->addDockWidgetTab(ads::BottomAutoHideArea, dw);
+    dw->setFeature(ads::CDockWidget::DockWidgetDeleteOnClose, true);
+
+    SdlChild->SDLInit();
 #endif
 }
 
@@ -1001,6 +1019,13 @@ void MainWindow::createActions(){
     actMacro->setShortcut(tr("F11"));
     actMacro->setStatusTip(tr("Run macro"));
     connect(actMacro, SIGNAL(triggered()), this, SLOT(onDlgMcr()));
+
+    //graph
+    QAction* actGraph = new QAction( QIcon(QApplication::style()->standardIcon(QStyle::SP_DriveNetIcon)), tr("&graph"), this );
+    actGraph->setShortcut(tr("F10"));
+    actGraph->setStatusTip(tr("Графика"));
+    connect(actGraph, SIGNAL(triggered()), this, SLOT(open_graph()));
+
     //calc
     QAction* actKDD = new QAction(tr("&Контроль"), this);
     actKDD->setStatusTip(tr("Контроль исходных данных"));
@@ -1107,6 +1132,8 @@ void MainWindow::createActions(){
 
     QMenu* menuMacro = menuBar()->addMenu(tr("&Макро"));
     menuMacro->addAction(actMacro);
+    QMenu* menuGraph = menuBar()->addMenu(tr("&Графика"));
+    menuGraph->addAction(actGraph);
     QMenu* menuCalc = menuBar()->addMenu(tr("&Расчеты"));
     menuCalc->addAction(actKDD);
     menuCalc->addAction(actRGM);
