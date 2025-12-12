@@ -26,6 +26,7 @@ void  RTablesDataManager::onRastrHint(const _hint_data& hint_data)
     long row = hint_data.n_indx;
     std::string cname = hint_data.str_column;
     std::string tname = hint_data.str_table;
+    qDebug() << "Hint: type: " << (long)(hint_data.hint) << " tname: " <<tname << " col_name: " << cname;
 
     std::map<std::string,std::shared_ptr<QDataBlock>>::iterator it;
     switch (hint_data.hint)
@@ -249,6 +250,7 @@ std::shared_ptr<QDataBlock>  RTablesDataManager::Get(std::string tname, std::str
     }
     else
     {
+        qDebug()<<"RTDM: add Table" << tname;
         mpTables.insert(std::make_pair(tname,new QDataBlock()));
         GetDataBlock(tname,Cols,*mpTables.find(tname)->second);
     }
@@ -256,6 +258,17 @@ std::shared_ptr<QDataBlock>  RTablesDataManager::Get(std::string tname, std::str
     return mpTables.find(tname)->second;
 }
 
+long RTablesDataManager::column_index(std::string tname , std::string _col_name)
+{
+    IRastrTablesPtr tablesx{ m_pqastra->getRastr()->Tables() };
+    IRastrPayload tindex{tablesx->FindIndex(tname)};
+    if ( tindex.Value() < 0 )
+        return -1;
+    IRastrTablePtr table{ tablesx->Item(tname) };
+    IRastrColumnsPtr columns{ table->Columns() };
+    IRastrPayload res{columns->FindIndex(_col_name)};
+    return res.Value();
+}
 void  RTablesDataManager::GetDataBlock(std::string tname , std::string Cols , QDataBlock& QDB)
 {
     FieldDataOptions Options;
@@ -265,6 +278,7 @@ void  RTablesDataManager::GetDataBlock(std::string tname , std::string Cols , QD
     //Options.SetEditatableColumnsOnly(true);
     IRastrTablesPtr tablesx{ m_pqastra->getRastr()->Tables() };
     IRastrTablePtr table{ tablesx->Item(tname) };
+
     IRastrResultVerify(table->DataBlock(Cols, QDB, Options));
 }
 void  RTablesDataManager::GetDataBlock(std::string tname , std::string Cols , QDataBlock& QDB,FieldDataOptions Options )

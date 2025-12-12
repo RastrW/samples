@@ -1014,17 +1014,6 @@ void MainWindow::createActions(){
         recentFileActs[i]->setVisible(false);
         connect( recentFileActs[i], SIGNAL(triggered()), this, SLOT(openRecentFile()) );
     }
-    //macro
-    QAction* actMacro = new QAction( QIcon(QApplication::style()->standardIcon(QStyle::SP_MediaPlay)), tr("&macro"), this );
-    actMacro->setShortcut(tr("F11"));
-    actMacro->setStatusTip(tr("Run macro"));
-    connect(actMacro, SIGNAL(triggered()), this, SLOT(onDlgMcr()));
-
-    //graph
-    QAction* actGraph = new QAction( QIcon(QApplication::style()->standardIcon(QStyle::SP_DriveNetIcon)), tr("&graph"), this );
-    actGraph->setShortcut(tr("F10"));
-    actGraph->setStatusTip(tr("Графика"));
-    connect(actGraph, SIGNAL(triggered()), this, SLOT(open_graph()));
 
     //calc
     QAction* actKDD = new QAction(tr("&Контроль"), this);
@@ -1050,6 +1039,18 @@ void MainWindow::createActions(){
     actIdop->setShortcut(tr("F9"));
     actIdop->setStatusTip(tr("Расчет допустимых токов от температуры"));
     connect(actIdop, SIGNAL(triggered()), this, SLOT(idop_wrap()));
+
+    //graph
+    QAction* actGraph = new QAction( QIcon(QApplication::style()->standardIcon(QStyle::SP_DriveNetIcon)), tr("&graph"), this );
+    actGraph->setShortcut(tr("F10"));
+    actGraph->setStatusTip(tr("Графика"));
+    connect(actGraph, SIGNAL(triggered()), this, SLOT(open_graph()));
+
+    //macro
+    QAction* actMacro = new QAction( QIcon(QApplication::style()->standardIcon(QStyle::SP_MediaPlay)), tr("&macro"), this );
+    actMacro->setShortcut(tr("F11"));
+    actMacro->setStatusTip(tr("Run macro"));
+    connect(actMacro, SIGNAL(triggered()), this, SLOT(onDlgMcr()));
 
     // TI
     separatorAct = new QAction(this);

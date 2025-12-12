@@ -33,8 +33,9 @@ public:
     void onRastrHint(const _hint_data& hint_data);
     std::shared_ptr<QDataBlock> Get(std::string tname, std::string Cols);
 
-private:
+    long column_index(std::string tname, std::string _col_name);
     void GetDataBlock(std::string tname , std::string Cols , QDataBlock& QDB);
+private:
     void GetDataBlock(std::string tname , std::string Cols , QDataBlock& QDB,FieldDataOptions Options );
     void GetDataBlock(std::string tname , QDataBlock& QDB,FieldDataOptions Options );
     void GetDataBlock(std::string tname , QDataBlock& QDB);
