@@ -5,6 +5,7 @@
 #include "app.h"
 #include "formsettings.h"
 //#include <SDL3\SDL.h>
+#include <pqxx/pqxx>
 
 int main23(int argc, char *argv[]){
     int n_res = 0;
@@ -26,6 +27,10 @@ int main23(int argc, char *argv[]){
 int main(int argc, char *argv[]){
     long n_res = 0;
     App app(argc, argv);
+
+    //Compile test
+    //pqxx::connection cx{"postgresql://accounting@localhost/company"};
+    //pqxx::work tx{cx};
 
     app.setOrganizationName("Trolltech");
     app.setApplicationName("QRastr");

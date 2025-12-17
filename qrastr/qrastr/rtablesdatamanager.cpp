@@ -26,7 +26,7 @@ void  RTablesDataManager::onRastrHint(const _hint_data& hint_data)
     long row = hint_data.n_indx;
     std::string cname = hint_data.str_column;
     std::string tname = hint_data.str_table;
-    qDebug() << "Hint: type: " << (long)(hint_data.hint) << " tname: " <<tname << " col_name: " << cname;
+    qDebug() << "Hint: type: " << (long)(hint_data.hint) << " tname: " <<tname.c_str() << " col_name: " << cname.c_str();
 
     std::map<std::string,std::shared_ptr<QDataBlock>>::iterator it;
     switch (hint_data.hint)
@@ -250,7 +250,7 @@ std::shared_ptr<QDataBlock>  RTablesDataManager::Get(std::string tname, std::str
     }
     else
     {
-        qDebug()<<"RTDM: add Table" << tname;
+        qDebug()<<"RTDM: add Table" << tname.c_str();
         mpTables.insert(std::make_pair(tname,new QDataBlock()));
         GetDataBlock(tname,Cols,*mpTables.find(tname)->second);
     }

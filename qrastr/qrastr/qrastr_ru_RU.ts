@@ -424,550 +424,600 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="mainwindow.cpp" line="62"/>
+        <location filename="mainwindow.cpp" line="64"/>
         <source>~qrastr~</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="mainwindow.cpp" line="525"/>
-        <source>File saved</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="mainwindow.cpp" line="757"/>
-        <source>About QRastr</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="mainwindow.cpp" line="757"/>
-        <source>About the &lt;b&gt;QRastr&lt;/b&gt;.</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="mainwindow.cpp" line="980"/>
-        <source>&amp;О программе</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="mainwindow.cpp" line="986"/>
-        <source>&amp;Файлы</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="mainwindow.cpp" line="992"/>
-        <source>&amp;Настройки программы</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="mainwindow.cpp" line="994"/>
-        <source>&amp;Настройки</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="mainwindow.cpp" line="998"/>
-        <source>&amp;Последние</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="mainwindow.cpp" line="1007"/>
-        <source>&amp;Макро</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="mainwindow.cpp" line="1009"/>
-        <source>&amp;Расчеты</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="mainwindow.cpp" line="1020"/>
-        <source>&amp;ТИ</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="mainwindow.cpp" line="1024"/>
-        <source>&amp;Открыть</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="mainwindow.cpp" line="1026"/>
-        <source>Окна</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="mainwindow.cpp" line="1046"/>
-        <location filename="mainwindow.cpp" line="1129"/>
-        <source>&amp;%1 %2</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="mainwindow.cpp" line="1049"/>
-        <source>%1 %2</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="mainwindow.cpp" line="880"/>
-        <source>Ctrl+N</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="mainwindow.cpp" line="881"/>
-        <source>Create a new file</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="mainwindow.cpp" line="884"/>
-        <source>Ctrl+O</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="mainwindow.cpp" line="885"/>
-        <source>Open an existing file</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="mainwindow.cpp" line="888"/>
-        <source>Ctrl+S</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="mainwindow.cpp" line="889"/>
-        <source>Save the document to disk</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="mainwindow.cpp" line="892"/>
-        <source>Save the document under a new name</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="mainwindow.cpp" line="900"/>
-        <source>E&amp;xit</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="mainwindow.cpp" line="901"/>
-        <source>Ctrl+Q</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="mainwindow.cpp" line="902"/>
-        <source>Exit the application</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="mainwindow.cpp" line="418"/>
+        <location filename="mainwindow.cpp" line="436"/>
         <source>Open Rastr files</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="mainwindow.cpp" line="492"/>
+        <location filename="mainwindow.cpp" line="512"/>
         <source>Save Rastr file</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="mainwindow.cpp" line="537"/>
+        <location filename="mainwindow.cpp" line="545"/>
+        <source>File saved</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="mainwindow.cpp" line="557"/>
         <source>File not saved</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="mainwindow.cpp" line="879"/>
+        <location filename="mainwindow.cpp" line="818"/>
+        <source>Подготовка для расчета МДП</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="mainwindow.cpp" line="819"/>
+        <source>Сечения:</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="mainwindow.cpp" line="849"/>
+        <source>About QRastr</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="mainwindow.cpp" line="849"/>
+        <source>About the &lt;b&gt;QRastr&lt;/b&gt;.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="mainwindow.cpp" line="987"/>
         <source>&amp;Новый</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="mainwindow.cpp" line="883"/>
+        <location filename="mainwindow.cpp" line="988"/>
+        <source>Ctrl+N</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="mainwindow.cpp" line="989"/>
+        <source>Create a new file</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="mainwindow.cpp" line="991"/>
         <source>&amp;Загрузить</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="mainwindow.cpp" line="887"/>
+        <location filename="mainwindow.cpp" line="992"/>
+        <source>Ctrl+O</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="mainwindow.cpp" line="993"/>
+        <source>Open an existing file</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="mainwindow.cpp" line="995"/>
         <source>&amp;Сохранить</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="mainwindow.cpp" line="891"/>
+        <location filename="mainwindow.cpp" line="996"/>
+        <source>Ctrl+S</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="mainwindow.cpp" line="997"/>
+        <source>Save the document to disk</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="mainwindow.cpp" line="999"/>
         <source>&amp;Сохранить как</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="mainwindow.cpp" line="894"/>
+        <location filename="mainwindow.cpp" line="1000"/>
+        <source>Save the document under a new name</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="mainwindow.cpp" line="1002"/>
         <source>&amp;Сохранить все</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="mainwindow.cpp" line="895"/>
+        <location filename="mainwindow.cpp" line="1003"/>
         <source>Save all the document</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="mainwindow.cpp" line="897"/>
-        <location filename="mainwindow.cpp" line="1019"/>
+        <location filename="mainwindow.cpp" line="1005"/>
+        <location filename="mainwindow.cpp" line="1148"/>
         <source>&amp;Параметры</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="mainwindow.cpp" line="898"/>
+        <location filename="mainwindow.cpp" line="1006"/>
         <source>Open settings form.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="mainwindow.cpp" line="910"/>
+        <location filename="mainwindow.cpp" line="1008"/>
+        <source>E&amp;xit</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="mainwindow.cpp" line="1009"/>
+        <source>Ctrl+Q</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="mainwindow.cpp" line="1010"/>
+        <source>Exit the application</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="mainwindow.cpp" line="1050"/>
         <source>&amp;macro</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="mainwindow.cpp" line="911"/>
+        <location filename="mainwindow.cpp" line="1051"/>
         <source>F11</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="mainwindow.cpp" line="912"/>
+        <location filename="mainwindow.cpp" line="1052"/>
         <source>Run macro</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="mainwindow.cpp" line="915"/>
+        <location filename="mainwindow.cpp" line="1044"/>
+        <source>&amp;graph</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="mainwindow.cpp" line="1045"/>
+        <source>F10</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="mainwindow.cpp" line="1046"/>
+        <source>Графика</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="mainwindow.cpp" line="1019"/>
         <source>&amp;Контроль</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="mainwindow.cpp" line="916"/>
+        <location filename="mainwindow.cpp" line="1020"/>
         <source>Контроль исходных данных</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="mainwindow.cpp" line="918"/>
+        <location filename="mainwindow.cpp" line="1022"/>
         <source>&amp;Режим</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="mainwindow.cpp" line="920"/>
-        <source>Расчет УР</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="mainwindow.cpp" line="922"/>
-        <source>&amp;ОС</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="mainwindow.cpp" line="923"/>
-        <source>F6</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="mainwindow.cpp" line="924"/>
-        <source>Оценка состояния</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="mainwindow.cpp" line="926"/>
-        <source>&amp;МДП</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="mainwindow.cpp" line="927"/>
-        <source>F7</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="mainwindow.cpp" line="928"/>
-        <source>Расчет МДП</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="mainwindow.cpp" line="930"/>
-        <source>&amp;ТКЗ</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="mainwindow.cpp" line="931"/>
-        <source>F8</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="mainwindow.cpp" line="932"/>
-        <source>Расчет ТКЗ</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="mainwindow.cpp" line="934"/>
-        <source>&amp;Доп. ток от Т</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="mainwindow.cpp" line="935"/>
-        <source>F9</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="mainwindow.cpp" line="936"/>
-        <source>Расчет допустимых токов от температуры</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="mainwindow.cpp" line="941"/>
-        <source>&amp;ПТИ</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="mainwindow.cpp" line="942"/>
-        <source>Расчет ПТИ</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="mainwindow.cpp" line="944"/>
-        <source>&amp;Фильтр ТИ</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="mainwindow.cpp" line="945"/>
-        <source>Расчет Фильтр ТИ</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="mainwindow.cpp" line="955"/>
-        <source>Cl&amp;ose</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="mainwindow.cpp" line="956"/>
-        <source>Ctrl+F4</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="mainwindow.cpp" line="957"/>
-        <source>Close the active window</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="mainwindow.cpp" line="959"/>
-        <source>Close &amp;All</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="mainwindow.cpp" line="960"/>
-        <source>Close all the windows</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="mainwindow.cpp" line="962"/>
-        <source>&amp;Tile</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="mainwindow.cpp" line="963"/>
-        <source>Tile the windows</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="mainwindow.cpp" line="965"/>
-        <source>&amp;Cascade</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="mainwindow.cpp" line="966"/>
-        <source>Cascade the windows</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="mainwindow.cpp" line="968"/>
-        <source>Ne&amp;xt</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="mainwindow.cpp" line="969"/>
-        <source>Ctrl+F6</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="mainwindow.cpp" line="970"/>
-        <source>Move the focus to the next window</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="mainwindow.cpp" line="972"/>
-        <source>Pre&amp;vious</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="mainwindow.cpp" line="973"/>
-        <source>Ctrl+Shift+F6</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="mainwindow.cpp" line="974"/>
-        <source>Move the focus to the previous window</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="mainwindow.cpp" line="1059"/>
-        <source>&amp;Помощь</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="mainwindow.cpp" line="1063"/>
-        <source>Файл</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="mainwindow.cpp" line="1068"/>
-        <source>Расчеты</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="mainwindow.cpp" line="1075"/>
-        <source>Телеизмерения</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="mainwindow.cpp" line="1131"/>
-        <source>&amp;%1 %2 %3</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="mainwindow.cpp" line="1224"/>
-        <source>Application</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="mainwindow.cpp" line="1225"/>
-        <source>The document has been modified.
-Do you want to save your changes?</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="mainwindow.cpp" line="981"/>
-        <source>Show the application&apos;s About box</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="mainwindow.cpp" line="919"/>
+        <location filename="mainwindow.cpp" line="1023"/>
         <source>F5</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="mainwindow.cpp" line="1217"/>
+        <location filename="mainwindow.cpp" line="1024"/>
+        <source>Расчет УР</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="mainwindow.cpp" line="1026"/>
+        <source>&amp;ОС</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="mainwindow.cpp" line="1027"/>
+        <source>F6</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="mainwindow.cpp" line="1028"/>
+        <source>Оценка состояния</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="mainwindow.cpp" line="1030"/>
+        <source>&amp;МДП</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="mainwindow.cpp" line="1031"/>
+        <source>F7</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="mainwindow.cpp" line="1032"/>
+        <source>Расчет МДП</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="mainwindow.cpp" line="1034"/>
+        <source>&amp;ТКЗ</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="mainwindow.cpp" line="1035"/>
+        <source>F8</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="mainwindow.cpp" line="1036"/>
+        <source>Расчет ТКЗ</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="mainwindow.cpp" line="1038"/>
+        <source>&amp;Доп. ток от Т</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="mainwindow.cpp" line="1039"/>
+        <source>F9</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="mainwindow.cpp" line="1040"/>
+        <source>Расчет допустимых токов от температуры</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="mainwindow.cpp" line="1059"/>
+        <source>&amp;Пересчет дорасчетной ТМ</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="mainwindow.cpp" line="1060"/>
+        <source>Пересчет дорасчетной ТМ</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="mainwindow.cpp" line="1063"/>
+        <source>&amp;Обновить таблицы по ТМ</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="mainwindow.cpp" line="1064"/>
+        <source>Обновить таблицы по ТМ</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="mainwindow.cpp" line="1067"/>
+        <source>&amp;ПТИ</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="mainwindow.cpp" line="1068"/>
+        <source>Расчет ПТИ</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="mainwindow.cpp" line="1070"/>
+        <source>&amp;Фильтр ТИ</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="mainwindow.cpp" line="1071"/>
+        <source>Расчет Фильтр ТИ</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="mainwindow.cpp" line="1077"/>
+        <source>&amp;Подг. МДП</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="mainwindow.cpp" line="1078"/>
+        <source>Подг. МДП</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="mainwindow.cpp" line="1082"/>
+        <source>Cl&amp;ose</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="mainwindow.cpp" line="1083"/>
+        <source>Ctrl+F4</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="mainwindow.cpp" line="1084"/>
+        <source>Close the active window</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="mainwindow.cpp" line="1086"/>
+        <source>Close &amp;All</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="mainwindow.cpp" line="1087"/>
+        <source>Close all the windows</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="mainwindow.cpp" line="1089"/>
+        <source>&amp;Tile</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="mainwindow.cpp" line="1090"/>
+        <source>Tile the windows</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="mainwindow.cpp" line="1092"/>
+        <source>&amp;Cascade</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="mainwindow.cpp" line="1093"/>
+        <source>Cascade the windows</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="mainwindow.cpp" line="1095"/>
+        <source>Ne&amp;xt</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="mainwindow.cpp" line="1096"/>
+        <source>Ctrl+F6</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="mainwindow.cpp" line="1097"/>
+        <source>Move the focus to the next window</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="mainwindow.cpp" line="1099"/>
+        <source>Pre&amp;vious</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="mainwindow.cpp" line="1100"/>
+        <source>Ctrl+Shift+F6</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="mainwindow.cpp" line="1101"/>
+        <source>Move the focus to the previous window</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="mainwindow.cpp" line="1107"/>
+        <source>&amp;О программе</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="mainwindow.cpp" line="1108"/>
+        <source>Show the application&apos;s About box</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="mainwindow.cpp" line="1113"/>
+        <source>&amp;Файлы</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="mainwindow.cpp" line="1119"/>
+        <source>&amp;Настройки программы</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="mainwindow.cpp" line="1121"/>
+        <source>&amp;Настройки</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="mainwindow.cpp" line="1125"/>
+        <source>&amp;Последние</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="mainwindow.cpp" line="1134"/>
+        <source>&amp;Макро</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="mainwindow.cpp" line="1136"/>
+        <source>&amp;Графика</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="mainwindow.cpp" line="1138"/>
+        <source>&amp;Расчеты</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="mainwindow.cpp" line="1149"/>
+        <source>&amp;ТИ</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="mainwindow.cpp" line="1155"/>
+        <source>&amp;Открыть</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="mainwindow.cpp" line="1157"/>
+        <source>Окна</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="mainwindow.cpp" line="1177"/>
+        <location filename="mainwindow.cpp" line="1265"/>
+        <source>&amp;%1 %2</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="mainwindow.cpp" line="1180"/>
+        <source>%1 %2</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="mainwindow.cpp" line="1190"/>
+        <source>&amp;Помощь</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="mainwindow.cpp" line="1194"/>
+        <source>Файл</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="mainwindow.cpp" line="1199"/>
+        <source>Расчеты</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="mainwindow.cpp" line="1206"/>
+        <source>Телеизмерения</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="mainwindow.cpp" line="1267"/>
+        <source>&amp;%1 %2 %3</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="mainwindow.cpp" line="1353"/>
         <source>Ready</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="mainwindow.cpp" line="1360"/>
+        <source>Application</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="mainwindow.cpp" line="1361"/>
+        <source>The document has been modified.
+Do you want to save your changes?</source>
         <translation type="unfinished"></translation>
     </message>
 </context>
 <context>
     <name>McrWnd</name>
     <message>
-        <location filename="qmcr/mcrwnd.cpp" line="255"/>
+        <location filename="qmcr/mcrwnd.cpp" line="282"/>
         <source>Macro Python</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="qmcr/mcrwnd.cpp" line="262"/>
+        <location filename="qmcr/mcrwnd.cpp" line="289"/>
         <source>&amp;New</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="qmcr/mcrwnd.cpp" line="264"/>
+        <location filename="qmcr/mcrwnd.cpp" line="291"/>
         <source>&amp;Open</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="qmcr/mcrwnd.cpp" line="266"/>
+        <location filename="qmcr/mcrwnd.cpp" line="293"/>
         <source>&amp;Save</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="qmcr/mcrwnd.cpp" line="268"/>
+        <location filename="qmcr/mcrwnd.cpp" line="295"/>
         <source>Save as</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="qmcr/mcrwnd.cpp" line="270"/>
+        <location filename="qmcr/mcrwnd.cpp" line="297"/>
         <source>Run (F10)</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="qmcr/mcrwnd.cpp" line="273"/>
+        <location filename="qmcr/mcrwnd.cpp" line="300"/>
         <source>&amp;Find</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="qmcr/mcrwnd.cpp" line="275"/>
+        <location filename="qmcr/mcrwnd.cpp" line="302"/>
         <source>&amp;Go to line</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="qmcr/mcrwnd.cpp" line="277"/>
+        <location filename="qmcr/mcrwnd.cpp" line="304"/>
         <source>&amp;Clear</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="qmcr/mcrwnd.cpp" line="439"/>
+        <location filename="qmcr/mcrwnd.cpp" line="466"/>
         <source>Macro modified. Save?</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="qmcr/mcrwnd.cpp" line="474"/>
-        <location filename="qmcr/mcrwnd.cpp" line="494"/>
+        <location filename="qmcr/mcrwnd.cpp" line="501"/>
+        <location filename="qmcr/mcrwnd.cpp" line="521"/>
         <source>Clear?</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="qmcr/mcrwnd.cpp" line="474"/>
+        <location filename="qmcr/mcrwnd.cpp" line="501"/>
         <source>Macro is not saved. Ignore and Exit?</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="qmcr/mcrwnd.cpp" line="494"/>
+        <location filename="qmcr/mcrwnd.cpp" line="521"/>
         <source>Macro is not saved. Ignore and Clear?</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="qmcr/mcrwnd.cpp" line="515"/>
+        <location filename="qmcr/mcrwnd.cpp" line="542"/>
         <source>Macro is not saved. Ignore and load new?</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="qmcr/mcrwnd.cpp" line="523"/>
+        <location filename="qmcr/mcrwnd.cpp" line="550"/>
         <source>Open file</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="qmcr/mcrwnd.cpp" line="532"/>
+        <location filename="qmcr/mcrwnd.cpp" line="559"/>
         <source>Failed load file: %1</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="qmcr/mcrwnd.cpp" line="543"/>
+        <location filename="qmcr/mcrwnd.cpp" line="570"/>
         <source>Save file as</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="qmcr/mcrwnd.cpp" line="550"/>
+        <location filename="qmcr/mcrwnd.cpp" line="577"/>
         <source>Failed set file: %1</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="qmcr/mcrwnd.cpp" line="606"/>
+        <location filename="qmcr/mcrwnd.cpp" line="633"/>
         <source>Go to line</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="qmcr/mcrwnd.cpp" line="606"/>
+        <location filename="qmcr/mcrwnd.cpp" line="633"/>
         <source>Go to line (1..%1) </source>
         <translation type="unfinished"></translation>
     </message>
 </context>
 <context>
     <name>MdiChild</name>
-    <message>
-        <location filename="mdiChildTable.cpp" line="367"/>
-        <source>Hide current column</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="mdiChildTable.cpp" line="397"/>
-        <source>Delete current row</source>
-        <translation type="unfinished"></translation>
-    </message>
     <message>
         <location filename="mdiChildTable.cpp" line="210"/>
         <source>qicstable%1.dat</source>
@@ -976,6 +1026,16 @@ Do you want to save your changes?</source>
     <message>
         <location filename="mdiChildTable.cpp" line="243"/>
         <source>Save As</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="mdiChildTable.cpp" line="367"/>
+        <source>Hide current column</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="mdiChildTable.cpp" line="397"/>
+        <source>Delete current row</source>
         <translation type="unfinished"></translation>
     </message>
 </context>
@@ -1000,11 +1060,11 @@ Do you want to save your changes?</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="app.cpp" line="363"/>
-        <location filename="app.cpp" line="375"/>
-        <location filename="qmcr/mcrwnd.cpp" line="531"/>
-        <location filename="qmcr/mcrwnd.cpp" line="549"/>
+        <location filename="app.cpp" line="367"/>
+        <location filename="app.cpp" line="379"/>
         <location filename="qmcr/mcrwnd.cpp" line="558"/>
+        <location filename="qmcr/mcrwnd.cpp" line="576"/>
+        <location filename="qmcr/mcrwnd.cpp" line="585"/>
         <location filename="qmcr/scihlp.cpp" line="73"/>
         <location filename="qmcr/scihlp.cpp" line="84"/>
         <location filename="qmcr/scihlp.cpp" line="144"/>
@@ -1012,7 +1072,7 @@ Do you want to save your changes?</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="app.cpp" line="375"/>
+        <location filename="app.cpp" line="379"/>
         <source>Can&apos;t read forms</source>
         <translation type="unfinished"></translation>
     </message>
@@ -1050,142 +1110,142 @@ Do you want to save your changes?</source>
 <context>
     <name>RtabWidget</name>
     <message>
-        <location filename="rtabwidget.cpp" line="406"/>
+        <location filename="rtabwidget.cpp" line="416"/>
         <source>Условное форматирование</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="rtabwidget.cpp" line="421"/>
-        <location filename="rtabwidget.cpp" line="433"/>
+        <location filename="rtabwidget.cpp" line="431"/>
+        <location filename="rtabwidget.cpp" line="443"/>
         <source>Вставить</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="rtabwidget.cpp" line="422"/>
+        <location filename="rtabwidget.cpp" line="432"/>
         <source>Ctrl+I</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="rtabwidget.cpp" line="423"/>
+        <location filename="rtabwidget.cpp" line="433"/>
         <source>Вставить строку</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="rtabwidget.cpp" line="435"/>
+        <location filename="rtabwidget.cpp" line="445"/>
         <source>Добавить</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="rtabwidget.cpp" line="437"/>
+        <location filename="rtabwidget.cpp" line="447"/>
         <source>Дублировать</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="rtabwidget.cpp" line="439"/>
+        <location filename="rtabwidget.cpp" line="449"/>
         <source>Удалить</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="rtabwidget.cpp" line="441"/>
+        <location filename="rtabwidget.cpp" line="451"/>
         <source>Групповая коррекция</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="rtabwidget.cpp" line="447"/>
-        <location filename="rtabwidget.cpp" line="506"/>
+        <location filename="rtabwidget.cpp" line="457"/>
+        <location filename="rtabwidget.cpp" line="516"/>
         <source>Выравнивание: по шаблону</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="rtabwidget.cpp" line="448"/>
-        <location filename="rtabwidget.cpp" line="507"/>
+        <location filename="rtabwidget.cpp" line="458"/>
+        <location filename="rtabwidget.cpp" line="517"/>
         <source>Выравнивание: по данным</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="rtabwidget.cpp" line="450"/>
+        <location filename="rtabwidget.cpp" line="460"/>
         <source>Экспорт CSV</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="rtabwidget.cpp" line="451"/>
+        <location filename="rtabwidget.cpp" line="461"/>
         <source>Импорт CSV</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="rtabwidget.cpp" line="452"/>
+        <location filename="rtabwidget.cpp" line="462"/>
         <source>Выборка</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="rtabwidget.cpp" line="482"/>
+        <location filename="rtabwidget.cpp" line="492"/>
         <source>Copy</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="rtabwidget.cpp" line="483"/>
+        <location filename="rtabwidget.cpp" line="493"/>
         <source>Copy with Headers</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="rtabwidget.cpp" line="484"/>
+        <location filename="rtabwidget.cpp" line="494"/>
         <source>Edit Conditional Formats...</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="rtabwidget.cpp" line="495"/>
+        <location filename="rtabwidget.cpp" line="505"/>
         <source>Insert Row</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="rtabwidget.cpp" line="497"/>
+        <location filename="rtabwidget.cpp" line="507"/>
         <source>Delete Row</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="rtabwidget.cpp" line="510"/>
-        <location filename="rtabwidget.cpp" line="555"/>
+        <location filename="rtabwidget.cpp" line="520"/>
+        <location filename="rtabwidget.cpp" line="565"/>
         <source>Format</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="rtabwidget.cpp" line="546"/>
+        <location filename="rtabwidget.cpp" line="556"/>
         <source>sortAscending</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="rtabwidget.cpp" line="547"/>
+        <location filename="rtabwidget.cpp" line="557"/>
         <source>sortDescending</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="rtabwidget.cpp" line="549"/>
+        <location filename="rtabwidget.cpp" line="559"/>
         <source>Clear Contents</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="rtabwidget.cpp" line="551"/>
+        <location filename="rtabwidget.cpp" line="561"/>
         <source>Скрыть</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="rtabwidget.cpp" line="552"/>
+        <location filename="rtabwidget.cpp" line="562"/>
         <source>Выбор колонок</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="rtabwidget.cpp" line="553"/>
+        <location filename="rtabwidget.cpp" line="563"/>
         <source>Показать все колонки</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="rtabwidget.cpp" line="765"/>
+        <location filename="rtabwidget.cpp" line="775"/>
         <source>Conditional formats for &quot;%1&quot;</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="rtabwidget.cpp" line="1347"/>
-        <location filename="rtabwidget.cpp" line="1360"/>
+        <location filename="rtabwidget.cpp" line="1359"/>
+        <location filename="rtabwidget.cpp" line="1372"/>
         <source>test</source>
         <translation type="unfinished"></translation>
     </message>
@@ -1589,6 +1649,11 @@ Do you want to save your changes?</source>
 <context>
     <name>mdiChildHeaderGrid</name>
     <message>
+        <location filename="mdiChildHeaderGrid.cpp" line="49"/>
+        <source>Подбор ширины все колонки</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
         <location filename="mdiChildHeaderGrid.cpp" line="61"/>
         <source>sortAscending</source>
         <translation type="unfinished"></translation>
@@ -1611,11 +1676,6 @@ Do you want to save your changes?</source>
     <message>
         <location filename="mdiChildHeaderGrid.cpp" line="67"/>
         <source>Unhide Columns</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="mdiChildHeaderGrid.cpp" line="49"/>
-        <source>Подбор ширины все колонки</source>
         <translation type="unfinished"></translation>
     </message>
     <message>

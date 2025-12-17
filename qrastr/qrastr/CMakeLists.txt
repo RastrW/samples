@@ -64,6 +64,7 @@ find_package( Metakit REQUIRED )
 find_package( fmt     REQUIRED )
 find_package(libpqxx REQUIRED)
 #find_package(cryptopp REQUIRED)
+find_package( libpqxx )                 # need build libpqxx release,from release_build: cmake --install .
 find_package( QT NAMES Qt6 Qt5 Test COMPONENTS REQUIRED )
 find_package( Qt${QT_VERSION_MAJOR} COMPONENTS
     Core
@@ -109,6 +110,7 @@ set(INCLUDES
     "${DEPENDENCIES_LOCATION}/QtitanDataGrid8.2.0_win_qt_6_7/include/" #win Qtitan
     "${DEPENDENCIES_LOCATION}/SDL3-3.2.28/include/" #win SDL
     "${DEPENDENCIES_LOCATION}/SDL3_image-3.2.4/include/" #win SDL Image
+    #"${DEPENDENCIES_LOCATION}/libpqxx/src"
 )
 #message("INCLUDES is set to ${INCLUDES}")
 
@@ -129,6 +131,7 @@ else()
     link_directories("${ASTRA_LOCATION}/build/")
     link_directories("${DEPENDENCIES_LOCATION}/qtitan8_lin_5_15/bin/")
     link_directories("${DEPENDENCIES_LOCATION}/build-ads-Desktop-${CMAKE_BUILD_TYPE}/lib/")
+    #link_directories("${DEPENDENCIES_LOCATION}/build-libpqxx-Desktop-${CMAKE_BUILD_TYPE}/lib/")
     link_directories("${ASTRA_LOCATION}/../../build-RastrWin-Desktop-${CMAKE_BUILD_TYPE}/astra/")
 endif()
 
@@ -312,6 +315,7 @@ if(MSVC)
 
     endif()
 else()
+    target_link_libraries( ${PROJECT_NAME} PRIVATE libpqxx::pqxx )
     if (CMAKE_BUILD_TYPE MATCHES Debug)
         target_link_libraries( ${PROJECT_NAME} PRIVATE Qt::WidgetsPrivate)
         target_link_libraries( ${PROJECT_NAME} PRIVATE qmcr       )
