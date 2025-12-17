@@ -62,6 +62,7 @@ endif()
 
 find_package( Metakit REQUIRED )
 find_package( fmt     REQUIRED )
+find_package(libpqxx REQUIRED)
 #find_package(cryptopp REQUIRED)
 find_package( QT NAMES Qt6 Qt5 Test COMPONENTS REQUIRED )
 find_package( Qt${QT_VERSION_MAJOR} COMPONENTS
