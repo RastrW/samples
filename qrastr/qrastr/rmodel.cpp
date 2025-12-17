@@ -21,6 +21,7 @@ RModel::RModel(QObject *parent, QAstra* pqastra, RTablesDataManager* pRTDM)
 
 int RModel::populateDataFromRastr(){
 
+    try{
     //beginResetModel();
     up_rdata = std::unique_ptr<RData>(new RData(pqastra_,pUIForm_->TableName()));
     up_rdata->Initialize(*pUIForm_,pqastra_);
@@ -62,20 +63,19 @@ int RModel::populateDataFromRastr(){
                 vsuperenum.push_back(val);
             if (vsuperenum.size() > 2)
             {
-                try{
-                    std::shared_ptr<QDataBlock> QDB = pRTDM_->Get(vsuperenum[0],vsuperenum[2]+","+vsuperenum[1]);
-                    //QDB->QDump();
-                    for ( int i = 0 ; i < QDB->RowsCount() ; i++)
+                QDataBlock QDB;
+                long indx1 = pRTDM_->column_index(vsuperenum[0],vsuperenum[1]);
+                long indx2 = pRTDM_->column_index(vsuperenum[0],vsuperenum[2]);
+                if ( (indx1 > -1) && (indx2 > -1) )
+                {
+                    pRTDM_->GetDataBlock(vsuperenum[0],vsuperenum[2]+","+vsuperenum[1], QDB);
+                    for ( int i = 0 ; i < QDB.RowsCount() ; i++)
                     {
-                        long ind_ref_val = std::visit(ToLong(),(QDB->Get(i,0)));
-                        std::string str_ref_val = std::visit(ToString(),(QDB->Get(i,1)));
+                        long ind_ref_val = std::visit(ToLong(),(QDB.Get(i,0)));
+                        std::string str_ref_val = std::visit(ToString(),(QDB.Get(i,1)));
                         list.append(str_ref_val.c_str());
                         map_string.insert(std::make_pair(ind_ref_val,str_ref_val));
                     }
-                }
-                catch(...)
-                {
-                    qDebug()<<up_rdata->t_name_.c_str()<<"->"<<rcol.nameref_.c_str()<< " : ParseError !";
                 }
                 mm_superenum_.insert(std::make_pair(rcol.index,map_string));
             }
@@ -89,21 +89,19 @@ int RModel::populateDataFromRastr(){
             int nclose = rcol.nameref_.find_first_of(']');
             std::string table = rcol.nameref_.substr(0,nopen);
             std::string col = rcol.nameref_.substr(nopen+1,rcol.nameref_.length() - nopen - 2);
-            std::shared_ptr<QDataBlock> QDB;
-            try{
-                QDB = pRTDM_->Get(table,col+",name");
-            }
-            catch(...)
-            {
-                QDB = pRTDM_->Get(table,col+","+col);   //ex: nsx not contains name
-            }
+            QDataBlock QDB;
+            long name_indx = pRTDM_->column_index(table,"name");
+            std::string cols = "";
+            cols = (name_indx > -1) ? col.append(",name") : col.append(",").append(col);    //ex: nsx not contains name
+            pRTDM_->GetDataBlock(table, cols, QDB);
+
             //QDB->QDump();
 
             QStringList list;
-            for ( int i = 0 ; i < QDB->RowsCount() ; i++)
+            for ( int i = 0 ; i < QDB.RowsCount() ; i++)
             {
-                long ind_ref_val = std::visit(ToLong(),(QDB->Get(i,0)));
-                std::string str_ref_val = std::visit(ToString(),(QDB->Get(i,1)));
+                long ind_ref_val = std::visit(ToLong(),(QDB.Get(i,0)));
+                std::string str_ref_val = std::visit(ToString(),(QDB.Get(i,1)));
                 list.append(str_ref_val.c_str());
                 map_string.insert(std::make_pair(ind_ref_val,str_ref_val));
             }
@@ -111,6 +109,11 @@ int RModel::populateDataFromRastr(){
         }
     }
     //endResetModel();
+    }
+    catch(...)
+    {
+        qDebug()<<"ERROR! rmodel.cpp->populateDataFromRastr: "<<up_rdata->t_name_.c_str();
+    }
 
     return 1;
 };
