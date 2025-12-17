@@ -5,7 +5,7 @@
 #include "app.h"
 #include "formsettings.h"
 //#include <SDL3\SDL.h>
-#include <pqxx/pqxx>
+//#include <pqxx/pqxx>
 
 int main23(int argc, char *argv[]){
     int n_res = 0;
