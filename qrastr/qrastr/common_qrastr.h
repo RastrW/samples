@@ -12,7 +12,7 @@
 #define SPDLOG_WCHAR_FILENAMES
 #include <spdlog/spdlog.h>
 //#include <spdlog/fmt/bundled/format.h>
-#include "Exceptions.h"
+//#include "Exceptions.h"
 
 enum class _err_code1{
     norm = 1,
@@ -36,8 +36,8 @@ static void exclog(){
     spdlog::error("Catch unknown exception.");
 }
 
-static void exclog(const CException& ex){
+/*static void exclog(const CException& ex){
     spdlog::error("Catch CException [{}]\n", ex.what());
-}
+}*/
 
 #endif // COMMON_QRASTR_H

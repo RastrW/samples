@@ -60,10 +60,11 @@ else()
     message(NOTICE "ASTRA_LOCATION= ${ASTRA_LOCATION}")
 endif()
 
+find_package( Astra   REQUIRED)         # need install Astra: ex. cmake --install build --config Debug
 find_package( Metakit REQUIRED )
 find_package( fmt     REQUIRED )
 #find_package(cryptopp REQUIRED)
-find_package( libpqxx )                 # need build libpqxx release,from release_build: cmake --install .
+#find_package( libpqxx )                 # need build libpqxx release,from release_build: cmake --install .
 find_package( QT NAMES Qt6 Qt5 Test COMPONENTS REQUIRED )
 find_package( Qt${QT_VERSION_MAJOR} COMPONENTS
     Core
@@ -90,12 +91,13 @@ add_subdirectory(
 
 set(INCLUDES
     "${ASTRA_LOCATION}"
+    "${Astra_DIR}/../../../include/astra/"
     "${ASTRA_LOCATION}/../comck/"
-    "${ASTRA_LOCATION}/fmt/include/"
-    "${DEPENDENCIES_LOCATION}/qicstable/include"
-    "${DEPENDENCIES_LOCATION}/metakit/include" #-win
-    "${DEPENDENCIES_GIT}/metakit/include"      #-lin
-    "${DEPENDENCIES_LOCATION}/eigen-eigen"
+    #"${ASTRA_LOCATION}/fmt/include/"
+    #"${DEPENDENCIES_LOCATION}/qicstable/include"
+    #"${DEPENDENCIES_LOCATION}/metakit/include" #-win
+    #"${DEPENDENCIES_GIT}/metakit/include"      #-lin
+    #"${DEPENDENCIES_LOCATION}/eigen-eigen"
     "${DEPENDENCIES_LOCATION}/boost/boost_1_76_0" # in_nix
     "${DEPENDENCIES_LOCATION}/boost/boost_1_80_0" # in_win
     "${DEPENDENCIES_LOCATION}/sci/scintilla/include"
@@ -104,7 +106,7 @@ set(INCLUDES
     "${DEPENDENCIES_LOCATION}/sci/scintilla/qt/ScintillaEdit"
     "${DEPENDENCIES_LOCATION}/Qt-Advanced-Docking-System/src"
     "${DEPENDENCIES_LOCATION}/spdlog/include/"
-    "${ASTRA_LOCATION}/../../flytfs/IPlainRastrTest/"
+    #"${ASTRA_LOCATION}/../../flytfs/IPlainRastrTest/"
     "${DEPENDENCIES_LOCATION}/qtitan8_lin_5_15/include/" #lin Qtitan
     "${DEPENDENCIES_LOCATION}/QtitanDataGrid8.2.0_win_qt_6_7/include/" #win Qtitan
     "${DEPENDENCIES_LOCATION}/SDL3-3.2.28/include/" #win SDL
@@ -117,17 +119,17 @@ if(MSVC)
     link_directories("${CMAKE_LIBRARY_OUTPUT_DIRECTORY}")
     #link_directories("${ASTRA_LOCATION}/build/${CMAKE_BUILD_TYPE}/")
     #link_directories("${ASTRA_LOCATION}/../build/vs-${CMAKE_BUILD_TYPE}/astra") #C:\projects\rastr\RastrWin\build\vs-Debug\astra
-   # link_directories("${ASTRA_LOCATION}/../build/astra/${CMAKE_BUILD_TYPE}") #C:\Projects\tfs\rastr\RastrWin\build\astra\Debug
+    #link_directories("${ASTRA_LOCATION}/../build/astra/${CMAKE_BUILD_TYPE}") #C:\Projects\tfs\rastr\RastrWin\build\astra\Debug
     #link_directories("${ASTRA_LOCATION}/../KC/build/vs-${CMAKE_BUILD_TYPE}") #C:\Projects\tfs\rastr\RastrWin\KC\build\vs-Debug   -> COMCK by cmake. Надо будет переделать по аналогии с астрой, видимо добавить install
-    link_directories("${DEPENDENCIES_LOCATION}/metakit/builds/")
+    #link_directories("${DEPENDENCIES_LOCATION}/metakit/builds/")
     link_directories("${DEPENDENCIES_LOCATION}/Qt-Advanced-Docking-System/build/vs-Debug/lib/")
     link_directories("${DEPENDENCIES_LOCATION}/Qt-Advanced-Docking-System/build/vs-Release/lib/")
     link_directories("${DEPENDENCIES_LOCATION}/QtitanDataGrid8.2.0_win_qt_6_7/bin/")
     link_directories("${DEPENDENCIES_LOCATION}/SDL3-3.2.28/lib/x64/")                   #win SDL
     link_directories("${DEPENDENCIES_LOCATION}/SDL3_image-3.2.4/lib/x64/")              #win SDL Image  https://github.com/libsdl-org/SDL_image/releases
 else()
-    link_directories("${DEPENDENCIES_LOCATION}/qicstable/lib/")
-    link_directories("${ASTRA_LOCATION}/build/")
+    #link_directories("${DEPENDENCIES_LOCATION}/qicstable/lib/")
+    #link_directories("${ASTRA_LOCATION}/build/")
     link_directories("${DEPENDENCIES_LOCATION}/qtitan8_lin_5_15/bin/")
     link_directories("${DEPENDENCIES_LOCATION}/build-ads-Desktop-${CMAKE_BUILD_TYPE}/lib/")
     #link_directories("${DEPENDENCIES_LOCATION}/build-libpqxx-Desktop-${CMAKE_BUILD_TYPE}/lib/")
@@ -140,14 +142,14 @@ set(PROJECT_SOURCES
     main.cpp
     mainwindow.cpp
     mainwindow.h
-    mdiChildTable.h
-    mdiChildTable.cpp
-    mdiChildGrid.h
-    mdiChildGrid.cpp
-    mdiChildHeaderGrid.h
-    mdiChildHeaderGrid.cpp
-    rastrdatamodel.h
-    rastrdatamodel.cpp
+    #mdiChildTable.h
+    #mdiChildTable.cpp
+    #mdiChildGrid.h
+    #mdiChildGrid.cpp
+    #mdiChildHeaderGrid.h
+    #mdiChildHeaderGrid.cpp
+    #rastrdatamodel.h
+    #rastrdatamodel.cpp
     astra_shared.h
     ColPropForm.h
     ColPropForm.cpp

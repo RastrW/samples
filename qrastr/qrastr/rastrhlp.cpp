@@ -25,7 +25,7 @@ int CRastrHlp::CreateRastr(){
 }
 
 CRastrHlp::~CRastrHlp(){
-    throw CException("called obsolet function CRastrHlp::~CRastrHlp()");
+    //throw CException("called obsolet function CRastrHlp::~CRastrHlp()");
     // if(IsIdValid(id_rastr_))
     //     ::RastrExterminate(id_rastr_);
 }

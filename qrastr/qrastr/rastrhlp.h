@@ -3,11 +3,12 @@
 #pragma once
 
 #include "common_qrastr.h"
-#include "astra_exp.h"
+//#include "astra_exp.h"
 #include "UIForms.h"
 
 class CRastrHlp
 {
+    typedef long _idRastr;
 public:
     CRastrHlp();
     virtual ~CRastrHlp();

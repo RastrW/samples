@@ -4,7 +4,7 @@
 
 #include <QAbstractTableModel>
 #include <QTimer>
-#include "astra_exp.h"
+//#include "astra_exp.h"
 #include "rdata.h"
 #include "qastra.h"
 #include "rtablesdatamanager.h"
