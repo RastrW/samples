@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE QtCreatorProject>
-<!-- Written by QtCreator 16.0.84, 2026-01-22T15:23:56. -->
+<!-- Written by QtCreator 16.0.84, 2026-01-23T10:42:50. -->
 <qtcreator>
  <data>
   <variable>EnvironmentId</variable>
@@ -116,7 +116,8 @@
 -DCMAKE_BUILD_TYPE:STRING=Debug
 -DCMAKE_CXX_FLAGS_INIT:STRING=%{Qt:QML_DEBUG_FLAG}
 -DCOMPILE_DIR:STRING=C:\Projects\compile_cmake
--DCMAKE_GENERATOR:STRING=Ninja</value>
+-DCMAKE_GENERATOR:STRING=Ninja
+-DRASTR_PREFIX_PATH:STRING=C:/Projects/tfs/rastr/RastrWin/build/install</value>
     <value type="int" key="EnableQmlDebugging">1</value>
     <value type="QString" key="ProjectExplorer.BuildConfiguration.BuildDirectory">C:\Projects\git\rastrw\samples\qrastr\qrastr\build\vs-Debug</value>
     <valuemap type="QVariantMap" key="ProjectExplorer.BuildConfiguration.BuildStepList.0">

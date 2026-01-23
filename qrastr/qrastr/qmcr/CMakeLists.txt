@@ -28,7 +28,7 @@ set(CMAKE_WINDOWS_EXPORT_ALL_SYMBOLS ON)#visual studio not generate .lib without
 find_package(QT NAMES Qt6 Qt5 REQUIRED COMPONENTS Widgets LinguistTools)
 find_package(Qt${QT_VERSION_MAJOR} REQUIRED COMPONENTS Widgets LinguistTools)
 find_package( Qt${QT_VERSION_MAJOR} REQUIRED COMPONENTS QuickWidgets)
-
+#find_package( Astra   REQUIRED)         # need install Astra: ex. cmake --install build --config Debug from C:\Projects\tfs\rastr\RastrWin
 
 set(PYTHON_MIN 3.10)
 #old CMake if(CMAKE_VERSION VERSION_LESS "3.12.0")
@@ -48,6 +48,7 @@ message( "Python3_INCLUDE_DIR:       ${Python3_INCLUDE_DIRS}")
 message( "Python3_EXECUTABLE:        ${Python3_EXECUTABLE}")
 link_directories    ( ${Python3_LIBRARY_DIRS} )
 include_directories ( ${Python3_INCLUDE_DIRS} )
+#include_directories ( ${Astra_INCLUDE_DIR} )
 
 include_directories("${ASTRA_LOCATION}/fmt/include/")
 

@@ -2,7 +2,11 @@
 #define QASTRA_EVENTS_DATA_H
 #pragma once
 
+//#include <astra/IPlainRastr.h>
 #include "IPlainRastr.h"
+//#include <C:\Projects\tfs\rastr\RastrWin\build\install\include\astra\IPlainRastr.h>
+
+
 ///////////////////////////////////////////////////////////////////////
 //RastrEngine.cs
 ///////////////////////////////////////////////////////////////////////

@@ -4,6 +4,8 @@
 #include <memory>
 #include <QObject>
 #include "IPlainBarsMDP.h"
+//#include <comck/IPlainBarsMDP.h>
+//#include "C:\Projects\tfs\rastr\RastrWin\build\install\include\comck\IPlainBarsMDP.h"
 
 class QBarsMDP  : public QObject
 {

@@ -33,7 +33,7 @@ set( CMAKE_CXX_STANDARD_REQUIRED ON )
 set( CMAKE_ARCHIVE_OUTPUT_DIRECTORY "${CMAKE_SOURCE_DIR}//..//${CMAKE_BUILD_TYPE}" )
 set( CMAKE_LIBRARY_OUTPUT_DIRECTORY "${CMAKE_SOURCE_DIR}//..//${CMAKE_BUILD_TYPE}" )
 set( CMAKE_RUNTIME_OUTPUT_DIRECTORY "${CMAKE_SOURCE_DIR}//..//${CMAKE_BUILD_TYPE}" )
-option( QRASTR_BUILD_WITH_MCR "QRASTR_BUILD_WITH_MCR" ON )
+option( QRASTR_BUILD_WITH_MCR "QRASTR_BUILD_WITH_MCR" OFF )
 #set( COMPILE_DIR "C:/Projects/tfs/rastr/RastrWin/thirdparty/_deps/compile_cmake" CACHE PATH "Installation directory for third-party projects" )# for example C:\projects\rastr\RastrWin\thirdparty\_deps\compile
 #set( COMPILE_DIR "C:/Projects/compile_cmake" )# for example C:\projects\rastr\RastrWin\thirdparty\_deps\compile
 if( NOT IS_DIRECTORY ${COMPILE_DIR} )
@@ -59,8 +59,19 @@ if( NOT IS_DIRECTORY ${ASTRA_LOCATION} )
 else()
     message(NOTICE "ASTRA_LOCATION= ${ASTRA_LOCATION}")
 endif()
+list(PREPEND CMAKE_PREFIX_PATH ${COMPILE_DIR})
+#list(PREPEND CMAKE_PREFIX_PATH "C:/Projects/tfs/rastr/RastrWin/build/install/include")
+list(PREPEND CMAKE_PREFIX_PATH ${RASTR_PREFIX_PATH})
+message(NOTICE "CMAKE_PREFIX_PATH= ${CMAKE_PREFIX_PATH}")
+#if(DEFINED RASTR_PREFIX_PATH)
+#    list(PREPEND CMAKE_PREFIX_PATH ${RASTR_PREFIX_PATH})
+#endif()
 
-find_package( Astra   REQUIRED)         # need install Astra: ex. cmake --install build --config Debug
+find_package( Astra   REQUIRED)         # need install Astra: ex. cmake --install build --config Debug from C:\Projects\tfs\rastr\RastrWin
+message(NOTICE "Astra_INCLUDE_DIR=" ${Astra_INCLUDE_DIR})
+find_package( COMCK  REQUIRED )
+#find_package(COMCK 1.0 CONFIG REQUIRED)
+message(NOTICE "COMCK_INCLUDE_DIR=" ${COMCK_INCLUDE_DIR})
 find_package( Metakit REQUIRED )
 find_package( fmt     REQUIRED )
 #find_package(cryptopp REQUIRED)
@@ -90,10 +101,12 @@ add_subdirectory(
 )
 
 set(INCLUDES
+    #"${CMAKE_PREFIX_PATH}"
     "${ASTRA_LOCATION}"
-    "${Astra_DIR}/../../../include/astra/"
+    #${Astra_INCLUDE_DIR}
+    #"${Astra_DIR}/../../../include/"
     "${ASTRA_LOCATION}/../comck/"
-    #"${ASTRA_LOCATION}/fmt/include/"
+    "${ASTRA_LOCATION}/fmt/include/"
     #"${DEPENDENCIES_LOCATION}/qicstable/include"
     #"${DEPENDENCIES_LOCATION}/metakit/include" #-win
     #"${DEPENDENCIES_GIT}/metakit/include"      #-lin
@@ -113,7 +126,7 @@ set(INCLUDES
     "${DEPENDENCIES_LOCATION}/SDL3_image-3.2.4/include/" #win SDL Image
     #"${DEPENDENCIES_LOCATION}/libpqxx/src"
 )
-#message("INCLUDES is set to ${INCLUDES}")
+message("INCLUDES is set to ${INCLUDES}")
 
 if(MSVC)
     link_directories("${CMAKE_LIBRARY_OUTPUT_DIRECTORY}")
@@ -301,6 +314,7 @@ target_link_libraries( ${PROJECT_NAME} PRIVATE fmt::fmt-header-only )
 #target_link_libraries( ${PROJECT_NAME} PRIVATE Python3::Python )
 #target_link_libraries(${PROJECT_NAME} ${PYTHON3_LIBRARIES})
 if(MSVC)
+    target_link_libraries( ${PROJECT_NAME} PRIVATE COMCK::COMCK )
     target_link_libraries( ${PROJECT_NAME} PRIVATE qmcr         )
     target_link_libraries( ${PROJECT_NAME} PRIVATE Qt::WidgetsPrivate)
     if (CMAKE_BUILD_TYPE MATCHES Debug)
@@ -313,6 +327,7 @@ if(MSVC)
         target_link_libraries( ${PROJECT_NAME} PRIVATE qtadvanceddocking  )
         target_link_libraries( ${PROJECT_NAME} PRIVATE QtitanBase2 )
         target_link_libraries( ${PROJECT_NAME} PRIVATE QtitanGrid8 )
+
 
     endif()
 else()

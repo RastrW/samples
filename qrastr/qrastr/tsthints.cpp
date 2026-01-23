@@ -2,6 +2,7 @@
 #include "tsthints.h"
 #include "common_qrastr.h"
 using WrapperExceptionType = std::runtime_error;
+//#include <astra/IPlainRastrWrappers.h>
 #include "IPlainRastrWrappers.h"
 
 TstHints::TstHints(QWidget *parent)
