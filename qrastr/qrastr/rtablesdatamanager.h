@@ -8,7 +8,8 @@
 #include "QVector"
 #include <QObject>
 #include "qastra.h"
-#include "UIForms.h"
+//#include "UIForms.h"
+#include <astra/UIForms.h>
 
 //class CUIForm;
 

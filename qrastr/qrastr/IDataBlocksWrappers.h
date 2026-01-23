@@ -6,8 +6,8 @@
 #include <QDebug>
 
 using WrapperExceptionType = std::runtime_error;
-//#include <astra/IPlainRastrWrappers.h>
-#include "IPlainRastrWrappers.h"
+#include <astra/IPlainRastrWrappers.h>
+//#include "IPlainRastrWrappers.h"
 
 
 // и вот тут мы наследуемся от базовых классов датаблоков, чтобы решать свои задачи

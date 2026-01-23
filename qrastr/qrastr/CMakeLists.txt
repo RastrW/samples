@@ -102,7 +102,7 @@ add_subdirectory(
 
 set(INCLUDES
     #"${CMAKE_PREFIX_PATH}"
-    "${ASTRA_LOCATION}"
+    #"${ASTRA_LOCATION}"         # такое надо выпилить
     #${Astra_INCLUDE_DIR}
     #"${Astra_DIR}/../../../include/"
     "${ASTRA_LOCATION}/../comck/"
