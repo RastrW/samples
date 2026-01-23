@@ -48,9 +48,10 @@ message( "Python3_INCLUDE_DIR:       ${Python3_INCLUDE_DIRS}")
 message( "Python3_EXECUTABLE:        ${Python3_EXECUTABLE}")
 link_directories    ( ${Python3_LIBRARY_DIRS} )
 include_directories ( ${Python3_INCLUDE_DIRS} )
+#target_include_directories ( qmcr PUBLIC ${Astra_INCLUDE_DIR} )
 include_directories ( ${Astra_INCLUDE_DIR} )
 
-include_directories("${ASTRA_LOCATION}/fmt/include/")
+#include_directories("${ASTRA_LOCATION}/fmt/include/")
 
 include_directories(
         ${SCI_DIR}/scintilla/include

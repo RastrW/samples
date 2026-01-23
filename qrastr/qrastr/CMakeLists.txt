@@ -61,7 +61,7 @@ else()
 endif()
 list(PREPEND CMAKE_PREFIX_PATH ${COMPILE_DIR})
 #list(PREPEND CMAKE_PREFIX_PATH "C:/Projects/tfs/rastr/RastrWin/build/install/include")
-list(PREPEND CMAKE_PREFIX_PATH ${RASTR_PREFIX_PATH})
+#list(PREPEND CMAKE_PREFIX_PATH ${RASTR_PREFIX_PATH})
 message(NOTICE "CMAKE_PREFIX_PATH= ${CMAKE_PREFIX_PATH}")
 #if(DEFINED RASTR_PREFIX_PATH)
 #    list(PREPEND CMAKE_PREFIX_PATH ${RASTR_PREFIX_PATH})
@@ -106,7 +106,7 @@ set(INCLUDES
     #${Astra_INCLUDE_DIR}
     #"${Astra_DIR}/../../../include/"
     #"${ASTRA_LOCATION}/../comck/"
-    "${ASTRA_LOCATION}/fmt/include/"
+    #"${ASTRA_LOCATION}/fmt/include/"
     #"${DEPENDENCIES_LOCATION}/qicstable/include"
     #"${DEPENDENCIES_LOCATION}/metakit/include" #-win
     #"${DEPENDENCIES_GIT}/metakit/include"      #-lin
