@@ -105,7 +105,7 @@ set(INCLUDES
     #"${ASTRA_LOCATION}"         # такое надо выпилить
     #${Astra_INCLUDE_DIR}
     #"${Astra_DIR}/../../../include/"
-    "${ASTRA_LOCATION}/../comck/"
+    #"${ASTRA_LOCATION}/../comck/"
     "${ASTRA_LOCATION}/fmt/include/"
     #"${DEPENDENCIES_LOCATION}/qicstable/include"
     #"${DEPENDENCIES_LOCATION}/metakit/include" #-win

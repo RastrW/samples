@@ -26,10 +26,11 @@ endif ()
 
 set( INCLUDES
     "${DEPENDENCIES_LOCATION}/spdlog/include/"
-    "${ASTRA_LOCATION}/"
-    "${ASTRA_LOCATION}/../comck/"
+    #"${ASTRA_LOCATION}/"
+    #"${ASTRA_LOCATION}/../comck/"
     "../../"
 )
+include_directories ( ${Astra_INCLUDE_DIR} )
 
 set(PROJECT_SOURCES
   plugin_barsmdp.cpp

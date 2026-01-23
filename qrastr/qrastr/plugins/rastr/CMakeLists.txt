@@ -29,10 +29,11 @@ endif ()
 set( INCLUDES
     "${DEPENDENCIES_LOCATION}/spdlog/include/"
     #${ASTRA_INCLUDE_DIR}
-    "${ASTRA_LOCATION}/"
+    #"${ASTRA_LOCATION}/"
     #"${ASTRA_LOCATION}/../../astra/"
     "../../"
 )
+include_directories ( ${Astra_INCLUDE_DIR} )
 set(PROJECT_SOURCES
     plugin_interfaces.h
     pluginrastr.h
