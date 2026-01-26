@@ -7,7 +7,7 @@
 using WrapperExceptionType = std::runtime_error;
 #include "qbarsmdp.h"
 //#include "IPlainRastrWrappers.h"
-#include <astra\IPlainRastrWrappers.h>
+#include <astra/IPlainRastrWrappers.h>
 
 #include "plugin_barsmdp.h"
 

@@ -9,7 +9,7 @@
 #include <spdlog/sinks/qt_sinks.h>
 #include "params.h"
 using WrapperExceptionType = std::runtime_error;
-#include <astra\IPlainRastrWrappers.h>
+#include <astra/IPlainRastrWrappers.h>
 //#include "IPlainRastrWrappers.h"
 //#include "C:\Projects\tfs\rastr\RastrWin\KC\IPlainTI.h"
 #include "plugins/rastr/plugin_interfaces.h"
