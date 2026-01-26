@@ -2,7 +2,8 @@
 #include "common_qrastr.h"
 #include "utils.h"
 //#include "License2/json.hpp"
-#include <astra/License2/json.hpp>
+//#include <astra/License2/json.hpp>
+#include "astra_headers/License2/json.hpp"
 #include <filesystem>
 //namespace fs = std::filesystem;
 

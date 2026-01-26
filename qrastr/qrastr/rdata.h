@@ -6,7 +6,8 @@
 //#include "astra_exp.h"
 #include "astra_shared.h"
 //#include "UIForms.h"
-#include <astra\UIForms.h>
+//#include <astra\UIForms.h>
+#include "astra_headers/UIForms.h"
 #include "qastra.h"
 #include "rtablesdatamanager.h"
 //#include "iostream"

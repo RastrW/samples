@@ -20,7 +20,8 @@ using WrapperExceptionType = std::runtime_error;
 #include "qbarsmdp.h"
 #include "utils.h"
 //#include "UIForms.h"
-#include <astra\UIForms.h>
+//#include <astra\UIForms.h>
+#include "astra_headers/UIForms.h"
 
 App::App(int &argc, char **argv)
     :QApplication(argc, argv){

@@ -176,7 +176,7 @@ set(PROJECT_SOURCES
     params.cpp
     common_qrastr.h
     common_qrastr.cpp
-    ${ASTRA_LOCATION}/ResourceManager.cpp
+    #${ASTRA_LOCATION}/ResourceManager.cpp
     appsettings.json
     params.h
     params.cpp
@@ -293,12 +293,18 @@ set(PROJECT_SOURCES
     formsaveall.ui
     SDLChild.h
     SDLChild.cpp
+    astra_headers/License2/json.hpp
+    astra_headers/Exceptions.h
+    astra_headers/ResourceManager.h
+    #astra_headers/ResourceManager.cpp
+    astra_headers/UIForms.h
 )
 
 if(${QT_VERSION_MAJOR} GREATER_EQUAL 6)
     qt_add_executable( ${PROJECT_NAME}
             MANUAL_FINALIZATION
             ${PROJECT_SOURCES}
+
     )
     qt_create_translation( QM_FILES ${CMAKE_SOURCE_DIR} ${TS_FILES} )
 else()
