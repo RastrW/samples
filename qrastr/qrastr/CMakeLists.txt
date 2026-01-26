@@ -33,7 +33,7 @@ set( CMAKE_CXX_STANDARD_REQUIRED ON )
 set( CMAKE_ARCHIVE_OUTPUT_DIRECTORY "${CMAKE_SOURCE_DIR}//..//${CMAKE_BUILD_TYPE}" )
 set( CMAKE_LIBRARY_OUTPUT_DIRECTORY "${CMAKE_SOURCE_DIR}//..//${CMAKE_BUILD_TYPE}" )
 set( CMAKE_RUNTIME_OUTPUT_DIRECTORY "${CMAKE_SOURCE_DIR}//..//${CMAKE_BUILD_TYPE}" )
-option( QRASTR_BUILD_WITH_MCR "QRASTR_BUILD_WITH_MCR" OFF )
+option( QRASTR_BUILD_WITH_MCR "QRASTR_BUILD_WITH_MCR" ON )
 #set( COMPILE_DIR "C:/Projects/tfs/rastr/RastrWin/thirdparty/_deps/compile_cmake" CACHE PATH "Installation directory for third-party projects" )# for example C:\projects\rastr\RastrWin\thirdparty\_deps\compile
 #set( COMPILE_DIR "C:/Projects/compile_cmake" )# for example C:\projects\rastr\RastrWin\thirdparty\_deps\compile
 if( NOT IS_DIRECTORY ${COMPILE_DIR} )
@@ -42,7 +42,8 @@ else()
     message(NOTICE "COMPILE_DIR= ${COMPILE_DIR}")
 endif()
 list( PREPEND CMAKE_PREFIX_PATH ${COMPILE_DIR} )
-list( PREPEND CMAKE_PREFIX_PATH "${CMAKE_CURRENT_SOURCE_DIR}/qmcr/" )
+list( PREPEND CMAKE_PREFIX_PATH ${RASTR_PREFIX_PATH} )
+#list( PREPEND CMAKE_PREFIX_PATH "${CMAKE_CURRENT_SOURCE_DIR}/qmcr/" )
 
 set( TS_FILES qrastr_ru_RU.ts )
 if(MSVC)
@@ -54,14 +55,15 @@ endif()
 
 #set(  ASTRA_LOCATION  ${COMPILE_DIR}/../../../astra  CACHE PATH "sdsd" FORCE )
 
-if( NOT IS_DIRECTORY ${ASTRA_LOCATION} )
-    message(FATAL_ERROR "Not defined ASTRA_LOCATION !") # example "c:/projects/rastr/RastrWin/astra"  "c:/projects/tfs/rastr/RastrWin/astra/"
-else()
-    message(NOTICE "ASTRA_LOCATION= ${ASTRA_LOCATION}")
-endif()
+#if( NOT IS_DIRECTORY ${ASTRA_LOCATION} )
+#    message(FATAL_ERROR "Not defined ASTRA_LOCATION !") # example "c:/projects/rastr/RastrWin/astra"  "c:/projects/tfs/rastr/RastrWin/astra/"
+#else()
+#    message(NOTICE "ASTRA_LOCATION= ${ASTRA_LOCATION}")
+#endif()
+
 list(PREPEND CMAKE_PREFIX_PATH ${COMPILE_DIR})
 #list(PREPEND CMAKE_PREFIX_PATH "C:/Projects/tfs/rastr/RastrWin/build/install/include")
-#list(PREPEND CMAKE_PREFIX_PATH ${RASTR_PREFIX_PATH})
+list(PREPEND CMAKE_PREFIX_PATH ${RASTR_PREFIX_PATH})
 message(NOTICE "CMAKE_PREFIX_PATH= ${CMAKE_PREFIX_PATH}")
 #if(DEFINED RASTR_PREFIX_PATH)
 #    list(PREPEND CMAKE_PREFIX_PATH ${RASTR_PREFIX_PATH})
@@ -146,7 +148,7 @@ else()
     link_directories("${DEPENDENCIES_LOCATION}/qtitan8_lin_5_15/bin/")
     link_directories("${DEPENDENCIES_LOCATION}/build-ads-Desktop-${CMAKE_BUILD_TYPE}/lib/")
     #link_directories("${DEPENDENCIES_LOCATION}/build-libpqxx-Desktop-${CMAKE_BUILD_TYPE}/lib/")
-    link_directories("${ASTRA_LOCATION}/../../build-RastrWin-Desktop-${CMAKE_BUILD_TYPE}/astra/")
+    #link_directories("${ASTRA_LOCATION}/../../build-RastrWin-Desktop-${CMAKE_BUILD_TYPE}/astra/")
 endif()
 
 set(PROJECT_SOURCES
@@ -296,7 +298,6 @@ set(PROJECT_SOURCES
     astra_headers/License2/json.hpp
     astra_headers/Exceptions.h
     astra_headers/ResourceManager.h
-    #astra_headers/ResourceManager.cpp
     astra_headers/UIForms.h
 )
 
@@ -319,6 +320,7 @@ target_link_libraries( ${PROJECT_NAME} PRIVATE fmt::fmt-header-only )
 #target_link_libraries( ${PROJECT_NAME} PRIVATE cryptopp::cryptopp )
 #target_link_libraries( ${PROJECT_NAME} PRIVATE Python3::Python )
 #target_link_libraries(${PROJECT_NAME} ${PYTHON3_LIBRARIES})
+#set_target_properties(qmcr PROPERTIES ENABLE_EXPORTS TRUE)
 if(MSVC)
     target_link_libraries( ${PROJECT_NAME} PRIVATE COMCK::COMCK )
     target_link_libraries( ${PROJECT_NAME} PRIVATE qmcr         )
