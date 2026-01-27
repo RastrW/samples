@@ -23,6 +23,8 @@ add_compile_definitions( QTN_NAMESPACE ) ## !! IT'S CRYTICAL!!
 
 #set(CMAKE_GENERATOR "Ninja")
 message("generator is set to ${CMAKE_GENERATOR}")
+set( TS_FILES qrastr_ru_RU.ts )
+set( QT_CREATOR_SKIP_MAINTENANCE_TOOL_PROVIDER ON )
 set( CMAKE_INCLUDE_CURRENT_DIR ON )
 set( CMAKE_AUTOUIC ON )
 set( CMAKE_AUTOMOC ON )
@@ -34,50 +36,28 @@ set( CMAKE_ARCHIVE_OUTPUT_DIRECTORY "${CMAKE_SOURCE_DIR}//..//${CMAKE_BUILD_TYPE
 set( CMAKE_LIBRARY_OUTPUT_DIRECTORY "${CMAKE_SOURCE_DIR}//..//${CMAKE_BUILD_TYPE}" )
 set( CMAKE_RUNTIME_OUTPUT_DIRECTORY "${CMAKE_SOURCE_DIR}//..//${CMAKE_BUILD_TYPE}" )
 option( QRASTR_BUILD_WITH_MCR "QRASTR_BUILD_WITH_MCR" ON )
-#set( COMPILE_DIR "C:/Projects/tfs/rastr/RastrWin/thirdparty/_deps/compile_cmake" CACHE PATH "Installation directory for third-party projects" )# for example C:\projects\rastr\RastrWin\thirdparty\_deps\compile
-#set( COMPILE_DIR "C:/Projects/compile_cmake" )# for example C:\projects\rastr\RastrWin\thirdparty\_deps\compile
+
+list( PREPEND CMAKE_PREFIX_PATH ${DEPENDENCIES_LOCATION} ) # ThirdParty components: ADS, Scittilla, SDL   ex: # win: "c:/projects/compile/ lin: ~/projects/compile/
+list( PREPEND CMAKE_PREFIX_PATH ${RASTR_PREFIX_PATH} )     # Astra install path                           ex: C:/Projects/tfs/rastr/RastrWin/build/install
+list( PREPEND CMAKE_PREFIX_PATH ${COMPILE_DIR})            # Astra thirdparty components: fmt             ex: C:\Projects\compile_cmake  (C:\projects\rastr\RastrWin\thirdparty\_deps\compile)
+message(NOTICE "DEPENDENCIES_LOCATION= ${DEPENDENCIES_LOCATION}")
+message(NOTICE "RASTR_PREFIX_PATH= ${RASTR_PREFIX_PATH}")
+message(NOTICE "COMPILE_DIR= ${COMPILE_DIR}")
+message(NOTICE "CMAKE_PREFIX_PATH= ${CMAKE_PREFIX_PATH}")
+
+if( NOT IS_DIRECTORY ${DEPENDENCIES_LOCATION} )
+    message(FATAL_ERROR "Not defined DEPENDENCIES_LOCATION")
+endif()
+if( NOT IS_DIRECTORY ${RASTR_PREFIX_PATH} )
+    message(FATAL_ERROR "Not defined RASTR_PREFIX_PATH")
+endif()
 if( NOT IS_DIRECTORY ${COMPILE_DIR} )
     message(FATAL_ERROR "Not defined COMPILE_DIR")
-else()
-    message(NOTICE "COMPILE_DIR= ${COMPILE_DIR}")
 endif()
-list( PREPEND CMAKE_PREFIX_PATH ${COMPILE_DIR} )
-list( PREPEND CMAKE_PREFIX_PATH ${RASTR_PREFIX_PATH} )  # Astra install path
-#list( PREPEND CMAKE_PREFIX_PATH "${CMAKE_CURRENT_SOURCE_DIR}/qmcr/" )
-
-set( TS_FILES qrastr_ru_RU.ts )
-if(MSVC)
-    set( DEPENDENCIES_LOCATION "c:/projects/compile/" )
-else()
-    set( DEPENDENCIES_LOCATION "~/projects/compile/" )
-    set( DEPENDENCIES_GIT      "/home/ustas/projects/git_main/" )
-endif()
-
-#set(  ASTRA_LOCATION  ${COMPILE_DIR}/../../../astra  CACHE PATH "sdsd" FORCE )
-
-#if( NOT IS_DIRECTORY ${ASTRA_LOCATION} )
-#    message(FATAL_ERROR "Not defined ASTRA_LOCATION !") # example "c:/projects/rastr/RastrWin/astra"  "c:/projects/tfs/rastr/RastrWin/astra/"
-#else()
-#    message(NOTICE "ASTRA_LOCATION= ${ASTRA_LOCATION}")
-#endif()
-
-list(PREPEND CMAKE_PREFIX_PATH ${COMPILE_DIR})
-#list(PREPEND CMAKE_PREFIX_PATH "C:/Projects/tfs/rastr/RastrWin/build/install/include")
-list(PREPEND CMAKE_PREFIX_PATH ${RASTR_PREFIX_PATH})
-message(NOTICE "CMAKE_PREFIX_PATH= ${CMAKE_PREFIX_PATH}")
-#if(DEFINED RASTR_PREFIX_PATH)
-#    list(PREPEND CMAKE_PREFIX_PATH ${RASTR_PREFIX_PATH})
-#endif()
 
 find_package( Astra   REQUIRED)         # need install Astra: ex. cmake --install build --config Debug from C:\Projects\tfs\rastr\RastrWin
-message(NOTICE "Astra_INCLUDE_DIR=" ${Astra_INCLUDE_DIR})
 find_package( COMCK  REQUIRED )
-#find_package(COMCK 1.0 CONFIG REQUIRED)
-message(NOTICE "COMCK_INCLUDE_DIR=" ${COMCK_INCLUDE_DIR})
-#find_package( Metakit REQUIRED )
 find_package( fmt     REQUIRED )
-message(NOTICE "fmt_INCLUDE_DIR=" ${fmt_INCLUDE_DIR})
-#find_package(cryptopp REQUIRED)
 #find_package( libpqxx )                 # need build libpqxx release,from release_build: cmake --install .
 find_package( QT NAMES Qt6 Qt5 Test COMPONENTS REQUIRED )
 find_package( Qt${QT_VERSION_MAJOR} COMPONENTS
@@ -122,7 +102,6 @@ set(INCLUDES
     "${DEPENDENCIES_LOCATION}/sci/scintilla/qt/ScintillaEdit"
     "${DEPENDENCIES_LOCATION}/Qt-Advanced-Docking-System/src"
     "${DEPENDENCIES_LOCATION}/spdlog/include/"
-    #"${ASTRA_LOCATION}/../../flytfs/IPlainRastrTest/"
     "${DEPENDENCIES_LOCATION}/qtitan8_lin_5_15/include/" #lin Qtitan
     "${DEPENDENCIES_LOCATION}/QtitanDataGrid8.2.0_win_qt_6_7/include/" #win Qtitan
     "${DEPENDENCIES_LOCATION}/SDL3-3.2.28/include/" #win SDL
@@ -336,26 +315,21 @@ if(MSVC)
         target_link_libraries( ${PROJECT_NAME} PRIVATE qtadvanceddocking  )
         target_link_libraries( ${PROJECT_NAME} PRIVATE QtitanBase2 )
         target_link_libraries( ${PROJECT_NAME} PRIVATE QtitanGrid8 )
-
-
     endif()
 else()
-    target_link_libraries( ${PROJECT_NAME} PRIVATE libpqxx::pqxx )
+    target_link_libraries( ${PROJECT_NAME} PRIVATE qmcr       )
+    target_link_libraries( ${PROJECT_NAME} PRIVATE astra  )
+    target_link_libraries( ${PROJECT_NAME} PRIVATE qtadvanceddocking )
+    #target_link_libraries( ${PROJECT_NAME} PRIVATE libpqxx::pqxx )
     if (CMAKE_BUILD_TYPE MATCHES Debug)
         target_link_libraries( ${PROJECT_NAME} PRIVATE Qt::WidgetsPrivate)
-        target_link_libraries( ${PROJECT_NAME} PRIVATE qmcr       )
-        target_link_libraries( ${PROJECT_NAME} PRIVATE qtadvanceddocking )
         target_link_libraries( ${PROJECT_NAME} PRIVATE QtitanBased )
         target_link_libraries( ${PROJECT_NAME} PRIVATE QtitanGridd )
-        target_link_libraries( ${PROJECT_NAME} PRIVATE astra  )
     else()
         target_link_libraries( ${PROJECT_NAME} PRIVATE Qt::WidgetsPrivate)
-        target_link_libraries( ${PROJECT_NAME} PRIVATE qmcr       )
-        target_link_libraries( ${PROJECT_NAME} PRIVATE qtadvanceddocking )
         target_link_libraries( ${PROJECT_NAME} PRIVATE QtitanBase )
         target_link_libraries( ${PROJECT_NAME} PRIVATE QtitanGrid )
         #target_link_libraries( ${PROJECT_NAME} PRIVATE astra_exp  ) # need for few obsolet functions in astra_exp.cpp!
-        target_link_libraries( ${PROJECT_NAME} PRIVATE astra  )
     endif()
 endif()
 
