@@ -2,7 +2,7 @@
 
 Сборка проекта **QRastr** в QTCreator с помощью CMake:
 
-1. Требуется наличие установленного пакета **Astra**, для обеспечения:
+## 1. Требуется наличие установленного пакета **Astra**, для обеспечения:
 ```cmake
 find_package(Astra REQUIRED)
 target_link_libraries( ${PROJECT_NAME} PRIVATE astra  )
@@ -26,7 +26,7 @@ RASTR_PREFIX_PATH C:/Projects/tfs/rastr/RastrWin/build/install
 ```
 Пакет должен записаться в /usr/local
 
-2. Требуемые пакеты (Third-party) с использованием find_package
+## 2. Требуемые пакеты (Third-party) с использованием find_package
 - fmt - Форматирование и кодировка ввода/ввывода строк
 - Qt - компоненты Qt
 	Core
@@ -41,7 +41,7 @@ fmt уже входит в RastrWin/thirdparty поетому используе
 ```cmake
 COMPILE_DIR C:\Projects\compile_cmake  (который по умолчанию C:\projects\rastr\RastrWin\thirdparty\_deps\compile)
 ```
-3. Требуемые пакеты (Third-party) собранные вручную
+## 3. Требуемые пакеты (Third-party) собранные вручную
 - [*scintilla*](https://github.com/ScintillaOrg/lexilla) - текстовые редактор, нужен для компонента протокол
 - [*Qt-Advanced-Docking-System*](https://github.com/githubuser0xFFFF/Qt-Advanced-Docking-System) - Докинг окон, красивый
 - [*spdlog*](https://github.com/gabime/spdlog) - Логи
