@@ -96,8 +96,8 @@ set(INCLUDES
     #"${DEPENDENCIES_LOCATION}/metakit/include" #-win
     #"${DEPENDENCIES_GIT}/metakit/include"      #-lin
     #"${DEPENDENCIES_LOCATION}/eigen-eigen"
-    "${DEPENDENCIES_LOCATION}/boost/boost_1_76_0" # in_nix
-    "${DEPENDENCIES_LOCATION}/boost/boost_1_80_0" # in_win
+    #"${DEPENDENCIES_LOCATION}/boost/boost_1_76_0" # in_nix
+    #"${DEPENDENCIES_LOCATION}/boost/boost_1_80_0" # in_win
     "${DEPENDENCIES_LOCATION}/sci/scintilla/include"
     "${DEPENDENCIES_LOCATION}/sci/scintilla/src"
     "${DEPENDENCIES_LOCATION}/sci/scintilla/qt/ScintillaEditBase"
