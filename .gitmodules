@@ -1,0 +1,16 @@
+[submodule "qrastr/thirdparty/metakit"]
+	path = qrastr/thirdparty/metakit
+	url = https://github.com/jnorthrup/metakit.git
+	branch = master
+[submodule "qrastr/thirdparty/Qt-Advanced-Docking-System"]
+	path = qrastr/thirdparty/Qt-Advanced-Docking-System
+	url = https://github.com/githubuser0xFFFF/Qt-Advanced-Docking-System.git
+	branch = master
+[submodule "qrastr/thirdparty/SDL"]
+	path = qrastr/thirdparty/SDL
+	url = https://github.com/libsdl-org/SDL.git
+	branch = main
+[submodule "qrastr/thirdparty/SDL_image"]
+	path = qrastr/thirdparty/SDL_image
+	url = https://github.com/libsdl-org/SDL_image.git
+	branch = main
