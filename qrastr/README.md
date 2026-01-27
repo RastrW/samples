@@ -1,4 +1,5 @@
 # QRastr
+Кроссплатформенная GUI оболочка для Astra(.dll/.so).
 
 Сборка проекта **QRastr** в QTCreator с помощью CMake:
 
@@ -36,10 +37,9 @@ RASTR_PREFIX_PATH C:/Projects/tfs/rastr/RastrWin/build/install
     Xml
     Test
 
-fmt уже входит в RastrWin/thirdparty поетому используем его для этого 
-Требуется указать
+fmt уже входит в RastrWin/thirdparty поэтому используем его. Требуется указать:
 ```cmake
-COMPILE_DIR C:\Projects\compile_cmake  (который по умолчанию C:\projects\rastr\RastrWin\thirdparty\_deps\compile)
+COMPILE_DIR C:\Projects\compile_cmake  #(который по умолчанию C:\projects\rastr\RastrWin\thirdparty\_deps\compile)
 ```
 ## 3. Требуемые пакеты (Third-party) собранные вручную
 - [*scintilla*](https://github.com/ScintillaOrg/lexilla) - текстовые редактор, нужен для компонента протокол
@@ -47,6 +47,11 @@ COMPILE_DIR C:\Projects\compile_cmake  (который по умолчанию C
 - [*spdlog*](https://github.com/gabime/spdlog) - Логи
 - QtitanDataGrid - собирается из исходников, контрол для грида
 - [*SDL*](https://github.com/libsdl-org/SDL) - зарезервирован для отображения/рендеринга однолинейной графики , пока не используется
+
+Для них требуется указать
+```cmake
+DEPENDENCIES_LOCATION c:/projects/compile/ # win: "c:/projects/compile/ lin: /home/ustas/projects/compile
+```
 
 
 
