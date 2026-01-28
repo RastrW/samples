@@ -137,16 +137,14 @@ elseif(UNIX AND NOT APPLE)
     else()
         set(COMPILER "gcc")
     endif()
-
 else()
     message(FATAL_ERROR "Unsupported platform: ${CMAKE_SYSTEM_NAME}")
 endif()
-# Определяем суффикс для Debug версий Qtitan библиотек
+
+# Определяем CONFIG_DIR для путей
 if(CMAKE_BUILD_TYPE MATCHES Debug)
-    set(LIBEND_SUFFIX "d")
     set(CONFIG_DIR "Debug")
 else()
-    set(LIBEND_SUFFIX "")
     set(CONFIG_DIR "Release")
 endif()
 
@@ -161,8 +159,8 @@ message(STATUS "  Platform directory: ${PLATFORM_DIR}")
 # ============================================================================
 option(QRASTR_BUILD_WITH_MCR "Build qmcr as library for qrastr" ON)
 option(BUILD_WITH_ASTRA "Build with ASTRA library" OFF)
-option(USE_PRECOMPILED_LIBS "Use precompiled libraries instead of building from source" OFF)
-
+option(USE_PRECOMPILED_LIBS "Use precompiled libraries instead of building from source" ON)
+option(BUILD_WITH_PQ "Build with libpq" OFF)
 
 message(STATUS "Build options:")
 message(STATUS "  QRASTR_BUILD_WITH_MCR: ${QRASTR_BUILD_WITH_MCR}")
@@ -210,13 +208,18 @@ endif()
 # 2. USE_PRECOMPILED_LIBS=OFF: собрать библиотеку из исходников через add_subdirectory
 # ============================================================================
 function(add_thirdparty_library LIB_NAME LIB_PATH)
-    set(options "")
+    set(options USE_DEBUG_SUFFIX)
     set(oneValueArgs LIB_REAL_NAME)
     set(multiValueArgs "")
     cmake_parse_arguments(ARG "${options}" "${oneValueArgs}" "${multiValueArgs}" ${ARGN})
 
     if(NOT ARG_LIB_REAL_NAME)
         set(ARG_LIB_REAL_NAME "${LIB_NAME}")
+    endif()
+
+    # Добавляем debug суффикс если требуется
+    if(ARG_USE_DEBUG_SUFFIX AND CMAKE_BUILD_TYPE MATCHES Debug)
+        set(ARG_LIB_REAL_NAME "${ARG_LIB_REAL_NAME}d")
     endif()
 
     if(USE_PRECOMPILED_LIBS)
@@ -237,7 +240,8 @@ function(add_thirdparty_library LIB_NAME LIB_PATH)
             message(FATAL_ERROR
                 "Precompiled ${LIB_NAME} not found in ${PRECOMPILED_DIR}\n"
                 "  Library: ${${LIB_NAME}_LIBRARY}\n"
-                "  Include: ${${LIB_NAME}_INCLUDE_DIR}")
+                "  Include: ${${LIB_NAME}_INCLUDE_DIR}\n"
+                "  Looking for: ${ARG_LIB_REAL_NAME}")
         endif()
 
         add_library(${LIB_NAME} UNKNOWN IMPORTED)
@@ -264,7 +268,6 @@ endfunction()
 # - AstraLinux: библиотеки собраны вручную в ~/.local, добавляем этот путь
 # - Windows: используем thirdparty (либо precompiled, либо из исходников)
 # ============================================================================
-
 if(WIN32)
     # ========================================================================
     # Windows: все библиотеки из thirdparty
@@ -285,13 +288,17 @@ if(WIN32)
     message(STATUS "Eigen3 (header-only): ${THIRDPARTY_DIR}/eigen")
 
     # fmt - используем add_thirdparty_library (она сама проверит USE_PRECOMPILED_LIBS)
-    add_thirdparty_library(fmt "${THIRDPARTY_DIR}/fmt")
-
+    add_thirdparty_library(fmt "${THIRDPARTY_DIR}/fmt" USE_DEBUG_SUFFIX)
     # spdlog
-    add_thirdparty_library(spdlog "${THIRDPARTY_DIR}/spdlog")
+    add_thirdparty_library(spdlog "${THIRDPARTY_DIR}/spdlog" USE_DEBUG_SUFFIX)
+
+    if(WIN32 AND USE_PRECOMPILED_LIBS)
+        add_library(fmt::fmt ALIAS fmt)
+        add_library(spdlog::spdlog ALIAS spdlog)
+    endif()
 
     # libpqxx require PostgreSQL, but it's MSVC only
-    if(USE_PRECOMPILED_LIBS)
+    if(BUILD_WITH_PQ)
         add_thirdparty_library(libpqxx "${THIRDPARTY_DIR}/libpqxx")
     endif()
 elseif(UNIX AND NOT APPLE)
@@ -396,8 +403,8 @@ endif()
 # Qt-Advanced-Docking-System
 # ----------------------------------------------------------------------------
 add_thirdparty_library(qtadvanceddocking "${THIRDPARTY_DIR}/Qt-Advanced-Docking-System"
-    LIB_REAL_NAME "qtadvanceddocking-qt6${LIBEND_SUFFIX}")
-
+    LIB_REAL_NAME "qtadvanceddocking-qt6"
+    USE_DEBUG_SUFFIX)
 # ----------------------------------------------------------------------------
 # SDL3 и SDL3_image
 # ----------------------------------------------------------------------------
@@ -665,7 +672,7 @@ target_link_libraries(${PROJECT_NAME} PRIVATE
 )
 
 # libpqxx
-if(USE_PRECOMPILED_LIBS)
+if(BUILD_WITH_PQ)
     target_link_libraries(${PROJECT_NAME} PRIVATE libpqxx::pqxx)
 endif()
 
