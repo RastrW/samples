@@ -31,8 +31,8 @@ RASTR_PREFIX_PATH C:/Projects/tfs/rastr/RastrWin/build/install
 ## 2. Требуемые пакеты (Third-party) с использованием find_package
 - fmt - Форматирование и кодировка ввода/ввывода строк
 - Qt - компоненты Qt
-- -	  Core
-- -    Widgets
+- - Core
+- - Widgets
 - -    LinguistTools
 - -    PrintSupport
 - -    Xml
