@@ -151,7 +151,7 @@ message(STATUS "  Platform directory: ${PLATFORM_DIR}")
 # Options
 # ============================================================================
 option(QRASTR_BUILD_WITH_MCR "Build qmcr as library for qrastr" ON)
-option(BUILD_WITH_ASTRA "Build with ASTRA library" OFF)
+option(BUILD_WITH_ASTRA "Build with ASTRA library" ON)
 option(USE_PRECOMPILED_LIBS "Use precompiled libraries instead of building from source" ON)
 option(BUILD_WITH_PQ "Build with libpq" OFF)
 
@@ -172,15 +172,55 @@ else()
     message(STATUS "THIRDPARTY_DIR: ${THIRDPARTY_DIR}")
 endif()
 
-if(BUILD_WITH_ASTRA)
-    set(ASTRA_LOCATION "${CMAKE_CURRENT_SOURCE_DIR}/../../astra" CACHE PATH "Path to ASTRA library")
+# Путь к библиотеке ASTRA с бинарными файлами
+set(ASTRA_BIN_ROOT "${CMAKE_CURRENT_SOURCE_DIR}/../lib/astra" CACHE PATH "Path to precompiled ASTRA library")
 
-    if(NOT IS_DIRECTORY ${ASTRA_LOCATION})
-        message(FATAL_ERROR "ASTRA_LOCATION not found: ${ASTRA_LOCATION}")
-    else()
-        message(STATUS "ASTRA_LOCATION: ${ASTRA_LOCATION}")
+if(BUILD_WITH_ASTRA)
+    if(NOT IS_DIRECTORY ${ASTRA_BIN_ROOT})
+        message(FATAL_ERROR "ASTRA binary directory not found: ${ASTRA_BIN_ROOT}")
     endif()
+
+    message(STATUS "ASTRA_BIN_ROOT: ${ASTRA_BIN_ROOT}")
+
+    # Пробуем найти через CMake Config (если есть)
+    list(APPEND CMAKE_PREFIX_PATH "${ASTRA_BIN_ROOT}")
+    find_package(COMCK CONFIG QUIET HINTS "${ASTRA_BIN_ROOT}/lib/cmake/COMCK")
+    find_package(Astra CONFIG QUIET HINTS "${ASTRA_BIN_ROOT}/lib/cmake/Astra")
+
+    # Если не нашли через Config, создаём targets вручную
+    if(NOT TARGET COMCK::COMCK)
+        add_library(COMCK SHARED IMPORTED GLOBAL)
+        set_target_properties(COMCK PROPERTIES
+            IMPORTED_LOCATION "${ASTRA_BIN_ROOT}/bin/COMCK.dll"
+            INTERFACE_INCLUDE_DIRECTORIES "${ASTRA_BIN_ROOT}/include/comck"
+        )
+        if(MINGW AND EXISTS "${ASTRA_BIN_ROOT}/lib/libCOMCK.dll.a")
+            set_target_properties(COMCK PROPERTIES IMPORTED_IMPLIB "${ASTRA_BIN_ROOT}/lib/libCOMCK.dll.a")
+        elseif(MSVC)
+            set_target_properties(COMCK PROPERTIES IMPORTED_IMPLIB "${ASTRA_BIN_ROOT}/lib/COMCK.lib")
+        endif()
+    else()
+        add_library(COMCK ALIAS COMCK::COMCK)
+    endif()
+
+    if(NOT TARGET Astra::astra)
+        add_library(astra SHARED IMPORTED GLOBAL)
+        set_target_properties(astra PROPERTIES
+            IMPORTED_LOCATION "${ASTRA_BIN_ROOT}/bin/astra.dll"
+            INTERFACE_INCLUDE_DIRECTORIES "${ASTRA_BIN_ROOT}/include/astra"
+        )
+        if(MINGW AND EXISTS "${ASTRA_BIN_ROOT}/lib/libastra.dll.a")
+            set_target_properties(astra PROPERTIES IMPORTED_IMPLIB "${ASTRA_BIN_ROOT}/lib/libastra.dll.a")
+        elseif(MSVC)
+            set_target_properties(astra PROPERTIES IMPORTED_IMPLIB "${ASTRA_BIN_ROOT}/lib/astra.lib")
+        endif()
+    else()
+        add_library(astra ALIAS Astra::astra)
+    endif()
+
+    message(STATUS "ASTRA: ✅ Configured")
 endif()
+
 
 if(WIN32)
     set(QTITAN_ROOT "C:/Qt/Developer Machines/QtitanComponents2025.1.0 Demo" CACHE PATH "Path to Qtitan")
@@ -440,10 +480,8 @@ endif()
 # Добавляем ASTRA include директории, если ASTRA включена
 if(BUILD_WITH_ASTRA)
     list(APPEND PROJECT_INCLUDES
-        ${ASTRA_LOCATION}
-        ${ASTRA_LOCATION}/../comck
-        ${ASTRA_LOCATION}/fmt/include/
-        ${ASTRA_LOCATION}/../../flytfs/IPlainRastrTest/
+        ${ASTRA_BIN_ROOT}/include/astra
+        ${ASTRA_BIN_ROOT}/include/comck
     )
 endif()
 
@@ -614,7 +652,7 @@ if(BUILD_WITH_ASTRA)
         qti.cpp
         qbarsmdp.h
         qbarsmdp.cpp
-        ${ASTRA_LOCATION}/ResourceManager.cpp
+        # ${ASTRA_LOCATION}/ResourceManager.cpp
     )
 endif()
 # Translation files
@@ -730,7 +768,23 @@ endif()
 
 # ASTRA library
 if(BUILD_WITH_ASTRA)
-    target_link_libraries(${PROJECT_NAME} PRIVATE astra)
+    target_link_libraries(${PROJECT_NAME} PRIVATE astra COMCK)
+
+    # Копируем DLL на Windows
+    if(WIN32)
+        add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
+            COMMAND ${CMAKE_COMMAND} -E copy_if_different
+                "${ASTRA_BIN_ROOT}/bin/astra.dll"
+                "$<TARGET_FILE_DIR:${PROJECT_NAME}>"
+            COMMAND ${CMAKE_COMMAND} -E copy_if_different
+                "${ASTRA_BIN_ROOT}/bin/COMCK.dll"
+                "$<TARGET_FILE_DIR:${PROJECT_NAME}>"
+            COMMAND ${CMAKE_COMMAND} -E copy_if_different
+                "${ASTRA_BIN_ROOT}/bin/mk4.dll"
+                "$<TARGET_FILE_DIR:${PROJECT_NAME}>"
+            COMMENT "Copying ASTRA DLLs"
+        )
+    endif()
 endif()
 
 # ============================================================================
