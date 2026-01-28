@@ -47,6 +47,10 @@ set(PYTHON_MIN 3.10)
 #include_directories(${PYTHON_INCLUDE_DIRS})
 
 #new CMake
+if (WIN32 AND NOT MSVC)
+    set(Python3_EXECUTABLE "C:/msys64/mingw64/bin/python3.exe" CACHE FILEPATH "" FORCE)
+    set(Python3_ROOT_DIR   "C:/msys64/mingw64"                 CACHE PATH "" FORCE)
+endif()
 find_package (Python3 ${PYTHON_MIN} REQUIRED COMPONENTS Interpreter Development)
 message( "Python3_FOUND:             ${Python3_FOUND}")
 message( "Python3_VERSION:           ${Python3_VERSION}")
