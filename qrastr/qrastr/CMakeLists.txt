@@ -9,52 +9,32 @@
 cmake_minimum_required(VERSION 3.23)
 message(STATUS "CMake version: ${CMAKE_VERSION}")
 
-# ============================================================================
-# Определение дистрибутива Linux и настройка компилятора ДО project()
-# ============================================================================
-if(UNIX AND NOT APPLE AND NOT WIN32)
-        # Читаем /etc/os-release для определения дистрибутива
+# Определяем OS
+if(WIN32)
+    set(OS_NAME "Windows")
+elseif(APPLE)
+    set(OS_NAME "macOS")
+elseif(UNIX)
+    set(OS_NAME "Linux")
+
+    # Определяем дистрибутив Linux
     if(EXISTS "/etc/os-release")
-        file(STRINGS "/etc/os-release" OS_RELEASE_CONTENTS)
-                # Ищем строку ID="astra" или NAME="Astra Linux"
-        set(IS_ASTRA_LINUX FALSE)
-        foreach(line ${OS_RELEASE_CONTENTS})
-            if(line MATCHES "ID=\"?astra\"?" OR line MATCHES "NAME=.*[Aa]stra")
-                set(IS_ASTRA_LINUX TRUE)
-                message(STATUS "Detected AstraLinux distribution")
-                break()
+        file(READ "/etc/os-release" OS_RELEASE)
+        if(OS_RELEASE MATCHES "ID=astra")
+            set(LINUX_DISTRO "AstraLinux")
+            set(IS_ASTRA_LINUX TRUE)
+
+            # Устанавливаем компилятор для Astra
+            if(NOT CMAKE_C_COMPILER)
+                set(CMAKE_C_COMPILER "/usr/bin/clang-13" CACHE FILEPATH "C compiler" FORCE)
             endif()
-        endforeach()
-
-        if(NOT IS_ASTRA_LINUX)
-                        # Проверяем, возможно это Ubuntu
-            foreach(line ${OS_RELEASE_CONTENTS})
-                if(line MATCHES "ID=\"?ubuntu\"?" OR line MATCHES "NAME=.*[Uu]buntu")
-                    message(STATUS "Detected Ubuntu distribution")
-                    break()
-                endif()
-            endforeach()
+            if(NOT CMAKE_CXX_COMPILER)
+                set(CMAKE_CXX_COMPILER "/usr/bin/clang++-13" CACHE FILEPATH "C++ compiler" FORCE)
+            endif()
+        elseif(OS_RELEASE MATCHES "ID=ubuntu")
+            set(LINUX_DISTRO "Ubuntu")
+            set(IS_ASTRA_LINUX FALSE)
         endif()
-    else()
-        message(WARNING "/etc/os-release not found, cannot auto-detect Linux distribution")
-        set(IS_ASTRA_LINUX FALSE)
-    endif()
-        # Для AstraLinux принудительно используем clang-13
-    # На AstraLinux встроенные gcc8 и clang11 слишком старые для C++17 features
-    if(IS_ASTRA_LINUX)
-
-        if(NOT CMAKE_C_COMPILER)
-            set(CMAKE_C_COMPILER "/usr/bin/clang-13" CACHE FILEPATH "C compiler" FORCE)
-        endif()
-        if(NOT CMAKE_CXX_COMPILER)
-            set(CMAKE_CXX_COMPILER "/usr/bin/clang++-13" CACHE FILEPATH "C++ compiler" FORCE)
-        endif()
-        message(STATUS "Using Clang-13 compiler for AstraLinux")
-        message(STATUS "  CC:  ${CMAKE_C_COMPILER}")
-        message(STATUS "  CXX: ${CMAKE_CXX_COMPILER}")
-    else()
-                # Для Ubuntu используем системный компилятор (gcc по умолчанию)
-        message(STATUS "Using default system compiler (gcc for Ubuntu)")
     endif()
 endif()
 
@@ -63,6 +43,19 @@ endif()
 # ============================================================================
 cmake_policy(SET CMP0167 NEW) # In CMake 3.30+, the FindBoost module has been removed. Using BoostConfig.cmake
 project(qrastr VERSION 0.1 LANGUAGES CXX C)
+
+# Определение компилятора
+if(MSVC)
+    set(COMPILER_NAME "msvc")
+elseif(MINGW)
+    set(COMPILER_NAME "mingw")
+elseif(CMAKE_CXX_COMPILER_ID MATCHES "GNU")
+    set(COMPILER_NAME "gcc")
+elseif(CMAKE_CXX_COMPILER_ID MATCHES "Clang")
+    set(COMPILER_NAME "clang")
+else()
+    set(COMPILER_NAME "unknown")
+endif()
 
 # ============================================================================
 # Build Configuration
@@ -159,7 +152,7 @@ message(STATUS "  Platform directory: ${PLATFORM_DIR}")
 # ============================================================================
 option(QRASTR_BUILD_WITH_MCR "Build qmcr as library for qrastr" ON)
 option(BUILD_WITH_ASTRA "Build with ASTRA library" OFF)
-option(USE_PRECOMPILED_LIBS "Use precompiled libraries instead of building from source" ON)
+option(USE_PRECOMPILED_LIBS "Use precompiled libraries instead of building from source" OFF)
 option(BUILD_WITH_PQ "Build with libpq" OFF)
 
 message(STATUS "Build options:")
@@ -275,11 +268,7 @@ if(WIN32)
 
     # Boost (header-only)
     add_library(Boost::boost INTERFACE IMPORTED)
-    add_library(Boost::filesystem INTERFACE IMPORTED)
-    add_library(Boost::system INTERFACE IMPORTED)
     target_include_directories(Boost::boost INTERFACE "${THIRDPARTY_DIR}/boost_1_80_0")
-    target_include_directories(Boost::filesystem INTERFACE "${THIRDPARTY_DIR}/boost_1_80_0")
-    target_include_directories(Boost::system INTERFACE "${THIRDPARTY_DIR}/boost_1_80_0")
     message(STATUS "Boost (header-only): ${THIRDPARTY_DIR}/boost_1_80_0")
 
     # Eigen3 (header-only)
@@ -314,7 +303,7 @@ elseif(UNIX AND NOT APPLE)
     message(STATUS "CMAKE_PREFIX_PATH: ${CMAKE_PREFIX_PATH}")
 
     # Boost
-    find_package(Boost 1.80 REQUIRED COMPONENTS filesystem system)
+    find_package(Boost 1.80 REQUIRED)
     message(STATUS "Boost found: ${Boost_VERSION} at ${Boost_INCLUDE_DIRS}")
 
     # ----------------------------------------------------------------------------
@@ -660,13 +649,11 @@ endif()
 # ============================================================================
 # Link Libraries - линковка библиотек к исполняемому файлу
 # ============================================================================
-set_target_properties(fmt PROPERTIES AUTOMOC OFF AUTOUIC OFF AUTORCC OFF)
-set_target_properties(spdlog PROPERTIES AUTOMOC OFF AUTOUIC OFF AUTORCC OFF)
+set_target_properties(fmt::fmt PROPERTIES AUTOMOC OFF AUTOUIC OFF AUTORCC OFF)
+set_target_properties(spdlog::spdlog PROPERTIES AUTOMOC OFF AUTOUIC OFF AUTORCC OFF)
 
 target_link_libraries(${PROJECT_NAME} PRIVATE
     Eigen3::Eigen
-    Boost::filesystem
-    Boost::system
     fmt::fmt
     spdlog::spdlog
 )
