@@ -152,7 +152,7 @@ message(STATUS "  Platform directory: ${PLATFORM_DIR}")
 # ============================================================================
 option(QRASTR_BUILD_WITH_MCR "Build qmcr as library for qrastr" ON)
 option(BUILD_WITH_ASTRA "Build with ASTRA library" OFF)
-option(USE_PRECOMPILED_LIBS "Use precompiled libraries instead of building from source" OFF)
+option(USE_PRECOMPILED_LIBS "Use precompiled libraries instead of building from source" ON)
 option(BUILD_WITH_PQ "Build with libpq" OFF)
 
 message(STATUS "Build options:")
@@ -649,8 +649,14 @@ endif()
 # ============================================================================
 # Link Libraries - линковка библиотек к исполняемому файлу
 # ============================================================================
-set_target_properties(fmt::fmt PROPERTIES AUTOMOC OFF AUTOUIC OFF AUTORCC OFF)
-set_target_properties(spdlog::spdlog PROPERTIES AUTOMOC OFF AUTOUIC OFF AUTORCC OFF)
+#set_target_properties can not be used on an ALIAS target.
+if(WIN32)
+    set_target_properties(fmt PROPERTIES AUTOMOC OFF AUTOUIC OFF AUTORCC OFF)
+    set_target_properties(spdlog PROPERTIES AUTOMOC OFF AUTOUIC OFF AUTORCC OFF)
+else()
+    set_target_properties(fmt::fmt PROPERTIES AUTOMOC OFF AUTOUIC OFF AUTORCC OFF)
+    set_target_properties(spdlog::spdlog PROPERTIES AUTOMOC OFF AUTOUIC OFF AUTORCC OFF)
+endif()
 
 target_link_libraries(${PROJECT_NAME} PRIVATE
     Eigen3::Eigen
