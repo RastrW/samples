@@ -1,5 +1,5 @@
 # QRastr
-Кроссплатформенная GUI оболочка для Astra(.dll/.so).
+Кроссплатформенный Rastr на основе QT.
 
 Сборка проекта **QRastr** в QTCreator с помощью CMake:
 
@@ -15,12 +15,13 @@ target_link_libraries( ${PROJECT_NAME} PRIVATE astra  )
 C:\Projects\tfs\rastr\RastrWin> cmake --install build --config Debug
 C:\Projects\tfs\rastr\RastrWin> cmake --install build --config Release
 ```
+В каталоге build должен появиться каталог install - это и есть пакет **Astra**
+
 Требуется указать
 ```cmake
 RASTR_PREFIX_PATH C:/Projects/tfs/rastr/RastrWin/build/install
 ```
 
-В каталоге build должен появиться каталог install - это и есть пакет **Astra**
 ### Linux
 ```console
 /projects/git_main/rastr/build-RastrWin-Desktop-Release$ sudo cmake --install .
@@ -30,12 +31,12 @@ RASTR_PREFIX_PATH C:/Projects/tfs/rastr/RastrWin/build/install
 ## 2. Требуемые пакеты (Third-party) с использованием find_package
 - fmt - Форматирование и кодировка ввода/ввывода строк
 - Qt - компоненты Qt
-	Core
-    Widgets
-    LinguistTools
-    PrintSupport
-    Xml
-    Test
+--	  Core
+--    Widgets
+--    LinguistTools
+--    PrintSupport
+--    Xml
+--    Test
 
 fmt уже входит в RastrWin/thirdparty поэтому используем его. Требуется указать:
 ```cmake
