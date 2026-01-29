@@ -2,8 +2,11 @@
 # Универсальный CMakeLists.txt для qrastr
 # Поддерживаемые платформы:
 #   - Windows (MSVC, MinGW)
-#   - Ubuntu 24.04 (gcc, системные библиотеки через apt)
-#   - AstraLinux 1.7 (clang-13, библиотеки собраны в ~/.local)
+#   - Ubuntu 24.04 (gcc)
+#   - AstraLinux 1.7 (clang-13)
+#
+# Все платформы теперь используют библиотеки из thirdparty
+# (либо precompiled, либо собираемые из исходников через add_subdirectory)
 # ============================================================================
 
 cmake_minimum_required(VERSION 3.23)
@@ -89,12 +92,12 @@ if(WIN32)
     add_compile_definitions(COMPILE_WIN)
 
     if(MSVC)
-                # Подавление предупреждений о deprecated Microsoft extensions (?)
+        # Подавление предупреждений о deprecated Microsoft extensions (?)
         add_compile_definitions(_SILENCE_ALL_MS_EXT_DEPRECATION_WARNINGS)
-                # Отключение макросов min/max из windows.h (конфликт с std::min/max)
+        # Отключение макросов min/max из windows.h (конфликт с std::min/max)
         add_compile_definitions(NOMINMAX)
     endif()
-        # Настройка CRT (C Runtime Library) для Release сборок
+    # Настройка CRT (C Runtime Library) для Release сборок
     # Используем статическую линковку CRT для уменьшения зависимостей
     if(NOT CMAKE_BUILD_TYPE MATCHES Debug)
         set(CMAKE_MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>")
@@ -123,7 +126,7 @@ elseif(UNIX AND NOT APPLE)
     set(LIB_PREFIX "lib")
     set(LIB_SUFFIX ".so")
     set(PLATFORM_DIR "linux")
-        # Определяем компилятор для выбора правильных precompiled библиотек
+    # Определяем компилятор для выбора правильных precompiled библиотек
     # Библиотеки скомпилированные разными компиляторами могут быть несовместимы
     if(IS_ASTRA_LINUX)
         set(COMPILER "clang")
@@ -151,8 +154,8 @@ message(STATUS "  Platform directory: ${PLATFORM_DIR}")
 # Options
 # ============================================================================
 option(QRASTR_BUILD_WITH_MCR "Build qmcr as library for qrastr" ON)
-option(BUILD_WITH_ASTRA "Build with ASTRA library" ON)
-option(USE_PRECOMPILED_LIBS "Use precompiled libraries instead of building from source" ON)
+option(BUILD_WITH_ASTRA "Build with ASTRA library" OFF)
+option(USE_PRECOMPILED_LIBS "Use precompiled libraries instead of building from source" OFF)
 option(BUILD_WITH_PQ "Build with libpq" OFF)
 
 message(STATUS "Build options:")
@@ -182,7 +185,7 @@ if(BUILD_WITH_ASTRA)
 
     message(STATUS "ASTRA_BIN_ROOT: ${ASTRA_BIN_ROOT}")
 
-    # Пробуем найти через CMake Config (если есть)
+    # Пробуем найти через CMake Config
     list(APPEND CMAKE_PREFIX_PATH "${ASTRA_BIN_ROOT}")
     find_package(COMCK CONFIG QUIET HINTS "${ASTRA_BIN_ROOT}/lib/cmake/COMCK")
     find_package(Astra CONFIG QUIET HINTS "${ASTRA_BIN_ROOT}/lib/cmake/Astra")
@@ -218,9 +221,8 @@ if(BUILD_WITH_ASTRA)
         add_library(astra ALIAS Astra::astra)
     endif()
 
-    message(STATUS "ASTRA: ✅ Configured")
+    message(STATUS "ASTRA: Configured")
 endif()
-
 
 if(WIN32)
     set(QTITAN_ROOT "C:/Qt/Developer Machines/QtitanComponents2025.1.0 Demo" CACHE PATH "Path to Qtitan")
@@ -295,90 +297,53 @@ function(add_thirdparty_library LIB_NAME LIB_PATH)
 endfunction()
 
 # ============================================================================
-# System Libraries - поиск системных библиотек
-# Стратегия зависит от платформы:
-# - Ubuntu: библиотеки установлены через apt, ищем в стандартных путях
-# - AstraLinux: библиотеки собраны вручную в ~/.local, добавляем этот путь
-# - Windows: используем thirdparty (либо precompiled, либо из исходников)
+# System Libraries - все платформы используют thirdparty
+# Стратегия:
+# - Boost и Eigen3: header-only библиотеки из thirdparty
+# - fmt, spdlog: собираются через add_thirdparty_library
+# - libpqxx: опционально собирается через add_thirdparty_library (зависит от наличия PostgreSQL)
 # ============================================================================
-if(WIN32)
-    # ========================================================================
-    # Windows: все библиотеки из thirdparty
-    # ========================================================================
 
-    # Boost (header-only)
-    add_library(Boost::boost INTERFACE IMPORTED)
-    target_include_directories(Boost::boost INTERFACE "${THIRDPARTY_DIR}/boost_1_80_0")
-    message(STATUS "Boost (header-only): ${THIRDPARTY_DIR}/boost_1_80_0")
+# ============================================================================
+# Boost (header-only) - одинаково для всех платформ
+# ============================================================================
+add_library(Boost::boost INTERFACE IMPORTED)
+target_include_directories(Boost::boost INTERFACE "${THIRDPARTY_DIR}/boost_1_80_0")
+message(STATUS "Boost (header-only): ${THIRDPARTY_DIR}/boost_1_80_0")
 
-    # Eigen3 (header-only)
-    add_library(Eigen3::Eigen INTERFACE IMPORTED)
-    target_include_directories(Eigen3::Eigen INTERFACE "${THIRDPARTY_DIR}/eigen")
-    message(STATUS "Eigen3 (header-only): ${THIRDPARTY_DIR}/eigen")
+# ============================================================================
+# Eigen3 (header-only) - одинаково для всех платформ
+# ============================================================================
+add_library(Eigen3::Eigen INTERFACE IMPORTED)
+target_include_directories(Eigen3::Eigen INTERFACE "${THIRDPARTY_DIR}/eigen")
+message(STATUS "Eigen3 (header-only): ${THIRDPARTY_DIR}/eigen")
 
-    # fmt - используем add_thirdparty_library (она сама проверит USE_PRECOMPILED_LIBS)
-    add_thirdparty_library(fmt "${THIRDPARTY_DIR}/fmt" USE_DEBUG_SUFFIX)
-    # spdlog
-    add_thirdparty_library(spdlog "${THIRDPARTY_DIR}/spdlog" USE_DEBUG_SUFFIX)
+# ============================================================================
+# fmt - собирается из thirdparty на всех платформах
+# ============================================================================
+add_thirdparty_library(fmt "${THIRDPARTY_DIR}/fmt" USE_DEBUG_SUFFIX)
 
-    if(WIN32 AND USE_PRECOMPILED_LIBS)
-        add_library(fmt::fmt ALIAS fmt)
-        add_library(spdlog::spdlog ALIAS spdlog)
-    endif()
+# ============================================================================
+# spdlog - собирается из thirdparty на всех платформах
+# ============================================================================
+add_thirdparty_library(spdlog "${THIRDPARTY_DIR}/spdlog" USE_DEBUG_SUFFIX)
 
-    # libpqxx require PostgreSQL, but it's MSVC only
-    if(BUILD_WITH_PQ)
-        add_thirdparty_library(libpqxx "${THIRDPARTY_DIR}/libpqxx")
-    endif()
-elseif(UNIX AND NOT APPLE)
-    # ========================================================================
-    # Linux: используем find_package для системных библиотек
-    # ========================================================================
-
-    if(IS_ASTRA_LINUX)
-        list(PREPEND CMAKE_PREFIX_PATH "$ENV{HOME}/.local")
-        message(STATUS "AstraLinux: Added ~/.local to CMAKE_PREFIX_PATH")
-    endif()
-
-    message(STATUS "CMAKE_PREFIX_PATH: ${CMAKE_PREFIX_PATH}")
-
-    # Boost
-    find_package(Boost 1.80 REQUIRED)
-    message(STATUS "Boost found: ${Boost_VERSION} at ${Boost_INCLUDE_DIRS}")
-
-    # ----------------------------------------------------------------------------
-    # Eigen3 - header-only библиотека линейной алгебры
-    # ----------------------------------------------------------------------------
-    # Ubuntu: eigen3-dev через apt
-    # AstraLinux: установлен через apt (версия 3.3.7)
-    find_package(Eigen3 3.3 REQUIRED)
-    message(STATUS "Eigen3 found: ${EIGEN3_VERSION} at ${EIGEN3_INCLUDE_DIR}")
-
-    # ----------------------------------------------------------------------------
-    # fmt - библиотека форматирования строк (аналог std::format для C++17)
-    # ----------------------------------------------------------------------------
-    # Ubuntu: libfmt-dev через apt
-    # AstraLinux: fmt 10.2.1 собран вручную в ~/.local
-    find_package(fmt 10.0 REQUIRED)
-    message(STATUS "fmt found: ${fmt_VERSION}")
-
-    # ----------------------------------------------------------------------------
-    # spdlog - библиотека логирования
-    # ----------------------------------------------------------------------------
-    # Ubuntu: libspdlog-dev через apt
-    # AstraLinux: spdlog 1.12.0 собран вручную в ~/.local
-    find_package(spdlog 1.12 REQUIRED)
-    message(STATUS "spdlog found: ${spdlog_VERSION}")
-
-    # ----------------------------------------------------------------------------
-    # libpqxx - C++ клиент для PostgreSQL
-    # ----------------------------------------------------------------------------
-    # Ubuntu: libpqxx-dev через apt
-    # AstraLinux: libpqxx 7.7.5 собран вручную в ~/.local
-    find_package(libpqxx 7.0 QUIET)
-    message(STATUS "libpqxx found: ${libpqxx_VERSION}")
-
+# Создаём алиасы для совместимости с find_package
+if(USE_PRECOMPILED_LIBS)
+    add_library(fmt::fmt ALIAS fmt)
+    add_library(spdlog::spdlog ALIAS spdlog)
 endif()
+
+# ============================================================================
+# libpqxx - опционально собирается из thirdparty на всех платформах
+# ============================================================================
+if(BUILD_WITH_PQ)
+    add_thirdparty_library(libpqxx "${THIRDPARTY_DIR}/libpqxx")
+    if(USE_PRECOMPILED_LIBS)
+        add_library(libpqxx::pqxx ALIAS libpqxx)
+    endif()
+endif()
+
 # ============================================================================
 # Qt
 # ============================================================================
@@ -420,7 +385,7 @@ add_subdirectory(qmcr ${CMAKE_BINARY_DIR}/generated/qmcr)
 message(STATUS "qmcr subproject added")
 
 # ----------------------------------------------------------------------------
-# Metakit
+# Metakit - все платформы собирают из thirdparty
 # ----------------------------------------------------------------------------
 if(USE_PRECOMPILED_LIBS)
         # Metakit собирается только из precompiled (проблемы с новыми компиляторами)
@@ -429,13 +394,14 @@ if(USE_PRECOMPILED_LIBS)
 endif()
 
 # ----------------------------------------------------------------------------
-# Qt-Advanced-Docking-System
+# Qt-Advanced-Docking-System - все платформы собирают из thirdparty
 # ----------------------------------------------------------------------------
 add_thirdparty_library(qtadvanceddocking "${THIRDPARTY_DIR}/Qt-Advanced-Docking-System"
     LIB_REAL_NAME "qtadvanceddocking-qt6"
     USE_DEBUG_SUFFIX)
+
 # ----------------------------------------------------------------------------
-# SDL3 и SDL3_image
+# SDL3 и SDL3_image - все платформы собирают из thirdparty
 # ----------------------------------------------------------------------------
 if(NOT USE_PRECOMPILED_LIBS)
         # Временно уменьшаем уровень логирования CMake при сборке SDL
@@ -450,7 +416,7 @@ if(NOT USE_PRECOMPILED_LIBS)
 endif()
 
 # ----------------------------------------------------------------------------
-# Scintilla
+# Scintilla - все платформы собирают из thirdparty
 # ----------------------------------------------------------------------------
 add_thirdparty_library(scintilla "${THIRDPARTY_DIR}/scintilla")
 
@@ -687,13 +653,13 @@ endif()
 # ============================================================================
 # Link Libraries - линковка библиотек к исполняемому файлу
 # ============================================================================
-#set_target_properties can not be used on an ALIAS target.
+# set_target_properties can not be used on an ALIAS target.
 if(WIN32)
     set_target_properties(fmt PROPERTIES AUTOMOC OFF AUTOUIC OFF AUTORCC OFF)
     set_target_properties(spdlog PROPERTIES AUTOMOC OFF AUTOUIC OFF AUTORCC OFF)
 else()
-    set_target_properties(fmt::fmt PROPERTIES AUTOMOC OFF AUTOUIC OFF AUTORCC OFF)
-    set_target_properties(spdlog::spdlog PROPERTIES AUTOMOC OFF AUTOUIC OFF AUTORCC OFF)
+    set_target_properties(fmt PROPERTIES AUTOMOC OFF AUTOUIC OFF AUTORCC OFF)
+    set_target_properties(spdlog PROPERTIES AUTOMOC OFF AUTOUIC OFF AUTORCC OFF)
 endif()
 
 target_link_libraries(${PROJECT_NAME} PRIVATE
