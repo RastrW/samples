@@ -29,10 +29,11 @@ endif ()
 set( INCLUDES
     "${DEPENDENCIES_LOCATION}/spdlog/include/"
     #${COMCK_INCLUDE_DIR}
-    "${ASTRA_LOCATION}/"
-    "${ASTRA_LOCATION}/../comck/"
-    #"../../"
+    #"${ASTRA_LOCATION}/"
+    #"${ASTRA_LOCATION}/../comck/"
+    "../../"
 )
+include_directories ( ${COMCK_INCLUDE_DIR} )
 set(PROJECT_SOURCES
     plugin_ti_interfaces.h
     pluginti.h

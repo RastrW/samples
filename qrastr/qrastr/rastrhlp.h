@@ -4,7 +4,9 @@
 
 #include "common_qrastr.h"
 //#include "astra_exp.h"
-#include "UIForms.h"
+//#include "UIForms.h"
+#include "astra_headers/UIForms.h"
+//#include <astra/UIForms.h>
 
 class CRastrHlp
 {

@@ -9,7 +9,8 @@
 #include <iostream>
 #include <spdlog/spdlog.h>
 using WrapperExceptionType = std::runtime_error;
-#include "IPlainRastrWrappers.h"
+//#include "IPlainRastrWrappers.h"
+#include <astra/IPlainRastrWrappers.h>
 #include "pluginrastr.h"
 
 void PluginRastr::setLoggerPtr(std::shared_ptr<spdlog::logger> spLoger){

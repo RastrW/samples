@@ -2,8 +2,13 @@
 #include <fstream>
 #include "params.h"
 #include "common_qrastr.h"
-#include "License2/json.hpp"
-#include "UIForms.h"
+//#include "License2/json.hpp"
+//#include <astra/License2/json.hpp>
+//#include "UIForms.h"
+//#include <astra/UIForms.h>
+
+#include <astra_headers/License2/json.hpp>
+#include "astra_headers/UIForms.h"
 
 Params::Params(){
 }

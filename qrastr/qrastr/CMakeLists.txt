@@ -154,8 +154,8 @@ message(STATUS "  Platform directory: ${PLATFORM_DIR}")
 # Options
 # ============================================================================
 option(QRASTR_BUILD_WITH_MCR "Build qmcr as library for qrastr" ON)
-option(BUILD_WITH_ASTRA "Build with ASTRA library" OFF)
-option(USE_PRECOMPILED_LIBS "Use precompiled libraries instead of building from source" OFF)
+option(BUILD_WITH_ASTRA "Build with ASTRA library" ON)
+option(USE_PRECOMPILED_LIBS "Use precompiled libraries instead of building from source" ON)
 option(BUILD_WITH_PQ "Build with libpq" OFF)
 
 message(STATUS "Build options:")

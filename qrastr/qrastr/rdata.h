@@ -3,9 +3,11 @@
 #pragma once
 
 #include "rastrhlp.h"
-#include "astra_exp.h"
+//#include "astra_exp.h"
 #include "astra_shared.h"
-#include "UIForms.h"
+//#include "UIForms.h"
+//#include <astra\UIForms.h>
+#include "astra_headers/UIForms.h"
 #include "qastra.h"
 #include "rtablesdatamanager.h"
 //#include "iostream"
@@ -15,7 +17,7 @@ using WrapperExceptionType = std::runtime_error;
 #include "QDataBlocks.h"
 
 //using WrapperExceptionType = std::runtime_error;
-#include "IPlainRastrWrappers.h"
+#include <astra/IPlainRastrWrappers.h>
 //#include "IDataBlocksWrappers.h"
 
 
@@ -749,7 +751,7 @@ public:
         }
     }
 
-    _idRastr id_rastr_ = 0;
+   // _idRastr id_rastr_ = 0;
     QAstra* pqastra_;
     std::string t_name_ = "";
     std::string t_title_ = "";
