@@ -184,44 +184,21 @@ if(BUILD_WITH_ASTRA)
     endif()
 
     message(STATUS "ASTRA_BIN_ROOT: ${ASTRA_BIN_ROOT}")
+    #CONFIG, значит: FindCOMCK.cmake — даже не ищется, ищется comck-config.cmake
+    #HINTS вместо list(APPEND CMAKE_PREFIX_PATH "${PATH}")
+    find_package(COMCK CONFIG HINTS "${ASTRA_BIN_ROOT}/lib/cmake/COMCK")
+    find_package(Astra CONFIG HINTS "${ASTRA_BIN_ROOT}/lib/cmake/Astra")
 
-    # Пробуем найти через CMake Config
-    list(APPEND CMAKE_PREFIX_PATH "${ASTRA_BIN_ROOT}")
-    find_package(COMCK CONFIG QUIET HINTS "${ASTRA_BIN_ROOT}/lib/cmake/COMCK")
-    find_package(Astra CONFIG QUIET HINTS "${ASTRA_BIN_ROOT}/lib/cmake/Astra")
-
-    # Если не нашли через Config, создаём targets вручную
-    if(NOT TARGET COMCK::COMCK)
-        add_library(COMCK SHARED IMPORTED GLOBAL)
-        set_target_properties(COMCK PROPERTIES
-            IMPORTED_LOCATION "${ASTRA_BIN_ROOT}/bin/COMCK.dll"
-            INTERFACE_INCLUDE_DIRECTORIES "${ASTRA_BIN_ROOT}/include/comck"
-        )
-        if(MINGW AND EXISTS "${ASTRA_BIN_ROOT}/lib/libCOMCK.dll.a")
-            set_target_properties(COMCK PROPERTIES IMPORTED_IMPLIB "${ASTRA_BIN_ROOT}/lib/libCOMCK.dll.a")
-        elseif(MSVC)
-            set_target_properties(COMCK PROPERTIES IMPORTED_IMPLIB "${ASTRA_BIN_ROOT}/lib/COMCK.lib")
-        endif()
-    else()
-        add_library(COMCK ALIAS COMCK::COMCK)
+    if(NOT COMCK_FOUND)
+        message(FATAL_ERROR "COMCK not found")
     endif()
 
-    if(NOT TARGET Astra::astra)
-        add_library(astra SHARED IMPORTED GLOBAL)
-        set_target_properties(astra PROPERTIES
-            IMPORTED_LOCATION "${ASTRA_BIN_ROOT}/bin/astra.dll"
-            INTERFACE_INCLUDE_DIRECTORIES "${ASTRA_BIN_ROOT}/include/astra"
-        )
-        if(MINGW AND EXISTS "${ASTRA_BIN_ROOT}/lib/libastra.dll.a")
-            set_target_properties(astra PROPERTIES IMPORTED_IMPLIB "${ASTRA_BIN_ROOT}/lib/libastra.dll.a")
-        elseif(MSVC)
-            set_target_properties(astra PROPERTIES IMPORTED_IMPLIB "${ASTRA_BIN_ROOT}/lib/astra.lib")
-        endif()
-    else()
-        add_library(astra ALIAS Astra::astra)
+    if(NOT Astra_FOUND)
+        message(FATAL_ERROR "Astra not found")
     endif()
 
-    message(STATUS "ASTRA: Configured")
+    message(STATUS "COMCK found: ${COMCK_FOUND}")
+    message(STATUS "Astra found: ${Astra_FOUND}")
 endif()
 
 if(WIN32)
