@@ -184,6 +184,7 @@ if(BUILD_WITH_ASTRA)
     endif()
 
     message(STATUS "ASTRA_BIN_ROOT: ${ASTRA_BIN_ROOT}")
+    # Ищем конфигурацию ASTRA
     #CONFIG, значит: FindCOMCK.cmake — даже не ищется, ищется comck-config.cmake
     #HINTS вместо list(APPEND CMAKE_PREFIX_PATH "${PATH}")
     find_package(COMCK CONFIG HINTS "${ASTRA_BIN_ROOT}/lib/cmake/COMCK")
@@ -195,6 +196,17 @@ if(BUILD_WITH_ASTRA)
 
     if(NOT Astra_FOUND)
         message(FATAL_ERROR "Astra not found")
+    endif()
+
+    if(Astra_FOUND)
+        # Создаём interface target для ASTRA includes
+        if(NOT TARGET Astra::Headers)
+            add_library(Astra::Headers INTERFACE IMPORTED)
+            target_include_directories(Astra::Headers INTERFACE
+                ${ASTRA_BIN_ROOT}/include/astra
+                ${ASTRA_BIN_ROOT}/include/comck
+            )
+        endif()
     endif()
 
     message(STATUS "COMCK found: ${COMCK_FOUND}")
@@ -396,7 +408,15 @@ endif()
 # Scintilla - все платформы собирают из thirdparty
 # ----------------------------------------------------------------------------
 add_thirdparty_library(scintilla "${THIRDPARTY_DIR}/scintilla")
-
+# Scintilla требует дополнительные include директории
+if(TARGET scintilla)
+    target_include_directories(scintilla INTERFACE
+        ${THIRDPARTY_DIR}/scintilla/include
+        ${THIRDPARTY_DIR}/scintilla/src
+        ${THIRDPARTY_DIR}/scintilla/qt/ScintillaEditBase
+        ${THIRDPARTY_DIR}/scintilla/qt/ScintillaEdit
+    )
+endif()
 # ============================================================================
 # Include Directories
 # ============================================================================
@@ -693,14 +713,10 @@ if(WIN32 AND MINGW)
 
     add_qtitan_lib(QtitanBase3)
     add_qtitan_lib(QtitanGrid9)
-    add_qtitan_lib(QtitanRibbon7)
-    add_qtitan_lib(QtitanChart7)
 
     target_link_libraries(${PROJECT_NAME} PRIVATE
         QtitanBase3
         QtitanGrid9
-        QtitanRibbon7
-        QtitanChart7
     )
 else()
     target_link_libraries(${PROJECT_NAME} PRIVATE

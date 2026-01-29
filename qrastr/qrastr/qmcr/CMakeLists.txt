@@ -1,43 +1,39 @@
 cmake_minimum_required(VERSION 3.16)
 project(qmcr VERSION 0.1 LANGUAGES CXX)
-
 set(CMAKE_AUTOUIC ON)
 set(CMAKE_AUTOMOC ON)
 set(CMAKE_AUTORCC ON)
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
-
 # from https://github.com/Vatsinator/vatsinator-legacy/blob/develop/CMakeLists.txt
 # set configuration types (msvc/xcode)
-if(CMAKE_CONFIGURATION_TYPES)
-    set(CMAKE_CONFIGURATION_TYPES Debug Release)
-    set(CMAKE_CONFIGURATION_TYPES "${CMAKE_CONFIGURATION_TYPES}" CACHE STRING
+if (CMAKE_CONFIGURATION_TYPES)
+    set (CMAKE_CONFIGURATION_TYPES Debug Release)
+    set (CMAKE_CONFIGURATION_TYPES "${CMAKE_CONFIGURATION_TYPES}" CACHE STRING
         "Reset the configurations to what we actually need" FORCE
-    )
+)
 endif()
 
-# ============================================================================
-# Определяем режим сборки: standalone (с thirdparty) или legacy (с COMPILE_DIR)
-# ============================================================================
-if(DEFINED DEPENDENCIES_LOCATION)
-    # standalone режим
-    set(BUILD_MODE "standalone")
-    set(SCI_DIR "${DEPENDENCIES_LOCATION}")
-    message(STATUS "qmcr: Building in STANDALONE mode")
-else()
-    # legacy режим
-    set(BUILD_MODE "legacy")
-    set(SCI_DIR "${DEPENDENCIES_LOCATION}/sci")
-    message(STATUS "qmcr: Building in LEGACY mode")
-endif()
+#if(MSVC)
+#    set(SCI_DIR C:/projects/compile/sci/)
+#    #set (SCI_DIR C:/Projects/compile/sci/)
+#else()
+#    set(SCI_DIR "${DEPENDENCIES_LOCATION}/sci")
+#endif()
 
+set(SCI_DIR "${DEPENDENCIES_LOCATION}")
+#For Mingw:
+if (WIN32 AND NOT MSVC)
+    set(Python3_EXECUTABLE "C:/msys64/mingw64/bin/python3.exe" CACHE FILEPATH "" FORCE)
+    set(Python3_ROOT_DIR   "C:/msys64/mingw64"                 CACHE PATH "" FORCE)
+endif()
 
 set(CMAKE_WINDOWS_EXPORT_ALL_SYMBOLS ON)#visual studio not generate .lib without exported from .dll!
 
 find_package(QT NAMES Qt6 Qt5 REQUIRED COMPONENTS Widgets LinguistTools)
 find_package(Qt${QT_VERSION_MAJOR} REQUIRED COMPONENTS Widgets LinguistTools)
 find_package( Qt${QT_VERSION_MAJOR} REQUIRED COMPONENTS QuickWidgets)
-
+find_package( Astra   REQUIRED)         # need install Astra: ex. cmake --install build --config Debug from C:\Projects\tfs\rastr\RastrWin
 
 set(PYTHON_MIN 3.10)
 #old CMake if(CMAKE_VERSION VERSION_LESS "3.12.0")
@@ -47,10 +43,6 @@ set(PYTHON_MIN 3.10)
 #include_directories(${PYTHON_INCLUDE_DIRS})
 
 #new CMake
-if (WIN32 AND NOT MSVC)
-    set(Python3_EXECUTABLE "C:/msys64/mingw64/bin/python3.exe" CACHE FILEPATH "" FORCE)
-    set(Python3_ROOT_DIR   "C:/msys64/mingw64"                 CACHE PATH "" FORCE)
-endif()
 find_package (Python3 ${PYTHON_MIN} REQUIRED COMPONENTS Interpreter Development)
 message( "Python3_FOUND:             ${Python3_FOUND}")
 message( "Python3_VERSION:           ${Python3_VERSION}")
@@ -61,8 +53,10 @@ message( "Python3_INCLUDE_DIR:       ${Python3_INCLUDE_DIRS}")
 message( "Python3_EXECUTABLE:        ${Python3_EXECUTABLE}")
 link_directories    ( ${Python3_LIBRARY_DIRS} )
 include_directories ( ${Python3_INCLUDE_DIRS} )
+#target_include_directories ( qmcr PUBLIC ${Astra_INCLUDE_DIR} )
+include_directories ( ${Astra_INCLUDE_DIR} )
 
-include_directories("${ASTRA_LOCATION}/fmt/include/")
+#include_directories("${ASTRA_LOCATION}/fmt/include/")
 
 include_directories(
         ${SCI_DIR}/scintilla/include
@@ -74,8 +68,8 @@ include_directories(
 )
 if(QRASTR_BUILD_WITH_MCR)
     include_directories(
-        "${ASTRA_LOCATION}/"
-        "${ASTRA_LOCATION}/../../astra/"
+        #"${ASTRA_LOCATION}/"
+        #"${ASTRA_LOCATION}/../../astra/"
     )
 endif()
 

@@ -79,12 +79,13 @@ CMakeLists.txt.user
 build*
 debug*
 release*
+_build
 
 Debug
 Release
 
 /thirdparty/scintilla/
+/thirdparty/lexilla/
 /thirdparty/compile/
 /thirdparty/boost_1_80_0/
 /lib/
-
