@@ -26,13 +26,13 @@ else()
     set( CMAKE_RUNTIME_OUTPUT_DIRECTORY "${CMAKE_SOURCE_DIR}//..//${CMAKE_BUILD_TYPE}//plugins" )
 endif ()
 
-set( INCLUDES
-    "${DEPENDENCIES_LOCATION}/spdlog/include/"
+#set( INCLUDES
+#    "${DEPENDENCIES_LOCATION}/spdlog/include/"
     #${COMCK_INCLUDE_DIR}
     #"${ASTRA_LOCATION}/"
     #"${ASTRA_LOCATION}/../comck/"
-    "../../"
-)
+#    "../../"
+#)
 include_directories ( ${COMCK_INCLUDE_DIR} )
 set(PROJECT_SOURCES
     plugin_ti_interfaces.h
@@ -56,8 +56,10 @@ target_link_libraries( ti PRIVATE
     Qt${QT_VERSION_MAJOR}::Core
     Qt${QT_VERSION_MAJOR}::Gui
     Qt${QT_VERSION_MAJOR}::Widgets
+    spdlog::spdlog
+    fmt::fmt
 )
 target_compile_options(ti PRIVATE ${COMPILE_OPTIONS})
-target_include_directories( ti PRIVATE
-  ${INCLUDES}
-)
+#target_include_directories( ti PRIVATE
+#  ${INCLUDES}
+#)

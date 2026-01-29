@@ -26,13 +26,13 @@ else()
     set( CMAKE_RUNTIME_OUTPUT_DIRECTORY "${CMAKE_SOURCE_DIR}//..//${CMAKE_BUILD_TYPE}//plugins" )
 endif ()
 
-set( INCLUDES
-    "${DEPENDENCIES_LOCATION}/spdlog/include/"
+#set( INCLUDES
+#    "${DEPENDENCIES_LOCATION}/spdlog/include/"
     #${ASTRA_INCLUDE_DIR}
     #"${ASTRA_LOCATION}/"
     #"${ASTRA_LOCATION}/../../astra/"
-    "../../"
-)
+#    "../../"
+#)
 include_directories ( ${Astra_INCLUDE_DIR} )
 set(PROJECT_SOURCES
     plugin_interfaces.h
@@ -58,12 +58,15 @@ target_link_libraries( rastr PRIVATE
     Qt${QT_VERSION_MAJOR}::Core
     Qt${QT_VERSION_MAJOR}::Gui
     Qt${QT_VERSION_MAJOR}::Widgets
+    spdlog::spdlog
+    fmt::fmt
 )
+
 target_compile_options(rastr PRIVATE ${COMPILE_OPTIONS})
 #${PROJECT_NAME} == qrastr
-target_include_directories( rastr PRIVATE
-  ${INCLUDES}
-)
+#target_include_directories( rastr PRIVATE
+#  ${INCLUDES}
+#)
 #install(TARGETS rastr
     #BUNDLE DESTINATION  "${INSTALL_EXAMPLEDIR}/plugins"
     #LIBRARY DESTINATION "${INSTALL_EXAMPLEDIR}/plugins"

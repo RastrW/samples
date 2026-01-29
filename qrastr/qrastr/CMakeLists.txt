@@ -273,6 +273,12 @@ function(add_thirdparty_library LIB_NAME LIB_PATH)
             IMPORTED_LOCATION "${${LIB_NAME}_LIBRARY}"
             INTERFACE_INCLUDE_DIRECTORIES "${${LIB_NAME}_INCLUDE_DIR}"
         )
+        if("${LIB_NAME}" STREQUAL "spdlog")
+            set_target_properties(spdlog PROPERTIES
+                INTERFACE_COMPILE_DEFINITIONS SPDLOG_FMT_EXTERNAL
+            )
+            message(STATUS "spdlog uses SPDLOG_FMT_EXTERNAL")
+        endif()
         message(STATUS "Using precompiled ${LIB_NAME}: ${${LIB_NAME}_LIBRARY}")
 
     else()

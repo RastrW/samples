@@ -24,12 +24,12 @@ else()
     set( CMAKE_RUNTIME_OUTPUT_DIRECTORY "${CMAKE_SOURCE_DIR}//..//${CMAKE_BUILD_TYPE}//plugins" )
 endif ()
 
-set( INCLUDES
-    "${DEPENDENCIES_LOCATION}/spdlog/include/"
+#set( INCLUDES
+#    "${DEPENDENCIES_LOCATION}/spdlog/include/"
     #"${ASTRA_LOCATION}/"
     #"${ASTRA_LOCATION}/../comck/"
-    "../../"
-)
+#    "../../"
+#)
 include_directories ( ${Astra_INCLUDE_DIR} )
 
 set(PROJECT_SOURCES
@@ -58,9 +58,12 @@ target_link_libraries( barsmdp PRIVATE
     Qt${QT_VERSION_MAJOR}::Core
     Qt${QT_VERSION_MAJOR}::Gui
     Qt${QT_VERSION_MAJOR}::Widgets
+    spdlog::spdlog
+    fmt::fmt
 )
+
 target_compile_options(barsmdp PRIVATE ${COMPILE_OPTIONS})
-target_include_directories( barsmdp PRIVATE
-  ${INCLUDES}
-)
+#target_include_directories( barsmdp PRIVATE
+#  ${INCLUDES}
+#)
 
