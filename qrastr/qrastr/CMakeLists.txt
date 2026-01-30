@@ -11,7 +11,19 @@
 
 cmake_minimum_required(VERSION 3.23)
 message(STATUS "CMake version: ${CMAKE_VERSION}")
+# ============================================================================
+# Для clang-cl: поиск mt.exe из Windows SDK
+# ============================================================================
+if(WIN32 AND CMAKE_CXX_COMPILER MATCHES "clang-cl")
+    # Указываем конкретный путь к найденному mt.exe
+    set(CMAKE_MT "C:/Program Files (x86)/Windows Kits/10/bin/10.0.26100.0/x64/mt.exe" CACHE FILEPATH "Path to mt.exe" FORCE)
 
+    if(EXISTS "${CMAKE_MT}")
+        message(STATUS "Found mt.exe for clang-cl: ${CMAKE_MT}")
+    else()
+        message(FATAL_ERROR "mt.exe not found at: ${CMAKE_MT}")
+    endif()
+endif()
 # Определяем OS
 if(WIN32)
     set(OS_NAME "Windows")
@@ -99,9 +111,11 @@ if(WIN32)
     endif()
     # Настройка CRT (C Runtime Library) для Release сборок
     # Используем статическую линковку CRT для уменьшения зависимостей
-    if(NOT CMAKE_BUILD_TYPE MATCHES Debug)
-        set(CMAKE_MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>")
-    endif()
+    # if(NOT CMAKE_BUILD_TYPE MATCHES Debug)
+    #     set(CMAKE_MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>")
+    # endif()
+    # Настройка CRT (C Runtime Library) - используем динамическую для совместимости с Qt и библиотеками
+    set(CMAKE_MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>DLL")
 endif()
 
 # ============================================================================
@@ -213,8 +227,12 @@ if(BUILD_WITH_ASTRA)
     message(STATUS "Astra found: ${Astra_FOUND}")
 endif()
 
+# ============================================================================
+# Qtitan
+# ============================================================================
+# Путь к библиотеке Qtitan
 if(WIN32)
-    set(QTITAN_ROOT "C:/Qt/Developer Machines/QtitanComponents2025.1.0 Demo" CACHE PATH "Path to Qtitan")
+    set(QTITAN_ROOT "${CMAKE_CURRENT_SOURCE_DIR}/../lib/QtitanDataGrid8.2.0_win_qt_6_7" CACHE PATH "Path to Qtitan")
 else()
     set(QTITAN_ROOT "$ENV{HOME}/Qt/Developer Machines/QtitanComponents2025.2.0 Demo" CACHE PATH "Path to Qtitan")
 endif()
@@ -224,6 +242,31 @@ if(NOT IS_DIRECTORY ${QTITAN_ROOT})
 else()
     message(STATUS "QTITAN_ROOT: ${QTITAN_ROOT}")
 endif()
+
+# Определяем пути к библиотекам Qtitan в зависимости от платформы и компилятора
+if(WIN32)
+    if(MSVC)
+        set(QTITAN_LIB_DIR "${QTITAN_ROOT}/lib/msvc/${CONFIG_DIR}")
+    elseif(MINGW)
+        set(QTITAN_LIB_DIR "${QTITAN_ROOT}/lib/mingw/${CONFIG_DIR}")
+    endif()
+else()
+    set(QTITAN_LIB_DIR "${QTITAN_ROOT}/lib")
+endif()
+
+set(QTITAN_INC_DIR "${QTITAN_ROOT}/include")
+
+if(NOT IS_DIRECTORY ${QTITAN_LIB_DIR})
+    message(FATAL_ERROR "Qtitan library directory not found: ${QTITAN_LIB_DIR}")
+endif()
+
+if(NOT IS_DIRECTORY ${QTITAN_INC_DIR})
+    message(FATAL_ERROR "Qtitan include directory not found: ${QTITAN_INC_DIR}")
+endif()
+
+message(STATUS "Qtitan configuration:")
+message(STATUS "  Library dir: ${QTITAN_LIB_DIR}")
+message(STATUS "  Include dir: ${QTITAN_INC_DIR}")
 
 # ============================================================================
 # Helper Function for Third-Party Libraries
@@ -433,6 +476,7 @@ endif()
 set(PROJECT_INCLUDES
     ${CMAKE_CURRENT_SOURCE_DIR}
     ${QTITAN_ROOT}/include
+    C:/Qt/6.9.3/msvc2022_64/include/QtWidgets/${QT_VERSION}/QtWidgets/private
 )
 
 # Добавляем Boost и Eigen3 include directories
@@ -710,33 +754,69 @@ target_link_libraries(${PROJECT_NAME} PRIVATE
     qmcr
 )
 
-# Qtitan libraries
-if(WIN32 AND MINGW)
+# Создаём imported targets для Qtitan библиотек
+function(add_qtitan_library LIB_NAME)
+    if(WIN32)
+        if(MSVC)
+            # MSVC: .lib для линковки, .dll рядом с .exe
+            set(LIB_FILE "${QTITAN_LIB_DIR}/${LIB_NAME}.lib")
+            set(DLL_FILE "${QTITAN_LIB_DIR}/${LIB_NAME}.dll")
 
-    set(QTITAN_BIN "${QTITAN_ROOT}/bin")
-    set(QTITAN_INC "${QTITAN_ROOT}/include")
+            if(NOT EXISTS ${LIB_FILE})
+                message(FATAL_ERROR "Qtitan library not found: ${LIB_FILE}")
+            endif()
 
-    function(add_qtitan_lib NAME)
-        add_library(${NAME} SHARED IMPORTED)
-        set_target_properties(${NAME} PROPERTIES
-            IMPORTED_IMPLIB "${QTITAN_BIN}/lib${NAME}.dll.a"
-            IMPORTED_LOCATION "${QTITAN_BIN}/${NAME}.dll"
-            INTERFACE_INCLUDE_DIRECTORIES "${QTITAN_INC}"
+            add_library(Qtitan::${LIB_NAME} SHARED IMPORTED)
+            set_target_properties(Qtitan::${LIB_NAME} PROPERTIES
+                IMPORTED_IMPLIB "${LIB_FILE}"
+                IMPORTED_LOCATION "${DLL_FILE}"
+                INTERFACE_INCLUDE_DIRECTORIES "${QTITAN_INC_DIR}"
+            )
+        elseif(MINGW)
+            # MinGW: lib*.a для линковки, .dll рядом с .exe
+            set(LIB_FILE "${QTITAN_LIB_DIR}/lib${LIB_NAME}.a")
+            set(DLL_FILE "${QTITAN_LIB_DIR}/${LIB_NAME}.dll")
+
+            if(NOT EXISTS ${LIB_FILE})
+                message(FATAL_ERROR "Qtitan library not found: ${LIB_FILE}")
+            endif()
+
+            add_library(Qtitan::${LIB_NAME} SHARED IMPORTED)
+            set_target_properties(Qtitan::${LIB_NAME} PROPERTIES
+                IMPORTED_IMPLIB "${LIB_FILE}"
+                IMPORTED_LOCATION "${DLL_FILE}"
+                INTERFACE_INCLUDE_DIRECTORIES "${QTITAN_INC_DIR}"
+            )
+        endif()
+    else()
+        # Linux: .so файлы
+        set(LIB_FILE "${QTITAN_LIB_DIR}/lib${LIB_NAME}.so")
+
+        if(NOT EXISTS ${LIB_FILE})
+            message(FATAL_ERROR "Qtitan library not found: ${LIB_FILE}")
+        endif()
+
+        add_library(Qtitan::${LIB_NAME} SHARED IMPORTED)
+        set_target_properties(Qtitan::${LIB_NAME} PROPERTIES
+            IMPORTED_LOCATION "${LIB_FILE}"
+            INTERFACE_INCLUDE_DIRECTORIES "${QTITAN_INC_DIR}"
         )
-    endfunction()
+    endif()
 
-    add_qtitan_lib(QtitanBase3)
-    add_qtitan_lib(QtitanGrid9)
+    message(STATUS "  Added Qtitan::${LIB_NAME}")
+endfunction()
 
-    target_link_libraries(${PROJECT_NAME} PRIVATE
-        QtitanBase3
-        QtitanGrid9
-    )
+# Добавляем необходимые библиотеки Qtitan
+if(CMAKE_BUILD_TYPE MATCHES Debug)
+    add_qtitan_library(QtitanBased2)
+    add_qtitan_library(QtitanGridd8)
+    add_qtitan_library(QtitanStyled2)
+    add_qtitan_library(QtitanFastInfosetd2)
 else()
-    target_link_libraries(${PROJECT_NAME} PRIVATE
-        ${QTITAN_ROOT}/bin/${LIB_PREFIX}QtitanBase${LIB_SUFFIX}
-        ${QTITAN_ROOT}/bin/${LIB_PREFIX}QtitanGrid${LIB_SUFFIX}
-    )
+    add_qtitan_library(QtitanBase2)
+    add_qtitan_library(QtitanGrid8)
+    add_qtitan_library(QtitanStyle2)
+    add_qtitan_library(QtitanFastInfoset2)
 endif()
 
 # ASTRA library
@@ -763,7 +843,9 @@ endif()
 # ============================================================================
 # Include Directories
 # ============================================================================
-target_include_directories(${PROJECT_NAME} PRIVATE ${PROJECT_INCLUDES})
+target_include_directories(${PROJECT_NAME} PRIVATE
+    ${PROJECT_INCLUDES}
+)
 
 # ============================================================================
 # Target Properties

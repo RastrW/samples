@@ -47,8 +47,8 @@ enum StyleSetting
     FluentLightStyleSetting,
     FluentDarkStyleSetting
 };
-
-namespace spdlog{namespace level{enum level_enum;}}
+#include "spdlog/common.h"
+//namespace spdlog{namespace level{enum level_enum;}}
 class PyHlp;
 class MainWindow
     : public QMainWindow{

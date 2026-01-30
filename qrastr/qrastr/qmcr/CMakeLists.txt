@@ -200,9 +200,9 @@ endif()
 if(MSVC)
     # MSVC: использует суффиксы _d5 для Debug, 5 для Release
     if(CMAKE_BUILD_TYPE MATCHES Debug)
-        target_link_libraries(qmcr PRIVATE ScintillaEdit_d5 Lexilla_d5)
+        target_link_libraries(qmcr PRIVATE ScintillaEdit_d5 lexilla)
     else()
-        target_link_libraries(qmcr PRIVATE ScintillaEdit5 Lexilla5)
+        target_link_libraries(qmcr PRIVATE ScintillaEdit5 lexilla)
     endif()
 
 elseif(MINGW)
