@@ -113,6 +113,7 @@ long App::readSettings(){ //it cache log messages to vector, because it called b
             }
             nRes = p_params->readJsonFile(str_path_2_conf);
             if(nRes < 0){
+
                 QMessageBox mb;
                 // так лучше не делать ,смешение строк qt и std это боль.
                 QString qstr = QObject::tr("Can't load on_start_file: ");

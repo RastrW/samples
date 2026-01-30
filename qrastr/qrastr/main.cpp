@@ -6,7 +6,7 @@
 #include "formsettings.h"
 //#include <SDL3\SDL.h>
 //#include <pqxx/pqxx>
-
+/*
 int main23(int argc, char *argv[]){
     int n_res = 0;
     //QApplication app(argc, argv);
@@ -24,8 +24,15 @@ int main23(int argc, char *argv[]){
     fs.show();
     return app.exec();
 }
+*/
 int main(int argc, char *argv[]){
     long n_res = 0;
+
+    // устанавливаем ПЕРЕД созданием QApplication
+#if (QT_VERSION >= QT_VERSION_CHECK(6, 0, 0))
+    QApplication::setHighDpiScaleFactorRoundingPolicy(Qt::HighDpiScaleFactorRoundingPolicy::Round);
+#endif
+
     App app(argc, argv);
 
     //Compile test
@@ -34,10 +41,6 @@ int main(int argc, char *argv[]){
 
     app.setOrganizationName("Trolltech");
     app.setApplicationName("QRastr");
-
-#if (QT_VERSION >= QT_VERSION_CHECK(6, 0, 0))
-    app.setHighDpiScaleFactorRoundingPolicy(Qt::HighDpiScaleFactorRoundingPolicy::Round);
-#endif
 
     n_res = app.init();
     if(n_res<0){

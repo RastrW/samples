@@ -24,6 +24,9 @@ if(WIN32 AND CMAKE_CXX_COMPILER MATCHES "clang-cl")
         message(FATAL_ERROR "mt.exe not found at: ${CMAKE_MT}")
     endif()
 endif()
+if(CMAKE_CXX_COMPILER_ID MATCHES "Clang" AND MSVC)
+    set(CMAKE_LINKER "lld-link" CACHE STRING "Linker" FORCE)
+endif()
 # Определяем OS
 if(WIN32)
     set(OS_NAME "Windows")
@@ -246,9 +249,18 @@ endif()
 # Определяем пути к библиотекам Qtitan в зависимости от платформы и компилятора
 if(WIN32)
     if(MSVC)
-        set(QTITAN_LIB_DIR "${QTITAN_ROOT}/lib/msvc/${CONFIG_DIR}")
+        #  используем CMAKE_BUILD_TYPE, а не CONFIG_DIR
+        if(CMAKE_BUILD_TYPE MATCHES Debug)
+            set(QTITAN_LIB_DIR "${QTITAN_ROOT}/lib/msvc/Debug")
+        else()
+            set(QTITAN_LIB_DIR "${QTITAN_ROOT}/lib/msvc/Release")
+        endif()
     elseif(MINGW)
-        set(QTITAN_LIB_DIR "${QTITAN_ROOT}/lib/mingw/${CONFIG_DIR}")
+        if(CMAKE_BUILD_TYPE MATCHES Debug)
+            set(QTITAN_LIB_DIR "${QTITAN_ROOT}/lib/mingw/Debug")
+        else()
+            set(QTITAN_LIB_DIR "${QTITAN_ROOT}/lib/mingw/Release")
+        endif()
     endif()
 else()
     set(QTITAN_LIB_DIR "${QTITAN_ROOT}/lib")
@@ -754,6 +766,12 @@ target_link_libraries(${PROJECT_NAME} PRIVATE
     qmcr
 )
 
+# if(QRASTR_BUILD_WITH_MCR)
+#     target_link_libraries(${PROJECT_NAME} PRIVATE
+#         qmcr
+#     )
+# endif()
+
 # Создаём imported targets для Qtitan библиотек
 function(add_qtitan_library LIB_NAME)
     if(WIN32)
@@ -806,23 +824,70 @@ function(add_qtitan_library LIB_NAME)
     message(STATUS "  Added Qtitan::${LIB_NAME}")
 endfunction()
 
-# Добавляем необходимые библиотеки Qtitan
-if(CMAKE_BUILD_TYPE MATCHES Debug)
-    add_qtitan_library(QtitanBased2)
-    add_qtitan_library(QtitanGridd8)
-    add_qtitan_library(QtitanStyled2)
-    add_qtitan_library(QtitanFastInfosetd2)
-else()
-    add_qtitan_library(QtitanBase2)
-    add_qtitan_library(QtitanGrid8)
-    add_qtitan_library(QtitanStyle2)
-    add_qtitan_library(QtitanFastInfoset2)
-endif()
+# ============================================================================
+# Qtitan Libraries - с правильной поддержкой Debug/Release
+# ============================================================================
+
+function(add_qtitan_library_both LIB_NAME_RELEASE LIB_NAME_DEBUG)
+    if(WIN32)
+        if(MSVC)
+            # Release
+            set(LIB_FILE_RELEASE "${QTITAN_ROOT}/lib/msvc/Release/${LIB_NAME_RELEASE}.lib")
+            set(DLL_FILE_RELEASE "${QTITAN_ROOT}/lib/msvc/Release/${LIB_NAME_RELEASE}.dll")
+
+            # Debug
+            set(LIB_FILE_DEBUG "${QTITAN_ROOT}/lib/msvc/Debug/${LIB_NAME_DEBUG}.lib")
+            set(DLL_FILE_DEBUG "${QTITAN_ROOT}/lib/msvc/Debug/${LIB_NAME_DEBUG}.dll")
+
+            if(NOT EXISTS ${LIB_FILE_RELEASE})
+                message(FATAL_ERROR "Qtitan Release library not found: ${LIB_FILE_RELEASE}")
+            endif()
+
+            if(NOT EXISTS ${LIB_FILE_DEBUG})
+                message(WARNING "Qtitan Debug library not found: ${LIB_FILE_DEBUG} (continuing with Release only)")
+                set(LIB_FILE_DEBUG ${LIB_FILE_RELEASE})
+                set(DLL_FILE_DEBUG ${DLL_FILE_RELEASE})
+            endif()
+
+            add_library(Qtitan::${LIB_NAME_RELEASE} SHARED IMPORTED)
+            set_target_properties(Qtitan::${LIB_NAME_RELEASE} PROPERTIES
+                IMPORTED_IMPLIB_RELEASE "${LIB_FILE_RELEASE}"
+                IMPORTED_LOCATION_RELEASE "${DLL_FILE_RELEASE}"
+                IMPORTED_IMPLIB_DEBUG "${LIB_FILE_DEBUG}"
+                IMPORTED_LOCATION_DEBUG "${DLL_FILE_DEBUG}"
+                INTERFACE_INCLUDE_DIRECTORIES "${QTITAN_INC_DIR}"
+                IMPORTED_CONFIGURATIONS "Debug;Release"
+            )
+        endif()
+    endif()
+
+    message(STATUS "  Added Qtitan::${LIB_NAME_RELEASE} (Debug: ${LIB_NAME_DEBUG})")
+endfunction()
+
+# Добавляем библиотеки Qtitan
+add_qtitan_library_both(QtitanBase2 QtitanBased2)
+add_qtitan_library_both(QtitanGrid8 QtitanGridd8)
+add_qtitan_library_both(QtitanStyle2 QtitanStyled2)
+add_qtitan_library_both(QtitanFastInfoset2 QtitanFastInfosetd2)
+
+# ============================================================================
+# Link Qtitan Libraries
+# ============================================================================
+target_link_libraries(${PROJECT_NAME} PRIVATE
+    Qtitan::QtitanBase2
+    Qtitan::QtitanGrid8
+    Qtitan::QtitanStyle2
+    Qtitan::QtitanFastInfoset2
+)
 
 # ASTRA library
 if(BUILD_WITH_ASTRA)
-    target_link_libraries(${PROJECT_NAME} PRIVATE astra COMCK)
+    # target_link_libraries(${PROJECT_NAME} PRIVATE astra COMCK)
 
+    target_link_libraries(${PROJECT_NAME} PRIVATE
+        "${ASTRA_BIN_ROOT}/lib/astra.lib"
+        "${ASTRA_BIN_ROOT}/lib/COMCK.lib"
+    )
     # Копируем DLL на Windows
     if(WIN32)
         add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
