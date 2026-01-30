@@ -63,7 +63,6 @@ target_link_libraries( barsmdp PRIVATE
 )
 
 target_compile_options(barsmdp PRIVATE ${COMPILE_OPTIONS})
-#target_include_directories( barsmdp PRIVATE
-#  ${INCLUDES}
-#)
-
+target_include_directories( barsmdp PRIVATE
+  "../../"
+)

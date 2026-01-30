@@ -60,6 +60,6 @@ target_link_libraries( ti PRIVATE
     fmt::fmt
 )
 target_compile_options(ti PRIVATE ${COMPILE_OPTIONS})
-#target_include_directories( ti PRIVATE
-#  ${INCLUDES}
-#)
+target_include_directories( ti PRIVATE
+  "../../"
+)

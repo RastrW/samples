@@ -280,7 +280,11 @@ function(add_thirdparty_library LIB_NAME LIB_PATH)
             message(STATUS "spdlog uses SPDLOG_FMT_EXTERNAL")
         endif()
         message(STATUS "Using precompiled ${LIB_NAME}: ${${LIB_NAME}_LIBRARY}")
-
+        if("${LIB_NAME}" STREQUAL "qtadvanceddocking")
+            target_include_directories(qtadvanceddocking INTERFACE
+                ${THIRDPARTY_DIR}/Qt-Advanced-Docking-System/src
+            )
+        endif()
     else()
         if(NOT EXISTS "${LIB_PATH}/CMakeLists.txt")
             message(FATAL_ERROR "${LIB_NAME} source not found at: ${LIB_PATH}")
@@ -449,10 +453,14 @@ endif()
 # Добавляем ASTRA include директории, если ASTRA включена
 if(BUILD_WITH_ASTRA)
     list(APPEND PROJECT_INCLUDES
-        ${ASTRA_BIN_ROOT}/include/astra
+        ${ASTRA_BIN_ROOT}/include
         ${ASTRA_BIN_ROOT}/include/comck
     )
 endif()
+
+list(APPEND PROJECT_INCLUDES
+    ${CMAKE_CURRENT_SOURCE_DIR}/astra_headers
+)
 
 # ============================================================================
 # Source Files
