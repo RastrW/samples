@@ -198,45 +198,83 @@ endif()
 # Линковка Scintilla/Lexilla
 # ============================================================================
 if(MSVC)
-    # MSVC: использует суффиксы _d5 для Debug, 5 для Release
     if(CMAKE_BUILD_TYPE MATCHES Debug)
-        target_link_libraries(qmcr PRIVATE ScintillaEdit_d5 lexilla)
+        target_link_libraries(qmcr PRIVATE ScintillaEdit_d5)
+
+        # Ищем import library для DLL (lexilla.lib находится в lib/)
+        find_library(LEXILLA_IMPORT_LIB
+            NAMES lexilla
+            PATHS "${LEXILLA_DIR}/lib"
+            NO_DEFAULT_PATH
+        )
+
+        if(LEXILLA_IMPORT_LIB)
+            target_link_libraries(qmcr PRIVATE ${LEXILLA_IMPORT_LIB})
+            message(STATUS "Using Lexilla import lib: ${LEXILLA_IMPORT_LIB}")
+
+            # Копируем только lexilla5.dll
+            if(EXISTS "${LEXILLA_DIR}/bin/lexilla5.dll")
+                file(COPY "${LEXILLA_DIR}/bin/lexilla5.dll"
+                     DESTINATION "${CMAKE_BINARY_DIR}")
+                message(STATUS "Copied lexilla5.dll to ${CMAKE_BINARY_DIR}")
+            else()
+                message(WARNING "lexilla5.dll not found at ${LEXILLA_DIR}/bin/")
+            endif()
+        else()
+            message(FATAL_ERROR "Lexilla import library (lexilla.lib) not found in ${LEXILLA_DIR}/lib")
+        endif()
     else()
-        target_link_libraries(qmcr PRIVATE ScintillaEdit5 lexilla)
+        # Release - то же самое
+        target_link_libraries(qmcr PRIVATE ScintillaEdit5)
+
+        find_library(LEXILLA_IMPORT_LIB
+            NAMES lexilla
+            PATHS "${LEXILLA_DIR}/lib"
+            NO_DEFAULT_PATH
+        )
+
+        if(LEXILLA_IMPORT_LIB)
+            target_link_libraries(qmcr PRIVATE ${LEXILLA_IMPORT_LIB})
+            message(STATUS "Using Lexilla import lib: ${LEXILLA_IMPORT_LIB}")
+
+            # Копируем только lexilla5.dll
+            if(EXISTS "${LEXILLA_DIR}/bin/lexilla5.dll")
+                file(COPY "${LEXILLA_DIR}/bin/lexilla5.dll"
+                     DESTINATION "${CMAKE_BINARY_DIR}")
+                message(STATUS "Copied lexilla5.dll to ${CMAKE_BINARY_DIR}")
+            else()
+                message(WARNING "lexilla5.dll not found at ${LEXILLA_DIR}/bin/")
+            endif()
+        else()
+            message(FATAL_ERROR "Lexilla import library (lexilla.lib) not found in ${LEXILLA_DIR}/lib")
+        endif()
     endif()
-
 elseif(MINGW)
-    # MinGW: использует .a статические библиотеки или .dll.a импорт-библиотеки
-    # Пытаемся найти библиотеки в порядке приоритета
-
-    # ScintillaEdit
+    # MinGW: аналогично
     find_library(SCINTILLA_EDIT_LIB
         NAMES ScintillaEdit5 libScintillaEdit5
         PATHS "${SCINTILLA_DIR}/lib" "${SCI_DIR}/bin"
         NO_DEFAULT_PATH
     )
 
-    # ScintillaEditBase (запасной вариант)
     find_library(SCINTILLA_EDIT_BASE_LIB
         NAMES ScintillaEditBase5 libScintillaEditBase5
         PATHS "${SCINTILLA_BASE_DIR}/lib" "${SCI_DIR}/bin"
         NO_DEFAULT_PATH
     )
 
-    # Lexilla
-    find_library(LEXILLA_LIB
-        NAMES lexilla Lexilla liblexilla
+    # Статическая библиотека Lexilla для MinGW
+    find_library(LEXILLA_STATIC_LIB
+        NAMES liblexilla.a liblexilla
         PATHS "${LEXILLA_DIR}/lib" "${SCI_DIR}/bin"
         NO_DEFAULT_PATH
     )
 
-    # Выводим информацию о найденных библиотеках
     message(STATUS "Scintilla libraries for MinGW:")
     message(STATUS "  ScintillaEdit: ${SCINTILLA_EDIT_LIB}")
     message(STATUS "  ScintillaEditBase: ${SCINTILLA_EDIT_BASE_LIB}")
-    message(STATUS "  Lexilla: ${LEXILLA_LIB}")
+    message(STATUS "  Lexilla (static): ${LEXILLA_STATIC_LIB}")
 
-    # Линкуем то, что нашли
     if(SCINTILLA_EDIT_LIB)
         target_link_libraries(qmcr PRIVATE ${SCINTILLA_EDIT_LIB})
     elseif(SCINTILLA_EDIT_BASE_LIB)
@@ -246,10 +284,10 @@ elseif(MINGW)
         message(FATAL_ERROR "Neither ScintillaEdit nor ScintillaEditBase found!")
     endif()
 
-    if(LEXILLA_LIB)
-        target_link_libraries(qmcr PRIVATE ${LEXILLA_LIB})
+    if(LEXILLA_STATIC_LIB)
+        target_link_libraries(qmcr PRIVATE ${LEXILLA_STATIC_LIB})
     else()
-        message(FATAL_ERROR "Lexilla library not found!")
+        message(FATAL_ERROR "Lexilla static library not found!")
     endif()
 
 elseif(UNIX)
