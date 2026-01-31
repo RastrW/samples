@@ -4,6 +4,7 @@
 #include "mainwindow.h"
 #include "app.h"
 #include "formsettings.h"
+
 //#include <SDL3\SDL.h>
 //#include <pqxx/pqxx>
 /*
@@ -25,6 +26,7 @@ int main23(int argc, char *argv[]){
     return app.exec();
 }
 */
+
 int main(int argc, char *argv[]){
     long n_res = 0;
 
@@ -33,8 +35,9 @@ int main(int argc, char *argv[]){
     QApplication::setHighDpiScaleFactorRoundingPolicy(Qt::HighDpiScaleFactorRoundingPolicy::Round);
 #endif
 
+    qInfo() << "=== BEFORE App creation ===";
     App app(argc, argv);
-
+    qInfo() << "=== AFTER App creation ===";
     //Compile test
     //pqxx::connection cx{"postgresql://accounting@localhost/company"};
     //pqxx::work tx{cx};
@@ -59,7 +62,9 @@ int main(int argc, char *argv[]){
     }
 */
    // SDL_Init(SDL_INIT_VIDEO); // Basics of SDL, init what you need to use
+    qInfo() << "=== BEFORE MainWindow creation ===";
     MainWindow w;
+    qInfo() << "=== AFTER MainWindow creation ===";
 
     n_res = app.start();
     if(n_res<0){

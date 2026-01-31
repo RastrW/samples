@@ -114,16 +114,16 @@ long App::readSettings(){ //it cache log messages to vector, because it called b
             nRes = p_params->readJsonFile(str_path_2_conf);
             if(nRes < 0){
 
-                QMessageBox mb;
+                //QMessageBox mb;
                 // так лучше не делать ,смешение строк qt и std это боль.
                 QString qstr = QObject::tr("Can't load on_start_file: ");
                 std::string qstr_fmt = qstr.toUtf8().constData(); //  qstr.toStdString(); !!not worked!!
                 //std::string ss = fmt::format( "{}{} ", qstr_fmt.c_str(), p_params->Get_on_start_load_file_rastr());
                 std::string ss = "error in files load";
                 QString str = QString::fromUtf8(ss.c_str());
-                mb.setText(str);
+                //mb.setText(str);
                 v_cache_log_.add( spdlog::level::err, "{} ReadJsonFile {}", nRes, str.toStdString());
-                mb.exec();
+                //mb.exec();
                 return -1;
             }
             p_params->setFileAppsettings(str_path_2_conf);
@@ -165,6 +165,7 @@ long App::writeSettings(){
 }
 
 long App::init(){
+    qInfo() << "=== App::init() START ===";
     try{
         auto logg = std::make_shared<spdlog::logger>( "qrastr" );
         spdlog::set_default_logger(logg);
@@ -193,6 +194,7 @@ long App::init(){
         exclog();
         return -99;
     }
+    qInfo() << "=== App::init() END ===";
     return 1;
 }
 
@@ -343,6 +345,7 @@ std::list<CUIForm>& App::GetForms() const {
 }
 
 long App::start(){
+    qInfo() << "=== App::start() START ===";
     try{
         long n_res =0;
         QDir::setCurrent(Params::GetInstance()->getDirData().absolutePath());
@@ -393,6 +396,7 @@ long App::start(){
         exclog();
         return -199;
     }
+    qInfo() << "=== App::start() END ===";
     return 1;
 }
 
