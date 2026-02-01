@@ -178,7 +178,7 @@ message(STATUS "  Platform directory: ${PLATFORM_DIR}")
 # Options
 # ============================================================================
 option(QRASTR_BUILD_WITH_MCR "Build qmcr as library for qrastr" ON)
-option(BUILD_WITH_ASTRA "Build with ASTRA library" ON)
+option(BUILD_WITH_ASTRA "Build with ASTRA library" OFF)
 option(USE_PRECOMPILED_LIBS "Use precompiled libraries instead of building from source" ON)
 option(BUILD_WITH_PQ "Build with libpq" OFF)
 
@@ -249,7 +249,7 @@ else()
     set(QTITAN_ROOT "$ENV{HOME}/Qt/Developer Machines/QtitanComponents2025.2.0 Demo" CACHE PATH "Path to Qtitan")
 endif()
 
-if(NOT IS_DIRECTORY ${QTITAN_ROOT})
+if(NOT IS_DIRECTORY "${QTITAN_ROOT}")
     message(FATAL_ERROR "Qtitan not found at: ${QTITAN_ROOT}")
 else()
     message(STATUS "QTITAN_ROOT: ${QTITAN_ROOT}")
@@ -273,7 +273,7 @@ if(WIN32)
     endif()
 else()
     # Linux - оставляем без изменений для совместимости с Qtitan
-    set(QTITAN_LIB_DIR "${QTITAN_ROOT}/lib")
+    set(QTITAN_LIB_DIR "${QTITAN_ROOT}/bin")
 endif()
 
 set(QTITAN_INC_DIR "${QTITAN_ROOT}/include")
