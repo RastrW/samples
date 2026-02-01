@@ -178,7 +178,7 @@ message(STATUS "  Platform directory: ${PLATFORM_DIR}")
 # Options
 # ============================================================================
 option(QRASTR_BUILD_WITH_MCR "Build qmcr as library for qrastr" ON)
-option(BUILD_WITH_ASTRA "Build with ASTRA library" OFF)
+option(BUILD_WITH_ASTRA "Build with ASTRA library" ON)
 option(USE_PRECOMPILED_LIBS "Use precompiled libraries instead of building from source" ON)
 option(BUILD_WITH_PQ "Build with libpq" OFF)
 
@@ -795,140 +795,72 @@ target_link_libraries(${PROJECT_NAME} PRIVATE
 # ============================================================================
 # Qtitan Libraries Configuration
 # ============================================================================
-# Создаём imported targets для Qtitan библиотек
-function(add_qtitan_library LIB_NAME)
+# Универсальная функция для добавления Qtitan библиотек
+function(add_qtitan_library LIB_NAME_BASE)
     if(WIN32)
-        if(MSVC)
-            # MSVC: .lib для линковки, .dll рядом с .exe
-            set(LIB_FILE "${QTITAN_LIB_DIR}/${LIB_NAME}.lib")
-            set(DLL_FILE "${QTITAN_LIB_DIR}/${LIB_NAME}.dll")
-
-            if(NOT EXISTS ${LIB_FILE})
-                message(FATAL_ERROR "Qtitan library not found: ${LIB_FILE}")
-            endif()
-
-            add_library(Qtitan::${LIB_NAME} SHARED IMPORTED)
-            set_target_properties(Qtitan::${LIB_NAME} PROPERTIES
-                IMPORTED_IMPLIB "${LIB_FILE}"
-                IMPORTED_LOCATION "${DLL_FILE}"
-                INTERFACE_INCLUDE_DIRECTORIES "${QTITAN_INC_DIR}"
-            )
-        elseif(MINGW)
-            # MinGW: lib*.a для линковки, .dll рядом с .exe
-            set(LIB_FILE "${QTITAN_LIB_DIR}/lib${LIB_NAME}.a")
-            set(DLL_FILE "${QTITAN_LIB_DIR}/${LIB_NAME}.dll")
-
-            if(NOT EXISTS ${LIB_FILE})
-                message(FATAL_ERROR "Qtitan library not found: ${LIB_FILE}")
-            endif()
-
-            add_library(Qtitan::${LIB_NAME} SHARED IMPORTED)
-            set_target_properties(Qtitan::${LIB_NAME} PROPERTIES
-                IMPORTED_IMPLIB "${LIB_FILE}"
-                IMPORTED_LOCATION "${DLL_FILE}"
-                INTERFACE_INCLUDE_DIRECTORIES "${QTITAN_INC_DIR}"
-            )
+        # Windows: определяем имена для текущей конфигурации
+        if(CMAKE_BUILD_TYPE MATCHES Debug)
+            # Qtitan 8.2.0 использует формат: QtitanBased2 вместо QtitanBase2d
+            set(LIB_NAME "${LIB_NAME_BASE}d")
+            # Исправляем позицию 'd' для Qtitan 8.2.0+
+            string(REPLACE "2d" "d2" LIB_NAME "${LIB_NAME}")
+            string(REPLACE "8d" "d8" LIB_NAME "${LIB_NAME}")
+            set(CONFIG_SUBDIR "Debug")
+        else()
+            set(LIB_NAME "${LIB_NAME_BASE}")
+            set(CONFIG_SUBDIR "Release")
         endif()
-    else()
-        # Linux: .so файлы - оставляем старую логику для совместимости
-        set(LIB_FILE "${QTITAN_LIB_DIR}/lib${LIB_NAME}.so")
+
+        if(MSVC)
+            set(LIB_FILE "${QTITAN_ROOT}/lib/msvc/${CONFIG_SUBDIR}/${LIB_NAME}.lib")
+            set(DLL_FILE "${QTITAN_ROOT}/lib/msvc/${CONFIG_SUBDIR}/${LIB_NAME}.dll")
+        elseif(MINGW)
+            set(LIB_FILE "${QTITAN_ROOT}/lib/mingw/${CONFIG_SUBDIR}/lib${LIB_NAME}.a")
+            set(DLL_FILE "${QTITAN_ROOT}/lib/mingw/${CONFIG_SUBDIR}/${LIB_NAME}.dll")
+        endif()
 
         if(NOT EXISTS ${LIB_FILE})
             message(FATAL_ERROR "Qtitan library not found: ${LIB_FILE}")
         endif()
 
-        add_library(Qtitan::${LIB_NAME} SHARED IMPORTED)
-        set_target_properties(Qtitan::${LIB_NAME} PROPERTIES
+        add_library(Qtitan::${LIB_NAME_BASE} SHARED IMPORTED)
+        set_target_properties(Qtitan::${LIB_NAME_BASE} PROPERTIES
+            IMPORTED_IMPLIB "${LIB_FILE}"
+            IMPORTED_LOCATION "${DLL_FILE}"
+            INTERFACE_INCLUDE_DIRECTORIES "${QTITAN_INC_DIR}"
+        )
+        message(STATUS "  Added Qtitan::${LIB_NAME_BASE} (${CONFIG_SUBDIR}: ${LIB_NAME})")
+    else()
+        # Linux код остаётся без изменений
+        string(REGEX REPLACE "[0-9]+$" "" LIB_NAME_NO_VERSION "${LIB_NAME_BASE}")
+        set(LIB_FILE "${QTITAN_LIB_DIR}/lib${LIB_NAME_BASE}.so")
+
+        if(NOT EXISTS ${LIB_FILE})
+            file(GLOB LIB_FILE_VERSIONED "${QTITAN_LIB_DIR}/lib${LIB_NAME_NO_VERSION}.so*")
+            if(LIB_FILE_VERSIONED)
+                list(SORT LIB_FILE_VERSIONED)
+                list(REVERSE LIB_FILE_VERSIONED)
+                list(GET LIB_FILE_VERSIONED 0 LIB_FILE)
+                message(STATUS "  Found versioned: ${LIB_FILE}")
+            else()
+                message(FATAL_ERROR "Qtitan library not found: ${QTITAN_LIB_DIR}/lib${LIB_NAME_NO_VERSION}.so*")
+            endif()
+        endif()
+
+        add_library(Qtitan::${LIB_NAME_BASE} SHARED IMPORTED)
+        set_target_properties(Qtitan::${LIB_NAME_BASE} PROPERTIES
             IMPORTED_LOCATION "${LIB_FILE}"
             INTERFACE_INCLUDE_DIRECTORIES "${QTITAN_INC_DIR}"
         )
-    endif()
-
-    message(STATUS "  Added Qtitan::${LIB_NAME}")
-endfunction()
-
-# Функция для добавления Qtitan библиотек с поддержкой Debug/Release
-function(add_qtitan_library_both LIB_NAME_RELEASE LIB_NAME_DEBUG)
-    if(WIN32)
-        if(MSVC)
-            # Release
-            set(LIB_FILE_RELEASE "${QTITAN_ROOT}/lib/msvc/Release/${LIB_NAME_RELEASE}.lib")
-            set(DLL_FILE_RELEASE "${QTITAN_ROOT}/lib/msvc/Release/${LIB_NAME_RELEASE}.dll")
-
-            # Debug
-            set(LIB_FILE_DEBUG "${QTITAN_ROOT}/lib/msvc/Debug/${LIB_NAME_DEBUG}.lib")
-            set(DLL_FILE_DEBUG "${QTITAN_ROOT}/lib/msvc/Debug/${LIB_NAME_DEBUG}.dll")
-
-            if(NOT EXISTS ${LIB_FILE_RELEASE})
-                message(FATAL_ERROR "Qtitan Release library not found: ${LIB_FILE_RELEASE}")
-            endif()
-
-            if(NOT EXISTS ${LIB_FILE_DEBUG})
-                message(WARNING "Qtitan Debug library not found: ${LIB_FILE_DEBUG} (continuing with Release only)")
-                set(LIB_FILE_DEBUG ${LIB_FILE_RELEASE})
-                set(DLL_FILE_DEBUG ${DLL_FILE_RELEASE})
-            endif()
-
-            add_library(Qtitan::${LIB_NAME_RELEASE} SHARED IMPORTED)
-            set_target_properties(Qtitan::${LIB_NAME_RELEASE} PROPERTIES
-                IMPORTED_IMPLIB_RELEASE "${LIB_FILE_RELEASE}"
-                IMPORTED_LOCATION_RELEASE "${DLL_FILE_RELEASE}"
-                IMPORTED_IMPLIB_DEBUG "${LIB_FILE_DEBUG}"
-                IMPORTED_LOCATION_DEBUG "${DLL_FILE_DEBUG}"
-                INTERFACE_INCLUDE_DIRECTORIES "${QTITAN_INC_DIR}"
-                IMPORTED_CONFIGURATIONS "Debug;Release"
-            )
-        elseif(MINGW)
-            # MinGW - добавляем поддержку
-            set(LIB_FILE_RELEASE "${QTITAN_ROOT}/lib/mingw/Release/lib${LIB_NAME_RELEASE}.a")
-            set(DLL_FILE_RELEASE "${QTITAN_ROOT}/lib/mingw/Release/${LIB_NAME_RELEASE}.dll")
-
-            set(LIB_FILE_DEBUG "${QTITAN_ROOT}/lib/mingw/Debug/lib${LIB_NAME_DEBUG}.a")
-            set(DLL_FILE_DEBUG "${QTITAN_ROOT}/lib/mingw/Debug/${LIB_NAME_DEBUG}.dll")
-
-            if(NOT EXISTS ${LIB_FILE_RELEASE})
-                message(FATAL_ERROR "Qtitan Release library not found: ${LIB_FILE_RELEASE}")
-            endif()
-
-            if(NOT EXISTS ${LIB_FILE_DEBUG})
-                message(WARNING "Qtitan Debug library not found: ${LIB_FILE_DEBUG} (continuing with Release only)")
-                set(LIB_FILE_DEBUG ${LIB_FILE_RELEASE})
-                set(DLL_FILE_DEBUG ${DLL_FILE_RELEASE})
-            endif()
-
-            add_library(Qtitan::${LIB_NAME_RELEASE} SHARED IMPORTED)
-            set_target_properties(Qtitan::${LIB_NAME_RELEASE} PROPERTIES
-                IMPORTED_IMPLIB_RELEASE "${LIB_FILE_RELEASE}"
-                IMPORTED_LOCATION_RELEASE "${DLL_FILE_RELEASE}"
-                IMPORTED_IMPLIB_DEBUG "${LIB_FILE_DEBUG}"
-                IMPORTED_LOCATION_DEBUG "${DLL_FILE_DEBUG}"
-                INTERFACE_INCLUDE_DIRECTORIES "${QTITAN_INC_DIR}"
-                IMPORTED_CONFIGURATIONS "Debug;Release"
-            )
-        endif()
-    else()
-        # Linux - используем простую функцию без Debug/Release
-        add_qtitan_library(${LIB_NAME_RELEASE})
-    endif()
-
-    if(WIN32)
-        message(STATUS "  Added Qtitan::${LIB_NAME_RELEASE} (Debug: ${LIB_NAME_DEBUG})")
+        message(STATUS "  Added Qtitan::${LIB_NAME_BASE}")
     endif()
 endfunction()
 
-# Добавляем библиотеки Qtitan
-if(WIN32)
-    add_qtitan_library_both(QtitanBase2 QtitanBased2)
-    add_qtitan_library_both(QtitanGrid8 QtitanGridd8)
-    add_qtitan_library_both(QtitanStyle2 QtitanStyled2)
-    add_qtitan_library_both(QtitanFastInfoset2 QtitanFastInfosetd2)
-else()
-    # Linux - используем имена без суффиксов
-    add_qtitan_library(QtitanBase2)
-    add_qtitan_library(QtitanGrid8)
-    add_qtitan_library(QtitanStyle2)
-    add_qtitan_library(QtitanFastInfoset2)
-endif()
+# Использование - одинаково для всех платформ!
+add_qtitan_library(QtitanBase2)
+add_qtitan_library(QtitanGrid8)
+add_qtitan_library(QtitanStyle2)
+add_qtitan_library(QtitanFastInfoset2)
 
 # Link Qtitan Libraries
 target_link_libraries(${PROJECT_NAME} PRIVATE
