@@ -5,12 +5,13 @@
 #   - Ubuntu 24.04 (gcc)
 #   - AstraLinux 1.7 (clang-13)
 #
-# Все платформы теперь используют библиотеки из thirdparty
+# Все платформы  используют библиотеки из thirdparty
 # (либо precompiled, либо собираемые из исходников через add_subdirectory)
 # ============================================================================
 
 cmake_minimum_required(VERSION 3.23)
 message(STATUS "CMake version: ${CMAKE_VERSION}")
+
 # ============================================================================
 # Для clang-cl: поиск mt.exe из Windows SDK
 # ============================================================================
@@ -24,9 +25,14 @@ if(WIN32 AND CMAKE_CXX_COMPILER MATCHES "clang-cl")
         message(FATAL_ERROR "mt.exe not found at: ${CMAKE_MT}")
     endif()
 endif()
+
 if(CMAKE_CXX_COMPILER_ID MATCHES "Clang" AND MSVC)
     set(CMAKE_LINKER "lld-link" CACHE STRING "Linker" FORCE)
 endif()
+
+# ============================================================================
+# Platform Detection and Compiler Configuration
+# ============================================================================
 # Определяем OS
 if(WIN32)
     set(OS_NAME "Windows")
@@ -81,10 +87,12 @@ endif()
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_INCLUDE_CURRENT_DIR ON)
+
 # Автоматическая обработка Qt-специфичных файлов
 set(CMAKE_AUTOUIC ON)
 set(CMAKE_AUTOMOC ON)
 set(CMAKE_AUTORCC ON)
+
 # Output directories - все бинарники идут в ../Debug или ../Release
 set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY "${CMAKE_SOURCE_DIR}/../${CMAKE_BUILD_TYPE}")
 set(CMAKE_LIBRARY_OUTPUT_DIRECTORY "${CMAKE_SOURCE_DIR}/../${CMAKE_BUILD_TYPE}")
@@ -99,30 +107,27 @@ add_compile_definitions(ASTRA_NIX)
 add_compile_definitions(QTN_NAMESPACE)
 
 add_compile_definitions(
-    $<$<CONFIG:Debug>:q4_INLINE=0> 	# Отключает inline функции в Debug
-    $<$<CONFIG:Debug>:YYDEBUG>		# Включает отладочный вывод для yacc/bison парсеров
+    $<$<CONFIG:Debug>:q4_INLINE=0>  # Отключает inline функции в Debug
+    $<$<CONFIG:Debug>:YYDEBUG>      # Включает отладочный вывод для yacc/bison парсеров
 )
+
 # Windows-specific definitions
 if(WIN32)
     add_compile_definitions(COMPILE_WIN)
 
     if(MSVC)
-        # Подавление предупреждений о deprecated Microsoft extensions (?)
+        # Подавление предупреждений о deprecated Microsoft extensions
         add_compile_definitions(_SILENCE_ALL_MS_EXT_DEPRECATION_WARNINGS)
         # Отключение макросов min/max из windows.h (конфликт с std::min/max)
         add_compile_definitions(NOMINMAX)
     endif()
-    # Настройка CRT (C Runtime Library) для Release сборок
-    # Используем статическую линковку CRT для уменьшения зависимостей
-    # if(NOT CMAKE_BUILD_TYPE MATCHES Debug)
-    #     set(CMAKE_MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>")
-    # endif()
+
     # Настройка CRT (C Runtime Library) - используем динамическую для совместимости с Qt и библиотеками
     set(CMAKE_MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>DLL")
 endif()
 
 # ============================================================================
-# Platform Detection
+# Platform Detection for Libraries
 # ============================================================================
 if(WIN32)
     if(MSVC)
@@ -142,13 +147,15 @@ if(WIN32)
 elseif(UNIX AND NOT APPLE)
     set(LIB_PREFIX "lib")
     set(LIB_SUFFIX ".so")
-    set(PLATFORM_DIR "linux")
+
     # Определяем компилятор для выбора правильных precompiled библиотек
     # Библиотеки скомпилированные разными компиляторами могут быть несовместимы
     if(IS_ASTRA_LINUX)
         set(COMPILER "clang")
+        set(PLATFORM_DIR "linux/clang")
     else()
         set(COMPILER "gcc")
+        set(PLATFORM_DIR "linux/gcc")
     endif()
 else()
     message(FATAL_ERROR "Unsupported platform: ${CMAKE_SYSTEM_NAME}")
@@ -179,6 +186,7 @@ message(STATUS "Build options:")
 message(STATUS "  QRASTR_BUILD_WITH_MCR: ${QRASTR_BUILD_WITH_MCR}")
 message(STATUS "  BUILD_WITH_ASTRA: ${BUILD_WITH_ASTRA}")
 message(STATUS "  USE_PRECOMPILED_LIBS: ${USE_PRECOMPILED_LIBS}")
+message(STATUS "  BUILD_WITH_PQ: ${BUILD_WITH_PQ}")
 
 # ============================================================================
 # Path Configuration
@@ -201,9 +209,10 @@ if(BUILD_WITH_ASTRA)
     endif()
 
     message(STATUS "ASTRA_BIN_ROOT: ${ASTRA_BIN_ROOT}")
+
     # Ищем конфигурацию ASTRA
-    #CONFIG, значит: FindCOMCK.cmake — даже не ищется, ищется comck-config.cmake
-    #HINTS вместо list(APPEND CMAKE_PREFIX_PATH "${PATH}")
+    # CONFIG означает: FindCOMCK.cmake — даже не ищется, ищется comck-config.cmake
+    # HINTS вместо list(APPEND CMAKE_PREFIX_PATH "${PATH}")
     find_package(COMCK CONFIG HINTS "${ASTRA_BIN_ROOT}/lib/cmake/COMCK")
     find_package(Astra CONFIG HINTS "${ASTRA_BIN_ROOT}/lib/cmake/Astra")
 
@@ -231,9 +240,9 @@ if(BUILD_WITH_ASTRA)
 endif()
 
 # ============================================================================
-# Qtitan
+# Qtitan Configuration
 # ============================================================================
-# Путь к библиотеке Qtitan
+# Путь к библиотеке Qtitan - оставляем по-старому для Astra Linux
 if(WIN32)
     set(QTITAN_ROOT "${CMAKE_CURRENT_SOURCE_DIR}/../lib/QtitanDataGrid8.2.0_win_qt_6_7" CACHE PATH "Path to Qtitan")
 else()
@@ -249,7 +258,7 @@ endif()
 # Определяем пути к библиотекам Qtitan в зависимости от платформы и компилятора
 if(WIN32)
     if(MSVC)
-        #  используем CMAKE_BUILD_TYPE, а не CONFIG_DIR
+        # Используем CMAKE_BUILD_TYPE, а не CONFIG_DIR
         if(CMAKE_BUILD_TYPE MATCHES Debug)
             set(QTITAN_LIB_DIR "${QTITAN_ROOT}/lib/msvc/Debug")
         else()
@@ -263,6 +272,7 @@ if(WIN32)
         endif()
     endif()
 else()
+    # Linux - оставляем без изменений для совместимости с Qtitan
     set(QTITAN_LIB_DIR "${QTITAN_ROOT}/lib")
 endif()
 
@@ -328,13 +338,18 @@ function(add_thirdparty_library LIB_NAME LIB_PATH)
             IMPORTED_LOCATION "${${LIB_NAME}_LIBRARY}"
             INTERFACE_INCLUDE_DIRECTORIES "${${LIB_NAME}_INCLUDE_DIR}"
         )
+
+        # Специальные настройки для spdlog
         if("${LIB_NAME}" STREQUAL "spdlog")
             set_target_properties(spdlog PROPERTIES
                 INTERFACE_COMPILE_DEFINITIONS SPDLOG_FMT_EXTERNAL
             )
             message(STATUS "spdlog uses SPDLOG_FMT_EXTERNAL")
         endif()
+
         message(STATUS "Using precompiled ${LIB_NAME}: ${${LIB_NAME}_LIBRARY}")
+
+        # Специальные настройки для qtadvanceddocking
         if("${LIB_NAME}" STREQUAL "qtadvanceddocking")
             target_include_directories(qtadvanceddocking INTERFACE
                 ${THIRDPARTY_DIR}/Qt-Advanced-Docking-System/src
@@ -410,10 +425,11 @@ find_package(Qt${QT_VERSION_MAJOR} REQUIRED COMPONENTS
     Test
     LinguistTools
 )
+
 # Qt6 требует дополнительный модуль для совместимости с Qt5
 if(QT_VERSION_MAJOR EQUAL 6)
     find_package(Qt${QT_VERSION_MAJOR} REQUIRED COMPONENTS Core5Compat)
-        # qt_standard_project_setup() настраивает проект для Qt6
+    # qt_standard_project_setup() настраивает проект для Qt6
     if(CMAKE_VERSION VERSION_GREATER_EQUAL "3.19" AND QT_VERSION VERSION_GREATER_EQUAL "6.3")
         qt_standard_project_setup()
     endif()
@@ -438,11 +454,13 @@ set(DEPENDENCIES_LOCATION "${THIRDPARTY_DIR}" CACHE PATH "Passes the path to the
 add_subdirectory(qmcr ${CMAKE_BINARY_DIR}/generated/qmcr)
 message(STATUS "qmcr subproject added")
 
+# ============================================================================
+# Third-Party Libraries
 # ----------------------------------------------------------------------------
 # Metakit - все платформы собирают из thirdparty
 # ----------------------------------------------------------------------------
 if(USE_PRECOMPILED_LIBS)
-        # Metakit собирается только из precompiled (проблемы с новыми компиляторами)
+    # Metakit собирается только из precompiled (проблемы с новыми компиляторами)
     add_thirdparty_library(metakit "${THIRDPARTY_DIR}/metakit"
         LIB_REAL_NAME "mk4")
 endif()
@@ -458,7 +476,7 @@ add_thirdparty_library(qtadvanceddocking "${THIRDPARTY_DIR}/Qt-Advanced-Docking-
 # SDL3 и SDL3_image - все платформы собирают из thirdparty
 # ----------------------------------------------------------------------------
 if(NOT USE_PRECOMPILED_LIBS)
-        # Временно уменьшаем уровень логирования CMake при сборке SDL
+    # Временно уменьшаем уровень логирования CMake при сборке SDL
     set(CMAKE_MESSAGE_LOG_LEVEL WARNING)
 endif()
 
@@ -473,6 +491,7 @@ endif()
 # Scintilla - все платформы собирают из thirdparty
 # ----------------------------------------------------------------------------
 add_thirdparty_library(scintilla "${THIRDPARTY_DIR}/scintilla")
+
 # Scintilla требует дополнительные include директории
 if(TARGET scintilla)
     target_include_directories(scintilla INTERFACE
@@ -482,14 +501,21 @@ if(TARGET scintilla)
         ${THIRDPARTY_DIR}/scintilla/qt/ScintillaEdit
     )
 endif()
+
 # ============================================================================
 # Include Directories
 # ============================================================================
 set(PROJECT_INCLUDES
     ${CMAKE_CURRENT_SOURCE_DIR}
     ${QTITAN_ROOT}/include
-    C:/Qt/6.9.3/msvc2022_64/include/QtWidgets/${QT_VERSION}/QtWidgets/private
 )
+
+# Windows-specific includes
+if(WIN32 AND MSVC)
+    list(APPEND PROJECT_INCLUDES
+        C:/Qt/6.9.3/msvc2022_64/include/QtWidgets/${QT_VERSION}/QtWidgets/private
+    )
+endif()
 
 # Добавляем Boost и Eigen3 include directories
 if(TARGET Boost::boost)
@@ -685,9 +711,9 @@ if(BUILD_WITH_ASTRA)
         qti.cpp
         qbarsmdp.h
         qbarsmdp.cpp
-        # ${ASTRA_LOCATION}/ResourceManager.cpp
     )
 endif()
+
 # Translation files
 set(TS_FILES qrastr_ru_RU.ts)
 
@@ -695,18 +721,18 @@ set(TS_FILES qrastr_ru_RU.ts)
 # Executable - создание исполняемого файла
 # ============================================================================
 if(QT_VERSION_MAJOR GREATER_EQUAL 6)
-        # Qt6: используем qt_add_executable
+    # Qt6: используем qt_add_executable
     qt_add_executable(${PROJECT_NAME}
-        MANUAL_FINALIZATION	# Вызовем qt_finalize_executable() вручную в конце
+        MANUAL_FINALIZATION  # Вызовем qt_finalize_executable() вручную в конце
         ${PROJECT_SOURCES}
     )
-        # Создание скомпилированных переводов (.qm файлы из .ts файлов)
+    # Создание скомпилированных переводов (.qm файлы из .ts файлов)
     qt_create_translation(QM_FILES
         ${PROJECT_SOURCES}  # Исходники для извлечения строк перевода
         ${TS_FILES}         # XML файлы переводов
     )
 else()
-        # Qt5: используем add_executable
+    # Qt5: используем add_executable
     add_executable(${PROJECT_NAME}
         ${PROJECT_SOURCES}
     )
@@ -766,12 +792,9 @@ target_link_libraries(${PROJECT_NAME} PRIVATE
     qmcr
 )
 
-# if(QRASTR_BUILD_WITH_MCR)
-#     target_link_libraries(${PROJECT_NAME} PRIVATE
-#         qmcr
-#     )
-# endif()
-
+# ============================================================================
+# Qtitan Libraries Configuration
+# ============================================================================
 # Создаём imported targets для Qtitan библиотек
 function(add_qtitan_library LIB_NAME)
     if(WIN32)
@@ -807,7 +830,7 @@ function(add_qtitan_library LIB_NAME)
             )
         endif()
     else()
-        # Linux: .so файлы
+        # Linux: .so файлы - оставляем старую логику для совместимости
         set(LIB_FILE "${QTITAN_LIB_DIR}/lib${LIB_NAME}.so")
 
         if(NOT EXISTS ${LIB_FILE})
@@ -824,10 +847,7 @@ function(add_qtitan_library LIB_NAME)
     message(STATUS "  Added Qtitan::${LIB_NAME}")
 endfunction()
 
-# ============================================================================
-# Qtitan Libraries - с правильной поддержкой Debug/Release
-# ============================================================================
-
+# Функция для добавления Qtitan библиотек с поддержкой Debug/Release
 function(add_qtitan_library_both LIB_NAME_RELEASE LIB_NAME_DEBUG)
     if(WIN32)
         if(MSVC)
@@ -858,21 +878,59 @@ function(add_qtitan_library_both LIB_NAME_RELEASE LIB_NAME_DEBUG)
                 INTERFACE_INCLUDE_DIRECTORIES "${QTITAN_INC_DIR}"
                 IMPORTED_CONFIGURATIONS "Debug;Release"
             )
+        elseif(MINGW)
+            # MinGW - добавляем поддержку
+            set(LIB_FILE_RELEASE "${QTITAN_ROOT}/lib/mingw/Release/lib${LIB_NAME_RELEASE}.a")
+            set(DLL_FILE_RELEASE "${QTITAN_ROOT}/lib/mingw/Release/${LIB_NAME_RELEASE}.dll")
+
+            set(LIB_FILE_DEBUG "${QTITAN_ROOT}/lib/mingw/Debug/lib${LIB_NAME_DEBUG}.a")
+            set(DLL_FILE_DEBUG "${QTITAN_ROOT}/lib/mingw/Debug/${LIB_NAME_DEBUG}.dll")
+
+            if(NOT EXISTS ${LIB_FILE_RELEASE})
+                message(FATAL_ERROR "Qtitan Release library not found: ${LIB_FILE_RELEASE}")
+            endif()
+
+            if(NOT EXISTS ${LIB_FILE_DEBUG})
+                message(WARNING "Qtitan Debug library not found: ${LIB_FILE_DEBUG} (continuing with Release only)")
+                set(LIB_FILE_DEBUG ${LIB_FILE_RELEASE})
+                set(DLL_FILE_DEBUG ${DLL_FILE_RELEASE})
+            endif()
+
+            add_library(Qtitan::${LIB_NAME_RELEASE} SHARED IMPORTED)
+            set_target_properties(Qtitan::${LIB_NAME_RELEASE} PROPERTIES
+                IMPORTED_IMPLIB_RELEASE "${LIB_FILE_RELEASE}"
+                IMPORTED_LOCATION_RELEASE "${DLL_FILE_RELEASE}"
+                IMPORTED_IMPLIB_DEBUG "${LIB_FILE_DEBUG}"
+                IMPORTED_LOCATION_DEBUG "${DLL_FILE_DEBUG}"
+                INTERFACE_INCLUDE_DIRECTORIES "${QTITAN_INC_DIR}"
+                IMPORTED_CONFIGURATIONS "Debug;Release"
+            )
         endif()
+    else()
+        # Linux - используем простую функцию без Debug/Release
+        add_qtitan_library(${LIB_NAME_RELEASE})
     endif()
 
-    message(STATUS "  Added Qtitan::${LIB_NAME_RELEASE} (Debug: ${LIB_NAME_DEBUG})")
+    if(WIN32)
+        message(STATUS "  Added Qtitan::${LIB_NAME_RELEASE} (Debug: ${LIB_NAME_DEBUG})")
+    endif()
 endfunction()
 
 # Добавляем библиотеки Qtitan
-add_qtitan_library_both(QtitanBase2 QtitanBased2)
-add_qtitan_library_both(QtitanGrid8 QtitanGridd8)
-add_qtitan_library_both(QtitanStyle2 QtitanStyled2)
-add_qtitan_library_both(QtitanFastInfoset2 QtitanFastInfosetd2)
+if(WIN32)
+    add_qtitan_library_both(QtitanBase2 QtitanBased2)
+    add_qtitan_library_both(QtitanGrid8 QtitanGridd8)
+    add_qtitan_library_both(QtitanStyle2 QtitanStyled2)
+    add_qtitan_library_both(QtitanFastInfoset2 QtitanFastInfosetd2)
+else()
+    # Linux - используем имена без суффиксов
+    add_qtitan_library(QtitanBase2)
+    add_qtitan_library(QtitanGrid8)
+    add_qtitan_library(QtitanStyle2)
+    add_qtitan_library(QtitanFastInfoset2)
+endif()
 
-# ============================================================================
 # Link Qtitan Libraries
-# ============================================================================
 target_link_libraries(${PROJECT_NAME} PRIVATE
     Qtitan::QtitanBase2
     Qtitan::QtitanGrid8
@@ -880,14 +938,15 @@ target_link_libraries(${PROJECT_NAME} PRIVATE
     Qtitan::QtitanFastInfoset2
 )
 
-# ASTRA library
+# ============================================================================
+# ASTRA Library Linking
+# ============================================================================
 if(BUILD_WITH_ASTRA)
-    # target_link_libraries(${PROJECT_NAME} PRIVATE astra COMCK)
-
     target_link_libraries(${PROJECT_NAME} PRIVATE
         "${ASTRA_BIN_ROOT}/lib/astra.lib"
         "${ASTRA_BIN_ROOT}/lib/COMCK.lib"
     )
+
     # Копируем DLL на Windows
     if(WIN32)
         add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
