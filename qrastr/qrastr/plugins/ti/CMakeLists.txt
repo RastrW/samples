@@ -25,16 +25,11 @@ find_package(Qt${QT_VERSION_MAJOR} COMPONENTS
 
 # ============================================================================
 # Output Directories
-# Все плагины должны собираться в ../plugins относительно главного исполняемого файла
 # ============================================================================
-if(MSVC)
-    set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/../../${CMAKE_BUILD_TYPE}/plugins")
-    set(CMAKE_LIBRARY_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/../../${CMAKE_BUILD_TYPE}/plugins")
-    set(CMAKE_RUNTIME_OUTPUT_DIRECTORY "${CMAKE_SOURCE_DIR}/../../${CMAKE_BUILD_TYPE}/plugins")
-else()
-    set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/../${CMAKE_BUILD_TYPE}/plugins")
-    set(CMAKE_LIBRARY_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/../${CMAKE_BUILD_TYPE}/plugins")
+if(NOT CMAKE_CONFIGURATION_TYPES)
     set(CMAKE_RUNTIME_OUTPUT_DIRECTORY "${CMAKE_SOURCE_DIR}/../${CMAKE_BUILD_TYPE}/plugins")
+    set(CMAKE_LIBRARY_OUTPUT_DIRECTORY "${CMAKE_SOURCE_DIR}/../${CMAKE_BUILD_TYPE}/plugins")
+    set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY "${CMAKE_SOURCE_DIR}/../${CMAKE_BUILD_TYPE}/plugins")
 endif()
 
 # ============================================================================
@@ -79,7 +74,9 @@ target_link_libraries(ti PRIVATE
 # ============================================================================
 # Compiler Options
 # ============================================================================
-target_compile_options(ti PRIVATE ${COMPILE_OPTIONS})
+if(DEFINED COMPILE_OPTIONS)
+    target_compile_options(ti PRIVATE ${COMPILE_OPTIONS})
+endif()
 
 # Добавляем include директорию головного проекта для доступа к общим заголовкам
 target_include_directories(ti PRIVATE
