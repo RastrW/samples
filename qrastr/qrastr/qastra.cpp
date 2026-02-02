@@ -102,20 +102,9 @@ IPlainRastrRetCode QAstra::OnEvent(const IRastrEventBase& Event) noexcept {
     // Hint,		// хинт изменения
     // Command		// хинт команды UI
    if(Event.Type() == EventTypes::Print){
-       ///@todo Delete
-       const auto& eventPrint =
-           static_cast<const IRastrEventPrint&>(Event);
-
-       std::string msg = eventPrint.Message();
-
-       if (!msg.empty())
-       {
-           spdlog::info("OnEvent.Print: {}", msg);
-           emit onRastrPrint(msg);
-       }
-       //spdlog::info( "OnEvent.Print: {}", static_cast<const IRastrEventPrint&>(Event).Message() );
-       //const std::string str_msg { static_cast<const IRastrEventPrint&>(Event).Message() };
-       //emit onRastrPrint( str_msg );
+       spdlog::info( "OnEvent.Print: {}", static_cast<const IRastrEventPrint&>(Event).Message() );
+       const std::string str_msg { static_cast<const IRastrEventPrint&>(Event).Message() };
+       emit onRastrPrint( str_msg );
    }
    return IPlainRastrRetCode::Ok;
 }

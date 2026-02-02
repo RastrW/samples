@@ -13,24 +13,6 @@ cmake_minimum_required(VERSION 3.23)
 message(STATUS "CMake version: ${CMAKE_VERSION}")
 
 # ============================================================================
-# Для clang-cl: поиск mt.exe из Windows SDK
-# ============================================================================
-if(WIN32 AND CMAKE_CXX_COMPILER MATCHES "clang-cl")
-    # Указываем конкретный путь к найденному mt.exe
-    set(CMAKE_MT "C:/Program Files (x86)/Windows Kits/10/bin/10.0.26100.0/x64/mt.exe" CACHE FILEPATH "Path to mt.exe" FORCE)
-
-    if(EXISTS "${CMAKE_MT}")
-        message(STATUS "Found mt.exe for clang-cl: ${CMAKE_MT}")
-    else()
-        message(FATAL_ERROR "mt.exe not found at: ${CMAKE_MT}")
-    endif()
-endif()
-
-if(CMAKE_CXX_COMPILER_ID MATCHES "Clang" AND MSVC)
-    set(CMAKE_LINKER "lld-link" CACHE STRING "Linker" FORCE)
-endif()
-
-# ============================================================================
 # Platform Detection and Compiler Configuration
 # ============================================================================
 # Определяем OS

@@ -128,18 +128,21 @@ long App::readSettings(){ //it cache log messages to vector, because it called b
             }
             p_params->setFileAppsettings(str_path_2_conf);
             v_cache_log_.add(spdlog::level::info, "ReadTemplates: {}", p_params->getDirSHABLON().absolutePath().toStdString());
-            nRes = Params::GetInstance()->readTemplates( p_params->getDirSHABLON().absolutePath().toStdString() ); assert(nRes>0);
+            nRes = Params::GetInstance()->readTemplates( p_params->getDirSHABLON().absolutePath().toStdString() );
+            assert(nRes>0);
             if(nRes < 0){
                 v_cache_log_.add(spdlog::level::err, "Error while read: {}", nRes);
             }
 
             const std::filesystem::path path_dirforms = p_params->getDirData().canonicalPath().toStdString()+"//form//";
             v_cache_log_.add(spdlog::level::info, "ReadForms: {}", path_dirforms.string());
-            nRes = Params::GetInstance()->readFormsExists( path_dirforms ); assert(nRes>0);
+            nRes = Params::GetInstance()->readFormsExists( path_dirforms );
+            assert(nRes>0);
             if(nRes < 0){
                 v_cache_log_.add(spdlog::level::err, "Error while read existed forms: {}", nRes);
             }
-            nRes = Params::GetInstance()->readForms( path_dirforms ); assert(nRes>0);
+            nRes = Params::GetInstance()->readForms( path_dirforms );
+            assert(nRes>0);
             if(nRes < 0){
                 v_cache_log_.add(spdlog::level::err, "Error while read: {}", nRes);
             }
