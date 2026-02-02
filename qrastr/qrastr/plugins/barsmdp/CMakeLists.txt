@@ -1,8 +1,5 @@
-# ============================================================================
-# Plugin: barsmdp
-# ============================================================================
 project(barsmdp)
-cmake_minimum_required(VERSION 3.23) # 3.20 min version for "astra" build
+cmake_minimum_required(VERSION 3.23)
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
@@ -67,8 +64,6 @@ target_link_libraries(barsmdp PRIVATE
     Qt${QT_VERSION_MAJOR}::Core
     Qt${QT_VERSION_MAJOR}::Gui
     Qt${QT_VERSION_MAJOR}::Widgets
-    spdlog::spdlog
-    fmt::fmt
 )
 
 # ============================================================================
@@ -78,7 +73,19 @@ if(DEFINED COMPILE_OPTIONS)
     target_compile_options(barsmdp PRIVATE ${COMPILE_OPTIONS})
 endif()
 
-# Добавляем include директорию головного проекта для доступа к общим заголовкам
+# ============================================================================
+# Получаем THIRDPARTY_DIR из родительского проекта
+# ============================================================================
+get_directory_property(THIRDPARTY_DIR DIRECTORY ${CMAKE_SOURCE_DIR} DEFINITION THIRDPARTY_DIR)
+
+# Добавляем include директории
 target_include_directories(barsmdp PRIVATE
     "../../"
+    "${THIRDPARTY_DIR}/spdlog/include"
+    "${THIRDPARTY_DIR}/fmt/include"
+)
+
+target_compile_definitions(barsmdp PRIVATE
+    SPDLOG_HEADER_ONLY
+    FMT_HEADER_ONLY
 )

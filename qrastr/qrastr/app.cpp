@@ -205,23 +205,39 @@ void App::loadPlugins(){
     QDir pluginsDir{QDir{QCoreApplication::applicationDirPath()}};
     pluginsDir.cd("plugins");
     spdlog::info("Plugins dir: {}", pluginsDir.absolutePath().toStdString());
+
+    //путь к плагинам в библиотечные пути
+    QCoreApplication::addLibraryPath(pluginsDir.absolutePath());
+
 #if(COMPILE_WIN)
-    //const   auto entryList = pluginsDir.entryList(QStringList() << "*.dll", QDir::Files);
     auto entryList = pluginsDir.entryList(QStringList() << "*.dll", QDir::Files);
 #else
     auto entryList = pluginsDir.entryList(QDir::Files);
 #endif
-    //move rastr.dll at top
-    #if(COMPILE_WIN)
-        int ind_rastr = entryList.indexOf("rastr.dll");
-    #else
-        int ind_rastr = entryList.indexOf("librastr.so");
-    #endif
 
-    auto item = entryList.takeAt(ind_rastr);
-    entryList.insert(0,item);
-    for( const QString &fileName : entryList ){
-        QPluginLoader loader(pluginsDir.absoluteFilePath(fileName));
+// move rastr.dll at top
+#if(COMPILE_WIN)
+    int ind_rastr = entryList.indexOf("rastr.dll");
+#else
+    int ind_rastr = entryList.indexOf("librastr.so");
+#endif
+
+    if(ind_rastr >= 0) {  // Проверка на случай отсутствия файла
+        auto item = entryList.takeAt(ind_rastr);
+        entryList.insert(0, item);
+    }
+
+    for(const QString &fileName : entryList){
+        QString fullPath = pluginsDir.absoluteFilePath(fileName);
+        QPluginLoader loader(fullPath);
+
+        // Проверка ошибок
+        if(!loader.load()) {
+            spdlog::error("Failed to load plugin {}: {}",
+                          fileName.toStdString(),
+                          loader.errorString().toStdString());
+            continue;
+        }
         QObject *plugin = loader.instance();
         if(plugin){
             spdlog::info( "Load dynamic plugin {}/{} : {}", pluginsDir.absolutePath().toStdString(), fileName.toStdString(), plugin->objectName().toStdString());
@@ -249,7 +265,7 @@ void App::loadPlugins(){
                     exclog();
                 }
                 spdlog::info( "it is Rastr.test.finished");
-                qDebug( "Plugin Rastr is loaded" );
+                qInfo()<< "Plugin Rastr is loaded";
             }
             auto iTI = qobject_cast<InterfaceTI *>(plugin);
             if(iTI){
@@ -273,8 +289,8 @@ void App::loadPlugins(){
                     exclog();
                 }
                 spdlog::info( "it is TI.test.finished");
+                qInfo()<< "Plugin Ti is loaded";
             }
-
             auto iBarsMDP = qobject_cast<InterfaceBarsMDP *>(plugin);
             if(iBarsMDP){
                 try{
@@ -298,6 +314,7 @@ void App::loadPlugins(){
                     exclog();
                 }
                 spdlog::info( "it is BarsMDP.test.finished");
+                qInfo()<< "Plugin BarsMDP is loaded";
             }
         }
     }
@@ -366,6 +383,7 @@ long App::start(){
             for(const Params::_v_templates::value_type& templ_to_load : v_templates){
                 std::filesystem::path path_template = path_templates;
                 path_template /= templ_to_load;
+                //path_template += "/" + templ_to_load;
                 m_sp_qastra->Load( eLoadCode::RG_REPL, "", path_template.string() );
             }
             for(const Params::_v_file_templates::value_type& file_template : Params::GetInstance()->getStartLoadFileTemplates()){

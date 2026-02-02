@@ -175,6 +175,8 @@ message(STATUS "  BUILD_WITH_PQ: ${BUILD_WITH_PQ}")
 # ============================================================================
 # Thirdparty directory - сторонние библиотеки
 set(THIRDPARTY_DIR "${CMAKE_CURRENT_SOURCE_DIR}/../thirdparty")
+# Передаем THIRDPARTY_DIR в дочерние проекты
+set(THIRDPARTY_DIR "${THIRDPARTY_DIR}" CACHE INTERNAL "")
 
 if(NOT IS_DIRECTORY ${THIRDPARTY_DIR})
     message(FATAL_ERROR "THIRDPARTY_DIR not found: ${THIRDPARTY_DIR}")

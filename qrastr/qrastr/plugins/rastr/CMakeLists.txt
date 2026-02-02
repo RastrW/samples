@@ -1,6 +1,3 @@
-# ============================================================================
-# Plugin: rastr
-# ============================================================================
 project(rastr)
 cmake_minimum_required(VERSION 3.23) # 3.20 min version for "astra" build
 set(CMAKE_CXX_STANDARD 17)
@@ -26,7 +23,6 @@ find_package(Qt${QT_VERSION_MAJOR} COMPONENTS
 # ============================================================================
 # Output Directories
 # ============================================================================
-
 if(NOT CMAKE_CONFIGURATION_TYPES)
     set(CMAKE_RUNTIME_OUTPUT_DIRECTORY "${CMAKE_SOURCE_DIR}/../${CMAKE_BUILD_TYPE}/plugins")
     set(CMAKE_LIBRARY_OUTPUT_DIRECTORY "${CMAKE_SOURCE_DIR}/../${CMAKE_BUILD_TYPE}/plugins")
@@ -68,8 +64,6 @@ target_link_libraries(rastr PRIVATE
     Qt${QT_VERSION_MAJOR}::Core
     Qt${QT_VERSION_MAJOR}::Gui
     Qt${QT_VERSION_MAJOR}::Widgets
-    spdlog::spdlog
-    fmt::fmt
 )
 
 # ============================================================================
@@ -79,7 +73,19 @@ if(DEFINED COMPILE_OPTIONS)
     target_compile_options(rastr PRIVATE ${COMPILE_OPTIONS})
 endif()
 
-# Добавляем include директорию головного проекта для доступа к общим заголовкам
+# ============================================================================
+# Получаем THIRDPARTY_DIR из родительского проекта
+# ============================================================================
+get_directory_property(THIRDPARTY_DIR DIRECTORY ${CMAKE_SOURCE_DIR} DEFINITION THIRDPARTY_DIR)
+
+# Добавляем include директории
 target_include_directories(rastr PRIVATE
     "../../"
+    "${THIRDPARTY_DIR}/spdlog/include"
+    "${THIRDPARTY_DIR}/fmt/include"
+)
+
+target_compile_definitions(rastr PRIVATE
+    SPDLOG_HEADER_ONLY
+    FMT_HEADER_ONLY
 )
