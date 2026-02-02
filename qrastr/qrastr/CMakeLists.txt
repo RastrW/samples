@@ -224,17 +224,6 @@ if(BUILD_WITH_ASTRA)
         message(FATAL_ERROR "Astra not found")
     endif()
 
-    if(Astra_FOUND)
-        # Создаём interface target для ASTRA includes
-        if(NOT TARGET Astra::Headers)
-            add_library(Astra::Headers INTERFACE IMPORTED)
-            target_include_directories(Astra::Headers INTERFACE
-                ${ASTRA_BIN_ROOT}/include/astra
-                ${ASTRA_BIN_ROOT}/include/comck
-            )
-        endif()
-    endif()
-
     message(STATUS "COMCK found: ${COMCK_FOUND}")
     message(STATUS "Astra found: ${Astra_FOUND}")
 endif()
