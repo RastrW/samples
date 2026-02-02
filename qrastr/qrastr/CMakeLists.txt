@@ -414,6 +414,10 @@ message(STATUS "Qt found: ${QT_VERSION} at ${Qt${QT_VERSION_MAJOR}_DIR}")
 # Plugins (ASTRA-dependent)
 # ============================================================================
 if(BUILD_WITH_ASTRA)
+    # Передаем THIRDPARTY_DIR в дочерние проекты
+    # *DEPENDENCIES_LOCATION ранее
+    set(THIRDPARTY_DIR "${THIRDPARTY_DIR}" PARENT_SCOPE)
+
     add_subdirectory(plugins/rastr)
     add_subdirectory(plugins/ti)
     add_subdirectory(plugins/barsmdp)

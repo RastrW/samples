@@ -231,6 +231,14 @@ void App::loadPlugins(){
         QString fullPath = pluginsDir.absoluteFilePath(fileName);
         QPluginLoader loader(fullPath);
 
+        // Проверка метаданных перед загрузкой
+        QJsonObject metaData = loader.metaData();
+        if(metaData.isEmpty()) {
+            spdlog::warn("{} is not a valid Qt plugin (no metadata)",
+                         fileName.toStdString());
+            continue;
+        }
+
         // Проверка ошибок
         if(!loader.load()) {
             spdlog::error("Failed to load plugin {}: {}",
