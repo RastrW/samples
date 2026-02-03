@@ -38,13 +38,15 @@ endif()
 
 set(INCLUDES
     "${THIRDPARTY_DIR}/spdlog/include/"
+    "${THIRDPARTY_DIR}/fmt/include/"
     "../../"
 )
 
 # ============================================================================
-# Используем include_directories для COMCK, как в оригинале!
+# Используем include_directories для COMCK
 # ============================================================================
 include_directories(${COMCK_INCLUDE_DIR})
+message(STATUS "Ti include COMCK: ${COMCK_INCLUDE_DIR}")
 
 set(PROJECT_SOURCES
     plugin_ti_interfaces.h
@@ -64,8 +66,9 @@ else()
 endif()
 
 target_include_directories(ti PRIVATE ${INCLUDES})
+
 # ============================================================================
-# Линковка библиотек
+# Линковка ТОЛЬКО Qt
 # ============================================================================
 target_link_libraries(ti PRIVATE
     Qt${QT_VERSION_MAJOR}::Core
@@ -73,32 +76,4 @@ target_link_libraries(ti PRIVATE
     Qt${QT_VERSION_MAJOR}::Widgets
 )
 
-message(STATUS "IMPORTED_LOCATION FMT = ${THIRDPARTY_DIR}/compile/fmt/${PLATFORM_DIR}/${CONFIG_DIR}/bin/fmtd.dll")
-message(STATUS "IMPORTED_LOCATION SPDLOG = ${THIRDPARTY_DIR}/compile/spdlog/${PLATFORM_DIR}/${CONFIG_DIR}/bin/spdlogd.dll")
-
-# Создаем imported targets для fmt и spdlog (такой же код)
-if(NOT TARGET fmt::fmt)
-    message(STATUS "Creating imported target fmt::fmt")
-    add_library(fmt::fmt SHARED IMPORTED)
-    set_target_properties(fmt::fmt PROPERTIES
-        IMPORTED_LOCATION "${THIRDPARTY_DIR}/compile/fmt/${PLATFORM_DIR}/${CONFIG_DIR}/bin/fmtd.dll"
-        IMPORTED_IMPLIB "${THIRDPARTY_DIR}/compile/fmt/${PLATFORM_DIR}/${CONFIG_DIR}/lib/fmtd.lib"
-        INTERFACE_INCLUDE_DIRECTORIES "${THIRDPARTY_DIR}/compile/fmt/${PLATFORM_DIR}/${CONFIG_DIR}/include"
-    )
-else()
-    message(STATUS "Target fmt::fmt already exists")
-endif()
-
-if(NOT TARGET spdlog::spdlog)
-    message(STATUS "Creating imported target spdlog::spdlog")
-    add_library(spdlog::spdlog SHARED IMPORTED)
-    set_target_properties(spdlog::spdlog PROPERTIES
-        IMPORTED_LOCATION "${THIRDPARTY_DIR}/compile/spdlog/${PLATFORM_DIR}/${CONFIG_DIR}/bin/spdlogd.dll"
-        IMPORTED_IMPLIB "${THIRDPARTY_DIR}/compile/spdlog/${PLATFORM_DIR}/${CONFIG_DIR}/lib/spdlogd.lib"
-        INTERFACE_INCLUDE_DIRECTORIES "${THIRDPARTY_DIR}/compile/spdlog/${PLATFORM_DIR}/${CONFIG_DIR}/include"
-    )
-else()
-    message(STATUS "Target spdlog::spdlog already exists")
-endif()
-
-target_link_libraries(ti PRIVATE fmt::fmt spdlog::spdlog)
+# НЕ линкуем fmt и spdlog!
