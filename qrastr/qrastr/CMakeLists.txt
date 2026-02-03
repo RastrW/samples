@@ -93,19 +93,19 @@ add_compile_definitions(
     $<$<CONFIG:Debug>:YYDEBUG>      # Включает отладочный вывод для yacc/bison парсеров
 )
 
-# Windows-specific definitions
-if(WIN32)
-    add_compile_definitions(COMPILE_WIN)
-
-    if(MSVC)
-        # Подавление предупреждений о deprecated Microsoft extensions
-        add_compile_definitions(_SILENCE_ALL_MS_EXT_DEPRECATION_WARNINGS)
-        # Отключение макросов min/max из windows.h (конфликт с std::min/max)
-        add_compile_definitions(NOMINMAX)
+if(MSVC)
+    add_compile_definitions( COMPILE_WIN )
+    # Подавление предупреждений о deprecated Microsoft extensions
+    add_compile_definitions( _SILENCE_ALL_MS_EXT_DEPRECATION_WARNINGS )
+    # Отключение макросов min/max из windows.h (конфликт с std::min/max)
+    add_compile_definitions( NOMINMAX )
+    if (CMAKE_BUILD_TYPE MATCHES Debug)
+    else()
+        # Debug was fall on this with "__acrt_first_block == header", beacuse Qt have MtD heap but this have Mt heap
+        set(CMAKE_MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>")
     endif()
-
-    # Настройка CRT (C Runtime Library) - используем динамическую для совместимости с Qt и библиотеками
-    set(CMAKE_MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>DLL")
+    # CMake сам добавит Debug, если нужно
+    # set(CMAKE_MSVC_RUNTIME_LIBRARY "MultiThreaded")
 endif()
 
 # ============================================================================

@@ -311,6 +311,12 @@ void App::loadPlugins(){
                         continue;
                     }
 
+                    auto rastrPtr = m_sp_qastra->getRastr().get();
+                    spdlog::info("Rastr pointer: {}", (void*)rastrPtr);
+                    if (!rastrPtr) {
+                        qInfo()<< "Rastr pointer is NULL!";
+                        continue;
+                    }
                     BarsMDP->Set_Rastr(m_sp_qastra->getRastr().get());
                     auto ret =BarsMDP->Hello();
                     m_sp_qbarsmdp = std::make_shared<QBarsMDP>();
