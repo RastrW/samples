@@ -36,6 +36,15 @@ if(NOT THIRDPARTY_DIR)
     message(FATAL_ERROR "THIRDPARTY_DIR not defined in parent project!")
 endif()
 
+# ============================================================================
+# те же defines что и в главном проекте
+# ============================================================================
+add_compile_definitions(
+    SPDLOG_HEADER_ONLY
+    SPDLOG_FMT_EXTERNAL
+    FMT_HEADER_ONLY
+)
+
 set(INCLUDES
     "${THIRDPARTY_DIR}/spdlog/include/"
     "${THIRDPARTY_DIR}/fmt/include/"

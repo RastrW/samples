@@ -103,9 +103,16 @@ IPlainRastrRetCode QAstra::OnEvent(const IRastrEventBase& Event) noexcept {
     // Command		// хинт команды UI
    if(Event.Type() == EventTypes::Print){
        qInfo() << QString::fromStdString("OnEvent called");
-       spdlog::info( "OnEvent.Print: {}", static_cast<const IRastrEventPrint&>(Event).Message() );
-       const std::string str_msg { static_cast<const IRastrEventPrint&>(Event).Message() };
-       emit onRastrPrint( str_msg );
+       // QString безопасно копирует из C-string
+       const QString qstr = QString::fromUtf8(
+           static_cast<const IRastrEventPrint&>(Event).Message().c_str()
+           );
+
+       spdlog::info("OnEvent.Print: {}", qstr.toStdString());
+       emit onRastrPrint(qstr.toStdString());
+       //spdlog::info( "OnEvent.Print: {}", static_cast<const IRastrEventPrint&>(Event).Message() );
+       //const std::string str_msg { static_cast<const IRastrEventPrint&>(Event).Message() };
+       //emit onRastrPrint( str_msg );
    }
    return IPlainRastrRetCode::Ok;
 }

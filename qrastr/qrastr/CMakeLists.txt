@@ -219,15 +219,12 @@ target_include_directories(Eigen3::Eigen INTERFACE "${THIRDPARTY_DIR}/eigen")
 message(STATUS "Eigen3 (header-only): ${THIRDPARTY_DIR}/eigen")
 
 # ============================================================================
-# fmt - используем header-only через spdlog
+# fmt и spdlog - header-only для всех модулей
 # ============================================================================
 add_library(Fmt::fmt INTERFACE IMPORTED)
 target_include_directories(Fmt::fmt INTERFACE "${THIRDPARTY_DIR}/fmt/include")
-message(STATUS "fmt (header-only): ${THIRDPARTY_DIR}/fmt/include")
+target_compile_definitions(Fmt::fmt INTERFACE FMT_HEADER_ONLY)
 
-# ============================================================================
-# spdlog - header-only с внешним fmt
-# ============================================================================
 add_library(Spdlog::spdlog INTERFACE IMPORTED)
 target_include_directories(Spdlog::spdlog INTERFACE "${THIRDPARTY_DIR}/spdlog/include")
 target_compile_definitions(Spdlog::spdlog INTERFACE
@@ -235,11 +232,13 @@ target_compile_definitions(Spdlog::spdlog INTERFACE
     SPDLOG_FMT_EXTERNAL
     FMT_HEADER_ONLY
 )
-message(STATUS "spdlog (header-only): ${THIRDPARTY_DIR}/spdlog/include")
 
 # Создаём алиасы для совместимости
 add_library(fmt::fmt ALIAS Fmt::fmt)
 add_library(spdlog::spdlog ALIAS Spdlog::spdlog)
+
+message(STATUS "fmt (header-only): ${THIRDPARTY_DIR}/fmt/include")
+message(STATUS "spdlog (header-only with external fmt): ${THIRDPARTY_DIR}/spdlog/include")
 # ============================================================================
 # libpqxx - опционально собирается из thirdparty на всех платформах
 # ============================================================================
