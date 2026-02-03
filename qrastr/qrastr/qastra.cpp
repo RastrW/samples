@@ -57,6 +57,7 @@ spdlog::level::level_enum QAstra::getSpdLevel(const LogMessageTypes lmt){
 }
 
 IPlainRastrRetCode QAstra::OnEvent(const IRastrEventLog& Event) noexcept  {
+    /*
    //spdlog::info( "OnEvent.Log Status: {:3}  StageId: {:2} EventMsg: {:40} Table: {:10}  Column: {:5} Index: {:5} UIForm: {:10}"
    spdlog::log( getSpdLevel(Event.Status()), "OnEvent.Log Status: {:3}  StageId: {:2} EventMsg: {:40} Table: {:10}  Column: {:5} Index: {:5} UIForm: {:10}"
        , static_cast<std::underlying_type<LogMessageTypes>::type>(Event.Status())
@@ -75,23 +76,70 @@ IPlainRastrRetCode QAstra::OnEvent(const IRastrEventLog& Event) noexcept  {
    log_data.str_col    = Event.DBLocation().Column();
    log_data.n_indx     = Event.DBLocation().Index();
    log_data.str_uiform = Event.UIForm();
+   */
+    qInfo() << QString::fromStdString("OnEvent for IRastrEventLog is called");
+    // Безопасное копирование всех строк из astra.dll
+    const QString qstr_msg = QString::fromUtf8(Event.Message().c_str());
+    const QString qstr_table = QString::fromUtf8(Event.DBLocation().Table().c_str());
+    const QString qstr_column = QString::fromUtf8(Event.DBLocation().Column().c_str());
+    const QString qstr_uiform = QString::fromUtf8(Event.UIForm().c_str());
+
+    spdlog::log(getSpdLevel(Event.Status()),
+                "OnEvent.Log Status: {:3}  StageId: {:2} EventMsg: {:40} Table: {:10}  Column: {:5} Index: {:5} UIForm: {:10}",
+                static_cast<std::underlying_type<LogMessageTypes>::type>(Event.Status()),
+                Event.StageId(),
+                qstr_msg.toStdString(),
+                qstr_table.toStdString(),
+                qstr_column.toStdString(),
+                Event.DBLocation().Index(),
+                qstr_uiform.toStdString()
+                );
+
+    _log_data log_data;
+    log_data.lmt        = Event.Status();
+    log_data.n_stage_id = Event.StageId();
+    log_data.str_msg    = qstr_msg.toStdString();
+    log_data.str_table  = qstr_table.toStdString();
+    log_data.str_col    = qstr_column.toStdString();
+    log_data.n_indx     = Event.DBLocation().Index();
+    log_data.str_uiform = qstr_uiform.toStdString();
+
    emit onRastrLog(log_data);
    return IPlainRastrRetCode::Ok;
 }
 
 IPlainRastrRetCode QAstra::OnEvent(const IRastrEventHint& Event) noexcept  {
-   _hint_data dh;
-   dh.hint       = Event.Hint();
-   dh.str_table  = Event.DBLocation().Table();
-   dh.str_column = Event.DBLocation().Column();
-   dh.n_indx     = Event.DBLocation().Index();
-   spdlog::debug( "OnEvent.Hint: [{:10}] [{:1}] Table: {:10} Column: {:5} Index: {}"
-       , getHintName(Event.Hint())
-       , static_cast<std::underlying_type<EventHints>::type>(Event.Hint())
-       , Event.DBLocation().Table()
-       , Event.DBLocation().Column()
-       , Event.DBLocation().Index()
-   );
+    qInfo() << "OnEvent for IRastrEventHint is called";
+    // Безопасное копирование строк
+    const QString qstr_table = QString::fromUtf8(Event.DBLocation().Table().c_str());
+    const QString qstr_column = QString::fromUtf8(Event.DBLocation().Column().c_str());
+    /*
+       _hint_data dh;
+       dh.hint       = Event.Hint();
+       dh.str_table  = Event.DBLocation().Table();
+       dh.str_column = Event.DBLocation().Column();
+       dh.n_indx     = Event.DBLocation().Index();
+       spdlog::debug( "OnEvent.Hint: [{:10}] [{:1}] Table: {:10} Column: {:5} Index: {}"
+           , getHintName(Event.Hint())
+           , static_cast<std::underlying_type<EventHints>::type>(Event.Hint())
+           , Event.DBLocation().Table()
+           , Event.DBLocation().Column()
+           , Event.DBLocation().Index()
+       );
+    */
+    _hint_data dh;
+    dh.hint       = Event.Hint();
+    dh.str_table  = qstr_table.toStdString();
+    dh.str_column = qstr_column.toStdString();
+    dh.n_indx     = Event.DBLocation().Index();
+
+    spdlog::debug("OnEvent.Hint: [{:10}] [{:1}] Table: {:10} Column: {:5} Index: {}",
+                  getHintName(Event.Hint()),
+                  static_cast<std::underlying_type<EventHints>::type>(Event.Hint()),
+                  qstr_table.toStdString(),
+                  qstr_column.toStdString(),
+                  Event.DBLocation().Index()
+                  );
    emit onRastrHint( dh );
    return IPlainRastrRetCode::Ok;
 }
@@ -102,7 +150,7 @@ IPlainRastrRetCode QAstra::OnEvent(const IRastrEventBase& Event) noexcept {
     // Hint,		// хинт изменения
     // Command		// хинт команды UI
    if(Event.Type() == EventTypes::Print){
-       qInfo() << QString::fromStdString("OnEvent called");
+       qInfo() << QString::fromStdString("OnEvent for IRastrEventBase is called");
        // QString безопасно копирует из C-string
        const QString qstr = QString::fromUtf8(
            static_cast<const IRastrEventPrint&>(Event).Message().c_str()
