@@ -234,19 +234,27 @@ void App::loadPlugins(){
         // Проверка метаданных перед загрузкой
         QJsonObject metaData = loader.metaData();
         if(metaData.isEmpty()) {
-            spdlog::warn("{} is not a valid Qt plugin (no metadata)",
-                         fileName.toStdString());
+             qWarning()<< "{} is not a valid Qt plugin (no metadata)",
+                         fileName.toStdString();
             continue;
         }
 
         // Проверка ошибок
         if(!loader.load()) {
-            spdlog::error("Failed to load plugin {}: {}",
+            qWarning()<< "Failed to load plugin {}: {}",
                           fileName.toStdString(),
-                          loader.errorString().toStdString());
+                          loader.errorString().toStdString();
             continue;
         }
         QObject *plugin = loader.instance();
+
+        if(!plugin){
+            qWarning()<< "Plugin instance is NULL for {}", fileName.toStdString();
+            continue;
+        }
+
+         qInfo()<< "Successfully loaded plugin: {}", fileName.toStdString();
+
         if(plugin){
             spdlog::info( "Load dynamic plugin {}/{} : {}", pluginsDir.absolutePath().toStdString(), fileName.toStdString(), plugin->objectName().toStdString());
             auto iRastr = qobject_cast<InterfaceRastr *>(plugin);
@@ -259,7 +267,7 @@ void App::loadPlugins(){
                     if(nullptr==rastr){
                         spdlog::error( "rastr==null" );
                         assert(!"may be u haven't license!");
-                        qDebug( "Plugin Rastr no load (rastr==null)! may be u haven't license!" );
+                        qInfo( "Plugin Rastr no load (rastr==null)! may be u haven't license!" );
                         continue;
                     }
                     //m_sp_qastra = std::move( std::make_shared<QAstra>());

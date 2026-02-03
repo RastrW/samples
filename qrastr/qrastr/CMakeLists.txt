@@ -6,7 +6,6 @@
 #   - AstraLinux 1.7 (clang-13)
 #
 # Все платформы  используют библиотеки из thirdparty
-# (либо precompiled, либо собираемые из исходников через add_subdirectory)
 # ============================================================================
 
 cmake_minimum_required(VERSION 3.23)
@@ -167,7 +166,6 @@ option(BUILD_WITH_PQ "Build with libpq" OFF)
 message(STATUS "Build options:")
 message(STATUS "  QRASTR_BUILD_WITH_MCR: ${QRASTR_BUILD_WITH_MCR}")
 message(STATUS "  BUILD_WITH_ASTRA: ${BUILD_WITH_ASTRA}")
-message(STATUS "  USE_PRECOMPILED_LIBS: ${USE_PRECOMPILED_LIBS}")
 message(STATUS "  BUILD_WITH_PQ: ${BUILD_WITH_PQ}")
 
 # ============================================================================
@@ -265,9 +263,6 @@ message(STATUS "  Include dir: ${QTITAN_INC_DIR}")
 
 # ============================================================================
 # Helper Function for Third-Party Libraries
-# Эта функция управляет подключением сторонних библиотек в двух режимах:
-# 1. USE_PRECOMPILED_LIBS=ON: использовать предсобранные .so/.lib файлы
-# 2. USE_PRECOMPILED_LIBS=OFF: собрать библиотеку из исходников через add_subdirectory
 # ============================================================================
 function(add_thirdparty_library LIB_NAME LIB_PATH)
     set(options USE_DEBUG_SUFFIX)
@@ -284,63 +279,53 @@ function(add_thirdparty_library LIB_NAME LIB_PATH)
         set(ARG_LIB_REAL_NAME "${ARG_LIB_REAL_NAME}d")
     endif()
 
-    if(USE_PRECOMPILED_LIBS)
-        set(PRECOMPILED_DIR "${THIRDPARTY_DIR}/compile/${LIB_NAME}/${PLATFORM_DIR}/${CONFIG_DIR}")
+    set(PRECOMPILED_DIR "${THIRDPARTY_DIR}/compile/${LIB_NAME}/${PLATFORM_DIR}/${CONFIG_DIR}")
 
-        find_library(${LIB_NAME}_LIBRARY
-            NAMES ${ARG_LIB_REAL_NAME}
-            PATHS ${PRECOMPILED_DIR}/lib
-            NO_DEFAULT_PATH
+    find_library(${LIB_NAME}_LIBRARY
+        NAMES ${ARG_LIB_REAL_NAME}
+        PATHS ${PRECOMPILED_DIR}/lib
+        NO_DEFAULT_PATH
+    )
+
+    set(${LIB_NAME}_INCLUDE_DIR "${PRECOMPILED_DIR}/include")
+    if(NOT EXISTS "${${LIB_NAME}_INCLUDE_DIR}")
+        set(${LIB_NAME}_INCLUDE_DIR "${LIB_NAME}_INCLUDE_DIR-NOTFOUND")
+    endif()
+
+    if(NOT ${LIB_NAME}_LIBRARY OR NOT EXISTS "${${LIB_NAME}_INCLUDE_DIR}")
+        message(FATAL_ERROR
+            "Precompiled ${LIB_NAME} not found in ${PRECOMPILED_DIR}\n"
+            "  Library: ${${LIB_NAME}_LIBRARY}\n"
+            "  Include: ${${LIB_NAME}_INCLUDE_DIR}\n"
+            "  Looking for: ${ARG_LIB_REAL_NAME}")
+    endif()
+
+    add_library(${LIB_NAME} UNKNOWN IMPORTED)
+    set_target_properties(${LIB_NAME} PROPERTIES
+        IMPORTED_LOCATION "${${LIB_NAME}_LIBRARY}"
+        INTERFACE_INCLUDE_DIRECTORIES "${${LIB_NAME}_INCLUDE_DIR}"
+    )
+
+    # Специальные настройки для spdlog
+    if("${LIB_NAME}" STREQUAL "spdlog")
+        set_target_properties(spdlog PROPERTIES
+            INTERFACE_COMPILE_DEFINITIONS SPDLOG_FMT_EXTERNAL
         )
+        message(STATUS "spdlog uses SPDLOG_FMT_EXTERNAL")
+    endif()
 
-        set(${LIB_NAME}_INCLUDE_DIR "${PRECOMPILED_DIR}/include")
-        if(NOT EXISTS "${${LIB_NAME}_INCLUDE_DIR}")
-            set(${LIB_NAME}_INCLUDE_DIR "${LIB_NAME}_INCLUDE_DIR-NOTFOUND")
-        endif()
+    message(STATUS "Using precompiled ${LIB_NAME}: ${${LIB_NAME}_LIBRARY}")
 
-        if(NOT ${LIB_NAME}_LIBRARY OR NOT EXISTS "${${LIB_NAME}_INCLUDE_DIR}")
-            message(FATAL_ERROR
-                "Precompiled ${LIB_NAME} not found in ${PRECOMPILED_DIR}\n"
-                "  Library: ${${LIB_NAME}_LIBRARY}\n"
-                "  Include: ${${LIB_NAME}_INCLUDE_DIR}\n"
-                "  Looking for: ${ARG_LIB_REAL_NAME}")
-        endif()
-
-        add_library(${LIB_NAME} UNKNOWN IMPORTED)
-        set_target_properties(${LIB_NAME} PROPERTIES
-            IMPORTED_LOCATION "${${LIB_NAME}_LIBRARY}"
-            INTERFACE_INCLUDE_DIRECTORIES "${${LIB_NAME}_INCLUDE_DIR}"
+    # Специальные настройки для qtadvanceddocking
+    if("${LIB_NAME}" STREQUAL "qtadvanceddocking")
+        target_include_directories(qtadvanceddocking INTERFACE
+            ${THIRDPARTY_DIR}/Qt-Advanced-Docking-System/src
         )
-
-        # Специальные настройки для spdlog
-        if("${LIB_NAME}" STREQUAL "spdlog")
-            set_target_properties(spdlog PROPERTIES
-                INTERFACE_COMPILE_DEFINITIONS SPDLOG_FMT_EXTERNAL
-            )
-            message(STATUS "spdlog uses SPDLOG_FMT_EXTERNAL")
-        endif()
-
-        message(STATUS "Using precompiled ${LIB_NAME}: ${${LIB_NAME}_LIBRARY}")
-
-        # Специальные настройки для qtadvanceddocking
-        if("${LIB_NAME}" STREQUAL "qtadvanceddocking")
-            target_include_directories(qtadvanceddocking INTERFACE
-                ${THIRDPARTY_DIR}/Qt-Advanced-Docking-System/src
-            )
-        endif()
-    else()
-        if(NOT EXISTS "${LIB_PATH}/CMakeLists.txt")
-            message(FATAL_ERROR "${LIB_NAME} source not found at: ${LIB_PATH}")
-        endif()
-
-        message(STATUS "Building ${LIB_NAME} from source")
-        add_subdirectory(${LIB_PATH} ${CMAKE_BINARY_DIR}/${LIB_NAME})
     endif()
 endfunction()
 
 # ============================================================================
-# System Libraries - все платформы используют thirdparty
-# Стратегия:
+# System Libraries
 # - Boost и Eigen3: header-only библиотеки из thirdparty
 # - fmt, spdlog: собираются через add_thirdparty_library
 # - libpqxx: опционально собирается через add_thirdparty_library (зависит от наличия PostgreSQL)
@@ -371,19 +356,14 @@ add_thirdparty_library(fmt "${THIRDPARTY_DIR}/fmt" USE_DEBUG_SUFFIX)
 add_thirdparty_library(spdlog "${THIRDPARTY_DIR}/spdlog" USE_DEBUG_SUFFIX)
 
 # Создаём алиасы для совместимости с find_package
-if(USE_PRECOMPILED_LIBS)
-    add_library(fmt::fmt ALIAS fmt)
-    add_library(spdlog::spdlog ALIAS spdlog)
-endif()
-
+add_library(fmt::fmt ALIAS fmt)
+add_library(spdlog::spdlog ALIAS spdlog)
 # ============================================================================
 # libpqxx - опционально собирается из thirdparty на всех платформах
 # ============================================================================
 if(BUILD_WITH_PQ)
     add_thirdparty_library(libpqxx "${THIRDPARTY_DIR}/libpqxx")
-    if(USE_PRECOMPILED_LIBS)
-        add_library(libpqxx::pqxx ALIAS libpqxx)
-    endif()
+    add_library(libpqxx::pqxx ALIAS libpqxx)
 endif()
 
 # ============================================================================
@@ -434,39 +414,19 @@ message(STATUS "qmcr subproject added")
 # ============================================================================
 # Third-Party Libraries
 # ----------------------------------------------------------------------------
-# Metakit - все платформы собирают из thirdparty
-# ----------------------------------------------------------------------------
-if(USE_PRECOMPILED_LIBS)
-    # Metakit собирается только из precompiled (проблемы с новыми компиляторами)
-    add_thirdparty_library(metakit "${THIRDPARTY_DIR}/metakit"
-        LIB_REAL_NAME "mk4")
-endif()
+# Metakit
+add_thirdparty_library(metakit "${THIRDPARTY_DIR}/metakit"
+    LIB_REAL_NAME "mk4")
 
-# ----------------------------------------------------------------------------
-# Qt-Advanced-Docking-System - все платформы собирают из thirdparty
-# ----------------------------------------------------------------------------
+# Qt-Advanced-Docking-System
 add_thirdparty_library(qtadvanceddocking "${THIRDPARTY_DIR}/Qt-Advanced-Docking-System"
     LIB_REAL_NAME "qtadvanceddocking-qt6"
     USE_DEBUG_SUFFIX)
 
-# ----------------------------------------------------------------------------
-# SDL3 и SDL3_image - все платформы собирают из thirdparty
-# ----------------------------------------------------------------------------
-if(NOT USE_PRECOMPILED_LIBS)
-    # Временно уменьшаем уровень логирования CMake при сборке SDL
-    set(CMAKE_MESSAGE_LOG_LEVEL WARNING)
-endif()
-
 add_thirdparty_library(SDL3 "${THIRDPARTY_DIR}/SDL")
 add_thirdparty_library(SDL3_image "${THIRDPARTY_DIR}/SDL_image")
 
-if(NOT USE_PRECOMPILED_LIBS)
-    set(CMAKE_MESSAGE_LOG_LEVEL STATUS)
-endif()
-
-# ----------------------------------------------------------------------------
-# Scintilla - все платформы собирают из thirdparty
-# ----------------------------------------------------------------------------
+# Scintilla
 add_thirdparty_library(scintilla "${THIRDPARTY_DIR}/scintilla")
 
 # Scintilla требует дополнительные include директории
@@ -757,9 +717,7 @@ if(QT_VERSION_MAJOR EQUAL 6)
 endif()
 
 # Third-party libraries
-if(USE_PRECOMPILED_LIBS)
-    target_link_libraries(${PROJECT_NAME} PRIVATE metakit)
-endif()
+target_link_libraries(${PROJECT_NAME} PRIVATE metakit)
 
 target_link_libraries(${PROJECT_NAME} PRIVATE
     qtadvanceddocking
