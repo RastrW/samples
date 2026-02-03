@@ -63,20 +63,42 @@ else()
     )
 endif()
 
+target_include_directories(ti PRIVATE ${INCLUDES})
+# ============================================================================
+# Линковка библиотек
+# ============================================================================
 target_link_libraries(ti PRIVATE
     Qt${QT_VERSION_MAJOR}::Core
     Qt${QT_VERSION_MAJOR}::Gui
     Qt${QT_VERSION_MAJOR}::Widgets
 )
 
-if(DEFINED COMPILE_OPTIONS)
-    target_compile_options(ti PRIVATE ${COMPILE_OPTIONS})
+message(STATUS "IMPORTED_LOCATION FMT = ${THIRDPARTY_DIR}/compile/fmt/${PLATFORM_DIR}/${CONFIG_DIR}/bin/fmtd.dll")
+message(STATUS "IMPORTED_LOCATION SPDLOG = ${THIRDPARTY_DIR}/compile/spdlog/${PLATFORM_DIR}/${CONFIG_DIR}/bin/spdlogd.dll")
+
+# Создаем imported targets для fmt и spdlog (такой же код)
+if(NOT TARGET fmt::fmt)
+    message(STATUS "Creating imported target fmt::fmt")
+    add_library(fmt::fmt SHARED IMPORTED)
+    set_target_properties(fmt::fmt PROPERTIES
+        IMPORTED_LOCATION "${THIRDPARTY_DIR}/compile/fmt/${PLATFORM_DIR}/${CONFIG_DIR}/bin/fmtd.dll"
+        IMPORTED_IMPLIB "${THIRDPARTY_DIR}/compile/fmt/${PLATFORM_DIR}/${CONFIG_DIR}/lib/fmtd.lib"
+        INTERFACE_INCLUDE_DIRECTORIES "${THIRDPARTY_DIR}/compile/fmt/${PLATFORM_DIR}/${CONFIG_DIR}/include"
+    )
+else()
+    message(STATUS "Target fmt::fmt already exists")
 endif()
 
-target_include_directories(ti PRIVATE ${INCLUDES})
+if(NOT TARGET spdlog::spdlog)
+    message(STATUS "Creating imported target spdlog::spdlog")
+    add_library(spdlog::spdlog SHARED IMPORTED)
+    set_target_properties(spdlog::spdlog PROPERTIES
+        IMPORTED_LOCATION "${THIRDPARTY_DIR}/compile/spdlog/${PLATFORM_DIR}/${CONFIG_DIR}/bin/spdlogd.dll"
+        IMPORTED_IMPLIB "${THIRDPARTY_DIR}/compile/spdlog/${PLATFORM_DIR}/${CONFIG_DIR}/lib/spdlogd.lib"
+        INTERFACE_INCLUDE_DIRECTORIES "${THIRDPARTY_DIR}/compile/spdlog/${PLATFORM_DIR}/${CONFIG_DIR}/include"
+    )
+else()
+    message(STATUS "Target spdlog::spdlog already exists")
+endif()
 
-# Добавляем compile definitions для header-only библиотек
-target_compile_definitions(ti PRIVATE
-    SPDLOG_HEADER_ONLY
-    FMT_HEADER_ONLY
-)
+target_link_libraries(ti PRIVATE fmt::fmt spdlog::spdlog)

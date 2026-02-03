@@ -160,7 +160,6 @@ message(STATUS "  Platform directory: ${PLATFORM_DIR}")
 # ============================================================================
 option(QRASTR_BUILD_WITH_MCR "Build qmcr as library for qrastr" ON)
 option(BUILD_WITH_ASTRA "Build with ASTRA library" ON)
-option(USE_PRECOMPILED_LIBS "Use precompiled libraries instead of building from source" ON)
 option(BUILD_WITH_PQ "Build with libpq" OFF)
 
 message(STATUS "Build options:")
@@ -394,9 +393,10 @@ message(STATUS "Qt found: ${QT_VERSION} at ${Qt${QT_VERSION_MAJOR}_DIR}")
 # Plugins (ASTRA-dependent)
 # ============================================================================
 if(BUILD_WITH_ASTRA)
-    # Передаем THIRDPARTY_DIR в дочерние проекты
-    # *DEPENDENCIES_LOCATION ранее
-    set(THIRDPARTY_DIR "${THIRDPARTY_DIR}" PARENT_SCOPE)
+    # Передаем переменные в дочерние проекты через CACHE
+    set(THIRDPARTY_DIR "${THIRDPARTY_DIR}" CACHE INTERNAL "Thirdparty directory")
+    set(PLATFORM_DIR "${PLATFORM_DIR}" CACHE INTERNAL "Platform directory")
+    set(CONFIG_DIR "${CONFIG_DIR}" CACHE INTERNAL "Config directory")
 
     add_subdirectory(plugins/rastr)
     add_subdirectory(plugins/ti)
@@ -683,13 +683,29 @@ endif()
 # ============================================================================
 # Link Libraries - линковка библиотек к исполняемому файлу
 # ============================================================================
-# set_target_properties can not be used on an ALIAS target.
 if(WIN32)
-    set_target_properties(fmt PROPERTIES AUTOMOC OFF AUTOUIC OFF AUTORCC OFF)
-    set_target_properties(spdlog PROPERTIES AUTOMOC OFF AUTOUIC OFF AUTORCC OFF)
-else()
-    set_target_properties(fmt PROPERTIES AUTOMOC OFF AUTOUIC OFF AUTORCC OFF)
-    set_target_properties(spdlog PROPERTIES AUTOMOC OFF AUTOUIC OFF AUTORCC OFF)
+    # Копируем fmt и spdlog DLL в output directory
+    add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
+        COMMAND ${CMAKE_COMMAND} -E copy_if_different
+            "${THIRDPARTY_DIR}/compile/fmt/${PLATFORM_DIR}/${CONFIG_DIR}/bin/fmtd.dll"
+            "$<TARGET_FILE_DIR:${PROJECT_NAME}>"
+        COMMAND ${CMAKE_COMMAND} -E copy_if_different
+            "${THIRDPARTY_DIR}/compile/spdlog/${PLATFORM_DIR}/${CONFIG_DIR}/bin/spdlogd.dll"
+            "$<TARGET_FILE_DIR:${PROJECT_NAME}>"
+        COMMENT "Copying fmt and spdlog DLLs"
+    )
+
+    # Также копируем в plugins directory
+    add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
+        COMMAND ${CMAKE_COMMAND} -E make_directory "$<TARGET_FILE_DIR:${PROJECT_NAME}>/plugins"
+        COMMAND ${CMAKE_COMMAND} -E copy_if_different
+            "${THIRDPARTY_DIR}/compile/fmt/${PLATFORM_DIR}/${CONFIG_DIR}/bin/fmtd.dll"
+            "$<TARGET_FILE_DIR:${PROJECT_NAME}>/plugins"
+        COMMAND ${CMAKE_COMMAND} -E copy_if_different
+            "${THIRDPARTY_DIR}/compile/spdlog/${PLATFORM_DIR}/${CONFIG_DIR}/bin/spdlogd.dll"
+            "$<TARGET_FILE_DIR:${PROJECT_NAME}>/plugins"
+        COMMENT "Copying fmt and spdlog DLLs to plugins"
+    )
 endif()
 
 target_link_libraries(${PROJECT_NAME} PRIVATE

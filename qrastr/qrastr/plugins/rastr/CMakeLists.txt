@@ -28,23 +28,28 @@ else()
 endif()
 
 # ============================================================================
-# Получаем THIRDPARTY_DIR из главного проекта
-# В оригинале это было DEPENDENCIES_LOCATION
+# Получаем переменные из главного проекта
 # ============================================================================
-get_directory_property(THIRDPARTY_DIR DIRECTORY ${CMAKE_SOURCE_DIR} DEFINITION THIRDPARTY_DIR)
-
 if(NOT THIRDPARTY_DIR)
     message(FATAL_ERROR "THIRDPARTY_DIR not defined in parent project!")
 endif()
 
+if(NOT PLATFORM_DIR)
+    message(FATAL_ERROR "PLATFORM_DIR not defined in parent project!")
+endif()
+
+if(NOT CONFIG_DIR)
+    message(FATAL_ERROR "CONFIG_DIR not defined in parent project!")
+endif()
+
 set(INCLUDES
     "${THIRDPARTY_DIR}/spdlog/include/"
+    "${THIRDPARTY_DIR}/fmt/include/"
     "../../"
 )
 
 # ============================================================================
-# Используем include_directories, как в оригинале!
-# Это делает заголовки доступными, но НЕ линкует библиотеку
+# Используем include_directories для Astra
 # ============================================================================
 include_directories(${Astra_INCLUDE_DIR})
 
@@ -65,20 +70,42 @@ else()
     )
 endif()
 
+target_include_directories(rastr PRIVATE ${INCLUDES})
+# ============================================================================
+# Линковка библиотек
+# ============================================================================
 target_link_libraries(rastr PRIVATE
     Qt${QT_VERSION_MAJOR}::Core
     Qt${QT_VERSION_MAJOR}::Gui
     Qt${QT_VERSION_MAJOR}::Widgets
 )
 
-if(DEFINED COMPILE_OPTIONS)
-    target_compile_options(rastr PRIVATE ${COMPILE_OPTIONS})
+message(STATUS "IMPORTED_LOCATION FMT = ${THIRDPARTY_DIR}/compile/fmt/${PLATFORM_DIR}/${CONFIG_DIR}/bin/fmtd.dll")
+message(STATUS "IMPORTED_LOCATION SPDLOG = ${THIRDPARTY_DIR}/compile/spdlog/${PLATFORM_DIR}/${CONFIG_DIR}/bin/spdlogd.dll")
+
+# Создаем imported targets для fmt и spdlog
+if(NOT TARGET fmt::fmt)
+    message(STATUS "Creating imported target fmt::fmt")
+    add_library(fmt::fmt SHARED IMPORTED)
+    set_target_properties(fmt::fmt PROPERTIES
+        IMPORTED_LOCATION "${THIRDPARTY_DIR}/compile/fmt/${PLATFORM_DIR}/${CONFIG_DIR}/bin/fmtd.dll"
+        IMPORTED_IMPLIB "${THIRDPARTY_DIR}/compile/fmt/${PLATFORM_DIR}/${CONFIG_DIR}/lib/fmtd.lib"
+        INTERFACE_INCLUDE_DIRECTORIES "${THIRDPARTY_DIR}/compile/fmt/${PLATFORM_DIR}/${CONFIG_DIR}/include"
+    )
+else()
+    message(STATUS "Target fmt::fmt already exists")
 endif()
 
-target_include_directories(rastr PRIVATE ${INCLUDES})
+if(NOT TARGET spdlog::spdlog)
+    message(STATUS "Creating imported target spdlog::spdlog")
+    add_library(spdlog::spdlog SHARED IMPORTED)
+    set_target_properties(spdlog::spdlog PROPERTIES
+        IMPORTED_LOCATION "${THIRDPARTY_DIR}/compile/spdlog/${PLATFORM_DIR}/${CONFIG_DIR}/bin/spdlogd.dll"
+        IMPORTED_IMPLIB "${THIRDPARTY_DIR}/compile/spdlog/${PLATFORM_DIR}/${CONFIG_DIR}/lib/spdlogd.lib"
+        INTERFACE_INCLUDE_DIRECTORIES "${THIRDPARTY_DIR}/compile/spdlog/${PLATFORM_DIR}/${CONFIG_DIR}/include"
+    )
+else()
+    message(STATUS "Target spdlog::spdlog already exists")
+endif()
 
-# Добавляем compile definitions для header-only библиотек
-target_compile_definitions(rastr PRIVATE
-    SPDLOG_HEADER_ONLY
-    FMT_HEADER_ONLY
-)
+target_link_libraries(rastr PRIVATE fmt::fmt spdlog::spdlog)
