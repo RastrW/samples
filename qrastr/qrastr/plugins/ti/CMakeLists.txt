@@ -84,5 +84,3 @@ target_link_libraries(ti PRIVATE
     Qt${QT_VERSION_MAJOR}::Gui
     Qt${QT_VERSION_MAJOR}::Widgets
 )
-
-# НЕ линкуем fmt и spdlog!

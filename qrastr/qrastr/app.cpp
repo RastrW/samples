@@ -400,12 +400,13 @@ long App::start(){
                 std::filesystem::path path_template = path_templates;
                 path_template /= templ_to_load;
                 //path_template += "/" + templ_to_load;
-                m_sp_qastra->Load( eLoadCode::RG_REPL, "", path_template.string() );
+                IPlainRastrRetCode res = m_sp_qastra->Load( eLoadCode::RG_REPL, "", path_template.string() );
+                int check = 0;
             }
             for(const Params::_v_file_templates::value_type& file_template : Params::GetInstance()->getStartLoadFileTemplates()){
                 std::filesystem::path path_template = path_templates;
                 path_template /= file_template.second;
-                //m_sp_qastra->Load( eLoadCode::RG_REPL, file_template.first, path_template.string() );
+                IPlainRastrRetCode res = m_sp_qastra->Load( eLoadCode::RG_REPL, file_template.first, path_template.string() );
                 if(n_res<0){
                     spdlog::error("{} =LoadFile()", n_res);
                     QMessageBox mb( QMessageBox::Icon::Critical, QObject::tr("Error"),

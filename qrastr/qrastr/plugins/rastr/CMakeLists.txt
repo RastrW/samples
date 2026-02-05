@@ -75,6 +75,3 @@ target_link_libraries(rastr PRIVATE
     Qt${QT_VERSION_MAJOR}::Gui
     Qt${QT_VERSION_MAJOR}::Widgets
 )
-
-# НЕ линкуем fmt и spdlog!
-# Плагины будут использовать символы из astra.dll через runtime linking

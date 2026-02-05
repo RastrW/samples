@@ -59,10 +59,10 @@ if(MSVC)
     # Отключение макросов min/max из windows.h (конфликт с std::min/max)
     add_compile_definitions( NOMINMAX )
     # if (CMAKE_BUILD_TYPE MATCHES Debug)
-    # else()
+    #  else()
         # Debug was fall on this with "__acrt_first_block == header", beacuse Qt have MtD heap but this have Mt heap
-        set(CMAKE_MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>")
-    # endif()
+    #     set(CMAKE_MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>")
+    #  endif()
 endif()
 
 # ============================================================================
@@ -74,12 +74,10 @@ include(cmake/compiler_and_platform.cmake)
 # Options
 # ============================================================================
 option(QRASTR_BUILD_WITH_MCR "Build qmcr as library for qrastr" ON)
-option(BUILD_WITH_ASTRA "Build with ASTRA library" ON)
 option(BUILD_WITH_PQ "Build with libpq" OFF)
 
 message(STATUS "Build options:")
 message(STATUS "  QRASTR_BUILD_WITH_MCR: ${QRASTR_BUILD_WITH_MCR}")
-message(STATUS "  BUILD_WITH_ASTRA: ${BUILD_WITH_ASTRA}")
 message(STATUS "  BUILD_WITH_PQ: ${BUILD_WITH_PQ}")
 
 # ============================================================================
@@ -99,31 +97,28 @@ endif()
 # Путь к библиотеке ASTRA с бинарными файлами
 set(ASTRA_BIN_ROOT "${CMAKE_CURRENT_SOURCE_DIR}/../lib/astra" CACHE PATH "Path to precompiled ASTRA library")
 
-if(BUILD_WITH_ASTRA)
-    if(NOT IS_DIRECTORY ${ASTRA_BIN_ROOT})
-        message(FATAL_ERROR "ASTRA binary directory not found: ${ASTRA_BIN_ROOT}")
-    endif()
-
-    message(STATUS "ASTRA_BIN_ROOT: ${ASTRA_BIN_ROOT}")
-
-    # Ищем конфигурацию ASTRA
-    # CONFIG означает: FindCOMCK.cmake — даже не ищется, ищется comck-config.cmake
-    # HINTS вместо list(APPEND CMAKE_PREFIX_PATH "${PATH}")
-    find_package(COMCK CONFIG HINTS "${ASTRA_BIN_ROOT}/lib/cmake/COMCK")
-    find_package(Astra CONFIG HINTS "${ASTRA_BIN_ROOT}/lib/cmake/Astra")
-
-    if(NOT COMCK_FOUND)
-        message(FATAL_ERROR "COMCK not found")
-    endif()
-
-    if(NOT Astra_FOUND)
-        message(FATAL_ERROR "Astra not found")
-    endif()
-
-    message(STATUS "COMCK found: ${COMCK_FOUND}")
-    message(STATUS "Astra found: ${Astra_FOUND}")
+if(NOT IS_DIRECTORY ${ASTRA_BIN_ROOT})
+    message(FATAL_ERROR "ASTRA binary directory not found: ${ASTRA_BIN_ROOT}")
 endif()
 
+message(STATUS "ASTRA_BIN_ROOT: ${ASTRA_BIN_ROOT}")
+
+# Ищем конфигурацию ASTRA
+# CONFIG означает: FindCOMCK.cmake — даже не ищется, ищется comck-config.cmake
+# HINTS вместо list(APPEND CMAKE_PREFIX_PATH "${PATH}")
+find_package(COMCK CONFIG HINTS "${ASTRA_BIN_ROOT}/lib/cmake/COMCK")
+find_package(Astra CONFIG HINTS "${ASTRA_BIN_ROOT}/lib/cmake/Astra")
+
+if(NOT COMCK_FOUND)
+    message(FATAL_ERROR "COMCK not found")
+endif()
+
+if(NOT Astra_FOUND)
+    message(FATAL_ERROR "Astra not found")
+endif()
+
+message(STATUS "COMCK found: ${COMCK_FOUND}")
+message(STATUS "Astra found: ${Astra_FOUND}")
 # ============================================================================
 # Qtitan Configuration
 # ============================================================================
@@ -272,17 +267,15 @@ message(STATUS "Qt found: ${QT_VERSION} at ${Qt${QT_VERSION_MAJOR}_DIR}")
 # ============================================================================
 # Plugins (ASTRA-dependent)
 # ============================================================================
-if(BUILD_WITH_ASTRA)
-    # Передаем переменные в дочерние проекты через CACHE
-    set(THIRDPARTY_DIR "${THIRDPARTY_DIR}" CACHE INTERNAL "Thirdparty directory")
-    set(PLATFORM_DIR "${PLATFORM_DIR}" CACHE INTERNAL "Platform directory")
-    set(CONFIG_DIR "${CONFIG_DIR}" CACHE INTERNAL "Config directory")
+# Передаем переменные в дочерние проекты через CACHE
+set(THIRDPARTY_DIR "${THIRDPARTY_DIR}" CACHE INTERNAL "Thirdparty directory")
+set(PLATFORM_DIR "${PLATFORM_DIR}" CACHE INTERNAL "Platform directory")
+set(CONFIG_DIR "${CONFIG_DIR}" CACHE INTERNAL "Config directory")
 
-    add_subdirectory(plugins/rastr)
-    add_subdirectory(plugins/ti)
-    add_subdirectory(plugins/barsmdp)
-    message(STATUS "ASTRA plugins enabled")
-endif()
+add_subdirectory(plugins/rastr)
+add_subdirectory(plugins/ti)
+add_subdirectory(plugins/barsmdp)
+message(STATUS "ASTRA plugins enabled")
 
 # ============================================================================
 # qmcr subdirectory
@@ -340,18 +333,12 @@ if(TARGET Eigen3::Eigen)
     endif()
 endif()
 
-# Добавляем ASTRA include директории, если ASTRA включена
-if(BUILD_WITH_ASTRA)
-    list(APPEND PROJECT_INCLUDES
-        ${ASTRA_BIN_ROOT}/include
-        ${ASTRA_BIN_ROOT}/include/comck
-    )
-endif()
-
+# Добавляем ASTRA include директории
 list(APPEND PROJECT_INCLUDES
+    ${ASTRA_BIN_ROOT}/include
+    ${ASTRA_BIN_ROOT}/include/comck
     ${CMAKE_CURRENT_SOURCE_DIR}/astra_headers
 )
-
 # ============================================================================
 # Source Files
 # ============================================================================
@@ -504,23 +491,17 @@ set(PROJECT_SOURCES
     # ASTRA
     astra_shared.h
     qastra_events_data.h
+    qastra.h
+    qastra.cpp
+    qti.h
+    qti.cpp
+    qbarsmdp.h
+    qbarsmdp.cpp
 
     # Resources
     qrastr.qrc
     appsettings.json
 )
-
-# ASTRA-specific sources
-if(BUILD_WITH_ASTRA)
-    list(APPEND PROJECT_SOURCES
-        qastra.h
-        qastra.cpp
-        qti.h
-        qti.cpp
-        qbarsmdp.h
-        qbarsmdp.cpp
-    )
-endif()
 
 # Translation files
 set(TS_FILES qrastr_ru_RU.ts)
@@ -592,19 +573,17 @@ set(QTITAN_LIBS
 
 # Astra
 set(ASTRA_LIBS)
-if(BUILD_WITH_ASTRA)
-    list(APPEND ASTRA_LIBS
-        "${ASTRA_BIN_ROOT}/lib/astra.lib"
-        "${ASTRA_BIN_ROOT}/lib/COMCK.lib"
-    )
-endif()
+list(APPEND ASTRA_LIBS
+    "${ASTRA_BIN_ROOT}/lib/astra.lib"
+    "${ASTRA_BIN_ROOT}/lib/COMCK.lib"
+)
 
 # 2) Составляем окончательный список с учётом опций
 set(PROJECT_LINK_LIBS)
 list(APPEND PROJECT_LINK_LIBS ${QT_LIBS})
 list(APPEND PROJECT_LINK_LIBS ${THIRD_PARTY_LIBS})
 list(APPEND PROJECT_LINK_LIBS ${QTITAN_LIBS})
-list(APPEND PROJECT_LINK_LIBS ${ASTRA_LIBS})  # может быть пустым
+list(APPEND PROJECT_LINK_LIBS ${ASTRA_LIBS})
 
 # 3) Применяем один вызов для link'ов
 target_link_libraries(${PROJECT_NAME} PRIVATE ${PROJECT_LINK_LIBS})
@@ -631,19 +610,17 @@ target_link_libraries(${PROJECT_NAME} PRIVATE
 # ============================================================================
 # ASTRA Library Linking
 # ============================================================================
-if(BUILD_WITH_ASTRA)
-    # Копируем DLL на Windows
-    if(WIN32)
-        add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
-            COMMAND ${CMAKE_COMMAND} -E copy_if_different
-                "${ASTRA_BIN_ROOT}/bin/astra.dll"
-                "$<TARGET_FILE_DIR:${PROJECT_NAME}>/plugins/"
-            COMMAND ${CMAKE_COMMAND} -E copy_if_different
-                "${ASTRA_BIN_ROOT}/bin/COMCK.dll"
-                "$<TARGET_FILE_DIR:${PROJECT_NAME}>/plugins/"
-            COMMENT "Copying ASTRA DLLs"
-        )
-    endif()
+# Копируем DLL на Windows
+if(WIN32)
+    add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
+        COMMAND ${CMAKE_COMMAND} -E copy_if_different
+            "${ASTRA_BIN_ROOT}/bin/astra.dll"
+            "$<TARGET_FILE_DIR:${PROJECT_NAME}>/plugins/"
+        COMMAND ${CMAKE_COMMAND} -E copy_if_different
+            "${ASTRA_BIN_ROOT}/bin/COMCK.dll"
+            "$<TARGET_FILE_DIR:${PROJECT_NAME}>/plugins/"
+        COMMENT "Copying ASTRA DLLs"
+    )
 endif()
 
 # ============================================================================
