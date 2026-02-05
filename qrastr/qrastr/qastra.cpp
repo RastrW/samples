@@ -168,7 +168,8 @@ IPlainRastrRetCode QAstra::OnEvent(const IRastrEventBase& Event) noexcept {
 IPlainRastrRetCode QAstra::OnUICommand(const IRastrEventBase& Event, IPlainRastrVariant* Result) noexcept  {
    EventTypes et = Event.Type();
    std::string str;
-   if(Event.Type() == EventTypes::Hint){
+/*
+    if(Event.Type() == EventTypes::Hint){
        str = fmt::format("[{}][{}] {} {} {} "
            , getHintName(static_cast<const IRastrEventHint&>(Event).Hint())
            , static_cast<std::underlying_type<EventHints>::type>( static_cast<const IRastrEventHint&>(Event).Hint() )
@@ -182,7 +183,32 @@ IPlainRastrRetCode QAstra::OnUICommand(const IRastrEventBase& Event, IPlainRastr
            , static_cast<const IRastrEventCommand&>(Event).Arg2()
            , static_cast<const IRastrEventCommand&>(Event).Arg3()
        );
-   }else if(Event.Type() == EventTypes::Log){
+   }
+//*/
+///*
+   if(Event.Type() == EventTypes::Hint){
+       const QString qstr_table = QString::fromUtf8(static_cast<const IRastrEventHint&>(Event).DBLocation().Table().c_str());
+       const QString qstr_column = QString::fromUtf8(static_cast<const IRastrEventHint&>(Event).DBLocation().Column().c_str());
+
+       str = fmt::format("[{}][{}] {} {} {} "
+                         , getHintName(static_cast<const IRastrEventHint&>(Event).Hint())
+                         , static_cast<std::underlying_type<EventHints>::type>( static_cast<const IRastrEventHint&>(Event).Hint() )
+                         , qstr_table.toStdString()
+                         , qstr_column.toStdString()
+                         , static_cast<const IRastrEventHint&>(Event).DBLocation().Index()
+                         );
+   }else if(Event.Type() == EventTypes::Command){
+       const QString qstr_arg1 = QString::fromUtf8(static_cast<const IRastrEventCommand&>(Event).Arg1().c_str());
+       const QString qstr_arg2 = QString::fromUtf8(static_cast<const IRastrEventCommand&>(Event).Arg2().c_str());
+
+       str = fmt::format("{} {} {}"
+                         , qstr_arg1.toStdString() // stringutils::acp_encode
+                         , qstr_arg2.toStdString()
+                         , static_cast<const IRastrEventCommand&>(Event).Arg3()
+                         );
+   }
+//*/
+   else if(Event.Type() == EventTypes::Log){
        const auto& w = static_cast<const IRastrEventLog&>(Event);
        str = fmt::format( "EventTypes::Log" );
    }else if(Event.Type() == EventTypes::Print){

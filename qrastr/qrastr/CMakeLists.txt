@@ -58,13 +58,11 @@ if(MSVC)
     add_compile_definitions( _SILENCE_ALL_MS_EXT_DEPRECATION_WARNINGS )
     # Отключение макросов min/max из windows.h (конфликт с std::min/max)
     add_compile_definitions( NOMINMAX )
-    if (CMAKE_BUILD_TYPE MATCHES Debug)
-    else()
+    # if (CMAKE_BUILD_TYPE MATCHES Debug)
+    # else()
         # Debug was fall on this with "__acrt_first_block == header", beacuse Qt have MtD heap but this have Mt heap
         set(CMAKE_MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>")
-    endif()
-    # CMake сам добавит Debug, если нужно
-    # set(CMAKE_MSVC_RUNTIME_LIBRARY "MultiThreaded")
+    # endif()
 endif()
 
 # ============================================================================
@@ -592,7 +590,7 @@ set(QTITAN_LIBS
     Qtitan::QtitanFastInfoset2
 )
 
-# Astra (опционально)
+# Astra
 set(ASTRA_LIBS)
 if(BUILD_WITH_ASTRA)
     list(APPEND ASTRA_LIBS
@@ -634,11 +632,6 @@ target_link_libraries(${PROJECT_NAME} PRIVATE
 # ASTRA Library Linking
 # ============================================================================
 if(BUILD_WITH_ASTRA)
-    target_link_libraries(${PROJECT_NAME} PRIVATE
-        "${ASTRA_BIN_ROOT}/lib/astra.lib"
-        "${ASTRA_BIN_ROOT}/lib/COMCK.lib"
-    )
-
     # Копируем DLL на Windows
     if(WIN32)
         add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD

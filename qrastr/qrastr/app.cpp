@@ -168,7 +168,6 @@ long App::writeSettings(){
 }
 
 long App::init(){
-    qInfo() << "=== App::init() START ===";
     try{
         auto logg = std::make_shared<spdlog::logger>( "qrastr" );
         spdlog::set_default_logger(logg);
@@ -197,7 +196,6 @@ long App::init(){
         exclog();
         return -99;
     }
-    qInfo() << "=== App::init() END ===";
     return 1;
 }
 
@@ -234,26 +232,23 @@ void App::loadPlugins(){
         // Проверка метаданных перед загрузкой
         QJsonObject metaData = loader.metaData();
         if(metaData.isEmpty()) {
-             qWarning()<< "{} is not a valid Qt plugin (no metadata)",
-                         fileName.toStdString();
+             qWarning()<< fileName + " is not a valid Qt plugin (no metadata)";
             continue;
         }
 
         // Проверка ошибок
         if(!loader.load()) {
-            qWarning()<< "Failed to load plugin {}: {}",
-                          fileName.toStdString(),
-                          loader.errorString().toStdString();
+            qWarning()<< "Failed to load plugin " + fileName + ": " + loader.errorString();
             continue;
         }
         QObject *plugin = loader.instance();
 
         if(!plugin){
-            qWarning()<< "Plugin instance is NULL for {}", fileName.toStdString();
+            qWarning()<< "Plugin instance is NULL for " + fileName;
             continue;
         }
 
-         qInfo()<< "Successfully loaded plugin: {}", fileName.toStdString();
+         qInfo()<< "Successfully loaded plugin: " + fileName;
 
         if(plugin){
             spdlog::info( "Load dynamic plugin {}/{} : {}", pluginsDir.absolutePath().toStdString(), fileName.toStdString(), plugin->objectName().toStdString());
@@ -387,7 +382,6 @@ std::list<CUIForm>& App::GetForms() const {
 }
 
 long App::start(){
-    qInfo() << "=== App::start() START ===";
     try{
         long n_res =0;
         QDir::setCurrent(Params::GetInstance()->getDirData().absolutePath());
@@ -411,7 +405,7 @@ long App::start(){
             for(const Params::_v_file_templates::value_type& file_template : Params::GetInstance()->getStartLoadFileTemplates()){
                 std::filesystem::path path_template = path_templates;
                 path_template /= file_template.second;
-                m_sp_qastra->Load( eLoadCode::RG_REPL, file_template.first, path_template.string() );
+                //m_sp_qastra->Load( eLoadCode::RG_REPL, file_template.first, path_template.string() );
                 if(n_res<0){
                     spdlog::error("{} =LoadFile()", n_res);
                     QMessageBox mb( QMessageBox::Icon::Critical, QObject::tr("Error"),
@@ -439,7 +433,6 @@ long App::start(){
         exclog();
         return -199;
     }
-    qInfo() << "=== App::start() END ===";
     return 1;
 }
 
