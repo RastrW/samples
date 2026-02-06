@@ -63,11 +63,11 @@ SciHlp::SciHlp(QWidget *parent, _en_role role)
     markerSetBack(1,1);
 
 #if _WIN32 //https://www.scintilla.org/LexillaDoc.html
-    typedef void *(__stdcall *CreateLexerFn)(const char* name);
+    typedef void* (__stdcall *CreateLexerFn)(const char* name);
     const QFunctionPointer pfn = QLibrary::resolve("lexilla5", "CreateLexer");
 #else
-    typedef void *(*CreateLexerFn)(const char* name);
-    const QFunctionPointer pfn = QLibrary::resolve("libLexilla.so.5", "CreateLexer");
+    typedef void* (*CreateLexerFn)(const char* name);
+    const QFunctionPointer pfn = QLibrary::resolve("lexilla5", "CreateLexer");
 #endif
     if(pfn == nullptr){
         QMessageBox mb( QMessageBox::Icon::Critical, QObject::tr("Error"),

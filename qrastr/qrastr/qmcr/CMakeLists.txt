@@ -325,15 +325,15 @@ elseif(MINGW)
     endif()
 
 elseif(UNIX)
-    # Linux: использует .so shared libraries или .a static libraries
-    # Сначала пытаемся найти ScintillaEdit
+    # Linux: используем shared library (.so) для динамической загрузки
+
+    # Для Scintilla - статическая линковка
     find_library(SCINTILLA_EDIT_LIB
         NAMES ScintillaEdit libScintillaEdit
         PATHS "${SCINTILLA_DIR}/lib" "${SCINTILLA_DIR}/bin" "${SCI_DIR}/bin"
         NO_DEFAULT_PATH
     )
 
-    # Если не нашли, ищем ScintillaEditBase
     if(NOT SCINTILLA_EDIT_LIB)
         find_library(SCINTILLA_EDIT_BASE_LIB
             NAMES ScintillaEditBase libScintillaEditBase
@@ -342,19 +342,15 @@ elseif(UNIX)
         )
     endif()
 
-    # Ищем Lexilla (может быть .so или .a)
-    find_library(LEXILLA_LIB
-        NAMES lexilla liblexilla Lexilla
-        PATHS "${LEXILLA_DIR}/lib" "${LEXILLA_DIR}/bin" "${SCI_DIR}/bin"
-        NO_DEFAULT_PATH
-    )
+    # Для Lexilla - НЕ линкуем напрямую, только добавляем в RPATH
+    # Lexilla будет загружаться динамически через QLibrary
 
     message(STATUS "Scintilla libraries for Linux:")
     message(STATUS "  ScintillaEdit: ${SCINTILLA_EDIT_LIB}")
     message(STATUS "  ScintillaEditBase: ${SCINTILLA_EDIT_BASE_LIB}")
-    message(STATUS "  Lexilla: ${LEXILLA_LIB}")
+    message(STATUS "  Lexilla will be loaded dynamically from: ${LEXILLA_DIR}/bin")
 
-    # Линкуем найденные библиотеки
+    # Линкуем только Scintilla
     if(SCINTILLA_EDIT_LIB)
         target_link_libraries(qmcr PRIVATE ${SCINTILLA_EDIT_LIB})
     elseif(SCINTILLA_EDIT_BASE_LIB)
@@ -364,16 +360,21 @@ elseif(UNIX)
         message(FATAL_ERROR "Neither ScintillaEdit nor ScintillaEditBase found!")
     endif()
 
-    if(LEXILLA_LIB)
-        target_link_libraries(qmcr PRIVATE ${LEXILLA_LIB})
+    # Добавляем RPATH чтобы приложение могло найти lexilla5.so
+    set_target_properties(qmcr PROPERTIES
+        INSTALL_RPATH "${LEXILLA_DIR}/bin"
+        BUILD_RPATH "${LEXILLA_DIR}/bin"
+    )
+
+    # Копируем lexilla5.so в output directory
+    if(EXISTS "${LEXILLA_DIR}/bin/lexilla5.so")
+        file(COPY "${LEXILLA_DIR}/bin/lexilla5.so"
+             DESTINATION "${CMAKE_BINARY_DIR}")
+        message(STATUS "Copied lexilla5.so to ${CMAKE_BINARY_DIR}")
     else()
-        message(FATAL_ERROR "Lexilla library not found!")
+        message(WARNING "lexilla5.so not found at ${LEXILLA_DIR}/bin/")
     endif()
-
-else()
-    message(FATAL_ERROR "Unsupported platform for Scintilla/Lexilla linking")
 endif()
-
 # ============================================================================
 # Target Properties
 # ============================================================================
