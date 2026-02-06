@@ -306,13 +306,6 @@ set(PROJECT_INCLUDES
     ${QTITAN_ROOT}/include
 )
 
-# Windows Qt6 private headers
-if(WIN32 AND MSVC AND QT_VERSION_MAJOR EQUAL 6)
-    list(APPEND PROJECT_INCLUDES
-        C:/Qt/6.9.3/msvc2022_64/include/QtWidgets/${QT_VERSION}/QtWidgets/private
-    )
-endif()
-
 # Добавляем Boost и Eigen3 include directories
 if(TARGET Boost::boost)
     get_target_property(BOOST_INCLUDES Boost::boost INTERFACE_INCLUDE_DIRECTORIES)
