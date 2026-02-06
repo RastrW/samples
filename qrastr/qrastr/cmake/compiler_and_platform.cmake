@@ -34,16 +34,10 @@ if(WIN32)
 elseif(UNIX AND NOT APPLE)
     set(LIB_PREFIX "lib")
     set(LIB_SUFFIX ".so")
-
     # Определяем компилятор для выбора правильных precompiled библиотек
     # Библиотеки скомпилированные разными компиляторами могут быть несовместимы
-    if(IS_ASTRA_LINUX)
-        set(COMPILER "clang")
-        set(PLATFORM_DIR "linux/clang")
-    else()
-        set(COMPILER "gcc")
-        set(PLATFORM_DIR "linux/gcc")
-    endif()
+    set(COMPILER "gcc")
+    set(PLATFORM_DIR "linux/${COMPILER}")
 else()
     message(FATAL_ERROR "Unsupported platform: ${CMAKE_SYSTEM_NAME}")
 endif()
