@@ -6,7 +6,7 @@
 //    #include <private/qtableview_p.h>
 //#endif
 #if QT_VERSION < QT_VERSION_CHECK(6, 0, 0)
-#include <QtWidgets/private/qtableview_p.h>
+#include <private/qtableview_p.h>
 #endif
 
 RTableCornerButton::RTableCornerButton(QWidget *parent)
@@ -71,7 +71,7 @@ RTableView::RTableView(QWidget *parent) :
 //#if(defined(_MSC_VER))
 #if QT_VERSION < QT_VERSION_CHECK(6, 0, 0)
     Q_D(QTableView);
-    d->cornerWidget = (QTableCornerButton*)&cornerButton;
+    d->cornerWidget = &cornerButton;
 #else
   //  Q_D(QTableView);
     //d->cornerWidget = nullptr;//(QTableCornerButton*)&cornerButton;
