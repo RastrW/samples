@@ -6,7 +6,7 @@
 //    #include <private/qtableview_p.h>
 //#endif
 #if QT_VERSION < QT_VERSION_CHECK(6, 0, 0)
-#include <private/qtableview_p.h>
+#include <QtWidgets/private/qtableview_p.h>
 #endif
 
 RTableCornerButton::RTableCornerButton(QWidget *parent)

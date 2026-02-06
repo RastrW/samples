@@ -121,7 +121,7 @@ message(STATUS "Astra found: ${Astra_FOUND}")
 if(WIN32)
     set(QTITAN_ROOT "${CMAKE_CURRENT_SOURCE_DIR}/../lib/QtitanDataGrid8.2.0_win_qt_6_7" CACHE PATH "Path to Qtitan")
 else()
-    set(QTITAN_ROOT "$ENV{HOME}/Qt/Developer Machines/QtitanComponents2025.2.0 Demo" CACHE PATH "Path to Qtitan")
+    set(QTITAN_ROOT "${CMAKE_CURRENT_SOURCE_DIR}/../lib/qtitan8_lin_5_15" CACHE PATH "Path to Qtitan")
 endif()
 # ============================================================================
 # Helper Function for Third-Party Libraries
@@ -286,7 +286,7 @@ add_thirdparty_library(metakit "${THIRDPARTY_DIR}/metakit"
     LIB_REAL_NAME "mk4")
 
 add_thirdparty_library(qtadvanceddocking "${THIRDPARTY_DIR}/Qt-Advanced-Docking-System"
-    LIB_REAL_NAME "qtadvanceddocking-qt6"
+    LIB_REAL_NAME "qtadvanceddocking-qt${QT_VERSION_MAJOR}"
     USE_DEBUG_SUFFIX)
 
 add_thirdparty_library(SDL3 "${THIRDPARTY_DIR}/SDL")
@@ -306,10 +306,19 @@ set(PROJECT_INCLUDES
     ${QTITAN_ROOT}/include
 )
 
-# Windows-specific includes
+# specific includes
 if(WIN32 AND MSVC)
     list(APPEND PROJECT_INCLUDES
         C:/Qt/6.9.3/msvc2022_64/include/QtWidgets/${QT_VERSION}/QtWidgets/private
+    )
+else()
+    list(APPEND PROJECT_INCLUDES
+        /home/administrator/Qt/5.15.2/gcc_64/include
+        /home/administrator/Qt/5.15.2/gcc_64/include/QtWidgets
+        /home/administrator/Qt/5.15.2/gcc_64/include/QtWidgets/5.15.2
+        /home/administrator/Qt/5.15.2/gcc_64/include/QtWidgets/5.15.2/QtWidgets
+        /home/administrator/Qt/5.15.2/gcc_64/include/QtGui/5.15.2
+        /home/administrator/Qt/5.15.2/gcc_64/include/QtCore/5.15.2
     )
 endif()
 
@@ -569,8 +578,8 @@ set(QTITAN_LIBS
 # Astra
 set(ASTRA_LIBS)
 list(APPEND ASTRA_LIBS
-    "${ASTRA_BIN_ROOT}/lib/astra.lib"
-    "${ASTRA_BIN_ROOT}/lib/COMCK.lib"
+    "${ASTRA_BIN_ROOT}/lib/${LIB_PREFIX}astra${LIB_SUFFIX}"
+    "${ASTRA_BIN_ROOT}/lib/${LIB_PREFIX}COMCK${LIB_SUFFIX}"
 )
 
 # 2) Составляем окончательный список с учётом опций

@@ -91,17 +91,7 @@ if(WIN32)
         set(PLATFORM_DIR "win/mingw")
     endif()
 elseif(UNIX AND NOT APPLE)
-    # Определяем компилятор для Linux
-    if(EXISTS "/etc/os-release")
-        file(READ "/etc/os-release" OS_RELEASE)
-        if(OS_RELEASE MATCHES "ID=astra")
-            set(PLATFORM_DIR "linux/clang")
-        else()
-            set(PLATFORM_DIR "linux/gcc")
-        endif()
-    else()
         set(PLATFORM_DIR "linux/gcc")
-    endif()
 endif()
 
 # Базовый путь к precompiled библиотекам
