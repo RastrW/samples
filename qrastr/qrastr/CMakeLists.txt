@@ -306,19 +306,10 @@ set(PROJECT_INCLUDES
     ${QTITAN_ROOT}/include
 )
 
-# specific includes
-if(WIN32 AND MSVC)
+# Windows Qt6 private headers
+if(WIN32 AND MSVC AND QT_VERSION_MAJOR EQUAL 6)
     list(APPEND PROJECT_INCLUDES
         C:/Qt/6.9.3/msvc2022_64/include/QtWidgets/${QT_VERSION}/QtWidgets/private
-    )
-else()
-    list(APPEND PROJECT_INCLUDES
-        /home/administrator/Qt/5.15.2/gcc_64/include
-        /home/administrator/Qt/5.15.2/gcc_64/include/QtWidgets
-        /home/administrator/Qt/5.15.2/gcc_64/include/QtWidgets/5.15.2
-        /home/administrator/Qt/5.15.2/gcc_64/include/QtWidgets/5.15.2/QtWidgets
-        /home/administrator/Qt/5.15.2/gcc_64/include/QtGui/5.15.2
-        /home/administrator/Qt/5.15.2/gcc_64/include/QtCore/5.15.2
     )
 endif()
 
@@ -550,6 +541,14 @@ set(QT_LIBS
 
 if(QT_VERSION_MAJOR EQUAL 6)
     list(APPEND QT_LIBS Qt${QT_VERSION_MAJOR}::Core5Compat)
+endif()
+
+# Добавляем WidgetsPrivate - как в старом CMakeLists
+# Это НЕ требует find_package, таргет создается автоматически
+if(QT_VERSION_MAJOR EQUAL 5)
+    list(APPEND QT_LIBS Qt5::WidgetsPrivate)
+elseif(QT_VERSION_MAJOR EQUAL 6)
+    list(APPEND QT_LIBS Qt6::WidgetsPrivate)
 endif()
 
 set(THIRD_PARTY_LIBS

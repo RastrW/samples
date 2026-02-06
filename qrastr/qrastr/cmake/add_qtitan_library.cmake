@@ -69,11 +69,6 @@ function(add_qtitan_library LIB_NAME_BASE)
         # ====================================================================
         # Linux: Qt5, GCC
         # ====================================================================
-
-        # Qtitan на Linux собирается в release по умолчанию (trial версия)
-        # Файлы располагаются в ${QTITAN_ROOT}/lib/
-        # Формат: libQtitanDataGrid2.so.8.2.0
-
         # Удаляем версию из конца имени библиотеки для поиска
         string(REGEX REPLACE "[0-9]+$" "" LIB_NAME_NO_VERSION "${LIB_NAME_BASE}")
 
@@ -116,8 +111,6 @@ if(LIB_FILE_VERSIONED)
         )
 
         message(STATUS "  Added Qtitan::${LIB_NAME_BASE}")
-        message(STATUS "    Location: ${LIB_FILE}")
-        message(STATUS "    Includes: ${QTITAN_ROOT}/include")
 
     endif()
 endfunction()
