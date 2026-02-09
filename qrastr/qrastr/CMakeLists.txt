@@ -42,9 +42,7 @@ set(CMAKE_RUNTIME_OUTPUT_DIRECTORY "${CMAKE_SOURCE_DIR}/../${CMAKE_BUILD_TYPE}")
 # ============================================================================
 # Compile Definitions
 # ============================================================================
-add_compile_definitions(QICSGRID_NO) #Старый grid, можно выпилить
 add_compile_definitions(SDL_NO) #Воспроизведение окон SDL
-# add_compile_definitions(ASTRA_NIX)
 add_compile_definitions(QTN_NAMESPACE)
 
 add_compile_definitions(
@@ -362,23 +360,13 @@ set(PROJECT_SOURCES
     ${APP_DIR}/main/mainwindow.cpp
     ${APP_DIR}/main/mainwindow.h
 
-    # MDI
-    ${APP_DIR}/mdi/mdiChildTable.h
-    ${APP_DIR}/mdi/mdiChildTable.cpp
-    ${APP_DIR}/mdi/mdiChildGrid.h
-    ${APP_DIR}/mdi/mdiChildGrid.cpp
-    ${APP_DIR}/mdi/mdiChildHeaderGrid.h
-    ${APP_DIR}/mdi/mdiChildHeaderGrid.cpp
-
     # Data
-    ${APP_DIR}/data/rastrdatamodel.h
-    ${APP_DIR}/data/rastrdatamodel.cpp
+    ${APP_DIR}/data/rtablesdatamanager.h
+    ${APP_DIR}/data/rtablesdatamanager.cpp
     ${APP_DIR}/data/rmodel.cpp
     ${APP_DIR}/data/rmodel.h
     ${APP_DIR}/data/rdata.h
     ${APP_DIR}/data/rdata.cpp
-    ${APP_DIR}/data/rtablesdatamanager.h
-    ${APP_DIR}/data/rtablesdatamanager.cpp
     ${APP_DIR}/data/IDataBlocksWrappers.h
     ${APP_DIR}/data/IDataBlocksWrappers.cpp
     ${APP_DIR}/data/QDataBlocks.h

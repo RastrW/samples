@@ -377,14 +377,6 @@ void MainWindow::closeEvent(QCloseEvent *event){
     if (m_DockManager) {
         m_DockManager->deleteLater(); //else untabbed window not close!
     }
-#if(!defined(QICSGRID_NO))
-    m_workspace->closeAllSubWindows();
-    if (activeMdiChild()) {
-        event->ignore();
-    } else {
-        event->accept();
-    }
-#endif// #if(!defined(QICSGRID_NO))
 }
 
 void MainWindow::slot_newFile(){
@@ -396,11 +388,6 @@ void MainWindow::slot_newFile(){
             m_sp_qastra->Load( eLoadCode::RG_REPL, "", str_path_to_shablon );
         }
     }
-#if(!defined(QICSGRID_NO))
-    MdiChild *child = createMdiChild(  j_forms_[0] );
-    child->newFile();
-    child->show();
-#endif
 }
 void MainWindow::slot_openGraph(){
 
@@ -481,13 +468,6 @@ void MainWindow::slot_open(){
 
     QString fileName = QFileDialog::getOpenFileName(this);
     if (!fileName.isEmpty()) {
-#if(!defined(QICSGRID_NO))
-        QMdiSubWindow *existing = findMdiChild(fileName);
-        if (existing) {
-            m_workspace->setActiveSubWindow(existing);
-            return;
-        }
-#endif//#if(!defined(QICSGRID_NO))
         m_sp_qastra->Load(eLoadCode::RG_REPL, fileName.toStdString(),"");
         setWindowTitle(fileName);
         curFile = fileName;
@@ -527,10 +507,6 @@ void MainWindow::slot_saveAs(){
         setCurrentFile(qstr_rfile);
         qDebug() << "templ: "<< qstr_template << "  file : " << qstr_rfile ;
     }
-#if(!defined(QICSGRID_NO))
-    if (activeMdiChild()->save())
-        statusBar()->showMessage(tr("File saved"), 2000);
-#endif//#if(!defined(QICSGRID_NO))
     if (!curFile.isEmpty()){
         int nRes = 0;
         const std::string& f = curFile.toStdString();
@@ -899,12 +875,6 @@ void MainWindow::slot_openForm(CUIForm _uiform){
         qDebug() << "doc dock widget created!" << dw << area;
     }
     //prtw->show();
-#if(!defined(QICSGRID_NO))
-    const nlohmann::json j_form = up_rastr_->GetJForms()[n_indx];
-    MdiChild *child = createMdiChild( j_form );
-    //child->newFile();
-    child->show();
-#endif // #if(!defined(QICSGRID_NO))
 }
 
 void MainWindow::slot_itemPressed(const QModelIndex &index){
@@ -941,19 +911,6 @@ void MainWindow::slot_button2Click(){
 }
 
 void MainWindow::slot_updateMenu(){
-#if(!defined(QICSGRID_NO))
-    bool hasMdiChild = (activeMdiChild() != 0);
-    m_saveAct->setEnabled(hasMdiChild);
-    m_saveAsAct->setEnabled(hasMdiChild);
-    m_pasteAct->setEnabled(hasMdiChild);
-    m_closeAct->setEnabled(hasMdiChild);
-    m_closeAllAct->setEnabled(hasMdiChild);
-    m_tileAct->setEnabled(hasMdiChild);
-    m_cascadeAct->setEnabled(hasMdiChild);
-    m_nextAct->setEnabled(hasMdiChild);
-    m_previousAct->setEnabled(hasMdiChild);
-    m_separatorAct->setVisible(hasMdiChild);
-#endif //#if(!defined(QICSGRID_NO))
 }
 
 void MainWindow::slot_setActiveSubWindow(QWidget *window){
@@ -1152,25 +1109,7 @@ void MainWindow::createActions(){
     menuWindow->addAction(separatorAct);
     QList<QMdiSubWindow *> windows = m_workspace->subWindowList();
     separatorAct->setVisible(!windows.isEmpty());
-#if(!defined(QICSGRID_NO))
-    for (int i = 0; i < windows.size(); ++i) {
-        MdiChild *child = qobject_cast<MdiChild *>(windows.at(i)->widget());
-        if ( !child ) printf("uh oh!\n");
-        QString text;
-        if (i < 9) {
-            text = tr("&%1 %2").arg(i + 1)
-                               .arg(child->userFriendlyCurrentFile());
-        } else {
-            text = tr("%1 %2").arg(i + 1)
-                              .arg(child->userFriendlyCurrentFile());
-        }
-        QAction *action  = m_windowMenu->addAction(text);
-        action->setCheckable(true);
-        action ->setChecked(child == activeMdiChild());
-        connect(action, SIGNAL(triggered()), m_windowMapper, SLOT(map()));
-        m_windowMapper->setMapping(action, windows.at(i));
-    }
-#endif
+
     QMenu* menuHelp = menuBar()->addMenu(tr("&Помощь"));
     menuHelp->addAction(aboutAct);
 

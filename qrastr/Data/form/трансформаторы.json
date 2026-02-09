@@ -1,0 +1,458 @@
+{
+    "forms": [
+        {
+            "addToMenuIndex": 1,
+            "fields": [
+                {
+                    "name": "Num"
+                },
+                {
+                    "name": "Name"
+                },
+                {
+                    "name": "An1"
+                },
+                {
+                    "name": "An2"
+                },
+                {
+                    "name": "An3"
+                },
+                {
+                    "name": "x_h"
+                },
+                {
+                    "name": "x_m"
+                },
+                {
+                    "name": "x_l"
+                },
+                {
+                    "name": "r_h"
+                },
+                {
+                    "name": "r_m"
+                },
+                {
+                    "name": "r_l"
+                },
+                {
+                    "name": "u_h"
+                },
+                {
+                    "name": "u_m"
+                },
+                {
+                    "name": "u_l"
+                },
+                {
+                    "name": "u_k"
+                },
+                {
+                    "name": "idop_h"
+                },
+                {
+                    "name": "idop_m"
+                },
+                {
+                    "name": "idop_com"
+                },
+                {
+                    "name": "KT_r"
+                },
+                {
+                    "name": "KT_r2"
+                },
+                {
+                    "name": "KT_i"
+                },
+                {
+                    "name": "KT_i2"
+                },
+                {
+                    "name": "b"
+                },
+                {
+                    "name": "g"
+                },
+                {
+                    "name": "calc"
+                }
+            ],
+            "menuPath": "\\Трансформаторы",
+            "name": "ТР: Анцапфы расчет",
+            "tableName": "Ancapf2"
+        },
+        {
+            "addToMenuIndex": 1,
+            "fields": [
+                {
+                    "name": "Id"
+                },
+                {
+                    "name": "Name"
+                },
+                {
+                    "name": "Brand"
+                },
+                {
+                    "name": "Type"
+                },
+                {
+                    "name": "Snom"
+                },
+                {
+                    "name": "U_high"
+                },
+                {
+                    "name": "U_mid"
+                },
+                {
+                    "name": "U_low"
+                },
+                {
+                    "name": "dPхх"
+                },
+                {
+                    "name": "Iхх"
+                },
+                {
+                    "name": "Uk_HM"
+                },
+                {
+                    "name": "Uk_HL"
+                },
+                {
+                    "name": "Uk_ML"
+                },
+                {
+                    "name": "minUK_HM"
+                },
+                {
+                    "name": "maxUK_HM"
+                },
+                {
+                    "name": "dPk_HM"
+                },
+                {
+                    "name": "dPk_HL"
+                },
+                {
+                    "name": "dPk_ML"
+                },
+                {
+                    "name": "KsL"
+                },
+                {
+                    "name": "Kr"
+                }
+            ],
+            "menuPath": "\\Трансформаторы",
+            "name": "ТР: Трансформаторы паспорт",
+            "tableName": "ATtrans"
+        },
+        {
+            "addToMenuIndex": 1,
+            "fields": [
+                {
+                    "name": "Id"
+                },
+                {
+                    "name": "Brand"
+                },
+                {
+                    "name": "Type"
+                },
+                {
+                    "name": "U_high"
+                },
+                {
+                    "name": "U_mid"
+                },
+                {
+                    "name": "U_low"
+                },
+                {
+                    "name": "Snom"
+                },
+                {
+                    "name": "dPхх"
+                },
+                {
+                    "name": "Iхх"
+                },
+                {
+                    "name": "Uk_HM"
+                },
+                {
+                    "name": "Uk_HL"
+                },
+                {
+                    "name": "Uk_ML"
+                },
+                {
+                    "name": "minUK_HM"
+                },
+                {
+                    "name": "maxUK_HM"
+                },
+                {
+                    "name": "dPk_HM"
+                },
+                {
+                    "name": "dPk_HL"
+                },
+                {
+                    "name": "dPk_ML"
+                },
+                {
+                    "name": "Idp_high"
+                },
+                {
+                    "name": "Idp_mid"
+                },
+                {
+                    "name": "Idp_com"
+                },
+                {
+                    "name": "Ks_L"
+                },
+                {
+                    "name": "Kr"
+                }
+            ],
+            "menuPath": "\\Трансформаторы",
+            "name": "ТР: Трансформаторы БД",
+            "tableName": "ATtrans_DB"
+        },
+        {
+            "addToMenuIndex": 1,
+            "fields": [
+                {
+                    "name": "Id"
+                },
+                {
+                    "name": "Name"
+                },
+                {
+                    "name": "Brand"
+                },
+                {
+                    "name": "Type"
+                },
+                {
+                    "name": "sta"
+                },
+                {
+                    "name": "n_high"
+                },
+                {
+                    "name": "n_mid"
+                },
+                {
+                    "name": "n_low"
+                },
+                {
+                    "name": "n_low2"
+                },
+                {
+                    "name": "n_zero"
+                },
+                {
+                    "name": "n_par"
+                },
+                {
+                    "name": "n_anc_PBV"
+                },
+                {
+                    "name": "n_anc_RPN"
+                },
+                {
+                    "name": "n_anc_VDT"
+                },
+                {
+                    "name": "ktr_hm"
+                },
+                {
+                    "name": "ktr_hl"
+                },
+                {
+                    "name": "NumPBV"
+                },
+                {
+                    "name": "NumRPN"
+                },
+                {
+                    "name": "NumVDT"
+                },
+                {
+                    "name": "NumX"
+                },
+                {
+                    "name": "calc_anc"
+                }
+            ],
+            "menuPath": "\\Трансформаторы",
+            "name": "ТР: Трансформаторы",
+            "tableName": "ATtrans"
+        },
+        {
+            "addToMenuIndex": 1,
+            "fields": [
+                {
+                    "name": "Id"
+                },
+                {
+                    "name": "Name"
+                },
+                {
+                    "name": "Brand"
+                },
+                {
+                    "name": "Type"
+                },
+                {
+                    "name": "sta"
+                },
+                {
+                    "name": "n_high"
+                },
+                {
+                    "name": "n_mid"
+                },
+                {
+                    "name": "n_low"
+                },
+                {
+                    "name": "n_low2"
+                },
+                {
+                    "name": "n_zero"
+                },
+                {
+                    "name": "n_par"
+                },
+                {
+                    "name": "n_it"
+                },
+                {
+                    "name": "Tc"
+                },
+                {
+                    "name": "Idp_high"
+                },
+                {
+                    "name": "I_high"
+                },
+                {
+                    "name": "Idp_mid"
+                },
+                {
+                    "name": "I_mid"
+                },
+                {
+                    "name": "Idp_com"
+                },
+                {
+                    "name": "I_com"
+                },
+                {
+                    "name": "contr_icom"
+                },
+                {
+                    "name": "TypeDAP_Num"
+                },
+                {
+                    "name": "TypeDAP_Name"
+                },
+                {
+                    "name": "tpn"
+                },
+                {
+                    "name": "tc_interpol"
+                },
+                {
+                    "name": "kdp"
+                }
+            ],
+            "menuPath": "\\Трансформаторы",
+            "name": "ТР: Токовая загрузка",
+            "tableName": "ATtrans"
+        },
+        {
+            "addToMenuIndex": 1,
+            "fields": [
+                {
+                    "name": "Num"
+                },
+                {
+                    "name": "Name"
+                },
+                {
+                    "name": "Descr"
+                }
+            ],
+            "menuPath": "\\Трансформаторы",
+            "name": "ТР: Справочник: Характеристики перегрузки",
+            "tableName": "ATTypeDAPEnum"
+        },
+        {
+            "addToMenuIndex": 1,
+            "fields": [
+                {
+                    "name": "Num"
+                },
+                {
+                    "name": "tpn"
+                }
+            ],
+            "menuPath": "\\Трансформаторы",
+            "name": "ТР: Справочник: Время перегрузки",
+            "tableName": "ATTimeEnum"
+        },
+        {
+            "addToMenuIndex": 1,
+            "fields": [
+                {
+                    "name": "TypeDAP_Num"
+                },
+                {
+                    "name": "TypeDAP_Name"
+                },
+                {
+                    "name": "TypeDAP_Descr"
+                },
+                {
+                    "name": "tpn"
+                },
+                {
+                    "name": "tc_25"
+                },
+                {
+                    "name": "tc_20"
+                },
+                {
+                    "name": "tc_10"
+                },
+                {
+                    "name": "tc0"
+                },
+                {
+                    "name": "tc10"
+                },
+                {
+                    "name": "tc20"
+                },
+                {
+                    "name": "tc30"
+                },
+                {
+                    "name": "tc40"
+                }
+            ],
+            "menuPath": "\\Трансформаторы",
+            "name": "ТР: Справочник: КДП",
+            "tableName": "ATKDAP"
+        }
+    ]
+}

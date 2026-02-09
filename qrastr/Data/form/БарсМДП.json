@@ -1,0 +1,170 @@
+{
+    "forms": [
+        {
+            "addToMenuIndex": 1,
+            "fields": [
+                {
+                    "name": "sel"
+                },
+                {
+                    "name": "sta"
+                },
+                {
+                    "name": "Num"
+                },
+                {
+                    "name": "Name"
+                }
+            ],
+            "menuPath": "\\БарсМДП",
+            "name": "БМДП:Транзиты",
+            "tableName": "ut_vir_tranzit"
+        },
+        {
+            "addToMenuIndex": 1,
+            "fields": [
+                {
+                    "name": "sel"
+                },
+                {
+                    "name": "sta"
+                },
+                {
+                    "name": "Num"
+                },
+                {
+                    "name": "TrNum"
+                },
+                {
+                    "name": "Name"
+                }
+            ],
+            "menuPath": "\\БарсМДП",
+            "name": "БМДП:Ремонты",
+            "tableName": "ut_vir_remont"
+        },
+        {
+            "addToMenuIndex": 1,
+            "fields": [
+                {
+                    "name": "sta"
+                },
+                {
+                    "name": "RemNum"
+                },
+                {
+                    "name": "SechNum"
+                }
+            ],
+            "menuPath": "\\БарсМДП",
+            "name": "БМДП:Ремонт-Сечение",
+            "tableName": "ut_vir_remont_sech"
+        },
+        {
+            "addToMenuIndex": 1,
+            "fields": [
+                {
+                    "name": "sta"
+                },
+                {
+                    "name": "RemNum"
+                },
+                {
+                    "name": "SechNum"
+                },
+                {
+                    "name": "VirNum"
+                }
+            ],
+            "menuPath": "\\БарсМДП",
+            "name": "БМДП:Ремонт-ВИР",
+            "tableName": "ut_vir_remont_vir"
+        },
+        {
+            "addToMenuIndex": 1,
+            "fields": [
+                {
+                    "name": "sta"
+                },
+                {
+                    "name": "RemNum"
+                },
+                {
+                    "name": "SechNum"
+                },
+                {
+                    "name": "APNum"
+                }
+            ],
+            "menuPath": "\\БарсМДП",
+            "name": "БМДП:Ремонт-АП",
+            "tableName": "ut_vir_remont_ap"
+        },
+        {
+            "addToMenuIndex": 1,
+            "fields": [
+                {
+                    "name": "Node1"
+                },
+                {
+                    "name": "Node2"
+                }
+            ],
+            "menuPath": "\\БарсМДП",
+            "name": "БМДП:Карта Узлов",
+            "tableName": "NodeMap"
+        },
+        {
+            "addToMenuIndex": 1,
+            "fields": [
+                {
+                    "name": "Ip1"
+                },
+                {
+                    "name": "Iq1"
+                },
+                {
+                    "name": "Np1"
+                },
+                {
+                    "name": "Ip2"
+                },
+                {
+                    "name": "Iq2"
+                },
+                {
+                    "name": "Np2"
+                },
+                {
+                    "name": "Ngb2"
+                }
+            ],
+            "menuPath": "\\БарсМДП",
+            "name": "БМДП:Карта Ветвей",
+            "tableName": "BranchMap"
+        },
+        {
+            "addToMenuIndex": 1,
+            "fields": [
+                {
+                    "name": "ip"
+                },
+                {
+                    "name": "iq"
+                },
+                {
+                    "name": "np"
+                },
+                {
+                    "name": "NPoint"
+                },
+                {
+                    "name": "Tc"
+                }
+            ],
+            "menuPath": "\\БарсМДП",
+            "name": "БМДП:Тс Ветвей",
+            "tableName": "BranchWeather"
+        }
+    ]
+}

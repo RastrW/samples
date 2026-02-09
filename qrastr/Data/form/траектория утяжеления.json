@@ -1,0 +1,262 @@
+{
+    "forms": [
+        {
+            "addToMenuIndex": 2,
+            "fields": [
+                {
+                    "name": "maxs"
+                },
+                {
+                    "name": "maxv"
+                },
+                {
+                    "name": "maxd"
+                },
+                {
+                    "name": "maxa"
+                },
+                {
+                    "name": "iter"
+                },
+                {
+                    "name": "tip"
+                },
+                {
+                    "name": "f_ots"
+                },
+                {
+                    "name": "add_d"
+                },
+                {
+                    "name": "ekstr"
+                },
+                {
+                    "name": "kfc"
+                },
+                {
+                    "name": "sum_kfc"
+                },
+                {
+                    "name": "ds"
+                },
+                {
+                    "name": "it"
+                },
+                {
+                    "name": "Status"
+                },
+                {
+                    "name": "KorrT"
+                },
+                {
+                    "name": "KorrPer"
+                },
+                {
+                    "name": "KorrVib"
+                },
+                {
+                    "name": "enable_contr"
+                },
+                {
+                    "name": "dis_v_contr"
+                },
+                {
+                    "name": "dis_p_contr"
+                },
+                {
+                    "name": "dis_i_contr"
+                },
+                {
+                    "name": "ss_calc"
+                },
+                {
+                    "name": "criterion"
+                },
+                {
+                    "name": "no_crit_d_ba"
+                },
+                {
+                    "name": "no_crit_d_coa"
+                },
+                {
+                    "name": "no_crit_d_ga"
+                },
+                {
+                    "name": "save_files"
+                },
+                {
+                    "name": "save_files_filter"
+                },
+                {
+                    "name": "save_files_path"
+                },
+                {
+                    "name": "stop_u_n"
+                },
+                {
+                    "name": "dyn_find_pred"
+                }
+            ],
+            "name": "Утяжеление",
+            "tableName": "ut_common",
+            "vertical": true
+        },
+        {
+            "addToMenuIndex": 1,
+            "fields": [
+                {
+                    "name": "sta"
+                },
+                {
+                    "name": "tip"
+                },
+                {
+                    "name": "ny"
+                },
+                {
+                    "name": "pn"
+                },
+                {
+                    "name": "qn"
+                },
+                {
+                    "name": "tg"
+                },
+                {
+                    "name": "pg"
+                },
+                {
+                    "name": "qg"
+                },
+                {
+                    "name": "vzd"
+                },
+                {
+                    "name": "qmin"
+                },
+                {
+                    "name": "qmax"
+                },
+                {
+                    "name": "vras"
+                },
+                {
+                    "name": "delta"
+                },
+                {
+                    "name": "prior"
+                },
+                {
+                    "name": "name"
+                },
+                {
+                    "name": "table"
+                },
+                {
+                    "name": "vibork"
+                },
+                {
+                    "name": "param"
+                },
+                {
+                    "name": "min"
+                },
+                {
+                    "name": "max"
+                },
+                {
+                    "name": "tol"
+                }
+            ],
+            "menuPath": "\\Траектория",
+            "name": "Приращения_Узлы",
+            "tableName": "ut_node"
+        },
+        {
+            "addToMenuIndex": 1,
+            "fields": [
+                {
+                    "name": "sta"
+                },
+                {
+                    "name": "na"
+                },
+                {
+                    "name": "pn"
+                },
+                {
+                    "name": "qn"
+                },
+                {
+                    "name": "tg"
+                },
+                {
+                    "name": "pg"
+                },
+                {
+                    "name": "prior"
+                }
+            ],
+            "menuPath": "\\Траектория",
+            "name": "Приращения_Районы",
+            "tableName": "ut_area"
+        },
+        {
+            "fields": [
+                {
+                    "name": "ny"
+                },
+                {
+                    "name": "name"
+                },
+                {
+                    "name": "uhom"
+                },
+                {
+                    "name": "vras"
+                },
+                {
+                    "name": "delta"
+                },
+                {
+                    "name": "d_v"
+                },
+                {
+                    "name": "d_delta"
+                }
+            ],
+            "name": "Узлы_Анализ",
+            "tableName": "node"
+        },
+        {
+            "fields": [
+                {
+                    "name": "ip"
+                },
+                {
+                    "name": "iq"
+                },
+                {
+                    "name": "name"
+                },
+                {
+                    "name": "dij"
+                },
+                {
+                    "name": "d_deltaij"
+                },
+                {
+                    "name": "pl_ip"
+                },
+                {
+                    "name": "dp"
+                },
+                {
+                    "name": "pl_iq"
+                }
+            ],
+            "name": "Ветви_Анализ",
+            "tableName": "vetv"
+        }
+    ]
+}

@@ -9,10 +9,6 @@
 #include <rtablesdatamanager.h>
 #include "spdlog/common.h"
 
-#if(!defined(QICSGRID_NO))
-    #include <QicsTable.h>
-#endif //#if(!defined(QICSGRID_NO))
-
 class QMdiArea;
 class QSignalMapper;
 class QHBoxLayout;
@@ -159,16 +155,9 @@ private slots:
     void slot_dataChanged(std::string _t_name, std::string _col_name, int _row, QVariant _value);
     void slot_rowInserted(std::string _t_name, int _row);
     void slot_rowDeleted (std::string _t_name, int _row);
-#if(!defined(QICSGRID_NO))
-    void sortAscending();
-    void sortDescending();
-#endif//#if(!defined(QICSGRID_NO))
+
     void slot_itemPressed(const QModelIndex &index);
 public slots:
-#if(!defined(QICSGRID_NO))
-    MdiChild *createMdiChild(nlohmann::json j_form = "");
-#endif//#if(!defined(QICSGRID_NO))
-
     // Обновить меню
     void slot_updateMenu();
     // Активировать подокно
@@ -202,9 +191,6 @@ private:
     int  writeSettings();
     // Обработка показа окна
     void showEvent( QShowEvent* event ) override;
-#if(!defined(QICSGRID_NO))
-    QicsTable* activeTable(); // Returns pointer to the table that is active, otherwise returns NULL
-#endif//#if(!defined(QICSGRID_NO))
     // Создать действия (меню, кнопки)
     void createActions();
     // Создать панель расчётов
@@ -215,10 +201,6 @@ private:
     void logCacheFlush();
     // Диалог "Сохранить изменения?"
     bool maybeSave();
-#if(!defined(QICSGRID_NO))
-    MdiChild *activeMdiChild();
-    QMdiSubWindow *findMdiChild(const QString &fileName);
-#endif
     // Обработка закрытия окна
     void closeEvent(QCloseEvent *event) override;
 

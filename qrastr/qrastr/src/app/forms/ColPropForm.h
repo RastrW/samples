@@ -16,10 +16,10 @@ class ColPropForm : public QWidget
     Q_OBJECT
 
 public:
-//#if(!defined(QICSGRID_NO))
-    explicit ColPropForm(RData* prdata,RTableView* ptv,Qtitan::GridTableView* view, RCol* prcol, QWidget *parent = nullptr);
-    //explicit ColPropForm(RModel* prmodel,RCol* prcol, QWidget *parent = nullptr);
-//#endif//#if(!defined(QICSGRID_NO))
+    explicit ColPropForm(RData* prdata,RTableView* ptv,
+                         Qtitan::GridTableView* view,
+                         RCol* prcol, QWidget *parent = nullptr);
+
     ~ColPropForm();
 
     void setName(const QString& name);

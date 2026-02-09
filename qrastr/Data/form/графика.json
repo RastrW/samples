@@ -1,0 +1,28 @@
+{
+    "forms": [
+        {
+            "fields": [
+                {
+                    "name": "ip"
+                },
+                {
+                    "name": "iq"
+                },
+                {
+                    "name": "tip"
+                },
+                {
+                    "name": "nprb"
+                },
+                {
+                    "name": "npre"
+                },
+                {
+                    "name": "viz"
+                }
+            ],
+            "name": "Gr_vetv",
+            "tableName": "graph_vetv"
+        }
+    ]
+}
