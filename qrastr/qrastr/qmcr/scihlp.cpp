@@ -67,7 +67,7 @@ SciHlp::SciHlp(QWidget *parent, _en_role role)
     const QFunctionPointer pfn = QLibrary::resolve("lexilla5", "CreateLexer");
 #else
     typedef void* (*CreateLexerFn)(const char* name);
-    const QFunctionPointer pfn = QLibrary::resolve("lexilla5", "CreateLexer");
+    const QFunctionPointer pfn = QLibrary::resolve("liblexilla", "CreateLexer");
 #endif
     if(pfn == nullptr){
         QMessageBox mb( QMessageBox::Icon::Critical, QObject::tr("Error"),
