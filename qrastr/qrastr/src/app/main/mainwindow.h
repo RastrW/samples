@@ -1,10 +1,14 @@
-#ifndef MAINWINDOW_H
-#define MAINWINDOW_H
 #pragma once
 
+// Заголовочные файлы стандартной библиотеки C++
+// Заголовочные файлы других библиотек.
 #include <QMainWindow>
 #include <QMap>
+
+// Заголовочные файлы проекта.
 #include <rtablesdatamanager.h>
+#include "spdlog/common.h"
+
 #if(!defined(QICSGRID_NO))
     #include <QicsTable.h>
 #endif //#if(!defined(QICSGRID_NO))
@@ -23,6 +27,7 @@ class rmodel;
 namespace ads{ class CDockManager; }
 class RtabWidget;
 class FormProtocol;
+
 enum MainTheme
 {
     THEME_0 = -1,
@@ -47,11 +52,20 @@ enum StyleSetting
     FluentLightStyleSetting,
     FluentDarkStyleSetting
 };
-#include "spdlog/common.h"
-//namespace spdlog{namespace level{enum level_enum;}}
+
 class PyHlp;
-class MainWindow
-    : public QMainWindow{
+
+/**
+ * @class MainWindow
+ * @brief Главное окно приложения с MDI-интерфейсом
+ *
+ * Отвечает за:
+ * - Создание меню, панелей инструментов, статусной строки
+ * - Управление множественными документами (MDI - Multiple Document Interface)
+ * - Связь GUI с расчётными модулями
+ * - Докирование окон (протоколы, таблицы)
+ */
+class MainWindow : public QMainWindow{
     Q_OBJECT
 public:
     struct _cache_log{
@@ -69,127 +83,186 @@ public:
         void add( const spdlog::level::level_enum lev_in, const std::string_view sv_format, Args&&... args );
     };
 signals:
-    void file_loaded();                                                                     // загружен файл
-    void rgm_signal();
-   // void rm_change(std::string _t_name, QModelIndex index, QVariant value);
-   // void rm_change(std::string _t_name, std::string _col_name, int _row, QVariant _value);
-    void rm_RowInserted(std::string _t_name, int _row);
-    void rm_RowDeleted(std::string _t_name, int _row);
-    void rm_update(std::string _t_name);
-    void signal_calc_begin();
-    void signal_calc_end();
-///slots.begin
+    // Файл загружен
+    void sig_fileLoaded();
+    // Строка добавлена в таблицу
+    void sig_rowInserted(std::string _t_name, int _row);
+    // Строка удалена
+    void sig_rowDeleted(std::string _t_name, int _row);
+    // Таблица обновлена
+    void sig_update(std::string _t_name);
+    // Начало расчёта
+    void sig_calcBegin();
+    // Конец расчёта
+    void sig_calcEnd();
 private slots:
-    void open_graph();
-    void newFile();
-    void open();
-    void save();
-    void saveAs();
-    void saveAll();
-    void openRecentFile();
-    void showFormSettings();
-    void about();
-    void kdd_wrap();
-    void rgm_wrap();
-    void oc_wrap();
-    void smzu_tst_wrap();
-    void tkz_wrap();
-    void idop_wrap();
-    void ti_recalcdor_wrap();
-    void ti_updatetables_wrap();
-    void ti_calcpti_wrap();
-    void ti_filtrti_wrap();
-    void bars_mdp_prepare_wrap();
+    ///< Графика
+    void slot_openGraph();
+    ///< Файлы
+    // Создать новый файл
+    void slot_newFile();
+    // Открыть файл
+    void slot_open();
+    // Сохранить
+    void slot_save();
+    // Сохранить как
+    void slot_saveAs();
+    // Сохранить все
+    void slot_saveAll();
+    // Открыть недавний файл
+    void slot_openRecentFile();
+    ///< Настройки
+    // Показать настройки форм
+    void slot_showFormSettings();
+    void slot_about();
+    ///< Расчёты
+    // Контроль исходных данных
+    void slot_kddWrap();
+    // Расчёт режима (установившийся режим)
+    void slot_rgmWrap();
+    // Оценка состояния
+    void slot_ocWrap();
+    // Расчёт МДП
+    void slot_smzuTstWrap();
+    // Расчёт токов короткого замыкания
+    void slot_tkzWrap();
+    // Расчёт допустимых токов от температуры
+    void slot_idopWrap();
+    // Подготовка данных для МДП
+    void slot_barsMdpPrepareWrap();
 
-    void onDlgMcr();
-    void onOpenForm(QAction* p_actn);
-    void onOpenForm(CUIForm _uiform);
-    void onButton2Click();
-    void Btn1_onClick();
-    void Btn3_onClick();
-    void ondataChanged(std::string _t_name, QModelIndex index, QVariant value);
-    void ondataChanged(std::string _t_name, std::string _col_name, int _row, QVariant _value);
-    void onRowInserted(std::string _t_name, int _row);
-    void onRowDeleted (std::string _t_name, int _row);
+    ///< Телеизмерения
+    // Пересчёт дорасчётных измерений
+    void slot_tiRecalcdorWrap();
+    // Обновление таблиц по телеметрии
+    void slot_tiUpdateTablesWrap();
+    // Расчёт псевдоизмерений
+    void slot_tiCalcptiWrap();
+    // Фильтрация телеизмерений
+    void slot_tiFiltrtiWrap();
+
+    // Формы и макросы
+    // Диалог макросов
+    void slot_openMcrDialog();
+    // Открыть форму из меню
+    void slot_openForm(QAction* p_actn);
+    // Открыть конкретную форму
+    void slot_openForm(CUIForm _uiform);
+
+    ///< Кнопки
+    void slot_button2Click();
+    void slot_btn1Click();
+    void slot_btn3Click();
+
+    // Обработка изменений данных
+    void slot_dataChanged(std::string _t_name, QModelIndex index, QVariant value);
+    void slot_dataChanged(std::string _t_name, std::string _col_name, int _row, QVariant _value);
+    void slot_rowInserted(std::string _t_name, int _row);
+    void slot_rowDeleted (std::string _t_name, int _row);
 #if(!defined(QICSGRID_NO))
     void sortAscending();
     void sortDescending();
 #endif//#if(!defined(QICSGRID_NO))
-    void onItemPressed(const QModelIndex &index);
+    void slot_itemPressed(const QModelIndex &index);
 public slots:
-    void updateMenus();
 #if(!defined(QICSGRID_NO))
     MdiChild *createMdiChild(nlohmann::json j_form = "");
 #endif//#if(!defined(QICSGRID_NO))
-    void setActiveSubWindow(QWidget *window);
-    void tst_onRastrHint(const _hint_data&);
+
+    // Обновить меню
+    void slot_updateMenu();
+    // Активировать подокно
+    void slot_setActiveSubWindow(QWidget *window);
+
+    // Drag & Drop
     void dragEnterEvent(QDragEnterEvent *event) override;
     void dropEvent(QDropEvent *event) override;
-
-
-
-private:
-///slots.end.
 public:
     MainWindow();
     virtual ~MainWindow();
-    void setForms(const std::list<CUIForm>& forms); // https://stackoverflow.com/questions/14151443/how-to-pass-a-qstring-to-a-qt-slot-from-a-qmenu-via-qsignalmapper-or-otherwise
-    void setSettingsForms();                         // Настройки программы - настройки (.form)
+    ///< Установка компонентов
+    // Установить формы
+    void setForms(const std::list<CUIForm>& forms);
+    // Настройки форм
+    void setSettingsForms();
+    // Подключить Rastr
     void setQAstra(const std::shared_ptr<QAstra>& sp_qastra);
+    // Подключить TI
     void setQTI(const std::shared_ptr<QTI>& sp_qti);
+    // Подключить BarsMDP
     void setQBarsMDP(const std::shared_ptr<QBarsMDP>& sp_qbarsmdp);
 private:
     QHBoxLayout* createStyleSetting();
     void setCurrentFile(const QString &fileName, const std::string Shablon = "");
+    // Обновить список недавних файлов
     void updateRecentFileActions();
-    QString strippedName(const QString &fullFileName);
-    QString curFile;                             // текущий загруженный или сохраненный файл
-    QString curDir;                              // директория текущего загруженного или сохраненного файла
-    QMap<QString,QString> mFilesLoad;
-
+    // Чтение настроек окна
     int  readSettings();
+    // Сохранение настроек окна
     int  writeSettings();
+    // Обработка показа окна
     void showEvent( QShowEvent* event ) override;
 #if(!defined(QICSGRID_NO))
     QicsTable* activeTable(); // Returns pointer to the table that is active, otherwise returns NULL
 #endif//#if(!defined(QICSGRID_NO))
+    // Создать действия (меню, кнопки)
     void createActions();
+    // Создать панель расчётов
     void createCalcLayout();
+    // Создать статусную строку
     void createStatusBar();
+    // Сбросить кэш логов
     void logCacheFlush();
+    // Диалог "Сохранить изменения?"
     bool maybeSave();
 #if(!defined(QICSGRID_NO))
     MdiChild *activeMdiChild();
     QMdiSubWindow *findMdiChild(const QString &fileName);
 #endif
+    // Обработка закрытия окна
     void closeEvent(QCloseEvent *event) override;
-    QMdiArea*          m_workspace     = nullptr;
-    McrWnd*            m_pMcrWnd       = nullptr;
-    FormProtocol*      m_pFormProtocol = nullptr;
-    QSignalMapper*     m_windowMapper  = nullptr;
-    QMenu*             m_menuOpen      = nullptr;
-    QMenu*             m_recentFilesMenu=nullptr;               // Файлы - последние
-    QMenu*             m_menuCalcParameters = nullptr;          // Расчеты - Параметры
-    QMenu*             m_menuCalcTI = nullptr;                  // Расчеты - ТИ
-    QMenu*             m_menuProgrammProperties = nullptr;      // Файлы - Настройки программы
-    QMenu*             m_menuProperties = nullptr;              // Файлы - Настройки программы - Настройки
-    QAction*           separatorAct;
+
+    QString strippedName(const QString &fullFileName);
+    QString curFile;                             // текущий загруженный или сохраненный файл
+    QString curDir;                              // директория текущего загруженного или сохраненного файла
+    QMap<QString,QString> mFilesLoad;
+
+    QMdiArea*          m_workspace     = nullptr;               // Область для множественных документов
+    McrWnd*            m_pMcrWnd       = nullptr;               // Окно протокола/макросов
+    FormProtocol*      m_pFormProtocol = nullptr;               // Главный протокол
+    QSignalMapper*     m_windowMapper  = nullptr;               // Маппер для управления окнами
+
+    QMenu*             m_menuOpen      = nullptr;               // Меню "Открыть"
+    QMenu*             m_recentFilesMenu=nullptr;               // Недавние файлы
+    QMenu*             m_menuCalcParameters = nullptr;          // Параметры расчётов
+    QMenu*             m_menuCalcTI = nullptr;                  // Меню ТИ
+    QMenu*             m_menuProgrammProperties = nullptr;      // Настройки программы
+    QMenu*             m_menuProperties = nullptr;              // Свойства
+
+    QAction*           separatorAct;                            // Разделитель в меню
     QHBoxLayout*       m_layoutActions = nullptr;               // actions: rgm,opf,...
-    QToolBar*          m_toolbarCalc   = nullptr;
+    QToolBar*          m_toolbarCalc   = nullptr;               // Панель расчётов
     QToolBar*          m_toolbarTI     = nullptr;               // Панель ТИ
-    RtabWidget*        m_prtw_current  = nullptr;               // current table
-    QDockWidget*       m_dock        = nullptr;
-    ads::CDockManager* m_DockManager = nullptr; // The main container for docking
-    _v_cache_log       m_v_cache_log;
+
+
+    QDockWidget*       m_dock        = nullptr;                 // Текущая дока
+    RtabWidget*        m_prtw_current  = nullptr;               // Текущая активная таблица
+
+    // The main container for Advanced Docking System
+    ads::CDockManager* m_DockManager = nullptr;
+
+    _v_cache_log       m_v_cache_log;                           // Кэш логов
+
     std::shared_ptr<QAstra> m_sp_qastra;
     std::shared_ptr<QTI> m_sp_qti;
     std::shared_ptr<QBarsMDP> m_sp_qbarsmdp;
-    std::unique_ptr<PyHlp> m_up_PyHlp;
 
-    RTablesDataManager m_RTDM;
+    std::unique_ptr<PyHlp> m_up_PyHlp;                          // Python helper (для выполнения макросов)
 
-    std::list<CUIForm> m_lstUIForms;
+    RTablesDataManager m_RTDM;                                  // Менеджер данных таблиц
+
+    std::list<CUIForm> m_lstUIForms;                            // Список форм для отображения
+    // Недавние файлы
     enum { MaxRecentFiles = 10 };
     QAction *recentFileActs[MaxRecentFiles];
 };
-#endif // MAINWINDOW_H

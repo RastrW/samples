@@ -3,7 +3,7 @@
 # Поддерживаемые платформы:
 #   - Windows (MSVC, MinGW)
 #   - Ubuntu 24.04 (gcc)
-#   - AstraLinux 1.7 (clang-13)
+#   - AstraLinux 1.7 (gcc)
 #
 # Все платформы  используют библиотеки из thirdparty
 # ============================================================================
@@ -42,9 +42,9 @@ set(CMAKE_RUNTIME_OUTPUT_DIRECTORY "${CMAKE_SOURCE_DIR}/../${CMAKE_BUILD_TYPE}")
 # ============================================================================
 # Compile Definitions
 # ============================================================================
-add_compile_definitions(QICSGRID_NO)
-add_compile_definitions(SDL_NO)
-add_compile_definitions(ASTRA_NIX)
+add_compile_definitions(QICSGRID_NO) #Старый grid, можно выпилить
+add_compile_definitions(SDL_NO) #Воспроизведение окон SDL
+# add_compile_definitions(ASTRA_NIX)
 add_compile_definitions(QTN_NAMESPACE)
 
 add_compile_definitions(

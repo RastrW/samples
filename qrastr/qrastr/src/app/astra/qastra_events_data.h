@@ -1,47 +1,27 @@
-#ifndef QASTRA_EVENTS_DATA_H
-#define QASTRA_EVENTS_DATA_H
 #pragma once
 
 #include <astra/IPlainRastr.h>
-//#include "IPlainRastr.h"
-//#include <C:\Projects\tfs\rastr\RastrWin\build\install\include\astra\IPlainRastr.h>
-
 
 ///////////////////////////////////////////////////////////////////////
 //RastrEngine.cs
 ///////////////////////////////////////////////////////////////////////
-///
+
 // Событие, возникающее при изменении данных в таблице
-//public event EventHandler<ChangeDataEventArgs> OnChangeData; // IRastrEventHint
-//public class ChangeDataEventArgs : EventArgs
-//    public ChangeDataHint Hint
-//    public string         Table
-//    public string         Column
-//    public int            RowIndex
 struct _hint_data{
-    EventHints  hint;
-    std::string str_table;
-    std::string str_column;
-    long        n_indx;
+    EventHints  hint;           // Тип события (изменение, вставка, удаление)
+    std::string str_table;      // Имя таблицы
+    std::string str_column;     // Имя колонки
+    long        n_indx;         // Индекс строки
 };
 
 // Событие журналирования
-//public event EventHandler<LogEventArgs> OnLog; //IRastrEventLog
-//public class LogEventArgs : EventArgs
-//  public LogMessageCode MessageCode
-//  public int Level
-//  public int StageId
-//  public string TableName
-//  public int TableIndex
-//  public string Description
-//  public string FormName
 struct _log_data{
-    LogMessageTypes lmt;
-    long            n_stage_id;
-    std::string     str_msg;
+    LogMessageTypes lmt;            // Тип сообщения (Info, Warning, Error)
+    long            n_stage_id;     // ID стадии расчёта
+    std::string     str_msg;        // Текст сообщения
     std::string     str_table;
     std::string     str_col;
-    IndexT          n_indx;
+    IndexT          n_indx;         // Индекс (если применимо)
     std::string     str_uiform;
 };
 
@@ -59,4 +39,3 @@ struct _log_data{
 //  public int           Pp
 //  public object        Result
 
-#endif // QASTRA_EVENTS_DATA_H

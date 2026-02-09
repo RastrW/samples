@@ -45,21 +45,29 @@ public:
 	void SetReadOnly(bool ReadOnly) { ReadOnly_ = ReadOnly; }
 };
 
-//! Класс формы
+/**
+ * @class CUIForm
+ * @brief Описание формы для отображения данных
+ *
+ * Хранит информацию о том, как отображать таблицу:
+ * - какие колонки показывать
+ * - как называется форма
+ * - вертикальная или горизонтальная ориентация
+ */
 class CUIForm
 {
 protected:
-	std::string Name_;
-	std::string TableName_;
+    std::string Name_;                      // Имя формы (для меню)
+    std::string TableName_;                 // Имя таблицы в Rastr
 	std::string Collection_;
 	std::string Query_;
 	std::string DetailAssignment_;
 	std::string DetailQueryColumnName_;
-	std::string MenuPath_;
+    std::string MenuPath_;                  // Путь в меню
 	bool HasDetailForm_ = false;
-	int AddToMenuIndex_ = 0;
-	bool Vertical_ = false;
-	std::list<CUIFormField> Fields_;
+    int AddToMenuIndex_ = 0;                // Индекс в меню
+    bool Vertical_ = false;                 // Вертикальная ориентация
+    std::list<CUIFormField> Fields_;        // Поля для отображения
 public:
 
 	CUIForm() = default;

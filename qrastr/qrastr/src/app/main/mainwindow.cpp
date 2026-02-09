@@ -59,7 +59,7 @@ MainWindow::MainWindow(){
     m_windowMapper = new QSignalMapper(this);
     createActions();
     createStatusBar();
-    updateMenus();
+    slot_updateMenu();
     this->setAcceptDrops(true);
 
     setWindowTitle(tr("~qrastr~"));
@@ -141,20 +141,6 @@ int MainWindow::writeSettings(){
     settings.setValue("geometry", saveGeometry());
     settings.endGroup();
     return 1;
-}
-
-void MainWindow::tst_onRastrHint(const _hint_data& dh){
-    spdlog::info("XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX");
-    spdlog::info("XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX");
-    spdlog::info("XXX MainWindow::tst_onRastrHint about {} {} {} {} {} XXX"
-        , QAstra::getHintName(dh.hint)
-        , static_cast<std::underlying_type<EventHints>::type>(dh.hint)
-        , dh.str_table
-        , dh.str_column
-        , dh.n_indx
-    );
-    spdlog::info("XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX");
-    spdlog::info("XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX");
 }
 
 void MainWindow::dragEnterEvent(QDragEnterEvent *event){
@@ -309,7 +295,7 @@ void MainWindow::setSettingsForms(){
                 _form.Fields().emplace_back(IRastrPayload{column->Name()}.Value());
             }
             connect(p_actn, &QAction::triggered, [this, _form] {
-                onOpenForm(_form); });
+                slot_openForm(_form); });
         }
         //qDebug() <<"TabName: " << str_tab_name.c_str() << "Templ name: " << str_templ_name.c_str();
     }
@@ -401,7 +387,7 @@ void MainWindow::closeEvent(QCloseEvent *event){
 #endif// #if(!defined(QICSGRID_NO))
 }
 
-void MainWindow::newFile(){
+void MainWindow::slot_newFile(){
     FormFileNew* pformFileNew = new FormFileNew(this);
     if(QDialog::Accepted == pformFileNew->exec()){
         const FormFileNew::_s_checked_templatenames s_checked_templatenames = pformFileNew->getCheckedTemplateNames();
@@ -416,7 +402,7 @@ void MainWindow::newFile(){
     child->show();
 #endif
 }
-void MainWindow::open_graph(){
+void MainWindow::slot_openGraph(){
 
 #if(!defined(SDL_NO))
     SDL_Init(SDL_INIT_VIDEO); // Basics of SDL, init what you need to use
@@ -433,7 +419,7 @@ void MainWindow::open_graph(){
 #endif
 }
 
-void MainWindow::open(){
+void MainWindow::slot_open(){
     QFileDialog fileDlg( this, tr("Open Rastr files") );
     fileDlg.setOption(QFileDialog::DontUseNativeDialog, true);
     fileDlg.setViewMode(QFileDialog::Detail);
@@ -509,7 +495,7 @@ void MainWindow::open(){
     }
 }
 
-void MainWindow::saveAs(){
+void MainWindow::slot_saveAs(){
     QFileDialog fileDlg( this, tr("Save Rastr file") );
     fileDlg.setAcceptMode(QFileDialog::AcceptSave);
     fileDlg.setOption(QFileDialog::DontUseNativeDialog, true);
@@ -560,19 +546,19 @@ void MainWindow::saveAs(){
     }
 }
 
-void MainWindow::save(){
+void MainWindow::slot_save(){
     m_sp_qastra->Save( curFile.toStdString().c_str(), "" );
     std::string str_msg = fmt::format( "{}: {}", "Сохранен файл", curFile.toStdString().c_str());
     statusBar()->showMessage( str_msg.c_str(), 2000 );
     return;
 }
 
-void MainWindow::saveAll(){
+void MainWindow::slot_saveAll(){
     formsaveall* fsaveall = new formsaveall(m_sp_qastra.get(),mFilesLoad);
     fsaveall->show();
 }
 
-void MainWindow::openRecentFile()
+void MainWindow::slot_openRecentFile()
 {
     QAction *action = qobject_cast<QAction *>(sender());
     if (action){
@@ -593,8 +579,8 @@ void MainWindow::openRecentFile()
     }
 }
 
-void MainWindow::rgm_wrap(){
-    emit signal_calc_begin();
+void MainWindow::slot_rgmWrap(){
+    emit sig_calcBegin();
     eASTCode code = m_sp_qastra->Rgm("");
     std::string str_msg = "";
     if (code == eASTCode::AST_OK){
@@ -605,11 +591,10 @@ void MainWindow::rgm_wrap(){
         spdlog::error("{} : {}", static_cast<int>(code), str_msg);
     }
     statusBar()->showMessage( str_msg.c_str(), 0 );
-    emit signal_calc_end();
-    //emit rgm_signal();
+    emit sig_calcEnd();
 }
 
-void MainWindow::kdd_wrap(){
+void MainWindow::slot_kddWrap(){
     eASTCode code = m_sp_qastra->Kdd("");
     std::string str_msg = "";
     if (code == eASTCode::AST_OK){
@@ -622,8 +607,8 @@ void MainWindow::kdd_wrap(){
     statusBar()->showMessage( str_msg.c_str(), 0 );
 }
 
-void MainWindow::oc_wrap(){
-    emit signal_calc_begin();
+void MainWindow::slot_ocWrap(){
+    emit sig_calcBegin();
     eASTCode code = m_sp_qastra->Opf("s");
 
     std::string str_msg = "";
@@ -635,11 +620,11 @@ void MainWindow::oc_wrap(){
         spdlog::error("{} : {}", static_cast<int>(code), str_msg);
     }
     statusBar()->showMessage( str_msg.c_str(), 0 );
-    emit signal_calc_end();
+    emit sig_calcEnd();
 }
 
-void MainWindow::smzu_tst_wrap(){
-    emit signal_calc_begin();
+void MainWindow::slot_smzuTstWrap(){
+    emit sig_calcBegin();
 
     const std::time_t time_now{ std::time(0) };
     const std::tm*    ptm_now{ std::localtime(&time_now) };
@@ -665,11 +650,11 @@ void MainWindow::smzu_tst_wrap(){
     //m_sp_qastra->onRastrPrint(str_msg);
     //m_sp_qastra->onRastrPrint(str_msg);
     statusBar()->showMessage( str_msg.c_str(), 0 );
-    emit signal_calc_end();
+    emit sig_calcEnd();
 }
 
-void MainWindow::tkz_wrap(){
-    emit signal_calc_begin();
+void MainWindow::slot_tkzWrap(){
+    emit sig_calcBegin();
     std::string str_msg = "Implement me in IplainRastr";
     const std::string parameters = "";
     eNonsym Nonsym = eNonsym::KZ_1;
@@ -689,26 +674,26 @@ void MainWindow::tkz_wrap(){
         spdlog::error("{} : {}", static_cast<int>(code), str_msg);
     }
     statusBar()->showMessage( str_msg.c_str(), 0 );
-    emit signal_calc_end();
+    emit sig_calcEnd();
 }
 
-void MainWindow::idop_wrap(){
-    emit signal_calc_begin();
+void MainWindow::slot_idopWrap(){
+    emit sig_calcBegin();
 
     eASTCode code = eASTCode::AST_OK;
     formcalcidop* pformcalcidop = new formcalcidop(m_sp_qastra.get(),this);
     pformcalcidop->show();  // on OK call -> calcIdop
-    emit signal_calc_end();
+    emit sig_calcEnd();
 }
 
-void MainWindow::ti_recalcdor_wrap()
+void MainWindow::slot_tiRecalcdorWrap()
 {
     if (m_sp_qti == nullptr)
     {
         spdlog::warn("{}", "Plugin TI not initialized! Function is unavailable.");
         return;
     }
-    emit signal_calc_begin();
+    emit sig_calcBegin();
     Timer t_calc_recalcdor;
 
     long code = m_sp_qti->RecalcDor();
@@ -723,14 +708,14 @@ void MainWindow::ti_recalcdor_wrap()
     }
 }
 
-void MainWindow::ti_updatetables_wrap()
+void MainWindow::slot_tiUpdateTablesWrap()
 {
     if (m_sp_qti == nullptr)
     {
         spdlog::warn("{}", "Plugin TI not initialized! Function is unavailable.");
         return;
     }
-    emit signal_calc_begin();
+    emit sig_calcBegin();
     Timer _timer;
 
     long code = m_sp_qti->UpdateTables();
@@ -745,14 +730,14 @@ void MainWindow::ti_updatetables_wrap()
     }
 }
 
-void MainWindow::ti_calcpti_wrap(){
+void MainWindow::slot_tiCalcptiWrap(){
     if (m_sp_qti == nullptr)
     {
         spdlog::warn("{}", "Plugin TI not initialized! Function is unavailable.");
         return;
     }
 
-    emit signal_calc_begin();
+    emit sig_calcBegin();
     Timer t_calc_pti;
 
     long code = m_sp_qti->CalcPTI();
@@ -777,9 +762,9 @@ void MainWindow::ti_calcpti_wrap(){
     }
 
     statusBar()->showMessage( str_msg.c_str(), 0 );
-    emit signal_calc_end();
+    emit sig_calcEnd();
 }
-void MainWindow::ti_filtrti_wrap()
+void MainWindow::slot_tiFiltrtiWrap()
 {
     if (m_sp_qti == nullptr)
     {
@@ -787,7 +772,7 @@ void MainWindow::ti_filtrti_wrap()
         return;
     }
 
-    emit signal_calc_begin();
+    emit sig_calcBegin();
     Timer t_filtr_ti;
 
     long code = m_sp_qti->FiltrTI();
@@ -801,17 +786,17 @@ void MainWindow::ti_filtrti_wrap()
     }
 
     statusBar()->showMessage( str_msg.c_str(), 0 );
-    emit signal_calc_end();
+    emit sig_calcEnd();
 }
 
-void MainWindow::bars_mdp_prepare_wrap()
+void MainWindow::slot_barsMdpPrepareWrap()
 {
     if (m_sp_qbarsmdp == nullptr)
     {
         spdlog::warn("{}", "Plugin TI not initialized! Function is unavailable.");
         return;
     }
-    emit signal_calc_begin();
+    emit sig_calcBegin();
     Timer t_barsmdp;
 
     bool ok{};
@@ -838,7 +823,7 @@ void MainWindow::bars_mdp_prepare_wrap()
     }
 }
 
-void MainWindow::onDlgMcr(){
+void MainWindow::slot_openMcrDialog(){
     McrWnd* pMcrWnd = new McrWnd( this, McrWnd::_en_role::macro_dlg );
     //connect( m_sp_qastra.get(), SIGNAL(onRastrLog(const _log_data&) ), m_pMcrWnd,       SLOT(onRastrLog(const _log_data&)) );
     connect( m_sp_qastra.get(), SIGNAL( onRastrPrint(const std::string&) ), pMcrWnd, SLOT( onRastrPrint(const std::string&) ) );
@@ -846,11 +831,11 @@ void MainWindow::onDlgMcr(){
     pMcrWnd->show();
 }
 
-void MainWindow::about(){
+void MainWindow::slot_about(){
    QMessageBox::about( this, tr("About QRastr"), tr("About the <b>QRastr</b>.") );
 }
 
-void MainWindow::onOpenForm( QAction* p_actn ){
+void MainWindow::slot_openForm( QAction* p_actn ){
     const int n_indx = p_actn->data().toInt();
     const auto& forms = m_lstUIForms;
 
@@ -858,10 +843,10 @@ void MainWindow::onOpenForm( QAction* p_actn ){
     std::advance(it,n_indx);
     auto form  =*it;
     form.SetName(stringutils::MkToUtf8(form.Name()));
-    onOpenForm(form);
+    slot_openForm(form);
 }
 
-void MainWindow::onOpenForm(CUIForm _uiform){
+void MainWindow::slot_openForm(CUIForm _uiform){
     CUIForm form  = _uiform;
     qDebug() << "\n Open form:" << form.Name().c_str();
     //Проверка существования таблицы
@@ -875,8 +860,6 @@ void MainWindow::onOpenForm(CUIForm _uiform){
         return;
     }
 
-
-
     //spdlog::info( "Create tab [{}]", stringutils::cp1251ToUtf8(form.Name()) );
     spdlog::info( "Прочитана таблица [{}] - [{}]", form.Name(),form.TableName() );
     RtabWidget *prtw = new RtabWidget(m_sp_qastra.get(),form,&m_RTDM,m_DockManager,this);
@@ -884,8 +867,8 @@ void MainWindow::onOpenForm(CUIForm _uiform){
     //Выравнивание даных по шаблону , выравнивание текста по левому краю
     prtw->widebyshabl();
 
-    QObject::connect(this, &MainWindow::signal_calc_begin, prtw, &RtabWidget::on_calc_begin);
-    QObject::connect(this, &MainWindow::signal_calc_end, prtw, &RtabWidget::on_calc_end);
+    QObject::connect(this, &MainWindow::sig_calcBegin, prtw, &RtabWidget::on_calc_begin);
+    QObject::connect(this, &MainWindow::sig_calcEnd, prtw, &RtabWidget::on_calc_end);
 
     // Docking
     if(false){
@@ -924,7 +907,7 @@ void MainWindow::onOpenForm(CUIForm _uiform){
 #endif // #if(!defined(QICSGRID_NO))
 }
 
-void MainWindow::onItemPressed(const QModelIndex &index){
+void MainWindow::slot_itemPressed(const QModelIndex &index){
     //prtw_current = qobject_cast<RtabWidget*>(index.);
     int row = index.row();
     int column = index.column();
@@ -932,32 +915,32 @@ void MainWindow::onItemPressed(const QModelIndex &index){
     qDebug()<<"Pressed:" <<row<< ","<<column;
 }
 
-void MainWindow::ondataChanged(std::string _t_name, QModelIndex index, QVariant value ){
+void MainWindow::slot_dataChanged(std::string _t_name, QModelIndex index, QVariant value ){
     std::string tname = _t_name;
     //emit rm_change(_t_name,index,value);
 }
 
-void MainWindow::ondataChanged(std::string _t_name, std::string _col_name, int _row, QVariant _value){
+void MainWindow::slot_dataChanged(std::string _t_name, std::string _col_name, int _row, QVariant _value){
     //emit rm_change(_t_name,_col_name,_row,_value);
 }
 
-void MainWindow::onRowInserted(std::string _t_name, int _row){
-    emit rm_RowInserted(_t_name,_row);
-    emit rm_update(_t_name);
+void MainWindow::slot_rowInserted(std::string _t_name, int _row){
+    emit sig_rowInserted(_t_name,_row);
+    emit sig_update(_t_name);
 }
 
-void MainWindow::onRowDeleted(std::string _t_name, int _row){
-    emit rm_RowDeleted(_t_name,_row);
-    emit rm_update(_t_name);
+void MainWindow::slot_rowDeleted(std::string _t_name, int _row){
+    emit sig_rowDeleted(_t_name,_row);
+    emit sig_update(_t_name);
 }
 
-void MainWindow::onButton2Click(){
+void MainWindow::slot_button2Click(){
     const long num_chars = 10000;
     char* pch_JSON_out = new char[num_chars];
     //long n_res = PyRunMacro( L"", L"", pch_JSON_out, num_chars );
 }
 
-void MainWindow::updateMenus(){
+void MainWindow::slot_updateMenu(){
 #if(!defined(QICSGRID_NO))
     bool hasMdiChild = (activeMdiChild() != 0);
     m_saveAct->setEnabled(hasMdiChild);
@@ -973,11 +956,11 @@ void MainWindow::updateMenus(){
 #endif //#if(!defined(QICSGRID_NO))
 }
 
-void MainWindow::setActiveSubWindow(QWidget *window){
+void MainWindow::slot_setActiveSubWindow(QWidget *window){
     m_workspace->setActiveSubWindow(qobject_cast<QMdiSubWindow *>(window));
 }
 
-void MainWindow::showFormSettings(){
+void MainWindow::slot_showFormSettings(){
     FormSettings* pformSettings = new FormSettings();
     pformSettings->init(m_sp_qastra);
     pformSettings->show();
@@ -1281,7 +1264,7 @@ QString MainWindow::strippedName(const QString &fullFileName){
     return QFileInfo(fullFileName).fileName();
 }
 
-void MainWindow::Btn1_onClick(){
+void MainWindow::slot_btn1Click(){
     QTableView* view = new QTableView;
     view->setWindowTitle("charttest");
     view->setWindowFlags(Qt::Tool);
@@ -1304,7 +1287,7 @@ void MainWindow::Btn1_onClick(){
     */
 }
 
-void MainWindow::Btn3_onClick(){
+void MainWindow::slot_btn3Click(){
     //Show test ComboBox item at grid column
 
     QStandardItemModel* model = new QStandardItemModel(8, 2);
@@ -1338,9 +1321,9 @@ void MainWindow::createCalcLayout(){
     QPushButton *btn2 = new QPushButton("Button 2");
     QPushButton *btn3 = new QPushButton("Tst ComboBoxDelegate");
 
-    connect(btn1,&QPushButton::clicked,this, &MainWindow::Btn1_onClick);
-    connect(btn2,&QPushButton::clicked,this, &MainWindow::onButton2Click);
-    connect(btn3,&QPushButton::clicked,this, &MainWindow::Btn3_onClick);
+    connect(btn1,&QPushButton::clicked,this, &MainWindow::slot_btn1Click);
+    connect(btn2,&QPushButton::clicked,this, &MainWindow::slot_button2Click);
+    connect(btn3,&QPushButton::clicked,this, &MainWindow::slot_btn3Click);
 
     QWidget* widget = new QWidget;
     widget -> setWindowTitle("Functions");

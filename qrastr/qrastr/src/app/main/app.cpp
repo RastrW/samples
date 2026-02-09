@@ -376,7 +376,7 @@ long App::readForms(){
     return 1;
 }
 
-std::list<CUIForm>& App::GetForms() const {
+std::list<CUIForm>& App::getForms() const {
     assert(nullptr!=upCUIFormsCollection_);
     return upCUIFormsCollection_->Forms();
 }

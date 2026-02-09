@@ -5,28 +5,6 @@
 #include "app.h"
 #include "formsettings.h"
 
-//#include <SDL3\SDL.h>
-//#include <pqxx/pqxx>
-/*
-int main23(int argc, char *argv[]){
-    int n_res = 0;
-    //QApplication app(argc, argv);
-    App app(argc, argv);
-    n_res = app.init(); assert(n_res>0);
-    app.setWindowIcon(QIcon(":/images/rastr.png"));
-
-    n_res = app.start();
-    if(n_res<0){
-        return 200;
-    }
-
-    FormSettings fs;
-    n_res = fs.init(app.getQAstraPtr());
-    fs.show();
-    return app.exec();
-}
-*/
-
 int main(int argc, char *argv[]){
     long n_res = 0;
 
@@ -69,10 +47,9 @@ int main(int argc, char *argv[]){
     w.setQAstra(app.getQAstraPtr());
     w.setQTI(app.getQTIPtr());
     w.setQBarsMDP(app.getQBarsMDPPtr());
-    w.setForms(app.GetForms());
-    //w.resize(1200,800);
+    w.setForms(app.getForms());
+
     w.show();
-    //w.windowHandle()->setScreen(qApp->screens().last());
-    //w.showNormal();
+
     return app.exec();
 }
