@@ -58,8 +58,9 @@ if(MSVC)
     add_compile_definitions( _SILENCE_ALL_MS_EXT_DEPRECATION_WARNINGS )
     # Отключение макросов min/max из windows.h (конфликт с std::min/max)
     add_compile_definitions( NOMINMAX )
-endif()
 
+    add_compile_options(/utf-8)
+endif()
 # ============================================================================
 # Определение компилятора и соответствующих путей
 # ============================================================================
@@ -114,6 +115,9 @@ endif()
 
 message(STATUS "COMCK found: ${COMCK_FOUND}")
 message(STATUS "Astra found: ${Astra_FOUND}")
+
+set(SRC_DIR ${CMAKE_CURRENT_SOURCE_DIR}/src)
+set(APP_DIR ${SRC_DIR}/app)
 # ============================================================================
 # Qtitan Configuration
 # ============================================================================
@@ -267,16 +271,22 @@ set(THIRDPARTY_DIR "${THIRDPARTY_DIR}" CACHE INTERNAL "Thirdparty directory")
 set(PLATFORM_DIR "${PLATFORM_DIR}" CACHE INTERNAL "Platform directory")
 set(CONFIG_DIR "${CONFIG_DIR}" CACHE INTERNAL "Config directory")
 
-add_subdirectory(plugins/rastr)
-add_subdirectory(plugins/ti)
-add_subdirectory(plugins/barsmdp)
+add_subdirectory(${SRC_DIR}/plugins/rastr)
+add_subdirectory(${SRC_DIR}/plugins/ti)
+add_subdirectory(${SRC_DIR}/plugins/barsmdp)
 message(STATUS "ASTRA plugins enabled")
 
-# ============================================================================
 # qmcr subdirectory
-# ============================================================================
 set(DEPENDENCIES_LOCATION "${THIRDPARTY_DIR}" CACHE PATH "Passes the path to the thirdparty to the qmcr subproject")
-add_subdirectory(qmcr ${CMAKE_BINARY_DIR}/generated/qmcr)
+
+set(QMCR_SOURCE_DIR "${SRC_DIR}/qmcr")
+if(NOT IS_DIRECTORY "${QMCR_SOURCE_DIR}")
+    message(FATAL_ERROR "qmcr directory not found: ${QMCR_SOURCE_DIR}")
+endif()
+
+add_subdirectory(
+    "${QMCR_SOURCE_DIR}"
+)
 message(STATUS "qmcr subproject added")
 
 # ============================================================================
@@ -304,6 +314,20 @@ target_include_directories(scintilla INTERFACE
 set(PROJECT_INCLUDES
     ${CMAKE_CURRENT_SOURCE_DIR}
     ${QTITAN_ROOT}/include
+    ${SRC_DIR}/
+    ${APP_DIR}/astra/
+    ${APP_DIR}/data/
+    ${APP_DIR}/delegates/
+    ${APP_DIR}/formatting/
+    ${APP_DIR}/forms/
+    ${APP_DIR}/main/
+    ${APP_DIR}/mdi/
+    ${APP_DIR}/protocol_tree/
+    ${APP_DIR}/sdl/
+    ${APP_DIR}/test/
+    ${APP_DIR}/ui_components/
+    ${APP_DIR}/utilities/
+    ${APP_DIR}/astra/astra_headers
 )
 
 # Добавляем Boost и Eigen3 include directories
@@ -325,174 +349,177 @@ endif()
 list(APPEND PROJECT_INCLUDES
     ${ASTRA_BIN_ROOT}/include
     ${ASTRA_BIN_ROOT}/include/comck
-    ${CMAKE_CURRENT_SOURCE_DIR}/astra_headers
 )
 # ============================================================================
 # Source Files
 # ============================================================================
 set(PROJECT_SOURCES
+    ${APP_DIR}/main.cpp
+
     # Main
-    app.h
-    app.cpp
-    main.cpp
-    mainwindow.cpp
-    mainwindow.h
+    ${APP_DIR}/main/app.h
+    ${APP_DIR}/main/app.cpp
+    ${APP_DIR}/main/mainwindow.cpp
+    ${APP_DIR}/main/mainwindow.h
 
     # MDI
-    mdiChildTable.h
-    mdiChildTable.cpp
-    mdiChildGrid.h
-    mdiChildGrid.cpp
-    mdiChildHeaderGrid.h
-    mdiChildHeaderGrid.cpp
+    ${APP_DIR}/mdi/mdiChildTable.h
+    ${APP_DIR}/mdi/mdiChildTable.cpp
+    ${APP_DIR}/mdi/mdiChildGrid.h
+    ${APP_DIR}/mdi/mdiChildGrid.cpp
+    ${APP_DIR}/mdi/mdiChildHeaderGrid.h
+    ${APP_DIR}/mdi/mdiChildHeaderGrid.cpp
 
     # Data
-    rastrdatamodel.h
-    rastrdatamodel.cpp
-    rmodel.cpp
-    rmodel.h
-    testmodel.h
-    testmodel.cpp
-    rdata.h
-    rdata.cpp
-    rtablesdatamanager.h
-    rtablesdatamanager.cpp
-    IDataBlocksWrappers.h
-    IDataBlocksWrappers.cpp
-    QDataBlocks.h
-    QDataBlocks.cpp
+    ${APP_DIR}/data/rastrdatamodel.h
+    ${APP_DIR}/data/rastrdatamodel.cpp
+    ${APP_DIR}/data/rmodel.cpp
+    ${APP_DIR}/data/rmodel.h
+    ${APP_DIR}/data/rdata.h
+    ${APP_DIR}/data/rdata.cpp
+    ${APP_DIR}/data/rtablesdatamanager.h
+    ${APP_DIR}/data/rtablesdatamanager.cpp
+    ${APP_DIR}/data/IDataBlocksWrappers.h
+    ${APP_DIR}/data/IDataBlocksWrappers.cpp
+    ${APP_DIR}/data/QDataBlocks.h
+    ${APP_DIR}/data/QDataBlocks.cpp
 
     # UI Components
-    rtabwidget.h
-    rtabwidget.cpp
-    rtableview.h
-    rtableview.cpp
-    filtertableheader.h
-    filtertableheader.cpp
-    filterlineedit.h
-    filterlineedit.cpp
-    qtitangrid.h
-    qtitangrid.cpp
+    ${APP_DIR}/ui_components/rtabwidget.h
+    ${APP_DIR}/ui_components/rtabwidget.cpp
+    ${APP_DIR}/ui_components/rtableview.h
+    ${APP_DIR}/ui_components/rtableview.cpp
+    ${APP_DIR}/ui_components/filtertableheader.h
+    ${APP_DIR}/ui_components/filtertableheader.cpp
+    ${APP_DIR}/ui_components/filterlineedit.h
+    ${APP_DIR}/ui_components/filterlineedit.cpp
+    ${APP_DIR}/ui_components/qtitangrid.h
+    ${APP_DIR}/ui_components/qtitangrid.cpp
 
     # Delegates
-    delegatecombobox.cpp
-    delegatecombobox.h
-    delegatedoubleitem.h
-    delegatedoubleitem.cpp
-    delegatecheckbox.h
-    delegatecheckbox.cpp
+    ${APP_DIR}/delegates/delegatecombobox.cpp
+    ${APP_DIR}/delegates/delegatecombobox.h
+    ${APP_DIR}/delegates/delegatedoubleitem.h
+    ${APP_DIR}/delegates/delegatedoubleitem.cpp
+    ${APP_DIR}/delegates/delegatecheckbox.h
+    ${APP_DIR}/delegates/delegatecheckbox.cpp
 
     # Forms
-    ColPropForm.h
-    ColPropForm.cpp
-    ColPropForm.ui
-    formsettings.h
-    formsettings.cpp
-    formsettingsdatas.h
-    formsettingsdatas.cpp
-    formsettingsdatas.ui
-    formsettingsforms.h
-    formsettingsforms.cpp
-    formsettingsforms.ui
-    formsettingsonloadfiles.h
-    formsettingsonloadfiles.cpp
-    formsettingsonloadfiles.ui
-    formsettingsstackeditem.h
-    formsettingsstackeditem.cpp
-    formsettingsonloadtemplates.h
-    formsettingsonloadtemplates.cpp
-    formsettingsonloadtemplates.ui
-    formsettingsonloadforms.h
-    formsettingsonloadforms.cpp
-    formsettingsonloadforms.ui
-    formfilenew.h
-    formfilenew.cpp
-    formfilenew.ui
-    formselection.h
-    formselection.cpp
-    formselection.ui
-    formprotocol.h
-    formprotocol.cpp
-    formprotocol.ui
-    formexportcsv.h
-    formexportcsv.cpp
-    formexportcsv.ui
-    formgroupcorrection.h
-    formgroupcorrection.cpp
-    formgroupcorrection.ui
-    formimportcsv2.h
-    formimportcsv2.cpp
-    formimportcsv2.ui
-    formcalcidop.h
-    formcalcidop.cpp
-    formcalcidop.ui
-    formsaveall.h
-    formsaveall.cpp
-    formsaveall.ui
+    ${APP_DIR}/forms/ColPropForm.h
+    ${APP_DIR}/forms/ColPropForm.cpp
+    ${APP_DIR}/forms/ColPropForm.ui
+    ${APP_DIR}/forms/formsettings.h
+    ${APP_DIR}/forms/formsettings.cpp
+    ${APP_DIR}/forms/formsettingsdatas.h
+    ${APP_DIR}/forms/formsettingsdatas.cpp
+    ${APP_DIR}/forms/formsettingsdatas.ui
+    ${APP_DIR}/forms/formsettingsforms.h
+    ${APP_DIR}/forms/formsettingsforms.cpp
+    ${APP_DIR}/forms/formsettingsforms.ui
+    ${APP_DIR}/forms/formsettingsonloadfiles.h
+    ${APP_DIR}/forms/formsettingsonloadfiles.cpp
+    ${APP_DIR}/forms/formsettingsonloadfiles.ui
+    ${APP_DIR}/forms/formsettingsstackeditem.h
+    ${APP_DIR}/forms/formsettingsstackeditem.cpp
+    ${APP_DIR}/forms/formsettingsonloadtemplates.h
+    ${APP_DIR}/forms/formsettingsonloadtemplates.cpp
+    ${APP_DIR}/forms/formsettingsonloadtemplates.ui
+    ${APP_DIR}/forms/formsettingsonloadforms.h
+    ${APP_DIR}/forms/formsettingsonloadforms.cpp
+    ${APP_DIR}/forms/formsettingsonloadforms.ui
+    ${APP_DIR}/forms/formfilenew.h
+    ${APP_DIR}/forms/formfilenew.cpp
+    ${APP_DIR}/forms/formfilenew.ui
+    ${APP_DIR}/forms/formselection.h
+    ${APP_DIR}/forms/formselection.cpp
+    ${APP_DIR}/forms/formselection.ui
+    ${APP_DIR}/forms/formprotocol.h
+    ${APP_DIR}/forms/formprotocol.cpp
+    ${APP_DIR}/forms/formprotocol.ui
+    ${APP_DIR}/forms/formexportcsv.h
+    ${APP_DIR}/forms/formexportcsv.cpp
+    ${APP_DIR}/forms/formexportcsv.ui
+    ${APP_DIR}/forms/formgroupcorrection.h
+    ${APP_DIR}/forms/formgroupcorrection.cpp
+    ${APP_DIR}/forms/formgroupcorrection.ui
+    ${APP_DIR}/forms/formimportcsv2.h
+    ${APP_DIR}/forms/formimportcsv2.cpp
+    ${APP_DIR}/forms/formimportcsv2.ui
+    ${APP_DIR}/forms/formcalcidop.h
+    ${APP_DIR}/forms/formcalcidop.cpp
+    ${APP_DIR}/forms/formcalcidop.ui
+    ${APP_DIR}/forms/formsaveall.h
+    ${APP_DIR}/forms/formsaveall.cpp
+    ${APP_DIR}/forms/formsaveall.ui
 
     # Protocol tree
-    protocoltreeitem.h
-    protocoltreeitem.cpp
-    protocoltreemodel.h
-    protocoltreemodel.cpp
+    ${APP_DIR}/protocol_tree/protocoltreeitem.h
+    ${APP_DIR}/protocol_tree/protocoltreeitem.cpp
+    ${APP_DIR}/protocol_tree/protocoltreemodel.h
+    ${APP_DIR}/protocol_tree/protocoltreemodel.cpp
 
     # Conditional formatting
-    CondFormat.h
-    CondFormat.cpp
-    CondFormatManager.h
-    CondFormatManager.cpp
-    CondFormatManager.ui
-    Palette.h
-    Palette.cpp
-    condformatjson.h
-    condformatjson.cpp
+    ${APP_DIR}/formatting/CondFormat.h
+    ${APP_DIR}/formatting/CondFormat.cpp
+    ${APP_DIR}/formatting/CondFormatManager.h
+    ${APP_DIR}/formatting/CondFormatManager.cpp
+    ${APP_DIR}/formatting/CondFormatManager.ui
+    ${APP_DIR}/formatting/Palette.h
+    ${APP_DIR}/formatting/Palette.cpp
+    ${APP_DIR}/formatting/condformatjson.h
+    ${APP_DIR}/formatting/condformatjson.cpp
 
     # Utilities
-    utils.h
-    singleton_dclp.hpp
-    params.h
-    params.cpp
-    common_qrastr.h
-    common_qrastr.cpp
-    rastrhlp.h
-    rastrhlp.cpp
-    Settings.h
-    Settings.cpp
-    string_bool.h
-    string_bool.cpp
-    linkedform.h
-    linkedform.cpp
+    ${APP_DIR}/utilities/utils.h
+    ${APP_DIR}/utilities/singleton_dclp.hpp
+    ${APP_DIR}/utilities/params.h
+    ${APP_DIR}/utilities/params.cpp
+    ${APP_DIR}/utilities/common_qrastr.h
+    ${APP_DIR}/utilities/common_qrastr.cpp
+    ${APP_DIR}/utilities/rastrhlp.h
+    ${APP_DIR}/utilities/rastrhlp.cpp
+    ${APP_DIR}/utilities/Settings.h
+    ${APP_DIR}/utilities/Settings.cpp
+    ${APP_DIR}/utilities/string_bool.h
+    ${APP_DIR}/utilities/string_bool.cpp
+    ${APP_DIR}/utilities/linkedform.h
+    ${APP_DIR}/utilities/linkedform.cpp
 
     # SDL
-    SDLChild.h
-    SDLChild.cpp
+    ${APP_DIR}/sdl/SDLChild.h
+    ${APP_DIR}/sdl/SDLChild.cpp
 
     # Test hints
-    tsthints.h
-    tsthints.cpp
-    tsthintsmvc.h
-    tsthintsmvc.cpp
+    ${APP_DIR}/test/tsthints.h
+    ${APP_DIR}/test/tsthints.cpp
+    ${APP_DIR}/test/tsthintsmvc.h
+    ${APP_DIR}/test/tsthintsmvc.cpp
+    ${APP_DIR}/test/testmodel.h
+    ${APP_DIR}/test/testmodel.cpp
 
     # Plugin
-    plugins/rastr/plugin_interfaces.h
+    ${SRC_DIR}/plugins/rastr/plugin_interfaces.h
 
     # ASTRA
-    astra_shared.h
-    qastra_events_data.h
-    qastra.h
-    qastra.cpp
-    qti.h
-    qti.cpp
-    qbarsmdp.h
-    qbarsmdp.cpp
-
-    # Resources
-    qrastr.qrc
-    appsettings.json
+    ${APP_DIR}/astra/astra_shared.h
+    ${APP_DIR}/astra/qastra_events_data.h
+    ${APP_DIR}/astra/qastra.h
+    ${APP_DIR}/astra/qastra.cpp
+    ${APP_DIR}/astra/qti.h
+    ${APP_DIR}/astra/qti.cpp
+    ${APP_DIR}/astra/qbarsmdp.h
+    ${APP_DIR}/astra/qbarsmdp.cpp
 )
 
 # Translation files
-set(TS_FILES qrastr_ru_RU.ts)
+set(TS_FILES
+    recources/qrastr_ru_RU.ts
+)
+
+# Ресурсы
+set(RESOURCES
+    resources/qrastr.qrc
+)
 
 # ============================================================================
 # Executable - создание исполняемого файла
@@ -502,6 +529,7 @@ if(QT_VERSION_MAJOR GREATER_EQUAL 6)
     qt_add_executable(${PROJECT_NAME}
         MANUAL_FINALIZATION  # Вызовем qt_finalize_executable() вручную в конце
         ${PROJECT_SOURCES}
+        ${RESOURCES}
     )
     # Создание скомпилированных переводов (.qm файлы из .ts файлов)
     qt_create_translation(QM_FILES
@@ -512,6 +540,7 @@ else()
     # Qt5: используем add_executable
     add_executable(${PROJECT_NAME}
         ${PROJECT_SOURCES}
+        ${RESOURCES}
     )
 
     qt5_create_translation(QM_FILES

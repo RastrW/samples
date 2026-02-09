@@ -5,7 +5,8 @@
 #include <iostream>
 #include <spdlog/spdlog.h>
 using WrapperExceptionType = std::runtime_error;
-#include "qti.h"
+#include "../../app/astra/qti.h"
+
 //#include "IPlainRastrWrappers.h"
 
 #include "pluginti.h"

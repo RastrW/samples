@@ -18,7 +18,7 @@ QQmlDebuggingEnabler enabler;
 #include "tst2_dialog.h"
 #include "forms/dlgfindrepl.h"
 //#include "IPlainRastr.h"
-#include "../qastra_events_data.h"
+#include "../app/astra/qastra_events_data.h"
 #include "pyhlp.h"
 
 
