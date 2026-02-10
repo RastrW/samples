@@ -304,7 +304,7 @@ void MainWindow::setQAstra(const std::shared_ptr<QAstra>& sp_qastra){
     m_RTDM.setQAstra(sp_qastra.get());
 
     connect(m_sp_qastra.get(), &QAstra::onRastrLog, m_pFormProtocol, &FormProtocol::onRastrLog);
-    connect( m_sp_qastra.get(), SIGNAL(onRastrLog(const _log_data&) ), m_pMcrWnd,       SLOT(onRastrLog(const _log_data&)) );
+    connect(m_sp_qastra.get(), &QAstra::onRastrLog, m_pMcrWnd, &McrWnd::onRastrLog);
 
     m_pFormProtocol->setIgnoreAppendProtocol(true);
     assert(nullptr == m_up_PyHlp);
@@ -793,7 +793,7 @@ void MainWindow::slot_barsMdpPrepareWrap()
 
 void MainWindow::slot_openMcrDialog(){
     McrWnd* pMcrWnd = new McrWnd( this, McrWnd::_en_role::macro_dlg );
-    connect( m_sp_qastra.get(), SIGNAL( onRastrPrint(const std::string&) ), pMcrWnd, SLOT( onRastrPrint(const std::string&) ) );
+    connect(m_sp_qastra.get(), &QAstra::onRastrPrint, pMcrWnd, &McrWnd::onRastrPrint);
 
     pMcrWnd->setPyHlp(m_up_PyHlp.get());
     pMcrWnd->show();

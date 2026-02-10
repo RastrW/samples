@@ -14,7 +14,16 @@ class  DlgFindRepl;
 class  PyHlp;
 struct _log_data;
 
-class McrWnd : public QDialog{
+///@note qmcr подключается в качестве dll, поэтому для использования
+///современного connect требуется qmcr_EXPORTS
+#ifdef qmcr_EXPORTS
+#define QMCR_API Q_DECL_EXPORT
+#else
+#define QMCR_API Q_DECL_IMPORT
+#endif
+
+
+class QMCR_API McrWnd : public QDialog{
     Q_OBJECT
 public:
     enum class _en_role{
