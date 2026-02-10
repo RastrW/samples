@@ -66,25 +66,8 @@ if(QRASTR_BUILD_WITH_MCR)
 endif()
 
 # ============================================================================
-# Platform Detection для Scintilla/Lexilla
+# Scintilla/Lexilla
 # ============================================================================
-# Определяем CONFIG_DIR для путей к precompiled библиотекам
-if(CMAKE_BUILD_TYPE MATCHES Debug)
-    set(CONFIG_DIR "Debug")
-else()
-    set(CONFIG_DIR "Release")
-endif()
-
-# Определяем PLATFORM_DIR
-if(WIN32)
-    if(MSVC)
-        set(PLATFORM_DIR "win/msvc")
-    elseif(MINGW)
-        set(PLATFORM_DIR "win/mingw")
-    endif()
-elseif(UNIX AND NOT APPLE)
-        set(PLATFORM_DIR "linux/gcc")
-endif()
 
 # Базовый путь к precompiled библиотекам
 set(PRECOMPILED_BASE "${SCI_DIR}/compile")
@@ -215,35 +198,18 @@ endif()
 # Линковка Scintilla/Lexilla для разных платформ
 # ============================================================================
 if(MSVC)
-    # MSVC: используем import libraries (.lib) и копируем DLL
-    if(CMAKE_BUILD_TYPE MATCHES Debug)
-        # Debug build - ищем ScintillaEdit с суффиксом _d
-        find_library(SCINTILLA_EDIT_LIB
-            NAMES ScintillaEdit_d5 ScintillaEdit5
-            PATHS "${SCINTILLA_DIR}/lib" "${SCI_DIR}/bin"
-            NO_DEFAULT_PATH
-        )
+    set(SCINTILLA_LIB_NAME "ScintillaEdit5")
 
-        if(SCINTILLA_EDIT_LIB)
-            target_link_libraries(qmcr PRIVATE ${SCINTILLA_EDIT_LIB})
-            message(STATUS "Linked Scintilla (Debug): ${SCINTILLA_EDIT_LIB}")
-        else()
-            message(FATAL_ERROR "ScintillaEdit library not found for Debug configuration")
-        endif()
+    find_library(SCINTILLA_EDIT_LIB
+        NAMES ${SCINTILLA_LIB_NAME}
+        PATHS "${SCINTILLA_DIR}/lib"
+        NO_DEFAULT_PATH
+    )
+
+    if(SCINTILLA_EDIT_LIB)
+        target_link_libraries(qmcr PRIVATE ${SCINTILLA_EDIT_LIB})
     else()
-        # Release build
-        find_library(SCINTILLA_EDIT_LIB
-            NAMES ScintillaEdit5
-            PATHS "${SCINTILLA_DIR}/lib" "${SCI_DIR}/bin"
-            NO_DEFAULT_PATH
-        )
-
-        if(SCINTILLA_EDIT_LIB)
-            target_link_libraries(qmcr PRIVATE ${SCINTILLA_EDIT_LIB})
-            message(STATUS "Linked Scintilla (Release): ${SCINTILLA_EDIT_LIB}")
-        else()
-            message(FATAL_ERROR "ScintillaEdit library not found for Release configuration")
-        endif()
+        message(FATAL_ERROR "ScintillaEdit library not found")
     endif()
 
     # Lexilla: ищем import library для DLL (lexilla.lib находится в lib/)
@@ -268,45 +234,13 @@ if(MSVC)
     else()
         message(FATAL_ERROR "Lexilla import library (lexilla.lib) not found in ${LEXILLA_DIR}/lib")
     endif()
-
-elseif(MINGW)
-    # MinGW: используем статические библиотеки (.a)
-    find_library(SCINTILLA_EDIT_LIB
-        NAMES ScintillaEdit5 libScintillaEdit5
-        PATHS "${SCINTILLA_DIR}/lib" "${SCI_DIR}/bin"
-        NO_DEFAULT_PATH
-    )
-
-    # Статическая библиотека Lexilla для MinGW
-    find_library(LEXILLA_STATIC_LIB
-        NAMES liblexilla.a liblexilla
-        PATHS "${LEXILLA_DIR}/lib" "${SCI_DIR}/bin"
-        NO_DEFAULT_PATH
-    )
-
-    message(STATUS "Scintilla libraries for MinGW:")
-    message(STATUS "  ScintillaEdit: ${SCINTILLA_EDIT_LIB}")
-    message(STATUS "  Lexilla (static): ${LEXILLA_STATIC_LIB}")
-
-    if(SCINTILLA_EDIT_LIB)
-        target_link_libraries(qmcr PRIVATE ${SCINTILLA_EDIT_LIB})
-    else()
-        message(FATAL_ERROR "Neither ScintillaEdit found!")
-    endif()
-
-    if(LEXILLA_STATIC_LIB)
-        target_link_libraries(qmcr PRIVATE ${LEXILLA_STATIC_LIB})
-    else()
-        message(FATAL_ERROR "Lexilla static library not found!")
-    endif()
-
 elseif(UNIX)
     # Linux: используем shared library (.so) для динамической загрузки
 
     # Для Scintilla - статическая линковка
     find_library(SCINTILLA_EDIT_LIB
         NAMES ScintillaEdit libScintillaEdit
-        PATHS "${SCINTILLA_DIR}/lib" "${SCINTILLA_DIR}/bin" "${SCI_DIR}/bin"
+        PATHS "${SCINTILLA_DIR}/lib"
         NO_DEFAULT_PATH
     )
 
@@ -373,4 +307,51 @@ if(QT_VERSION_MAJOR EQUAL 6)
     if(NOT QRASTR_BUILD_WITH_MCR)
         qt_finalize_executable(qmcr)
     endif()
+endif()
+
+# ============================================================================
+# Copy Python DLLs (Windows MSVC only)
+# ============================================================================
+if(WIN32 AND Python3_FOUND)
+    # Получаем директорию с Python
+    get_filename_component(PYTHON_DIR "${Python3_EXECUTABLE}" DIRECTORY)
+
+    message(STATUS "PYTHON_DIR: ${PYTHON_DIR}")
+
+    # Копируем python3.dll и pythonXX.dll
+    set(PYTHON_DLLS
+        "${PYTHON_DIR}/python3.dll"
+        "${PYTHON_DIR}/python${Python3_VERSION_MAJOR}${Python3_VERSION_MINOR}.dll"
+    )
+
+    foreach(DLL_PATH ${PYTHON_DLLS})
+        if(EXISTS "${DLL_PATH}")
+            add_custom_command(TARGET qmcr POST_BUILD
+                COMMAND ${CMAKE_COMMAND} -E copy_if_different
+                    "${DLL_PATH}"
+                    "$<TARGET_FILE_DIR:qmcr>/"
+                COMMENT "Copying Python DLL: ${DLL_PATH}"
+            )
+        endif()
+    endforeach()
+endif()
+
+# ============================================================================
+# Copy DLLs
+# ============================================================================
+if(WIN32)
+    # Копирование ScintillaEdit DLL
+    set(SCINTILLA_DLL_NAME "ScintillaEdit5.dll")
+
+    if(EXISTS "${SCINTILLA_DIR}/lib/${SCINTILLA_DLL_NAME}")
+        add_custom_command(TARGET qmcr POST_BUILD
+            COMMAND ${CMAKE_COMMAND} -E copy_if_different
+                "${SCINTILLA_DIR}/lib/${SCINTILLA_DLL_NAME}"
+                "$<TARGET_FILE_DIR:qmcr>/"
+            COMMENT "Copying ${SCINTILLA_DLL_NAME}"
+        )
+    endif()
+
+    # lexilla.dll и ScintillaBaseEdit5.dll копировать НЕ нужно,
+    # т.к. они уже загружаются через import library
 endif()
