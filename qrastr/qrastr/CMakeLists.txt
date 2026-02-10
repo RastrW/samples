@@ -547,14 +547,6 @@ if(QT_VERSION_MAJOR EQUAL 6)
     list(APPEND QT_LIBS Qt${QT_VERSION_MAJOR}::Core5Compat)
 endif()
 
-# Добавляем WidgetsPrivate - как в старом CMakeLists
-# Это НЕ требует find_package, таргет создается автоматически
-if(QT_VERSION_MAJOR EQUAL 5)
-    list(APPEND QT_LIBS Qt5::WidgetsPrivate)
-elseif(QT_VERSION_MAJOR EQUAL 6)
-    list(APPEND QT_LIBS Qt6::WidgetsPrivate)
-endif()
-
 set(THIRD_PARTY_LIBS
     Eigen3::Eigen
     fmt::fmt
