@@ -143,11 +143,6 @@ private slots:
     // Открыть форму из меню
     void slot_openForm(QAction* p_actn);
 
-    ///< Кнопки
-    void slot_btn1Click();
-    void slot_button2Click();
-    void slot_btn3Click();
-
     // Обработка изменений данных
     void slot_dataChanged(std::string _t_name, QModelIndex index, QVariant value);
     void slot_dataChanged(std::string _t_name, std::string _col_name, int _row, QVariant _value);
@@ -192,8 +187,6 @@ private:
     void showEvent( QShowEvent* event ) override;
     // Создать действия (меню, кнопки)
     void createActions();
-    // Создать панель расчётов
-    void createCalcLayout();
     // Создать статусную строку
     void createStatusBar();
     // Сбросить кэш логов

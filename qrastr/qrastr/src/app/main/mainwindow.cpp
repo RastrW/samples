@@ -15,7 +15,6 @@
 #include <QAbstractTableModel>
 #include <QInputDialog>
 
-#include "common_qrastr.h"
 #include <spdlog/sinks/stdout_color_sinks.h>
 #include <spdlog/sinks/rotating_file_sink.h>
 #include <spdlog/sinks/qt_sinks.h>
@@ -24,14 +23,9 @@
 #include "mainwindow.h"
 #include "qbarsmdp.h"
 #include "rtabwidget.h"
-//#include "mdiChildTable.h"
-//#include "mdiChildGrid.h"
-//#include "mdiChildHeaderGrid.h"
-//#include "astra_exp.h"
 #include "qmcr/mcrwnd.h"
 #include "plugins/rastr/plugin_interfaces.h"
 using WrapperExceptionType = std::runtime_error;
-//#include "IPlainRastrWrappers.h"
 #include <astra/IPlainRastrWrappers.h>
 #include "qastra.h"
 #include "qti.h"
@@ -46,11 +40,7 @@ using WrapperExceptionType = std::runtime_error;
 #include "formprotocol.h"
 #include "formcalcidop.h"
 #include <QtitanDef.h>
-#include <QtitanGrid.h>
 #include "qmcr/pyhlp.h"
-#include "SDLChild.h"
-
-
 
 MainWindow::MainWindow(){
     m_workspace = new QMdiArea;
@@ -559,7 +549,6 @@ void MainWindow::slot_rgmWrap(){
     }
     statusBar()->showMessage( str_msg.c_str(), 0 );
     emit sig_calcEnd();
-    //emit rgm_signal();
 }
 
 void MainWindow::slot_kddWrap(){
@@ -888,12 +877,6 @@ void MainWindow::slot_rowDeleted(std::string _t_name, int _row){
     emit sig_update(_t_name);
 }
 
-void MainWindow::slot_button2Click(){
-    const long num_chars = 10000;
-    char* pch_JSON_out = new char[num_chars];
-    //long n_res = PyRunMacro( L"", L"", pch_JSON_out, num_chars );
-}
-
 void MainWindow::slot_updateMenu(){
 
 }
@@ -1120,9 +1103,6 @@ void MainWindow::createActions(){
     m_toolbarTI->addAction(actOC);
     m_toolbarTI->addAction(actRecalcDor);
     m_toolbarTI->addAction(actUpdateTables);
-
-    //TEST BUTTONS
-    //createCalcLayout();
 }
 
 void MainWindow::setCurrentFile(const QString &fileName, const std::string Shablon){
@@ -1189,75 +1169,6 @@ void MainWindow::updateRecentFileActions(){
 
 QString MainWindow::strippedName(const QString &fullFileName){
     return QFileInfo(fullFileName).fileName();
-}
-
-void MainWindow::slot_btn1Click(){
-    QTableView* view = new QTableView;
-    view->setWindowTitle("charttest");
-    view->setWindowFlags(Qt::Tool);
-    view->setModel(new ChartModel);
-    view->show();
-
-    //Show stock grid with nodes table
-    /*
-    QTableView* ptv = new QTableView();
-    RModel* pmm = new RModel(nullptr,m_sp_qastra.get(),nullptr);
-    const auto& forms = m_lstUIForms;
-    auto it = forms.begin();
-    std::advance(it,0);
-    auto form  =*it;
-    pmm->setForm(&form);
-    pmm->populateDataFromRastr();
-    ptv->setSortingEnabled(true);
-    ptv->setModel(pmm);
-    ptv->show();
-    */
-}
-
-void MainWindow::slot_btn3Click(){
-    //Show test ComboBox item at grid column
-
-    QStandardItemModel* model = new QStandardItemModel(8, 2);
-    QTableView* ptableView = new QTableView();;
-    DelegateComboBox* delegate = new DelegateComboBox(this,"Item1,Item2,Item3");
-    //tableView.setItemDelegate(&delegate);
-    ptableView->setItemDelegateForColumn(1, delegate); // Column 0 can take any value, column 1 can only take values up to 8.
-
-    for (int row = 0; row < 8; ++row)
-    {
-        for (int column = 0; column < 2; ++column)
-        {
-            QModelIndex index = model->index(row, column, QModelIndex());
-            int value = (row+1) * (column+1);
-            std::cout << "Setting (" << row << ", " << column << ") to " << value << std::endl;
-            model->setData(index, QVariant(value));
-        }
-    }
-    // Make the combo boxes always displayed.
-    for ( int i = 0; i < model->rowCount(); ++i )
-    {
-        ptableView->openPersistentEditor( model->index(i, 1) );
-    }
-    ptableView->setModel(model);
-    ptableView->show();
-}
-
-void MainWindow::createCalcLayout(){
-    // набор вложенных виджетов - кнопок
-    QPushButton *btn1 = new QPushButton("Stock grid");
-    QPushButton *btn2 = new QPushButton("Button 2");
-    QPushButton *btn3 = new QPushButton("Tst ComboBoxDelegate");
-
-    connect(btn1,&QPushButton::clicked,this, &MainWindow::slot_btn1Click);
-    connect(btn2,&QPushButton::clicked,this, &MainWindow::slot_button2Click);
-    connect(btn3,&QPushButton::clicked,this, &MainWindow::slot_btn3Click);
-
-    QWidget* widget = new QWidget;
-    widget -> setWindowTitle("Functions");
-    m_layoutActions = new QHBoxLayout(widget);
-    m_layoutActions->addWidget(btn1);
-    m_layoutActions->addWidget(btn3);
-    m_toolbarCalc->addWidget(widget);
 }
 
 void MainWindow::createStatusBar(){
