@@ -208,71 +208,59 @@ if(MSVC)
 
     if(SCINTILLA_EDIT_LIB)
         target_link_libraries(qmcr PRIVATE ${SCINTILLA_EDIT_LIB})
+        message(STATUS "Linked Scintilla: ${SCINTILLA_EDIT_LIB}")
     else()
         message(FATAL_ERROR "ScintillaEdit library not found")
     endif()
 
-    # Lexilla: ищем import library для DLL (lexilla.lib находится в lib/)
-    find_library(LEXILLA_IMPORT_LIB
-        NAMES lexilla
-        PATHS "${LEXILLA_DIR}/lib"
-        NO_DEFAULT_PATH
-    )
-
-    if(LEXILLA_IMPORT_LIB)
-        target_link_libraries(qmcr PRIVATE ${LEXILLA_IMPORT_LIB})
-        message(STATUS "Using Lexilla import lib: ${LEXILLA_IMPORT_LIB}")
-
-        # Копируем lexilla5.dll
-        if(EXISTS "${LEXILLA_DIR}/bin/lexilla5.dll")
-            file(COPY "${LEXILLA_DIR}/bin/lexilla5.dll"
-                 DESTINATION "${CMAKE_BINARY_DIR}")
-            message(STATUS "Copied lexilla5.dll to ${CMAKE_BINARY_DIR}")
-        else()
-            message(WARNING "lexilla5.dll not found at ${LEXILLA_DIR}/bin/")
-        endif()
+    # Копируем lexillaв output directory для динамической загрузки через QLibrary::resolve()
+    if(EXISTS "${LEXILLA_DIR}/bin/lexilla5.dll")
+        add_custom_command(TARGET qmcr POST_BUILD
+            COMMAND ${CMAKE_COMMAND} -E copy_if_different
+                "${LEXILLA_DIR}/bin/lexilla5.dll"
+                "$<TARGET_FILE_DIR:qmcr>/"
+            COMMENT "Copying lexilla5.dll for dynamic loading"
+        )
+        message(STATUS "Will copy lexilla5.dll from: ${LEXILLA_DIR}/bin/lexilla5.dll")
     else()
-        message(FATAL_ERROR "Lexilla import library (lexilla.lib) not found in ${LEXILLA_DIR}/lib")
+        message(FATAL_ERROR "lexilla5.dll not found at ${LEXILLA_DIR}/bin/")
     endif()
-elseif(UNIX)
-    # Linux: используем shared library (.so) для динамической загрузки
 
-    # Для Scintilla - статическая линковка
+elseif(UNIX)
     find_library(SCINTILLA_EDIT_LIB
         NAMES ScintillaEdit libScintillaEdit
         PATHS "${SCINTILLA_DIR}/lib"
         NO_DEFAULT_PATH
     )
 
-    # Для Lexilla - НЕ линкуем напрямую, только добавляем в RPATH
-    # Lexilla будет загружаться динамически через QLibrary
-
-    message(STATUS "Scintilla libraries for Linux:")
-    message(STATUS "  ScintillaEdit: ${SCINTILLA_EDIT_LIB}")
-    message(STATUS "  Lexilla will be loaded dynamically from: ${LEXILLA_DIR}/bin")
-
     # Линкуем только Scintilla
     if(SCINTILLA_EDIT_LIB)
         target_link_libraries(qmcr PRIVATE ${SCINTILLA_EDIT_LIB})
+        message(STATUS "Linked Scintilla: ${SCINTILLA_EDIT_LIB}")
     else()
-        message(FATAL_ERROR "Neither ScintillaEdit nor ScintillaEditBase found!")
+        message(FATAL_ERROR "ScintillaEdit library not found!")
     endif()
 
-    # Добавляем RPATH чтобы приложение могло найти lexilla5.so
+    # Копируем lexillaв output directory для динамической загрузки через QLibrary::resolve()
+    if(EXISTS "${LEXILLA_DIR}/bin/liblexilla.so")
+        add_custom_command(TARGET qmcr POST_BUILD
+            COMMAND ${CMAKE_COMMAND} -E copy_if_different
+                "${LEXILLA_DIR}/bin/liblexilla.so"
+                "$<TARGET_FILE_DIR:qmcr>/"
+            COMMENT "Copying liblexilla.so for dynamic loading"
+        )
+        message(STATUS "Will copy liblexilla.so from: ${LEXILLA_DIR}/bin/liblexilla.so")
+    else()
+        message(FATAL_ERROR "liblexilla.so not found at ${LEXILLA_DIR}/bin/")
+    endif()
+
+    # Добавляем RPATH чтобы приложение могло найти библиотеки
     set_target_properties(qmcr PROPERTIES
-        INSTALL_RPATH "${LEXILLA_DIR}/bin"
-        BUILD_RPATH "${LEXILLA_DIR}/bin"
+        INSTALL_RPATH "$ORIGIN"
+        BUILD_RPATH "$ORIGIN"
     )
-
-    # Копируем lexilla5.so в output directory
-    if(EXISTS "${LEXILLA_DIR}/bin/lexilla5.so")
-        file(COPY "${LEXILLA_DIR}/bin/lexilla5.so"
-             DESTINATION "${CMAKE_BINARY_DIR}")
-        message(STATUS "Copied lexilla5.so to ${CMAKE_BINARY_DIR}")
-    else()
-        message(WARNING "lexilla5.so not found at ${LEXILLA_DIR}/bin/")
-    endif()
 endif()
+
 # ============================================================================
 # Target Properties
 # ============================================================================
@@ -310,36 +298,32 @@ if(QT_VERSION_MAJOR EQUAL 6)
 endif()
 
 # ============================================================================
-# Copy Python DLLs (Windows MSVC only)
-# ============================================================================
-if(WIN32 AND Python3_FOUND)
-    # Получаем директорию с Python
-    get_filename_component(PYTHON_DIR "${Python3_EXECUTABLE}" DIRECTORY)
-
-    message(STATUS "PYTHON_DIR: ${PYTHON_DIR}")
-
-    # Копируем python3.dll и pythonXX.dll
-    set(PYTHON_DLLS
-        "${PYTHON_DIR}/python3.dll"
-        "${PYTHON_DIR}/python${Python3_VERSION_MAJOR}${Python3_VERSION_MINOR}.dll"
-    )
-
-    foreach(DLL_PATH ${PYTHON_DLLS})
-        if(EXISTS "${DLL_PATH}")
-            add_custom_command(TARGET qmcr POST_BUILD
-                COMMAND ${CMAKE_COMMAND} -E copy_if_different
-                    "${DLL_PATH}"
-                    "$<TARGET_FILE_DIR:qmcr>/"
-                COMMENT "Copying Python DLL: ${DLL_PATH}"
-            )
-        endif()
-    endforeach()
-endif()
-
-# ============================================================================
-# Copy DLLs
+# Copy Python DLLs
 # ============================================================================
 if(WIN32)
+    if(Python3_FOUND)
+        # Получаем директорию с Python
+        get_filename_component(PYTHON_DIR "${Python3_EXECUTABLE}" DIRECTORY)
+
+        message(STATUS "PYTHON_DIR: ${PYTHON_DIR}")
+
+        # Копируем python3.dll и pythonXX.dll
+        set(PYTHON_DLLS
+            "${PYTHON_DIR}/python3.dll"
+            "${PYTHON_DIR}/python${Python3_VERSION_MAJOR}${Python3_VERSION_MINOR}.dll"
+        )
+
+        foreach(DLL_PATH ${PYTHON_DLLS})
+            if(EXISTS "${DLL_PATH}")
+                add_custom_command(TARGET qmcr POST_BUILD
+                    COMMAND ${CMAKE_COMMAND} -E copy_if_different
+                        "${DLL_PATH}"
+                        "$<TARGET_FILE_DIR:qmcr>/"
+                    COMMENT "Copying Python DLL: ${DLL_PATH}"
+                )
+            endif()
+        endforeach()
+    endif()
     # Копирование ScintillaEdit DLL
     set(SCINTILLA_DLL_NAME "ScintillaEdit5.dll")
 
@@ -350,8 +334,8 @@ if(WIN32)
                 "$<TARGET_FILE_DIR:qmcr>/"
             COMMENT "Copying ${SCINTILLA_DLL_NAME}"
         )
+        message(STATUS "Will copy ${SCINTILLA_DLL_NAME} from: ${SCINTILLA_DIR}/bin/")
+    else()
+        message(WARNING "${SCINTILLA_DLL_NAME} not found at ${SCINTILLA_DIR}/bin/")
     endif()
-
-    # lexilla.dll и ScintillaBaseEdit5.dll копировать НЕ нужно,
-    # т.к. они уже загружаются через import library
 endif()
