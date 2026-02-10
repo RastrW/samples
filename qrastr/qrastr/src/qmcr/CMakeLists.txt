@@ -21,15 +21,6 @@ endif()
 
 set(SCI_DIR "${DEPENDENCIES_LOCATION}")
 
-# ============================================================================
-# Python Configuration (for codegen)
-# ============================================================================
-# For MinGW: specify Python3 paths
-if(WIN32 AND NOT MSVC)
-    set(Python3_EXECUTABLE "C:/msys64/mingw64/bin/python3.exe" CACHE FILEPATH "" FORCE)
-    set(Python3_ROOT_DIR   "C:/msys64/mingw64"                 CACHE PATH "" FORCE)
-endif()
-
 # Visual Studio exports all symbols by default when building DLL
 set(CMAKE_WINDOWS_EXPORT_ALL_SYMBOLS ON)
 
@@ -69,7 +60,8 @@ include_directories(
 
 if(QRASTR_BUILD_WITH_MCR)
     include_directories(
-        # Add qrastr-specific includes if needed
+        #"${ASTRA_LOCATION}/"
+        #"${ASTRA_LOCATION}/../../astra/"
     )
 endif()
 
@@ -119,9 +111,6 @@ endif()
 if(EXISTS "${SCINTILLA_DIR}/lib")
     link_directories("${SCINTILLA_DIR}/lib")
 endif()
-if(EXISTS "${SCINTILLA_BASE_DIR}/lib")
-    link_directories("${SCINTILLA_BASE_DIR}/lib")
-endif()
 if(EXISTS "${LEXILLA_DIR}/lib")
     link_directories("${LEXILLA_DIR}/lib")
 endif()
@@ -130,9 +119,6 @@ endif()
 if(WIN32)
     if(EXISTS "${SCINTILLA_DIR}/bin")
         link_directories("${SCINTILLA_DIR}/bin")
-    endif()
-    if(EXISTS "${SCINTILLA_BASE_DIR}/bin")
-        link_directories("${SCINTILLA_BASE_DIR}/bin")
     endif()
     if(EXISTS "${LEXILLA_DIR}/bin")
         link_directories("${LEXILLA_DIR}/bin")
@@ -291,12 +277,6 @@ elseif(MINGW)
         NO_DEFAULT_PATH
     )
 
-    find_library(SCINTILLA_EDIT_BASE_LIB
-        NAMES ScintillaEditBase5 libScintillaEditBase5
-        PATHS "${SCINTILLA_BASE_DIR}/lib" "${SCI_DIR}/bin"
-        NO_DEFAULT_PATH
-    )
-
     # Статическая библиотека Lexilla для MinGW
     find_library(LEXILLA_STATIC_LIB
         NAMES liblexilla.a liblexilla
@@ -306,16 +286,12 @@ elseif(MINGW)
 
     message(STATUS "Scintilla libraries for MinGW:")
     message(STATUS "  ScintillaEdit: ${SCINTILLA_EDIT_LIB}")
-    message(STATUS "  ScintillaEditBase: ${SCINTILLA_EDIT_BASE_LIB}")
     message(STATUS "  Lexilla (static): ${LEXILLA_STATIC_LIB}")
 
     if(SCINTILLA_EDIT_LIB)
         target_link_libraries(qmcr PRIVATE ${SCINTILLA_EDIT_LIB})
-    elseif(SCINTILLA_EDIT_BASE_LIB)
-        target_link_libraries(qmcr PRIVATE ${SCINTILLA_EDIT_BASE_LIB})
-        message(WARNING "ScintillaEdit not found, using ScintillaEditBase")
     else()
-        message(FATAL_ERROR "Neither ScintillaEdit nor ScintillaEditBase found!")
+        message(FATAL_ERROR "Neither ScintillaEdit found!")
     endif()
 
     if(LEXILLA_STATIC_LIB)
@@ -334,28 +310,16 @@ elseif(UNIX)
         NO_DEFAULT_PATH
     )
 
-    if(NOT SCINTILLA_EDIT_LIB)
-        find_library(SCINTILLA_EDIT_BASE_LIB
-            NAMES ScintillaEditBase libScintillaEditBase
-            PATHS "${SCINTILLA_BASE_DIR}/lib" "${SCINTILLA_BASE_DIR}/bin" "${SCI_DIR}/bin"
-            NO_DEFAULT_PATH
-        )
-    endif()
-
     # Для Lexilla - НЕ линкуем напрямую, только добавляем в RPATH
     # Lexilla будет загружаться динамически через QLibrary
 
     message(STATUS "Scintilla libraries for Linux:")
     message(STATUS "  ScintillaEdit: ${SCINTILLA_EDIT_LIB}")
-    message(STATUS "  ScintillaEditBase: ${SCINTILLA_EDIT_BASE_LIB}")
     message(STATUS "  Lexilla will be loaded dynamically from: ${LEXILLA_DIR}/bin")
 
     # Линкуем только Scintilla
     if(SCINTILLA_EDIT_LIB)
         target_link_libraries(qmcr PRIVATE ${SCINTILLA_EDIT_LIB})
-    elseif(SCINTILLA_EDIT_BASE_LIB)
-        target_link_libraries(qmcr PRIVATE ${SCINTILLA_EDIT_BASE_LIB})
-        message(WARNING "ScintillaEdit not found, using ScintillaEditBase")
     else()
         message(FATAL_ERROR "Neither ScintillaEdit nor ScintillaEditBase found!")
     endif()

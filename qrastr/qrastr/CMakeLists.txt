@@ -276,10 +276,6 @@ message(STATUS "ASTRA plugins enabled")
 set(DEPENDENCIES_LOCATION "${THIRDPARTY_DIR}" CACHE PATH "Passes the path to the thirdparty to the qmcr subproject")
 
 set(QMCR_SOURCE_DIR "${SRC_DIR}/qmcr")
-if(NOT IS_DIRECTORY "${QMCR_SOURCE_DIR}")
-    message(FATAL_ERROR "qmcr directory not found: ${QMCR_SOURCE_DIR}")
-endif()
-
 add_subdirectory(
     "${QMCR_SOURCE_DIR}"
 )
