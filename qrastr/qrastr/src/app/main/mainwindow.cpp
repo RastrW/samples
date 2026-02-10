@@ -303,7 +303,7 @@ void MainWindow::setQAstra(const std::shared_ptr<QAstra>& sp_qastra){
     m_sp_qastra = sp_qastra;
     m_RTDM.setQAstra(sp_qastra.get());
 
-    connect( m_sp_qastra.get(), SIGNAL(onRastrLog(const _log_data&) ), m_pFormProtocol, SLOT(onRastrLog(const _log_data&)) );
+    connect(m_sp_qastra.get(), &QAstra::onRastrLog, m_pFormProtocol, &FormProtocol::onRastrLog);
     connect( m_sp_qastra.get(), SIGNAL(onRastrLog(const _log_data&) ), m_pMcrWnd,       SLOT(onRastrLog(const _log_data&)) );
 
     m_pFormProtocol->setIgnoreAppendProtocol(true);
@@ -316,7 +316,8 @@ void MainWindow::setQAstra(const std::shared_ptr<QAstra>& sp_qastra){
         tstHints_vetv->setQAstra(std::weak_ptr<QAstra>(m_sp_qastra));
         tstHints_vetv->setTableName("vetv");
         tstHints_vetv->setColNames({"ip","iq","np","name","pl_ip","slb"});
-        const bool my0 = QObject::connect( m_sp_qastra.get(), SIGNAL( onRastrHint(const _hint_data&) ), tstHints_vetv, SLOT( onRastrHint(const _hint_data&) ) );
+        const bool my0 = QObject::connect(m_sp_qastra.get(), &QAstra::onRastrHint,
+                                          tstHints_vetv, &TstHints::onRastrHint);
         assert(my0 == true);
         auto dw_tst_hints_vetv = new ads::CDockWidget( "TstHints", this);
         dw_tst_hints_vetv->setWidget(tstHints_vetv);
@@ -329,7 +330,8 @@ void MainWindow::setQAstra(const std::shared_ptr<QAstra>& sp_qastra){
         tstHints->setQAstra(std::weak_ptr<QAstra>(m_sp_qastra));
         tstHints->setTableName("node");
         tstHints->setColNames({"ny","name","vras","delta"});
-        const bool my1 = QObject::connect( m_sp_qastra.get(), SIGNAL( onRastrHint(const _hint_data&) ), tstHints, SLOT( onRastrHint(const _hint_data&) ) );
+        const bool my1 = QObject::connect(m_sp_qastra.get(), &QAstra::onRastrHint,
+                                          tstHints, &TstHints::onRastrHint);
         assert(my1 == true);
         auto dw_tst_hints = new ads::CDockWidget( "TstHints", this);
         dw_tst_hints->setWidget(tstHints);
@@ -337,24 +339,14 @@ void MainWindow::setQAstra(const std::shared_ptr<QAstra>& sp_qastra){
         auto container_tsthints = m_DockManager->addDockWidgetFloating(dw_tst_hints);
         container_tsthints->move(QPoint(1400,20));
         container_tsthints->resize(600,400);
-        /*
-        static int colCount = 50;
-        static int rowCount = 300;
-        tstHints->setColumnCount(colCount);
-        tstHints->setRowCount(rowCount);
-        for (int col = 0; col < colCount; ++col){
-          tstHints->setHorizontalHeaderItem(col, new QTableWidgetItem(QString("Col %1").arg(col+1)));
-          for (int row = 0; row < rowCount; ++row){
-             tstHints->setItem(row, col, new QTableWidgetItem(QString("T %1-%2").arg(row + 1).arg(col+1)));
-          }
-        }
-*/
     }
 }
+
 void MainWindow::setQTI(const std::shared_ptr<QTI>& sp_qti){
     assert(nullptr!=sp_qti);
     m_sp_qti = sp_qti;
 }
+
 void MainWindow::setQBarsMDP(const std::shared_ptr<QBarsMDP>& sp_qbarsmdp){
     assert(nullptr!=sp_qbarsmdp);
     m_sp_qbarsmdp = sp_qbarsmdp;
