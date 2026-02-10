@@ -13,6 +13,7 @@ class  Tst2_Dialog;
 class  DlgFindRepl;
 class  PyHlp;
 struct _log_data;
+
 class McrWnd : public QDialog{
     Q_OBJECT
 public:
@@ -28,6 +29,9 @@ public:
     void encode(std::string& data_out, const QString& qstr_in);
     void setPyHlp(PyHlp* pPyHlp);
 signals:
+public slots:
+    void onRastrLog(const _log_data&);
+    void onRastrPrint(const std::string&);
 private slots:
     std::pair<bool,bool> checkSaveModified();
     bool onFileNew();
@@ -40,8 +44,6 @@ private slots:
     void onChngEditFileInfo(const QFileInfo& fiNew);
     void Find(SciHlp::_params_find params_find);
     void onQStringAppendProtocol(const QString& qstr);
-    void onRastrLog(const _log_data&);
-    void onRastrPrint(const std::string&);
 private:
     const _en_role en_role_;
     SciHlp*        shEdit_{nullptr};

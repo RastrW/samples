@@ -81,9 +81,10 @@ RTableView::RTableView(QWidget *parent) :
 #endif
 
     cornerButton.setText("*");
-    disconnect(&cornerButton, SIGNAL(clicked()), this, SLOT(selectAll()));
-    connect(&cornerButton , SIGNAL(clicked()), this, SLOT(CornerButtonPressed()));
+    disconnect(&cornerButton, &QPushButton::clicked, this, &QTableView::selectAll);
+    connect(&cornerButton, &QPushButton::clicked, this, &RTableView::CornerButtonPressed);
 }
+
 /*RTableView::RTableView(RTabWidget* rtw)
 {
     m_tableHeader = new FilterTableHeader(this);

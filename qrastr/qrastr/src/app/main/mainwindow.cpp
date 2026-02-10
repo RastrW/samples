@@ -55,7 +55,8 @@ using WrapperExceptionType = std::runtime_error;
 MainWindow::MainWindow(){
     m_workspace = new QMdiArea;
     setCentralWidget(m_workspace);
-    connect(m_workspace, SIGNAL(subWindowActivated(QMdiSubWindow *)), this, SLOT(updateMenus()));
+    connect(m_workspace, &QMdiArea::subWindowActivated, this, &MainWindow::slot_updateMenu);
+
     m_windowMapper = new QSignalMapper(this);
     createActions();
     createStatusBar();
@@ -67,11 +68,11 @@ MainWindow::MainWindow(){
     ads::CDockManager::setConfigFlag(ads::CDockManager::AllTabsHaveCloseButton, true);
     m_DockManager = new ads::CDockManager(this);
     QObject::connect(m_DockManager, &ads::CDockManager::focusedDockWidgetChanged
-                                  , [] (ads::CDockWidget* old, ads::CDockWidget* now){
-        static int Count = 0;
-        qDebug() << Count++ << " CDockManager::focusedDockWidgetChanged old: " << (old ? old->objectName() : "-") << " now: " << now->objectName() << " visible: " << now->isVisible();
-        now->widget()->setFocus();
-    });
+                     , [] (ads::CDockWidget* old, ads::CDockWidget* now){
+                         static int Count = 0;
+                         qDebug() << Count++ << " CDockManager::focusedDockWidgetChanged old: " << (old ? old->objectName() : "-") << " now: " << now->objectName() << " visible: " << now->isVisible();
+                         now->widget()->setFocus();
+                     });
     m_pMcrWnd = new McrWnd( this, McrWnd::_en_role::global_protocol );
     m_pFormProtocol = new FormProtocol(this);
     if(false){
@@ -86,7 +87,7 @@ MainWindow::MainWindow(){
         dw->setFeature( static_cast<ads::CDockWidget::DockWidgetFeature>(f), true);
         //auto area = m_DockManager->addDockWidgetTab(ads::NoDockWidgetArea, dw);
         auto container = m_DockManager->addDockWidgetTab(ads::BottomDockWidgetArea,dw);
-       /* auto container = m_DockManager->addDockWidgetFloating(dw);
+        /* auto container = m_DockManager->addDockWidgetFloating(dw);
         container->move(QPoint(2100, 20));
         container->resize(1200,800);*/
 
@@ -96,9 +97,9 @@ MainWindow::MainWindow(){
         pdwProtocol->setFeature( static_cast<ads::CDockWidget::DockWidgetFeature>(f), true );
         //auto area = m_DockManager->addDockWidgetTab(ads::NoDockWidgetArea, dw);
         auto pfdc = m_DockManager->addDockWidgetTab(ads::BottomDockWidgetArea,pdwProtocol);
-       // auto pfdc = m_DockManager->addDockWidgetFloating(pdwProtocol);
+        // auto pfdc = m_DockManager->addDockWidgetFloating(pdwProtocol);
         //pfdc->move(QPoint(2100, 20));
-       // pfdc->resize(600,400);
+        // pfdc->resize(600,400);
     }
     auto qt_sink = std::make_shared<spdlog::sinks::qt_sink_mt>(m_pMcrWnd, "onQStringAppendProtocol");
     auto logg = spdlog::default_logger();
@@ -144,18 +145,18 @@ int MainWindow::writeSettings(){
 }
 
 void MainWindow::dragEnterEvent(QDragEnterEvent *event){
-   event->acceptProposedAction();
+    event->acceptProposedAction();
 }
 
 void MainWindow::dropEvent(QDropEvent *dropEvent){
-   QStringList filePathList;
-   foreach (QUrl url, dropEvent->mimeData()->urls()){
-       std::string fileName = url.toLocalFile().toStdString();
-       filePathList << url.toLocalFile();
-       m_sp_qastra->Load( eLoadCode::RG_REPL, fileName, "" );
-       setWindowTitle(tr(fileName.c_str()));
-   }
-   dropEvent->acceptProposedAction();
+    QStringList filePathList;
+    foreach (QUrl url, dropEvent->mimeData()->urls()){
+        std::string fileName = url.toLocalFile().toStdString();
+        filePathList << url.toLocalFile();
+        m_sp_qastra->Load( eLoadCode::RG_REPL, fileName, "" );
+        setWindowTitle(tr(fileName.c_str()));
+    }
+    dropEvent->acceptProposedAction();
 }
 
 void MainWindow::logCacheFlush(){
@@ -166,9 +167,9 @@ void MainWindow::logCacheFlush(){
 }
 
 void MainWindow::showEvent( QShowEvent* event ){
-        QWidget::showEvent( event );
-        //your code here
-        // https://stackoverflow.com/questions/14161100/which-qt-widget-should-i-use-for-message-display
+    QWidget::showEvent( event );
+    //your code here
+    // https://stackoverflow.com/questions/14161100/which-qt-widget-should-i-use-for-message-display
 }
 
 MainWindow::_cache_log::_cache_log( const spdlog::level::level_enum lev_in, std::string_view sv_in )
@@ -252,14 +253,10 @@ void MainWindow::setForms(const std::list<CUIForm>& forms){ // https://stackover
         }
         i++;
     }
-    qDebug()<<"Msg1";
-    connect( m_menuOpen, SIGNAL(triggered(QAction *)), this, SLOT(onOpenForm(QAction *)), Qt::UniqueConnection);
-    connect( m_menuCalcParameters, SIGNAL(triggered(QAction *)), this, SLOT(onOpenForm(QAction *)), Qt::UniqueConnection);
-   // connect( m_menuProperties,  SIGNAL(m_menuProperties->aboutToShow()), this, SLOT(setSettingsForms()), Qt::UniqueConnection);
+
+    connect(m_menuOpen, &QMenu::triggered, this, &MainWindow::slot_openForm, Qt::UniqueConnection);
+    connect(m_menuCalcParameters, &QMenu::triggered, this, &MainWindow::slot_openForm, Qt::UniqueConnection);
     connect(m_menuProperties, &QMenu::aboutToShow, this, &MainWindow::setSettingsForms);
-   qDebug()<<"Msg2";
-    // connect( m_menuProperties,  SIGNAL(m_menuProperties->aboutToShow()), this, SLOT(setSettingsForms()), Qt::UniqueConnection);
-   // m_menuProperties->aboutToShow()
 }
 
 void MainWindow::setSettingsForms(){
@@ -295,7 +292,7 @@ void MainWindow::setSettingsForms(){
                 _form.Fields().emplace_back(IRastrPayload{column->Name()}.Value());
             }
             connect(p_actn, &QAction::triggered, [this, _form] {
-                slot_openForm(_form); });
+                openForm(_form); });
         }
         //qDebug() <<"TabName: " << str_tab_name.c_str() << "Templ name: " << str_templ_name.c_str();
     }
@@ -308,6 +305,7 @@ void MainWindow::setQAstra(const std::shared_ptr<QAstra>& sp_qastra){
 
     connect( m_sp_qastra.get(), SIGNAL(onRastrLog(const _log_data&) ), m_pFormProtocol, SLOT(onRastrLog(const _log_data&)) );
     connect( m_sp_qastra.get(), SIGNAL(onRastrLog(const _log_data&) ), m_pMcrWnd,       SLOT(onRastrLog(const _log_data&)) );
+
     m_pFormProtocol->setIgnoreAppendProtocol(true);
     assert(nullptr == m_up_PyHlp);
     m_up_PyHlp = std::move( std::make_unique<PyHlp>( *m_sp_qastra->getRastr().get() ) );
@@ -339,7 +337,7 @@ void MainWindow::setQAstra(const std::shared_ptr<QAstra>& sp_qastra){
         auto container_tsthints = m_DockManager->addDockWidgetFloating(dw_tst_hints);
         container_tsthints->move(QPoint(1400,20));
         container_tsthints->resize(600,400);
-/*
+        /*
         static int colCount = 50;
         static int rowCount = 300;
         tstHints->setColumnCount(colCount);
@@ -364,7 +362,7 @@ void MainWindow::setQBarsMDP(const std::shared_ptr<QBarsMDP>& sp_qbarsmdp){
 
 void MainWindow::closeEvent(QCloseEvent *event){
 
-   /* if (maybeSave()) {
+    /* if (maybeSave()) {
         writeSettings();
         event->accept();
     } else {
@@ -377,7 +375,8 @@ void MainWindow::closeEvent(QCloseEvent *event){
     if (m_DockManager) {
         m_DockManager->deleteLater(); //else untabbed window not close!
     }
-}
+
+    }
 
 void MainWindow::slot_newFile(){
     FormFileNew* pformFileNew = new FormFileNew(this);
@@ -568,6 +567,7 @@ void MainWindow::slot_rgmWrap(){
     }
     statusBar()->showMessage( str_msg.c_str(), 0 );
     emit sig_calcEnd();
+    //emit rgm_signal();
 }
 
 void MainWindow::slot_kddWrap(){
@@ -801,14 +801,14 @@ void MainWindow::slot_barsMdpPrepareWrap()
 
 void MainWindow::slot_openMcrDialog(){
     McrWnd* pMcrWnd = new McrWnd( this, McrWnd::_en_role::macro_dlg );
-    //connect( m_sp_qastra.get(), SIGNAL(onRastrLog(const _log_data&) ), m_pMcrWnd,       SLOT(onRastrLog(const _log_data&)) );
     connect( m_sp_qastra.get(), SIGNAL( onRastrPrint(const std::string&) ), pMcrWnd, SLOT( onRastrPrint(const std::string&) ) );
+
     pMcrWnd->setPyHlp(m_up_PyHlp.get());
     pMcrWnd->show();
 }
 
 void MainWindow::slot_about(){
-   QMessageBox::about( this, tr("About QRastr"), tr("About the <b>QRastr</b>.") );
+    QMessageBox::about( this, tr("About QRastr"), tr("About the <b>QRastr</b>.") );
 }
 
 void MainWindow::slot_openForm( QAction* p_actn ){
@@ -819,10 +819,10 @@ void MainWindow::slot_openForm( QAction* p_actn ){
     std::advance(it,n_indx);
     auto form  =*it;
     form.SetName(stringutils::MkToUtf8(form.Name()));
-    slot_openForm(form);
+    openForm(form);
 }
 
-void MainWindow::slot_openForm(CUIForm _uiform){
+void MainWindow::openForm(CUIForm _uiform){
     CUIForm form  = _uiform;
     qDebug() << "\n Open form:" << form.Name().c_str();
     //Проверка существования таблицы
@@ -835,6 +835,8 @@ void MainWindow::slot_openForm(CUIForm _uiform){
         spdlog::info( "Таблица [{}] - [{}] не существует! ", form.Name(), form.TableName());
         return;
     }
+
+
 
     //spdlog::info( "Create tab [{}]", stringutils::cp1251ToUtf8(form.Name()) );
     spdlog::info( "Прочитана таблица [{}] - [{}]", form.Name(),form.TableName() );
@@ -860,22 +862,12 @@ void MainWindow::slot_openForm(CUIForm _uiform){
         dw->setWidget(prtw->m_grid);
         dw->setFeature(ads::CDockWidget::DockWidgetDeleteOnClose, true);
         auto area = m_DockManager->addDockWidgetTab(ads::TopDockWidgetArea, dw);
-        connect( dw, SIGNAL( closed() ),
-                prtw, SLOT( OnClose() ) );                    // emit RtabWidget->closeEvent
-        // Stock QT grid
-        /*auto dw2 = new ads::CDockWidget( stringutils::cp1251ToUtf8(form.Name()).c_str(), this);
-        dw2->setWidget(prtw);
-        dw2->setFeature(ads::CDockWidget::DockWidgetDeleteOnClose, true);
-        dw2->setFeature(ads::CDockWidget::DockWidgetForceCloseWithArea, true);
-        auto area2 = m_DockManager->addDockWidgetTab(ads::BottomDockWidgetArea, dw2);
-        connect( dw2, SIGNAL( closed() ),
-                prtw, SLOT( OnClose() ) );                    // emit RtabWidget->closeEvent
-        */
+        connect(dw, &ads::CDockWidget::closed, prtw, &RtabWidget::OnClose);
 
         qDebug() << "doc dock widget created!" << dw << area;
     }
     //prtw->show();
-}
+    }
 
 void MainWindow::slot_itemPressed(const QModelIndex &index){
     //prtw_current = qobject_cast<RtabWidget*>(index.);
@@ -911,6 +903,7 @@ void MainWindow::slot_button2Click(){
 }
 
 void MainWindow::slot_updateMenu(){
+
 }
 
 void MainWindow::slot_setActiveSubWindow(QWidget *window){
@@ -928,126 +921,131 @@ void MainWindow::createActions(){
     QAction* actNewFile = new QAction(QIcon(":/images/document_new.png"), tr("&Новый"), this);
     actNewFile->setShortcut(tr("Ctrl+N"));
     actNewFile->setStatusTip(tr("Create a new file"));
-    connect(actNewFile, SIGNAL(triggered()), this, SLOT(newFile()));
+    connect(actNewFile, &QAction::triggered, this, &MainWindow::slot_newFile);
     QAction* actOpenfile = new QAction(QIcon(":/images/folder_out.png"), tr("&Загрузить"), this);
     actOpenfile->setShortcut(tr("Ctrl+O"));
     actOpenfile->setStatusTip(tr("Open an existing file"));
-    connect(actOpenfile, SIGNAL(triggered()), this, SLOT(open()));
+    connect(actOpenfile, &QAction::triggered, this, &MainWindow::slot_open);
     QAction* actSaveFile = new QAction(QIcon(":/images/disk_blue.png"), tr("&Сохранить"), this);
     actSaveFile->setShortcut(tr("Ctrl+S"));
     actSaveFile->setStatusTip(tr("Save the document to disk"));
-    connect(actSaveFile, SIGNAL(triggered()), this, SLOT(save()));
+    connect(actSaveFile, &QAction::triggered, this, &MainWindow::slot_save);
     QAction* actSaveFileAs = new QAction(tr("&Сохранить как"), this);
     actSaveFileAs->setStatusTip(tr("Save the document under a new name"));
-    connect(actSaveFileAs, SIGNAL(triggered()), this, SLOT(saveAs()));
+    connect(actSaveFileAs, &QAction::triggered, this, &MainWindow::slot_saveAs);
     QAction* actSaveAllFiles = new QAction(QIcon(":/images/Save_all.png"),tr("&Сохранить все"), this);
     actSaveAllFiles->setStatusTip(tr("Save all the document"));
-    connect(actSaveAllFiles, SIGNAL(triggered()), this, SLOT(saveAll()));
+    connect(actSaveAllFiles, &QAction::triggered, this, &MainWindow::slot_saveAll);
     QAction* actShowFormSettings = new QAction(tr("&Параметры"), this);
     actShowFormSettings->setStatusTip(tr("Open settings form."));
-    connect(actShowFormSettings, SIGNAL(triggered()), this, SLOT(showFormSettings()));
+    connect(actShowFormSettings, &QAction::triggered, this, &MainWindow::slot_showFormSettings);
     QAction* actExit = new QAction(tr("E&xit"), this);
     actExit->setShortcut(tr("Ctrl+Q"));
     actExit->setStatusTip(tr("Exit the application"));
-    connect(actExit, SIGNAL(triggered()), qApp, SLOT(closeAllWindows()));
+    connect(actExit, &QAction::triggered, qApp, &QApplication::closeAllWindows);
     for (int i = 0; i < MaxRecentFiles; ++i) {
         recentFileActs[i] = new QAction(this);
         recentFileActs[i]->setVisible(false);
-        connect( recentFileActs[i], SIGNAL(triggered()), this, SLOT(openRecentFile()) );
+        connect(recentFileActs[i], &QAction::triggered, this, &MainWindow::slot_openRecentFile);
     }
 
     //calc
     QAction* actKDD = new QAction(tr("&Контроль"), this);
     actKDD->setStatusTip(tr("Контроль исходных данных"));
-    connect(actKDD, SIGNAL(triggered()), this, SLOT(kdd_wrap()));
+    connect(actKDD, &QAction::triggered, this, &MainWindow::slot_kddWrap);
     QAction* actRGM = new QAction(QIcon(":/images/Rastr3_rgm_16x16.png"),tr("&Режим"), this);
     actRGM->setShortcut(tr("F5"));
     actRGM->setStatusTip(tr("Расчет УР"));
-    connect(actRGM, SIGNAL(triggered()), this, SLOT(rgm_wrap()));
+    connect(actRGM, &QAction::triggered, this, &MainWindow::slot_rgmWrap);
     QAction* actOC = new QAction(QIcon(":/images/Bee.png"),tr("&ОС"), this);
     actOC->setShortcut(tr("F6"));
     actOC->setStatusTip(tr("Оценка состояния"));
-    connect(actOC, SIGNAL(triggered()), this, SLOT(oc_wrap()));
+    connect(actOC, &QAction::triggered, this, &MainWindow::slot_ocWrap);
     QAction* actMDP = new QAction(QIcon(":/images/mdp_16.png"),tr("&МДП"), this);
     actMDP->setShortcut(tr("F7"));
     actMDP->setStatusTip(tr("Расчет МДП"));
-    connect( actMDP, SIGNAL(triggered()), this, SLOT(smzu_tst_wrap()));
+    connect(actMDP, &QAction::triggered, this, &MainWindow::slot_smzuTstWrap);
     QAction* actTkz = new QAction(QIcon(":/images/TKZ_48.png"),tr("&ТКЗ"), this);
     actTkz->setShortcut(tr("F8"));
     actTkz->setStatusTip(tr("Расчет ТКЗ"));
-    connect( actTkz, SIGNAL(triggered()), this, SLOT(tkz_wrap()));
+    connect(actTkz, &QAction::triggered, this, &MainWindow::slot_tkzWrap);
     QAction* actIdop = new QAction(tr("&Доп. ток от Т"), this);
     actIdop->setShortcut(tr("F9"));
     actIdop->setStatusTip(tr("Расчет допустимых токов от температуры"));
-    connect(actIdop, SIGNAL(triggered()), this, SLOT(idop_wrap()));
+    connect(actIdop, &QAction::triggered, this, &MainWindow::slot_idopWrap);
 
     //graph
     QAction* actGraph = new QAction( QIcon(QApplication::style()->standardIcon(QStyle::SP_DriveNetIcon)), tr("&graph"), this );
     actGraph->setShortcut(tr("F10"));
     actGraph->setStatusTip(tr("Графика"));
-    connect(actGraph, SIGNAL(triggered()), this, SLOT(open_graph()));
-
+    connect(actGraph, &QAction::triggered, this, &MainWindow::slot_openGraph);
     //macro
     QAction* actMacro = new QAction( QIcon(QApplication::style()->standardIcon(QStyle::SP_MediaPlay)), tr("&macro"), this );
     actMacro->setShortcut(tr("F11"));
     actMacro->setStatusTip(tr("Run macro"));
-    connect(actMacro, SIGNAL(triggered()), this, SLOT(onDlgMcr()));
-
+    connect(actMacro, &QAction::triggered, this, &MainWindow::slot_openMcrDialog);
     // TI
     separatorAct = new QAction(this);
     separatorAct->setSeparator(true);
 
     QAction* actRecalcDor = new QAction(QIcon(":/images/RecalcDor.png"),tr("&Пересчет дорасчетной ТМ"), this);
     actRecalcDor->setStatusTip(tr("Пересчет дорасчетной ТМ"));
-    connect( actRecalcDor, SIGNAL(triggered()), this, SLOT(ti_recalcdor_wrap()));
+    connect(actRecalcDor, &QAction::triggered, this, &MainWindow::slot_tiRecalcdorWrap);
 
     QAction* actUpdateTables = new QAction(QIcon(":/images/UpdateTablesTI.png"),tr("&Обновить таблицы по ТМ"), this);
     actUpdateTables->setStatusTip(tr("Обновить таблицы по ТМ"));
-    connect( actUpdateTables, SIGNAL(triggered()), this, SLOT(ti_updatetables_wrap()));
+    connect(actUpdateTables, &QAction::triggered, this, &MainWindow::slot_tiUpdateTablesWrap);
 
     QAction* actPTI = new QAction(QIcon(":/images/calc_PTI.png"),tr("&ПТИ"), this);
     actPTI->setStatusTip(tr("Расчет ПТИ"));
-    connect( actPTI, SIGNAL(triggered()), this, SLOT(ti_calcpti_wrap()));
+    connect(actPTI, &QAction::triggered, this, &MainWindow::slot_tiCalcptiWrap);
+
     QAction* actFiltrTI = new QAction(QIcon(":/images/filtr_1.png"),tr("&Фильтр ТИ"), this);
     actFiltrTI->setStatusTip(tr("Расчет Фильтр ТИ"));
-    connect( actFiltrTI, SIGNAL(triggered()), this, SLOT(ti_filtrti_wrap()));
+    connect(actFiltrTI, &QAction::triggered, this, &MainWindow::slot_tiFiltrtiWrap);
 
     //BarsMDP
     separatorAct = new QAction(this);
     separatorAct->setSeparator(true);
     QAction* actPrepare_MDP = new QAction(tr("&Подг. МДП"), this);
     actPrepare_MDP->setStatusTip(tr("Подг. МДП"));
-    connect( actPrepare_MDP, SIGNAL(triggered()), this, SLOT(bars_mdp_prepare_wrap()));
+    connect(actPrepare_MDP, &QAction::triggered, this, &MainWindow::slot_barsMdpPrepareWrap);
 
     //windows
     QAction* closeAct = new QAction(tr("Cl&ose"), this);
     closeAct->setShortcut(tr("Ctrl+F4"));
     closeAct->setStatusTip(tr("Close the active window"));
-    connect(closeAct, SIGNAL(triggered()), m_workspace, SLOT(closeActiveSubWindow()));
+    connect(closeAct, &QAction::triggered, m_workspace, &QMdiArea::closeActiveSubWindow);
+
     QAction* closeAllAct = new QAction(tr("Close &All"), this);
     closeAllAct->setStatusTip(tr("Close all the windows"));
-    connect(closeAllAct, SIGNAL(triggered()), m_workspace, SLOT(closeAllSubWindows()));
+    connect(closeAllAct, &QAction::triggered, m_workspace, &QMdiArea::closeAllSubWindows);
+
     QAction* tileAct = new QAction(tr("&Tile"), this);
     tileAct->setStatusTip(tr("Tile the windows"));
-    connect(tileAct, SIGNAL(triggered()), m_workspace, SLOT(tileSubWindows()));
+    connect(tileAct, &QAction::triggered, m_workspace, &QMdiArea::tileSubWindows);
+
     QAction* cascadeAct = new QAction(tr("&Cascade"), this);
     cascadeAct->setStatusTip(tr("Cascade the windows"));
-    connect(cascadeAct, SIGNAL(triggered()), m_workspace, SLOT(cascadeSubWindows()));
+    connect(cascadeAct, &QAction::triggered, m_workspace, &QMdiArea::cascadeSubWindows);
+
     QAction* nextAct = new QAction(tr("Ne&xt"), this);
     nextAct->setShortcut(tr("Ctrl+F6"));
     nextAct->setStatusTip(tr("Move the focus to the next window"));
-    connect(nextAct, SIGNAL(triggered()), m_workspace, SLOT(activateNextSubWindow()));
+    connect(nextAct, &QAction::triggered, m_workspace, &QMdiArea::activateNextSubWindow);
+
     QAction* previousAct = new QAction(tr("Pre&vious"), this);
     previousAct->setShortcut(tr("Ctrl+Shift+F6"));
     previousAct->setStatusTip(tr("Move the focus to the previous window"));
-    connect(previousAct, SIGNAL(triggered()), m_workspace, SLOT(activatePreviousSubWindow()));
+    connect(previousAct, &QAction::triggered, m_workspace, &QMdiArea::activatePreviousSubWindow);
+
     //QAction* separatorAct = new QAction(this);
     separatorAct = new QAction(this);
     separatorAct->setSeparator(true);
     //help
     QAction* aboutAct = new QAction(tr("&О программе"), this);
     aboutAct->setStatusTip(tr("Show the application's About box"));
-    connect(aboutAct, SIGNAL(triggered()), this, SLOT(about()));
+    connect(aboutAct, &QAction::triggered, this, &MainWindow::slot_about);
 
     //MENU's
     //QMenu* menuFile = menuBar()->addMenu(tr("&File"));
@@ -1091,12 +1089,11 @@ void MainWindow::createActions(){
     m_menuCalcTI->addAction(actPTI);
     m_menuCalcTI->addAction(actRecalcDor);
     m_menuCalcTI->addAction(actUpdateTables);
-   // m_menuCalcTI->addAction(actPrepare_MDP);
+    // m_menuCalcTI->addAction(actPrepare_MDP);
 
     m_menuOpen = menuBar()->addMenu(tr("&Открыть") );
     menuBar()->addSeparator();
     QMenu* menuWindow = menuBar()->addMenu(tr("Окна"));
-    //connect(m_windowMenu, SIGNAL(aboutToShow()), this, SLOT(updateWindowMenu()));// ustas about: not understend for a what this? (have fall on it)
     menuWindow->clear();
     menuWindow->addAction(closeAct);
     menuWindow->addAction(closeAllAct);
@@ -1109,7 +1106,6 @@ void MainWindow::createActions(){
     menuWindow->addAction(separatorAct);
     QList<QMdiSubWindow *> windows = m_workspace->subWindowList();
     separatorAct->setVisible(!windows.isEmpty());
-
     QMenu* menuHelp = menuBar()->addMenu(tr("&Помощь"));
     menuHelp->addAction(aboutAct);
 
@@ -1277,8 +1273,8 @@ void MainWindow::createStatusBar(){
 }
 
 bool MainWindow::maybeSave(){
-   // if (!textEdit->document()->isModified())
-   //     return true;
+    // if (!textEdit->document()->isModified())
+    //     return true;
     const QMessageBox::StandardButton ret
         = QMessageBox::warning(this, tr("Application"),
                                tr("The document has been modified.\n"
@@ -1295,4 +1291,3 @@ bool MainWindow::maybeSave(){
     }
     return true;
 }
-

@@ -22,8 +22,10 @@ public:
     ~FormProtocol();
     void setIgnoreAppendProtocol(bool bl_ignore);
 signals:
-private slots:
+public slots:
     void onRastrLog(const _log_data&);
+private slots:
+
     void onAppendProtocol(const QString& qstr);
 private:
     Ui::FormProtocol*  ui = nullptr;

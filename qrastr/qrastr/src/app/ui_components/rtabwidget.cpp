@@ -85,7 +85,8 @@ RtabWidget::RtabWidget(CUIForm UIForm,QWidget *parent) :
 
 }
 
-RtabWidget::RtabWidget(QAstra* pqastra,CUIForm UIForm,RTablesDataManager* pRTDM, ads::CDockManager* pDockManager, QWidget *parent)
+RtabWidget::RtabWidget(QAstra* pqastra,CUIForm UIForm, RTablesDataManager* pRTDM,
+                       ads::CDockManager* pDockManager, QWidget *parent)
     : RtabWidget{UIForm,parent}
 {
     m_selection = "";
@@ -94,69 +95,24 @@ RtabWidget::RtabWidget(QAstra* pqastra,CUIForm UIForm,RTablesDataManager* pRTDM,
     m_pRTDM = pRTDM;
     m_DockManager = pDockManager;
 
-
-    /*
-    customizeFrame.setObjectName("RTABLEVIEWCUSTOMIZEFRAME");
-    customizeFrame.setFrameShape(QFrame::StyledPanel);
-    customizeFrame.raise();
-    customizeFrame.setMinimumHeight(200);
-    customizeFrame.setMinimumWidth(175);
-    customizeFrame.resize(175, 100);
-
-    customizeListWidget.setParent(&customizeFrame);
-    customizeListWidget.setObjectName("RTABLEVIEWCUSTOMIZEFRAMELISTWIDGET");
-    customizeListWidget.setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
-    customizeListWidget.resize(175, 200);
-    customizeListWidget.setResizeMode(QListView::Adjust);
-
-    customizeFrame.hide();
-*/
-
     resize(800,500);
     setWindowFlags(Qt::WindowMinimizeButtonHint | Qt::WindowMinMaxButtonsHint | Qt::WindowCloseButtonHint);
     setWindowModality(Qt::ApplicationModal);
 
-
-    //connect(this, SIGNAL(CondFormatsModified),this, SLOT(onCondFormatsModified()));
     connect(this, &RtabWidget::CondFormatsModified,this, &RtabWidget::onCondFormatsModified);
-
-
-    //connect(m_pRTDM, SIGNAL(RTDM_UpdateModel(std::string)), this, SLOT(onRTDM_UpdateModel(std::string)));
-    //connect(ptv, SIGNAL(onCornerButtonPressed()), SLOT(cornerButtonPressed()));
-    //connect(this->ptv, SIGNAL(customContextMenuRequested(QPoint)),SLOT(customMenuRequested(QPoint)));
-    //connect(this->ptv, SIGNAL(ContextMenu(QPoint)),
-    //        SLOT(customMenuRequested(QPoint)));
-    //connect(this->ptv, SIGNAL(pressed(const QModelIndex &)), SLOT(onItemPressed(const QModelIndex &)));
-    //connect(this->ptv->horizontalHeader(), SIGNAL(customContextMenuRequested(QPoint)), SLOT(customHeaderMenuRequested(QPoint)));
-    //connect(ptv->horizontalHeader(), SIGNAL(filterChanged(size_t , QString )), this, SLOT(updateFilter(size_t , QString) ));
-
 
     //QTitan
     //Connect Grid's context menu handler.
-    connect(view, SIGNAL(contextMenu(ContextMenuEventArgs*)), this, SLOT(contextMenu(ContextMenuEventArgs* )));
-    connect(this->view, SIGNAL(cellClicked( CellClickEventArgs* )), this, SLOT(onItemPressed( CellClickEventArgs*)));
-
+    connect(view, &GridTableView::contextMenu, this, &RtabWidget::contextMenu);
+    connect(view, &GridTableView::cellClicked, this, &RtabWidget::onItemPressed);
 
     CreateModel(pqastra,&m_UIForm);
 
-    //connect(m_pRTDM, &RTablesDataManager::RTDM_ResetModel,this, &RtabWidget::onRTDM_ResetModel);
     connect(m_pRTDM, &RTablesDataManager::RTDM_dataChanged,this->prm.get(), &RModel::onrm_DataChanged);
     connect(m_pRTDM, &RTablesDataManager::RTDM_BeginResetModel,this->prm.get(), &RModel::onrm_BeginResetModel);
     connect(m_pRTDM, &RTablesDataManager::RTDM_EndResetModel,this->prm.get(), &RModel::onrm_EndResetModel);
     connect(m_pRTDM, &RTablesDataManager::RTDM_BeginInsertRow,this->prm.get(), &RModel::onrm_BeginInsertRow);
     connect(m_pRTDM, &RTablesDataManager::RTDM_EndInsertRow,this->prm.get(), &RModel::onrm_EndInsertRow);
-
-    //SetTableView(*ptv,*prm);                // ширина по шаблону
-    //ptv->resizeColumnsToContents();         // ширина по контенту
-    //ptv->setParent(this);
-
-    //int ncols = prm->columnCount();
-    //ptv->generateFilters(ncols);
-    //ptv->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
-
-    //QVBoxLayout *layout = new QVBoxLayout(this);
-    //layout->addWidget(ptv);
-    //setLayout(layout);
 }
 
 
@@ -641,119 +597,19 @@ void RtabWidget::onOpenLinkedForm( LinkedForm _lf)
         return;
 
     RtabWidget *prtw = new RtabWidget(m_pqastra,*pUIForm,m_pRTDM,m_DockManager,this);
-
-    //_lf.vconn.push_back(connect(this->view, SIGNAL(cellClicked( CellClickEventArgs* )), prtw,
-    //        SLOT(onLinkedFormUpdate( CellClickEventArgs*))));
     _lf.vconn.push_back(connect(view, &GridTableView::focusRowChanged, prtw, &RtabWidget::onfocusRowChanged));
 
     prtw->SetLinkedForm(_lf);
 
     auto dw = new ads::CDockWidget( stringutils::MkToUtf8(pUIForm->Name()).c_str(), this);
     dw->setWidget(prtw->m_grid);
-    connect( dw, SIGNAL( closed() ), prtw, SLOT( OnClose() ) );                    // emit RtabWidget->closeEvent
+    connect(dw, &ads::CDockWidget::closed, prtw, &RtabWidget::OnClose);
 
     auto area = m_DockManager->addDockWidgetTab(ads::BottomAutoHideArea, dw);
     dw->setFeature(ads::CDockWidget::DockWidgetDeleteOnClose, true);
     prtw->show();
 }
 
-/*
-void RtabWidget::cornerButtonPressed()
-{
-    auto hh = ptv->horizontalHeader();
-    if(ptv->horizontalHeader()->count() < 1)
-    return;
-
-    if(!ptv->model())
-        return;
-
-    QObject::disconnect(&customizeListWidget, SIGNAL(itemChanged(QListWidgetItem*)),
-                        this, SLOT(changeColumnVisible(QListWidgetItem*)));
-
-    customizeListWidget.clear();
-
-    QVector<QString> headers(ptv->model()->columnCount());
-    QVector<bool> visibles(ptv->model()->columnCount());
-
-    for(int ix = 0; ix < hh->count(); ix++)
-    {
-        if(tItemStateMap[ix].bVisible)
-        {
-            int x = hh->visualIndex(ix);
-            headers[x] = ptv->model()->headerData(ix, Qt::Horizontal).toString();
-            visibles[x] = hh->isSectionHidden(ix);
-        }
-    }
-    for(int ix = 0; ix < hh->count(); ix++)
-    {
-        if(tItemStateMap[ix].bVisible)
-            customizeListWidget.addItem(headers[ix]);
-    }
-
-    int x = 0;
-    for(int ix = 0; ix < hh->count(); ix++)
-    {
-        if(tItemStateMap[ix].bVisible)
-        {
-            QListWidgetItem *item = customizeListWidget.item(x++);
-            item->setData(RTABLEVIEWCOLINDEXROLE, ix);
-            item->setFlags(item->flags() | Qt::ItemIsUserCheckable);
-            item->setCheckState(visibles[ix] ? Qt::Unchecked : Qt::Checked);
-        }
-    }
-
-    QObject::connect(&customizeListWidget, SIGNAL(itemChanged(QListWidgetItem*)),
-                     this, SLOT(changeColumnVisible(QListWidgetItem*)));
-
-    //QPoint P(10, rect().y() + hdr->sectionHeight());
-    QPoint P(10, rect().y() + hh->height());
-
-    customizeFrame.move(mapToGlobal(P));
-    customizeFrame.setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
-    customizeFrame.show();
-
-    emit onCornerButtonPressed();
-
-}
-*/
-
-/*
-void RtabWidget::changeColumnVisible(QListWidgetItem *item)
-{
-    //PBSHeaderView *hdr = static_cast<PBSHeaderView*>(pTableWidget.horizontalHeader());
-
-
-    auto hh = this->ptv->horizontalHeader();
-
-    int ix = item->data(RTABLEVIEWCOLINDEXROLE).toInt();
-    int i = hh->logicalIndex(ix); // customizeListWidget.row(item));
-
-    std::string name = (item->data(Qt::DisplayRole).toString()).toStdString();
-    std::string item_rname = item->whatsThis().toStdString();
-    if(i < 0)
-        return;
-
-    if(item->checkState() == Qt::Checked)
-    {
-        tItemStateMap[ix].bHidden = true;
-        if(hh->isSectionHidden(i))
-        {
-            hh->showSection(i);
-            CUIFormField uiff(item_rname.c_str());
-            m_UIForm.Fields().insert( m_UIForm.Fields().begin(),uiff);
-        }
-    }
-    else
-    {
-        tItemStateMap[ix].bHidden = false;
-        if(!hh->isSectionHidden(i))
-        {
-            hh->hideSection(i);
-            m_UIForm.Fields().remove_if([&](const CUIFormField Field){return (Field.Name() == item_rname);});
-        }
-    }
-}
-*/
 void RtabWidget::SetDirectCodeEntry(size_t column)
 {
     RCol* prcol = prm->getRCol(column);
@@ -832,13 +688,7 @@ void RtabWidget::onItemPressed( CellClickEventArgs* _args)
     int col = _args->cell().columnIndex();
     qDebug()<<"Pressed:" <<row<< ","<<col;
 }
-void RtabWidget::onItemPressed(const QModelIndex &_index)
-{
-    index = _index;
-    int row = index.row();
-    int column = index.column();
-    qDebug()<<"Pressed:" <<row<< ","<<column;
-}
+
 void RtabWidget::insertRow()
 {
     prm->insertRows(index.row(),1,index);
@@ -942,65 +792,7 @@ void RtabWidget::hideColumns()
 
     column_qt->setVisible(!prcol->hidden);
 }
-/*
-void RtabWidget::unhideColumns()
-{
-    RCol* prcol = prm->getRCol(column);
-    auto hh = ptv->horizontalHeader();
 
-    QObject::disconnect(&customizeListWidget, SIGNAL(itemChanged(QListWidgetItem*)),
-                        this, SLOT(changeColumnVisible(QListWidgetItem*)));
-
-    customizeListWidget.clear();
-
-    QVector<QString> headers(ptv->model()->columnCount());
-    QVector<QString> rnames(ptv->model()->columnCount());
-    QVector<bool> visibles(ptv->model()->columnCount());
-
-    for(int ix = 0; ix < hh->count(); ix++)
-    {
-        if(tItemStateMap[ix].bVisible)
-        {
-            int x = hh->visualIndex(ix);
-            headers[x] = ptv->model()->headerData(ix, Qt::Horizontal).toString();
-            rnames[x] = prm->getRCol(ix)->str_name_.c_str();
-            visibles[x] = hh->isSectionHidden(ix);
-        }
-    }
-    for(int ix = 0; ix < hh->count(); ix++)
-    {
-        if(tItemStateMap[ix].bVisible)
-            customizeListWidget.addItem(headers[ix]);
-    }
-
-    int x = 0;
-    for(int ix = 0; ix < hh->count(); ix++)
-    {
-        if(tItemStateMap[ix].bVisible)
-        {
-            QListWidgetItem *item = customizeListWidget.item(x++);
-            item->setData(RTABLEVIEWCOLINDEXROLE, ix);
-            item->setFlags(item->flags() | Qt::ItemIsUserCheckable);
-            item->setCheckState(visibles[ix] ? Qt::Unchecked : Qt::Checked);
-            item->setWhatsThis(rnames[ix]);
-        }
-    }
-
-    QObject::connect(&customizeListWidget, SIGNAL(itemChanged(QListWidgetItem*)),
-                     this, SLOT(changeColumnVisible(QListWidgetItem*)));
-
-
-    int position = hh->sectionPosition(prcol->index);
-    //QPoint P(point.x(), point.y() + 20);
-    QPoint P(position, rect().y() + hh->height());
-
-
-    customizeFrame.move(mapToGlobal(P));
-    //customizeFrame.move(P);
-    customizeFrame.setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
-    customizeFrame.show();
-}
-*/
 void RtabWidget::showAllColumns()
 {
     for (auto &rcol : *this->prm->getRdata())

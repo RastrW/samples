@@ -3,7 +3,7 @@
 # Поддерживаемые платформы:
 #   - Windows (MSVC, MinGW)
 #   - Ubuntu 24.04 (gcc)
-#   - AstraLinux 1.7 (gcc)
+#   - AstraLinux 1.8 (gcc)
 #
 # Все платформы  используют библиотеки из thirdparty
 # ============================================================================
@@ -56,8 +56,6 @@ if(MSVC)
     add_compile_definitions( _SILENCE_ALL_MS_EXT_DEPRECATION_WARNINGS )
     # Отключение макросов min/max из windows.h (конфликт с std::min/max)
     add_compile_definitions( NOMINMAX )
-
-    add_compile_options(/utf-8)
 endif()
 # ============================================================================
 # Определение компилятора и соответствующих путей
@@ -641,6 +639,8 @@ endif()
 # ============================================================================
 target_include_directories(${PROJECT_NAME} PRIVATE
     ${PROJECT_INCLUDES}
+    ${QMCR_SOURCE_DIR}
+    ${QMCR_SOURCE_DIR}/forms
 )
 
 # ============================================================================

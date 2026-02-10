@@ -316,7 +316,7 @@ McrWnd::McrWnd(QWidget* parent, const _en_role en_role)
     //this->addAction();
 
     if(_en_role::macro_dlg == en_role_){
-        connect( shEdit_, SIGNAL( chngFileInfo( const QFileInfo& ) ), this, SLOT( onChngEditFileInfo( const QFileInfo& ) ) );
+        connect(shEdit_, &SciHlp::chngFileInfo, this, &McrWnd::onChngEditFileInfo);
 
         shEdit_->setContent(R"(
 import os
@@ -428,21 +428,6 @@ else:
   }//if(macro_dlg)
 
     qDebug() << "themeSearchPaths:" << QIcon::themeSearchPaths() << QIcon::themeName();
-/*
-    QIcon::setThemeName("oxygen");
-    tst_tb_ = new Tst_ToolBox(this->parentWidget());
-    //tst_tb_->setHidden(true);
-    tst_tb_->show();
-    //tst_tb_->move(1500,600);
-    //tst_tb_->stackUnder(this->parentWidg
-
-    //this->show();
-    //this->raise();
-    //this->activateWindow();
-
-    tst2_dlg_ = new Tst2_Dialog(this);
-    //tst2_dlg_->show();
-*/
 }
 
 McrWnd::~McrWnd()
@@ -641,7 +626,7 @@ void McrWnd::onFind()
     qDebug("McrWnd::onFindRepl()");
     if(pdlgFindRepl_==nullptr){
         pdlgFindRepl_ = new DlgFindRepl(this);
-        connect( pdlgFindRepl_, SIGNAL( chngFind( SciHlp::_params_find ) ), this, SLOT( Find( SciHlp::_params_find ) ) );
+        connect(pdlgFindRepl_, &DlgFindRepl::chngFind, this, &McrWnd::Find);
     }
     pdlgFindRepl_->show();
     pdlgFindRepl_->raise();

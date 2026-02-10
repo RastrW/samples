@@ -95,9 +95,8 @@ SciHlp::SciHlp(QWidget *parent, _en_role role)
         setProperty("fold.quotes.python", "1");
         setAutomaticFold(SCI_SETAUTOMATICFOLD);
 
-        connect(this, SIGNAL(marginClicked( Scintilla::Position, Scintilla::KeyMod, int ) ), this, SLOT(onMarginClicked( Scintilla::Position, Scintilla::KeyMod, int ) ) );
-        connect(this, SIGNAL(notify       ( Scintilla::NotificationData*                ) ), this, SLOT(onNotify       ( Scintilla::NotificationData* )                ) );
-
+        connect(this, &ScintillaEdit::marginClicked, this, &SciHlp::onMarginClicked);
+        connect(this, &ScintillaEdit::notify, this, &SciHlp::onNotify);
         setKeyWords(0,R"(
             False None True and as assert break class continue def del elif else
             except finally for from global if import in is lambda nonlocal not
@@ -314,7 +313,8 @@ void SciHlp::tstSci(){
 void SciHlp::showEvent(QShowEvent *event){
 }
 
-void SciHlp::onMarginClicked(Scintilla::Position position, Scintilla::KeyMod modifiers, int margin) {
+void SciHlp::onMarginClicked(Scintilla::Position position,
+                             Scintilla::KeyMod modifiers, int margin) {
     if(margin == 1) {
         toggleFold(lineFromPosition(position));
     }

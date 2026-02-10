@@ -21,12 +21,14 @@ FormSettingsOnLoadFiles::FormSettingsOnLoadFiles(QWidget *parent)
         ui->cbTemplate->setCurrentText( Params::GetInstance()->getStartLoadFileTemplates()[0].second.c_str() ); //int n_item = ui->cbTemplate->findText(qstr_templ);
     }
     QAction* act_trig_path_to_load_file = ui->lePathToLoadFile->addAction(QIcon(":/images/open.png"), QLineEdit::LeadingPosition); // TrailingPosition
-    //bool bl_res = connect( act_trig_path_to_load_file, &QAction::triggered, [this](){  assert(0);  }); assert(bl_res == true);
-    //bool bl_res = connect( act_trig_path_to_load_file, &QAction::triggered, this, &FormSettingsOnLoadFiles::onActTrigNewPathToFile ); assert(bl_res == true);
-    bool bl_res = connect( act_trig_path_to_load_file, SIGNAL(triggered(bool)), this, SLOT(onActTrigNewPathToFile()) ); assert(bl_res == true);
-    bl_res      = connect( ui->lePathToLoadFile, SIGNAL(editingFinished()), this, SLOT(onChangeData()) );assert(bl_res == true);
-    bl_res      = connect( ui->cbTemplate, SIGNAL(currentTextChanged(const QString&)), this, SLOT(onChangeData()) );assert(bl_res == true);
+    bool bl_res = connect(act_trig_path_to_load_file, &QAction::triggered, this, &FormSettingsOnLoadFiles::onActTrigNewPathToFile);
+    assert(bl_res == true);
+    bl_res = connect(ui->lePathToLoadFile, &QLineEdit::editingFinished, this, &FormSettingsOnLoadFiles::onChangeData);
+    assert(bl_res == true);
+    bl_res = connect(ui->cbTemplate, &QComboBox::currentTextChanged, this, &FormSettingsOnLoadFiles::onChangeData);
+    assert(bl_res == true);
 }
+
 FormSettingsOnLoadFiles::~FormSettingsOnLoadFiles(){
     delete ui;
 }

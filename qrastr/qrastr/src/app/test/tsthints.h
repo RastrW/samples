@@ -23,7 +23,7 @@ public:
 
 signals:
 
-private slots:
+public slots:
     void onRastrHint(const _hint_data&);
 
 private:

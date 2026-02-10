@@ -19,7 +19,9 @@ SDLChild::SDLChild(QWidget * parent) : QMdiSubWindow(parent) {
     grey backgrounds.
     */
     Time = new QTimer(this);
-    connect(Time, SIGNAL(timeout()), this, SLOT(Render()));
+    #if(!defined(SDL_NO))
+        connect(Time, &QTimer::timeout, this, &SDLChild::Render);
+    #endif
     Time->start(1000 / 60);
 #if(!defined(SDL_NO))
     RendererRef = 0;

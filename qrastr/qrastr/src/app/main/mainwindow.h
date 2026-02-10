@@ -142,12 +142,10 @@ private slots:
     void slot_openMcrDialog();
     // Открыть форму из меню
     void slot_openForm(QAction* p_actn);
-    // Открыть конкретную форму
-    void slot_openForm(CUIForm _uiform);
 
     ///< Кнопки
-    void slot_button2Click();
     void slot_btn1Click();
+    void slot_button2Click();
     void slot_btn3Click();
 
     // Обработка изменений данных
@@ -157,6 +155,8 @@ private slots:
     void slot_rowDeleted (std::string _t_name, int _row);
 
     void slot_itemPressed(const QModelIndex &index);
+    // Настройки форм
+    void setSettingsForms();
 public slots:
     // Обновить меню
     void slot_updateMenu();
@@ -172,8 +172,7 @@ public:
     ///< Установка компонентов
     // Установить формы
     void setForms(const std::list<CUIForm>& forms);
-    // Настройки форм
-    void setSettingsForms();
+
     // Подключить Rastr
     void setQAstra(const std::shared_ptr<QAstra>& sp_qastra);
     // Подключить TI
@@ -203,6 +202,8 @@ private:
     bool maybeSave();
     // Обработка закрытия окна
     void closeEvent(QCloseEvent *event) override;
+    // Открыть конкретную форму
+    void openForm(CUIForm _uiform);
 
     QString strippedName(const QString &fullFileName);
     QString curFile;                             // текущий загруженный или сохраненный файл

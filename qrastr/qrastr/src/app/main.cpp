@@ -6,6 +6,8 @@
 #include "formsettings.h"
 
 int main(int argc, char *argv[]){
+    system("chcp 65001");
+
     long n_res = 0;
 
     // устанавливаем ПЕРЕД созданием QApplication

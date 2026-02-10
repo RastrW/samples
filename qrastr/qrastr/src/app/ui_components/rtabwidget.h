@@ -142,7 +142,6 @@ public slots:
     void customMenuRequested(QPoint pos);
     void customHeaderMenuRequested(QPoint pos);
 
-    void onItemPressed(const QModelIndex &index);
     void onItemPressed(CellClickEventArgs* _index);
     void onLinkedFormUpdate(CellClickEventArgs* _index);
     void onfocusRowChanged( int _row_old,int _row_new);
