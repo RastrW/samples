@@ -353,6 +353,8 @@ set(PROJECT_SOURCES
     ${APP_DIR}/main/app.cpp
     ${APP_DIR}/main/mainwindow.cpp
     ${APP_DIR}/main/mainwindow.h
+    ${APP_DIR}/main/cacheLog.cpp
+    ${APP_DIR}/main/cacheLog.h
 
     # Data
     ${APP_DIR}/data/rtablesdatamanager.h

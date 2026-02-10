@@ -10,17 +10,12 @@
 #include "params.h"
 using WrapperExceptionType = std::runtime_error;
 #include <astra/IPlainRastrWrappers.h>
-//#include "IPlainRastrWrappers.h"
-//#include "C:\Projects\tfs\rastr\RastrWin\KC\IPlainTI.h"
 #include "plugins/rastr/plugin_interfaces.h"
 #include "plugins/ti/plugin_ti_interfaces.h"
 #include "plugins/barsmdp/plugin_barsmdp_interfaces.h"
 #include "qastra.h"
 #include "qti.h"
 #include "qbarsmdp.h"
-#include "utils.h"
-//#include "UIForms.h"
-//#include <astra\UIForms.h>
 #include "astra_headers/UIForms.h"
 
 App::App(int &argc, char **argv)
@@ -52,36 +47,6 @@ bool App::notify(QObject* receiver, QEvent* event){
     return done;
 }
 
-App::_cache_log::_cache_log( const spdlog::level::level_enum lev_in, std::string_view sv_in )
-    : lev{lev_in}
-    , str_log{sv_in}{
-}
-
-App::_cache_log& App::_cache_log::operator=(const App::_cache_log& cache_log){
-    lev     = cache_log.lev;
-    str_log = cache_log.str_log;
-    return *this;
-}
-
-App::_cache_log& App::_cache_log::operator=(const App::_cache_log&& cache_log){
-    operator=(cache_log);
-    return *this;
-}
-
-App::_cache_log::_cache_log(const App::_cache_log& cache_log){
-    operator=(cache_log);
-}
-
-App::_cache_log::_cache_log(const App::_cache_log&& cache_log){
-    operator=(cache_log);
-}
-
-template <typename... Args>
-void App::_v_cache_log::add( const spdlog::level::level_enum lev_in, const std::string_view sv_format, Args&&... args ){
-    _cache_log cache_log{lev_in, fmt::format(sv_format, args...)};
-    emplace_back(cache_log);
-}
-
 long App::readSettings(){ //it cache log messages to vector, because it called befor logger intialization
     try{
         Params::Construct();
@@ -107,9 +72,9 @@ long App::readSettings(){ //it cache log messages to vector, because it called b
             p_params->setDirData(fi_appsettings.dir());
             const bool bl_res = QDir::setCurrent(p_params->getDirData().path());
             if(bl_res == true){
-                v_cache_log_.add(spdlog::level::info, "Set DataDir: {}", p_params->getDirData().path().toStdString());
+                m_v_cache_log.add(spdlog::level::info, "Set DataDir: {}", p_params->getDirData().path().toStdString());
             }else{
-                v_cache_log_.add(spdlog::level::err, "Can't set DataDir: {}", p_params->getDirData().path().toStdString());
+                m_v_cache_log.add(spdlog::level::err, "Can't set DataDir: {}", p_params->getDirData().path().toStdString());
             }
             nRes = p_params->readJsonFile(str_path_2_conf);
             if(nRes < 0){
@@ -122,39 +87,39 @@ long App::readSettings(){ //it cache log messages to vector, because it called b
                 std::string ss = "error in files load";
                 QString str = QString::fromUtf8(ss.c_str());
                 mb.setText(str);
-                v_cache_log_.add( spdlog::level::err, "{} ReadJsonFile {}", nRes, str.toStdString());
+                m_v_cache_log.add( spdlog::level::err, "{} ReadJsonFile {}", nRes, str.toStdString());
                 mb.exec();
                 return -1;
             }
             p_params->setFileAppsettings(str_path_2_conf);
-            v_cache_log_.add(spdlog::level::info, "ReadTemplates: {}", p_params->getDirSHABLON().absolutePath().toStdString());
+            m_v_cache_log.add(spdlog::level::info, "ReadTemplates: {}", p_params->getDirSHABLON().absolutePath().toStdString());
             nRes = Params::GetInstance()->readTemplates( p_params->getDirSHABLON().absolutePath().toStdString() );
             assert(nRes>0);
             if(nRes < 0){
-                v_cache_log_.add(spdlog::level::err, "Error while read: {}", nRes);
+                m_v_cache_log.add(spdlog::level::err, "Error while read: {}", nRes);
             }
 
             const std::filesystem::path path_dirforms = p_params->getDirData().canonicalPath().toStdString()+"//form//";
-            v_cache_log_.add(spdlog::level::info, "ReadForms: {}", path_dirforms.string());
+            m_v_cache_log.add(spdlog::level::info, "ReadForms: {}", path_dirforms.string());
             nRes = Params::GetInstance()->readFormsExists( path_dirforms );
             assert(nRes>0);
             if(nRes < 0){
-                v_cache_log_.add(spdlog::level::err, "Error while read existed forms: {}", nRes);
+                m_v_cache_log.add(spdlog::level::err, "Error while read existed forms: {}", nRes);
             }
             nRes = Params::GetInstance()->readForms( path_dirforms );
             assert(nRes>0);
             if(nRes < 0){
-                v_cache_log_.add(spdlog::level::err, "Error while read: {}", nRes);
+                m_v_cache_log.add(spdlog::level::err, "Error while read: {}", nRes);
             }
 
         }else{
-            v_cache_log_.add(spdlog::level::err, "Can't create singleton Params");
+            m_v_cache_log.add(spdlog::level::err, "Can't create singleton Params");
         }
     }catch(const std::exception& ex){
-        v_cache_log_.add( spdlog::level::err,"Exception: {} ", ex.what());
+        m_v_cache_log.add( spdlog::level::err,"Exception: {} ", ex.what());
         return -4;
     }catch(...){
-        v_cache_log_.add( spdlog::level::err,"Unknown exception.");
+        m_v_cache_log.add( spdlog::level::err,"Unknown exception.");
         return -5;
     }
     return 1;

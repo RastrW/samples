@@ -18,7 +18,6 @@
 #include <spdlog/sinks/stdout_color_sinks.h>
 #include <spdlog/sinks/rotating_file_sink.h>
 #include <spdlog/sinks/qt_sinks.h>
-#include <iostream>
 #include <DockManager.h>
 #include "mainwindow.h"
 #include "qbarsmdp.h"
@@ -36,7 +35,6 @@ using WrapperExceptionType = std::runtime_error;
 #include "rtabwidget.h"
 #include "params.h"
 #include "formfilenew.h"
-#include "testmodel.h"
 #include "formprotocol.h"
 #include "formcalcidop.h"
 #include <QtitanDef.h>
@@ -150,46 +148,13 @@ void MainWindow::dropEvent(QDropEvent *dropEvent){
 }
 
 void MainWindow::logCacheFlush(){
-    for( const auto& cache_log : m_v_cache_log){
-        spdlog::log(cache_log.lev, cache_log.str_log);
-    }
-    m_v_cache_log.clear();
+    m_v_cache_log.flush();
 }
 
 void MainWindow::showEvent( QShowEvent* event ){
     QWidget::showEvent( event );
     //your code here
     // https://stackoverflow.com/questions/14161100/which-qt-widget-should-i-use-for-message-display
-}
-
-MainWindow::_cache_log::_cache_log( const spdlog::level::level_enum lev_in, std::string_view sv_in )
-    : lev{lev_in}
-    , str_log{sv_in}{
-}
-
-MainWindow::_cache_log& MainWindow::_cache_log::operator=(const MainWindow::_cache_log& cache_log){
-    lev     = cache_log.lev;
-    str_log = cache_log.str_log;
-    return *this;
-}
-
-MainWindow::_cache_log& MainWindow::_cache_log::operator=(const MainWindow::_cache_log&& cache_log){
-    operator=(cache_log);
-    return *this;
-}
-
-MainWindow::_cache_log::_cache_log(const MainWindow::_cache_log& cache_log){
-    operator=(cache_log);
-}
-
-MainWindow::_cache_log::_cache_log(const MainWindow::_cache_log&& cache_log){
-    operator=(cache_log);
-}
-
-template <typename... Args>
-void MainWindow::_v_cache_log::add( const spdlog::level::level_enum lev_in, const std::string_view sv_format, Args&&... args ){
-    _cache_log cache_log{lev_in, fmt::format(sv_format, args...)};
-    emplace_back(cache_log);
 }
 
 void MainWindow::setForms(const std::list<CUIForm>& forms){ // https://stackoverflow.com/questions/14151443/how-to-pass-a-qstring-to-a-qt-slot-from-a-qmenu-via-qsignalmapper-or-otherwise

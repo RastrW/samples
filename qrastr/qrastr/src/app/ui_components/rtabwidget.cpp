@@ -145,14 +145,11 @@ void RtabWidget::OnClose()
 void RtabWidget::CreateModel(QAstra* pqastra, CUIForm* pUIForm)
 {
     prm = std::unique_ptr<RModel>(new RModel(nullptr, pqastra, m_pRTDM ));
-    //proxyModel = new QSortFilterProxyModel(prm.get()); // used for sorting: create proxy //https://doc.qt.io/qt-5/qsortfilterproxymodel.html#details
-    //proxyModel->setSourceModel(prm.get());
     prm->setForm(pUIForm);
     prm->populateDataFromRastr();
 
     view->beginUpdate();
     view->setModel(prm.get());
-    //ptv->setModel(proxyModel);
 
     SetEditors();
 
@@ -172,10 +169,6 @@ void RtabWidget::CreateModel(QAstra* pqastra, CUIForm* pUIForm)
         }
     }
 
-    //Show button menu for all column headers.
-    //for (int i = 0; i < view->getColumnCount(); ++i)
-    //    static_cast<GridTableColumn *>(view->getColumn(i))->setMenuButtonVisible(true);
-
     // Заливка колонок цветом по правилам CondFormat
     for (RCol& rcol : *prm->getRdata())
         m_MapcondFormatVector.emplace(rcol.index, std::vector<CondFormat>());
@@ -192,10 +185,6 @@ void RtabWidget::CreateModel(QAstra* pqastra, CUIForm* pUIForm)
         }
 
     view->endUpdate();
-
-
-    //new QAbstractItemModelTester( prm.get(), QAbstractItemModelTester::FailureReportingMode::Warning, this);
-
 
     this->update();
     this->repaint();
@@ -222,21 +211,12 @@ void RtabWidget::SetEditor(RCol& rcol)
     {
         if (!rcol.directcode)
         {
-            //DelegateComboBox* delegate = new DelegateComboBox(this,rcol.NameRef());
-            //ptv->setItemDelegateForColumn(rcol.index, delegate);
-
             column_qt->setEditorType(GridEditor::ComboBox);
 
             QStringList list = prm->m_enum_.at(rcol.index);
 
             column_qt->editorRepository()->setDefaultValue(list.at(0), Qt::EditRole);
             column_qt->editorRepository()->setDefaultValue(list, (Qt::ItemDataRole)Qtitan::ComboBoxRole);
-
-            // Make the combo boxes always displayed.
-            /*for ( int i = 0; i < prm->rowCount(); ++i )
-                {
-                    ptv->openPersistentEditor( prm->index(i, rcol.index) );
-                }*/
         }
         else
          column_qt->setEditorType(GridEditor::Numeric);
@@ -278,8 +258,6 @@ void RtabWidget::SetEditor(RCol& rcol)
     if (rcol.com_prop_tt == enComPropTT::COM_PR_REAL)
     {
         int prec = std::atoi(rcol.prec().c_str());
-        //DelegateDoubleItem* delegate = new DelegateDoubleItem(prec,this);
-        //ptv->setItemDelegateForColumn(rcol.index, delegate);
 
         column_qt->setEditorType(GridEditor::Numeric);
         ((Qtitan::GridNumericEditorRepository *)column_qt->editorRepository())->setMinimum(-100000);
@@ -289,28 +267,9 @@ void RtabWidget::SetEditor(RCol& rcol)
 
     if (rcol.com_prop_tt == enComPropTT::COM_PR_BOOL)
     {
-        //DelegateCheckBox* delegate = new DelegateCheckBox(this);
-        //ptv->setItemDelegateForColumn(rcol.index, delegate);
-
         column_qt->setEditorType(GridEditor::CheckBox);
         ((Qtitan::GridCheckBoxEditorRepository *)column_qt->editorRepository())->setAppearance(GridCheckBox::StyledAppearance);
     }
-    /*if (rcol.com_prop_tt == enComPropTT::COM_PR_ENPIC)
-        {
-            // TO DO: сделать комбобокс из картинок
-           // column_qt->setEditorType(GridEditor::ComboBoxPicture);
-           // ((Qtitan::GridPictureComboBoxEditorRepository*)column_qt->editorRepository())->setIcon( QPixmap(QStringLiteral(":images/cut.png")));
-
-            column_qt->setEditorType(GridEditor::ComboBoxPicture);
-            QList<QPixmap> qpixmaplist;
-            qpixmaplist.push_back( QPixmap(QStringLiteral(":images/cut.png")));
-            qpixmaplist.push_back( QPixmap(QStringLiteral(":images/copy.png")));
-            QStringList list = prm->mnamerefs_.at(rcol.index);
-            //qtn_pixmap_to_qvariant(1,qpixmaplist.at(0))
-            column_qt->editorRepository()->setDefaultValue(qpixmaplist.at(0), Qt::EditRole);
-            column_qt->editorRepository()->setDefaultValue(list, (Qt::ItemDataRole)Qtitan::ComboBoxRole);
-
-        }*/
     view->endUpdate();
 }
 

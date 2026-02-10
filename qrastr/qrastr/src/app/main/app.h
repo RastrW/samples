@@ -4,8 +4,8 @@
 #include <QDir>
 #include <QObject>
 #include <spdlog/spdlog.h>
+#include "cacheLog.h"
 
-//namespace spdlog{namespace level{enum level_enum;}}
 class QAstra;
 class QTI;
 class QBarsMDP;
@@ -23,33 +23,6 @@ class CUIForm;
 class App final : public QApplication{
     Q_OBJECT
 public:
-    /**
-     * @struct _cache_log
-     * @brief Структура для кэширования логов до инициализации системы логирования
-     *
-     * Используется потому что логирование настраивается ПОСЛЕ чтения настроек,
-     * но логи нужны уже ПРИ чтении настроек
-     */
-    struct _cache_log{
-        spdlog::level::level_enum lev;
-        std::string               str_log;
-        _cache_log( const spdlog::level::level_enum lev_in, std::string_view sv_in );
-        _cache_log& operator=(const _cache_log&  cache_log);
-        _cache_log& operator=(const _cache_log&& cache_log);
-        _cache_log           (const _cache_log&  cache_log);
-        _cache_log           (const _cache_log&& cache_log);
-    };
-    /**
-     * @struct _v_cache_log
-     * @brief Вектор для накопления логов
-     *
-     * Расширяет std::vector методом add() для удобного форматирования
-     */
-    struct _v_cache_log
-        : public std::vector<_cache_log> {
-        template <typename... Args>
-        void add( const spdlog::level::level_enum lev_in, const std::string_view sv_format, Args&&... args );
-    };
 
     App(int &argc, char **argv);
     ~App() override;
@@ -76,7 +49,7 @@ public:
     std::shared_ptr<QBarsMDP> getQBarsMDPPtr(){ return m_sp_qbarsmdp;}
 
     // Кэш логов до инициализации
-    _v_cache_log v_cache_log_;
+    qrastr::CacheLogVector m_v_cache_log;
 
     // Умные указатели на плагины
     std::shared_ptr<QAstra> m_sp_qastra;

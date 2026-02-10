@@ -8,6 +8,7 @@
 // Заголовочные файлы проекта.
 #include <rtablesdatamanager.h>
 #include "spdlog/common.h"
+#include "cacheLog.h"
 
 class QMdiArea;
 class QSignalMapper;
@@ -63,21 +64,6 @@ class PyHlp;
  */
 class MainWindow : public QMainWindow{
     Q_OBJECT
-public:
-    struct _cache_log{
-        spdlog::level::level_enum lev;
-        std::string               str_log;
-        _cache_log( const spdlog::level::level_enum lev_in, std::string_view sv_in );
-        _cache_log& operator=(const _cache_log&  cache_log);
-        _cache_log& operator=(const _cache_log&& cache_log);
-        _cache_log           (const _cache_log&  cache_log);
-        _cache_log           (const _cache_log&& cache_log);
-    };
-    struct _v_cache_log
-        : public std::vector<_cache_log> {
-        template <typename... Args>
-        void add( const spdlog::level::level_enum lev_in, const std::string_view sv_format, Args&&... args );
-    };
 signals:
     // Файл загружен
     void sig_fileLoaded();
@@ -227,7 +213,7 @@ private:
     // The main container for Advanced Docking System
     ads::CDockManager* m_DockManager = nullptr;
 
-    _v_cache_log       m_v_cache_log;                           // Кэш логов
+    qrastr::CacheLogVector  m_v_cache_log;                           // Кэш логов
 
     std::shared_ptr<QAstra> m_sp_qastra;
     std::shared_ptr<QTI> m_sp_qti;
