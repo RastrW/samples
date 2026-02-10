@@ -90,27 +90,6 @@ if(EXISTS "${LEXILLA_DIR}/include")
     include_directories("${LEXILLA_DIR}/include")
 endif()
 
-# Добавляем lib директории для поиска библиотек
-if(EXISTS "${SCINTILLA_DIR}/lib")
-    link_directories("${SCINTILLA_DIR}/lib")
-endif()
-if(EXISTS "${LEXILLA_DIR}/lib")
-    link_directories("${LEXILLA_DIR}/lib")
-endif()
-
-# Добавляем bin директории для поиска DLL (Windows)
-if(WIN32)
-    if(EXISTS "${SCINTILLA_DIR}/bin")
-        link_directories("${SCINTILLA_DIR}/bin")
-    endif()
-    if(EXISTS "${LEXILLA_DIR}/bin")
-        link_directories("${LEXILLA_DIR}/bin")
-    endif()
-endif()
-
-# Добавляем старый путь для обратной совместимости
-link_directories(${SCI_DIR}/bin)
-
 message(STATUS "Scintilla/Lexilla paths:")
 message(STATUS "  SCINTILLA_DIR: ${SCINTILLA_DIR}")
 message(STATUS "  SCINTILLA_BASE_DIR: ${SCINTILLA_BASE_DIR}")
