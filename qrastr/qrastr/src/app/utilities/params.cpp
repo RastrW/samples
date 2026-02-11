@@ -124,9 +124,11 @@ int Params::readForms(const fs::path& path_forms){
             path_file_form /= stringutils::utf8_decode(form);
             CUIFormsCollection* CUIFormsCollection_ = new CUIFormsCollection ;
             if (path_file_form.extension() == ".fm")
-                *CUIFormsCollection_ = CUIFormCollectionSerializerBinary(path_file_form).Deserialize();
+                *CUIFormsCollection_ = CUIFormCollectionSerializerBinary
+                                       (path_file_form).Deserialize();
             else
-                *CUIFormsCollection_ = CUIFormCollectionSerializerJson(path_file_form).Deserialize();
+                *CUIFormsCollection_ = CUIFormCollectionSerializerJson
+                                       (path_file_form).Deserialize();
             for(const  CUIForm& uiform : CUIFormsCollection_->Forms()){
                 upCUIFormsCollection_->Forms().emplace_back(uiform);
             }

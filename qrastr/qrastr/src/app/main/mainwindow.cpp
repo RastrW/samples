@@ -163,12 +163,9 @@ void MainWindow::setForms(const std::list<CUIForm>& forms){ // https://stackover
     m_RTDM.SetForms(&m_lstUIForms);
     QMap<QString,QMenu *> map_menu;
     for(const auto& j_form : forms){
-        //std::string str_MenuPath = stringutils::cp1251ToUtf8(j_form.MenuPath());
         std::string str_MenuPath = stringutils::MkToUtf8(j_form.MenuPath());
         auto vmenu = split(str_MenuPath,'\\');
-        //std::string str_Name = stringutils::cp1251ToUtf8(j_form.Name());
         std::string str_Name = stringutils::MkToUtf8(j_form.Name());
-        //if (!str_MenuPath.empty() && str_MenuPath.at(0) == '_')
         if (str_MenuPath.empty())
             continue;
         if (j_form.AddToMenuIndex() >= vmenu.size() )
@@ -178,13 +175,10 @@ void MainWindow::setForms(const std::list<CUIForm>& forms){ // https://stackover
             map_menu.insert(qstr_MenuPath,m_menuOpen->addMenu(qstr_MenuPath.isEmpty()?"Остальное":qstr_MenuPath));
     }
     for(const auto& j_form : forms){
-        //std::string str_Name = stringutils::cp1251ToUtf8(j_form.Name());
         std::string str_Name = stringutils::MkToUtf8(j_form.Name());
         std::string str_TableName = j_form.TableName();
-        //std::string str_MenuPath = stringutils::cp1251ToUtf8(j_form.MenuPath());
         std::string str_MenuPath = stringutils::MkToUtf8(j_form.MenuPath());
         auto vmenu = split(str_MenuPath,'\\');
-        //QString qstr_MenuPath = str_MenuPath.c_str();
         if (!str_MenuPath.empty() && j_form.AddToMenuIndex() >= vmenu.size() ){
             i++;
             continue;

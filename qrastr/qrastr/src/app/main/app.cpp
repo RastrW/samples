@@ -39,7 +39,6 @@ bool App::notify(QObject* receiver, QEvent* event){
     }catch(std::exception& ex){
         exclog(ex);
         const std::string str{fmt::format("std::exception: {}",ex.what())};
-        assert(!str.c_str());
     }catch (...){
         exclog();
     }
@@ -51,7 +50,7 @@ long App::init(){
         auto logg = std::make_shared<spdlog::logger>( "qrastr" );
         spdlog::set_default_logger(logg);
 #if(defined(_MSC_VER))
-        SetConsoleOutputCP(CP_UTF8);
+       //SetConsoleOutputCP(CP_UTF8);
 #endif
         auto console_sink = std::make_shared<spdlog::sinks::stdout_color_sink_mt>();
         logg->sinks().push_back(console_sink);
@@ -94,7 +93,7 @@ long App::readSettings(){
        // QMessageBox mb( QMessageBox::Icon::Critical, QObject::tr("Error"), QString("In lin not implemented!") );  mb.exec();
 #endif
         QFileInfo fi_appsettings(str_path_2_conf.c_str());
-        Params* const p_params = Params::get_instance();
+        auto* const p_params = Params::get_instance();
         if(p_params!=nullptr){
             p_params->setDirData(fi_appsettings.dir());
             const bool bl_res = QDir::setCurrent(p_params->getDirData().path());
@@ -203,8 +202,7 @@ void App::loadPlugins(){
             continue;
         }
 
-         qInfo()<< "Successfully loaded plugin: " + fileName;
-
+        qInfo()<< "Successfully loaded plugin: " + fileName;
         if(plugin){
             spdlog::info( "Load dynamic plugin {}/{} : {}", pluginsDir.absolutePath().toStdString(), fileName.toStdString(), plugin->objectName().toStdString());
             auto iRastr = qobject_cast<InterfaceRastr *>(plugin);
@@ -220,11 +218,9 @@ void App::loadPlugins(){
                         qInfo( "Plugin Rastr no load (rastr==null)! may be u haven't license!" );
                         continue;
                     }
-                    //m_sp_qastra = std::move( std::make_shared<QAstra>());
 
                     m_sp_qastra = std::make_shared<QAstra>();
                     m_sp_qastra->setRastr(rastr);
-
                 }catch(const std::exception& ex){
                     exclog(ex);
                 }catch(...){
@@ -302,22 +298,18 @@ long App::readForms(){
         for(const Params::_v_forms::value_type &form : Params::get_instance()->getStartLoadForms()){
             std::filesystem::path path_file_form = stringutils::utf8_decode(form);
             path_form_load =  path_forms / path_file_form;
-    #if(defined(_MSC_VER))
-            qDebug() << "read form from file : " << path_form_load.wstring();
-    #else
-            //path_forms_load = str_path_to_file_forms;
-            //qDebug() << "read form from file : " << path_forms_load.c_str();
-    #endif
+
             CUIFormsCollection* CUIFormsCollection_ = new CUIFormsCollection ;
             if (path_form_load.extension() == ".fm")
-                *CUIFormsCollection_ = CUIFormCollectionSerializerBinary(path_form_load).Deserialize();
+                *CUIFormsCollection_ = CUIFormCollectionSerializerBinary
+                                       (path_form_load).Deserialize();
             else
-                *CUIFormsCollection_ = CUIFormCollectionSerializerJson(path_form_load).Deserialize();
+                *CUIFormsCollection_ = CUIFormCollectionSerializerJson
+                                       (path_form_load).Deserialize();
             for(const  CUIForm& uiform : CUIFormsCollection_->Forms()){
                 upCUIFormsCollection_->Forms().emplace_back(uiform);
             }
         }
-        qDebug() << "Thats all forms.\n" ;
     }catch(const std::exception& ex){
         exclog(ex);
         return -1;
@@ -336,33 +328,35 @@ std::list<CUIForm>& App::getForms() const {
 long App::start(){
     try{
         long n_res =0;
-        QDir::setCurrent(Params::get_instance()->getDirData().absolutePath());
+        auto* const p_params = Params::get_instance();
+        QDir::setCurrent(p_params->getDirData().absolutePath());
         loadPlugins();
         if(nullptr!=m_sp_qastra){
-            const QDir dir = Params::get_instance()->getDirSHABLON();
-            //std::filesystem::path path_templates = Params::GetInstance()->getDirSHABLON().canonicalPath().toStdString();
+            const QDir dir = p_params->getDirSHABLON();
 #if(QT_VERSION > QT_VERSION_CHECK(5, 16, 0))
-            const std::filesystem::path path_templates = Params::get_instance()->getDirSHABLON().filesystemCanonicalPath();
+            const std::filesystem::path path_templates = p_params->getDirSHABLON().filesystemCanonicalPath();
 #else
             std::filesystem::path path_templates = Params::GetInstance()->getDirSHABLON().canonicalPath().toStdString();
             //assert(!"what?");
 #endif
-            const Params::_v_templates v_templates{ Params::get_instance()->getStartLoadTemplates() };
+            const Params::_v_templates v_templates{ p_params->getStartLoadTemplates() };
             for(const Params::_v_templates::value_type& templ_to_load : v_templates){
                 std::filesystem::path path_template = path_templates;
                 path_template /= templ_to_load;
-                //path_template += "/" + templ_to_load;
-                IPlainRastrRetCode res = m_sp_qastra->Load( eLoadCode::RG_REPL, "", path_template.string() );
+                IPlainRastrRetCode res =
+                    m_sp_qastra->Load( eLoadCode::RG_REPL, "", path_template.string() );
                 int check = 0;
             }
-            for(const Params::_v_file_templates::value_type& file_template : Params::get_instance()->getStartLoadFileTemplates()){
+            for(const Params::_v_file_templates::value_type& file_template
+                 : p_params->getStartLoadFileTemplates()){
                 std::filesystem::path path_template = path_templates;
                 path_template /= file_template.second;
-                IPlainRastrRetCode res = m_sp_qastra->Load( eLoadCode::RG_REPL, file_template.first, path_template.string() );
+                IPlainRastrRetCode res =
+                    m_sp_qastra->Load( eLoadCode::RG_REPL, file_template.first,
+                                                           path_template.string() );
                 if(n_res<0){
                     spdlog::error("{} =LoadFile()", n_res);
                     QMessageBox mb( QMessageBox::Icon::Critical, QObject::tr("Error"),
-                                    //QString("error: %1 wheh read file : %2").arg(n_res).arg(m_params.Get_on_start_load_file_rastr().c_str())
                                     QString("error: %1 wheh read file : %2").arg(n_res).arg(file_template.first.c_str())
                                    );
                     mb.exec();
@@ -373,10 +367,8 @@ long App::start(){
         n_res = readForms();
         if(n_res<0){
             spdlog::error("{} =ReadForms()", n_res);
-            QMessageBox mb( QMessageBox::Icon::Critical, QObject::tr("Error"), QObject::tr("Can't read forms")
-                            //QString("error: %1 wheh read file : %2").arg(n_res).arg(m_params.Get_on_start_load_file_forms().c_str())
-                            //QString("error: %1 wheh read file : %2").arg(n_res).arg(Params::GetInstance()->Get_on_start_load_file_forms().c_str())
-                           );
+            QMessageBox mb(QMessageBox::Icon::Critical, QObject::tr("Error"),
+                           QObject::tr("Can't read forms"));
             mb.exec();
         }
     }catch(const std::exception& ex){
@@ -391,7 +383,6 @@ long App::start(){
 
 long App::writeSettings(){
     QSettings settings(Params::pch_org_qrastr_);
-    //QSettings::IniFormat
     QString qstr = settings.fileName();
     return 1;
 }

@@ -165,28 +165,23 @@ void FormSettings::onBtnSaveClick(){
 int FormSettings::init(const std::shared_ptr<QAstra>& sp_qastra){
     int n_res = 0;
     sp_qastra_ = sp_qastra;
-    //n_res = Params::GetInstance()->readForms    ( Params::GetInstance()->getDirSHABLON().absolutePath().toStdString() ); assert(n_res>0);
-    n_res = Params::get_instance()->readTemplates( Params::get_instance()->getDirSHABLON().absolutePath().toStdString() ); assert(n_res>0);
+    n_res = Params::get_instance()->readTemplates
+            ( Params::get_instance()->getDirSHABLON().absolutePath().toStdString() );
+    assert(n_res>0);
 
     pti_settings_root_ = new _tree_item{"root","Настройки"};
     _tree_item ti_datas     { "datas",     "Данные" , new FormSettingsDatas()  };
     _tree_item ti_protocol  { "protocol",  "Протокол" };
-    _tree_item ti_forms     { "forms",     "Формы", new FormSettingsForms()    };
-        ti_forms.v_childs.emplace_back(_tree_item{ "loaded", "Загруженные" });
     _tree_item ti_on_start { "on_start", "Загружаемые при старте"  };
         _tree_item  ti_onload_templates{ "templates",  "Шаблоны", new FormSettingsOnLoadTemplates() };
         ti_on_start.v_childs.emplace_back(ti_onload_templates);
-        //ti_on_start.v_childs.emplace_back(_tree_item{ "templates",  "Шаблоны", new FormSettingsOnLoadTemplates() });
         _tree_item  ti_onload_forms{ "forms",  "Формы", new FormSettingsOnLoadForms() };
-        //ti_on_start.v_childs.emplace_back(_tree_item{ "foms", "Формы"   });
         ti_on_start.v_childs.emplace_back(ti_onload_forms);
         _tree_item ti_on_load_files{ "templates", "Файлы", new FormSettingsOnLoadFiles(this) };
-        //ti_on_start.v_childs.emplace_back(_tree_item{ "templates", "Загружаемые файлы", new FormSettingsOnLoadFiles() });
         ti_on_start.v_childs.emplace_back(ti_on_load_files);
     _tree_item ti_modules   { "modules",   "Модули"   };
     pti_settings_root_->v_childs.emplace_back( ti_datas     );
     pti_settings_root_->v_childs.emplace_back( ti_protocol  );
-    pti_settings_root_->v_childs.emplace_back( ti_forms     );
     pti_settings_root_->v_childs.emplace_back( ti_on_start );
     pti_settings_root_->v_childs.emplace_back( ti_modules   );
 
@@ -200,21 +195,14 @@ int FormSettings::init(const std::shared_ptr<QAstra>& sp_qastra){
     psw_->addWidget(secondPageWidget);
     psw_->addWidget(thirdPageWidget);
     psw_->addWidget(ti_datas.pw);
-    psw_->addWidget(ti_forms.pw);
     psw_->addWidget(ti_on_load_files.pw);
     psw_->addWidget(ti_onload_templates.pw);
     psw_->addWidget(ti_onload_forms.pw);
-    //psw_->adjustSize();
-    //psw_->setContentsMargins();
-    //psw_->setSizePolicy();
-    //psw_->
-    //connect( ptw_sections_, &QTreeView::clicked, psw_, [=](    const QModelIndex &index ){
-    //connect( ptw_sections_, &QTreeView::clicked, psw_, [this]( const QModelIndex &index ){
+
     connect( ptw_sections_, &QTreeView::clicked, psw_, [this]( const QModelIndex &index ){
         qDebug()<<"pc."<< index.parent().column()<< " : pr."<< index.parent().row() <<" -- c."<< index.column()<< " : r."<< index.row()
             <<" == " << index.data().toString()<< " :: " << index.internalId();
-        //const QStandardItemModel *model = qobject_cast<QStandardItemModel *>( ptw_sections_->model() );
-        //const QStandardItem *item = model->itemFromIndex( index );
+
         const QTreeWidgetItem* ptiw = this->ptw_sections_->currentItem();
         const _tree_item*      pti  = this->pti_settings_root_->getEq(ptiw);//strange to look by pointer, but it works
         this->psw_->setCurrentWidget(pti->pw);
@@ -230,7 +218,6 @@ int FormSettings::init(const std::shared_ptr<QAstra>& sp_qastra){
         private:
         QPushButton* pb_save_ = nullptr;
     };
-    //ptw_sections_->setHeader(new Header(ptw_sections_));
 
     return 1;
 }

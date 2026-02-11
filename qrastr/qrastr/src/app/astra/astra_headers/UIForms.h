@@ -162,13 +162,15 @@ public:
 	using CUIFromCollectionSerializerFile::CUIFromCollectionSerializerFile;
 
 	//! Сериализация коллекции форм в файл, заданный в параметре
-	const CUIFormsCollection& Serialize(const fs::path& Path, const CUIFormsCollection& Forms) const
+    const CUIFormsCollection& Serialize(const fs::path& Path,
+                                        const CUIFormsCollection& Forms) const
 	{
 		try
 		{
 			std::ofstream formstream(Path, std::ios::binary);
 			if (!formstream.is_open())
-				throw CExceptionGLE(Resources.String(CUIFormCollectionSerializerBase::RCS_UIFormsCannotBeOpened));
+                throw CExceptionGLE(Resources.String
+                                (CUIFormCollectionSerializerBase::RCS_UIFormsCannotBeOpened));
 			WriteInt32(static_cast<std::int32_t>(Forms.Forms().size()), formstream);
 			for (const auto& form : Forms.Forms())
 				SerializeForm(form, formstream);
@@ -234,7 +236,6 @@ public:
 protected:
 
 	// функции бинарного I/O
-
 	static std::int32_t ReadInt32(std::ifstream& formstream)
 	{
 		std::int32_t Value{ 0 };

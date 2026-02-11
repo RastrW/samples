@@ -7,10 +7,12 @@ void RTablesDataManager::setQAstra( QAstra* _pqastra)
     m_pqastra = _pqastra;
     connect(m_pqastra, &QAstra::onRastrHint, this, &RTablesDataManager::onRastrHint);
 }
+
 void  RTablesDataManager::SetForms ( std::list<CUIForm>* _lstUIForms)
 {
     m_plstUIForms = _lstUIForms;
 }
+
 CUIForm*  RTablesDataManager::getForm ( std::string _name)
 {
     for (CUIForm &form : *m_plstUIForms)
@@ -21,6 +23,7 @@ CUIForm*  RTablesDataManager::getForm ( std::string _name)
     }
     return nullptr;
 }
+
 void  RTablesDataManager::onRastrHint(const _hint_data& hint_data)
 {
     long row = hint_data.n_indx;
@@ -167,17 +170,12 @@ void  RTablesDataManager::onRastrHint(const _hint_data& hint_data)
                 Options.SetEditatableColumnsOnly(true);
                 IRastrResultVerify(table->DataBlock("", VDB, Options));
             }
-
-            //VDB.QDump();
-
             for (int i = 0 ; i < columnscount.Value(); i++)
             {
                 size_t ind = row * columnscount.Value() + i;
                 size_t ind_vdb = 0 * columnscount.Value() + i;
                 pqdb->Data()[ind] = VDB.Data()[ind_vdb];
             }
-           // emit RTDM_dataChanged(tname,row,0,row,cols_cnt);
-            //emit RTDM_EndResetModel(tname);
         }
         break;
 
@@ -200,7 +198,6 @@ void  RTablesDataManager::onRastrHint(const _hint_data& hint_data)
             QDataBlock* pqdb = it->second.get();
             pqdb->InsertRow(row);
             emit RTDM_EndInsertRow(tname);
-            //pqdb->QDump(10,20);
         }
         break;
     case EventHints::DeleteRow:
@@ -227,8 +224,6 @@ std::shared_ptr<QDataBlock>  RTablesDataManager::Get(std::string tname, std::str
      * например если таблицу открыли, а потом закрыли, тогда она остается в RTDM со счетчиком ссылок (use_count()) = 1
      * если не удалять, тогда при расчете УР придется обновлять данные, но необходимости в этом нет.
     */
-    //not work with map until < C++20
-    //auto iter{ std::remove_if(begin(mpTables), end(mpTables), [&](auto& T) { return T.second.use_count() > 1; })};
     auto iter = mpTables.begin();
     auto endIter = mpTables.end();
     for(; iter != endIter; ) {
@@ -245,11 +240,7 @@ std::shared_ptr<QDataBlock>  RTablesDataManager::Get(std::string tname, std::str
     if (it != mpTables.end() )
     {
         return it->second;
-        //it->second->Clear();
-        //GetDataBlock(tname,(*it->second.get()));
-    }
-    else
-    {
+    }else{
         qDebug()<<"RTDM: add Table" << tname.c_str();
         mpTables.insert(std::make_pair(tname,new QDataBlock()));
         GetDataBlock(tname,Cols,*mpTables.find(tname)->second);
@@ -275,7 +266,7 @@ void  RTablesDataManager::GetDataBlock(std::string tname , std::string Cols , QD
     Options.SetEnumAsInt(TriBool::True);
     Options.SetSuperEnumAsInt(TriBool::True);
     Options.SetUseChangedIndices(true);
-    //Options.SetEditatableColumnsOnly(true);
+
     IRastrTablesPtr tablesx{ m_pqastra->getRastr()->Tables() };
     IRastrTablePtr table{ tablesx->Item(tname) };
 
@@ -301,7 +292,7 @@ void  RTablesDataManager::GetDataBlock(std::string tname , QDataBlock& QDB)
     Options.SetEnumAsInt(TriBool::True);
     Options.SetSuperEnumAsInt(TriBool::True);
     Options.SetUseChangedIndices(true);
-    //Options.SetEditatableColumnsOnly(true);
+
     GetDataBlock(tname,QDB,Options);
 }
 

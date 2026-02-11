@@ -57,8 +57,8 @@ spdlog::level::level_enum QAstra::getSpdLevel(const LogMessageTypes lmt){
 }
 
 IPlainRastrRetCode QAstra::OnEvent(const IRastrEventLog& Event) noexcept  {
-   //spdlog::info( "OnEvent.Log Status: {:3}  StageId: {:2} EventMsg: {:40} Table: {:10}  Column: {:5} Index: {:5} UIForm: {:10}"
-   spdlog::log( getSpdLevel(Event.Status()), "OnEvent.Log Status: {:3}  StageId: {:2} EventMsg: {:40} Table: {:10}  Column: {:5} Index: {:5} UIForm: {:10}"
+   spdlog::log( getSpdLevel(Event.Status()),
+    "OnEvent.Log Status: {:3}  StageId: {:2} EventMsg: {:40} Table: {:10}  Column: {:5} Index: {:5} UIForm: {:10}"
        , static_cast<std::underlying_type<LogMessageTypes>::type>(Event.Status())
        , Event.StageId()
        , Event.Message()

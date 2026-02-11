@@ -33,7 +33,8 @@ namespace RCM
 		{
 			if (index() != rhs.index())
 				return false;
-			return static_cast<const std::string&>(*this) == static_cast<const std::string&>(rhs);
+            return static_cast<const std::string&>(*this) ==
+                   static_cast<const std::string&>(rhs);
 		}
 
 		bool operator != (const ResourceItem& rhs) const
@@ -60,9 +61,12 @@ namespace RCM
 	{
 	protected:
 		static inline constexpr std::array<std::string_view,
-			static_cast<std::underlying_type<LanguageId>::type>(LanguageId::Last)> LanguageNames_ = { {"Russian", "English"} };
+            static_cast<std::underlying_type<LanguageId>::type>(LanguageId::Last)>
+            LanguageNames_ = { {"Russian", "English"} };
 	public:
-		ResourceId(std::string_view Id, const LanguageId& Language = LanguageId::Last) : ResourceKeyT{ Id, Language } {}
+        ResourceId(std::string_view Id,
+                   const LanguageId& Language = LanguageId::Last)
+            : ResourceKeyT{ Id, Language } {}
 		virtual ~ResourceId() = default;
 		bool operator<(const ResourceId& rhs) const
 		{
@@ -70,9 +74,12 @@ namespace RCM
 		}
 		inline const LanguageId Language() const { return second; }
 		inline const std::string& Id() const { return first; }
-		inline const std::string_view& LanguageName() const { return LanguageName(second); }
-		static const std::string_view& LanguageName(LanguageId Id) { return LanguageNames_[static_cast<std::underlying_type<LanguageId>::type>(Id)]; }
-		std::string Key() const { return fmt::format("\"{}\" in {}", Id(), LanguageName()); }
+        inline const std::string_view& LanguageName()
+            const { return LanguageName(second); }
+        static const std::string_view& LanguageName(LanguageId Id)
+            { return LanguageNames_[static_cast<std::underlying_type<LanguageId>::type>(Id)]; }
+        std::string Key() const
+            { return fmt::format("\"{}\" in {}", Id(), LanguageName()); }
 	};
 
 	class ResourceManager
@@ -105,7 +112,8 @@ namespace RCM
 			{
 				const auto& dup{ Ins.first->second };
 				if (ResourceItem(data) != dup)
-					throw std::runtime_error(fmt::format("ResourceManager::Add - different resources for key {} : \"{}\" and \"{}\"",
+                    throw std::runtime_error
+                        (fmt::format("ResourceManager::Add - different resources for key {} : \"{}\" and \"{}\"",
 						Id.Key(),
 						static_cast<const std::string&>(data),
 						static_cast<const std::string&>(dup)));

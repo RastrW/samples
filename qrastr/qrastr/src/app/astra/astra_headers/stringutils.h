@@ -40,22 +40,26 @@ public:
 
 	static inline void ltrim(std::string& s)
 	{
-		s.erase(s.begin(), std::find_if(s.begin(), s.end(), [](unsigned char ch) noexcept { return !std::isspace(ch); }));
+        s.erase(s.begin(), std::find_if(s.begin(), s.end(),
+                [](unsigned char ch) noexcept { return !std::isspace(ch); }));
 	}
 
 	static inline void rtrim(std::string& s)
 	{
-		s.erase(std::find_if(s.rbegin(), s.rend(), [](unsigned char ch) noexcept { return !std::isspace(ch); }).base(), s.end());
+        s.erase(std::find_if(s.rbegin(), s.rend(),
+                [](unsigned char ch) noexcept { return !std::isspace(ch); }).base(), s.end());
 	}
 
 	static inline void tolower(std::string& s)
 	{
-        std::transform(s.begin(), s.end(), s.begin(), [](unsigned char c) { return static_cast<unsigned char>(std::tolower(c)); });
+        std::transform(s.begin(), s.end(), s.begin(),
+                [](unsigned char c) { return static_cast<unsigned char>(std::tolower(c)); });
 	}
 
 	static inline void toupper(std::string& s)
 	{
-		std::transform(s.begin(), s.end(), s.begin(), [](unsigned char c) { return static_cast<unsigned char>(std::toupper(c)); });
+        std::transform(s.begin(), s.end(), s.begin(),
+                [](unsigned char c) { return static_cast<unsigned char>(std::toupper(c)); });
 	}
 
 	static inline void trim(std::string& s) { ltrim(s);  rtrim(s); }
@@ -68,7 +72,8 @@ public:
 
 	static inline void fix_decimal_separator(std::string& s)
 	{
-		std::transform(s.begin(), s.end(), s.begin(), [](unsigned char c) { return c == ',' ? stringutils::decimal_separator : c;  });
+        std::transform(s.begin(), s.end(), s.begin(),
+                [](unsigned char c) { return c == ',' ? stringutils::decimal_separator : c;  });
 	}
 
 	template<typename T>
@@ -90,7 +95,8 @@ public:
 		result.clear();
 		for(size_t nPos(0); nPos < str.length() ; )
 		{
-			if (const auto nMinDelPos{ str.find_first_of(Delimiters, nPos) }; nMinDelPos == std::string::npos)
+            if (const auto nMinDelPos{ str.find_first_of(Delimiters, nPos) };
+                nMinDelPos == std::string::npos)
 			{	
 				stringutils::PushContainer(result, str.substr(nPos));
 				break;
@@ -108,9 +114,11 @@ public:
 	{
 #ifdef _MSC_VER
 		if (wstr.empty()) return std::string();
-		const auto size_needed{ WideCharToMultiByte(CP_UTF8, 0, &wstr[0], static_cast<int>(wstr.size()), NULL, 0, NULL, NULL) };
+        const auto size_needed{ WideCharToMultiByte(CP_UTF8, 0, &wstr[0],
+                            static_cast<int>(wstr.size()), NULL, 0, NULL, NULL) };
 		std::string strTo(size_needed, 0);
-		WideCharToMultiByte(CP_UTF8, 0, &wstr[0], static_cast<int>(wstr.size()), &strTo[0], size_needed, NULL, NULL);
+        WideCharToMultiByte(CP_UTF8, 0, &wstr[0],
+                            static_cast<int>(wstr.size()), &strTo[0], size_needed, NULL, NULL);
 		return strTo;
 #else
 		return std::string(); // nothing to convert on linux
@@ -128,9 +136,11 @@ public:
 	static std::string COM_decode(const std::wstring_view wstr)
 	{
 		if (wstr.empty()) return std::string();
-		const auto size_needed{ WideCharToMultiByte(CP_ACP, 0, &wstr[0], static_cast<int>(wstr.size()), NULL, 0, NULL, NULL) };
+        const auto size_needed{ WideCharToMultiByte(CP_ACP, 0, &wstr[0],
+                            static_cast<int>(wstr.size()), NULL, 0, NULL, NULL) };
 		std::string strTo(size_needed, 0);
-		WideCharToMultiByte(CP_ACP, 0, &wstr[0], static_cast<int>(wstr.size()), &strTo[0], size_needed, NULL, NULL);
+        WideCharToMultiByte(CP_ACP, 0, &wstr[0],
+                            static_cast<int>(wstr.size()), &strTo[0], size_needed, NULL, NULL);
 		return strTo;
 	}
 #else

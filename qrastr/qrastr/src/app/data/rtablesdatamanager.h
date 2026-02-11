@@ -1,5 +1,3 @@
-#ifndef RTABLESDATAMANAGER_H
-#define RTABLESDATAMANAGER_H
 #pragma once
 
 #include <map>
@@ -8,11 +6,8 @@
 #include "QVector"
 #include <QObject>
 #include "qastra.h"
-//#include "UIForms.h"
-//#include <astra/UIForms.h>
 #include "astra_headers/UIForms.h"
 
-//class CUIForm;
 
 template<typename T>
 class ITablesDataManagerT
@@ -44,8 +39,6 @@ private:
     std::string GetTCols(std::string tname);
     long GetColIndex(std::string tname,std::string cname);
     ePropType GetColType(std::string tname,std::string cname);
-
-
 signals:
     void RTDM_dataChanged(std::string tname,int row_from , int col_from , int row_to, int col_to);
     void RTDM_UpdateModel(std::string tname);
@@ -55,8 +48,6 @@ signals:
     void RTDM_EndResetModel(std::string tname);
     void RTDM_BeginInsertRow(std::string tname,int first,int last);
     void RTDM_EndInsertRow(std::string tname);
-
-
 private:
     QAstra* m_pqastra;
     std::list<CUIForm>* m_plstUIForms;
@@ -68,5 +59,3 @@ private:
       * */
     std::map<std::string,std::shared_ptr<QDataBlock>> mpTables;
 };
-
-#endif // RTABLESDATAMANAGER_H

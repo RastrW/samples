@@ -73,12 +73,19 @@ private:
     QDir                  dir_Data_;
     QDir                  dir_SHABLON_;
     fs::path              path_appsettings_;
+    /// Список загрузок по appsettings:
+    // Файл для загрузки и соответствющие ему шаблоны
     _v_templates          v_start_load_templates_;
+    // Список файлов из папки Data/form
     _v_forms              v_start_load_forms_;
+    // Список файлов из папки Data/SHABLON
     _v_file_templates     v_start_load_file_templates_;
+    /// Список всех возможных файлов
+    // Список файлов в папке Data/form
     _v_forms              v_forms_exists_;
-    std::unique_ptr<CUIFormsCollection> upCUIFormsCollection_;
+    // Список файлов в папке Data/SHABLON
     _v_template_exts      v_template_exts_;
+    std::unique_ptr<CUIFormsCollection> upCUIFormsCollection_;
 public:
     static constexpr const char pch_stub_phrase_[]=               "not_set";
     static constexpr const char pch_dir_data_[]=                  "Data";
