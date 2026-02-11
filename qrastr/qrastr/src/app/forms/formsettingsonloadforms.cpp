@@ -18,12 +18,12 @@ FormSettingsOnLoadForms::FormSettingsOnLoadForms(QWidget *parent) :
 void FormSettingsOnLoadForms::showEvent( QShowEvent* event ){
     ui->twForms->setRowCount(0);
     int n_row_num = 0;
-    for(const auto& form_exists_name : Params::GetInstance()->getFormsExists()){
+    for(const auto& form_exists_name : Params::get_instance()->getFormsExists()){
         ui->twForms->insertRow(n_row_num);
         QTableWidgetItem* ptwi_checkbox = new QTableWidgetItem();
         ptwi_checkbox->data(Qt::CheckStateRole);
         ptwi_checkbox->setCheckState(Qt::Unchecked);
-        for(const auto& form_load_name: Params::GetInstance()->getStartLoadForms()){
+        for(const auto& form_load_name: Params::get_instance()->getStartLoadForms()){
             if(form_exists_name == form_load_name){
                 ptwi_checkbox->setCheckState(Qt::Checked);
             }
@@ -47,6 +47,6 @@ void FormSettingsOnLoadForms::on_pbApply_clicked(){
             v_forms_load_new.emplace_back(ptwi_formname->text().toStdString());
         }
     }
-    Params::GetInstance()->setStartLoadForms(v_forms_load_new);
+    Params::get_instance()->setStartLoadForms(v_forms_load_new);
 }
 

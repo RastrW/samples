@@ -1,27 +1,20 @@
-#include <iostream>
-#include <fstream>
 #include "params.h"
+#include <fstream>
 #include "common_qrastr.h"
-//#include "License2/json.hpp"
-//#include <astra/License2/json.hpp>
-//#include "UIForms.h"
-//#include <astra/UIForms.h>
-
 #include <astra_headers/License2/json.hpp>
 #include "astra_headers/UIForms.h"
 
 Params::Params(){
 }
+
 int Params::readJsonFile(const fs::path& path_2_json){
     try{
-        //spdlog::info("read JSON file: [{}]", path_2_json.string());
         v_start_load_file_templates_.clear();
         v_start_load_forms_.clear();
         v_start_load_templates_.clear();
         std::ifstream ifs(path_2_json);
         if(ifs.is_open()){
             const nlohmann::json jf = nlohmann::json::parse(ifs);
-            //const std::string sssdd = jf.dump(1, ' ', true); //spdlog::info("JSON : [{}]", sssdd);
             const nlohmann::json j_start     = jf[ pch_json_start_ ];
             const nlohmann::json j_load      = j_start[pch_json_start_load_];
             for( const nlohmann::json& j_file_template : j_load ){
@@ -39,19 +32,19 @@ int Params::readJsonFile(const fs::path& path_2_json){
             }
             ifs.close();
         }else{
-            //spdlog::error("Can't open file [{}]", path_2_json.string());
+            spdlog::warn("couldn't read the json file");
             return -3;
         }
     }catch(const std::exception& ex){
-        //exclog(ex);
-        std::string str{ex.what()};
+        exclog(ex);
         return -1;
     }catch(...){
-        //exclog();
+        exclog();
         return -2;
     }
     return 1;
 }
+
 int Params::writeJsonFile(const fs::path& path_2_json)const {
     try{
         nlohmann::json jarr_load;
@@ -95,10 +88,13 @@ int Params::writeJsonFile(const fs::path& path_2_json)const {
     }
     return 1;
 }
-bool Params::templ_sort_func(const std::pair<std::string,std::string>& p1,const std::pair<std::string,std::string>& p2)
+
+bool Params::templ_sort_func(const std::pair<std::string,std::string>& p1,
+                             const std::pair<std::string,std::string>& p2)
 {
     return (p1.first.length() < p2.first.length());
 }
+
 int Params::readTemplates(const fs::path& path_dir_templates){
     try{
         v_template_exts_.clear();
@@ -106,8 +102,8 @@ int Params::readTemplates(const fs::path& path_dir_templates){
             fs::path path_template = entry.path();
             std::string str_templ_name = path_template.stem().u8string();
             std::string str_templ_ext  = path_template.extension().u8string();
-            //spdlog::info("{}:{}", str_templ_name, str_templ_ext);
-            v_template_exts_.emplace_back(std::make_pair(str_templ_name, str_templ_ext));
+            v_template_exts_.emplace_back
+                (std::make_pair(str_templ_name, str_templ_ext));
         }
         std::sort(v_template_exts_.begin(),v_template_exts_.end(),templ_sort_func);
     }catch(const std::exception& ex){
@@ -119,23 +115,9 @@ int Params::readTemplates(const fs::path& path_dir_templates){
     }
     return 1;
 }
+
 int Params::readForms(const fs::path& path_forms){
     try{
-        /*
-    #if(defined(_MSC_VER))
-        //on Windows, you MUST use 8bit ANSI (and it must match the user's locale) or UTF-16 !! Unicode!
-        //!!! https://stackoverflow.com/questions/30829364/open-utf8-encoded-filename-in-c-windows  !!!
-        //for (std::string &form : forms){
-        for(const Params::_v_forms::value_type &form : Params::GetInstance()->getStartLoadForms()){
-            std::filesystem::path path_file_form = stringutils::utf8_decode(form);
-            path_form_load =  path_forms / path_file_form;
-            qDebug() << "read form from file : " << path_form_load.wstring();
-    #else
-            path_forms_load = str_path_to_file_forms;
-            qDebug() << "read form from file : " << path_forms_load.c_str();
-    #endif
-
-    */
         upCUIFormsCollection_ = std::make_unique<CUIFormsCollection>();
         for(const Params::_v_forms::value_type &form : v_start_load_forms_){
             fs::path path_file_form  {path_forms};
@@ -158,6 +140,7 @@ int Params::readForms(const fs::path& path_forms){
     }
     return 1;
 }
+
 int Params::readFormsExists(const fs::path& path_dir_forms){
     try{
         v_forms_exists_.clear();

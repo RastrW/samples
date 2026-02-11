@@ -8,6 +8,7 @@
 namespace fs = std::filesystem;   
 
 class CUIFormsCollection;
+
 class Params
     : public SingletonDclp<Params>{
 public:
@@ -17,6 +18,8 @@ public:
     using _v_template_exts = std::vector<std::pair< std::string, std::string > >;
     Params();
     virtual ~Params() = default;
+
+    ///<Чтение/запись файла appsettings.json
     int readJsonFile (const fs::path& path_2_json);
     int writeJsonFile(const fs::path& path_2_json)const;
     static bool templ_sort_func(const std::pair<std::string,std::string> &p1,const std::pair<std::string,std::string> &p2);

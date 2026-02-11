@@ -24,7 +24,7 @@ App::App(int &argc, char **argv)
 }
 
 App::~App() {
-    Params::Destruct();
+    Params::destruct();
 }
 
 bool App::event( QEvent *event ){
@@ -39,7 +39,6 @@ bool App::notify(QObject* receiver, QEvent* event){
     }catch(std::exception& ex){
         exclog(ex);
         const std::string str{fmt::format("std::exception: {}",ex.what())};
-        //spdlog::error("ERROR: {}", ex.what());
         assert(!str.c_str());
     }catch (...){
         exclog();
@@ -47,66 +46,96 @@ bool App::notify(QObject* receiver, QEvent* event){
     return done;
 }
 
-long App::readSettings(){ //it cache log messages to vector, because it called befor logger intialization
+long App::init(){
     try{
-        Params::Construct();
+        auto logg = std::make_shared<spdlog::logger>( "qrastr" );
+        spdlog::set_default_logger(logg);
+#if(defined(_MSC_VER))
+        SetConsoleOutputCP(CP_UTF8);
+#endif
+        auto console_sink = std::make_shared<spdlog::sinks::stdout_color_sink_mt>();
+        logg->sinks().push_back(console_sink);
+        int n_res = readSettings();
+        const bool bl_res = QDir::setCurrent(Params::get_instance()->getDirData().path());
+            assert(bl_res==true);
+        fs::path path_log{ Params::get_instance()->getDirData().absolutePath().toStdString() };
+        path_log /= L"qrastr_log.txt";
+        auto rotating_sink = std::make_shared<spdlog::sinks::rotating_file_sink_mt>( path_log.string(), 1024*1024*1, 3);
+        std::vector<spdlog::sink_ptr> sinks{ console_sink, rotating_sink };
+        logg->sinks().push_back(rotating_sink);
+        spdlog::info( "ReadSetting: {}", n_res );
+        spdlog::info( "Log: {}", path_log.generic_u8string() );
+    }catch(const std::exception& ex){
+        exclog(ex);
+        return -100;
+    }catch(...){
+        exclog();
+        return -99;
+    }
+    return 1;
+}
+
+long App::readSettings(){
+    try{
+        Params::construct();
         QSettings settings(Params::pch_org_qrastr_);
         QPoint pos = settings.value("pos", QPoint(200, 200)).toPoint();
         QSize size = settings.value("size", QSize(600, 800)).toSize();
-        //move(pos);
-        //resize(size);
 
         int nRes = 0;
         QString qstr_curr_path = QDir::currentPath();
         std::string str_path_2_conf = "undef";
 #if(defined(COMPILE_WIN))
-        str_path_2_conf = qstr_curr_path.toStdString()+ "/../"+Params::pch_dir_data_ +"/"+ Params::pch_fname_appsettings;
+        str_path_2_conf = qstr_curr_path.toStdString()+ "/../"+
+                          Params::pch_dir_data_ +"/"+ Params::pch_fname_appsettings;
 #else
         //str_path_2_conf = R"(/home/ustas/projects/git_web/samples/qrastr/qrastr/appsettings.json)";
         str_path_2_conf = qstr_curr_path.toStdString()+ "/../"+Params::pch_dir_data_ +"/"+ Params::pch_fname_appsettings;
        // QMessageBox mb( QMessageBox::Icon::Critical, QObject::tr("Error"), QString("In lin not implemented!") );  mb.exec();
 #endif
         QFileInfo fi_appsettings(str_path_2_conf.c_str());
-        Params* const p_params = Params::GetInstance();
+        Params* const p_params = Params::get_instance();
         if(p_params!=nullptr){
             p_params->setDirData(fi_appsettings.dir());
             const bool bl_res = QDir::setCurrent(p_params->getDirData().path());
             if(bl_res == true){
-                m_v_cache_log.add(spdlog::level::info, "Set DataDir: {}", p_params->getDirData().path().toStdString());
+                m_v_cache_log.add(spdlog::level::info, "Set DataDir: {}",
+                                  p_params->getDirData().path().toStdString());
             }else{
-                m_v_cache_log.add(spdlog::level::err, "Can't set DataDir: {}", p_params->getDirData().path().toStdString());
+                m_v_cache_log.add(spdlog::level::err, "Can't set DataDir: {}",
+                                  p_params->getDirData().path().toStdString());
             }
             nRes = p_params->readJsonFile(str_path_2_conf);
             if(nRes < 0){
-
                 QMessageBox mb;
                 // так лучше не делать ,смешение строк qt и std это боль.
-                QString qstr = QObject::tr("Can't load on_start_file: ");
-                std::string qstr_fmt = qstr.toUtf8().constData(); //  qstr.toStdString(); !!not worked!!
-                //std::string ss = fmt::format( "{}{} ", qstr_fmt.c_str(), p_params->Get_on_start_load_file_rastr());
                 std::string ss = "error in files load";
                 QString str = QString::fromUtf8(ss.c_str());
                 mb.setText(str);
-                m_v_cache_log.add( spdlog::level::err, "{} ReadJsonFile {}", nRes, str.toStdString());
+                m_v_cache_log.add(spdlog::level::err, "{} ReadJsonFile {}",
+                                  nRes, str.toStdString());
                 mb.exec();
                 return -1;
             }
             p_params->setFileAppsettings(str_path_2_conf);
-            m_v_cache_log.add(spdlog::level::info, "ReadTemplates: {}", p_params->getDirSHABLON().absolutePath().toStdString());
-            nRes = Params::GetInstance()->readTemplates( p_params->getDirSHABLON().absolutePath().toStdString() );
+            m_v_cache_log.add(spdlog::level::info, "ReadTemplates: {}",
+                              p_params->getDirSHABLON().absolutePath().toStdString());
+            nRes = p_params->readTemplates
+                   (p_params->getDirSHABLON().absolutePath().toStdString() );
             assert(nRes>0);
             if(nRes < 0){
                 m_v_cache_log.add(spdlog::level::err, "Error while read: {}", nRes);
             }
 
-            const std::filesystem::path path_dirforms = p_params->getDirData().canonicalPath().toStdString()+"//form//";
+            const std::filesystem::path path_dirforms =
+                p_params->getDirData().canonicalPath().toStdString()+"//form//";
             m_v_cache_log.add(spdlog::level::info, "ReadForms: {}", path_dirforms.string());
-            nRes = Params::GetInstance()->readFormsExists( path_dirforms );
+            nRes = p_params->readFormsExists( path_dirforms );
             assert(nRes>0);
             if(nRes < 0){
                 m_v_cache_log.add(spdlog::level::err, "Error while read existed forms: {}", nRes);
             }
-            nRes = Params::GetInstance()->readForms( path_dirforms );
+            nRes = p_params->readForms( path_dirforms );
             assert(nRes>0);
             if(nRes < 0){
                 m_v_cache_log.add(spdlog::level::err, "Error while read: {}", nRes);
@@ -121,45 +150,6 @@ long App::readSettings(){ //it cache log messages to vector, because it called b
     }catch(...){
         m_v_cache_log.add( spdlog::level::err,"Unknown exception.");
         return -5;
-    }
-    return 1;
-}
-
-long App::writeSettings(){
-    QSettings settings(Params::pch_org_qrastr_);
-    //QSettings::IniFormat
-    QString qstr = settings.fileName();
-    return 1;
-}
-
-long App::init(){
-    try{
-        auto logg = std::make_shared<spdlog::logger>( "qrastr" );
-        spdlog::set_default_logger(logg);
-#if(defined(_MSC_VER))
-        SetConsoleOutputCP(CP_UTF8);
-#endif
-        auto console_sink = std::make_shared<spdlog::sinks::stdout_color_sink_mt>();
-        logg->sinks().push_back(console_sink);
-        int n_res = readSettings();
-        //const bool bl_res = QDir::setCurrent(qdirData_.path()); assert(bl_res==true);
-        const bool bl_res = QDir::setCurrent(Params::GetInstance()->getDirData().path()); assert(bl_res==true);
-        //std::filesystem::path path_log{ qdirData_.absolutePath().toStdString() };
-        fs::path path_log{ Params::GetInstance()->getDirData().absolutePath().toStdString() };
-        path_log /= L"qrastr_log.txt";
-        auto rotating_sink = std::make_shared<spdlog::sinks::rotating_file_sink_mt>( path_log.string(), 1024*1024*1, 3);
-        //auto rotating_sink = std::make_shared<spdlog::sinks::rotating_file_sink_mt>( "sdfdsf", 1024*1024*1, 3);
-        //auto rotating_sink =            spdlog::rotating_logger_mt("some_logger_name", "logs/rotating.txt", 1048576 * 5, 3);
-        std::vector<spdlog::sink_ptr> sinks{ console_sink, rotating_sink };
-        logg->sinks().push_back(rotating_sink);
-        spdlog::info( "ReadSetting: {}", n_res );
-        spdlog::info( "Log: {}", path_log.generic_u8string() );
-    }catch(const std::exception& ex){
-        exclog(ex);
-        return -100;
-    }catch(...){
-        exclog();
-        return -99;
     }
     return 1;
 }
@@ -302,17 +292,14 @@ void App::loadPlugins(){
     }
 }
 
-// form files are deployed in form catalog near qrastr.exe
 long App::readForms(){
     try{
-        //std::vector<std::string> forms = split(str_path_forms, ',');
         std::filesystem::path path_forms ("form");
         std::filesystem::path path_form_load;
 
         //on Windows, you MUST use 8bit ANSI (and it must match the user's locale) or UTF-16 !! Unicode!
         //!!! https://stackoverflow.com/questions/30829364/open-utf8-encoded-filename-in-c-windows  !!!
-        //for (std::string &form : forms){
-        for(const Params::_v_forms::value_type &form : Params::GetInstance()->getStartLoadForms()){
+        for(const Params::_v_forms::value_type &form : Params::get_instance()->getStartLoadForms()){
             std::filesystem::path path_file_form = stringutils::utf8_decode(form);
             path_form_load =  path_forms / path_file_form;
     #if(defined(_MSC_VER))
@@ -349,18 +336,18 @@ std::list<CUIForm>& App::getForms() const {
 long App::start(){
     try{
         long n_res =0;
-        QDir::setCurrent(Params::GetInstance()->getDirData().absolutePath());
+        QDir::setCurrent(Params::get_instance()->getDirData().absolutePath());
         loadPlugins();
         if(nullptr!=m_sp_qastra){
-            const QDir dir = Params::GetInstance()->getDirSHABLON();
+            const QDir dir = Params::get_instance()->getDirSHABLON();
             //std::filesystem::path path_templates = Params::GetInstance()->getDirSHABLON().canonicalPath().toStdString();
 #if(QT_VERSION > QT_VERSION_CHECK(5, 16, 0))
-            const std::filesystem::path path_templates = Params::GetInstance()->getDirSHABLON().filesystemCanonicalPath();
+            const std::filesystem::path path_templates = Params::get_instance()->getDirSHABLON().filesystemCanonicalPath();
 #else
             std::filesystem::path path_templates = Params::GetInstance()->getDirSHABLON().canonicalPath().toStdString();
             //assert(!"what?");
 #endif
-            const Params::_v_templates v_templates{ Params::GetInstance()->getStartLoadTemplates() };
+            const Params::_v_templates v_templates{ Params::get_instance()->getStartLoadTemplates() };
             for(const Params::_v_templates::value_type& templ_to_load : v_templates){
                 std::filesystem::path path_template = path_templates;
                 path_template /= templ_to_load;
@@ -368,7 +355,7 @@ long App::start(){
                 IPlainRastrRetCode res = m_sp_qastra->Load( eLoadCode::RG_REPL, "", path_template.string() );
                 int check = 0;
             }
-            for(const Params::_v_file_templates::value_type& file_template : Params::GetInstance()->getStartLoadFileTemplates()){
+            for(const Params::_v_file_templates::value_type& file_template : Params::get_instance()->getStartLoadFileTemplates()){
                 std::filesystem::path path_template = path_templates;
                 path_template /= file_template.second;
                 IPlainRastrRetCode res = m_sp_qastra->Load( eLoadCode::RG_REPL, file_template.first, path_template.string() );
@@ -402,3 +389,9 @@ long App::start(){
     return 1;
 }
 
+long App::writeSettings(){
+    QSettings settings(Params::pch_org_qrastr_);
+    //QSettings::IniFormat
+    QString qstr = settings.fileName();
+    return 1;
+}

@@ -493,6 +493,12 @@ set(PROJECT_SOURCES
     ${APP_DIR}/astra/qti.cpp
     ${APP_DIR}/astra/qbarsmdp.h
     ${APP_DIR}/astra/qbarsmdp.cpp
+
+    ${APP_DIR}/astra/astra_headers/Exceptions.h
+    ${APP_DIR}/astra/astra_headers/ResourceManager.h
+    ${APP_DIR}/astra/astra_headers/stringutils.h
+    ${APP_DIR}/astra/astra_headers/UIForms.h
+    ${APP_DIR}/astra/astra_headers/License2/json.hpp
 )
 
 # Translation files

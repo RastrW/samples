@@ -1,18 +1,16 @@
-#ifndef SINGLETON_DCLP_HPP_
-#define SINGLETON_DCLP_HPP_
 #pragma once
-//from https://github.com/jimmy-park/singleton/tree/main
 
 #include <atomic>
 #include <mutex>
 #include <shared_mutex>
 #include <utility>
 
+///@note from https://github.com/jimmy-park/singleton/tree/main
 template <typename Derived>
 class SingletonDclp {
 public:
     template <typename... Args>
-    static void Construct(Args&&... args)
+    static void construct(Args&&... args)
     {
 #ifndef SINGLETON_INJECT_ABSTRACT_CLASS
         using Instance = Derived;
@@ -32,7 +30,7 @@ public:
         }
     }
 
-    static void Destruct()
+    static void destruct()
     {
         if (instance_.load(std::memory_order_acquire)) {
             std::lock_guard lock { mutex_ };
@@ -44,7 +42,7 @@ public:
         }
     }
 
-    static Derived* GetInstance()
+    static Derived* get_instance()
     {
         auto* instance = instance_.load(std::memory_order_acquire);
 
@@ -77,5 +75,3 @@ private:
     inline static std::atomic<Derived*> instance_ { nullptr };
     inline static std::shared_mutex mutex_;
 };
-
-#endif // SINGLETON_DCLP_HPP_

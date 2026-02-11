@@ -40,6 +40,7 @@ public:
 
     // Загрузка компонентов
     void loadPlugins(); // Динамическая загрузка .dll/.so плагинов
+    // form files are deployed in form catalog near qrastr.exe
     long readForms(); // Чтение описаний форм (.fm файлы)
 
     // Геттеры для доступа к плагинам
@@ -48,6 +49,7 @@ public:
     std::shared_ptr<QTI> getQTIPtr(){ return m_sp_qti;}
     std::shared_ptr<QBarsMDP> getQBarsMDPPtr(){ return m_sp_qbarsmdp;}
 
+private:
     // Кэш логов до инициализации
     qrastr::CacheLogVector m_v_cache_log;
 

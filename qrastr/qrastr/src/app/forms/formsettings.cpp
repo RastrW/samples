@@ -114,7 +114,7 @@ FormSettings::FormSettings(QWidget *parent)
     layout->addWidget(splitter);
     ppb_save_settings_ = new QPushButton();
     //setButtonSaveEnabled(false);
-    ppb_save_settings_->setText(QString("%1 : %2").arg("Save: ").arg(Params::GetInstance()->getFileAppsettings().string().c_str()));
+    ppb_save_settings_->setText(QString("%1 : %2").arg("Save: ").arg(Params::get_instance()->getFileAppsettings().string().c_str()));
     connect( ppb_save_settings_, &QPushButton::clicked, this, &FormSettings::onBtnSaveClick );
     layout->addWidget(ppb_save_settings_);
     setLayout(layout);
@@ -145,7 +145,7 @@ void FormSettings::setAppSettingsChanged(){
 }
 void FormSettings::onBtnSaveClick(){
     //Params::GetInstance()->Get_on_start_load_file_forms();
-    Params* p_params = Params::GetInstance();
+    Params* p_params = Params::get_instance();
     const std::filesystem::path path_appsettings = p_params->getFileAppsettings();
     if(std::filesystem::exists(path_appsettings)){
         QMessageBox msgBox;
@@ -157,7 +157,7 @@ void FormSettings::onBtnSaveClick(){
             std::filesystem::path path_appsettings_cpy = path_appsettings;
             path_appsettings_cpy.replace_filename(path_appsettings.stem().string()+"_previos"+path_appsettings.extension().string());
             std::filesystem::copy(path_appsettings, path_appsettings_cpy, std::filesystem::copy_options::overwrite_existing);
-            Params::GetInstance()->writeJsonFile(path_appsettings.string());
+            Params::get_instance()->writeJsonFile(path_appsettings.string());
             bl_app_settings_chnged_ = false;
         }
     }
@@ -166,7 +166,7 @@ int FormSettings::init(const std::shared_ptr<QAstra>& sp_qastra){
     int n_res = 0;
     sp_qastra_ = sp_qastra;
     //n_res = Params::GetInstance()->readForms    ( Params::GetInstance()->getDirSHABLON().absolutePath().toStdString() ); assert(n_res>0);
-    n_res = Params::GetInstance()->readTemplates( Params::GetInstance()->getDirSHABLON().absolutePath().toStdString() ); assert(n_res>0);
+    n_res = Params::get_instance()->readTemplates( Params::get_instance()->getDirSHABLON().absolutePath().toStdString() ); assert(n_res>0);
 
     pti_settings_root_ = new _tree_item{"root","Настройки"};
     _tree_item ti_datas     { "datas",     "Данные" , new FormSettingsDatas()  };

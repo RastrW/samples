@@ -5,6 +5,7 @@
 #include "Exceptions.h"
 #include "License2/json.hpp"
 #include <filesystem>
+
 namespace fs = std::filesystem;   
 
 //! Класс поля формы
@@ -26,13 +27,12 @@ protected:
 public:
 	CUIFormField() = default;
 	//! Конструктор по имени поля с параметрами
-	CUIFormField(std::string_view Name, eAlignment Alignment = eAlignment::Left, bool ReadOnly =  false) :
+    CUIFormField(std::string_view Name,
+                 eAlignment Alignment = eAlignment::Left,
+                 bool ReadOnly =  false) :
 		Name_(Name),
 		Alignment_(Alignment),
-		ReadOnly_(ReadOnly)
-	{
-
-	}
+		ReadOnly_(ReadOnly){}
 
 	// геттеры атрибутов
 	const std::string& Name() const { return Name_; }

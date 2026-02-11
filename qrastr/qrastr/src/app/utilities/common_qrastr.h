@@ -1,5 +1,3 @@
-#ifndef COMMON_QRASTR_H
-#define COMMON_QRASTR_H
 #pragma once
 
 #include <QDebug>
@@ -39,5 +37,3 @@ static void exclog(){
 /*static void exclog(const CException& ex){
     spdlog::error("Catch CException [{}]\n", ex.what());
 }*/
-
-#endif // COMMON_QRASTR_H

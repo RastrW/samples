@@ -15,7 +15,7 @@ FormFileNew::FormFileNew(QWidget *parent)
     headers<<""<<"Template";
     ui->twTemplates->setHorizontalHeaderLabels(headers);
     ui->twTemplates->horizontalHeader()->setStretchLastSection(true);
-    const Params::_v_template_exts v_template_ext{ Params::GetInstance()->getTemplateExts() };
+    const Params::_v_template_exts v_template_ext{ Params::get_instance()->getTemplateExts() };
     int n_row_num = 0;
     for(const Params::_v_template_exts::value_type& template_ext : v_template_ext){
         ui->twTemplates->insertRow(n_row_num);

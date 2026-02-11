@@ -330,7 +330,7 @@ void MainWindow::slot_newFile(){
     if(QDialog::Accepted == pformFileNew->exec()){
         const FormFileNew::_s_checked_templatenames s_checked_templatenames = pformFileNew->getCheckedTemplateNames();
         for(const FormFileNew::_s_checked_templatenames::value_type& templatename : s_checked_templatenames){
-            const std::string str_path_to_shablon = Params::GetInstance()->getDirSHABLON().absolutePath().toStdString() + "//" +templatename;
+            const std::string str_path_to_shablon = Params::get_instance()->getDirSHABLON().absolutePath().toStdString() + "//" +templatename;
             m_sp_qastra->Load( eLoadCode::RG_REPL, "", str_path_to_shablon );
         }
     }
@@ -358,7 +358,7 @@ void MainWindow::slot_open(){
     fileDlg.setViewMode(QFileDialog::Detail);
     QString qstr_filter;
     qstr_filter += "Known types(";
-    const Params::_v_template_exts v_template_ext{ Params::GetInstance()->getTemplateExts() };
+    const Params::_v_template_exts v_template_ext{ Params::get_instance()->getTemplateExts() };
     for(const Params::_v_template_exts::value_type& template_ext : v_template_ext){
         qstr_filter += QString("*%1 ").arg(template_ext.second.c_str());
     }
@@ -385,7 +385,7 @@ void MainWindow::slot_open(){
                 for(const Params::_v_template_exts::value_type& template_ext : v_template_ext){
                     if(true == rfile.endsWith(template_ext.second.c_str())){
                         bl_find_template = true;
-                        const std::string str_path_to_shablon = Params::GetInstance()->getDirSHABLON().absolutePath().toStdString() + "//" +template_ext.first +template_ext.second;
+                        const std::string str_path_to_shablon = Params::get_instance()->getDirSHABLON().absolutePath().toStdString() + "//" +template_ext.first +template_ext.second;
                         m_sp_qastra->Load( eLoadCode::RG_REPL, rfile.toStdString(), str_path_to_shablon );
                         setCurrentFile(rfile, str_path_to_shablon);
                         setWindowTitle(rfile);
@@ -427,7 +427,7 @@ void MainWindow::slot_saveAs(){
     fileDlg.setOption(QFileDialog::DontUseNativeDialog, true);
     fileDlg.setViewMode(QFileDialog::Detail);
     QString qstr_filter;
-    const Params::_v_template_exts v_template_ext{ Params::GetInstance()->getTemplateExts() };
+    const Params::_v_template_exts v_template_ext{ Params::get_instance()->getTemplateExts() };
     for(const Params::_v_template_exts::value_type& template_ext : v_template_ext){
         qstr_filter += QString("%1 (*%2);;").arg(template_ext.first.c_str()).arg(template_ext.second.c_str());
     }
@@ -448,7 +448,7 @@ void MainWindow::slot_saveAs(){
         qstr_template_name.remove('*');
         qstr_template_name.remove(' ');
 
-        const std::string str_path_to_shablon = Params::GetInstance()->getDirSHABLON().absolutePath().toStdString() + "/" +qstr_template_name.toStdString();
+        const std::string str_path_to_shablon = Params::get_instance()->getDirSHABLON().absolutePath().toStdString() + "/" +qstr_template_name.toStdString();
         m_sp_qastra->Save( qstr_rfile.toStdString(), str_path_to_shablon.c_str() );
         setCurrentFile(qstr_rfile);
         qDebug() << "templ: "<< qstr_template << "  file : " << qstr_rfile ;
