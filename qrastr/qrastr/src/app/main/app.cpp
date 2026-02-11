@@ -186,23 +186,22 @@ void App::loadPlugins(){
         // Проверка метаданных перед загрузкой
         QJsonObject metaData = loader.metaData();
         if(metaData.isEmpty()) {
-             qWarning()<< fileName + " is not a valid Qt plugin (no metadata)";
+            spdlog::warn("{} is not a valid Qt plugin (no metadata)", fileName.toStdString());
             continue;
         }
 
         // Проверка ошибок
         if(!loader.load()) {
-            qWarning()<< "Failed to load plugin " + fileName + ": " + loader.errorString();
+            spdlog::warn("Failed to load plugin {} : {}", fileName.toStdString(), loader.errorString().toStdString());
             continue;
         }
         QObject *plugin = loader.instance();
 
         if(!plugin){
-            qWarning()<< "Plugin instance is NULL for " + fileName;
+            spdlog::warn("Plugin instance is NULL for {}", fileName.toStdString());
             continue;
         }
 
-        qInfo()<< "Successfully loaded plugin: " + fileName;
         if(plugin){
             spdlog::info( "Load dynamic plugin {}/{} : {}", pluginsDir.absolutePath().toStdString(), fileName.toStdString(), plugin->objectName().toStdString());
             auto iRastr = qobject_cast<InterfaceRastr *>(plugin);
@@ -227,7 +226,6 @@ void App::loadPlugins(){
                     exclog();
                 }
                 spdlog::info( "it is Rastr.test.finished");
-                qInfo()<< "Plugin Rastr is loaded";
             }
             auto iTI = qobject_cast<InterfaceTI *>(plugin);
             if(iTI){
@@ -251,7 +249,6 @@ void App::loadPlugins(){
                     exclog();
                 }
                 spdlog::info( "it is TI.test.finished");
-                qInfo()<< "Plugin Ti is loaded";
             }
             auto iBarsMDP = qobject_cast<InterfaceBarsMDP *>(plugin);
             if(iBarsMDP){
@@ -282,7 +279,6 @@ void App::loadPlugins(){
                     exclog();
                 }
                 spdlog::info( "it is BarsMDP.test.finished");
-                qInfo()<< "Plugin BarsMDP is loaded";
             }
         }
     }

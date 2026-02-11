@@ -17,6 +17,7 @@ endif()
 # Platform Detection for Libraries
 # ============================================================================
 if(WIN32)
+    set(OS_NAME "Windows")
     if(MSVC)
         set(COMPILER "msvc")
         set(LIB_PREFIX "")
@@ -32,6 +33,8 @@ if(WIN32)
     set(PLATFORM_DIR "win/${COMPILER}")
 
 elseif(UNIX AND NOT APPLE)
+    set(OS_NAME "Linux")
+
     set(LIB_PREFIX "lib")
     set(LIB_SUFFIX ".so")
     # Определяем компилятор для выбора правильных precompiled библиотек
@@ -39,6 +42,7 @@ elseif(UNIX AND NOT APPLE)
     set(COMPILER "gcc")
     set(PLATFORM_DIR "linux/${COMPILER}")
 else()
+    set(OS_NAME "macOS")
     message(FATAL_ERROR "Unsupported platform: ${CMAKE_SYSTEM_NAME}")
 endif()
 

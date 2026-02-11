@@ -12,11 +12,6 @@ cmake_minimum_required(VERSION 3.23)
 message(STATUS "CMake version: ${CMAKE_VERSION}")
 
 # ============================================================================
-# Platform Detection and Compiler Configuration
-# ============================================================================
-include(cmake/platform_detection.cmake)
-
-# ============================================================================
 # Инициализация проекта
 # ============================================================================
 cmake_policy(SET CMP0167 NEW) # In CMake 3.30+, the FindBoost module has been removed. Using BoostConfig.cmake

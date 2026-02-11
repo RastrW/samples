@@ -25,19 +25,6 @@ public:
 
         };
 
-    //C++ 20
-    /*inline bool to_double(std::string& str,double& dval)
-   {
-       //double result{};
-       auto [ptr, ec] = std::from_chars(str.data(), str.data() + str.size(), dval);
-       if (ec == std::errc())
-           return true;
-       else if (ec == std::errc::invalid_argument)
-           return false;
-       else if (ec == std::errc::result_out_of_range)
-           return false;
-       else return false;
-   }*/
     inline bool to_double(std::string& str, double& dval)
     {
         char* pEnd = NULL;
