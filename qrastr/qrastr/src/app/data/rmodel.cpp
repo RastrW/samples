@@ -4,12 +4,9 @@
 #include <QBrush>
 #include <QTime>
 #include <QDebug>
-//#include <QJSEngine>
 #include <QRegularExpression>
 #include "QtitanGrid.h"
 #include <string_bool.h>
-
-//#include "fmt/format.h"
 
 RModel::RModel(QObject *parent, QAstra* pqastra, RTablesDataManager* pRTDM)
     : QAbstractTableModel(parent)

@@ -245,7 +245,6 @@ public:
     bool hidden ;
 private:
     nlohmann::json j_meta_;
-    //IRastrColumnPtr col_ptr;
     QAstra* pqastra_;
 
 };// class RCol
@@ -260,15 +259,10 @@ public:
     {
         pqastra_ = _pqastra;
         t_name_ = _t_name;
-        //nparray_ = new  MyDenseDataBlock<FieldVariantData>(pqastra_);
     }
 
     int AddCol(const RCol& rcol){
-        //      if(rcol.size()!=n_num_rows_)
-        //          return -1;
         emplace_back(rcol);
-        //qDebug() << rcol.name() << "->" << rcol.NameRef();
-        //push_back(rcol);
         return static_cast<int>(size());
     }
 

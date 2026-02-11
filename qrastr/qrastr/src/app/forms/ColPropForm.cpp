@@ -1,7 +1,6 @@
 #include "ColPropForm.h"
 #include "ui_ColPropForm.h"
-#include "delegatedoubleitem.h"
-
+#include "rmodel.h"
 
 ColPropForm::ColPropForm(RData* _prdata, RTableView* _ptv, Qtitan::GridTableView* _view, RCol* _prcol,QWidget *parent) :
     QWidget(parent),
@@ -29,6 +28,7 @@ ColPropForm::~ColPropForm()
 {
     delete ui;
 }
+
 //Setter
 void ColPropForm::setName(const QString& name)
 {
@@ -89,17 +89,16 @@ void ColPropForm::on_btn_cancel_clicked()
 
 void ColPropForm::on_btn_ok_clicked()
 {
-    //TO DO: need change propertires
+    ///@todo: need change propertires
 
     IRastrResultVerify{prdata->pqastra_->getRastr()->SetLockEvent(true)};
     prcol->set_prec(getPrec().toStdString().c_str());
-    //prcol->set_prop(FieldProperties::Name, getName().toStdString());
+
     prcol->set_prop(FieldProperties::Description, getDesc().toStdString());
     prcol->set_prop(FieldProperties::Expression, getExpr().toStdString());
     prcol->set_prop(FieldProperties::Title, getTitle().toStdString());
     prcol->set_prop(FieldProperties::Width, getWidth().toStdString());
 
-    //static_cast<DelegateDoubleItem*>(ptv->itemDelegateForColumn(prcol->index))->set_prec(prec().toInt());
     IRastrResultVerify{prdata->pqastra_->getRastr()->SetLockEvent(false)};
 
     Qtitan::GridTableColumn* column_qt = (Qtitan::GridTableColumn *)view->getColumn(prcol->index);

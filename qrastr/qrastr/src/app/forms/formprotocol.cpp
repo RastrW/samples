@@ -143,7 +143,4 @@ void FormProtocol::onRastrLog(const _log_data& log_data){
         s_spti_stages_.top()->appendChild(sp_item);
     }
     p_protocol_tree_model_->layoutChanged();
-    //new QAbstractItemModelTester( p_protocol_tree_model_, QAbstractItemModelTester::FailureReportingMode::Fatal, this);
-
-    //new QAbstractItemModelTester( p_protocol_tree_model_, QAbstractItemModelTester::FailureReportingMode::Warning, this);
 }

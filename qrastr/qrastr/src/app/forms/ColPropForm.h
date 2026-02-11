@@ -1,15 +1,15 @@
-#ifndef COLPROPFORM_H
-#define COLPROPFORM_H
 #pragma once
 
 #include <QWidget>
 #include <QString>
-#include "rmodel.h"
 #include "rtableview.h"
 
 namespace Ui {
 class ColPropForm;
 }
+
+class RData;
+class RCol;
 
 class ColPropForm : public QWidget
 {
@@ -47,5 +47,3 @@ private:
     RData* prdata;
     RCol* prcol;
 };
-
-#endif // COLPROPFORM_H

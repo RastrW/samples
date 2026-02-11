@@ -166,6 +166,7 @@ private:
     // Обновить список недавних файлов
     void updateRecentFileActions();
     // Чтение настроек окна
+    //it cache log messages to vector, because it called befor logger intialization
     int  readSettings();
     // Сохранение настроек окна
     int  writeSettings();
@@ -205,7 +206,6 @@ private:
     QHBoxLayout*       m_layoutActions = nullptr;               // actions: rgm,opf,...
     QToolBar*          m_toolbarCalc   = nullptr;               // Панель расчётов
     QToolBar*          m_toolbarTI     = nullptr;               // Панель ТИ
-
 
     QDockWidget*       m_dock        = nullptr;                 // Текущая дока
     RtabWidget*        m_prtw_current  = nullptr;               // Текущая активная таблица

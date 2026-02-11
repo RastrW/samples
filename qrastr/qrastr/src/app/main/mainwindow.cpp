@@ -63,38 +63,26 @@ MainWindow::MainWindow(){
                      });
     m_pMcrWnd = new McrWnd( this, McrWnd::_en_role::global_protocol );
     m_pFormProtocol = new FormProtocol(this);
-    if(false){
-        QDockWidget *dock = new QDockWidget( "protocol", this);
-        dock->setWidget(m_pMcrWnd);
-        dock->setAllowedAreas(Qt::LeftDockWidgetArea | Qt::RightDockWidgetArea | Qt::TopDockWidgetArea | Qt::BottomDockWidgetArea | Qt::AllDockWidgetAreas);
-        addDockWidget(Qt::TopDockWidgetArea, dock);
-    }else{
-        auto dw = new ads::CDockWidget( "protocol", this);
-        dw->setWidget(m_pMcrWnd);
-        int f = ads::CDockWidget::CustomCloseHandling;
-        dw->setFeature( static_cast<ads::CDockWidget::DockWidgetFeature>(f), true);
-        //auto area = m_DockManager->addDockWidgetTab(ads::NoDockWidgetArea, dw);
-        auto container = m_DockManager->addDockWidgetTab(ads::BottomDockWidgetArea,dw);
-        /* auto container = m_DockManager->addDockWidgetFloating(dw);
-        container->move(QPoint(2100, 20));
-        container->resize(1200,800);*/
 
-        auto pdwProtocol = new ads::CDockWidget( "protocolMain", this );
-        pdwProtocol->setWidget(m_pFormProtocol);
-        //int f = ads::CDockWidget::CustomCloseHandling;
-        pdwProtocol->setFeature( static_cast<ads::CDockWidget::DockWidgetFeature>(f), true );
-        //auto area = m_DockManager->addDockWidgetTab(ads::NoDockWidgetArea, dw);
-        auto pfdc = m_DockManager->addDockWidgetTab(ads::BottomDockWidgetArea,pdwProtocol);
-        // auto pfdc = m_DockManager->addDockWidgetFloating(pdwProtocol);
-        //pfdc->move(QPoint(2100, 20));
-        // pfdc->resize(600,400);
-    }
-    auto qt_sink = std::make_shared<spdlog::sinks::qt_sink_mt>(m_pMcrWnd, "onQStringAppendProtocol");
+    auto dw = new ads::CDockWidget( "protocol", this);
+    dw->setWidget(m_pMcrWnd);
+    int f = ads::CDockWidget::CustomCloseHandling;
+    dw->setFeature( static_cast<ads::CDockWidget::DockWidgetFeature>(f), true);
+
+    auto container = m_DockManager->addDockWidgetTab(ads::BottomDockWidgetArea,dw);
+
+    auto pdwProtocol = new ads::CDockWidget( "protocolMain", this );
+    pdwProtocol->setWidget(m_pFormProtocol);
+    pdwProtocol->setFeature( static_cast<ads::CDockWidget::DockWidgetFeature>(f), true );
+    auto pfdc = m_DockManager->addDockWidgetTab(ads::BottomDockWidgetArea,pdwProtocol);
+
+    auto qt_sink = std::make_shared<spdlog::sinks::qt_sink_mt>
+        (m_pMcrWnd, "onQStringAppendProtocol");
     auto logg = spdlog::default_logger();
     logg->sinks().push_back(qt_sink);
 
-    auto qsinkProtocol = std::make_shared<spdlog::sinks::qt_sink_mt>(m_pFormProtocol, "onAppendProtocol");
-    //auto logg = spdlog::default_logger();
+    auto qsinkProtocol = std::make_shared<spdlog::sinks::qt_sink_mt>
+        (m_pFormProtocol, "onAppendProtocol");
     logg->sinks().push_back(qsinkProtocol);
 
     setAcceptDrops(true);
@@ -104,7 +92,7 @@ MainWindow::MainWindow(){
 MainWindow::~MainWindow(){
 }
 
-int MainWindow::readSettings(){ //it cache log messages to vector, because it called befor logger intialization
+int MainWindow::readSettings(){
     try{
         QSettings settings;
         settings.beginGroup("MainWindow");
@@ -153,8 +141,6 @@ void MainWindow::logCacheFlush(){
 
 void MainWindow::showEvent( QShowEvent* event ){
     QWidget::showEvent( event );
-    //your code here
-    // https://stackoverflow.com/questions/14161100/which-qt-widget-should-i-use-for-message-display
 }
 
 void MainWindow::setForms(const std::list<CUIForm>& forms){ // https://stackoverflow.com/questions/14151443/how-to-pass-a-qstring-to-a-qt-slot-from-a-qmenu-via-qsignalmapper-or-otherwise
@@ -219,12 +205,10 @@ void MainWindow::setSettingsForms(){
         IRastrPayload tab_desc{table->Description()};
         std::string str_tab_name = tab_name.Value();
         std::string str_templ_name = templ_name.Value();
-        //m_menuProperties->actions().clear();
-        //m_menuProperties
+
         if ( QFileInfo(str_templ_name.c_str()).suffix() == "form"){
             CUIForm _form;
-            //_form.SetName(stringutils::cp1251ToUtf8(tab_desc.Value().c_str()));
-            //_form.SetTableName(stringutils::cp1251ToUtf8(tab_name.Value().c_str()));
+
             _form.SetName(tab_desc.Value().c_str());
             _form.SetTableName(tab_name.Value().c_str());
             QAction* p_actn = m_menuProperties->addAction(_form.Name().c_str());
@@ -243,7 +227,6 @@ void MainWindow::setSettingsForms(){
             connect(p_actn, &QAction::triggered, [this, _form] {
                 openForm(_form); });
         }
-        //qDebug() <<"TabName: " << str_tab_name.c_str() << "Templ name: " << str_templ_name.c_str();
     }
 }
 
@@ -258,37 +241,6 @@ void MainWindow::setQAstra(const std::shared_ptr<QAstra>& sp_qastra){
     m_pFormProtocol->setIgnoreAppendProtocol(true);
     assert(nullptr == m_up_PyHlp);
     m_up_PyHlp = std::move( std::make_unique<PyHlp>( *m_sp_qastra->getRastr().get() ) );
-
-    if(false){
-        //vetv
-        TstHints* tstHints_vetv = new TstHints(this);
-        tstHints_vetv->setQAstra(std::weak_ptr<QAstra>(m_sp_qastra));
-        tstHints_vetv->setTableName("vetv");
-        tstHints_vetv->setColNames({"ip","iq","np","name","pl_ip","slb"});
-        const bool my0 = QObject::connect(m_sp_qastra.get(), &QAstra::onRastrHint,
-                                          tstHints_vetv, &TstHints::onRastrHint);
-        assert(my0 == true);
-        auto dw_tst_hints_vetv = new ads::CDockWidget( "TstHints", this);
-        dw_tst_hints_vetv->setWidget(tstHints_vetv);
-        dw_tst_hints_vetv->move(QPoint(20, 20));
-        auto container_tsthints_vetv = m_DockManager->addDockWidgetFloating(dw_tst_hints_vetv);
-        container_tsthints_vetv->move(QPoint(1800,10));
-        container_tsthints_vetv->resize(600,400);
-        //node
-        TstHints* tstHints = new TstHints(this);
-        tstHints->setQAstra(std::weak_ptr<QAstra>(m_sp_qastra));
-        tstHints->setTableName("node");
-        tstHints->setColNames({"ny","name","vras","delta"});
-        const bool my1 = QObject::connect(m_sp_qastra.get(), &QAstra::onRastrHint,
-                                          tstHints, &TstHints::onRastrHint);
-        assert(my1 == true);
-        auto dw_tst_hints = new ads::CDockWidget( "TstHints", this);
-        dw_tst_hints->setWidget(tstHints);
-        dw_tst_hints->move(QPoint(20, 20));
-        auto container_tsthints = m_DockManager->addDockWidgetFloating(dw_tst_hints);
-        container_tsthints->move(QPoint(1400,20));
-        container_tsthints->resize(600,400);
-    }
 }
 
 void MainWindow::setQTI(const std::shared_ptr<QTI>& sp_qti){
@@ -302,13 +254,6 @@ void MainWindow::setQBarsMDP(const std::shared_ptr<QBarsMDP>& sp_qbarsmdp){
 }
 
 void MainWindow::closeEvent(QCloseEvent *event){
-
-    /* if (maybeSave()) {
-        writeSettings();
-        event->accept();
-    } else {
-        event->ignore();
-    }*/
 
     QMainWindow::closeEvent(event);
     writeSettings();
@@ -764,21 +709,16 @@ void MainWindow::slot_openForm( QAction* p_actn ){
 
 void MainWindow::openForm(CUIForm _uiform){
     CUIForm form  = _uiform;
-    qDebug() << "\n Open form:" << form.Name().c_str();
     //Проверка существования таблицы
     IRastrTablesPtr tablesx{  m_sp_qastra->getRastr()->Tables() };
     IRastrPayload res{ tablesx->FindIndex(_uiform.TableName()) };
     int t_ind = res.Value();
     if (t_ind < 0)
     {
-        qDebug() << "\n Table:" << form.Name().c_str() << " not exist!";
         spdlog::info( "Таблица [{}] - [{}] не существует! ", form.Name(), form.TableName());
         return;
     }
 
-
-
-    //spdlog::info( "Create tab [{}]", stringutils::cp1251ToUtf8(form.Name()) );
     spdlog::info( "Прочитана таблица [{}] - [{}]", form.Name(),form.TableName() );
     RtabWidget *prtw = new RtabWidget(m_sp_qastra.get(),form,&m_RTDM,m_DockManager,this);
 
@@ -789,41 +729,24 @@ void MainWindow::openForm(CUIForm _uiform){
     QObject::connect(this, &MainWindow::sig_calcEnd, prtw, &RtabWidget::on_calc_end);
 
     // Docking
-    if(false){
-        QDockWidget *dock = new QDockWidget( form.Name().c_str(), this);
-        dock->setWidget(prtw);
-        //dock->setWidget(prtw->m_grid);
-        dock->setAllowedAreas(Qt::LeftDockWidgetArea | Qt::RightDockWidgetArea | Qt::TopDockWidgetArea | Qt::BottomDockWidgetArea | Qt::AllDockWidgetAreas);
-        addDockWidget(Qt::TopDockWidgetArea, dock);
-    }else{
-        //QTitanGrid
-        //auto dw = new ads::CDockWidget( stringutils::cp1251ToUtf8(form.Name()).c_str(), this);
-        auto dw = new ads::CDockWidget(form.Name().c_str(), this);
-        dw->setWidget(prtw->m_grid);
-        dw->setFeature(ads::CDockWidget::DockWidgetDeleteOnClose, true);
-        auto area = m_DockManager->addDockWidgetTab(ads::TopDockWidgetArea, dw);
-        connect(dw, &ads::CDockWidget::closed, prtw, &RtabWidget::OnClose);
-
-        qDebug() << "doc dock widget created!" << dw << area;
-    }
-    //prtw->show();
-    }
+    //QTitanGrid
+    auto dw = new ads::CDockWidget(form.Name().c_str(), this);
+    dw->setWidget(prtw->m_grid);
+    dw->setFeature(ads::CDockWidget::DockWidgetDeleteOnClose, true);
+    auto area = m_DockManager->addDockWidgetTab(ads::TopDockWidgetArea, dw);
+    connect(dw, &ads::CDockWidget::closed, prtw, &RtabWidget::OnClose);
+}
 
 void MainWindow::slot_itemPressed(const QModelIndex &index){
-    //prtw_current = qobject_cast<RtabWidget*>(index.);
     int row = index.row();
     int column = index.column();
-    //QTableView* t = index.parent();
-    qDebug()<<"Pressed:" <<row<< ","<<column;
 }
 
 void MainWindow::slot_dataChanged(std::string _t_name, QModelIndex index, QVariant value ){
     std::string tname = _t_name;
-    //emit rm_change(_t_name,index,value);
 }
 
 void MainWindow::slot_dataChanged(std::string _t_name, std::string _col_name, int _row, QVariant _value){
-    //emit rm_change(_t_name,_col_name,_row,_value);
 }
 
 void MainWindow::slot_rowInserted(std::string _t_name, int _row){
@@ -973,7 +896,6 @@ void MainWindow::createActions(){
     previousAct->setStatusTip(tr("Move the focus to the previous window"));
     connect(previousAct, &QAction::triggered, m_workspace, &QMdiArea::activatePreviousSubWindow);
 
-    //QAction* separatorAct = new QAction(this);
     separatorAct = new QAction(this);
     separatorAct->setSeparator(true);
     //help
@@ -982,7 +904,6 @@ void MainWindow::createActions(){
     connect(aboutAct, &QAction::triggered, this, &MainWindow::slot_about);
 
     //MENU's
-    //QMenu* menuFile = menuBar()->addMenu(tr("&File"));
     QMenu* menuFile = menuBar()->addMenu(tr("&Файлы"));
     menuFile->addAction(actNewFile);
     menuFile->addAction(actOpenfile);
@@ -1016,14 +937,12 @@ void MainWindow::createActions(){
     menuCalc->addAction(actPrepare_MDP);
     menuCalc->addAction(actTkz);
     menuCalc->addAction(actIdop);
-    //menuCalc->addAction(actPTI);
-    //menuCalc->addAction(actFiltrTI);
+
     m_menuCalcParameters =  menuCalc->addMenu(tr("&Параметры"));
     m_menuCalcTI =  menuCalc->addMenu(tr("&ТИ"));
     m_menuCalcTI->addAction(actPTI);
     m_menuCalcTI->addAction(actRecalcDor);
     m_menuCalcTI->addAction(actUpdateTables);
-    // m_menuCalcTI->addAction(actPrepare_MDP);
 
     m_menuOpen = menuBar()->addMenu(tr("&Открыть") );
     menuBar()->addSeparator();

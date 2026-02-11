@@ -299,14 +299,15 @@ long App::readForms(){
             std::filesystem::path path_file_form = stringutils::utf8_decode(form);
             path_form_load =  path_forms / path_file_form;
 
-            CUIFormsCollection* CUIFormsCollection_ = new CUIFormsCollection ;
+            auto tempCollection = std::make_unique<CUIFormsCollection>();
+
             if (path_form_load.extension() == ".fm")
-                *CUIFormsCollection_ = CUIFormCollectionSerializerBinary
+                *tempCollection = CUIFormCollectionSerializerBinary
                                        (path_form_load).Deserialize();
             else
-                *CUIFormsCollection_ = CUIFormCollectionSerializerJson
+                *tempCollection = CUIFormCollectionSerializerJson
                                        (path_form_load).Deserialize();
-            for(const  CUIForm& uiform : CUIFormsCollection_->Forms()){
+            for(const  CUIForm& uiform : tempCollection->Forms()){
                 upCUIFormsCollection_->Forms().emplace_back(uiform);
             }
         }

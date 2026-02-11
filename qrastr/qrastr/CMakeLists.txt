@@ -460,8 +460,6 @@ set(PROJECT_SOURCES
     ${APP_DIR}/utilities/params.cpp
     ${APP_DIR}/utilities/common_qrastr.h
     ${APP_DIR}/utilities/common_qrastr.cpp
-    ${APP_DIR}/utilities/rastrhlp.h
-    ${APP_DIR}/utilities/rastrhlp.cpp
     ${APP_DIR}/utilities/Settings.h
     ${APP_DIR}/utilities/Settings.cpp
     ${APP_DIR}/utilities/string_bool.h
