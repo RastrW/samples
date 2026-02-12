@@ -340,158 +340,33 @@ list(APPEND PROJECT_INCLUDES
 # ============================================================================
 # Source Files
 # ============================================================================
-set(PROJECT_SOURCES
-    ${APP_DIR}/main.cpp
-
-    # Main
-    ${APP_DIR}/main/app.h
-    ${APP_DIR}/main/app.cpp
-    ${APP_DIR}/main/mainwindow.cpp
-    ${APP_DIR}/main/mainwindow.h
-    ${APP_DIR}/main/cacheLog.cpp
-    ${APP_DIR}/main/cacheLog.h
-
-    # Data
-    ${APP_DIR}/data/rtablesdatamanager.h
-    ${APP_DIR}/data/rtablesdatamanager.cpp
-    ${APP_DIR}/data/rmodel.cpp
-    ${APP_DIR}/data/rmodel.h
-    ${APP_DIR}/data/rdata.h
-    ${APP_DIR}/data/rdata.cpp
-    ${APP_DIR}/data/IDataBlocksWrappers.h
-    ${APP_DIR}/data/IDataBlocksWrappers.cpp
-    ${APP_DIR}/data/QDataBlocks.h
-    ${APP_DIR}/data/QDataBlocks.cpp
-
-    # UI Components
-    ${APP_DIR}/ui_components/rtabwidget.h
-    ${APP_DIR}/ui_components/rtabwidget.cpp
-    ${APP_DIR}/ui_components/rtableview.h
-    ${APP_DIR}/ui_components/rtableview.cpp
-    ${APP_DIR}/ui_components/filtertableheader.h
-    ${APP_DIR}/ui_components/filtertableheader.cpp
-    ${APP_DIR}/ui_components/filterlineedit.h
-    ${APP_DIR}/ui_components/filterlineedit.cpp
-    ${APP_DIR}/ui_components/qtitangrid.h
-    ${APP_DIR}/ui_components/qtitangrid.cpp
-
-    # Delegates
-    ${APP_DIR}/delegates/delegatecombobox.cpp
-    ${APP_DIR}/delegates/delegatecombobox.h
-    ${APP_DIR}/delegates/delegatedoubleitem.h
-    ${APP_DIR}/delegates/delegatedoubleitem.cpp
-    ${APP_DIR}/delegates/delegatecheckbox.h
-    ${APP_DIR}/delegates/delegatecheckbox.cpp
-
-    # Forms
-    ${APP_DIR}/forms/ColPropForm.h
-    ${APP_DIR}/forms/ColPropForm.cpp
-    ${APP_DIR}/forms/ColPropForm.ui
-    ${APP_DIR}/forms/formsettings.h
-    ${APP_DIR}/forms/formsettings.cpp
-    ${APP_DIR}/forms/formsettingsdatas.h
-    ${APP_DIR}/forms/formsettingsdatas.cpp
-    ${APP_DIR}/forms/formsettingsdatas.ui
-    ${APP_DIR}/forms/formsettingsforms.h
-    ${APP_DIR}/forms/formsettingsforms.cpp
-    ${APP_DIR}/forms/formsettingsforms.ui
-    ${APP_DIR}/forms/formsettingsonloadfiles.h
-    ${APP_DIR}/forms/formsettingsonloadfiles.cpp
-    ${APP_DIR}/forms/formsettingsonloadfiles.ui
-    ${APP_DIR}/forms/formsettingsstackeditem.h
-    ${APP_DIR}/forms/formsettingsstackeditem.cpp
-    ${APP_DIR}/forms/formsettingsonloadtemplates.h
-    ${APP_DIR}/forms/formsettingsonloadtemplates.cpp
-    ${APP_DIR}/forms/formsettingsonloadtemplates.ui
-    ${APP_DIR}/forms/formsettingsonloadforms.h
-    ${APP_DIR}/forms/formsettingsonloadforms.cpp
-    ${APP_DIR}/forms/formsettingsonloadforms.ui
-    ${APP_DIR}/forms/formfilenew.h
-    ${APP_DIR}/forms/formfilenew.cpp
-    ${APP_DIR}/forms/formfilenew.ui
-    ${APP_DIR}/forms/formselection.h
-    ${APP_DIR}/forms/formselection.cpp
-    ${APP_DIR}/forms/formselection.ui
-    ${APP_DIR}/forms/formprotocol.h
-    ${APP_DIR}/forms/formprotocol.cpp
-    ${APP_DIR}/forms/formprotocol.ui
-    ${APP_DIR}/forms/formexportcsv.h
-    ${APP_DIR}/forms/formexportcsv.cpp
-    ${APP_DIR}/forms/formexportcsv.ui
-    ${APP_DIR}/forms/formgroupcorrection.h
-    ${APP_DIR}/forms/formgroupcorrection.cpp
-    ${APP_DIR}/forms/formgroupcorrection.ui
-    ${APP_DIR}/forms/formimportcsv2.h
-    ${APP_DIR}/forms/formimportcsv2.cpp
-    ${APP_DIR}/forms/formimportcsv2.ui
-    ${APP_DIR}/forms/formcalcidop.h
-    ${APP_DIR}/forms/formcalcidop.cpp
-    ${APP_DIR}/forms/formcalcidop.ui
-    ${APP_DIR}/forms/formsaveall.h
-    ${APP_DIR}/forms/formsaveall.cpp
-    ${APP_DIR}/forms/formsaveall.ui
-
-    # Protocol tree
-    ${APP_DIR}/protocol_tree/protocoltreeitem.h
-    ${APP_DIR}/protocol_tree/protocoltreeitem.cpp
-    ${APP_DIR}/protocol_tree/protocoltreemodel.h
-    ${APP_DIR}/protocol_tree/protocoltreemodel.cpp
-
-    # Conditional formatting
-    ${APP_DIR}/formatting/CondFormat.h
-    ${APP_DIR}/formatting/CondFormat.cpp
-    ${APP_DIR}/formatting/CondFormatManager.h
-    ${APP_DIR}/formatting/CondFormatManager.cpp
-    ${APP_DIR}/formatting/CondFormatManager.ui
-    ${APP_DIR}/formatting/Palette.h
-    ${APP_DIR}/formatting/Palette.cpp
-    ${APP_DIR}/formatting/condformatjson.h
-    ${APP_DIR}/formatting/condformatjson.cpp
-
-    # Utilities
-    ${APP_DIR}/utilities/utils.h
-    ${APP_DIR}/utilities/singleton_dclp.hpp
-    ${APP_DIR}/utilities/params.h
-    ${APP_DIR}/utilities/params.cpp
-    ${APP_DIR}/utilities/common_qrastr.h
-    ${APP_DIR}/utilities/common_qrastr.cpp
-    ${APP_DIR}/utilities/Settings.h
-    ${APP_DIR}/utilities/Settings.cpp
-    ${APP_DIR}/utilities/string_bool.h
-    ${APP_DIR}/utilities/string_bool.cpp
-    ${APP_DIR}/utilities/linkedform.h
-    ${APP_DIR}/utilities/linkedform.cpp
-
-    # SDL
-    ${APP_DIR}/sdl/SDLChild.h
-    ${APP_DIR}/sdl/SDLChild.cpp
-
-    # Test hints
-    ${APP_DIR}/test/tsthints.h
-    ${APP_DIR}/test/tsthints.cpp
-    ${APP_DIR}/test/tsthintsmvc.h
-    ${APP_DIR}/test/tsthintsmvc.cpp
-    ${APP_DIR}/test/testmodel.h
-    ${APP_DIR}/test/testmodel.cpp
-
-    # Plugin
-    ${SRC_DIR}/plugins/rastr/plugin_interfaces.h
-
-    # ASTRA
-    ${APP_DIR}/astra/astra_shared.h
-    ${APP_DIR}/astra/qastra_events_data.h
-    ${APP_DIR}/astra/qastra.h
-    ${APP_DIR}/astra/qastra.cpp
-    ${APP_DIR}/astra/qti.h
-    ${APP_DIR}/astra/qti.cpp
-    ${APP_DIR}/astra/qbarsmdp.h
-    ${APP_DIR}/astra/qbarsmdp.cpp
-
-    ${APP_DIR}/astra/astra_headers/Exceptions.h
-    ${APP_DIR}/astra/astra_headers/ResourceManager.h
-    ${APP_DIR}/astra/astra_headers/stringutils.h
-    ${APP_DIR}/astra/astra_headers/UIForms.h
-    ${APP_DIR}/astra/astra_headers/License2/json.hpp
+file(GLOB_RECURSE PROJECT_SOURCES
+    "${APP_DIR}/main/*.cpp"
+    "${APP_DIR}/main/*.h"
+    "${APP_DIR}/data/*.cpp"
+    "${APP_DIR}/data/*.h"
+    "${APP_DIR}/ui_components/*.cpp"
+    "${APP_DIR}/ui_components/*.h"
+    "${APP_DIR}/delegates/*.cpp"
+    "${APP_DIR}/delegates/*.h"
+    "${APP_DIR}/forms/*.cpp"
+    "${APP_DIR}/forms/*.h"
+    "${APP_DIR}/forms/*.ui"
+    "${APP_DIR}/protocol_tree/*.cpp"
+    "${APP_DIR}/protocol_tree/*.h"
+    "${APP_DIR}/formatting/*.cpp"
+    "${APP_DIR}/formatting/*.h"
+    "${APP_DIR}/utilities/*.cpp"
+    "${APP_DIR}/utilities/*.h"
+    "${APP_DIR}/sdl/*.cpp"
+    "${APP_DIR}/sdl/*.h"
+    "${APP_DIR}/test/*.cpp"
+    "${APP_DIR}/test/*.h"
+    "${APP_DIR}/astra/*.cpp"
+    "${APP_DIR}/astra/*.h"
+    "${APP_DIR}/astra/astra_headers/*.h"
+    "${SRC_DIR}/plugins/rastr/plugin_interfaces.h"
+    "${APP_DIR}/main.cpp"
 )
 
 # Translation files
