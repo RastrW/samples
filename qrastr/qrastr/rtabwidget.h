@@ -113,8 +113,11 @@ class RtabWidget : public QWidget
 public:
     explicit RtabWidget(CUIForm UIForm,QWidget *parent = nullptr);
     explicit RtabWidget(QAstra* pqastra, CUIForm UIForm, RTablesDataManager* pRTDM, ads::CDockManager* pDockManager ,QWidget *parent = nullptr);
-    /*~RtabWidget(){}; //C2036
+    virtual ~RtabWidget()
     {
+        qDebug()<<"RtabWidget::Destructor";
+    }; //C2036
+    /*{
         //qDebug()<<"RtabWidget::Destructor "<< "[" <<m_UIForm.Name().c_str() << "]";
     };*/
 
@@ -184,6 +187,8 @@ private slots:
     void SetEditors();
     void SetEditor(RCol& _prcol);
     void onRTDM_ResetModel(std::string tname);
+    void onRTDM_BeginResetModel(std::string tname);
+    void onRTDM_EndResetModel(std::string tname);
 
 public:
     std::unique_ptr<RModel> prm;
@@ -211,6 +216,8 @@ private:
     QPoint MenuRequestedPoint;
     std::string m_selection;                                                            // Текущая выборка
     std::map<int, std::vector<CondFormat>> m_MapcondFormatVector;                       // column , vector<CondFormat>
+    std::map<QString,bool> m_ColumnsVisible;
+
     QShortcut *sC_CTRL_I = new QShortcut( QKeySequence(Qt::CTRL | Qt::Key_I), this,nullptr,nullptr, Qt::WidgetWithChildrenShortcut);
     QShortcut *sC_CTRL_D = new QShortcut( QKeySequence(Qt::CTRL | Qt::Key_D), this);
     QShortcut *sC_CTRL_R = new QShortcut( QKeySequence(Qt::CTRL | Qt::Key_R), this);

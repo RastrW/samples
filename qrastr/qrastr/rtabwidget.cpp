@@ -143,6 +143,10 @@ RtabWidget::RtabWidget(QAstra* pqastra,CUIForm UIForm,RTablesDataManager* pRTDM,
     connect(m_pRTDM, &RTablesDataManager::RTDM_dataChanged,this->prm.get(), &RModel::onrm_DataChanged);
     connect(m_pRTDM, &RTablesDataManager::RTDM_BeginResetModel,this->prm.get(), &RModel::onrm_BeginResetModel);
     connect(m_pRTDM, &RTablesDataManager::RTDM_EndResetModel,this->prm.get(), &RModel::onrm_EndResetModel);
+
+    connect(m_pRTDM, &RTablesDataManager::RTDM_BeginResetModel,this, &RtabWidget::onRTDM_BeginResetModel);
+    connect(m_pRTDM, &RTablesDataManager::RTDM_EndResetModel,this,  &RtabWidget::onRTDM_EndResetModel);
+
     connect(m_pRTDM, &RTablesDataManager::RTDM_BeginInsertRow,this->prm.get(), &RModel::onrm_BeginInsertRow);
     connect(m_pRTDM, &RTablesDataManager::RTDM_EndInsertRow,this->prm.get(), &RModel::onrm_EndInsertRow);
 
@@ -184,11 +188,14 @@ void RtabWidget::onvisibilityChanged(bool visible)
 }
 void RtabWidget::OnClose()
 {
+    disconnect(m_pRTDM, &RTablesDataManager::RTDM_BeginResetModel,this, &RtabWidget::onRTDM_BeginResetModel);
+    disconnect(m_pRTDM, &RTablesDataManager::RTDM_EndResetModel,this,  &RtabWidget::onRTDM_EndResetModel);
     this->close();
 }
 void RtabWidget::CreateModel(QAstra* pqastra, CUIForm* pUIForm)
 {
-    prm = std::unique_ptr<RModel>(new RModel(nullptr, pqastra, m_pRTDM ));
+    //prm = std::unique_ptr<RModel>(new RModel(nullptr, pqastra, m_pRTDM ));
+    prm = std::unique_ptr<RModel>(new RModel(this, pqastra, m_pRTDM ));
     //proxyModel = new QSortFilterProxyModel(prm.get()); // used for sorting: create proxy //https://doc.qt.io/qt-5/qsortfilterproxymodel.html#details
     //proxyModel->setSourceModel(prm.get());
     prm->setForm(pUIForm);
@@ -202,15 +209,14 @@ void RtabWidget::CreateModel(QAstra* pqastra, CUIForm* pUIForm)
 
     //Порядок колонок как в форме
     int vi = 0;
-    for (auto f : pUIForm->Fields())
+    for (const auto &f : pUIForm->Fields())
     {
-        for (RCol& rcol : *prm->getRdata())
+        for (const RCol& rcol : *prm->getRdata())
         {
             if (f.Name() == rcol.str_name_)
             {
                 column_qt = (Qtitan::GridTableColumn *)view->getColumn(rcol.index);
-
-                column_qt   ->setVisualIndex(vi++);
+                column_qt->setVisualIndex(vi++);
                 continue;
             }
         }
@@ -260,6 +266,7 @@ void RtabWidget::SetEditor(RCol& rcol)
         return;
 
     column_qt->setVisible(!rcol.hidden);
+    //column_qt->setCaption(rcol.title_.c_str());
 
     //Настройки отображения колонок по типам
     if (rcol.com_prop_tt == enComPropTT::COM_PR_ENUM)
@@ -373,6 +380,48 @@ void RtabWidget::onRTDM_ResetModel(std::string tname)
     //prm->beginResetModel();
     CreateModel(m_pqastra,&m_UIForm);
     //ptv->update();
+}
+void RtabWidget::onRTDM_BeginResetModel(std::string tname)
+{
+    if (this->m_UIForm.TableName() != tname)
+        return;
+
+    view->beginUpdate();
+
+    // Запомним видимые столбцы
+    int ncols = view->getColumnCount();
+    //qDebug()<<"onRTDM_BeginResetModel"<<tname<<": ncols(view) = "<<ncols;
+
+    for (int i = 0 ; i < ncols ; i++)
+    {
+        column_qt = (Qtitan::GridTableColumn *)view->getColumn(i);
+        m_ColumnsVisible.insert(std::make_pair(column_qt->caption() , column_qt->isVisible() ));
+        //qDebug()<<i<<":"<<column_qt->caption()<<" - "<<column_qt->isVisible();
+    }
+}
+void RtabWidget::onRTDM_EndResetModel(std::string tname)
+{
+    if (this->m_UIForm.TableName() != tname)
+        return;
+
+    //view->setModel(prm.get());
+    //SetEditors();
+
+    // Установим видимые столбцы
+    int ncols = view->getColumnCount();
+    int sz = (prm->getRdata())->size();
+    qDebug()<<"onRTDM_EndResetModel"<<tname<<": ncols(view) = "<<ncols;
+    for (const RCol& rcol : *prm->getRdata())
+    {
+        column_qt = (Qtitan::GridTableColumn *)view->getColumn(rcol.index);
+        column_qt->setVisible(false);
+        if (contains(m_ColumnsVisible, column_qt->caption()))
+        {
+            //qDebug()<<rcol.index<<":"<<column_qt->caption()<<" - "<<column_qt->isVisible();
+            column_qt->setVisible(m_ColumnsVisible.at(column_qt->caption()));
+        }
+    }
+    view->endUpdate();
 }
 
 void RtabWidget::SetTableView(QTableView& tv, RModel& mm, int myltiplier  )

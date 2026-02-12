@@ -534,6 +534,13 @@ public:
         IRastrTablesPtr tablesx{ pqastra_->getRastr()->Tables() };
         IRastrTablePtr table{ tablesx->Item(table_name_) };
         IRastrColumnsPtr columns{ table->Columns() };
+        long indx = IRastrPayload{columns->FindIndex(str_name_)}.Value();
+        if (indx < 0)
+        {
+            qDebug()<<"rdata->title(): "<<str_name_<< "column not found! ";
+            std::string _tmp = "->no column!";
+            return _tmp.append(str_name_);
+        }
         IRastrColumnPtr col_ptr{ columns->Item(str_name_) };
         std::string str_title = IRastrPayload(IRastrVariantPtr(col_ptr->Property(FieldProperties::Title))->String()).Value();
         return str_title;
@@ -675,7 +682,6 @@ public:
     bool hidden ;
 private:
     nlohmann::json j_meta_;
-    //IRastrColumnPtr col_ptr;
     QAstra* pqastra_;
 
 };// class RCol

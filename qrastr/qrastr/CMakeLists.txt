@@ -37,7 +37,7 @@ set( CMAKE_LIBRARY_OUTPUT_DIRECTORY "${CMAKE_SOURCE_DIR}//..//${CMAKE_BUILD_TYPE
 set( CMAKE_RUNTIME_OUTPUT_DIRECTORY "${CMAKE_SOURCE_DIR}//..//${CMAKE_BUILD_TYPE}" )
 option( QRASTR_BUILD_WITH_MCR "QRASTR_BUILD_WITH_MCR" ON )
 
-list( PREPEND CMAKE_PREFIX_PATH ${DEPENDENCIES_LOCATION} ) # ThirdParty components: ADS, Scittilla, SDL   ex: # win: "c:/projects/compile/ lin: ~/projects/compile/
+list( PREPEND CMAKE_PREFIX_PATH ${DEPENDENCIES_LOCATION} ) # ThirdParty components: ADS, Scittilla, SDL   ex: # win: "c:/projects/compile/ lin: /home/ustas/projects/compile (~/projects/compile/)
 list( PREPEND CMAKE_PREFIX_PATH ${RASTR_PREFIX_PATH} )     # Astra install path                           ex: C:/Projects/tfs/rastr/RastrWin/build/install
 list( PREPEND CMAKE_PREFIX_PATH ${COMPILE_DIR})            # Astra thirdparty components: fmt             ex: C:\Projects\compile_cmake  (C:\projects\rastr\RastrWin\thirdparty\_deps\compile)
 message(NOTICE "DEPENDENCIES_LOCATION= ${DEPENDENCIES_LOCATION}")

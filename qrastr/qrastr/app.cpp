@@ -359,7 +359,7 @@ long App::start(){
             for(const Params::_v_templates::value_type& templ_to_load : v_templates){
                 std::filesystem::path path_template = path_templates;
                 path_template /= templ_to_load;
-                m_sp_qastra->Load( eLoadCode::RG_REPL, "", path_template.string() );
+                auto ret = m_sp_qastra->Load( eLoadCode::RG_REPL, "", path_template.string() );
             }
             for(const Params::_v_file_templates::value_type& file_template : Params::GetInstance()->getStartLoadFileTemplates()){
                 std::filesystem::path path_template = path_templates;

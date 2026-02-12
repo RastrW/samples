@@ -27,7 +27,7 @@ class RModel : public QAbstractTableModel
     QAstra* pqastra_;
     RTablesDataManager* pRTDM_;
     std::unique_ptr<RData> up_rdata;
-    std::vector<QString> vqcols_;                                 // Заголовки столбцов
+    //std::vector<QString> vqcols_;                                 // Заголовки столбцов
     CUIForm* pUIForm_;
 public:
     std::map<std::size_t,QStringList> m_enum_;                                 // ENUM -> БАЗА|Ген|Нагр|Ген+
