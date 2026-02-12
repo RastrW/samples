@@ -11,17 +11,12 @@
 #include <QVBoxLayout>
 #include <QSortFilterProxyModel>
 #include "ColPropForm.h"
-#include "formselection.h"
-#include "formgroupcorrection.h"
-#include "formexportcsv.h"
-#include "formimportcsv2.h"
+
 #include "rmodel.h"
 #include "rtableview.h"
 #include "rtablesdatamanager.h"
-#include "utils.h"
+
 #include "linkedform.h"
-
-
 
 namespace ads{ class CDockManager; }
 
@@ -107,6 +102,16 @@ typedef QMap<int, ItemState> itemStateMap;
 
 #define RTABLEVIEWCOLINDEXROLE Qt::UserRole + 1
 
+/**
+ * @brief
+    - Отображение табличных данных в QTitan Grid
+    - Управление взаимодействием пользователя с таблицей
+    - Обработка контекстных меню
+    - Связывание с RModel
+    - Поддержка условного форматирования
+    - Управление связанными формами
+ */
+
 class RtabWidget : public QWidget
 {
     Q_OBJECT
@@ -158,6 +163,7 @@ public slots:
     void widebydata();
     void OpenColPropForm();
     void OpenSelectionForm();
+
     void OpenGroupCorrection();
     void OpenLinkedForm(std::string name,std::string selection , std::vector<int> keys );    // ТИ:Каналы ; id1=%d & id2=0 & prv_num<8 ; 801
     void OpenExportCSVForm();

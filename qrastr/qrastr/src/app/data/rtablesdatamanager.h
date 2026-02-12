@@ -8,46 +8,49 @@
 #include "qastra.h"
 #include "astra_headers/UIForms.h"
 
-
-template<typename T>
-class ITablesDataManagerT
-{
-    virtual void Add(std::string tname , QDenseDataBlock<T> DataBlock) = 0;
-};
-
-
 /* Класс для управления данными из метакита
- * Хранит данные по таблицам, в виджеты отдает указатели
- * обрабатывает события QAstra
+ * - Централизованное хранение данных таблиц
+ * - Обработка событий от QAstra (EventHints)
+ * - Управление жизненным циклом DataBlock
+ * - Синхронизация данных между расчётным ядром и UI
+ * - Реализация паттерна "1 DataBlock : N Views"
 */
 class RTablesDataManager : public QObject
 {
     Q_OBJECT
 public:
     void setQAstra( QAstra* _pqastra);
-    void SetForms ( std::list<CUIForm>* _lstUIForms);
+    void setForms ( std::list<CUIForm>* _lstUIForms);
     CUIForm* getForm ( std::string _name);
+    ///< Обработчик событий от Rastr
     void onRastrHint(const _hint_data& hint_data);
-    std::shared_ptr<QDataBlock> Get(std::string tname, std::string Cols);
+    ///<Получение/создание DataBlock
+    std::shared_ptr<QDataBlock>
+        get(std::string tname, std::string Cols);
 
     long column_index(std::string tname, std::string _col_name);
-    void GetDataBlock(std::string tname , std::string Cols , QDataBlock& QDB);
+    void getDataBlock(std::string tname, std::string Cols, QDataBlock& QDB);
 private:
-    void GetDataBlock(std::string tname , std::string Cols , QDataBlock& QDB,FieldDataOptions Options );
-    void GetDataBlock(std::string tname , QDataBlock& QDB,FieldDataOptions Options );
-    void GetDataBlock(std::string tname , QDataBlock& QDB);
-    std::string GetTCols(std::string tname);
-    long GetColIndex(std::string tname,std::string cname);
-    ePropType GetColType(std::string tname,std::string cname);
+    void getDataBlock(std::string tname, std::string Cols, QDataBlock& QDB, FieldDataOptions Options );
+    void getDataBlock(std::string tname, QDataBlock& QDB, FieldDataOptions Options );
+    void getDataBlock(std::string tname, QDataBlock& QDB);
+    std::string getTCols(std::string tname);
+    long getColIndex(std::string tname,std::string cname);
+    ePropType getColType(std::string tname,std::string cname);
 signals:
-    void RTDM_dataChanged(std::string tname,int row_from , int col_from , int row_to, int col_to);
-    void RTDM_UpdateModel(std::string tname);
-    void RTDM_UpdateView(std::string tname);
-    void RTDM_ResetModel(std::string tname);
-    void RTDM_BeginResetModel(std::string tname);
-    void RTDM_EndResetModel(std::string tname);
-    void RTDM_BeginInsertRow(std::string tname,int first,int last);
-    void RTDM_EndInsertRow(std::string tname);
+    ///< изменены данные в диапазоне
+    void sig_dataChanged(std::string tname,int row_from ,
+                         int col_from , int row_to, int col_to);
+    ///< перестроение модели
+    void sig_BeginResetModel(std::string tname);
+    void sig_EndResetModel(std::string tname);
+    ///< вставка строки
+    void sig_BeginInsertRow(std::string tname,int first,int last);
+    void sig_EndInsertRow(std::string tname);
+    ///< обновление представлений
+    void sig_UpdateModel(std::string tname);
+    void sig_UpdateView(std::string tname);
+    void sig_ResetModel(std::string tname);
 private:
     QAstra* m_pqastra;
     std::list<CUIForm>* m_plstUIForms;

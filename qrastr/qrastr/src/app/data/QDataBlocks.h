@@ -7,6 +7,17 @@
 #include "IDataBlocksWrappers.h"
 
 constexpr const char *cszDef = "[def]"; // "пустое" значение для разреженного режима
+/**
+@brief Иерархия классов
+IDataBlockBase (интерфейс)
+├── IDataBlockBaseT<T> (шаблонный интерфейс)
+│   ├── MyDenseDataBlock<T>
+│   │   └── QDenseDataBlock<T>
+│   │       └── QDataBlock (алиас для QDenseDataBlock<FieldVariantData>)
+│   └── MySparseDataBlock<T>
+└── IDataSetBase (интерфейс)
+    └── MyDataSet
+*/
 
 template<typename T>
 class MyDenseDataBlock : public IDataBlockBaseT<T>
@@ -653,6 +664,7 @@ protected:
     std::vector<ColumnHeaderT> Columns_;
 };
 
+///
 template<typename T>
 class QDenseDataBlock : public MyDenseDataBlock<T>
 {
@@ -722,6 +734,7 @@ class QDenseDataBlock : public MyDenseDataBlock<T>
             return IPlainRastrRetCode::Failed;
         }
     }
+
     IPlainRastrRetCode AddRow(IndexT count = 1) noexcept
     {
         try {
@@ -751,6 +764,7 @@ class QDenseDataBlock : public MyDenseDataBlock<T>
             return IPlainRastrRetCode::Failed;
         }
     }
+
     IPlainRastrRetCode InsertRow(IndexT insrow ) noexcept
     {
         try {
@@ -786,6 +800,7 @@ class QDenseDataBlock : public MyDenseDataBlock<T>
             return IPlainRastrRetCode::Failed;
         }
     }
+
     IPlainRastrRetCode DuplicateRow(IndexT duprow ) noexcept
     {
         try {
@@ -800,6 +815,7 @@ class QDenseDataBlock : public MyDenseDataBlock<T>
             return IPlainRastrRetCode::Failed;
         }
     }
+
     IPlainRastrRetCode DeleteRow(IndexT delrow ) noexcept
     {
         try {

@@ -1,15 +1,12 @@
-#ifndef RMODEL_H
-#define RMODEL_H
 #pragma once
 
 #include <QAbstractTableModel>
 #include <QTimer>
-//#include "astra_exp.h"
+
 #include "rdata.h"
 #include "qastra.h"
 #include "rtablesdatamanager.h"
 
-//class CondFormat;
 #include "CondFormat.h"
 
 struct ToQVariant {
@@ -85,16 +82,10 @@ private:
 
 signals:
     void editCompleted(const QString &);
-    //void dataChanged(std::string _t_name, QModelIndex index_from, QModelIndex index_to);
-   // void dataChanged(std::string _t_name, std::string _col_name, int _row, QVariant _value);
-
 public slots:
-    //void onRModelchange(std::string _t_name, std::string _col_name, int _row, QVariant _value);
-    void onrm_DataChanged(std::string _t_name, int row_from,int col_from ,int row_to,int col_to);
-    void onrm_BeginResetModel(std::string _t_name);
-    void onrm_EndResetModel(std::string _t_name);
-    void onrm_BeginInsertRow(std::string _t_name,int first, int last);
-    void onrm_EndInsertRow(std::string _t_name);
+    void slot_DataChanged(std::string _t_name, int row_from,int col_from ,int row_to,int col_to);
+    void slot_BeginResetModel(std::string _t_name);
+    void slot_EndResetModel(std::string _t_name);
+    void slot_BeginInsertRow(std::string _t_name,int first, int last);
+    void slot_EndInsertRow(std::string _t_name);
 };
-
-#endif // RMODEL_H

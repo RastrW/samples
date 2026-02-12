@@ -65,7 +65,7 @@ int RModel::populateDataFromRastr(){
                 long indx2 = pRTDM_->column_index(vsuperenum[0],vsuperenum[2]);
                 if ( (indx1 > -1) && (indx2 > -1) )
                 {
-                    pRTDM_->GetDataBlock(vsuperenum[0],vsuperenum[2]+","+vsuperenum[1], QDB);
+                    pRTDM_->getDataBlock(vsuperenum[0],vsuperenum[2]+","+vsuperenum[1], QDB);
                     for ( int i = 0 ; i < QDB.RowsCount() ; i++)
                     {
                         long ind_ref_val = std::visit(ToLong(),(QDB.Get(i,0)));
@@ -90,7 +90,7 @@ int RModel::populateDataFromRastr(){
             long name_indx = pRTDM_->column_index(table,"name");
             std::string cols = "";
             cols = (name_indx > -1) ? col.append(",name") : col.append(",").append(col);    //ex: nsx not contains name
-            pRTDM_->GetDataBlock(table, cols, QDB);
+            pRTDM_->getDataBlock(table, cols, QDB);
 
             //QDB->QDump();
 
@@ -185,38 +185,6 @@ QVariant RModel::data(const QModelIndex &index, int role) const
     else
             return QVariant();
 
-
-    // Some old examples , code not reach hear
-    /*switch (role) {
-        case Qt::DisplayRole:
-            if(row == 0 && col == 1) return QString("<--left");
-            if(row == 1 && col == 1) return QString("right-->");
-            if(row == 1 && col == 1 ) return QTime::currentTime().toString();
-        return QString("Row%1, Column%2")
-            .arg(row + 1)
-            .arg(col +1);
-        case Qt::FontRole:
-            if (row == 0 && col == 0) { //change font only for cell(0,0)
-                QFont boldFont;
-                boldFont.setBold(true);
-        return boldFont;
-        }
-        break;
-        case Qt::BackgroundRole:
-            if (row == 1 && col == 2)  //change background only for cell(1,2)
-                return QBrush(Qt::red);
-        break;
-        case Qt::TextAlignmentRole:
-            if (row == 1 && col == 1) //change text alignment only for cell(1,1)
-                return int(Qt::AlignRight | Qt::AlignVCenter);
-        break;
-        case Qt::CheckStateRole:
-            if (row == 1 && col == 0) //add a checkbox to cell(1,0)
-                return Qt::Checked;
-        break;
-    }
-    */
-
     return QVariant();
 }
 
@@ -243,7 +211,6 @@ bool RModel::setData(const QModelIndex &index, const QVariant &value, int role)
     int row = index.row();
 
     RData::iterator iter_col = up_rdata->begin() + col;
-    //RCol rcol = *iter_col;
 
     IRastrTablesPtr tablesx{this->pqastra_->getRastr()->Tables()};
     IRastrTablePtr table{ tablesx->Item(iter_col->table_name_) };
@@ -430,19 +397,7 @@ QVariant RModel::getMatchingCondFormat(const std::map<size_t, std::vector<CondFo
 QVariant RModel::getMatchingCondFormat(size_t row, size_t column, const QString& value, int role) const
 {
     QVariant format;
-    // Check first for a row-id format and when there is none, for a conditional format.
-    /*if (m_mRowIdFormats.count(column))
-    {
-        std::unique_lock<std::mutex> lock(m_mutexDataCache);
-        const bool row_available = m_cache.count(row);
-        const QByteArray blank_data("");
-        const QByteArray& row_id_data = row_available ? m_cache.at(row).at(0) : blank_data;
-        lock.unlock();
 
-        format = getMatchingCondFormat(m_mRowIdFormats, column, row_id_data, role);
-        if (format.isValid())
-            return format;
-    }*/
     if (m_mCondFormats.count(column))
         return getMatchingCondFormat(m_mCondFormats, row, column,value, role);
     else
@@ -487,10 +442,8 @@ bool RModel::AddRow(size_t count ,const QModelIndex &parent)
     IRastrTablePtr table{ tablesx->Item(getRdata()->t_name_) };
     IRastrPayload sz{table->Size()};
 
-    //IPlainRastrResult* pres = this->pqastra_->getRastr()->SetLockEvent(true);
     for (size_t i = 0 ; i < count ; i++ )
         IPlainRastrResult* pres = table->AddRow();
-    //pres = this->pqastra_->getRastr()->SetLockEvent(false);
 
     return true;
 }
@@ -513,9 +466,7 @@ bool RModel::DuplicateRow(int row, const QModelIndex &parent)
     IRastrTablePtr table{ tablesx->Item(getRdata()->t_name_) };
     IRastrPayload sz{table->Size()};
 
-    //beginInsertRows(parent,sz.Value(),sz.Value());
     IPlainRastrResult* pres = table->DuplicateRow(row); // send EventHints::InsertRow
-    //endInsertRows();
 
     //Дублируем данные в клиенте
     this->up_rdata->pnparray_->DuplicateRow(row);
@@ -527,7 +478,7 @@ bool RModel::DuplicateRow(int row, const QModelIndex &parent)
 bool RModel::insertColumns(int column, int count, const QModelIndex &parent)
 {
     beginInsertColumns(parent, column, column + count - 1);
-    // FIXME: Implement me!
+    ///@todo FIXME: Implement me!
     endInsertColumns();
     return true;
 }
@@ -551,7 +502,7 @@ bool RModel::removeRows(int row, int count, const QModelIndex &parent)
 bool RModel::removeColumns(int column, int count, const QModelIndex &parent)
 {
     beginRemoveColumns(parent, column, column + count - 1);
-    // FIXME: Implement me!
+    ///@todo FIXME: Implement me!
     endRemoveColumns();
     return true;
 }
@@ -603,7 +554,7 @@ bool RModel::removeColumns(int column, int count, const QModelIndex &parent)
 }
 */
 
-void RModel::onrm_DataChanged(std::string _t_name, int row_from,int col_from ,int row_to,int col_to)
+void RModel::slot_DataChanged(std::string _t_name, int row_from,int col_from ,int row_to,int col_to)
 {
     if (this->getRdata()->t_name_ == _t_name)
     {
@@ -612,12 +563,12 @@ void RModel::onrm_DataChanged(std::string _t_name, int row_from,int col_from ,in
         emit dataChanged(top_left,bottom_right);
     }
 }
-void RModel::onrm_BeginResetModel(std::string _t_name)
+void RModel::slot_BeginResetModel(std::string _t_name)
 {
     if (this->getRdata()->t_name_ == _t_name)
         beginResetModel();
 }
-void RModel::onrm_EndResetModel(std::string _t_name)
+void RModel::slot_EndResetModel(std::string _t_name)
 {
     if (this->getRdata()->t_name_ == _t_name)
     {
@@ -625,13 +576,13 @@ void RModel::onrm_EndResetModel(std::string _t_name)
         endResetModel();
     }
 }
-void RModel::onrm_BeginInsertRow(std::string _t_name,int first, int last)
+void RModel::slot_BeginInsertRow(std::string _t_name,int first, int last)
 {
     const QModelIndex parent = QModelIndex();
     if (this->getRdata()->t_name_ == _t_name)
         beginInsertRows(parent,first,last);
 }
-void RModel::onrm_EndInsertRow(std::string _t_name)
+void RModel::slot_EndInsertRow(std::string _t_name)
 {
     if (this->getRdata()->t_name_ == _t_name)
         endInsertRows();

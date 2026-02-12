@@ -12,11 +12,7 @@
 #include <QProgressDialog>
 #include "CondFormat.h"
 #include "qastra.h"
-//using WrapperExceptionType = std::runtime_error;
-//#include "IPlainRastrWrappers.h"
 #include "delegatecombobox.h"
-//#include "delegatedoubleitem.h"
-//#include "delegatecheckbox.h"
 #include <QShortcut>
 #include <QPalette>
 #include "CondFormat.h"
@@ -24,14 +20,16 @@
 #include "condformatjson.h"
 #include "linkedform.h"
 
-//#include "Settings.h"
 #include <QtitanGrid.h>
-#include "qtitangrid.h"
 #include <utils.h>
-//#include "License2/json.hpp"
 #include <QAbstractItemModelTester>
 #include <DockManager.h>
 #include <QCloseEvent>
+
+#include "formselection.h"
+#include "formgroupcorrection.h"
+#include "formexportcsv.h"
+#include "formimportcsv2.h"
 
 namespace ads{ class CDockManager; }
 
@@ -108,13 +106,12 @@ RtabWidget::RtabWidget(QAstra* pqastra,CUIForm UIForm, RTablesDataManager* pRTDM
 
     CreateModel(pqastra,&m_UIForm);
 
-    connect(m_pRTDM, &RTablesDataManager::RTDM_dataChanged,this->prm.get(), &RModel::onrm_DataChanged);
-    connect(m_pRTDM, &RTablesDataManager::RTDM_BeginResetModel,this->prm.get(), &RModel::onrm_BeginResetModel);
-    connect(m_pRTDM, &RTablesDataManager::RTDM_EndResetModel,this->prm.get(), &RModel::onrm_EndResetModel);
-    connect(m_pRTDM, &RTablesDataManager::RTDM_BeginInsertRow,this->prm.get(), &RModel::onrm_BeginInsertRow);
-    connect(m_pRTDM, &RTablesDataManager::RTDM_EndInsertRow,this->prm.get(), &RModel::onrm_EndInsertRow);
+    connect(m_pRTDM, &RTablesDataManager::sig_dataChanged,this->prm.get(), &RModel::slot_DataChanged);
+    connect(m_pRTDM, &RTablesDataManager::sig_BeginResetModel,this->prm.get(), &RModel::slot_BeginResetModel);
+    connect(m_pRTDM, &RTablesDataManager::sig_EndResetModel,this->prm.get(), &RModel::slot_EndResetModel);
+    connect(m_pRTDM, &RTablesDataManager::sig_BeginInsertRow,this->prm.get(), &RModel::slot_BeginInsertRow);
+    connect(m_pRTDM, &RTablesDataManager::sig_EndInsertRow,this->prm.get(), &RModel::slot_EndInsertRow);
 }
-
 
 void RtabWidget::closeEvent(QCloseEvent *event)
 {
@@ -487,7 +484,7 @@ QMenu* RtabWidget::CunstructLinkedFormsMenu(std::string form_name)
     menu->setTitle("Связанные формы");
 
     std::vector<int> vbindvals;
-    auto table_context_form = m_pRTDM->Get("formcontext","");
+    auto table_context_form = m_pRTDM->get("formcontext","");
 
     size_t ind = 0;
     for (int irow = 0; irow<table_context_form->RowsCount();irow++)
@@ -579,12 +576,8 @@ void RtabWidget::editCondFormats(size_t column)
 {
     std::vector<CondFormat> condFormats;
     CondFormat condFormat;
-   // CondFormatManager condFormatDialog(m_settings[currentlyBrowsedTableName()].condFormats[column],
-    //                                  m_model->encoding(), this);
     CondFormatManager condFormatDialog(m_MapcondFormatVector[column],
                                             "UTF-8", this);
-    //CondFormatManager condFormatDialog(condFormats,
-    //                                  "UTF-8", this);
 
     QString title= prm->headerData(static_cast<int>(column), Qt::Horizontal, Qt::DisplayRole).toString();
     condFormatDialog.setWindowTitle(tr("Conditional formats for \"%1\"").
@@ -592,30 +585,8 @@ void RtabWidget::editCondFormats(size_t column)
     if (condFormatDialog.exec()) {
         std::vector<CondFormat> condFormatVector = condFormatDialog.getCondFormats();
         prm->setCondFormats(false, column, condFormatVector);
-        /*if (m_MapcondFormatVector.find(static_cast<int>(column)) != m_MapcondFormatVector.end())
-            m_MapcondFormatVector.at(static_cast<int>(column)) = condFormatVector;
-        else
-            m_MapcondFormatVector.insert(std::pair(static_cast<int>(column),condFormatVector));
-        */
         m_MapcondFormatVector.at(column) = condFormatVector;
 
-        //nlohmann::json j = nlohmann::json::parse(condFormatVector[0]);
-       /* nlohmann::json j;
-        j = {
-            {"node",title.toStdString().c_str(),condFormatVector[0].filter().toStdString()}
-        };
-        std::string jstr = j.dump();
-        std::filesystem::path path_2_json = std::filesystem::current_path() / "HighLightSetting.json";
-        std::ofstream ofs(path_2_json);
-        if(ofs.is_open())
-        {
-            std::string  str_file = j.dump(1, ' ');
-            ofs << str_file;
-            ofs.close();
-        }
-        */
-
-        //m_settings[currentlyBrowsedTableName()].condFormats[column] = condFormatVector;
         emit CondFormatsModified();
     }
 }
@@ -625,12 +596,7 @@ void RtabWidget::onCondFormatsModified()
     cfj.save_json();
 }
 
-void RtabWidget::onLinkedFormUpdate( CellClickEventArgs* _args)
-{
-    /*int row = _args->cell().rowIndex();
-    int col = _args->cell().columnIndex();
-    qDebug()<<"Linked form catch Cell catch Pressed:" <<row<< ","<<col;*/
-}
+void RtabWidget::onLinkedFormUpdate( CellClickEventArgs* _args){}
 
 void RtabWidget::onfocusRowChanged( int _row_old,int _row_new)
 {
@@ -730,7 +696,6 @@ void RtabWidget::OpenExportCSVForm()
 }
 void RtabWidget::OpenImportCSVForm()
 {
-    //formimportcsv* ImportCsv = new formimportcsv( prm->getRdata(),this);
     formimportcsv2* ImportCsv = new formimportcsv2( prm->getRdata(),this);
     ImportCsv->show();
 }

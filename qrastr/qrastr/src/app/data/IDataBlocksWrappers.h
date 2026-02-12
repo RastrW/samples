@@ -1,5 +1,3 @@
-#ifndef IDATABLOCKSWRAPPERS_H
-#define IDATABLOCKSWRAPPERS_H
 #pragma once
 
 #include "iostream"
@@ -45,11 +43,6 @@ struct MapFieldVariantType
     static const std::string_view VerbalType() noexcept;
 };
 
-
-
-
-
-
 template<typename T>
 struct VariantToString
 {
@@ -58,8 +51,6 @@ struct VariantToString
         return std::to_string(Value);
     }
 };
-
-
 
 template<template<typename> class T>
 std::unique_ptr<IDataBlockBase> CreateDataBlock(eFieldVariantType Type)
@@ -324,41 +315,5 @@ public:
         return Nzs > 0.0 ? Nzs / (RowsCount() * ColumnsCount()) : Nzs;
     }
 
-    void Dump()
-    {
-      /*  std::cout << "DataSet " << RowsCount() << "x" << ColumnsCount() << std::endl;
-        for (const auto& Column : Columns_)
-            std::cout << Column.Name << "(" <<
-                static_cast<std::underlying_type<eFieldVariantType>::type>(Column.Column->Type()) << ",[" <<
-                Column.Column->DataSize() << "]" <<
-                ");";
-        std::cout << std::endl;
-        for (IndexT row{ 0 }; row < RowsCount(); row++)
-        {
-            for (IndexT column = 0; column < ColumnsCount(); column++)
-            {
-                if (column)
-                    std::cout << ";";
-                else if (row < BaseT::IndexesVector().size())
-                    std::cout << BaseT::IndexesVector()[row] << ";";
-
-                const auto& col{ Column(column) };
-                if (col->DataSize() == RowsCount())
-                    std::cout << std::visit(ToString(), Column(column)->Get(row, 0));
-                else
-                {
-                    auto CurrentIndex{ BaseT::IndexesVector()[row] };
-                    auto first{ col->Indexes() };
-                    auto last{ first + col->IndexesSize() };
-                    auto locindex{ std::lower_bound(col->Indexes(), last, CurrentIndex) };
-                    if(locindex != last && CurrentIndex == *locindex)
-                        std::cout << std::visit(ToString(), Column(column)->Get(static_cast<IndexT>(locindex - first), 0));
-                }
-            }
-            std::cout << std::endl;
-        }
-      */
-    }
+    void Dump(){}
 };
-
-#endif // IDATABLOCKSWRAPPERS_H

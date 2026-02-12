@@ -95,7 +95,7 @@ void RData::populate_qastra(QAstra* _pqastra, RTablesDataManager* _pRTDM )
      * если такая таблица уже есть берем указатель на нее, если нет
      * тогда создаем в менеджере и отдаем указатель
     */
-    pnparray_ = _pRTDM->Get(t_name_,str_cols_);
+    pnparray_ = _pRTDM->get(t_name_,str_cols_);
 }
 
 std::string RData::get_cols(bool visible)
