@@ -8,8 +8,6 @@
 int main(int argc, char *argv[]){
     system("chcp 65001");
 
-    long n_res = 0;
-
     // устанавливаем ПЕРЕД созданием QApplication
 #if (QT_VERSION >= QT_VERSION_CHECK(6, 0, 0))
     QApplication::setHighDpiScaleFactorRoundingPolicy(Qt::HighDpiScaleFactorRoundingPolicy::Round);
@@ -26,8 +24,7 @@ int main(int argc, char *argv[]){
     app.setOrganizationName("Trolltech");
     app.setApplicationName("QRastr");
 
-    n_res = app.init();
-    if(n_res<0){
+    if(!app.init()){
         return 100;
     }
     app.setWindowIcon(QIcon(":/images/rastr.png"));
@@ -45,8 +42,7 @@ int main(int argc, char *argv[]){
    // SDL_Init(SDL_INIT_VIDEO); // Basics of SDL, init what you need to use
     MainWindow w;
 
-    n_res = app.start();
-    if(n_res<0){
+    if(!app.start()){
         return 200;
     }
     w.setQAstra(app.getQAstraPtr());

@@ -45,14 +45,15 @@ bool App::notify(QObject* receiver, QEvent* event){
     return done;
 }
 
-long App::init(){
+bool App::init(){
     try{
         auto logg = std::make_shared<spdlog::logger>( "qrastr" );
         spdlog::set_default_logger(logg);
 
         auto console_sink = std::make_shared<spdlog::sinks::stdout_color_sink_mt>();
         logg->sinks().push_back(console_sink);
-        int n_res = readSettings();
+        bool res = readSettings();
+
         const bool bl_res = QDir::setCurrent(Params::get_instance()->getDirData().path());
             assert(bl_res==true);
         fs::path path_log{ Params::get_instance()->getDirData().absolutePath().toStdString() };
@@ -60,19 +61,20 @@ long App::init(){
         auto rotating_sink = std::make_shared<spdlog::sinks::rotating_file_sink_mt>( path_log.string(), 1024*1024*1, 3);
         std::vector<spdlog::sink_ptr> sinks{ console_sink, rotating_sink };
         logg->sinks().push_back(rotating_sink);
-        spdlog::info( "ReadSetting: {}", n_res );
+
+        spdlog::info( "ReadSetting: {}", res);
         spdlog::info( "Log: {}", path_log.generic_u8string() );
     }catch(const std::exception& ex){
         exclog(ex);
-        return -100;
+        return false;
     }catch(...){
         exclog();
-        return -99;
+        return false;
     }
-    return 1;
+    return true;
 }
 
-long App::readSettings(){
+bool App::readSettings(){
     try{
         Params::construct();
         QSettings settings(Params::pch_org_qrastr_);
@@ -112,7 +114,7 @@ long App::readSettings(){
                 m_v_cache_log.add(spdlog::level::err, "{} ReadJsonFile {}",
                                   nRes, str.toStdString());
                 mb.exec();
-                return -1;
+                return false;
             }
             p_params->setFileAppsettings(str_path_2_conf);
             m_v_cache_log.add(spdlog::level::info, "ReadTemplates: {}",
@@ -140,15 +142,15 @@ long App::readSettings(){
         }
     }catch(const std::exception& ex){
         m_v_cache_log.add( spdlog::level::err,"Exception: {} ", ex.what());
-        return -4;
+        return false;
     }catch(...){
         m_v_cache_log.add( spdlog::level::err,"Unknown exception.");
-        return -5;
+        return false;
     }
-    return 1;
+    return true;
 }
 
-void App::loadPlugins(){
+bool App::loadPlugins(){
     QDir pluginsDir{QDir{QCoreApplication::applicationDirPath()}};
     pluginsDir.cd("plugins");
     spdlog::info("Plugins dir: {}", pluginsDir.absolutePath().toStdString());
@@ -182,15 +184,11 @@ void App::loadPlugins(){
 
         // Проверка ошибок
         if(!loader.load()) {
-            spdlog::warn("Failed to load plugin {} : {}", fileName.toStdString(), loader.errorString().toStdString());
-            continue;
+            spdlog::critical("Failed to load plugin {} : {}", fileName.toStdString(), loader.errorString().toStdString());
+            return false;
         }
-        QObject *plugin = loader.instance();
 
-        if(!plugin){
-            spdlog::warn("Plugin instance is NULL for {}", fileName.toStdString());
-            continue;
-        }
+        QObject *plugin = loader.instance();
 
         if(plugin){
             spdlog::info( "Load dynamic plugin {}/{} : {}", pluginsDir.absolutePath().toStdString(), fileName.toStdString(), plugin->objectName().toStdString());
@@ -205,15 +203,17 @@ void App::loadPlugins(){
                         spdlog::error( "rastr==null" );
                         assert(!"may be u haven't license!");
                         qInfo( "Plugin Rastr no load (rastr==null)! may be u haven't license!" );
-                        continue;
+                        return false;
                     }
 
                     m_sp_qastra = std::make_shared<QAstra>();
                     m_sp_qastra->setRastr(rastr);
                 }catch(const std::exception& ex){
                     exclog(ex);
+                    return false;
                 }catch(...){
                     exclog();
+                    return false;
                 }
                 spdlog::info( "it is Rastr.test.finished");
             }
@@ -226,6 +226,12 @@ void App::loadPlugins(){
                     const std::shared_ptr<IPlainTI> TI = iTI->getIPlainTIPtr(); // Destroyable  TI{ iTI };
                     if(nullptr==TI){
                         spdlog::error( "TI==null" );
+                        continue;
+                    }
+
+                    auto rastrPtr = m_sp_qastra->getRastr().get();
+                    if (rastrPtr == nullptr) {
+                        spdlog::critical("Rastr pointer: {}", (void*)rastrPtr);
                         continue;
                     }
 
@@ -247,17 +253,17 @@ void App::loadPlugins(){
                     const std::shared_ptr<spdlog::logger> sp_logger = spdlog::default_logger();
                     iBarsMDP->setLoggerPtr( sp_logger );
                     const std::shared_ptr<IPlainBarsMDP> BarsMDP = iBarsMDP->getIPlainBarsMDPPtr();
-                    if(nullptr==BarsMDP){
+                    if(BarsMDP == nullptr){
                         spdlog::error( "BarsMDP==null" );
                         continue;
                     }
 
                     auto rastrPtr = m_sp_qastra->getRastr().get();
-                    spdlog::info("Rastr pointer: {}", (void*)rastrPtr);
-                    if (!rastrPtr) {
-                        qInfo()<< "Rastr pointer is NULL!";
+                    if (rastrPtr == nullptr) {
+                        spdlog::critical("Rastr pointer: {}", (void*)rastrPtr);
                         continue;
                     }
+
                     BarsMDP->Set_Rastr(m_sp_qastra->getRastr().get());
                     auto ret =BarsMDP->Hello();
                     m_sp_qbarsmdp = std::make_shared<QBarsMDP>();
@@ -270,11 +276,16 @@ void App::loadPlugins(){
                 }
                 spdlog::info( "it is BarsMDP.test.finished");
             }
+        }else{
+            spdlog::warn("Plugin instance is NULL for {}", fileName.toStdString());
+            return false;
         }
     }
+
+    return true;
 }
 
-long App::readForms(){
+bool App::readForms(){
     try{
         std::filesystem::path path_forms ("form");
         std::filesystem::path path_form_load;
@@ -299,12 +310,12 @@ long App::readForms(){
         }
     }catch(const std::exception& ex){
         exclog(ex);
-        return -1;
+        return false;
     }catch(...){
         exclog();
-        return -2;
+        return false;
     }
-    return 1;
+    return true;
 }
 
 std::list<CUIForm>& App::getForms() const {
@@ -312,12 +323,13 @@ std::list<CUIForm>& App::getForms() const {
     return upCUIFormsCollection_->Forms();
 }
 
-long App::start(){
+bool App::start(){
     try{
-        long n_res =0;
         auto* const p_params = Params::get_instance();
         QDir::setCurrent(p_params->getDirData().absolutePath());
-        loadPlugins();
+        if (!loadPlugins()){
+            return false;
+        }
         if(nullptr!=m_sp_qastra){
             const QDir dir = p_params->getDirSHABLON();
 #if(QT_VERSION > QT_VERSION_CHECK(5, 16, 0))
@@ -332,7 +344,13 @@ long App::start(){
                 path_template /= templ_to_load;
                 IPlainRastrRetCode res =
                     m_sp_qastra->Load( eLoadCode::RG_REPL, "", path_template.string() );
-                int check = 0;
+                if(res != IPlainRastrRetCode::Ok){
+                    spdlog::error("wheh read file");
+                    QMessageBox mb( QMessageBox::Icon::Critical, QObject::tr("Error"),
+                                   QString("error: wheh read file : %1").arg(templ_to_load.c_str())
+                                   );
+                    mb.exec();
+                }
             }
             for(const Params::_v_file_templates::value_type& file_template
                  : p_params->getStartLoadFileTemplates()){
@@ -341,35 +359,34 @@ long App::start(){
                 IPlainRastrRetCode res =
                     m_sp_qastra->Load( eLoadCode::RG_REPL, file_template.first,
                                                            path_template.string() );
-                if(n_res<0){
-                    spdlog::error("{} =LoadFile()", n_res);
+                if(res != IPlainRastrRetCode::Ok){
+                    spdlog::error("wheh read file");
                     QMessageBox mb( QMessageBox::Icon::Critical, QObject::tr("Error"),
-                                    QString("error: %1 wheh read file : %2").arg(n_res).arg(file_template.first.c_str())
+                                    QString("error: wheh read file : %1").arg(file_template.first.c_str())
                                    );
                     mb.exec();
                 }
             }
         }
         spdlog::info("ReadForms");
-        n_res = readForms();
-        if(n_res<0){
-            spdlog::error("{} =ReadForms()", n_res);
+        if(!readForms()){
+            spdlog::error("Can't read forms");
             QMessageBox mb(QMessageBox::Icon::Critical, QObject::tr("Error"),
                            QObject::tr("Can't read forms"));
             mb.exec();
         }
     }catch(const std::exception& ex){
         exclog(ex);
-        return -200;
+        return false;
     }catch(...){
         exclog();
-        return -199;
+        return false;
     }
-    return 1;
+    return true;
 }
 
-long App::writeSettings(){
+bool App::writeSettings(){
     QSettings settings(Params::pch_org_qrastr_);
     QString qstr = settings.fileName();
-    return 1;
+    return true;
 }

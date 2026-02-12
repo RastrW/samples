@@ -1,5 +1,3 @@
-#ifndef QASTRA_H
-#define QASTRA_H
 #pragma once
 
 #include <QObject>
@@ -7,6 +5,8 @@
 #include "qastra_events_data.h"
 
 class CUIFormsCollection;
+
+///@class Обёртка для плагина расчётов Rastr
 class QAstra
     : public QObject
     , public IRastrEventsSinkBase{
@@ -39,7 +39,5 @@ signals:
     void onRastrPrint( const std::string& );
 private:
     _sp_rastr sp_rastr_;
-     std::unique_ptr<CUIFormsCollection> upCUIFormsCollection_;
+    std::unique_ptr<CUIFormsCollection> upCUIFormsCollection_;
 };
-
-#endif // QASTRA_H

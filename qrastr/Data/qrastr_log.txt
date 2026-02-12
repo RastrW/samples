@@ -3086,3 +3086,77 @@
 [2026-02-12 16:49:42.168] [qrastr] [info] OnEvent.Log Status:   5  StageId:  0 EventMsg: Загружен шаблон "context.form"           Table:             Column:       Index:     0 UIForm:           
 [2026-02-12 16:50:28.580] [qrastr] [error] Catch exception [No mapping for the Unicode character exists in the target multi-byte code page.]
 
+[2026-02-12 17:27:37.832] [qrastr] [info] ReadSetting: 1
+[2026-02-12 17:27:37.832] [qrastr] [info] Log: C:/work/rastr/qrastr/Data/qrastr_log.txt
+[2026-02-12 17:27:38.200] [qrastr] [info] Plugins dir: C:/work/rastr/qrastr/Debug/plugins
+[2026-02-12 17:27:38.731] [qrastr] [info] Load dynamic plugin C:/work/rastr/qrastr/Debug/plugins/rastr.dll : 
+[2026-02-12 17:27:38.738] [qrastr] [info] it is Rastr
+[2026-02-12 17:27:38.744] [qrastr] [info] RastrPlugin get logger
+[2026-02-12 17:27:39.453] [qrastr] [info] Get from [C:/work/rastr/qrastr/Debug/plugins/astra] functon: PlainRastrFactory
+[2026-02-12 17:27:39.460] [qrastr] [info] it is Rastr.test.finished
+[2026-02-12 17:27:39.469] [qrastr] [warning] astra.dll is not a valid Qt plugin (no metadata)
+[2026-02-12 17:27:40.093] [qrastr] [info] Load dynamic plugin C:/work/rastr/qrastr/Debug/plugins/barsmdp.dll : 
+[2026-02-12 17:27:40.100] [qrastr] [info] it is BarsMDP
+[2026-02-12 17:27:40.107] [qrastr] [info] RastrPlugin get logger
+[2026-02-12 17:27:40.443] [qrastr] [info] Get from [C:/work/rastr/qrastr/Debug/plugins/COMCK] functon: PlainBarsMDPFactory
+[2026-02-12 17:27:40.447] [qrastr] [info] Rastr pointer: 0x202878642d0
+[2026-02-12 17:27:40.450] [qrastr] [info] OnEvent.Print: IPlainRastr* _prastr has been setted into IPlainBarsMDP 
+[2026-02-12 17:27:40.452] [qrastr] [info] OnEvent.Print: 
+
+[2026-02-12 17:27:40.454] [qrastr] [info] it is BarsMDP.test.finished
+[2026-02-12 17:27:40.457] [qrastr] [warning] COMCK.dll is not a valid Qt plugin (no metadata)
+[2026-02-12 17:27:41.047] [qrastr] [info] Load dynamic plugin C:/work/rastr/qrastr/Debug/plugins/ti.dll : 
+[2026-02-12 17:27:41.053] [qrastr] [info] it is TI
+[2026-02-12 17:27:41.058] [qrastr] [info] RastrPlugin get logger
+[2026-02-12 17:27:41.064] [qrastr] [info] Get from [C:/work/rastr/qrastr/Debug/plugins/COMCK] functon: PlainTIFactory
+[2026-02-12 17:27:41.069] [qrastr] [info] OnEvent.Print: IPlainRastr* _prastr has been setted into IPlainTI 
+[2026-02-12 17:27:41.075] [qrastr] [info] OnEvent.Print: 
+
+[2026-02-12 17:27:41.080] [qrastr] [info] it is TI.test.finished
+[2026-02-12 17:27:41.182] [qrastr] [info] OnEvent.Log Status:   5  StageId:  0 EventMsg: Загружен шаблон "context.form"           Table:             Column:       Index:     0 UIForm:           
+[2026-02-12 17:27:41.344] [qrastr] [info] OnEvent.Log Status:   5  StageId:  0 EventMsg: Загружен шаблон "режим.rg2"              Table:             Column:       Index:     0 UIForm:           
+[2026-02-12 17:27:41.558] [qrastr] [info] OnEvent.Log Status:   5  StageId:  0 EventMsg: Загружен шаблон "анцапфы.anc"            Table:             Column:       Index:     0 UIForm:           
+[2026-02-12 17:27:41.765] [qrastr] [info] OnEvent.Log Status:   5  StageId:  0 EventMsg: Загружен шаблон "сечения.sch"            Table:             Column:       Index:     0 UIForm:           
+[2026-02-12 17:27:42.016] [qrastr] [info] OnEvent.Log Status:   5  StageId:  0 EventMsg: Загружен шаблон "траектория утяжеления.ut2" Table:             Column:       Index:     0 UIForm:           
+[2026-02-12 17:27:42.283] [qrastr] [info] OnEvent.Log Status:   4  StageId:  0 EventMsg: Загружен файл "Files/cx195.rg2" по шаблону "режим.rg2" за 0.21 с Table:             Column:       Index:     0 UIForm:           
+[2026-02-12 17:27:42.285] [qrastr] [info] OnUICommand (3): Files/cx195.rg2 режим.rg2 0
+[2026-02-12 17:27:42.297] [qrastr] [info] ReadForms
+[2026-02-12 17:28:10.635] [qrastr] [warning] MainWindow::closeEvent
+[2026-02-12 17:36:27.732] [qrastr] [info] ReadSetting: 1
+[2026-02-12 17:36:27.732] [qrastr] [info] Log: C:/work/rastr/qrastr/Data/qrastr_log.txt
+[2026-02-12 17:36:28.079] [qrastr] [info] Plugins dir: C:/work/rastr/qrastr/Debug/plugins
+[2026-02-12 17:36:28.088] [qrastr] [info] Load dynamic plugin C:/work/rastr/qrastr/Debug/plugins/rastr.dll : 
+[2026-02-12 17:36:28.090] [qrastr] [info] it is Rastr
+[2026-02-12 17:36:28.092] [qrastr] [info] RastrPlugin get logger
+[2026-02-12 17:36:28.128] [qrastr] [info] Get from [C:/work/rastr/qrastr/Debug/plugins/astra] functon: PlainRastrFactory
+[2026-02-12 17:36:28.131] [qrastr] [info] it is Rastr.test.finished
+[2026-02-12 17:36:28.133] [qrastr] [warning] astra.dll is not a valid Qt plugin (no metadata)
+[2026-02-12 17:36:28.137] [qrastr] [info] Load dynamic plugin C:/work/rastr/qrastr/Debug/plugins/barsmdp.dll : 
+[2026-02-12 17:36:28.138] [qrastr] [info] it is BarsMDP
+[2026-02-12 17:36:28.140] [qrastr] [info] RastrPlugin get logger
+[2026-02-12 17:36:28.145] [qrastr] [info] Get from [C:/work/rastr/qrastr/Debug/plugins/COMCK] functon: PlainBarsMDPFactory
+[2026-02-12 17:36:28.147] [qrastr] [info] Rastr pointer: 0x23075348360
+[2026-02-12 17:36:28.149] [qrastr] [info] OnEvent.Print: IPlainRastr* _prastr has been setted into IPlainBarsMDP 
+[2026-02-12 17:36:28.150] [qrastr] [info] OnEvent.Print: 
+
+[2026-02-12 17:36:28.152] [qrastr] [info] it is BarsMDP.test.finished
+[2026-02-12 17:36:28.154] [qrastr] [warning] COMCK.dll is not a valid Qt plugin (no metadata)
+[2026-02-12 17:36:28.158] [qrastr] [info] Load dynamic plugin C:/work/rastr/qrastr/Debug/plugins/ti.dll : 
+[2026-02-12 17:36:28.160] [qrastr] [info] it is TI
+[2026-02-12 17:36:28.162] [qrastr] [info] RastrPlugin get logger
+[2026-02-12 17:36:28.163] [qrastr] [info] Get from [C:/work/rastr/qrastr/Debug/plugins/COMCK] functon: PlainTIFactory
+[2026-02-12 17:36:28.165] [qrastr] [info] OnEvent.Print: IPlainRastr* _prastr has been setted into IPlainTI 
+[2026-02-12 17:36:28.167] [qrastr] [info] OnEvent.Print: 
+
+[2026-02-12 17:36:28.168] [qrastr] [info] it is TI.test.finished
+[2026-02-12 17:36:28.215] [qrastr] [info] OnEvent.Log Status:   5  StageId:  0 EventMsg: Загружен шаблон "context.form"           Table:             Column:       Index:     0 UIForm:           
+[2026-02-12 17:36:28.354] [qrastr] [info] OnEvent.Log Status:   5  StageId:  0 EventMsg: Загружен шаблон "режим.rg2"              Table:             Column:       Index:     0 UIForm:           
+[2026-02-12 17:36:28.467] [qrastr] [info] OnEvent.Log Status:   5  StageId:  0 EventMsg: Загружен шаблон "анцапфы.anc"            Table:             Column:       Index:     0 UIForm:           
+[2026-02-12 17:36:28.574] [qrastr] [info] OnEvent.Log Status:   5  StageId:  0 EventMsg: Загружен шаблон "сечения.sch"            Table:             Column:       Index:     0 UIForm:           
+[2026-02-12 17:36:28.695] [qrastr] [info] OnEvent.Log Status:   5  StageId:  0 EventMsg: Загружен шаблон "траектория утяжеления.ut2" Table:             Column:       Index:     0 UIForm:           
+[2026-02-12 17:36:28.911] [qrastr] [info] OnEvent.Log Status:   4  StageId:  0 EventMsg: Загружен файл "Files/cx195.rg2" по шаблону "режим.rg2" за 0.2 с Table:             Column:       Index:     0 UIForm:           
+[2026-02-12 17:36:28.913] [qrastr] [info] OnUICommand (3): Files/cx195.rg2 режим.rg2 0
+[2026-02-12 17:36:28.924] [qrastr] [info] ReadForms
+[2026-02-12 17:38:16.705] [qrastr] [info] Прочитана таблица [Узлы+Ветви] - [node]
+[2026-02-12 17:38:36.791] [qrastr] [info] Прочитана таблица [Узлы] - [node]
+[2026-02-12 17:40:22.084] [qrastr] [warning] MainWindow::closeEvent

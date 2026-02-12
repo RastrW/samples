@@ -6,9 +6,9 @@
 #include "License2/json.hpp"
 #include <filesystem>
 
-namespace fs = std::filesystem;   
+namespace fs = std::filesystem;
 
-//! Класс поля формы
+///@ Описание поля формы
 class CUIFormField
 {
 public:
@@ -20,9 +20,9 @@ public:
 	};
 
 protected:
-	std::string Name_;
-	eAlignment Alignment_ = eAlignment::Left;
-	bool ReadOnly_ = false;
+    std::string Name_;                          // Имя поля
+    eAlignment Alignment_ = eAlignment::Left;   // Выравнивание (Left/Right)
+    bool ReadOnly_ = false;                     // Только чтение
 
 public:
 	CUIFormField() = default;
@@ -46,7 +46,6 @@ public:
 };
 
 /**
- * @class CUIForm
  * @brief Описание формы для отображения данных
  *
  * Хранит информацию о том, как отображать таблицу:
@@ -59,12 +58,12 @@ class CUIForm
 protected:
     std::string Name_;                      // Имя формы (для меню)
     std::string TableName_;                 // Имя таблицы в Rastr
-	std::string Collection_;
-	std::string Query_;
-	std::string DetailAssignment_;
-	std::string DetailQueryColumnName_;
+    std::string Collection_;                // Коллекция
+    std::string Query_;                     // Запрос для выборки
+    std::string DetailAssignment_;          // Связь с детальной формой
+    std::string DetailQueryColumnName_;     // Колонка для связи
     std::string MenuPath_;                  // Путь в меню
-	bool HasDetailForm_ = false;
+    bool HasDetailForm_ = false;            // Наличие детальной формы
     int AddToMenuIndex_ = 0;                // Индекс в меню
     bool Vertical_ = false;                 // Вертикальная ориентация
     std::list<CUIFormField> Fields_;        // Поля для отображения
@@ -102,7 +101,7 @@ public:
 	void SetVertical(const bool Vertical) { Vertical_ = Vertical; }
 };
 
-//! Коллекция форм
+///< Коллекция всех форм, загруженных из конфигурации
 class CUIFormsCollection
 {
 protected:

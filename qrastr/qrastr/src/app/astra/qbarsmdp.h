@@ -1,12 +1,11 @@
-#ifndef QBARSMDP_H
-#define QBARSMDP_H
+#pragma once
 
 #include <memory>
 #include <QObject>
-//#include "IPlainBarsMDP.h"
 #include <comck/IPlainBarsMDP.h>
-//#include "C:\Projects\tfs\rastr\RastrWin\build\install\include\comck\IPlainBarsMDP.h"
 
+
+///@class Обёртка для плагина МДП
 class QBarsMDP  : public QObject
 {
     Q_OBJECT
@@ -22,6 +21,3 @@ public:
 private:
     _sp_barsmdp sp_barsmdp_;
 };
-
-
-#endif // QBARSMDP_H

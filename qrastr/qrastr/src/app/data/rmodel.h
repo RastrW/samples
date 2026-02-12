@@ -18,6 +18,7 @@ struct ToQVariant {
     QVariant operator()(const std::string& value) { return std::string(value).c_str(); }
 };
 
+///@brief Qt модель для связи QDataBlock с QTableView/QTitan Grid
 class RModel : public QAbstractTableModel
 {
     Q_OBJECT
