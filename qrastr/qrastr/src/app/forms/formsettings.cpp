@@ -165,8 +165,7 @@ void FormSettings::onBtnSaveClick(){
 int FormSettings::init(const std::shared_ptr<QAstra>& sp_qastra){
     int n_res = 0;
     sp_qastra_ = sp_qastra;
-    n_res = Params::get_instance()->readTemplates
-            ( Params::get_instance()->getDirSHABLON().absolutePath().toStdString() );
+    n_res = Params::get_instance()->readTemplates();
     assert(n_res>0);
 
     pti_settings_root_ = new _tree_item{"root","Настройки"};

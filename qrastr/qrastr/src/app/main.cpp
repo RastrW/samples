@@ -20,6 +20,9 @@ int main(int argc, char *argv[]){
     //pqxx::connection cx{"postgresql://accounting@localhost/company"};
     //pqxx::work tx{cx};
 
+#if(defined(_MSC_VER))
+    SetConsoleOutputCP(CP_UTF8);
+#endif
     app.setOrganizationName("Trolltech");
     app.setApplicationName("QRastr");
 

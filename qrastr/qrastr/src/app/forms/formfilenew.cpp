@@ -34,9 +34,11 @@ FormFileNew::FormFileNew(QWidget *parent)
     setFixedHeight(442);
     setFixedWidth(316);
 }
+
 FormFileNew::~FormFileNew(){
     delete ui;
 }
+
 FormFileNew::_s_checked_templatenames FormFileNew::getCheckedTemplateNames()const{
     _s_checked_templatenames s_checked_templatenames;
     for( int n_rownum = 0; n_rownum < ui->twTemplates->rowCount() ; n_rownum++ ){

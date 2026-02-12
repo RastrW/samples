@@ -262,7 +262,7 @@ void MainWindow::closeEvent(QCloseEvent *event){
         m_DockManager->deleteLater(); //else untabbed window not close!
     }
 
-    }
+}
 
 void MainWindow::slot_newFile(){
     FormFileNew* pformFileNew = new FormFileNew(this);

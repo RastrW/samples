@@ -22,12 +22,13 @@ public:
     ///<Чтение/запись файла appsettings.json
     int readJsonFile (const fs::path& path_2_json);
     int writeJsonFile(const fs::path& path_2_json)const;
-    static bool templ_sort_func(const std::pair<std::string,std::string> &p1,const std::pair<std::string,std::string> &p2);
-    int readTemplates(const fs::path& path_dir_templates);
-    int readForms    (const fs::path& path_form_load);
-    int readFormsExists(const fs::path& path_dir_forms);
+    static bool templ_sort_func(const std::pair<std::string,std::string> &p1,
+                                const std::pair<std::string,std::string> &p2);
+    int readTemplates();
+    int readForms    ();
+    int readFormsExists();
     const _v_forms& getFormsExists()const{
-        return v_forms_exists_;
+        return m_forms_exists_;
     }
     void setFileAppsettings(const fs::path& path_appsettings){
         path_appsettings_ = path_appsettings;
@@ -39,52 +40,69 @@ public:
         dir_Data_   = dir;
         dir_SHABLON_ = dir_Data_;
         dir_SHABLON_.cd("SHABLON");
+        path_forms = dir_Data_.canonicalPath().toStdString()+"//form//";
     }
+
     const QDir& getDirData( )const{
         return dir_Data_;
     }
     const QDir& getDirSHABLON( )const{
         return dir_SHABLON_;
     }
+
+    const std::filesystem::path& getPathForms( )const{
+        return path_forms;
+    }
+
     const _v_file_templates& getStartLoadFileTemplates()const{
-        return v_start_load_file_templates_;
+        return m_start_load_file_templates_;
     }
-    void setStartLoadFileTemplates(const _v_file_templates& v_start_load_file_templates){
-        v_start_load_file_templates_.clear();
-        v_start_load_file_templates_.insert( v_start_load_file_templates_.begin(), v_start_load_file_templates.begin(), v_start_load_file_templates.end() );
+
+    void setStartLoadFileTemplates(const _v_file_templates& start_load_file_templates){
+        m_start_load_file_templates_.clear();
+        m_start_load_file_templates_.insert(m_start_load_file_templates_.begin(),
+                                            start_load_file_templates.begin(),
+                                            start_load_file_templates.end() );
     }
-    void setStartLoadTemplates(const _v_templates& v_templates_in){
-        v_start_load_templates_ = v_templates_in;
+
+    void setStartLoadTemplates(const _v_templates& templates_in){
+        m_start_load_templates_ = templates_in;
     }
+
     const _v_templates& getStartLoadTemplates()const{
-        return v_start_load_templates_;
+        return m_start_load_templates_;
     }
+
     const _v_forms& getStartLoadForms()const{
-        return v_start_load_forms_;
+        return m_start_load_forms_;
     }
-    void setStartLoadForms(const _v_forms& v_start_load_file_forms){
-        v_start_load_forms_.clear();
-        v_start_load_forms_.insert( v_start_load_forms_.begin(), v_start_load_file_forms.begin(), v_start_load_file_forms.end() );
+
+    void setStartLoadForms(const _v_forms& start_load_file_forms){
+        m_start_load_forms_.clear();
+        m_start_load_forms_.insert(m_start_load_forms_.begin(),
+                                   start_load_file_forms.begin(),
+                                   start_load_file_forms.end() );
     }
     const _v_template_exts& getTemplateExts(){
-        return v_template_exts_;
+        return m_template_exts_;
     }
 private:
     QDir                  dir_Data_;
     QDir                  dir_SHABLON_;
     fs::path              path_appsettings_;
+    std::filesystem::path path_forms;
     /// Список загрузок по appsettings:
     // Файл для загрузки и соответствющие ему шаблоны
-    _v_templates          v_start_load_templates_;
+    _v_templates          m_start_load_templates_;
     // Список файлов из папки Data/form
-    _v_forms              v_start_load_forms_;
+    _v_forms              m_start_load_forms_;
     // Список файлов из папки Data/SHABLON
-    _v_file_templates     v_start_load_file_templates_;
+    _v_file_templates     m_start_load_file_templates_;
     /// Список всех возможных файлов
     // Список файлов в папке Data/form
-    _v_forms              v_forms_exists_;
+    _v_forms              m_forms_exists_;
     // Список файлов в папке Data/SHABLON
-    _v_template_exts      v_template_exts_;
+    _v_template_exts      m_template_exts_;
     std::unique_ptr<CUIFormsCollection> upCUIFormsCollection_;
 public:
     static constexpr const char pch_stub_phrase_[]=               "not_set";

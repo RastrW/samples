@@ -18,6 +18,7 @@ endif()
 # ============================================================================
 if(WIN32)
     set(OS_NAME "Windows")
+    set(SHLIB_SUFFIX ".dll")
     if(MSVC)
         set(COMPILER "msvc")
         set(LIB_PREFIX "")
@@ -34,6 +35,8 @@ if(WIN32)
 
 elseif(UNIX AND NOT APPLE)
     set(OS_NAME "Linux")
+
+    set(SHLIB_SUFFIX ".so")
 
     set(LIB_PREFIX "lib")
     set(LIB_SUFFIX ".so")

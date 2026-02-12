@@ -7,7 +7,6 @@
 
 // Заголовочные файлы проекта.
 #include <rtablesdatamanager.h>
-#include "spdlog/common.h"
 #include "cacheLog.h"
 
 class QMdiArea;
@@ -24,6 +23,7 @@ class rmodel;
 namespace ads{ class CDockManager; }
 class RtabWidget;
 class FormProtocol;
+class PyHlp;
 
 enum MainTheme
 {
@@ -50,7 +50,6 @@ enum StyleSetting
     FluentDarkStyleSetting
 };
 
-class PyHlp;
 
 /**
  * @class MainWindow

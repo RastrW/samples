@@ -57,6 +57,10 @@ endif()
 # ============================================================================
 include(cmake/compiler_and_platform.cmake)
 
+add_compile_definitions(
+    LIB_PREFIX="${LIB_PREFIX}"
+    SHLIB_SUFFIX="${SHLIB_SUFFIX}"
+)
 # ============================================================================
 # Options
 # ============================================================================
@@ -267,6 +271,7 @@ add_thirdparty_library(SDL3 "${THIRDPARTY_DIR}/SDL")
 add_thirdparty_library(SDL3_image "${THIRDPARTY_DIR}/SDL_image")
 
 add_thirdparty_library(scintilla "${THIRDPARTY_DIR}/scintilla")
+
 # Scintilla требует дополнительные include директории
 target_include_directories(scintilla INTERFACE
     ${THIRDPARTY_DIR}/scintilla/qt/ScintillaEditBase

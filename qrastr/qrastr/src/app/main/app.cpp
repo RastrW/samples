@@ -49,9 +49,7 @@ long App::init(){
     try{
         auto logg = std::make_shared<spdlog::logger>( "qrastr" );
         spdlog::set_default_logger(logg);
-#if(defined(_MSC_VER))
-       //SetConsoleOutputCP(CP_UTF8);
-#endif
+
         auto console_sink = std::make_shared<spdlog::sinks::stdout_color_sink_mt>();
         logg->sinks().push_back(console_sink);
         int n_res = readSettings();
@@ -119,22 +117,19 @@ long App::readSettings(){
             p_params->setFileAppsettings(str_path_2_conf);
             m_v_cache_log.add(spdlog::level::info, "ReadTemplates: {}",
                               p_params->getDirSHABLON().absolutePath().toStdString());
-            nRes = p_params->readTemplates
-                   (p_params->getDirSHABLON().absolutePath().toStdString() );
+            nRes = p_params->readTemplates();
             assert(nRes>0);
             if(nRes < 0){
                 m_v_cache_log.add(spdlog::level::err, "Error while read: {}", nRes);
             }
-
-            const std::filesystem::path path_dirforms =
-                p_params->getDirData().canonicalPath().toStdString()+"//form//";
-            m_v_cache_log.add(spdlog::level::info, "ReadForms: {}", path_dirforms.string());
-            nRes = p_params->readFormsExists( path_dirforms );
+            m_v_cache_log.add(spdlog::level::info, "ReadForms: {}",
+                              p_params->getPathForms().string());
+            nRes = p_params->readFormsExists();
             assert(nRes>0);
             if(nRes < 0){
                 m_v_cache_log.add(spdlog::level::err, "Error while read existed forms: {}", nRes);
             }
-            nRes = p_params->readForms( path_dirforms );
+            nRes = p_params->readForms();
             assert(nRes>0);
             if(nRes < 0){
                 m_v_cache_log.add(spdlog::level::err, "Error while read: {}", nRes);
@@ -162,18 +157,13 @@ void App::loadPlugins(){
     QCoreApplication::addLibraryPath(pluginsDir.absolutePath());
 
 #if(COMPILE_WIN)
-    auto entryList = pluginsDir.entryList(QStringList() << "*.dll", QDir::Files);
+    auto entryList = pluginsDir.entryList(QStringList() << "*" + QString(SHLIB_SUFFIX), QDir::Files);
 #else
     auto entryList = pluginsDir.entryList(QDir::Files);
 #endif
 
-// move rastr.dll at top
-#if(COMPILE_WIN)
-    int ind_rastr = entryList.indexOf("rastr.dll");
-#else
-    int ind_rastr = entryList.indexOf("librastr.so");
-#endif
-
+    // move rastr.dll at top
+    int ind_rastr = entryList.indexOf(QString(LIB_PREFIX) + "rastr" + QString(SHLIB_SUFFIX));
     if(ind_rastr >= 0) {  // Проверка на случай отсутствия файла
         auto item = entryList.takeAt(ind_rastr);
         entryList.insert(0, item);

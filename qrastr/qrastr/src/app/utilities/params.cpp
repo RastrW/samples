@@ -9,9 +9,9 @@ Params::Params(){
 
 int Params::readJsonFile(const fs::path& path_2_json){
     try{
-        v_start_load_file_templates_.clear();
-        v_start_load_forms_.clear();
-        v_start_load_templates_.clear();
+        m_start_load_file_templates_.clear();
+        m_start_load_forms_.clear();
+        m_start_load_templates_.clear();
         std::ifstream ifs(path_2_json);
         if(ifs.is_open()){
             const nlohmann::json jf = nlohmann::json::parse(ifs);
@@ -20,15 +20,15 @@ int Params::readJsonFile(const fs::path& path_2_json){
             for( const nlohmann::json& j_file_template : j_load ){
                 std::string str_file     = j_file_template[pch_json_start_load_file_];
                 std::string str_template = j_file_template[pch_json_start_load_template_];
-                v_start_load_file_templates_.emplace_back(str_file, str_template);
+                m_start_load_file_templates_.emplace_back(str_file, str_template);
             }
             const nlohmann::json j_forms = j_start[pch_json_start_forms_];
             for( const nlohmann::json& j_form : j_forms ){
-                v_start_load_forms_.emplace_back(j_form);
+                m_start_load_forms_.emplace_back(j_form);
             }
             const nlohmann::json j_templates = j_start[pch_json_start_templates_];
             for( const nlohmann::json& j_template : j_templates ){
-                v_start_load_templates_.emplace_back(j_template);
+                m_start_load_templates_.emplace_back(j_template);
             }
             ifs.close();
         }else{
@@ -48,18 +48,18 @@ int Params::readJsonFile(const fs::path& path_2_json){
 int Params::writeJsonFile(const fs::path& path_2_json)const {
     try{
         nlohmann::json jarr_load;
-        for(const _v_file_templates::value_type& file_template : v_start_load_file_templates_){
+        for(const _v_file_templates::value_type& file_template : m_start_load_file_templates_){
             nlohmann::json j_file_temple;
             j_file_temple[pch_json_start_load_file_] = file_template.first;
             j_file_temple[pch_json_start_load_template_] = file_template.second;
             jarr_load.emplace_back(j_file_temple);
         }
         nlohmann::json jarr_forms;
-        for(const _v_forms::value_type& form : v_start_load_forms_){
+        for(const _v_forms::value_type& form : m_start_load_forms_){
             jarr_forms.emplace_back(form);
         }
         nlohmann::json jarr_templates;
-        for(const _v_templates::value_type& templ : v_start_load_templates_){
+        for(const _v_templates::value_type& templ : m_start_load_templates_){
             jarr_templates.emplace_back(templ);
         }
         nlohmann::json j_start;
@@ -95,17 +95,19 @@ bool Params::templ_sort_func(const std::pair<std::string,std::string>& p1,
     return (p1.first.length() < p2.first.length());
 }
 
-int Params::readTemplates(const fs::path& path_dir_templates){
+int Params::readTemplates(){
     try{
-        v_template_exts_.clear();
+        const fs::path& path_dir_templates
+            {getDirSHABLON().absolutePath().toStdString()};
+        m_template_exts_.clear();
         for(const auto& entry : fs::directory_iterator(path_dir_templates)){
             fs::path path_template = entry.path();
             std::string str_templ_name = path_template.stem().u8string();
             std::string str_templ_ext  = path_template.extension().u8string();
-            v_template_exts_.emplace_back
+            m_template_exts_.emplace_back
                 (std::make_pair(str_templ_name, str_templ_ext));
         }
-        std::sort(v_template_exts_.begin(),v_template_exts_.end(),templ_sort_func);
+        std::sort(m_template_exts_.begin(),m_template_exts_.end(),templ_sort_func);
     }catch(const std::exception& ex){
         exclog(ex);
         return -1;
@@ -116,10 +118,10 @@ int Params::readTemplates(const fs::path& path_dir_templates){
     return 1;
 }
 
-int Params::readForms(const fs::path& path_forms){
+int Params::readForms(){
     try{
         upCUIFormsCollection_ = std::make_unique<CUIFormsCollection>();
-        for(const Params::_v_forms::value_type &form : v_start_load_forms_){
+        for(const Params::_v_forms::value_type &form : m_start_load_forms_){
             fs::path path_file_form  {path_forms};
             path_file_form /= stringutils::utf8_decode(form);
             CUIFormsCollection* CUIFormsCollection_ = new CUIFormsCollection ;
@@ -143,13 +145,13 @@ int Params::readForms(const fs::path& path_forms){
     return 1;
 }
 
-int Params::readFormsExists(const fs::path& path_dir_forms){
+int Params::readFormsExists(){
     try{
-        v_forms_exists_.clear();
-        for(const auto& entry : fs::directory_iterator(path_dir_forms)){
+        m_forms_exists_.clear();
+        for(const auto& entry : fs::directory_iterator(path_forms)){
             fs::path path_form = entry.path();
             std::string str_form_name = path_form.filename().u8string();
-            v_forms_exists_.emplace_back(str_form_name);
+            m_forms_exists_.emplace_back(str_form_name);
         }
     }catch(const std::exception& ex){
         exclog(ex);
@@ -160,6 +162,3 @@ int Params::readFormsExists(const fs::path& path_dir_forms){
     }
     return 1;
 }
-
-
-
