@@ -163,14 +163,6 @@ function(add_thirdparty_library LIB_NAME LIB_PATH)
         INTERFACE_INCLUDE_DIRECTORIES "${${LIB_NAME}_INCLUDE_DIR}"
     )
 
-    # Специальные настройки для spdlog
-    if("${LIB_NAME}" STREQUAL "spdlog")
-        set_target_properties(spdlog PROPERTIES
-            INTERFACE_COMPILE_DEFINITIONS SPDLOG_FMT_EXTERNAL
-        )
-        message(STATUS "spdlog uses SPDLOG_FMT_EXTERNAL")
-    endif()
-
     message(STATUS "Using precompiled ${LIB_NAME}: ${${LIB_NAME}_LIBRARY}")
 
     # Специальные настройки для qtadvanceddocking
@@ -183,27 +175,15 @@ endfunction()
 
 # ============================================================================
 # System Libraries
-# - Boost и Eigen3: header-only библиотеки из thirdparty
-# - fmt, spdlog: собираются через add_thirdparty_library
+# - header-only библиотеки из thirdparty: Boost, Eigen3, fmt, spdlog
 # - libpqxx: опционально собирается через add_thirdparty_library (зависит от наличия PostgreSQL)
-# ============================================================================
-# ============================================================================
-# Boost (header-only) - одинаково для всех платформ
 # ============================================================================
 add_library(Boost::boost INTERFACE IMPORTED)
 target_include_directories(Boost::boost INTERFACE "${THIRDPARTY_DIR}/boost_1_80_0")
-message(STATUS "Boost (header-only): ${THIRDPARTY_DIR}/boost_1_80_0")
 
-# ============================================================================
-# Eigen3 (header-only) - одинаково для всех платформ
-# ============================================================================
 add_library(Eigen3::Eigen INTERFACE IMPORTED)
 target_include_directories(Eigen3::Eigen INTERFACE "${THIRDPARTY_DIR}/eigen")
-message(STATUS "Eigen3 (header-only): ${THIRDPARTY_DIR}/eigen")
 
-# ============================================================================
-# fmt и spdlog - header-only для всех модулей
-# ============================================================================
 add_library(Fmt::fmt INTERFACE IMPORTED)
 target_include_directories(Fmt::fmt INTERFACE "${THIRDPARTY_DIR}/fmt/include")
 target_compile_definitions(Fmt::fmt INTERFACE FMT_HEADER_ONLY)
@@ -219,9 +199,6 @@ target_compile_definitions(Spdlog::spdlog INTERFACE
 # Создаём алиасы для совместимости
 add_library(fmt::fmt ALIAS Fmt::fmt)
 add_library(spdlog::spdlog ALIAS Spdlog::spdlog)
-
-message(STATUS "fmt (header-only): ${THIRDPARTY_DIR}/fmt/include")
-message(STATUS "spdlog (header-only with external fmt): ${THIRDPARTY_DIR}/spdlog/include")
 # ============================================================================
 # libpqxx - опционально собирается из thirdparty на всех платформах
 # ============================================================================
@@ -317,20 +294,18 @@ set(PROJECT_INCLUDES
     ${APP_DIR}/astra/astra_headers
 )
 
-# Добавляем Boost и Eigen3 include directories
-if(TARGET Boost::boost)
-    get_target_property(BOOST_INCLUDES Boost::boost INTERFACE_INCLUDE_DIRECTORIES)
-    if(BOOST_INCLUDES)
-        list(APPEND PROJECT_INCLUDES ${BOOST_INCLUDES})
-    endif()
-endif()
+# Добавляем header-only include directories
+get_target_property(BOOST_INCLUDES Boost::boost INTERFACE_INCLUDE_DIRECTORIES)
+list(APPEND PROJECT_INCLUDES ${BOOST_INCLUDES})
 
-if(TARGET Eigen3::Eigen)
-    get_target_property(EIGEN3_INCLUDES Eigen3::Eigen INTERFACE_INCLUDE_DIRECTORIES)
-    if(EIGEN3_INCLUDES)
-        list(APPEND PROJECT_INCLUDES ${EIGEN3_INCLUDES})
-    endif()
-endif()
+get_target_property(EIGEN3_INCLUDES Eigen3::Eigen INTERFACE_INCLUDE_DIRECTORIES)
+list(APPEND PROJECT_INCLUDES ${EIGEN3_INCLUDES})
+
+get_target_property(SPDLOG_INCLUDES Spdlog::spdlog INTERFACE_INCLUDE_DIRECTORIES)
+list(APPEND PROJECT_INCLUDES ${SPDLOG_INCLUDES})
+
+get_target_property(FMT_INCLUDES Fmt::fmt INTERFACE_INCLUDE_DIRECTORIES)
+list(APPEND PROJECT_INCLUDES ${FMT_INCLUDES})
 
 # Добавляем ASTRA include директории
 list(APPEND PROJECT_INCLUDES
@@ -424,9 +399,6 @@ if(QT_VERSION_MAJOR EQUAL 6)
 endif()
 
 set(THIRD_PARTY_LIBS
-    Eigen3::Eigen
-    fmt::fmt
-    spdlog::spdlog
     metakit
     qtadvanceddocking
     SDL3
