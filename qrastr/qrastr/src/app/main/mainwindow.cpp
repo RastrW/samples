@@ -39,6 +39,7 @@ using WrapperExceptionType = std::runtime_error;
 #include "formcalcidop.h"
 #include <QtitanDef.h>
 #include "qmcr/pyhlp.h"
+#include "fileManager.h"
 
 MainWindow::MainWindow(){
     m_workspace = new QMdiArea (this);
@@ -240,6 +241,9 @@ void MainWindow::setQAstra(const std::shared_ptr<QAstra>& sp_qastra){
     m_pFormProtocol->setIgnoreAppendProtocol(true);
     assert(nullptr == m_up_PyHlp);
     m_up_PyHlp = std::move( std::make_unique<PyHlp>( *m_sp_qastra->getRastr().get() ) );
+
+    // Менеджер файлов
+    m_fileManager = std::make_unique<FileManager>(sp_qastra, this);
 }
 
 void MainWindow::setQTI(const std::shared_ptr<QTI>& sp_qti){
@@ -263,16 +267,6 @@ void MainWindow::closeEvent(QCloseEvent *event){
 
 }
 
-void MainWindow::slot_newFile(){
-    FormFileNew* pformFileNew = new FormFileNew(this);
-    if(QDialog::Accepted == pformFileNew->exec()){
-        const FormFileNew::_s_checked_templatenames s_checked_templatenames = pformFileNew->getCheckedTemplateNames();
-        for(const FormFileNew::_s_checked_templatenames::value_type& templatename : s_checked_templatenames){
-            const std::string str_path_to_shablon = Params::get_instance()->getDirSHABLON().absolutePath().toStdString() + "//" +templatename;
-            m_sp_qastra->Load( eLoadCode::RG_REPL, "", str_path_to_shablon );
-        }
-    }
-}
 void MainWindow::slot_openGraph(){
 
 #if(!defined(SDL_NO))
@@ -288,155 +282,6 @@ void MainWindow::slot_openGraph(){
 
     SdlChild->SDLInit();
 #endif
-}
-
-void MainWindow::slot_open(){
-    QFileDialog fileDlg( this, tr("Open Rastr files") );
-    fileDlg.setOption(QFileDialog::DontUseNativeDialog, true);
-    fileDlg.setViewMode(QFileDialog::Detail);
-    QString qstr_filter;
-    qstr_filter += "Known types(";
-    const Params::_v_template_exts v_template_ext{ Params::get_instance()->getTemplateExts() };
-    for(const Params::_v_template_exts::value_type& template_ext : v_template_ext){
-        qstr_filter += QString("*%1 ").arg(template_ext.second.c_str());
-    }
-    qstr_filter += ");;";
-    const QString qstr_filter_no_template {"No template (*)"};
-    qstr_filter += qstr_filter_no_template; //qstr_filter += QString("xz (*.rg2 *.os)");
-    const QString qstr_filter_regim {";;режим (*.rg2)"};
-    qstr_filter += qstr_filter_regim;
-    const QString qstr_filter_poiskos {";;poisk (*.os)"};
-    qstr_filter += qstr_filter_poiskos;
-    const QString qstr_filter_graf {";;графика (*.grf)"};
-    qstr_filter += qstr_filter_graf;
-    fileDlg.setNameFilter(qstr_filter);
-    fileDlg.setFileMode(QFileDialog::ExistingFiles); //ExistingFile
-    int n_res = fileDlg.exec();
-    if(QDialog::Accepted == n_res){
-        QApplication::setOverrideCursor(Qt::WaitCursor);
-        const QString selectedFilter = fileDlg.selectedNameFilter();
-        for(const auto& rfile : fileDlg.selectedFiles()){
-            spdlog::info("try load file: {}", rfile.toStdString());
-            //spdlog::info("try load file: %1", rfile.toUtf8().constData());
-            if(qstr_filter_no_template != selectedFilter){
-                bool bl_find_template = false;
-                for(const Params::_v_template_exts::value_type& template_ext : v_template_ext){
-                    if(true == rfile.endsWith(template_ext.second.c_str())){
-                        bl_find_template = true;
-                        const std::string str_path_to_shablon = Params::get_instance()->getDirSHABLON().absolutePath().toStdString() + "//" +template_ext.first +template_ext.second;
-                        m_sp_qastra->Load( eLoadCode::RG_REPL, rfile.toStdString(), str_path_to_shablon );
-                        setCurrentFile(rfile, str_path_to_shablon);
-                        setWindowTitle(rfile);
-                        break;
-                    }
-                }
-                if(false == bl_find_template){
-                    spdlog::error("Template not found! for: ", rfile.toStdString());
-                }
-            }else{
-                IPlainRastrRetCode res = m_sp_qastra->Load( eLoadCode::RG_REPL, rfile.toStdString(), "" );
-                setWindowTitle(rfile);
-                setCurrentFile(rfile);
-                if (res ==IPlainRastrRetCode::Ok )
-                    spdlog::info("File loaded {}", rfile.toStdString());
-                else
-                {
-                    spdlog::info("Error File load result = {}", static_cast<int>(res));
-                }
-            }
-        }
-        QApplication::restoreOverrideCursor();
-    }
-
-    return;
-
-    QString fileName = QFileDialog::getOpenFileName(this);
-    if (!fileName.isEmpty()) {
-        m_sp_qastra->Load(eLoadCode::RG_REPL, fileName.toStdString(),"");
-        setWindowTitle(fileName);
-        curFile = fileName;
-        setCurrentFile(curFile);
-    }
-}
-
-void MainWindow::slot_saveAs(){
-    QFileDialog fileDlg( this, tr("Save Rastr file") );
-    fileDlg.setAcceptMode(QFileDialog::AcceptSave);
-    fileDlg.setOption(QFileDialog::DontUseNativeDialog, true);
-    fileDlg.setViewMode(QFileDialog::Detail);
-    QString qstr_filter;
-    const Params::_v_template_exts v_template_ext{ Params::get_instance()->getTemplateExts() };
-    for(const Params::_v_template_exts::value_type& template_ext : v_template_ext){
-        qstr_filter += QString("%1 (*%2);;").arg(template_ext.first.c_str()).arg(template_ext.second.c_str());
-    }
-    const QString qstr_filter_no_template {"No template (*)"};
-    qstr_filter += qstr_filter_no_template; //qstr_filter += QString("xz (*.rg2 *.os)");
-    fileDlg.setNameFilter(qstr_filter);
-    fileDlg.selectNameFilter("режим (*.rg2)");
-    fileDlg.setFileMode(QFileDialog::AnyFile);
-
-    fileDlg.setDirectory(curDir);
-    int n_res = fileDlg.exec();
-    if(QDialog::Accepted == n_res){
-        const QString qstr_template = fileDlg.selectedNameFilter();
-        const QString qstr_rfile    = fileDlg.selectedFiles()[0];
-        QString qstr_template_name =qstr_template;
-        qstr_template_name.remove('(');
-        qstr_template_name.remove(')');
-        qstr_template_name.remove('*');
-        qstr_template_name.remove(' ');
-
-        const std::string str_path_to_shablon = Params::get_instance()->getDirSHABLON().absolutePath().toStdString() + "/" +qstr_template_name.toStdString();
-        m_sp_qastra->Save( qstr_rfile.toStdString(), str_path_to_shablon.c_str() );
-        setCurrentFile(qstr_rfile);
-        qDebug() << "templ: "<< qstr_template << "  file : " << qstr_rfile ;
-    }
-    if (!curFile.isEmpty()){
-        int nRes = 0;
-        const std::string& f = curFile.toStdString();
-        //assert(!"not implemented");
-        if(nRes>0){
-            std::string str_msg = fmt::format( "{}: {}", "File saved", f);
-            statusBar()->showMessage( str_msg.c_str(), 2000 );
-        } else {
-            std::string str_msg = fmt::format( "{}: {}", "File not saved", f);
-            QMessageBox msgBox;
-            msgBox.critical( this, tr("File not saved"), str_msg.c_str() );
-        }
-    }
-}
-
-void MainWindow::slot_save(){
-    m_sp_qastra->Save( curFile.toStdString().c_str(), "" );
-    std::string str_msg = fmt::format( "{}: {}", "Сохранен файл", curFile.toStdString().c_str());
-    statusBar()->showMessage( str_msg.c_str(), 2000 );
-    return;
-}
-
-void MainWindow::slot_saveAll(){
-    formsaveall* fsaveall = new formsaveall(m_sp_qastra.get(),mFilesLoad);
-    fsaveall->show();
-}
-
-void MainWindow::slot_openRecentFile()
-{
-    QAction *action = qobject_cast<QAction *>(sender());
-    if (action){
-        //loadFile(action->data().toString());
-        QString _fileshabl = action->data().toString();
-        QStringList qslist = _fileshabl.split("<");
-        std::string file = qslist[0].toStdString();
-        std::string shabl = "";
-        if (qslist.size() > 1) {
-            shabl = qslist[1].toStdString();
-            shabl.erase(shabl.end()-1);
-        }
-        //m_sp_qastra->Load( eLoadCode::RG_REPL, action->data().toString().toStdString(), "" );
-        m_sp_qastra->Load( eLoadCode::RG_REPL, file, shabl );
-        setWindowTitle(action->data().toString());
-        mFilesLoad[shabl.c_str()] = file.c_str();
-        setCurrentFile(qslist[0]);
-    }
 }
 
 void MainWindow::slot_rgmWrap(){
@@ -624,6 +469,7 @@ void MainWindow::slot_tiCalcptiWrap(){
     statusBar()->showMessage( str_msg.c_str(), 0 );
     emit sig_calcEnd();
 }
+
 void MainWindow::slot_tiFiltrtiWrap()
 {
     if (m_sp_qti == nullptr)
@@ -773,25 +619,58 @@ void MainWindow::slot_showFormSettings(){
 }
 
 void MainWindow::createActions(){
-    //file
+    // ========== FileManager ==========
+
+    // Действия открытия/сохранения файлов
     QAction* actNewFile = new QAction(QIcon(":/images/document_new.png"), tr("&Новый"), this);
     actNewFile->setShortcut(tr("Ctrl+N"));
     actNewFile->setStatusTip(tr("Create a new file"));
-    connect(actNewFile, &QAction::triggered, this, &MainWindow::slot_newFile);
+
+    connect(actNewFile, &QAction::triggered,
+            m_fileManager.get(), &FileManager::newFile);
+
     QAction* actOpenfile = new QAction(QIcon(":/images/folder_out.png"), tr("&Загрузить"), this);
     actOpenfile->setShortcut(tr("Ctrl+O"));
     actOpenfile->setStatusTip(tr("Open an existing file"));
-    connect(actOpenfile, &QAction::triggered, this, &MainWindow::slot_open);
+
+    connect(actOpenfile, &QAction::triggered,
+            m_fileManager.get(), &FileManager::openFiles);
+
     QAction* actSaveFile = new QAction(QIcon(":/images/disk_blue.png"), tr("&Сохранить"), this);
     actSaveFile->setShortcut(tr("Ctrl+S"));
     actSaveFile->setStatusTip(tr("Save the document to disk"));
-    connect(actSaveFile, &QAction::triggered, this, &MainWindow::slot_save);
+
+    connect(actSaveFile, &QAction::triggered,
+            m_fileManager.get(), &FileManager::save);
+
     QAction* actSaveFileAs = new QAction(tr("&Сохранить как"), this);
     actSaveFileAs->setStatusTip(tr("Save the document under a new name"));
-    connect(actSaveFileAs, &QAction::triggered, this, &MainWindow::slot_saveAs);
+
+    connect(actSaveFileAs, &QAction::triggered,
+            m_fileManager.get(), &FileManager::saveAs);
+
     QAction* actSaveAllFiles = new QAction(QIcon(":/images/Save_all.png"),tr("&Сохранить все"), this);
     actSaveAllFiles->setStatusTip(tr("Save all the document"));
-    connect(actSaveAllFiles, &QAction::triggered, this, &MainWindow::slot_saveAll);
+
+    connect(actSaveAllFiles, &QAction::triggered,
+            m_fileManager.get(), &FileManager::saveAll);
+
+    // Обработка событий файлов
+    connect(m_fileManager.get(), &FileManager::fileOpened,
+            this, [this](const QString& file) {
+                setWindowTitle(file);
+            });
+
+    connect(m_fileManager.get(), &FileManager::fileSaved,
+            this, [](const QString& file) {
+                spdlog::info("File saved: {}", file.toStdString());
+            });
+
+    connect(m_fileManager.get(), &FileManager::fileLoadError,
+            this, [](const QString& error) {
+                spdlog::error("File load error: {}", error.toStdString());
+            });
+
     QAction* actShowFormSettings = new QAction(tr("&Параметры"), this);
     actShowFormSettings->setStatusTip(tr("Open settings form."));
     connect(actShowFormSettings, &QAction::triggered, this, &MainWindow::slot_showFormSettings);
@@ -799,11 +678,6 @@ void MainWindow::createActions(){
     actExit->setShortcut(tr("Ctrl+Q"));
     actExit->setStatusTip(tr("Exit the application"));
     connect(actExit, &QAction::triggered, qApp, &QApplication::closeAllWindows);
-    for (int i = 0; i < MaxRecentFiles; ++i) {
-        recentFileActs[i] = new QAction(this);
-        recentFileActs[i]->setVisible(false);
-        connect(recentFileActs[i], &QAction::triggered, this, &MainWindow::slot_openRecentFile);
-    }
 
     //calc
     QAction* actKDD = new QAction(tr("&Контроль"), this);
@@ -917,11 +791,10 @@ void MainWindow::createActions(){
     separatorAct = menuFile->addSeparator();
     QMenu* menuFileLast = menuFile->addMenu(tr("&Последние"));
     menuFile->addSeparator();
-    for (int i = 0; i < MaxRecentFiles; ++i)
-        menuFileLast->addAction(recentFileActs[i]);
+
     menuFile->addSeparator();
     menuFile->addAction(actExit);
-    updateRecentFileActions();
+
     menuBar()->addSeparator();
 
     QMenu* menuMacro = menuBar()->addMenu(tr("&Макро"));
@@ -980,68 +853,6 @@ void MainWindow::createActions(){
     m_toolbarTI->addAction(actOC);
     m_toolbarTI->addAction(actRecalcDor);
     m_toolbarTI->addAction(actUpdateTables);
-}
-
-void MainWindow::setCurrentFile(const QString &fileName, const std::string Shablon){
-    QFileInfo fileInfo(fileName);
-    curFile = fileName;
-    curDir = fileInfo.absolutePath();
-
-    setWindowFilePath(curFile);
-    mFilesLoad[Shablon.c_str()] = fileName;
-
-    QSettings settings;
-    QString _fileshabl = fileName;
-    if (!Shablon.empty())
-        _fileshabl.append(" <").append(Shablon.c_str()).append(">");
-    QStringList files = settings.value("recentFileList").toStringList();
-    files.removeAll(_fileshabl);
-    files.prepend(_fileshabl);
-    while (files.size() > MaxRecentFiles)
-        files.removeLast();
-
-    settings.setValue("recentFileList", files);
-
-    foreach (QWidget *widget, QApplication::topLevelWidgets()) {
-        MainWindow *mainWin = qobject_cast<MainWindow *>(widget);
-        if (mainWin)
-            mainWin->updateRecentFileActions();
-    }
-}
-
-void MainWindow::updateRecentFileActions(){
-    QSettings settings;
-    QStringList files = settings.value("recentFileList").toStringList();
-    int numRecentFiles = qMin(files.size(), (int)MaxRecentFiles);
-    for( int i = 0; i < numRecentFiles; ++i ){
-        //QString text = tr("&%1 %2").arg(i + 1).arg(strippedName(files[i]));
-        QStringList qslist = files[i].split(" ");
-        std::string file = qslist[0].toStdString();
-        std::string shabl = "";
-        QString stripshabl = "";
-        if (qslist.size() > 1){
-            shabl = qslist[1].toStdString();
-            if (!shabl.empty())
-            {
-                shabl.erase(shabl.begin());
-                shabl.erase(shabl.end()-1);
-                stripshabl = strippedName(shabl.c_str());
-            }
-        }
-        QString text;
-        if (stripshabl.isEmpty())
-            text = tr("&%1 %2").arg(i + 1).arg(qslist[0]);
-        else
-            text = tr("&%1 %2 %3").arg(i + 1).arg(qslist[0]).arg("<"+stripshabl+">");
-
-        recentFileActs[i]->setText(text);
-        recentFileActs[i]->setData(files[i]);
-        recentFileActs[i]->setVisible(true);
-    }
-    for (int j = numRecentFiles; j < MaxRecentFiles; ++j)
-        recentFileActs[j]->setVisible(false);
-
-    separatorAct->setVisible(numRecentFiles > 0);
 }
 
 QString MainWindow::strippedName(const QString &fullFileName){

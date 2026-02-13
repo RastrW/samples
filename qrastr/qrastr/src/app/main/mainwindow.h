@@ -24,6 +24,7 @@ namespace ads{ class CDockManager; }
 class RtabWidget;
 class FormProtocol;
 class PyHlp;
+class FileManager;
 
 enum MainTheme
 {
@@ -79,19 +80,6 @@ signals:
 private slots:
     ///< Графика
     void slot_openGraph();
-    ///< Файлы
-    // Создать новый файл
-    void slot_newFile();
-    // Открыть файл
-    void slot_open();
-    // Сохранить
-    void slot_save();
-    // Сохранить как
-    void slot_saveAs();
-    // Сохранить все
-    void slot_saveAll();
-    // Открыть недавний файл
-    void slot_openRecentFile();
     ///< Настройки
     // Показать настройки форм
     void slot_showFormSettings();
@@ -162,9 +150,6 @@ public:
     void setQBarsMDP(const std::shared_ptr<QBarsMDP>& sp_qbarsmdp);
 private:
     QHBoxLayout* createStyleSetting();
-    void setCurrentFile(const QString &fileName, const std::string Shablon = "");
-    // Обновить список недавних файлов
-    void updateRecentFileActions();
     // Чтение настроек окна
     //it cache log messages to vector, because it called befor logger intialization
     bool  readSettings();
@@ -184,6 +169,9 @@ private:
     void closeEvent(QCloseEvent *event) override;
     // Открыть конкретную форму
     void openForm(CUIForm _uiform);
+
+    // Компоненты (делегаты)
+    std::unique_ptr<FileManager> m_fileManager;
 
     QString strippedName(const QString &fullFileName);
     QString curFile;                             // текущий загруженный или сохраненный файл
@@ -224,7 +212,4 @@ private:
     RTablesDataManager m_RTDM;                                  // Менеджер данных таблиц
 
     std::list<CUIForm> m_lstUIForms;                            // Список форм для отображения
-    // Недавние файлы
-    enum { MaxRecentFiles = 10 };
-    QAction *recentFileActs[MaxRecentFiles];
 };
