@@ -11,7 +11,7 @@ class FormSettings
     using _v_tree_items = std::vector<_tree_item>;
 public:
     explicit FormSettings(QWidget *parent = nullptr);
-    int init(const std::shared_ptr<QAstra>& sp_qastra);
+    bool init(const std::shared_ptr<QAstra>& sp_qastra);
     void populateSettingsTree( _tree_item& ti_root, QTreeWidgetItem* ptwi_parent );
     void setButtonSaveEnabled(bool bl_new_val);
     void setAppSettingsChanged();

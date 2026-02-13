@@ -20,13 +20,13 @@ public:
     virtual ~Params() = default;
 
     ///<Чтение/запись файла appsettings.json
-    int readJsonFile (const fs::path& path_2_json);
-    int writeJsonFile(const fs::path& path_2_json)const;
+    bool readJsonFile (const fs::path& path_2_json);
+    bool writeJsonFile(const fs::path& path_2_json)const;
     static bool templ_sort_func(const std::pair<std::string,std::string> &p1,
                                 const std::pair<std::string,std::string> &p2);
-    int readTemplates();
-    int readForms    ();
-    int readFormsExists();
+    bool readTemplates();
+    bool readForms    ();
+    bool readFormsExists();
     const _v_forms& getFormsExists()const{
         return m_forms_exists_;
     }
@@ -105,9 +105,8 @@ private:
     _v_template_exts      m_template_exts_;
     std::unique_ptr<CUIFormsCollection> upCUIFormsCollection_;
 public:
-    static constexpr const char pch_stub_phrase_[]=               "not_set";
-    static constexpr const char pch_dir_data_[]=                  "Data";
     static constexpr const char pch_org_qrastr_[]=                "QRastr";
+    static constexpr const char pch_dir_data_[]=                  "Data";
     static constexpr const char pch_fname_appsettings[]=          "appsettings.json";
     static constexpr const char pch_json_start_[]=                "start";
     static constexpr const char pch_json_start_load_[]=           "load";

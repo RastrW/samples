@@ -16,16 +16,16 @@ RModel::RModel(QObject *parent, QAstra* pqastra, RTablesDataManager* pRTDM)
     setEmitSignals(true);
 }
 
-int RModel::populateDataFromRastr(){
+bool RModel::populateDataFromRastr(){
 
     try{
-    up_rdata = std::make_unique<RData>(pqastra_, pUIForm_->TableName());
-    up_rdata->Initialize(*pUIForm_,pqastra_);
-    up_rdata->populate_qastra(this->pqastra_,pRTDM_);
+        up_rdata = std::make_unique<RData>(pqastra_, pUIForm_->TableName());
+        up_rdata->Initialize(*pUIForm_,pqastra_);
+        up_rdata->populate_qastra(this->pqastra_,pRTDM_);
 
-    m_enum_.clear();
-    mm_superenum_.clear();
-    mm_nameref_.clear();
+        m_enum_.clear();
+        mm_superenum_.clear();
+        mm_nameref_.clear();
 
     for (RCol &rcol : *up_rdata)
     {
@@ -109,13 +109,16 @@ int RModel::populateDataFromRastr(){
     catch(...)
     {
         qDebug()<<"ERROR! rmodel.cpp->populateDataFromRastr: "<<up_rdata->t_name_.c_str();
+        return false;
     }
 
-    return 1;
+    return true;
 };
+
 int RModel::rowCount(const QModelIndex & /*parent*/) const{
     return static_cast<int>(up_rdata->pnparray_->RowsCount());
 }
+
 int RModel::columnCount(const QModelIndex & /*parent*/) const{
     return static_cast<int>(up_rdata->pnparray_->ColumnsCount());
 }

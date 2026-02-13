@@ -266,8 +266,8 @@ public:
         return static_cast<int>(size());
     }
 
-    int AddRow(int index = -1);
-    int RemoveRDMRow(int index = -1);
+    bool AddRow(int index = -1);
+    bool RemoveRDMRow(int index = -1);
 
     void Initialize(CUIForm _form, QAstra* _pqastra);
     void Initialize(nlohmann::json _j_Fields , nlohmann::json _j_metas,_vstr _vstr_fields_form);// old

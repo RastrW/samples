@@ -151,6 +151,7 @@ public:
     virtual ~MainWindow();
     ///< Установка компонентов
     // Установить формы
+    ///@note // https://stackoverflow.com/questions/14151443/how-to-pass-a-qstring-to-a-qt-slot-from-a-qmenu-via-qsignalmapper-or-otherwise
     void setForms(const std::list<CUIForm>& forms);
 
     // Подключить Rastr
@@ -166,9 +167,9 @@ private:
     void updateRecentFileActions();
     // Чтение настроек окна
     //it cache log messages to vector, because it called befor logger intialization
-    int  readSettings();
+    bool  readSettings();
     // Сохранение настроек окна
-    int  writeSettings();
+    bool  writeSettings();
     // Обработка показа окна
     void showEvent( QShowEvent* event ) override;
     // Создать действия (меню, кнопки)

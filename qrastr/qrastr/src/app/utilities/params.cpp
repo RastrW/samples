@@ -7,7 +7,7 @@
 Params::Params(){
 }
 
-int Params::readJsonFile(const fs::path& path_2_json){
+bool Params::readJsonFile(const fs::path& path_2_json){
     try{
         m_start_load_file_templates_.clear();
         m_start_load_forms_.clear();
@@ -33,19 +33,19 @@ int Params::readJsonFile(const fs::path& path_2_json){
             ifs.close();
         }else{
             spdlog::warn("couldn't read the json file");
-            return -3;
+            return false;
         }
     }catch(const std::exception& ex){
         exclog(ex);
-        return -1;
+        return false;
     }catch(...){
         exclog();
-        return -2;
+        return false;
     }
-    return 1;
+    return true;
 }
 
-int Params::writeJsonFile(const fs::path& path_2_json)const {
+bool Params::writeJsonFile(const fs::path& path_2_json)const {
     try{
         nlohmann::json jarr_load;
         for(const _v_file_templates::value_type& file_template : m_start_load_file_templates_){
@@ -77,16 +77,16 @@ int Params::writeJsonFile(const fs::path& path_2_json)const {
             ofs.close();
         }else{
             spdlog::error("Can't open file [{}]", path_2_json.string());
-            return -3;
+            return false;
         }
     }catch(const std::exception& ex){
         exclog(ex);
-        return -1;
+        return false;
     }catch(...){
         exclog();
-        return -2;
+        return false;
     }
-    return 1;
+    return true;
 }
 
 bool Params::templ_sort_func(const std::pair<std::string,std::string>& p1,
@@ -95,7 +95,7 @@ bool Params::templ_sort_func(const std::pair<std::string,std::string>& p1,
     return (p1.first.length() < p2.first.length());
 }
 
-int Params::readTemplates(){
+bool Params::readTemplates(){
     try{
         const fs::path& path_dir_templates
             {getDirSHABLON().absolutePath().toStdString()};
@@ -110,15 +110,15 @@ int Params::readTemplates(){
         std::sort(m_template_exts_.begin(),m_template_exts_.end(),templ_sort_func);
     }catch(const std::exception& ex){
         exclog(ex);
-        return -1;
+        return false;
     }catch(...){
         exclog();
-        return -2;
+        return false;
     }
-    return 1;
+    return true;
 }
 
-int Params::readForms(){
+bool Params::readForms(){
     try{
         upCUIFormsCollection_ = std::make_unique<CUIFormsCollection>();
         for(const Params::_v_forms::value_type &form : m_start_load_forms_){
@@ -138,15 +138,15 @@ int Params::readForms(){
         }
     }catch(const std::exception& ex){
         exclog(ex);
-        return -1;
+        return false;
     }catch(...){
         exclog();
-        return -2;
+        return false;
     }
-    return 1;
+    return true;
 }
 
-int Params::readFormsExists(){
+bool Params::readFormsExists(){
     try{
         m_forms_exists_.clear();
         for(const auto& entry : fs::directory_iterator(path_forms)){
@@ -156,10 +156,10 @@ int Params::readFormsExists(){
         }
     }catch(const std::exception& ex){
         exclog(ex);
-        return -1;
+        return false;
     }catch(...){
         exclog();
-        return -2;
+        return false;
     }
-    return 1;
+    return true;
 }

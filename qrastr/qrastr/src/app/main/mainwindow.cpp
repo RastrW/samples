@@ -89,10 +89,9 @@ MainWindow::MainWindow(){
     readSettings();
 }
 
-MainWindow::~MainWindow(){
-}
+MainWindow::~MainWindow() = default;
 
-int MainWindow::readSettings(){
+bool MainWindow::readSettings(){
     try{
         QSettings settings;
         settings.beginGroup("MainWindow");
@@ -104,20 +103,20 @@ int MainWindow::readSettings(){
         settings.endGroup();
     }catch(const std::exception& ex){
         m_v_cache_log.add( spdlog::level::err,"Exception: {} ", ex.what());
-        return -4;
+        return false;
     }catch(...){
         m_v_cache_log.add( spdlog::level::err,"Unknown exception.");
-        return -5;
+        return false;
     }
-    return 1;
+    return true;
 }
 
-int MainWindow::writeSettings(){
+bool MainWindow::writeSettings(){
     QSettings settings;
     settings.beginGroup("MainWindow");
     settings.setValue("geometry", saveGeometry());
     settings.endGroup();
-    return 1;
+    return true;
 }
 
 void MainWindow::dragEnterEvent(QDragEnterEvent *event){
@@ -143,7 +142,7 @@ void MainWindow::showEvent( QShowEvent* event ){
     QWidget::showEvent( event );
 }
 
-void MainWindow::setForms(const std::list<CUIForm>& forms){ // https://stackoverflow.com/questions/14151443/how-to-pass-a-qstring-to-a-qt-slot-from-a-qmenu-via-qsignalmapper-or-otherwise
+void MainWindow::setForms(const std::list<CUIForm>& forms){
     int i = 0;
     m_lstUIForms = forms;
     m_RTDM.setForms(&m_lstUIForms);

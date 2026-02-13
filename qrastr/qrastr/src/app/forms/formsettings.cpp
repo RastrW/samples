@@ -37,50 +37,7 @@ struct FormSettings::_tree_item{
     QTreeWidgetItem* ptwi_my = nullptr;
     _v_tree_items    v_childs;
 };
-/*
-class Widget : public QWidget
-{
-public:
-    Widget(QWidget *parent = nullptr);
-};
-Widget::Widget(QWidget *parent)
-    : QWidget(parent)
-{
-//! [0]
-    QWidget *firstPageWidget = new QWidget{};
-    //QWidget *secondPageWidget = new QWidget;
-    QPlainTextEdit* secondPageWidget = new QPlainTextEdit();
-    //QWidget *secondPageWidget = new QEditLin;
-    QWidget *thirdPageWidget = new QWidget();
 
-    QStackedWidget *stackedWidget = new QStackedWidget;
-    stackedWidget->addWidget(firstPageWidget);
-    stackedWidget->addWidget(secondPageWidget);
-    stackedWidget->addWidget(thirdPageWidget);
-
-//! [0] //! [1]
-    QComboBox *pageComboBox = new QComboBox;
-    pageComboBox->addItem(tr("Page 1"));
-    pageComboBox->addItem(tr("Page 2"));
-    pageComboBox->addItem(tr("Page 3"));
-    connect(pageComboBox, &QComboBox::activated,
-            stackedWidget, &QStackedWidget::setCurrentIndex);
-//! [1] //! [2]
-    QVBoxLayout *layout = new QVBoxLayout;
-//! [2]
-    layout->addWidget(pageComboBox);
-//! [3]
-    layout->addWidget(stackedWidget);
-    setLayout(layout);
-//! [3]
-    QTreeWidgetItemIterator it(ptwSections_);
-    while (*it) {
-      if ((*it)->text(0)=="searched")
-        break;
-      ++it;
-    }
-}
-*/
 void FormSettings::populateSettingsTree( _tree_item& ti_root, QTreeWidgetItem* ptwi_parent){
     for( auto& ti_child : ti_root.v_childs ){
         QTreeWidgetItem* ptwi_new = nullptr;
@@ -163,7 +120,7 @@ void FormSettings::onBtnSaveClick(){
     }
 }
 
-int FormSettings::init(const std::shared_ptr<QAstra>& sp_qastra){
+bool FormSettings::init(const std::shared_ptr<QAstra>& sp_qastra){
     int n_res = 0;
     sp_qastra_ = sp_qastra;
     n_res = Params::get_instance()->readTemplates();
@@ -207,17 +164,6 @@ int FormSettings::init(const std::shared_ptr<QAstra>& sp_qastra){
         const _tree_item*      pti  = this->pti_settings_root_->getEq(ptiw);//strange to look by pointer, but it works
         this->psw_->setCurrentWidget(pti->pw);
     });
-    class Header //from https://stackoverflow.com/questions/10082028/how-to-add-a-button-or-other-widget-in-qtreewidget-header
-        : public QHeaderView
-    {
-        public:
-        Header(QWidget* parent)
-            : QHeaderView(Qt::Horizontal, parent)
-            , pb_save_(new QPushButton("Save", this)){
-        }
-        private:
-        QPushButton* pb_save_ = nullptr;
-    };
 
-    return 1;
+    return true;
 }

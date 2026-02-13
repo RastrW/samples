@@ -148,8 +148,6 @@ public slots:
     void onLinkedFormUpdate(CellClickEventArgs* _index);
     void onfocusRowChanged( int _row_old,int _row_new);
 
-   // void changeColumnVisible(QListWidgetItem*);
-   // void cornerButtonPressed();
     void insertRow();
     void AddRow();
     void insertRow_qtitan();

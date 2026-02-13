@@ -37,7 +37,7 @@ public:
     int columnCount(const QModelIndex &parent = QModelIndex()) const override;
     QVariant data(const QModelIndex &index, int role = Qt::DisplayRole) const override;
     void setForm( CUIForm* _pUIForm) { pUIForm_ = _pUIForm; };
-    int populateDataFromRastr();
+    bool populateDataFromRastr();
     std::vector<std::tuple<int,int>>  ColumnsWidth ();
     RCol* getRCol(int n_col);
     int getIndexCol(std::string _col);

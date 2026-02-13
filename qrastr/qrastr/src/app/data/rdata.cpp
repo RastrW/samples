@@ -125,10 +125,10 @@ void RData::clear_data(){
     }
 }
 
-int RData::AddRow(int index ){
-    return 1;
+bool RData::AddRow(int index ){
+    return true;
 }
 
-int RData::RemoveRDMRow(int index ){
-    return 1;
+bool RData::RemoveRDMRow(int index ){
+    return true;
 }

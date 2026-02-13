@@ -81,7 +81,6 @@ bool App::readSettings(){
         QPoint pos = settings.value("pos", QPoint(200, 200)).toPoint();
         QSize size = settings.value("size", QSize(600, 800)).toSize();
 
-        int nRes = 0;
         QString qstr_curr_path = QDir::currentPath();
         std::string str_path_2_conf = "undef";
 #if(defined(COMPILE_WIN))
@@ -104,37 +103,31 @@ bool App::readSettings(){
                 m_v_cache_log.add(spdlog::level::err, "Can't set DataDir: {}",
                                   p_params->getDirData().path().toStdString());
             }
-            nRes = p_params->readJsonFile(str_path_2_conf);
-            if(nRes < 0){
+            if(!p_params->readJsonFile(str_path_2_conf)){
                 QMessageBox mb;
                 // так лучше не делать ,смешение строк qt и std это боль.
                 std::string ss = "error in files load";
                 QString str = QString::fromUtf8(ss.c_str());
                 mb.setText(str);
-                m_v_cache_log.add(spdlog::level::err, "{} ReadJsonFile {}",
-                                  nRes, str.toStdString());
+                m_v_cache_log.add(spdlog::level::err,
+                                  "ReadJsonFile {}", str.toStdString());
                 mb.exec();
                 return false;
             }
             p_params->setFileAppsettings(str_path_2_conf);
             m_v_cache_log.add(spdlog::level::info, "ReadTemplates: {}",
                               p_params->getDirSHABLON().absolutePath().toStdString());
-            nRes = p_params->readTemplates();
-            assert(nRes>0);
-            if(nRes < 0){
-                m_v_cache_log.add(spdlog::level::err, "Error while read: {}", nRes);
+
+            if(!p_params->readTemplates()){
+                m_v_cache_log.add(spdlog::level::err, "Error while read");
             }
             m_v_cache_log.add(spdlog::level::info, "ReadForms: {}",
                               p_params->getPathForms().string());
-            nRes = p_params->readFormsExists();
-            assert(nRes>0);
-            if(nRes < 0){
-                m_v_cache_log.add(spdlog::level::err, "Error while read existed forms: {}", nRes);
+            if(!p_params->readFormsExists()){
+                m_v_cache_log.add(spdlog::level::err, "Error while read existed forms");
             }
-            nRes = p_params->readForms();
-            assert(nRes>0);
-            if(nRes < 0){
-                m_v_cache_log.add(spdlog::level::err, "Error while read: {}", nRes);
+            if(!p_params->readForms()){
+                m_v_cache_log.add(spdlog::level::err, "Error while read");
             }
 
         }else{

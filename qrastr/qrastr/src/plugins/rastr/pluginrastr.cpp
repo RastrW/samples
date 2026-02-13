@@ -44,10 +44,3 @@ std::shared_ptr<IPlainRastr> PluginRastr::getIPlainRastrPtr(){
     }
     return shRastrOut;
 }
-
-
-#if(!defined(_MSC_VER))
-    int main(int argc, char *argv[]){
-        return 1;
-    }
-#endif
