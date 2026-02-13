@@ -1,5 +1,3 @@
-#ifndef QTITANGRID_H
-#define QTITANGRID_H
 #pragma once
 
 #include <DevMachines/QtitanGrid>
@@ -37,5 +35,3 @@ public:
 private:
     QSet<int> m_modelRows;
 };
-
-#endif // QTITANGRID_H

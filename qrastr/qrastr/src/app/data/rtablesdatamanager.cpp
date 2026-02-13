@@ -230,7 +230,7 @@ std::shared_ptr<QDataBlock>  RTablesDataManager::get(std::string tname, std::str
         return it->second;
     }else{
         qDebug()<<"RTDM: add Table" << tname.c_str();
-        mpTables.insert(std::make_pair(tname,new QDataBlock()));
+        mpTables.insert(std::make_pair(tname, std::make_shared<QDataBlock>()));
         getDataBlock(tname,Cols,*mpTables.find(tname)->second);
     }
 

@@ -52,15 +52,12 @@ void formsaveall::showEvent( QShowEvent* event )
         ui->twSaveFiles->setItem( n_row_num, static_cast<int>(_cols::save), ptwi_checkbox );
 
         QTableWidgetItem* ptwi_shabl = new QTableWidgetItem(  QFileInfo(_shabl).fileName());
-       // ptwi_shabl->setFlags(Qt::ItemIsSelectable|Qt::ItemIsEnabled);
         ui->twSaveFiles->setItem( n_row_num, static_cast<int>(_cols::templ), ptwi_shabl );
 
         QTableWidgetItem* ptwi_file = new QTableWidgetItem(    QFileInfo(_file).fileName() );
-      //  ptwi_file->setFlags(Qt::ItemIsSelectable|Qt::ItemIsEnabled);
         ui->twSaveFiles->setItem( n_row_num, static_cast<int>(_cols::file), ptwi_file );
 
         QTableWidgetItem* ptwi_path = new QTableWidgetItem(  QFileInfo(_file).path());
-      //  ptwi_path->setFlags(Qt::ItemIsSelectable|Qt::ItemIsEnabled);
         ui->twSaveFiles->setItem( n_row_num, static_cast<int>(_cols::path), ptwi_path );
 
         n_row_num++;

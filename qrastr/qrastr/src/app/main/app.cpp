@@ -196,9 +196,11 @@ bool App::loadPlugins(){
             if(iRastr){
                 try{
                     spdlog::info( "it is Rastr" );
-                    const std::shared_ptr<spdlog::logger> sp_logger = spdlog::default_logger();
+                    const std::shared_ptr<spdlog::logger> sp_logger =
+                        spdlog::default_logger();
                     iRastr->setLoggerPtr( sp_logger );
-                    const std::shared_ptr<IPlainRastr> rastr = iRastr->getIPlainRastrPtr(); // Destroyable rastr{ iRastr };
+                    const std::shared_ptr<IPlainRastr> rastr =
+                        iRastr->getIPlainRastrPtr(); // Destroyable rastr{ iRastr };
                     if(nullptr==rastr){
                         spdlog::error( "rastr==null" );
                         assert(!"may be u haven't license!");
@@ -221,7 +223,8 @@ bool App::loadPlugins(){
             if(iTI){
                 try{
                     spdlog::info( "it is TI" );
-                    const std::shared_ptr<spdlog::logger> sp_logger = spdlog::default_logger();
+                    const std::shared_ptr<spdlog::logger> sp_logger =
+                        spdlog::default_logger();
                     iTI->setLoggerPtr( sp_logger );
                     const std::shared_ptr<IPlainTI> TI = iTI->getIPlainTIPtr(); // Destroyable  TI{ iTI };
                     if(nullptr==TI){
@@ -250,9 +253,11 @@ bool App::loadPlugins(){
             if(iBarsMDP){
                 try{
                     spdlog::info( "it is BarsMDP" );
-                    const std::shared_ptr<spdlog::logger> sp_logger = spdlog::default_logger();
+                    const std::shared_ptr<spdlog::logger> sp_logger =
+                        spdlog::default_logger();
                     iBarsMDP->setLoggerPtr( sp_logger );
-                    const std::shared_ptr<IPlainBarsMDP> BarsMDP = iBarsMDP->getIPlainBarsMDPPtr();
+                    const std::shared_ptr<IPlainBarsMDP> BarsMDP =
+                        iBarsMDP->getIPlainBarsMDPPtr();
                     if(BarsMDP == nullptr){
                         spdlog::error( "BarsMDP==null" );
                         continue;

@@ -159,33 +159,23 @@ void PyHlp::SetErrorMessage()
         PyErr_NormalizeException(&type, &value, &traceback);
 
         //0
-        //PyObject *str_exc_value = PyObject_Repr(value);
-        //PyObject *pyExcValueStr = PyUnicode_AsEncodedString(str_exc_value, "utf-8", "Error ~");
-        //std::string errorMessage =  PyBytes_AsString(pyExcValueStr) ;
         const std::string errorMessage =  PyUtils::PyObjToStr(value);
 
         //1 //https://stackoverflow.com/questions/16733425/how-to-retrieve-filename-and-lineno-attribute-of-syntaxerror
         {
-            //PyObject *ptype = NULL, *pvalue = NULL, *ptraceback = NULL;
-            //PyErr_Fetch(&ptype,&pvalue,&ptraceback);
-            //PyErr_NormalizeException(&ptype,&pvalue,&ptraceback);
-
             char *msg;
             char *file;
             int line;
             int offset;
             char *text;
 
-            //int res = PyArg_ParseTuple(pvalue,"s(siis)",&msg,&file,&line,&offset,&text);
             int res = PyArg_ParseTuple(value,"s(siis)",&msg,&file,&line,&offset,&text);
 
-            //PyObject* file_name = PyObject_GetAttrString(pvalue,"filename");
             PyObject* file_name = PyObject_GetAttrString(value,"filename");
             PyObject* file_name_str = PyObject_Str(file_name);
             PyObject* file_name_unicode = PyUnicode_AsEncodedString(file_name_str,"utf-8", "Error");
             char *actual_file_name = PyBytes_AsString(file_name_unicode);
 
-            //PyObject* line_no = PyObject_GetAttrString(pvalue,"lineno");
             PyObject* line_no = PyObject_GetAttrString(value,"lineno");
             PyObject* line_no_str = PyObject_Str(line_no);
             PyObject* line_no_unicode = PyUnicode_AsEncodedString(line_no_str,"utf-8", "Error");
@@ -207,9 +197,6 @@ void PyHlp::SetErrorMessage()
             if (pyFileName) {
                 std::string fileNameWithFullPath =  PyUtils::PyObjToStr(pyFileName);
                 Py_DECREF(pyFileName);
-                // valueStr.erase(fileNameStart, fileNameEnd - fileNameStart);
-                // valueStr.insert(fileNameStart, fileNameWithFullPath);
-                // fileNameEnd += fileNameWithFullPath.size() - (fileNameEnd - fileNameStart);
             }
         }
 
@@ -234,9 +221,7 @@ void PyHlp::SetErrorMessage()
                PyObject* item = PyList_GetItem(lst, i);
                std::string pretty = PyBytes_AsString(PyUnicode_AsASCIIString(item));
                sstr <<pretty << "\n";
-               //sstr << std::string(convert_from_python(item)) << std::endl;
             }
-            //throw std::exception(sstr.str().c_str());
             throw std::runtime_error(sstr.str().c_str());
         }
 
@@ -245,7 +230,6 @@ void PyHlp::SetErrorMessage()
             errorMessage_ = std::string(nameExeption).append(": ");
         }
         PyObject* pstr = PyObject_Str(value);
-        //int line = PyLong_AsLong(PyObject_GetAttrString(PyObject_GetAttrString(value, "tb_frame"), "f_lineno"));
         if(pstr) {
             Py_ssize_t size;
             const char* msgError = PyUnicode_AsUTF8AndSize(pstr, &size);
@@ -293,23 +277,18 @@ bool PyHlp::Initialize()
     int nRes = 0;
     if(!Py_IsInitialized()){
         Py_InitializeEx(0);
-        //PyUtils::PyObjRaii sys_path = PySys_GetObject("path"); assert(nullptr != sys_path);
         PyObject* sys_path = PySys_GetObject("path"); assert(nullptr != sys_path);//Borrowed reference!
         std::string str_path1 = PyUtils::PyObjToStr(sys_path);
         QString qstr_plugin_path{QCoreApplication::applicationDirPath()};
         qstr_plugin_path += "/plugins/";    // MaxiMal: там находятся все внешние dll предлагаю там и держать astra_py.cp312-win_amd64.pyd
         nRes = PyList_Append(sys_path, PyUnicode_FromString(qstr_plugin_path.toStdString().c_str())); assert(0 == nRes);
 #if(defined(_MSC_VER))
-        //nRes = PyList_Append(sys_path, PyUnicode_FromString(R"(C:/projects/rastr/RastrWin/build/vs-Debug/pyastra/)")); assert(0 == nRes);
         nRes = PyList_Append(sys_path, PyUnicode_FromString(R"(C:\projects\rastr\RastrWin\build\vs-Debug\pyastra\)")); assert(0 == nRes);
-        //nRes = PyList_Append(sys_path, PyUnicode_FromString(R"(C:\projects\tfs\rastr\RastrWin\build\pyastra\Debug\)")); assert(0 == nRes);
 #else
         nRes = PyList_Append(sys_path, PyUnicode_FromString("/home/ustas/projects/git_main/rastr/build-RastrWin-Desktop-Debug/pyastra")); assert(0 == nRes);
 #endif
-        //PyUtils::PyObjRaii sys_path2 = PySys_GetObject("path"); assert(nullptr != sys_path);
         PyObject* sys_path2 = PySys_GetObject("path"); assert(nullptr != sys_path);
         std::string str_path2 = PyUtils::PyObjToStr(sys_path2);
-        //astraModule_ = PyImport_ImportModule("astra_py.cp310-win_amd64.pyd");
         astraModule_ = PyImport_ImportModule("astra_py");
         assert(nullptr != astraModule_);
         if(nullptr == astraModule_){

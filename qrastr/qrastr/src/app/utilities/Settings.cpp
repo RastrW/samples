@@ -63,7 +63,8 @@ void Settings::setSettingsObject()
 
     if(userSettingsFile == nullptr)
     {
-        settings = new QSettings(QCoreApplication::organizationName(), QCoreApplication::organizationName());
+        settings = new QSettings(QCoreApplication::organizationName(),
+                                 QCoreApplication::organizationName());
     } else {
         if(isNormalUserSettingsFile)
         {
@@ -76,12 +77,14 @@ void Settings::setSettingsObject()
 
                 // Since you do not have permission to the file, delete the existing assignment and assign the standard
                 delete settings;
-                settings = new QSettings(QCoreApplication::organizationName(), QCoreApplication::organizationName());
+                settings = new QSettings(QCoreApplication::organizationName(),
+                                         QCoreApplication::organizationName());
             }
         } else {
             qWarning() << qPrintable("The given settings file is not a normal settings file. Please check again.");
             qWarning() << qPrintable("So, the -S/--settings option is ignored.");
-            settings = new QSettings(QCoreApplication::organizationName(), QCoreApplication::organizationName());
+            settings = new QSettings(QCoreApplication::organizationName(),
+                                     QCoreApplication::organizationName());
         }
     }
 }

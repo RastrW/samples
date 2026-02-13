@@ -283,7 +283,6 @@ McrWnd::McrWnd(QWidget* parent, const _en_role en_role)
     QSplitter* splitter = new QSplitter(this);
     QVBoxLayout* layout = new QVBoxLayout();
     QVBoxLayout* container_layout = new QVBoxLayout();
-    QLineEdit* leFind = new QLineEdit();    leFind->setFixedWidth(100);
     if(_en_role::macro_dlg == en_role_){
         QToolBar* pToolBar = new QToolBar();
         pToolBar->addAction( QIcon(QApplication::style()->standardIcon(QStyle::SP_FileIcon)),         tr("&New"),     this,  SLOT( onFileNew() )    )

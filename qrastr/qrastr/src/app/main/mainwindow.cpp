@@ -41,7 +41,7 @@ using WrapperExceptionType = std::runtime_error;
 #include "qmcr/pyhlp.h"
 
 MainWindow::MainWindow(){
-    m_workspace = new QMdiArea;
+    m_workspace = new QMdiArea (this);
     setCentralWidget(m_workspace);
     connect(m_workspace, &QMdiArea::subWindowActivated, this, &MainWindow::slot_updateMenu);
 
@@ -74,7 +74,7 @@ MainWindow::MainWindow(){
     auto pdwProtocol = new ads::CDockWidget( "protocolMain", this );
     pdwProtocol->setWidget(m_pFormProtocol);
     pdwProtocol->setFeature( static_cast<ads::CDockWidget::DockWidgetFeature>(f), true );
-    auto pfdc = m_DockManager->addDockWidgetTab(ads::BottomDockWidgetArea,pdwProtocol);
+    auto pfdc = m_DockManager->addDockWidgetTab(ads::BottomDockWidgetArea, pdwProtocol);
 
     auto qt_sink = std::make_shared<spdlog::sinks::qt_sink_mt>
         (m_pMcrWnd, "onQStringAppendProtocol");

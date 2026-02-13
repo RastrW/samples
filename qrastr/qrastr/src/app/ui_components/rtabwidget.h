@@ -118,10 +118,7 @@ class RtabWidget : public QWidget
 public:
     explicit RtabWidget(CUIForm UIForm,QWidget *parent = nullptr);
     explicit RtabWidget(QAstra* pqastra, CUIForm UIForm, RTablesDataManager* pRTDM, ads::CDockManager* pDockManager ,QWidget *parent = nullptr);
-    /*~RtabWidget(){}; //C2036
-    {
-        //qDebug()<<"RtabWidget::Destructor "<< "[" <<m_UIForm.Name().c_str() << "]";
-    };*/
+    virtual ~RtabWidget() = default;
 
     void SetTableView(QTableView& tv, RModel& mm, int myltiplier = 10);
     void SetTableView(Qtitan::GridTableView& tv, RModel& mm, int myltiplier = 10 );

@@ -19,6 +19,7 @@
 #include "CondFormatManager.h"
 #include "condformatjson.h"
 #include "linkedform.h"
+#include "customFilterCondition.h"
 
 #include <QtitanGrid.h>
 #include <utils.h>
@@ -43,7 +44,7 @@ RtabWidget::RtabWidget(CUIForm UIForm,QWidget *parent) :
     ptv = new RTableView(this);
 
     Grid::loadTranslation();
-    m_grid = new Qtitan::Grid();
+    m_grid = new Qtitan::Grid(this);
     if (m_UIForm.Vertical())
         m_grid->setViewType(Qtitan::Grid::TableViewVertical);
     else

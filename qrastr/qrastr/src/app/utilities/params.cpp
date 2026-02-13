@@ -124,14 +124,15 @@ int Params::readForms(){
         for(const Params::_v_forms::value_type &form : m_start_load_forms_){
             fs::path path_file_form  {path_forms};
             path_file_form /= stringutils::utf8_decode(form);
-            CUIFormsCollection* CUIFormsCollection_ = new CUIFormsCollection ;
+
+            auto t_сollection = std::make_unique<CUIFormsCollection>();
             if (path_file_form.extension() == ".fm")
-                *CUIFormsCollection_ = CUIFormCollectionSerializerBinary
+                *t_сollection = CUIFormCollectionSerializerBinary
                                        (path_file_form).Deserialize();
             else
-                *CUIFormsCollection_ = CUIFormCollectionSerializerJson
+                *t_сollection = CUIFormCollectionSerializerJson
                                        (path_file_form).Deserialize();
-            for(const  CUIForm& uiform : CUIFormsCollection_->Forms()){
+            for(const  CUIForm& uiform : t_сollection->Forms()){
                 upCUIFormsCollection_->Forms().emplace_back(uiform);
             }
         }
