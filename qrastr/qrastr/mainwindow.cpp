@@ -124,6 +124,10 @@ int MainWindow::readSettings(){ //it cache log messages to vector, because it ca
             setGeometry(200, 200, 800, 800);
         else
             restoreGeometry(geometry);
+
+        // Restore the state of toolbars and dock widgets (menus are part of the overall layout)
+        restoreState(settings.value("mainWindowState").toByteArray());
+
         settings.endGroup();
     }catch(const std::exception& ex){
         m_v_cache_log.add( spdlog::level::err,"Exception: {} ", ex.what());
@@ -138,7 +142,10 @@ int MainWindow::readSettings(){ //it cache log messages to vector, because it ca
 int MainWindow::writeSettings(){
     QSettings settings;
     settings.beginGroup("MainWindow");
+    // Save window geometry
     settings.setValue("geometry", saveGeometry());
+    // Save the state of toolbars and dock widgets
+    settings.setValue("mainWindowState", saveState());
     settings.endGroup();
     return 1;
 }
