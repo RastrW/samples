@@ -45,10 +45,10 @@ int main(int argc, char *argv[]){
     if(!app.start()){
         return 200;
     }
-    w.setQAstra(app.getQAstraPtr());
-    w.setQTI(app.getQTIPtr());
-    w.setQBarsMDP(app.getQBarsMDPPtr());
-    w.setForms(app.getForms());
+    w.initialize(app.getQAstraPtr(),
+                 app.getQTIPtr(),
+                 app.getQBarsMDPPtr(),
+                 app.getForms());
 
     w.show();
 
