@@ -108,7 +108,7 @@ private:
     // ========== GUI ЭЛЕМЕНТЫ ==========
     QMdiArea* m_workspace = nullptr;            // Область для множественных документов
     ads::CDockManager* m_dockManager = nullptr; // The main container for Advanced Docking System
-    McrWnd* m_pMcrWnd = nullptr;                // Окно макросов (@todo не используется, проверить)
+    McrWnd* m_globalProtocol = nullptr;                // Глобавльный протокол
     FormProtocol* m_mainProtocol = nullptr;     // Главный протокол
     
     // ========== ВСПОМОГАТЕЛЬНЫЕ КОМПОНЕНТЫ ==========

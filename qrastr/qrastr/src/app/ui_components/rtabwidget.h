@@ -111,7 +111,6 @@ typedef QMap<int, ItemState> itemStateMap;
     - Поддержка условного форматирования
     - Управление связанными формами
  */
-
 class RtabWidget : public QWidget
 {
     Q_OBJECT
@@ -141,8 +140,6 @@ public slots:
     void OnClose();
     void onvisibilityChanged(bool visible);
     void contextMenu(ContextMenuEventArgs* args);
-    void customMenuRequested(QPoint pos);
-    void customHeaderMenuRequested(QPoint pos);
 
     void onItemPressed(CellClickEventArgs* _index);
     void onLinkedFormUpdate(CellClickEventArgs* _index);
@@ -178,7 +175,8 @@ public slots:
     void onCondFormatsModified();
     void SetLinkedForm( LinkedForm _lf);
     void onOpenLinkedForm(LinkedForm _lf );    // ТИ:Каналы ; id1=%d & id2=0 & prv_num<8 ; 801
-
+    void clearContents(){}
+    void unhideColumns() {}
 private slots:
     void CreateModel(QAstra* pqastra,CUIForm* pUIForm);
     void SetEditors();

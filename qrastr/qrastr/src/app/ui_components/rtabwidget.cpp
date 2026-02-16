@@ -131,15 +131,18 @@ void RtabWidget::closeEvent(QCloseEvent *event)
 
     this->prm->getRdata()->pnparray_.reset();
 };
+
 void RtabWidget::onvisibilityChanged(bool visible)
 {
    // if (!visible)
    //     this->close();
 }
+
 void RtabWidget::OnClose()
 {
     this->close();
 }
+
 void RtabWidget::CreateModel(QAstra* pqastra, CUIForm* pUIForm)
 {
     prm = std::unique_ptr<RModel>(new RModel(nullptr, pqastra, m_pRTDM ));
@@ -187,6 +190,7 @@ void RtabWidget::CreateModel(QAstra* pqastra, CUIForm* pUIForm)
     this->update();
     this->repaint();
 }
+
 void RtabWidget::SetEditors()
 {
     for (RCol& rcol : *prm->getRdata())
@@ -195,6 +199,7 @@ void RtabWidget::SetEditors()
         qDebug()<<"Col index"<<rcol.index<<"Col Name:"<<rcol.name().c_str();
     }
 }
+
 void RtabWidget::SetEditor(RCol& rcol)
 {
     view->beginUpdate();
@@ -326,10 +331,15 @@ void RtabWidget::contextMenu(ContextMenuEventArgs* args)
     if (!prcol)
         return;
 
-    QAction* condFormatAction = new QAction(QIcon(":/icons/edit_cond_formats"), tr("Условное форматирование"),  args->contextMenu());
+    QAction* condFormatAction = new QAction(QIcon(":/icons/edit_cond_formats"),
+                                            tr("Условное форматирование"),  args->contextMenu());
 
     args->contextMenu()->addSeparator();
-    args->contextMenu()->addAction(qstr_col_props, this, SLOT(OpenColPropForm()));
+    args->contextMenu()->addAction(
+        qstr_col_props,
+        this,
+        &RtabWidget::OpenColPropForm);
+
 
     std::tuple<int,double> item_sum = GetSumSelected();
 #if(defined(_MSC_VER))
@@ -338,7 +348,6 @@ void RtabWidget::contextMenu(ContextMenuEventArgs* args)
     args->contextMenu()->addAction( QString("Сумма: ") + QString::number(std::get<1>(item_sum))+QString(" Элементов: ") + QString::number(std::get<0>(item_sum)) );
 #endif
 
-    //args->contextMenu()->addAction(tr("Скрыть колонку"),this,SLOT(hideColumns()));
     args->contextMenu()->addSeparator();
 
     QAction* insRowAct = new QAction((QIcon(":/images/Rastr3_grid_insrow_16x16.png"),tr("Вставить"),this));
@@ -346,33 +355,54 @@ void RtabWidget::contextMenu(ContextMenuEventArgs* args)
     insRowAct->setStatusTip(tr("Вставить строку"));
     insRowAct->setShortcutContext(Qt::WidgetWithChildrenShortcut);
 
-
-
-    // TO DO
+    ///@todo
     // В Qtitane не работают шорткаты, хотя del встроенный работает.
+    args->contextMenu()->addAction(
+                           QIcon(":/images/Rastr3_grid_insrow_16x16.png"),
+                           tr("Вставить"),
+                           this,
+                           &RtabWidget::insertRow_qtitan
+                           )->setShortcut(QKeySequence(Qt::CTRL | Qt::Key_I));
+    args->contextMenu()->addAction(
+                           QIcon(":/images/Rastr3_grid_addrow_16x16.png"),
+                           tr("Добавить"),
+                           this,
+                           &RtabWidget::AddRow
+                           )->setShortcut(QKeySequence(Qt::CTRL | Qt::Key_A));
+    args->contextMenu()->addAction(
+                           QIcon(":/images/Rastr3_grid_duprow_16x161.png"),
+                           tr("Дублировать"),
+                           this,
+                           &RtabWidget::DuplicateRow_qtitan
+                           )->setShortcut(QKeySequence(Qt::CTRL | Qt::Key_R));
+    args->contextMenu()->addAction(
+                           QIcon(":/images/Rastr3_grid_delrow_16x16.png"),
+                           tr("Удалить"),
+                           this,
+                           &RtabWidget::deleteRow_qtitan
+                           )->setShortcut(QKeySequence(Qt::CTRL | Qt::Key_D));
+    args->contextMenu()->addAction(
+                           QIcon(":/images/column_edit.png"),
+                           tr("Групповая коррекция"),
+                           this,
+                           &RtabWidget::OpenGroupCorrection);
 
-    //args->contextMenu()->addAction(QIcon(":/images/Rastr3_grid_insrow_16x16.png"),tr("Вставить"),this,SLOT(insertRow_qtitan()),QKeySequence(Qt::CTRL | Qt::Key_I));
-
-    args->contextMenu()->addAction( QIcon(":/images/Rastr3_grid_insrow_16x16.png"), tr("Вставить"), this, SLOT(insertRow_qtitan()) )
-            ->setShortcut( QKeySequence(Qt::CTRL | Qt::Key_I) );
-    args->contextMenu()->addAction(QIcon(":/images/Rastr3_grid_addrow_16x16.png"),tr("Добавить"),this,SLOT(AddRow()))
-            ->setShortcut( QKeySequence(Qt::CTRL | Qt::Key_A) );
-    args->contextMenu()->addAction(QIcon(":/images/Rastr3_grid_duprow_16x161.png"),tr("Дублировать"),this,SLOT(DuplicateRow_qtitan()))
-            ->setShortcut( QKeySequence(Qt::CTRL | Qt::Key_R) );
-    args->contextMenu()->addAction(QIcon(":/images/Rastr3_grid_delrow_16x16.png"),tr("Удалить"),this,SLOT(deleteRow_qtitan()))
-            ->setShortcut( QKeySequence(Qt::CTRL | Qt::Key_D) );
-    args->contextMenu()->addAction(QIcon(":/images/column_edit.png"),tr("Групповая коррекция"), this, SLOT(OpenGroupCorrection()));
     connect(sC_CTRL_I, &QShortcut::activated, this, &RtabWidget::insertRow_qtitan);
     connect(sC_CTRL_A, &QShortcut::activated, this, &RtabWidget::AddRow);
     connect(sC_CTRL_R, &QShortcut::activated, this, &RtabWidget::DuplicateRow_qtitan);
     connect(sC_CTRL_D, &QShortcut::activated, this, &RtabWidget::deleteRow_qtitan);
     args->contextMenu()->addSeparator();
-    args->contextMenu()->addAction(tr("Выравнивание: по шаблону"),this,SLOT(widebyshabl()));
-    args->contextMenu()->addAction(tr("Выравнивание: по данным"),this,SLOT(widebydata()));
+    args->contextMenu()->addAction(tr("Выравнивание: по шаблону"),
+                                   this, &RtabWidget::widebyshabl);
+    args->contextMenu()->addAction(tr("Выравнивание: по данным"),
+                                   this, &RtabWidget::widebydata);
     args->contextMenu()->addSeparator();
-    args->contextMenu()->addAction(tr("Экспорт CSV"), this, SLOT(OpenExportCSVForm()));
-    args->contextMenu()->addAction(tr("Импорт CSV"), this, SLOT(OpenImportCSVForm()));
-    args->contextMenu()->addAction(tr("Выборка"), this, SLOT(OpenSelectionForm()));
+    args->contextMenu()->addAction(tr("Экспорт CSV"),
+                                   this, &RtabWidget::OpenExportCSVForm);
+    args->contextMenu()->addAction(tr("Импорт CSV"),
+                                   this, &RtabWidget::OpenImportCSVForm);
+    args->contextMenu()->addAction(tr("Выборка"),
+                                   this, &RtabWidget::OpenSelectionForm);
 
     if ( (!prcol->nameref_.empty() && prcol->com_prop_tt == enComPropTT::COM_PR_INT) || (prcol->com_prop_tt == enComPropTT::COM_PR_SUPERENUM) )
     {
@@ -394,89 +424,6 @@ void RtabWidget::contextMenu(ContextMenuEventArgs* args)
     connect(condFormatAction, &QAction::triggered, this, [&]() {
         emit editCondFormats(column);
     });
-}
-
-void RtabWidget::customMenuRequested(QPoint pos){
-    index=ptv->indexAt(pos);
-
-    MenuRequestedPoint = pos;
-
-    QMenu *menu=new QMenu(this);
-    QAction* copyAction = new QAction( tr("Copy"), menu);
-    QAction* copyWithHeadersAction = new QAction( tr("Copy with Headers"), menu);
-    QAction* condFormatAction = new QAction(QIcon(":/icons/edit_cond_formats"), tr("Edit Conditional Formats..."), menu);
-
-    std::tuple<int,double> item_sum = GetSumSelected();
-#if(defined(_MSC_VER))
-    menu->addAction("Сумма: " + QString::number(std::get<1>(item_sum))+" Элементов: " + QString::number(std::get<0>(item_sum)),this,nullptr);
-#else
-    menu->addAction("Сумма: " + QString::number(std::get<1>(item_sum))+" Элементов: " + QString::number(std::get<0>(item_sum)));
-#endif
-    menu->addSeparator();
-    menu->addAction(copyAction);
-    menu->addAction(copyWithHeadersAction);
-    menu->addAction(QIcon(":/images/Rastr3_grid_insrow_16x16.png"),tr("Insert Row"),this,SLOT(insertRow()))
-            ->setShortcut( QKeySequence(Qt::CTRL | Qt::Key_I) );
-    menu->addAction(QIcon(":/images/Rastr3_grid_delrow_16x16.png"),tr("Delete Row"),this,SLOT(deleteRow()))
-            ->setShortcut( QKeySequence(Qt::CTRL | Qt::Key_D) );
-    //menu->addAction(tr("Hide Rows"),this,SLOT(hideRows()));
-    //menu->addAction(tr("Unhide Rows"),this,SLOT(unhideRows()));
-    menu->addSeparator();
-    //menu->addAction(tr("Insert Columns"),this,SLOT(insertColumns()));
-    //menu->addAction(tr("Delete Columns"),this,SLOT(deleteColumns()));
-    //menu->addAction(tr("Hide Columns"),this,SLOT(hideColumns()));
-    //menu->addAction(tr("Unhide Columns"),this,SLOT(unhideColumns()));
-    menu->addAction(tr("Выравнивание: по шаблону"),this,SLOT(widebyshabl()));
-    menu->addAction(tr("Выравнивание: по данным"),this,SLOT(widebydata()));
-    menu->addSeparator();
-    menu->addAction("Выборка", this, SLOT(OpenSelectionForm()));
-    menu->addAction(tr("Format"));
-    menu->addAction(condFormatAction);
-    menu->popup(ptv->viewport()->mapToGlobal(pos));
-
-    //ShotCuts (no ru variant :(  ...)
-   // QShortcut *sC_CTRL_I = new QShortcut( QKeySequence(Qt::CTRL | Qt::Key_I), this);
-   // QShortcut *sC_CTRL_D = new QShortcut( QKeySequence(Qt::CTRL | Qt::Key_D), this);
-    connect(sC_CTRL_I, &QShortcut::activated, this, &RtabWidget::insertRow);
-    connect(sC_CTRL_D, &QShortcut::activated, this, &RtabWidget::deleteRow);
-
-    //connect(copyAction, &QAction::triggered, this, &RtabWidget::copy);
-    connect(copyAction, &QAction::triggered, this, [&]() {
-        copy(false, false);
-    });
-    //connect(cutAction, &QAction::triggered, this, &ExtendedTableWidget::cut);
-    connect(copyWithHeadersAction, &QAction::triggered, this, [&]() {
-        copy(true, false);
-    });
-
-    connect(condFormatAction, &QAction::triggered, this, [&]() {
-        emit editCondFormats(index.column());
-    });
-
-}
-
-void RtabWidget::customHeaderMenuRequested(QPoint pos){
-    MenuRequestedPoint = pos;
-    column=ptv->horizontalHeader()->logicalIndexAt(pos);
-
-    RCol* prcol = prm->getRCol(column);
-    std::string str_col_prop = prcol->desc() + " |"+ prcol->title() + "| -(" + prcol->name() + "), [" +prcol->unit() + "]";
-    QString qstr_col_props = str_col_prop.c_str();
-
-    QMenu *menu=new QMenu(this);
-    menu->addAction(qstr_col_props, this, SLOT(OpenColPropForm()));
-    menu->addSeparator();
-    menu->addAction(QIcon(":/images/sortasc.png"),tr("sortAscending"), this, SLOT(sortAscending()));
-    menu->addAction(QIcon(":/images/sortdesc.png"),tr("sortDescending"), this, SLOT(sortDescending()));
-    menu->addSeparator();
-    menu->addAction(tr("Clear Contents"),this,SLOT(clearContents()));
-    menu->addSeparator();
-    menu->addAction(tr("Скрыть"),this,SLOT(hideColumns()));
-    menu->addAction(tr("Выбор колонок"),this,SLOT(unhideColumns()));
-    menu->addAction(tr("Показать все колонки"),this,SLOT(showAllColumns()));
-    menu->addSeparator();
-    menu->addAction(tr("Format"));
-    menu->popup(ptv->horizontalHeader()->viewport()->mapToGlobal(pos));
 }
 
 QMenu* RtabWidget::CunstructLinkedFormsMenu(std::string form_name)

@@ -285,23 +285,48 @@ McrWnd::McrWnd(QWidget* parent, const _en_role en_role)
     QVBoxLayout* container_layout = new QVBoxLayout();
     if(_en_role::macro_dlg == en_role_){
         QToolBar* pToolBar = new QToolBar();
-        pToolBar->addAction( QIcon(QApplication::style()->standardIcon(QStyle::SP_FileIcon)),         tr("&New"),     this,  SLOT( onFileNew() )    )
-                ->setShortcut({QKeySequence(Qt::CTRL+Qt::Key_N)});
-        pToolBar->addAction( QIcon(QApplication::style()->standardIcon(QStyle::SP_DirIcon)),          tr("&Open"),    this,  SLOT( onFileOpen() )   )
-                ->setShortcut({QKeySequence(Qt::CTRL+Qt::Key_O)});
-        pToolBar->addAction( QIcon(QApplication::style()->standardIcon(QStyle::SP_DialogSaveButton)), tr("&Save"),    [this] { onFileSave(false); } )
-                ->setShortcuts( {QKeySequence(Qt::CTRL+Qt::Key_S)});
-        pToolBar->addAction( QIcon(QApplication::style()->standardIcon(QStyle::SP_DriveFDIcon)),      tr("Save as"),  [this] { onFileSave(true); }  )
-                ->setShortcut({QKeySequence(Qt::CTRL+Qt::Key_W)});
-        pToolBar->addAction( QIcon(QApplication::style()->standardIcon(QStyle::SP_MediaPlay)),        tr("Run (F10)"), this, SLOT( onRun() )        )
-                ->setShortcut({QKeySequence(Qt::Key_F10)});
-        //pToolBar->addWidget(leFind);
-        pToolBar->addAction( QIcon(QApplication::style()->standardIcon(QStyle::SP_BrowserReload)),    tr("&Find"),     this, SLOT( onFind() )       )
-                ->setShortcut({QKeySequence(Qt::CTRL+Qt::Key_F)});
-        pToolBar->addAction( QIcon(QApplication::style()->standardIcon(QStyle::SP_CommandLink)),      tr("&Go to line"), this, SLOT( onGoToLine() ) )
-                ->setShortcut({QKeySequence(Qt::CTRL+Qt::Key_G)});
-        pToolBar->addAction( QIcon(QApplication::style()->standardIcon(QStyle::SP_DialogResetButton)), tr("&Clear"), this, SLOT( onProtClear() ) );
-
+        pToolBar->addAction(
+                    QIcon(QApplication::style()->standardIcon(QStyle::SP_FileIcon)),
+                    tr("&New"),
+                    this,
+                    [this] { McrWnd::onFileNew(); }
+                    )->setShortcut(QKeySequence(Qt::CTRL | Qt::Key_N));
+        pToolBar->addAction(
+                    QIcon(QApplication::style()->standardIcon(QStyle::SP_DirIcon)),
+                    tr("&Open"),
+                    this,
+                    [this] { McrWnd::onFileOpen(); }
+                    )->setShortcut(QKeySequence(Qt::CTRL | Qt::Key_O));
+        pToolBar->addAction(
+                    QIcon(QApplication::style()->standardIcon(QStyle::SP_DialogSaveButton)),
+                    tr("&Save"),
+                    [this] { onFileSave(false); }
+                    )->setShortcut(QKeySequence(Qt::CTRL | Qt::Key_S));
+        pToolBar->addAction(
+                    QIcon(QApplication::style()->standardIcon(QStyle::SP_DriveFDIcon)),
+                    tr("&Save as"),
+                    [this] { onFileSave(true); }
+                    )->setShortcut(QKeySequence(Qt::CTRL | Qt::Key_W));
+        pToolBar->addAction(
+                    QIcon(QApplication::style()->standardIcon(QStyle::SP_MediaPlay)),
+                    tr("Run (F10)"),
+                    [this] { McrWnd::onRun(); }
+                    )->setShortcut(QKeySequence(Qt::Key_F10));
+        pToolBar->addAction(
+                    QIcon(QApplication::style()->standardIcon(QStyle::SP_BrowserReload)),
+                    tr("&Find"),
+                    [this] { McrWnd::onFind(); }
+                    )->setShortcut(QKeySequence(Qt::CTRL+Qt::Key_F));
+        pToolBar->addAction(
+                    QIcon(QApplication::style()->standardIcon(QStyle::SP_CommandLink)),
+                    tr("&Go to line"),
+                    [this] { McrWnd::onGoToLine(); }
+                    )->setShortcut(QKeySequence(Qt::CTRL+Qt::Key_G));
+        pToolBar->addAction(
+                    QIcon(QApplication::style()->standardIcon(QStyle::SP_DialogResetButton)),
+                    tr("&Clear"),
+                    [this] { McrWnd::onProtClear(); }
+                    );
 
         container_layout->addWidget(pToolBar);
         shEdit_ = new SciHlp(this, SciHlp::_en_role::editor_python);

@@ -122,10 +122,10 @@ void MainWindow::initialize(
 
 void MainWindow::setupDockWidgets() {
     // Окно макросов
-    m_pMcrWnd = new McrWnd(this, McrWnd::_en_role::global_protocol);
+    m_globalProtocol = new McrWnd(this, McrWnd::_en_role::global_protocol);
     
     auto dockProtocol = new ads::CDockWidget("protocol", this);
-    dockProtocol->setWidget(m_pMcrWnd);
+    dockProtocol->setWidget(m_globalProtocol);
     dockProtocol->setFeature(ads::CDockWidget::CustomCloseHandling, true);
     m_dockManager->addDockWidgetTab(ads::BottomDockWidgetArea, dockProtocol);
     
@@ -144,7 +144,7 @@ void MainWindow::setupLogging() {
     
     // Sink для окна протокола (макросы)
     auto qtSink = std::make_shared<spdlog::sinks::qt_sink_mt>(
-        m_pMcrWnd, "onQStringAppendProtocol"
+        m_globalProtocol, "onQStringAppendProtocol"
     );
     logger->sinks().push_back(qtSink);
     
@@ -157,7 +157,7 @@ void MainWindow::setupLogging() {
     connect(m_qastra.get(), &QAstra::onRastrLog,
             m_mainProtocol, &FormProtocol::onRastrLog);
     connect(m_qastra.get(), &QAstra::onRastrLog,
-            m_pMcrWnd, &McrWnd::onRastrLog);
+            m_globalProtocol, &McrWnd::onRastrLog);
 }
 
 void MainWindow::setupConnections() {

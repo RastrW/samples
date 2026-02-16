@@ -92,8 +92,7 @@ signals:
      * @param dialogType тип диалога ("idop", "mdp_prepare")
      */
     void showDialogRequested(const QString& dialogType,
-                             const QString& params = "");
-    
+                             const QString& params = "");  
 private:
     // ========== Зависимости ==========
     std::shared_ptr<QAstra> m_qastra;
@@ -105,7 +104,6 @@ private:
     QString m_currentCalculation;
     
     // ========== Вспомогательные методы ==========
-    
     void beginCalculation(const QString& name);
     void endCalculation(bool success, const QString& message);
     
