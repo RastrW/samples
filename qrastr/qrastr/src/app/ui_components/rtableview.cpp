@@ -54,9 +54,6 @@ RTableView::RTableView(QWidget *parent) :
     setContextMenuPolicy(Qt::CustomContextMenu);                   //https://forum.qt.io/topic/31233/how-to-create-a-custom-context-menu-for-qtableview/6
     horizontalHeader()->setContextMenuPolicy(Qt::CustomContextMenu);
 
-    //connect(ptv->horizontalHeader(), &FilterTableHeader::filterChanged, this, &RtabWidget::updateFilter);
-
-
     setSortingEnabled(true);
     //setSectionMoveable(true);
     horizontalHeader()->setSectionsMovable(true);

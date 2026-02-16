@@ -14,6 +14,7 @@ struct _log_data;
 class QStringListModel;
 class ProtocolTreeItem;
 class ProtocolTreeModel;
+
 class FormProtocol
     : public QWidget{
     Q_OBJECT

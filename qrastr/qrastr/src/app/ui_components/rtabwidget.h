@@ -1,5 +1,3 @@
-#ifndef RTABWIDGET_H
-#define RTABWIDGET_H
 #pragma once
 
 #include <QObject>
@@ -116,72 +114,54 @@ class RtabWidget : public QWidget
     Q_OBJECT
 public:
     explicit RtabWidget(CUIForm UIForm,QWidget *parent = nullptr);
-    explicit RtabWidget(QAstra* pqastra, CUIForm UIForm, RTablesDataManager* pRTDM, ads::CDockManager* pDockManager ,QWidget *parent = nullptr);
+    explicit RtabWidget(QAstra* pqastra, CUIForm UIForm,
+                        RTablesDataManager* pRTDM, ads::CDockManager* pDockManager ,QWidget *parent = nullptr);
     virtual ~RtabWidget() = default;
 
-    void SetTableView(QTableView& tv, RModel& mm, int myltiplier = 10);
-    void SetTableView(Qtitan::GridTableView& tv, RModel& mm, int myltiplier = 10 );
     void closeEvent(QCloseEvent* event) override;
+private:  
+    void setTableView(QTableView& tv, RModel& mm, int myltiplier = 10);
+    void setTableView(Qtitan::GridTableView& tv, RModel& mm, int myltiplier = 10 );
 
-private:
-    void test(const QModelIndexList& fromIndices);
-    void copyMimeData(const QModelIndexList& fromIndices, QMimeData* mimeData, const bool withHeaders, const bool inSQL);
-    void copy(const bool withHeaders, const bool inSQL);
-    void copy();
     std::tuple<int,double> GetSumSelected();
     QMenu* CunstructLinkedFormsMenu(std::string form_name);
 
 signals:
-    void onCornerButtonPressed();
     void CondFormatsModified();
 public slots:
     void on_calc_begin();
     void on_calc_end();
     void OnClose();
-    void onvisibilityChanged(bool visible);
     void contextMenu(ContextMenuEventArgs* args);
 
     void onItemPressed(CellClickEventArgs* _index);
-    void onLinkedFormUpdate(CellClickEventArgs* _index);
     void onfocusRowChanged( int _row_old,int _row_new);
 
-    void insertRow();
     void AddRow();
     void insertRow_qtitan();
     void DuplicateRow_qtitan();
-    void deleteRow();
     void deleteRow_qtitan();
+    // ширина по шаблону
     void widebyshabl();
+    // ширина по контенту
     void widebydata();
     void OpenColPropForm();
     void OpenSelectionForm();
 
     void OpenGroupCorrection();
-    void OpenLinkedForm(std::string name,std::string selection , std::vector<int> keys );    // ТИ:Каналы ; id1=%d & id2=0 & prv_num<8 ; 801
     void OpenExportCSVForm();
     void OpenImportCSVForm();
-    void sortAscending();
-    void sortDescending();
-    void hideColumns();
-    //void unhideColumns();
-    void showAllColumns();
-    void onUpdate(std::string _t_name);
-    void updateFilter(size_t column, QString value);
-    void onFileLoad();
-    void update_data();
+
     void SetSelection(std::string Selection);
     void SetDirectCodeEntry(size_t column);
     void editCondFormats(size_t column);
     void onCondFormatsModified();
     void SetLinkedForm( LinkedForm _lf);
     void onOpenLinkedForm(LinkedForm _lf );    // ТИ:Каналы ; id1=%d & id2=0 & prv_num<8 ; 801
-    void clearContents(){}
-    void unhideColumns() {}
 private slots:
     void CreateModel(QAstra* pqastra,CUIForm* pUIForm);
     void SetEditors();
     void SetEditor(RCol& _prcol);
-    void onRTDM_ResetModel(std::string tname);
 
 public:
     std::unique_ptr<RModel> prm;
@@ -196,27 +176,10 @@ public:
     LinkedForm m_lf;
 
 private:
-    using BufferRow = std::vector<QByteArray>;
-    std::vector<std::vector<QByteArray>> m_buffer;
-    QString m_generatorStamp;
-    RTableView* ptv ;
-    QSortFilterProxyModel *proxyModel;
-    QModelIndex index;              // current index (Cell clicked)
-    int form_indx;
+    RTableView* ptv;
     int column;                         // for header
     int row;
     Qtitan::GridTableColumn* column_qt;
-    QPoint MenuRequestedPoint;
     std::string m_selection;                                                            // Текущая выборка
     std::map<int, std::vector<CondFormat>> m_MapcondFormatVector;                       // column , vector<CondFormat>
-    QShortcut *sC_CTRL_I = new QShortcut( QKeySequence(Qt::CTRL | Qt::Key_I), this,nullptr,nullptr, Qt::WidgetWithChildrenShortcut);
-    QShortcut *sC_CTRL_D = new QShortcut( QKeySequence(Qt::CTRL | Qt::Key_D), this);
-    QShortcut *sC_CTRL_R = new QShortcut( QKeySequence(Qt::CTRL | Qt::Key_R), this);
-    QShortcut *sC_CTRL_A = new QShortcut( QKeySequence(Qt::CTRL | Qt::Key_A), this);
-protected:
-    //itemStateMap tItemStateMap;
-    //QFrame customizeFrame;
-    //QListWidget customizeListWidget;
 };
-
-#endif // RTABWIDGET_H

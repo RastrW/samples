@@ -8,7 +8,6 @@
 #include "params.h"
 #include "common_qrastr.h"
 #include "formsettingsdatas.h"
-#include "formsettingsforms.h"
 #include "formsettingsonloadfiles.h"
 #include "formsettingsonloadtemplates.h"
 #include "formsettingsonloadforms.h"

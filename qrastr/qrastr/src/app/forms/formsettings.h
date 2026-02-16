@@ -4,6 +4,7 @@
 
 #include <QtWidgets>
 class QAstra;
+
 class FormSettings
     : public QWidget{
     Q_OBJECT
