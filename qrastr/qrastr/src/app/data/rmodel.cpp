@@ -29,7 +29,6 @@ bool RModel::populateDataFromRastr(){
 
     for (RCol &rcol : *up_rdata)
     {
-        vqcols_.push_back(rcol.title().c_str());
         rcol.nameref_ =  rcol.NameRef();
 
         if (rcol.com_prop_tt == enComPropTT::COM_PR_ENUM)   // ex: Нет|Квадр.|Лин.|Комбинир.
@@ -55,7 +54,7 @@ bool RModel::populateDataFromRastr(){
             char delimiter = '.';
 
             int i = 0;
-            for (auto val : split(rcol.nameref_,delimiter))
+            for (const auto &val : split(rcol.nameref_,delimiter))
                 vsuperenum.push_back(val);
             if (vsuperenum.size() > 2)
             {
@@ -169,11 +168,11 @@ QVariant RModel::data(const QModelIndex &index, int role) const
             list = m_enum_.at(col);
 
         if (contains(mm_nameref_,col) )
-            for (auto val : mm_nameref_.at(col))
+            for (const auto &val : mm_nameref_.at(col))
                 list.append(val.second.c_str());
 
         if (contains(mm_superenum_,col) )
-            for (auto val : mm_superenum_.at(col))
+            for (const auto &val : mm_superenum_.at(col))
                 list.append(val.second.c_str());
 
         return list;
@@ -193,8 +192,7 @@ QVariant RModel::data(const QModelIndex &index, int role) const
 QVariant RModel::headerData(int section, Qt::Orientation orientation, int role) const
 {
     if (role == Qt::DisplayRole && orientation == Qt::Horizontal) {
-        if (section < vqcols_.size() )
-            return vqcols_[section];
+        return up_rdata.get()->at(section).title().c_str();
     }
     if (role == Qt::DisplayRole && orientation == Qt::Vertical) {
         return section + 1;
@@ -238,7 +236,7 @@ bool RModel::setData(const QModelIndex &index, const QVariant &value, int role)
                     if (contains(m_enum_,col))       // ENUM
                     {
                         int i =0;
-                        for (auto mval : m_enum_.at(col))
+                        for (const auto &mval : m_enum_.at(col))
                         {
                             if (mval == value)
                                 val = i;
@@ -247,13 +245,13 @@ bool RModel::setData(const QModelIndex &index, const QVariant &value, int role)
                     }
                     else if (contains(mm_superenum_,col))     // SUPER_ENUM
                     {
-                        for (auto [mkey,mval] : mm_superenum_.at(col) )
+                        for (const auto &[mkey,mval] : mm_superenum_.at(col) )
                             if (mval == value.toString().toStdString())
                                 val = mkey;
                     }
                     else if (contains(mm_nameref_,col))     // RefCol: node[na]
                     {
-                        for (auto [mkey,mval] : mm_nameref_.at(col) )
+                        for (const auto &[mkey,mval] : mm_nameref_.at(col) )
                             if (mval == value.toString().toStdString())
                                 val = mkey;
                     }
@@ -444,11 +442,14 @@ bool RModel::AddRow(size_t count ,const QModelIndex &parent)
     IRastrTablePtr table{ tablesx->Item(getRdata()->t_name_) };
     IRastrPayload sz{table->Size()};
 
+    //IPlainRastrResult* pres = this->pqastra_->getRastr()->SetLockEvent(true);
     for (size_t i = 0 ; i < count ; i++ )
-        IPlainRastrResult* pres = table->AddRow();
+        IRastrResultVerify{ table->AddRow()};
+    //pres = this->pqastra_->getRastr()->SetLockEvent(false);
 
     return true;
 }
+
 bool RModel::insertRows(int row, int count, const QModelIndex &parent)
 {
     IRastrTablesPtr tablesx{ this->pqastra_->getRastr()->Tables() };
@@ -457,10 +458,11 @@ bool RModel::insertRows(int row, int count, const QModelIndex &parent)
     IRastrPayload sz{table->Size()};
 
     for (size_t i = 0 ; i < count ; i++ )
-        IPlainRastrResult* pres = table->InsertRow(row);
+        IRastrResultVerify{table->InsertRow(row)};
 
     return true;
 }
+
 bool RModel::DuplicateRow(int row, const QModelIndex &parent)
 {
     IRastrTablesPtr tablesx{ this->pqastra_->getRastr()->Tables() };
@@ -468,7 +470,9 @@ bool RModel::DuplicateRow(int row, const QModelIndex &parent)
     IRastrTablePtr table{ tablesx->Item(getRdata()->t_name_) };
     IRastrPayload sz{table->Size()};
 
-    IPlainRastrResult* pres = table->DuplicateRow(row); // send EventHints::InsertRow
+    //beginInsertRows(parent,sz.Value(),sz.Value());
+    IRastrResultVerify{table->DuplicateRow(row)}; // send EventHints::InsertRow
+    //endInsertRows();
 
     //Дублируем данные в клиенте
     this->up_rdata->pnparray_->DuplicateRow(row);
@@ -495,7 +499,7 @@ bool RModel::removeRows(int row, int count, const QModelIndex &parent)
     //beginRemoveRows(parent,sz.Value(),sz.Value() + count -1);
     beginRemoveRows(parent,row,row + count -1);
     for (size_t i = 0 ; i < count ; i++ )
-        IPlainRastrResult* pres = table->DeleteRow(row);
+       IRastrResultVerify{table->DeleteRow(row)};
     endRemoveRows();
 
     return true;

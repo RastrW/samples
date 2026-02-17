@@ -356,11 +356,11 @@ bool App::start(){
                 path_template /= file_template.second;
                 IPlainRastrRetCode res =
                     m_sp_qastra->Load( eLoadCode::RG_REPL, file_template.first,
-                                                           path_template.string() );
+                                      path_template.string() );
                 if(res != IPlainRastrRetCode::Ok){
                     spdlog::error("wheh read file");
                     QMessageBox mb( QMessageBox::Icon::Critical, QObject::tr("Error"),
-                                    QString("error: wheh read file : %1").arg(file_template.first.c_str())
+                                   QString("error: wheh read file : %1").arg(file_template.first.c_str())
                                    );
                     mb.exec();
                 }
