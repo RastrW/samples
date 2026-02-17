@@ -272,41 +272,6 @@ endif()
 # Copy Python DLLs
 # ============================================================================
 if(WIN32)
-    if(Python3_FOUND)
-        get_filename_component(PYTHON_DIR "${Python3_EXECUTABLE}" DIRECTORY)
-        message(STATUS "PYTHON_DIR: ${PYTHON_DIR}")
-
-        # Python ищет stdlib рядом с exe: <TARGET_FILE_DIR>/Lib и <TARGET_FILE_DIR>/DLLs
-        add_custom_command(TARGET qmcr POST_BUILD
-            COMMAND ${CMAKE_COMMAND} -E copy_directory
-                "${PYTHON_DIR}/Lib"
-                "$<TARGET_FILE_DIR:qmcr>/Lib"
-            COMMENT "Copying Python stdlib to Lib"
-        )
-        add_custom_command(TARGET qmcr POST_BUILD
-            COMMAND ${CMAKE_COMMAND} -E copy_directory
-                "${PYTHON_DIR}/DLLs"
-                "$<TARGET_FILE_DIR:qmcr>/DLLs"
-            COMMENT "Copying Python DLLs to DLLs"
-        )
-
-        # python DLL-ки рядом с exe
-        set(PYTHON_DLLS
-            "${PYTHON_DIR}/python3.dll"
-            "${PYTHON_DIR}/python${Python3_VERSION_MAJOR}${Python3_VERSION_MINOR}.dll"
-        )
-        foreach(DLL_PATH ${PYTHON_DLLS})
-            if(EXISTS "${DLL_PATH}")
-                add_custom_command(TARGET qmcr POST_BUILD
-                    COMMAND ${CMAKE_COMMAND} -E copy_if_different
-                        "${DLL_PATH}"
-                        "$<TARGET_FILE_DIR:qmcr>/"
-                    COMMENT "Copying Python DLL: ${DLL_PATH}"
-                )
-            endif()
-        endforeach()
-
-    endif()
     # Копирование ScintillaEdit DLL
     set(SCINTILLA_DLL_NAME "ScintillaEdit5.dll")
 
