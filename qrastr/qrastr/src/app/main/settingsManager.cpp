@@ -25,7 +25,7 @@ bool SettingsManager::loadWindowGeometry(QMainWindow* window) {
         } else {
             window->restoreGeometry(geometry);
         }
-        
+
         m_settings.endGroup();
     }
     catch (const std::exception& ex) {

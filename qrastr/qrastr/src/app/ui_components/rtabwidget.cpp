@@ -95,6 +95,9 @@ RtabWidget::RtabWidget(QAstra* pqastra,CUIForm UIForm, RTablesDataManager* pRTDM
     connect(m_pRTDM, &RTablesDataManager::sig_EndResetModel,this->prm.get(), &RModel::slot_EndResetModel);
     connect(m_pRTDM, &RTablesDataManager::sig_BeginInsertRow,this->prm.get(), &RModel::slot_BeginInsertRow);
     connect(m_pRTDM, &RTablesDataManager::sig_EndInsertRow,this->prm.get(), &RModel::slot_EndInsertRow);
+
+    connect(m_pRTDM, &RTablesDataManager::sig_BeginResetModel,this, &RtabWidget::slot_beginResetModel);
+    connect(m_pRTDM, &RTablesDataManager::sig_EndResetModel,this,  &RtabWidget::slot_endResetModel);
 }
 
 void RtabWidget::closeEvent(QCloseEvent *event)
@@ -662,4 +665,48 @@ std::tuple<int,double> RtabWidget::GetSumSelected()
         }
     }
     return std::make_tuple(number,total);
+}
+
+
+void RtabWidget::slot_beginResetModel(std::string tname)
+{
+    if (this->m_UIForm.TableName() != tname)
+        return;
+
+    view->beginUpdate();
+
+    // Запомним видимые столбцы
+    int ncols = view->getColumnCount();
+    //qDebug()<<"onRTDM_BeginResetModel"<<tname<<": ncols(view) = "<<ncols;
+
+    for (int i = 0 ; i < ncols ; i++)
+    {
+        column_qt = (Qtitan::GridTableColumn *)view->getColumn(i);
+        m_ColumnsVisible.insert(std::make_pair(column_qt->caption() , column_qt->isVisible() ));
+        //qDebug()<<i<<":"<<column_qt->caption()<<" - "<<column_qt->isVisible();
+    }
+}
+void RtabWidget::slot_endResetModel(std::string tname)
+{
+    if (this->m_UIForm.TableName() != tname)
+        return;
+
+    //view->setModel(prm.get());
+    //SetEditors();
+
+    // Установим видимые столбцы
+    int ncols = view->getColumnCount();
+    int sz = (prm->getRdata())->size();
+    qDebug()<<"onRTDM_EndResetModel"<<tname<<": ncols(view) = "<<ncols;
+    for (const RCol& rcol : *prm->getRdata())
+    {
+        column_qt = (Qtitan::GridTableColumn *)view->getColumn(rcol.index);
+        column_qt->setVisible(false);
+        if (contains(m_ColumnsVisible, column_qt->caption()))
+        {
+            //qDebug()<<rcol.index<<":"<<column_qt->caption()<<" - "<<column_qt->isVisible();
+            column_qt->setVisible(m_ColumnsVisible.at(column_qt->caption()));
+        }
+    }
+    view->endUpdate();
 }

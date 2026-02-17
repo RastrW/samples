@@ -20,7 +20,11 @@
 #include <QInputDialog>
 #include <QApplication>
 #include <QMdiSubWindow>
+#include <QtSvgWidgets/QSvgWidget>
+#include <QSvgRenderer>
+
 #include <spdlog/spdlog.h>
+
 #include "calculationController.h"
 #include "fileManager.h"
 #include "formManager.h"
@@ -82,7 +86,9 @@ void MainWindow::initialize(
     // 1. SettingsManager (первым - нужен для загрузки настроек)
     m_settingsManager = std::make_unique<SettingsManager>(this);
     m_settingsManager->loadWindowGeometry(this);
-    
+    // Restore the state of toolbars and dock widgets (menus are part of the overall layout)
+    restoreState(m_settingsManager->getSettings("mainWindowState"));
+
     // 2. FileManager
     m_fileManager = std::make_unique<FileManager>(qastra, this);
     
@@ -338,19 +344,30 @@ void MainWindow::slot_openMcrDialog(){
 }
 
 void MainWindow::slot_openGraph(){
-#if(!defined(SDL_NO))
-    SDL_Init(SDL_INIT_VIDEO); // Basics of SDL, init what you need to use
 
     auto dw = new ads::CDockWidget( "Графика", this);
+
+    //Using QSvgWidget
+    QSvgWidget *svgWidget = new QSvgWidget;
+    svgWidget->load(QStringLiteral(":/images/cx195.svg"));
+    dw->setWidget(svgWidget);
+    connect( dw, SIGNAL( closed() ), svgWidget, SLOT( OnClose() ) );
+    auto area = m_dockManager->addDockWidgetTab(ads::BottomAutoHideArea, dw);
+    dw->setFeature(ads::CDockWidget::DockWidgetDeleteOnClose, true);
+
+
+#if(!defined(SDL_NO))
+    SDL_Init(SDL_INIT_VIDEO); // Basics of SDL, init what you need to use
     SDLChild * SdlChild = new SDLChild(dw);	// Creating the SDL Window and initializing it.
 
     dw->setWidget(SdlChild);
     connect( dw, SIGNAL( closed() ), SdlChild, SLOT( OnClose() ) );
-    auto area = m_DockManager->addDockWidgetTab(ads::BottomAutoHideArea, dw);
+    auto area = m_dockManager->addDockWidgetTab(ads::BottomAutoHideArea, dw);
     dw->setFeature(ads::CDockWidget::DockWidgetDeleteOnClose, true);
 
     SdlChild->SDLInit();
 #endif
+
 }
 
 void MainWindow::slot_about(){

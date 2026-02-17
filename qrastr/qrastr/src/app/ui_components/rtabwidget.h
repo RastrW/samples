@@ -81,6 +81,9 @@ public slots:
     void onCondFormatsModified();
     void SetLinkedForm( LinkedForm _lf);
     void onOpenLinkedForm(LinkedForm _lf );    // ТИ:Каналы ; id1=%d & id2=0 & prv_num<8 ; 801
+    void slot_beginResetModel(std::string tname);
+    void slot_endResetModel(std::string tname);
+
 private slots:
     void CreateModel(QAstra* pqastra,CUIForm* pUIForm);
     void SetEditors();
@@ -103,6 +106,7 @@ private:
     int column;                         // for header
     int row;
     Qtitan::GridTableColumn* column_qt;
-    std::string m_selection;                                                            // Текущая выборка
-    std::map<int, std::vector<CondFormat>> m_MapcondFormatVector;                       // column , vector<CondFormat>
+    std::string m_selection;                                      // Текущая выборка
+    std::map<int, std::vector<CondFormat>> m_MapcondFormatVector; // column , vector<CondFormat>
+    std::map<QString,bool> m_ColumnsVisible;
 };

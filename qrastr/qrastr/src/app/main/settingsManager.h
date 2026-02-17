@@ -36,6 +36,10 @@ public:
     // ========== Настройки форм ==========
     /// @brief Показать диалог настроек форм
     void showFormSettings(std::shared_ptr<QAstra> qastra);
+
+    QByteArray getSettings(const QString& name){
+        return m_settings.value(name).toByteArray();
+    }
 private:
     QSettings
         m_settings;

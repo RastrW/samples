@@ -194,11 +194,6 @@ target_compile_definitions(Fmt::fmt INTERFACE FMT_HEADER_ONLY)
 
 add_library(Spdlog::spdlog INTERFACE IMPORTED)
 target_include_directories(Spdlog::spdlog INTERFACE "${THIRDPARTY_DIR}/spdlog/include")
-target_compile_definitions(Spdlog::spdlog INTERFACE
-    SPDLOG_HEADER_ONLY
-    SPDLOG_FMT_EXTERNAL
-    FMT_HEADER_ONLY
-)
 
 # Создаём алиасы для совместимости
 add_library(fmt::fmt ALIAS Fmt::fmt)
@@ -222,6 +217,8 @@ find_package(Qt${QT_VERSION_MAJOR} REQUIRED COMPONENTS
     Xml
     Test
     LinguistTools
+    SvgWidgets
+    Svg
 )
 
 # Qt6 требует дополнительный модуль для совместимости с Qt5
@@ -397,6 +394,8 @@ set(QT_LIBS
     Qt${QT_VERSION_MAJOR}::PrintSupport
     Qt${QT_VERSION_MAJOR}::Xml
     Qt${QT_VERSION_MAJOR}::Test
+    Qt${QT_VERSION_MAJOR}::SvgWidgets
+    Qt${QT_VERSION_MAJOR}::Svg
 )
 
 if(QT_VERSION_MAJOR EQUAL 6)

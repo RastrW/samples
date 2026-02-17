@@ -19,7 +19,8 @@ RModel::RModel(QObject *parent, QAstra* pqastra, RTablesDataManager* pRTDM)
 bool RModel::populateDataFromRastr(){
 
     try{
-        up_rdata = std::make_unique<RData>(pqastra_, pUIForm_->TableName());
+        //beginResetModel();
+        up_rdata = std::unique_ptr<RData>(new RData(pqastra_,pUIForm_->TableName()));
         up_rdata->Initialize(*pUIForm_,pqastra_);
         up_rdata->populate_qastra(this->pqastra_,pRTDM_);
 
@@ -27,83 +28,83 @@ bool RModel::populateDataFromRastr(){
         mm_superenum_.clear();
         mm_nameref_.clear();
 
-    for (RCol &rcol : *up_rdata)
-    {
-        rcol.nameref_ =  rcol.NameRef();
-
-        if (rcol.com_prop_tt == enComPropTT::COM_PR_ENUM)   // ex: Нет|Квадр.|Лин.|Комбинир.
+        for (RCol &rcol : *up_rdata)
         {
-            QStringList list;
-            std::map<size_t,std::string> map_string;
-            char delimiter = '|';
+            rcol.nameref_ =  rcol.NameRef();
 
-            int i = 0;
-            for (auto val : split(rcol.nameref_,delimiter))
+            if (rcol.com_prop_tt == enComPropTT::COM_PR_ENUM)   // ex: Нет|Квадр.|Лин.|Комбинир.
             {
-                list.append(QString(val.c_str()));
-                map_string.insert(std::make_pair(i++,val));
-            }
-            m_enum_.insert(std::make_pair(rcol.index,list));
-        }
-        if (rcol.com_prop_tt == enComPropTT::COM_PR_SUPERENUM && !rcol.nameref_.empty()) // ex: ti_prv.Name.Num
-        {
-            QStringList list;
-            std::map<size_t,std::string> map_string ;
-            map_string.insert(std::make_pair(0,"не задано"));
-            std::vector<std::string> vsuperenum;
-            char delimiter = '.';
+                QStringList list;
+                std::map<size_t,std::string> map_string;
+                char delimiter = '|';
 
-            int i = 0;
-            for (const auto &val : split(rcol.nameref_,delimiter))
-                vsuperenum.push_back(val);
-            if (vsuperenum.size() > 2)
-            {
-                QDataBlock QDB;
-                long indx1 = pRTDM_->column_index(vsuperenum[0],vsuperenum[1]);
-                long indx2 = pRTDM_->column_index(vsuperenum[0],vsuperenum[2]);
-                if ( (indx1 > -1) && (indx2 > -1) )
+                int i = 0;
+                for (auto val : split(rcol.nameref_,delimiter))
                 {
-                    pRTDM_->getDataBlock(vsuperenum[0],vsuperenum[2]+","+vsuperenum[1], QDB);
-                    for ( int i = 0 ; i < QDB.RowsCount() ; i++)
-                    {
-                        long ind_ref_val = std::visit(ToLong(),(QDB.Get(i,0)));
-                        std::string str_ref_val = std::visit(ToString(),(QDB.Get(i,1)));
-                        list.append(str_ref_val.c_str());
-                        map_string.insert(std::make_pair(ind_ref_val,str_ref_val));
-                    }
+                    list.append(QString(val.c_str()));
+                    map_string.insert(std::make_pair(i++,val));
                 }
-                mm_superenum_.insert(std::make_pair(rcol.index,map_string));
+                m_enum_.insert(std::make_pair(rcol.index,list));
             }
-        }
-        if (rcol.com_prop_tt == enComPropTT::COM_PR_INT && !rcol.nameref_.empty())  // ex: node[na]
-        {
-            std::map<size_t,std::string> map_string ;
-            map_string.insert(std::make_pair(0,"не задано"));
-
-            int nopen = rcol.nameref_.find_first_of('[');
-            int nclose = rcol.nameref_.find_first_of(']');
-            std::string table = rcol.nameref_.substr(0,nopen);
-            std::string col = rcol.nameref_.substr(nopen+1,rcol.nameref_.length() - nopen - 2);
-            QDataBlock QDB;
-            long name_indx = pRTDM_->column_index(table,"name");
-            std::string cols = "";
-            cols = (name_indx > -1) ? col.append(",name") : col.append(",").append(col);    //ex: nsx not contains name
-            pRTDM_->getDataBlock(table, cols, QDB);
-
-            //QDB->QDump();
-
-            QStringList list;
-            for ( int i = 0 ; i < QDB.RowsCount() ; i++)
+            if (rcol.com_prop_tt == enComPropTT::COM_PR_SUPERENUM && !rcol.nameref_.empty()) // ex: ti_prv.Name.Num
             {
-                long ind_ref_val = std::visit(ToLong(),(QDB.Get(i,0)));
-                std::string str_ref_val = std::visit(ToString(),(QDB.Get(i,1)));
-                list.append(str_ref_val.c_str());
-                map_string.insert(std::make_pair(ind_ref_val,str_ref_val));
+                QStringList list;
+                std::map<size_t,std::string> map_string ;
+                map_string.insert(std::make_pair(0,"не задано"));
+                std::vector<std::string> vsuperenum;
+                char delimiter = '.';
+
+                int i = 0;
+                for (const auto &val : split(rcol.nameref_,delimiter))
+                    vsuperenum.push_back(val);
+                if (vsuperenum.size() > 2)
+                {
+                    QDataBlock QDB;
+                    long indx1 = pRTDM_->column_index(vsuperenum[0],vsuperenum[1]);
+                    long indx2 = pRTDM_->column_index(vsuperenum[0],vsuperenum[2]);
+                    if ( (indx1 > -1) && (indx2 > -1) )
+                    {
+                        pRTDM_->getDataBlock(vsuperenum[0],vsuperenum[2]+","+vsuperenum[1], QDB);
+                        for ( int i = 0 ; i < QDB.RowsCount() ; i++)
+                        {
+                            long ind_ref_val = std::visit(ToLong(),(QDB.Get(i,0)));
+                            std::string str_ref_val = std::visit(ToString(),(QDB.Get(i,1)));
+                            list.append(str_ref_val.c_str());
+                            map_string.insert(std::make_pair(ind_ref_val,str_ref_val));
+                        }
+                    }
+                    mm_superenum_.insert(std::make_pair(rcol.index,map_string));
+                }
             }
-            mm_nameref_.insert(std::make_pair(rcol.index,map_string));
+            if (rcol.com_prop_tt == enComPropTT::COM_PR_INT && !rcol.nameref_.empty())  // ex: node[na]
+            {
+                std::map<size_t,std::string> map_string ;
+                map_string.insert(std::make_pair(0,"не задано"));
+
+                int nopen = rcol.nameref_.find_first_of('[');
+                int nclose = rcol.nameref_.find_first_of(']');
+                std::string table = rcol.nameref_.substr(0,nopen);
+                std::string col = rcol.nameref_.substr(nopen+1,rcol.nameref_.length() - nopen - 2);
+                QDataBlock QDB;
+                long name_indx = pRTDM_->column_index(table,"name");
+                std::string cols = "";
+                cols = (name_indx > -1) ? col.append(",name") : col.append(",").append(col);    //ex: nsx not contains name
+                pRTDM_->getDataBlock(table, cols, QDB);
+
+                //QDB->QDump();
+
+                QStringList list;
+                for ( int i = 0 ; i < QDB.RowsCount() ; i++)
+                {
+                    long ind_ref_val = std::visit(ToLong(),(QDB.Get(i,0)));
+                    std::string str_ref_val = std::visit(ToString(),(QDB.Get(i,1)));
+                    list.append(str_ref_val.c_str());
+                    map_string.insert(std::make_pair(ind_ref_val,str_ref_val));
+                }
+                mm_nameref_.insert(std::make_pair(rcol.index,map_string));
+            }
         }
-    }
-    //endResetModel();
+        //endResetModel();
     }
     catch(...)
     {
