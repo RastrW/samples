@@ -475,20 +475,23 @@ endif()
 target_include_directories(${PROJECT_NAME} PRIVATE "${QTITAN_ROOT}/include")
 message(STATUS "Qtitan lib dir (normalized): ${QTITAN_LIB_DIR}")
 # ============================================================================
-# ASTRA Library Linking
+# Копируем ASTRA.DLL на Windows
 # ============================================================================
-# Копируем DLL на Windows
 if(WIN32)
-    add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
-        COMMAND ${CMAKE_COMMAND} -E copy_if_different
-            "${ASTRA_BIN_ROOT}/bin/astra.dll"
-            "$<TARGET_FILE_DIR:${PROJECT_NAME}>/plugins/"
-        COMMAND ${CMAKE_COMMAND} -E copy_if_different
-            "${ASTRA_BIN_ROOT}/bin/COMCK.dll"
-            "$<TARGET_FILE_DIR:${PROJECT_NAME}>/plugins/"
-        COMMENT "Copying ASTRA DLLs"
-    )
+    set(ASTRA_FOLDER "bin")
+else()
+    set(ASTRA_FOLDER "lib")
 endif()
+
+add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
+    COMMAND ${CMAKE_COMMAND} -E copy_if_different
+        "${ASTRA_BIN_ROOT}/${ASTRA_FOLDER}/${LIB_PREFIX}astra${SHLIB_SUFFIX}"
+        "$<TARGET_FILE_DIR:${PROJECT_NAME}>/plugins/"
+    COMMAND ${CMAKE_COMMAND} -E copy_if_different
+        "${ASTRA_BIN_ROOT}/${ASTRA_FOLDER}/${LIB_PREFIX}COMCK${SHLIB_SUFFIX}"
+        "$<TARGET_FILE_DIR:${PROJECT_NAME}>/plugins/"
+    COMMENT "Copying ASTRA"
+)
 
 # ============================================================================
 # Include Directories
