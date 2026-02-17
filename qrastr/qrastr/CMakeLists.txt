@@ -64,6 +64,8 @@ find_package( fmt     REQUIRED )
 find_package( QT NAMES Qt6 Qt5 Test COMPONENTS REQUIRED )
 find_package( Qt${QT_VERSION_MAJOR} COMPONENTS
     Core
+    SvgWidgets
+    Svg
     Widgets
     LinguistTools
     PrintSupport
@@ -340,6 +342,8 @@ target_link_libraries( ${PROJECT_NAME} PRIVATE
     Qt${QT_VERSION_MAJOR}::PrintSupport
     Qt${QT_VERSION_MAJOR}::Xml
     Qt${QT_VERSION_MAJOR}::Test
+    Qt${QT_VERSION_MAJOR}::SvgWidgets
+    Qt${QT_VERSION_MAJOR}::Svg
 )
 target_include_directories( ${PROJECT_NAME} PRIVATE
   ${INCLUDES}

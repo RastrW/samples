@@ -14,6 +14,10 @@
 #include <QDockWidget>
 #include <QAbstractTableModel>
 #include <QInputDialog>
+//#include <QApplication>
+
+#include <QtSvgWidgets/QSvgWidget>
+#include <QSvgRenderer>
 
 #include "common_qrastr.h"
 #include <spdlog/sinks/stdout_color_sinks.h>
@@ -49,6 +53,7 @@ using WrapperExceptionType = std::runtime_error;
 #include <QtitanGrid.h>
 #include "qmcr/pyhlp.h"
 #include "SDLChild.h"
+
 
 
 
@@ -425,10 +430,19 @@ void MainWindow::newFile(){
 }
 void MainWindow::open_graph(){
 
+    auto dw = new ads::CDockWidget( "Графика", this);
+
+    //Using QSvgWidget
+    QSvgWidget *svgWidget = new QSvgWidget;
+    svgWidget->load(QStringLiteral(":/images/cx195.svg"));
+    dw->setWidget(svgWidget);
+    connect( dw, SIGNAL( closed() ), svgWidget, SLOT( OnClose() ) );
+    auto area = m_DockManager->addDockWidgetTab(ads::BottomAutoHideArea, dw);
+    dw->setFeature(ads::CDockWidget::DockWidgetDeleteOnClose, true);
+
+
 #if(!defined(SDL_NO))
     SDL_Init(SDL_INIT_VIDEO); // Basics of SDL, init what you need to use
-
-    auto dw = new ads::CDockWidget( "Графика", this);
     SDLChild * SdlChild = new SDLChild(dw);	// Creating the SDL Window and initializing it.
 
     dw->setWidget(SdlChild);
@@ -438,6 +452,7 @@ void MainWindow::open_graph(){
 
     SdlChild->SDLInit();
 #endif
+
 }
 
 void MainWindow::open(){
@@ -1030,6 +1045,7 @@ void MainWindow::createActions(){
     QAction* actRGM = new QAction(QIcon(":/images/Rastr3_rgm_16x16.png"),tr("&Режим"), this);
     actRGM->setShortcut(tr("F5"));
     actRGM->setStatusTip(tr("Расчет УР"));
+    actRGM->setShortcutContext(Qt::ShortcutContext::ApplicationShortcut);
     connect(actRGM, SIGNAL(triggered()), this, SLOT(rgm_wrap()));
     QAction* actOC = new QAction(QIcon(":/images/Bee.png"),tr("&ОС"), this);
     actOC->setShortcut(tr("F6"));

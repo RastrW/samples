@@ -192,4 +192,6 @@ private:
     enum { MaxRecentFiles = 10 };
     QAction *recentFileActs[MaxRecentFiles];
 };
+
+
 #endif // MAINWINDOW_H
