@@ -29,6 +29,7 @@ class RtabWidget;
 class QMimeData;
 class QAstra;
 class LinkedForm;
+class PyHlp;
 
 
 typedef enum {ifNone, ifCheckBox } modelFlag;
@@ -132,6 +133,7 @@ private:
     void copy();
     std::tuple<int,double> GetSumSelected();
     QMenu* CunstructLinkedFormsMenu(std::string form_name);
+    QMenu* CunstructLinkedMacroMenu(std::string form_name);
 
 signals:
     void onCornerButtonPressed();
@@ -140,6 +142,7 @@ public slots:
     void on_calc_begin();
     void on_calc_end();
     void OnClose();
+    void setPyHlp(PyHlp* pPyHlp);
     void onvisibilityChanged(bool visible);
     void contextMenu(ContextMenuEventArgs* args);
     void customMenuRequested(QPoint pos);
@@ -181,6 +184,7 @@ public slots:
     void onCondFormatsModified();
     void SetLinkedForm( LinkedForm _lf);
     void onOpenLinkedForm(LinkedForm _lf );    // ТИ:Каналы ; id1=%d & id2=0 & prv_num<8 ; 801
+    void onOpenLinkedMacro(LinkedMacro _lm );
 
 private slots:
     void CreateModel(QAstra* pqastra,CUIForm* pUIForm);
@@ -201,6 +205,7 @@ public:
     Qtitan::Grid* m_grid;
     Qtitan::GridTableView* view;
     LinkedForm m_lf;
+    PyHlp* pPyHlp_{nullptr};
 
 private:
     using BufferRow = std::vector<QByteArray>;

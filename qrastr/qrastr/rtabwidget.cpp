@@ -23,6 +23,7 @@
 #include "CondFormatManager.h"
 #include "condformatjson.h"
 #include "linkedform.h"
+#include "qmcr/pyhlp.h"
 
 //#include "Settings.h"
 #include <QtitanGrid.h>
@@ -191,6 +192,10 @@ void RtabWidget::OnClose()
     disconnect(m_pRTDM, &RTablesDataManager::RTDM_BeginResetModel,this, &RtabWidget::onRTDM_BeginResetModel);
     disconnect(m_pRTDM, &RTablesDataManager::RTDM_EndResetModel,this,  &RtabWidget::onRTDM_EndResetModel);
     this->close();
+}
+void RtabWidget::setPyHlp(PyHlp* pPyHlp)
+{
+    pPyHlp_ = pPyHlp;
 }
 void RtabWidget::CreateModel(QAstra* pqastra, CUIForm* pUIForm)
 {
@@ -526,6 +531,10 @@ void RtabWidget::contextMenu(ContextMenuEventArgs* args)
     menu_linked_forms = CunstructLinkedFormsMenu( m_UIForm.Name());
     args->contextMenu()->addMenu(menu_linked_forms);
 
+    QMenu *menu_linked_macro;
+    menu_linked_macro = CunstructLinkedMacroMenu( m_UIForm.Name());
+    args->contextMenu()->addMenu(menu_linked_macro);
+
     args->contextMenu()->addAction(condFormatAction);
     connect(condFormatAction, &QAction::triggered, this, [&]() {
         emit editCondFormats(column);
@@ -654,6 +663,42 @@ QMenu* RtabWidget::CunstructLinkedFormsMenu(std::string form_name)
     return menu;
 }
 
+QMenu* RtabWidget::CunstructLinkedMacroMenu(std::string form_name)
+{
+    QMenu *menu=new QMenu(this);
+    menu->setTitle("Макрос");
+
+    std::vector<int> vbindvals;
+    auto table_context_macro = m_pRTDM->Get("macrocontext","");
+    size_t ind = 0;
+    for (int irow = 0; irow<table_context_macro->RowsCount();irow++)
+    {
+        std::string form = std::visit(ToString(),table_context_macro->Get(irow,0));
+        if (form_name == form)
+        {
+            long form_type = std::visit(ToLong(),table_context_macro->Get(irow,6));
+            long defappendix  = std::visit(ToLong(),table_context_macro->Get(irow,4));
+
+            if (form_type == 0 && defappendix )
+            {
+                LinkedMacro lm;
+                lm.col = std::visit(ToString(),table_context_macro->Get(irow,1));
+                lm.macrofile = std::visit(ToString(),table_context_macro->Get(irow,2));
+                lm.macrodesc  = std::visit(ToString(),table_context_macro->Get(irow,3));
+                lm.addstr       = std::visit(ToString(),table_context_macro->Get(irow,5));
+                lm.pbaseform = this;
+
+                QAction* LinkedFormAction = new QAction(lm.macrodesc.c_str(), menu);
+                menu->addAction(LinkedFormAction);
+                connect(LinkedFormAction, &QAction::triggered, [this, lm] {
+                    onOpenLinkedMacro(lm); });
+            }
+        }
+    }
+
+    return menu;
+}
+
 void RtabWidget::SetLinkedForm( LinkedForm _lf)
 {
     m_lf = _lf;
@@ -705,6 +750,42 @@ void RtabWidget::onOpenLinkedForm( LinkedForm _lf)
     dw->setFeature(ads::CDockWidget::DockWidgetDeleteOnClose, true);
     prtw->show();
 }
+
+void RtabWidget::onOpenLinkedMacro( LinkedMacro _lm)
+{
+    qDebug()<<"call linked macro:"<<_lm.macrofile;
+
+    //Макросы ищем в \Data\contextmacro заменяя расчширение .vbs -> .py
+    std::filesystem::path path_macrofile = QDir::currentPath().toStdString().c_str();
+    path_macrofile.append("contextmacro");
+    path_macrofile.append(_lm.macrofile);
+    path_macrofile.replace_extension(".py");
+
+    if( !fs::exists(path_macrofile.c_str()))
+    {
+        qDebug()<<"context macro not found:"<<path_macrofile;
+        return;
+    }
+
+    std::ifstream file(path_macrofile);
+
+    // Чтение файла в строку
+    std::string content((std::istreambuf_iterator<char>(file)),
+                        std::istreambuf_iterator<char>());
+
+    // В начало макроса добавим индекс строки и информацию для отладки
+    std::string debug_info = fmt::format("rastr.print(f\"run contextmacro: {}[row={}]\")\n",_lm.macrofile,row).c_str();
+    std::string aRow{"aRow="};
+    aRow.append(std::to_string(row));
+    aRow.append("\n");
+    content.insert(0,aRow);
+    content.insert(0,debug_info);
+
+    // тестовый макрос: узлы -> Отметить остров
+    const PyHlp::enPythonResult PythonResult{ pPyHlp_->Run( content.data() ) };
+
+}
+
 
 /*
 void RtabWidget::cornerButtonPressed()

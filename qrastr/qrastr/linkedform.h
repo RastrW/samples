@@ -43,4 +43,23 @@ private:
 
 };
 
+class LinkedMacro
+{
+public:
+    std::string col;
+    std::string macrofile;
+    std::string macrodesc;
+    std::string addstr;
+    std::string templatetags;
+    long row;
+    std::vector<int> vbindvals;
+    RtabWidget* pbaseform;
+    std::vector<QMetaObject::Connection> vconn;
+
+    void FillBindVals();
+private:
+    std::string selection_result;
+
+};
+
 #endif // LINKEDFORM_H

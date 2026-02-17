@@ -897,11 +897,10 @@ void MainWindow::onOpenForm(CUIForm _uiform){
         return;
     }
 
-
-
     //spdlog::info( "Create tab [{}]", stringutils::cp1251ToUtf8(form.Name()) );
     spdlog::info( "Прочитана таблица [{}] - [{}]", form.Name(),form.TableName() );
     RtabWidget *prtw = new RtabWidget(m_sp_qastra.get(),form,&m_RTDM,m_DockManager,this);
+    prtw->setPyHlp(m_up_PyHlp.get());
 
     //Выравнивание даных по шаблону , выравнивание текста по левому краю
     prtw->widebyshabl();
