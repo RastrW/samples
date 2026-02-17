@@ -33,6 +33,8 @@ find_package(Qt${QT_VERSION_MAJOR} REQUIRED COMPONENTS QuickWidgets)
 find_package(Astra REQUIRED)
 
 set(PYTHON_MIN 3.10)
+# Для Windows python 3.12 (в соответствии с astra_py)
+# Для Linux python 3.11 (версия пакета в системе)
 find_package(Python3 ${PYTHON_MIN} REQUIRED COMPONENTS Interpreter Development)
 message("Python3_FOUND:             ${Python3_FOUND}")
 message("Python3_VERSION:           ${Python3_VERSION}")
@@ -58,13 +60,6 @@ include_directories(
     include
 )
 
-if(QRASTR_BUILD_WITH_MCR)
-    include_directories(
-        #"${ASTRA_LOCATION}/"
-        #"${ASTRA_LOCATION}/../../astra/"
-    )
-endif()
-
 # ============================================================================
 # Scintilla/Lexilla
 # ============================================================================
@@ -80,15 +75,11 @@ set(SCINTILLA_BASE_DIR "${PRECOMPILED_BASE}/ScintillaEditBase/${PLATFORM_DIR}/${
 set(LEXILLA_DIR "${PRECOMPILED_BASE}/lexilla/${PLATFORM_DIR}/${CONFIG_DIR}")
 
 # Добавляем include директории
-if(EXISTS "${SCINTILLA_DIR}/include")
-    include_directories("${SCINTILLA_DIR}/include")
-endif()
-if(EXISTS "${SCINTILLA_BASE_DIR}/include")
-    include_directories("${SCINTILLA_BASE_DIR}/include")
-endif()
-if(EXISTS "${LEXILLA_DIR}/include")
-    include_directories("${LEXILLA_DIR}/include")
-endif()
+include_directories(
+        ${SCINTILLA_DIR}/include
+        ${SCINTILLA_BASE_DIR}/include
+        ${LEXILLA_DIR}/include
+)
 
 message(STATUS "Scintilla/Lexilla paths:")
 message(STATUS "  SCINTILLA_DIR: ${SCINTILLA_DIR}")
@@ -168,11 +159,12 @@ endif()
 target_link_libraries(qmcr PRIVATE Qt${QT_VERSION_MAJOR}::Widgets)
 target_link_libraries(qmcr PRIVATE Qt${QT_VERSION_MAJOR}::QuickWidgets)
 
-# Python - не линкуем для MSVC (используем embeddable Python)
+# На MSVC Python линкуется автоматически через #pragma comment в Python.h
+# (python311.lib прописан в заголовках). Явная линковка через CMake-таргет
+# не нужна и вызывает ошибки, т.к. Python3::Python не имеет Debug-конфигурации.
 if(NOT MSVC)
     target_link_libraries(qmcr PRIVATE Python3::Python)
 endif()
-
 # ============================================================================
 # Линковка Scintilla/Lexilla для разных платформ
 # ============================================================================
@@ -281,17 +273,28 @@ endif()
 # ============================================================================
 if(WIN32)
     if(Python3_FOUND)
-        # Получаем директорию с Python
         get_filename_component(PYTHON_DIR "${Python3_EXECUTABLE}" DIRECTORY)
-
         message(STATUS "PYTHON_DIR: ${PYTHON_DIR}")
 
-        # Копируем python3.dll и pythonXX.dll
+        # Python ищет stdlib рядом с exe: <TARGET_FILE_DIR>/Lib и <TARGET_FILE_DIR>/DLLs
+        add_custom_command(TARGET qmcr POST_BUILD
+            COMMAND ${CMAKE_COMMAND} -E copy_directory
+                "${PYTHON_DIR}/Lib"
+                "$<TARGET_FILE_DIR:qmcr>/Lib"
+            COMMENT "Copying Python stdlib to Lib"
+        )
+        add_custom_command(TARGET qmcr POST_BUILD
+            COMMAND ${CMAKE_COMMAND} -E copy_directory
+                "${PYTHON_DIR}/DLLs"
+                "$<TARGET_FILE_DIR:qmcr>/DLLs"
+            COMMENT "Copying Python DLLs to DLLs"
+        )
+
+        # python DLL-ки рядом с exe
         set(PYTHON_DLLS
             "${PYTHON_DIR}/python3.dll"
             "${PYTHON_DIR}/python${Python3_VERSION_MAJOR}${Python3_VERSION_MINOR}.dll"
         )
-
         foreach(DLL_PATH ${PYTHON_DLLS})
             if(EXISTS "${DLL_PATH}")
                 add_custom_command(TARGET qmcr POST_BUILD
@@ -302,6 +305,7 @@ if(WIN32)
                 )
             endif()
         endforeach()
+
     endif()
     # Копирование ScintillaEdit DLL
     set(SCINTILLA_DLL_NAME "ScintillaEdit5.dll")

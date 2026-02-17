@@ -1,5 +1,3 @@
-#ifndef MCRWND_H
-#define MCRWND_H
 #pragma once
 
 #include <QWidget>
@@ -63,5 +61,3 @@ private:
     long           n_stage_max_id_ = 0;
     PyHlp*         pPyHlp_{nullptr};
 };
-
-#endif // MCRWND_H

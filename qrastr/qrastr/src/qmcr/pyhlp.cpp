@@ -282,7 +282,8 @@ bool PyHlp::Initialize()
         std::string str_path1 = PyUtils::PyObjToStr(sys_path);
         QString qstr_plugin_path{QCoreApplication::applicationDirPath()};
         qstr_plugin_path += "/plugins/";    // MaxiMal: там находятся все внешние dll предлагаю там и держать astra_py.cp312-win_amd64.pyd
-        nRes = PyList_Append(sys_path, PyUnicode_FromString(qstr_plugin_path.toStdString().c_str())); assert(0 == nRes);
+        nRes = PyList_Append(sys_path, PyUnicode_FromString(qstr_plugin_path.toStdString().c_str()));
+        assert(0 == nRes);
 
         PyObject* sys_path2 = PySys_GetObject("path"); assert(nullptr != sys_path);
         std::string str_path2 = PyUtils::PyObjToStr(sys_path2);
