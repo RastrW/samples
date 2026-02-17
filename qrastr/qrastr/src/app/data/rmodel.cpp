@@ -509,53 +509,6 @@ bool RModel::removeColumns(int column, int count, const QModelIndex &parent)
     return true;
 }
 
-/*void RModel::onRModelchange(std::string _t_name, std::string _col_name, int row, QVariant value)
-{
-    if (_t_name != this->getRdata()->t_name_)
-        return;
-
-    int col = this->getIndexCol(_col_name);
-    if (col < 0)
-        return;
-
-    RData::iterator iter_col = up_rdata->begin() + col;
-    switch((*iter_col).en_data_){
-        case RCol::_en_data::DATA_BOOL:
-        {
-            bool val =  value.toBool();
-            FieldVariantData vd(val);
-            //up_rdata->nparray_.EmplaceSaveIndChange(row,col,vd);
-            up_rdata->pnparray_->Set(row,col,vd);
-            break;
-        }
-        case RCol::_en_data::DATA_INT:
-        {
-            long val =  value.toInt();
-            FieldVariantData vd(val);
-            up_rdata->pnparray_->Set(row,col,vd);
-            break;
-        }
-        case RCol::_en_data::DATA_STR:
-        {
-            std::string val =  value.toString().toStdString().c_str();
-            FieldVariantData vd(val);
-            up_rdata->pnparray_->Set(row,col,vd);
-            break;
-        }
-        break;
-        case RCol::_en_data::DATA_DBL:
-        {
-            double val =  value.toDouble();
-            FieldVariantData vd(val);
-            up_rdata->pnparray_->Set(row,col,vd);
-        }
-        break;
-        default :
-            break;
-    }
-}
-*/
-
 void RModel::slot_DataChanged(std::string _t_name, int row_from,int col_from ,int row_to,int col_to)
 {
     if (this->getRdata()->t_name_ == _t_name)
@@ -593,15 +546,6 @@ void RModel::slot_EndInsertRow(std::string _t_name)
 
 bool RModel::isBinary(const QModelIndex& index) const
 {
-   /* std::lock_guard<std::mutex> lock(m_mutexDataCache);
-
-    const size_t row = static_cast<size_t>(index.row());
-    if(!m_cache.count(row))
-        return false;
-
-    const auto & cached_row = m_cache.at(row);
-    return isBinary(cached_row.at(static_cast<size_t>(index.column())));
-    */
     switch (this->up_rdata->at(index.column()).en_data_)
    {
        case RCol::_en_data::DATA_BOOL:
@@ -625,7 +569,6 @@ bool RModel::isBinary(const QModelIndex& index) const
 
 bool RModel::isBinary(const QByteArray& data) const
 {
-    //return !isTextOnly(data, m_encoding, true);
     return true;
 }
 

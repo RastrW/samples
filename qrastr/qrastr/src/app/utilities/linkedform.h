@@ -10,9 +10,7 @@ class RtabWidget;
 
 class LinkedForm
 {
-    //Q_OBJECT
 public:
-    //LinkedForm();
     std::string linkedform;
     std::string linkedname;
     std::string selection;
@@ -28,7 +26,6 @@ public:
         replaceAll(selection_result,"%d",vbindvals);
         return selection_result;
     }
-//public slots:
      void FillBindVals();
 private:
     std::string selection_result;

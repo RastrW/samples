@@ -38,19 +38,13 @@ void RTableCornerButton::paintEvent(QPaintEvent*)
     style()->drawControl(QStyle::CE_Header, &opt, &painter, this);
 }
 
-//RTableView::RTableView()
 RTableView::RTableView(QWidget *parent) :
     QTableView(parent),
-    //pVertical(Qt::Vertical, this),
-    //pHorizontal(Qt::Horizontal, this),
     cornerButton(this)
 {
-    //cornerButton = new RTableCornerButton(this);
     // Set up filter row
     m_tableHeader = new FilterTableHeader(this);
-    //m_tableHeader->setFilter(4,tr("<100"));
     setHorizontalHeader(m_tableHeader);             // слетает сортировка по клику на заголовке столбца
-    //connect(verticalScrollBar(), &QScrollBar::valueChanged,  dynamic_cast<RtabWidget*>(this->parentWidget()), &RtabWidget::vscrollbarChanged);
     setContextMenuPolicy(Qt::CustomContextMenu);                   //https://forum.qt.io/topic/31233/how-to-create-a-custom-context-menu-for-qtableview/6
     horizontalHeader()->setContextMenuPolicy(Qt::CustomContextMenu);
 
@@ -59,16 +53,12 @@ RTableView::RTableView(QWidget *parent) :
     horizontalHeader()->setSectionsMovable(true);
     setAlternatingRowColors(true);
     setAutoFillBackground(true);
-//#if(defined(_MSC_VER))
+
 #if QT_VERSION < QT_VERSION_CHECK(6, 0, 0)
     Q_D(QTableView);
     d->cornerWidget = &cornerButton;
 #else
-  //  Q_D(QTableView);
-    //d->cornerWidget = nullptr;//(QTableCornerButton*)&cornerButton;
-   // QMessageBox mb( QMessageBox::Icon::Critical, QObject::tr("Error"), QObject::tr("!fixme rtablview:75")  );
-   // mb.exec();
-   // assert(!"nix: not understend howto compile.");
+
 #endif
 
     cornerButton.setText("*");
@@ -76,13 +66,6 @@ RTableView::RTableView(QWidget *parent) :
     connect(&cornerButton, &QPushButton::clicked, this, &RTableView::CornerButtonPressed);
 }
 
-/*RTableView::RTableView(RTabWidget* rtw)
-{
-    m_tableHeader = new FilterTableHeader(this);
-    setHorizontalHeader(m_tableHeader);             // слетает сортировка по клику на заголовке столбца
-
-    connect(verticalScrollBar(), &QScrollBar::valueChanged,  dynamic_cast<RtabWidget*>(this->parentWidget()), &RtabWidget::vscrollbarChanged);
-}*/
 void RTableView::generateFilters(int count)
 {
     m_tableHeader->generateFilters(count);

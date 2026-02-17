@@ -1,5 +1,3 @@
-#ifndef RTABLEVIEW_H
-#define RTABLEVIEW_H
 #pragma once
 
 #include <QTableView>
@@ -28,11 +26,7 @@ class RTableView : public QTableView
     Q_OBJECT
     Q_DECLARE_PRIVATE(QTableView)
 public:
-    //RTableView();
     explicit RTableView(QWidget *parent = nullptr);
-    // RTableView(QWidget *parent = nullptr);
-    //~RTableView();
-    //RTableView(RTabWidget* rtw);
     void generateFilters(int count);
 
 signals:
@@ -43,13 +37,4 @@ protected slots:
 protected:
      RTableCornerButton cornerButton;
      FilterTableHeader* m_tableHeader;
-
-     //PBSHeaderView pVertical, pHorizontal;
 };
-
-class QTRTableView : public Qtitan::GridTableView
-{
-    Q_OBJECT
-};
-
-#endif // RTABLEVIEW_H

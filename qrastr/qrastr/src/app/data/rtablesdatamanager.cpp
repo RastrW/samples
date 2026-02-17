@@ -1,7 +1,5 @@
 #include "rtablesdatamanager.h"
 
-//RTablesDataManager::RTablesDataManager() {}
-
 void RTablesDataManager::setQAstra( QAstra* _pqastra)
 {
     m_pqastra = _pqastra;

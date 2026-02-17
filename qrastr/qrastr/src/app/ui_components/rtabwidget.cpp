@@ -34,11 +34,9 @@
 
 namespace ads{ class CDockManager; }
 
-//std::map<std::string, BrowseDataTableSettings> RtabWidget::m_settings;
 
 RtabWidget::RtabWidget(CUIForm UIForm,QWidget *parent) :
       QWidget(parent)
-      //customizeFrame(this, Qt::Popup | Qt::Window)
 {
     m_UIForm = UIForm;
     ptv = new RTableView(this);
@@ -58,30 +56,16 @@ RtabWidget::RtabWidget(CUIForm UIForm,QWidget *parent) :
 
     view->tableOptions().setColumnAutoWidth(true);
     view->options().setSelectionPolicy(GridViewOptions::MultiCellSelection);    //user can select several cells at time. Hold shift key to select multiple cells.
-    //view->options().setNewRowPlace(Qtitan::AtEnd);                        // кнока добавления строки
-    //view->options().setRowRemoveEnabled(false);                           // кнока DEL в контекстном меню
-    //view->options().setGestureEnabled(true);
     view->options().setColumnHidingOnGroupingEnabled(false);
-    //view->options().setFastScrollEffect(true);                   //  If the option is true, then a special fade effect is enabled, which on fast data scrolling shows the frame of the rows without data inside the cells only. This allows you to increase the number of frames per second when rendering and avoid lag on large data.
     view->options().setFilterAutoHide(true);                     // Sets the value that indicates whether the filter panel can automatically hide or not.
     view->options().setFocusFrameEnabled(true);                  // Sets the painting the doted frame around the cell with focus to the enabled. By default frame is enabled.
     view->options().setGroupsHeader(false);                      // Sets the visibility status of the grid grouping panel to groupsHeader.
-    //view->options().setMainMenuDisabled(true);
     view->options().setScrollRowStyle(Qtitan::ScrollItemStyle::ScrollByItem);
     view->options().setShowWaitCursor(true);                    // Enables or disables wait cursor if grid is busy for lengthy operations with data like sorting or grouping.
 
-    // TO DO: Вынести в опцию контекстного меню (example MultiSelection)
+    ///@todo Вынести в опцию контекстного меню (example MultiSelection)
     view->tableOptions().setRowFrozenButtonVisible(true);
     view->tableOptions().setFrozenPlaceQuickSelection(true);
-
-    //Кнопка выбор колонок слева сверху, за собой тащит целый пустой бессмысленный столбец в котором указывается стролочка активной строки
-    //view->tableOptions().setColumnsQuickMenuVisible(false);
-    //view->tableOptions().setColumnsQuickCustomization(false);
-
-    //Заполнить строку поиска
-   // view->find("ШАГОЛ",Qt::CaseInsensitive,true);
-    //view->findClear();
-
 }
 
 RtabWidget::RtabWidget(QAstra* pqastra,CUIForm UIForm, RTablesDataManager* pRTDM,
@@ -89,7 +73,6 @@ RtabWidget::RtabWidget(QAstra* pqastra,CUIForm UIForm, RTablesDataManager* pRTDM
     : RtabWidget{UIForm,parent}
 {
     m_selection = "";
-   // m_UIForm = UIForm;
     m_pqastra = pqastra;
     m_pRTDM = pRTDM;
     m_DockManager = pDockManager;

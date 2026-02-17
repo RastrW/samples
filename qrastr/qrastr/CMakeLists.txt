@@ -416,13 +416,6 @@ if(BUILD_WITH_PQ)
     list(APPEND THIRD_PARTY_LIBS libpqxx::pqxx)
 endif()
 
-set(QTITAN_LIBS
-    Qtitan::QtitanBase2
-    Qtitan::QtitanGrid8
-    Qtitan::QtitanStyle2
-    Qtitan::QtitanFastInfoset2
-)
-
 # Astra
 set(ASTRA_LIBS)
 list(APPEND ASTRA_LIBS
@@ -434,7 +427,6 @@ list(APPEND ASTRA_LIBS
 set(PROJECT_LINK_LIBS)
 list(APPEND PROJECT_LINK_LIBS ${QT_LIBS})
 list(APPEND PROJECT_LINK_LIBS ${THIRD_PARTY_LIBS})
-list(APPEND PROJECT_LINK_LIBS ${QTITAN_LIBS})
 list(APPEND PROJECT_LINK_LIBS ${ASTRA_LIBS})
 
 # 3) Применяем один вызов для link'ов
@@ -442,23 +434,37 @@ target_link_libraries(${PROJECT_NAME} PRIVATE ${PROJECT_LINK_LIBS})
 # ============================================================================
 # Qtitan Libraries Configuration
 # ============================================================================
-# Универсальная функция для добавления Qtitan библиотек
-include(cmake/add_qtitan_library.cmake)
+if(WIN32)
+    string(TOLOWER "${CMAKE_BUILD_TYPE}" QTITAN_CONFIG_DIR)
+    set(QTITAN_LIB_DIR "${QTITAN_ROOT}/lib/msvc/${QTITAN_CONFIG_DIR}")
+else()
+    set(QTITAN_LIB_DIR "${QTITAN_ROOT}/lib")
+endif()
 
-# Использование - одинаково для всех платформ!
-add_qtitan_library(QtitanBase2)
-add_qtitan_library(QtitanGrid8)
-add_qtitan_library(QtitanStyle2)
-add_qtitan_library(QtitanFastInfoset2)
+# Нормализуем путь — убираем /../ чтобы линкер не спотыкался
+cmake_path(NORMAL_PATH QTITAN_LIB_DIR)
 
-# Link Qtitan Libraries
+if(NOT IS_DIRECTORY "${QTITAN_LIB_DIR}")
+    message(FATAL_ERROR "Qtitan library directory not found: ${QTITAN_LIB_DIR}")
+endif()
+message(STATUS "Qtitan library dir: ${QTITAN_LIB_DIR}")
+
+# Debug суффикс: QtitanBased2, QtitanGridd8 (d перед цифрой)
+if(CMAKE_BUILD_TYPE MATCHES Debug)
+    set(QTN_D "d")
+else()
+    set(QTN_D "")
+endif()
+
 target_link_libraries(${PROJECT_NAME} PRIVATE
-    Qtitan::QtitanBase2
-    Qtitan::QtitanGrid8
-    Qtitan::QtitanStyle2
-    Qtitan::QtitanFastInfoset2
+    "${QTITAN_LIB_DIR}/${LIB_PREFIX}QtitanBase${QTN_D}2${LIB_SUFFIX}"
+    "${QTITAN_LIB_DIR}/${LIB_PREFIX}QtitanGrid${QTN_D}8${LIB_SUFFIX}"
+    "${QTITAN_LIB_DIR}/${LIB_PREFIX}QtitanStyle${QTN_D}2${LIB_SUFFIX}"
+    "${QTITAN_LIB_DIR}/${LIB_PREFIX}QtitanFastInfoset${QTN_D}2${LIB_SUFFIX}"
 )
 
+target_include_directories(${PROJECT_NAME} PRIVATE "${QTITAN_ROOT}/include")
+message(STATUS "Qtitan lib dir (normalized): ${QTITAN_LIB_DIR}")
 # ============================================================================
 # ASTRA Library Linking
 # ============================================================================

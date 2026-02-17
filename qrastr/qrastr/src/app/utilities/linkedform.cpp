@@ -1,8 +1,6 @@
 #include "linkedform.h"
 #include "rtabwidget.h"
 
-//LinkedForm::LinkedForm() {}
-
 void LinkedForm::FillBindVals()
 {
     vbindvals.clear();
