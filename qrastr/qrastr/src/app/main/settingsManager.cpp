@@ -1,6 +1,6 @@
-#include "SettingsManager.h"
-#include "QAstra.h"
-#include "FormSettings.h"
+#include "settingsManager.h"
+#include "qastra.h"
+#include "formsettings.h"
 #include "cacheLog.h"
 
 #include <spdlog/spdlog.h>

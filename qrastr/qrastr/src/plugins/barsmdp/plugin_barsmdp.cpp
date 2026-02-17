@@ -5,6 +5,7 @@ using WrapperExceptionType = std::runtime_error;
 #include <astra/IPlainRastrWrappers.h>
 
 #include "plugin_barsmdp.h"
+#include "IPlainBarsMDP.h"
 
 void PluginBarsMDP::setLoggerPtr(std::shared_ptr<spdlog::logger> spLoger){
     spdlog::set_default_logger(spLoger);

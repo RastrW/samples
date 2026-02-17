@@ -1,7 +1,7 @@
 #include "formManager.h"
-#include "QAstra.h"
-#include "RTablesDataManager.h"
-#include "RtabWidget.h"
+#include "qastra.h"
+#include "rtablesdatamanager.h"
+#include "rtabwidget.h"
 
 #include <DockWidget.h>
 #include <DockManager.h>

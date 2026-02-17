@@ -54,13 +54,6 @@ RTableView::RTableView(QWidget *parent) :
     setAlternatingRowColors(true);
     setAutoFillBackground(true);
 
-#if QT_VERSION < QT_VERSION_CHECK(6, 0, 0)
-    Q_D(QTableView);
-    d->cornerWidget = &cornerButton;
-#else
-
-#endif
-
     cornerButton.setText("*");
     disconnect(&cornerButton, &QPushButton::clicked, this, &QTableView::selectAll);
     connect(&cornerButton, &QPushButton::clicked, this, &RTableView::CornerButtonPressed);

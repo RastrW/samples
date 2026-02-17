@@ -221,16 +221,16 @@ elseif(UNIX)
     endif()
 
     # Копируем lexillaв output directory для динамической загрузки через QLibrary::resolve()
-    if(EXISTS "${LEXILLA_DIR}/bin/liblexilla.so")
+    if(EXISTS "${LEXILLA_DIR}/lib/liblexilla.so")
         add_custom_command(TARGET qmcr POST_BUILD
             COMMAND ${CMAKE_COMMAND} -E copy_if_different
-                "${LEXILLA_DIR}/bin/liblexilla.so"
+                "${LEXILLA_DIR}/lib/liblexilla.so"
                 "$<TARGET_FILE_DIR:qmcr>/"
             COMMENT "Copying liblexilla.so for dynamic loading"
         )
-        message(STATUS "Will copy liblexilla.so from: ${LEXILLA_DIR}/bin/liblexilla.so")
+        message(STATUS "Will copy liblexilla.so from: ${LEXILLA_DIR}/lib/liblexilla.so")
     else()
-        message(FATAL_ERROR "liblexilla.so not found at ${LEXILLA_DIR}/bin/")
+        message(FATAL_ERROR "liblexilla.so not found at ${LEXILLA_DIR}/lib/")
     endif()
 
     # Добавляем RPATH чтобы приложение могло найти библиотеки

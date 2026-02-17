@@ -4,6 +4,7 @@
 using WrapperExceptionType = std::runtime_error;
 
 #include "pluginti.h"
+#include "IPlainTI.h"
 
 void PluginTI::setLoggerPtr(std::shared_ptr<spdlog::logger> spLoger){
     spdlog::set_default_logger(spLoger);

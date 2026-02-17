@@ -456,12 +456,21 @@ else()
     set(QTN_D "")
 endif()
 
-target_link_libraries(${PROJECT_NAME} PRIVATE
-    "${QTITAN_LIB_DIR}/${LIB_PREFIX}QtitanBase${QTN_D}2${LIB_SUFFIX}"
-    "${QTITAN_LIB_DIR}/${LIB_PREFIX}QtitanGrid${QTN_D}8${LIB_SUFFIX}"
-    "${QTITAN_LIB_DIR}/${LIB_PREFIX}QtitanStyle${QTN_D}2${LIB_SUFFIX}"
-    "${QTITAN_LIB_DIR}/${LIB_PREFIX}QtitanFastInfoset${QTN_D}2${LIB_SUFFIX}"
-)
+if(WIN32)
+    target_link_libraries(${PROJECT_NAME} PRIVATE
+        "${QTITAN_LIB_DIR}/${LIB_PREFIX}QtitanBase${QTN_D}2${LIB_SUFFIX}"
+        "${QTITAN_LIB_DIR}/${LIB_PREFIX}QtitanGrid${QTN_D}8${LIB_SUFFIX}"
+        "${QTITAN_LIB_DIR}/${LIB_PREFIX}QtitanStyle${QTN_D}2${LIB_SUFFIX}"
+        "${QTITAN_LIB_DIR}/${LIB_PREFIX}QtitanFastInfoset${QTN_D}2${LIB_SUFFIX}"
+    )
+else()
+    target_link_libraries(${PROJECT_NAME} PRIVATE
+        "${QTITAN_LIB_DIR}/${LIB_PREFIX}QtitanBase${LIB_SUFFIX}"
+        "${QTITAN_LIB_DIR}/${LIB_PREFIX}QtitanGrid${LIB_SUFFIX}"
+        "${QTITAN_LIB_DIR}/${LIB_PREFIX}QtitanStyle${LIB_SUFFIX}"
+        "${QTITAN_LIB_DIR}/${LIB_PREFIX}QtitanFastInfoset${LIB_SUFFIX}"
+    )
+endif()
 
 target_include_directories(${PROJECT_NAME} PRIVATE "${QTITAN_ROOT}/include")
 message(STATUS "Qtitan lib dir (normalized): ${QTITAN_LIB_DIR}")

@@ -1,10 +1,11 @@
 #include "calculationController.h"
-#include "QAstra.h"
-#include "QTI.h"
-#include "QBarsMDP.h"
+#include "qastra.h"
+#include "qti.h"
+#include "qbarsmdp.h"
 #include <QTimer>
 #include <spdlog/spdlog.h>
 #include <ctime>
+#include "utils.h"
 
 KzParameters::KzParameters()
     : nonsym(eNonsym::KZ_1)
@@ -165,8 +166,7 @@ void CalculationController::recalcTiDor() {
     }
     
     beginCalculation("TI_RecalcDor");
-    QElapsedTimer t_timer;
-    t_timer.start();
+    Timer t_timer;
 
     long code = m_qti->RecalcDor();
     
@@ -175,7 +175,7 @@ void CalculationController::recalcTiDor() {
     
     if (code == 1) {
         str_msg = fmt::format("Пересчет дорасчетных измерений выполнен за {} мс.",
-                              t_timer.nsecsElapsed() / 1000000.0);
+                              t_timer.seconds());
         spdlog::info("{}", str_msg);
         success = true;
     } else {
@@ -193,8 +193,7 @@ void CalculationController::updateTiTables() {
     }
     
     beginCalculation("TI_UpdateTables");
-    QElapsedTimer t_timer;
-    t_timer.start();
+    Timer t_timer;
 
     long code = m_qti->UpdateTables();
     
@@ -203,7 +202,7 @@ void CalculationController::updateTiTables() {
     
     if (code == 1) {
         str_msg = fmt::format("Обновление данных по ТМ (Привязка->T) выполнено за {} мс.",
-                              t_timer.nsecsElapsed() / 1000000.0);
+                              t_timer.seconds());
         spdlog::info("{}", str_msg);
         success = true;
     } else {
@@ -222,27 +221,25 @@ void CalculationController::calcPTI() {
     
     beginCalculation("TI_CalcPTI");
     
-    QElapsedTimer t_calc_pti;
-    t_calc_pti.start();
-
+    Timer t_calc_pti;
     long code = m_qti->CalcPTI();
     
     std::string str_msg;
     bool success = false;
     
     if (code == 1) {
-        str_msg = fmt::format("Расчет ПТИ выполнен за {} мс.", t_calc_pti.nsecsElapsed() / 1000000.0);
+        str_msg = fmt::format("Расчет ПТИ выполнен за {} мс.",
+                              t_calc_pti.seconds());
         spdlog::info("{}", str_msg);
         
         // Добавление ПТИ в таблицу
-        QElapsedTimer t_add_pti;
-        t_add_pti.start();
+        Timer t_add_pti;
 
         code = m_qti->DobavPTI();
         
         if (code == 1) {
             str_msg += fmt::format("\nПТИ записаны в ТИ:Каналы за {} мс.",
-                                   t_add_pti.nsecsElapsed() / 1000000.0);
+                                   t_add_pti.seconds());
             spdlog::info("PTI added to channels");
             success = true;
         } else {
@@ -265,8 +262,7 @@ void CalculationController::filtrTI() {
     }
     
     beginCalculation("TI_FiltrTI");
-    QElapsedTimer t_filtr_ti;
-    t_filtr_ti.start();
+    Timer t_filtr_ti;
 
     long code = m_qti->FiltrTI();
     
@@ -275,7 +271,7 @@ void CalculationController::filtrTI() {
     
     if (code == 1) {
         str_msg = fmt::format("Расчет Фильтра ТИ выполнен за {} мс.",
-                              t_filtr_ti.nsecsElapsed() / 1000000.0);
+                              t_filtr_ti.seconds());
         spdlog::info("{}", str_msg);
         success = true;
     } else {
@@ -300,8 +296,7 @@ void CalculationController::prepareBarsMDP(const QString& sections) {
     }
     
     beginCalculation("BarsMDP_Prepare");
-    QElapsedTimer t_barsmdp;
-    t_barsmdp.start();
+    Timer t_barsmdp;
 
     std::string str_msg;
     bool success = true;
@@ -312,7 +307,7 @@ void CalculationController::prepareBarsMDP(const QString& sections) {
         m_qbarsmdp->UpdateAUTOFields();
         
         str_msg = fmt::format("Подготовка для расчета МДП для сечений {} за {} мс.",
-                              sections.toStdString(), t_barsmdp.nsecsElapsed() / 1000000.0);
+                              sections.toStdString(), t_barsmdp.seconds());
         spdlog::info("{}", str_msg);
     }
     catch (const std::exception& ex) {

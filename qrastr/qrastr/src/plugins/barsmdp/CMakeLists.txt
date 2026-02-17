@@ -48,7 +48,7 @@ add_compile_definitions(
 set(INCLUDES
     "${THIRDPARTY_DIR}/spdlog/include/"
     "${THIRDPARTY_DIR}/fmt/include/"
-    "../../"
+    "${Astra_INCLUDE_DIR}/comck"
 )
 
 # ============================================================================

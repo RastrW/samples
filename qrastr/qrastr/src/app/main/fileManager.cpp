@@ -1,7 +1,7 @@
-#include "FileManager.h"
-#include "QAstra.h"
-#include "Params.h"
-#include "FormFileNew.h"
+#include "fileManager.h"
+#include "qastra.h"
+#include "params.h"
+#include "formfilenew.h"
 #include "formsaveall.h"
 
 #include <QFileDialog>

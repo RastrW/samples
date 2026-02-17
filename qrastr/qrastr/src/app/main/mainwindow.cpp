@@ -1,30 +1,32 @@
-#include "mainWindow.h"
+#include "mainwindow.h"
 
 #include <spdlog/sinks/stdout_color_sinks.h>
 #include <spdlog/sinks/rotating_file_sink.h>
 #include <spdlog/sinks/qt_sinks.h>
 
-#include "QAstra.h"
-#include "QTI.h"
-#include "QBarsMDP.h"
-#include "McrWnd.h"
-#include "FormProtocol.h"
-#include "PyHlp.h"
+#include "qastra.h"
+#include "qti.h"
+#include "qbarsmdp.h"
+#include "mcrwnd.h"
+#include "formprotocol.h"
+#include "pyhlp.h"
 #include "formcalcidop.h"
 
 #include <QStatusBar>
+#include <QMessageBox>
 #include <DockManager.h>
 #include <DockWidget.h>
 #include <QMdiArea>
 #include <QInputDialog>
 #include <QApplication>
-#include <QMessageBox>
+#include <QMdiSubWindow>
 #include <spdlog/spdlog.h>
 #include "calculationController.h"
 #include "fileManager.h"
 #include "formManager.h"
 #include "settingsManager.h"
 #include "uiBuilder.h"
+#include "cacheLog.h"
 
 MainWindow::MainWindow()
     : QMainWindow(){

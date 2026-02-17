@@ -333,7 +333,7 @@ bool App::start(){
 #if(QT_VERSION > QT_VERSION_CHECK(5, 16, 0))
             const std::filesystem::path path_templates = p_params->getDirSHABLON().filesystemCanonicalPath();
 #else
-            std::filesystem::path path_templates = Params::GetInstance()->getDirSHABLON().canonicalPath().toStdString();
+            std::filesystem::path path_templates = p_params->getDirSHABLON().canonicalPath().toStdString();
             //assert(!"what?");
 #endif
             const Params::_v_templates v_templates{ p_params->getStartLoadTemplates() };
