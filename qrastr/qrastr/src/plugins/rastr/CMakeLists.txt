@@ -18,13 +18,13 @@ find_package(Qt${QT_VERSION_MAJOR} COMPONENTS
 # Output Directories
 # ============================================================================
 if(MSVC)
-    set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}//..//..//..//${CMAKE_BUILD_TYPE}//plugins")
-    set(CMAKE_LIBRARY_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}//..//..//..//${CMAKE_BUILD_TYPE}//plugins")
-    set(CMAKE_RUNTIME_OUTPUT_DIRECTORY "${CMAKE_SOURCE_DIR}//..//..//..//${CMAKE_BUILD_TYPE}//plugins")
+    set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}//..//..//..//$<CONFIG>//plugins")
+    set(CMAKE_LIBRARY_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}//..//..//..//$<CONFIG>//plugins")
+    set(CMAKE_RUNTIME_OUTPUT_DIRECTORY "${CMAKE_SOURCE_DIR}//..//..//..//$<CONFIG>//plugins")
 else()
-    set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}//..//..//..//${CMAKE_BUILD_TYPE}//plugins")
-    set(CMAKE_LIBRARY_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}//..//..//..//${CMAKE_BUILD_TYPE}//plugins")
-    set(CMAKE_RUNTIME_OUTPUT_DIRECTORY "${CMAKE_SOURCE_DIR}//..//..//..//${CMAKE_BUILD_TYPE}//plugins")
+    set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}//..//..//..//$<CONFIG>//plugins")
+    set(CMAKE_LIBRARY_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}//..//..//..//$<CONFIG>/plugins")
+    set(CMAKE_RUNTIME_OUTPUT_DIRECTORY "${CMAKE_SOURCE_DIR}//..//..//..//$<CONFIG>//plugins")
 endif()
 
 # ============================================================================
@@ -52,17 +52,7 @@ set(PROJECT_SOURCES
     pluginrastr.cpp
 )
 
-if(QT_VERSION_MAJOR EQUAL 6)
-    qt_add_plugin(rastr
-        CLASS_NAME PluginRastr
-        ${PROJECT_SOURCES}
-    )
-else()
-    add_library(rastr SHARED
-        ${PROJECT_SOURCES}
-    )
-endif()
-
+add_library(rastr MODULE ${PROJECT_SOURCES})
 target_include_directories(rastr PRIVATE ${INCLUDES})
 
 # ============================================================================

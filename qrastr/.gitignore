@@ -84,10 +84,14 @@ _build
 Debug
 Release
 
-/thirdparty/scintilla/
-/thirdparty/lexilla/
-/thirdparty/compile/
-/thirdparty/boost_1_80_0/
-/lib/
+/thirdparty/*
+!/thirdparty/
+!/thirdparty/build_thirdparty_gcc.sh
+!/thirdparty/build_thirdparty_vs_msvc.bat
+
+/lib/*
+!/lib/
+!/lib/build_qtitan_gcc.sh
+!/lib/build_qtitan_vs_msvc.bat
 
 qrastr_log.txt

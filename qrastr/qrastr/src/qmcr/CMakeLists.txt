@@ -34,6 +34,7 @@ find_package(Astra REQUIRED)
 
 set(PYTHON_MIN 3.10)
 # Для Windows python 3.12 (в соответствии с astra_py)
+# Для работы python на Windows необходимо указать путь к нему в системной переменной PATH
 # Для Linux python 3.11 (версия пакета в системе)
 find_package(Python3 ${PYTHON_MIN} REQUIRED COMPONENTS Interpreter Development)
 message("Python3_FOUND:             ${Python3_FOUND}")
@@ -159,9 +160,6 @@ endif()
 target_link_libraries(qmcr PRIVATE Qt${QT_VERSION_MAJOR}::Widgets)
 target_link_libraries(qmcr PRIVATE Qt${QT_VERSION_MAJOR}::QuickWidgets)
 
-# На MSVC Python линкуется автоматически через #pragma comment в Python.h
-# (python311.lib прописан в заголовках). Явная линковка через CMake-таргет
-# не нужна и вызывает ошибки, т.к. Python3::Python не имеет Debug-конфигурации.
 if(NOT MSVC)
     target_link_libraries(qmcr PRIVATE Python3::Python)
 endif()

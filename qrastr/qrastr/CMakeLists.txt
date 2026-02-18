@@ -30,9 +30,9 @@ set(CMAKE_AUTOMOC ON)
 set(CMAKE_AUTORCC ON)
 
 # Output directories - все бинарники идут в ../Debug или ../Release
-set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY "${CMAKE_SOURCE_DIR}/../${CMAKE_BUILD_TYPE}")
-set(CMAKE_LIBRARY_OUTPUT_DIRECTORY "${CMAKE_SOURCE_DIR}/../${CMAKE_BUILD_TYPE}")
-set(CMAKE_RUNTIME_OUTPUT_DIRECTORY "${CMAKE_SOURCE_DIR}/../${CMAKE_BUILD_TYPE}")
+set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY "${CMAKE_SOURCE_DIR}/../$<CONFIG>")
+set(CMAKE_LIBRARY_OUTPUT_DIRECTORY "${CMAKE_SOURCE_DIR}/../$<CONFIG>")
+set(CMAKE_RUNTIME_OUTPUT_DIRECTORY "${CMAKE_SOURCE_DIR}/../$<CONFIG>")
 
 # ============================================================================
 # Compile Definitions
@@ -86,7 +86,7 @@ else()
 endif()
 
 # Путь к библиотеке ASTRA с бинарными файлами
-set(ASTRA_BIN_ROOT "${CMAKE_CURRENT_SOURCE_DIR}/../lib/astra" CACHE PATH "Path to precompiled ASTRA library")
+set(ASTRA_BIN_ROOT "${CMAKE_CURRENT_SOURCE_DIR}/../lib/astra")
 
 if(NOT IS_DIRECTORY ${ASTRA_BIN_ROOT})
     message(FATAL_ERROR "ASTRA binary directory not found: ${ASTRA_BIN_ROOT}")
@@ -118,9 +118,9 @@ set(APP_DIR ${SRC_DIR}/app)
 # ============================================================================
 # Путь к библиотеке Qtitan - оставляем по-старому для Astra Linux
 if(WIN32)
-    set(QTITAN_ROOT "${CMAKE_CURRENT_SOURCE_DIR}/../lib/QtitanDataGrid8.2.0_win_qt_6_7" CACHE PATH "Path to Qtitan")
+    set(QTITAN_ROOT "${CMAKE_CURRENT_SOURCE_DIR}/../lib/QtitanDataGrid8.2.0_win_qt_6_7")
 else()
-    set(QTITAN_ROOT "${CMAKE_CURRENT_SOURCE_DIR}/../lib/qtitan8_lin_5_15" CACHE PATH "Path to Qtitan")
+    set(QTITAN_ROOT "${CMAKE_CURRENT_SOURCE_DIR}/../lib/qtitan8_lin_5_15")
 endif()
 # ============================================================================
 # Helper Function for Third-Party Libraries
@@ -246,7 +246,7 @@ add_subdirectory(${SRC_DIR}/plugins/barsmdp)
 message(STATUS "ASTRA plugins enabled")
 
 # qmcr subdirectory
-set(DEPENDENCIES_LOCATION "${THIRDPARTY_DIR}" CACHE PATH "Passes the path to the thirdparty to the qmcr subproject")
+set(DEPENDENCIES_LOCATION "${THIRDPARTY_DIR}")
 
 set(QMCR_SOURCE_DIR "${SRC_DIR}/qmcr")
 add_subdirectory(
