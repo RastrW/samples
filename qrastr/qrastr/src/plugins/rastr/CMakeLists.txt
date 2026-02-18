@@ -17,16 +17,19 @@ find_package(Qt${QT_VERSION_MAJOR} COMPONENTS
 # ============================================================================
 # Output Directories
 # ============================================================================
-if(MSVC)
-    set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}//..//..//..//$<CONFIG>//plugins")
-    set(CMAKE_LIBRARY_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}//..//..//..//$<CONFIG>//plugins")
-    set(CMAKE_RUNTIME_OUTPUT_DIRECTORY "${CMAKE_SOURCE_DIR}//..//..//..//$<CONFIG>//plugins")
-else()
-    set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}//..//..//..//$<CONFIG>//plugins")
-    set(CMAKE_LIBRARY_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}//..//..//..//$<CONFIG>/plugins")
-    set(CMAKE_RUNTIME_OUTPUT_DIRECTORY "${CMAKE_SOURCE_DIR}//..//..//..//$<CONFIG>//plugins")
+# Получаем PLUGIN_OUTPUT_DIR из родительского проекта, если уже определена
+if(NOT PLUGIN_OUTPUT_DIR)
+    set(PLUGIN_OUTPUT_DIR "${CMAKE_SOURCE_DIR}/../${CMAKE_BUILD_TYPE}/plugins")
 endif()
 
+# Нормализуем путь (убираем /../)
+cmake_path(NORMAL_PATH PLUGIN_OUTPUT_DIR)
+
+set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY "${PLUGIN_OUTPUT_DIR}")
+set(CMAKE_LIBRARY_OUTPUT_DIRECTORY "${PLUGIN_OUTPUT_DIR}")
+set(CMAKE_RUNTIME_OUTPUT_DIRECTORY "${PLUGIN_OUTPUT_DIR}")
+
+message(STATUS "Plugin ${PROJECT_NAME} output dir: ${PLUGIN_OUTPUT_DIR}")
 # ============================================================================
 # Получаем THIRDPARTY_DIR из главного проекта
 # ============================================================================
@@ -52,7 +55,7 @@ set(PROJECT_SOURCES
     pluginrastr.cpp
 )
 
-add_library(rastr MODULE ${PROJECT_SOURCES})
+add_library(rastr SHARED ${PROJECT_SOURCES})
 target_include_directories(rastr PRIVATE ${INCLUDES})
 
 # ============================================================================

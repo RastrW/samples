@@ -30,9 +30,9 @@ set(CMAKE_AUTOMOC ON)
 set(CMAKE_AUTORCC ON)
 
 # Output directories - все бинарники идут в ../Debug или ../Release
-set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY "${CMAKE_SOURCE_DIR}/../$<CONFIG>")
-set(CMAKE_LIBRARY_OUTPUT_DIRECTORY "${CMAKE_SOURCE_DIR}/../$<CONFIG>")
-set(CMAKE_RUNTIME_OUTPUT_DIRECTORY "${CMAKE_SOURCE_DIR}/../$<CONFIG>")
+set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY "${CMAKE_SOURCE_DIR}/../${CMAKE_BUILD_TYPE}")
+set(CMAKE_LIBRARY_OUTPUT_DIRECTORY "${CMAKE_SOURCE_DIR}/../${CMAKE_BUILD_TYPE}")
+set(CMAKE_RUNTIME_OUTPUT_DIRECTORY "${CMAKE_SOURCE_DIR}/../${CMAKE_BUILD_TYPE}")
 
 # ============================================================================
 # Compile Definitions
@@ -56,6 +56,7 @@ endif()
 # Определение компилятора и соответствующих путей
 # ============================================================================
 include(cmake/compiler_and_platform.cmake)
+include(cmake/add_thirdparty_library.cmake)
 
 add_compile_definitions(
     LIB_PREFIX="${LIB_PREFIX}"
@@ -77,7 +78,7 @@ message(STATUS "  BUILD_WITH_PQ: ${BUILD_WITH_PQ}")
 # Thirdparty directory - сторонние библиотеки
 set(THIRDPARTY_DIR "${CMAKE_CURRENT_SOURCE_DIR}/../thirdparty")
 # Передаем THIRDPARTY_DIR в дочерние проекты
-set(THIRDPARTY_DIR "${THIRDPARTY_DIR}" CACHE INTERNAL "")
+set(THIRDPARTY_DIR "${THIRDPARTY_DIR}")
 
 if(NOT IS_DIRECTORY ${THIRDPARTY_DIR})
     message(FATAL_ERROR "THIRDPARTY_DIR not found: ${THIRDPARTY_DIR}")
@@ -122,60 +123,6 @@ if(WIN32)
 else()
     set(QTITAN_ROOT "${CMAKE_CURRENT_SOURCE_DIR}/../lib/qtitan8_lin_5_15")
 endif()
-# ============================================================================
-# Helper Function for Third-Party Libraries
-# ============================================================================
-function(add_thirdparty_library LIB_NAME LIB_PATH)
-    set(options USE_DEBUG_SUFFIX)
-    set(oneValueArgs LIB_REAL_NAME)
-    set(multiValueArgs "")
-    cmake_parse_arguments(ARG "${options}" "${oneValueArgs}" "${multiValueArgs}" ${ARGN})
-
-    if(NOT ARG_LIB_REAL_NAME)
-        set(ARG_LIB_REAL_NAME "${LIB_NAME}")
-    endif()
-
-    # Добавляем debug суффикс если требуется
-    if(ARG_USE_DEBUG_SUFFIX AND CMAKE_BUILD_TYPE MATCHES Debug)
-        set(ARG_LIB_REAL_NAME "${ARG_LIB_REAL_NAME}d")
-    endif()
-
-    set(PRECOMPILED_DIR "${THIRDPARTY_DIR}/compile/${LIB_NAME}/${PLATFORM_DIR}/${CONFIG_DIR}")
-
-    find_library(${LIB_NAME}_LIBRARY
-        NAMES ${ARG_LIB_REAL_NAME}
-        PATHS ${PRECOMPILED_DIR}/lib
-        NO_DEFAULT_PATH
-    )
-
-    set(${LIB_NAME}_INCLUDE_DIR "${PRECOMPILED_DIR}/include")
-    if(NOT EXISTS "${${LIB_NAME}_INCLUDE_DIR}")
-        set(${LIB_NAME}_INCLUDE_DIR "${LIB_NAME}_INCLUDE_DIR-NOTFOUND")
-    endif()
-
-    if(NOT ${LIB_NAME}_LIBRARY OR NOT EXISTS "${${LIB_NAME}_INCLUDE_DIR}")
-        message(FATAL_ERROR
-            "Precompiled ${LIB_NAME} not found in ${PRECOMPILED_DIR}\n"
-            "  Library: ${${LIB_NAME}_LIBRARY}\n"
-            "  Include: ${${LIB_NAME}_INCLUDE_DIR}\n"
-            "  Looking for: ${ARG_LIB_REAL_NAME}")
-    endif()
-
-    add_library(${LIB_NAME} UNKNOWN IMPORTED)
-    set_target_properties(${LIB_NAME} PROPERTIES
-        IMPORTED_LOCATION "${${LIB_NAME}_LIBRARY}"
-        INTERFACE_INCLUDE_DIRECTORIES "${${LIB_NAME}_INCLUDE_DIR}"
-    )
-
-    message(STATUS "Using precompiled ${LIB_NAME}: ${${LIB_NAME}_LIBRARY}")
-
-    # Специальные настройки для qtadvanceddocking
-    if("${LIB_NAME}" STREQUAL "qtadvanceddocking")
-        target_include_directories(qtadvanceddocking INTERFACE
-            ${THIRDPARTY_DIR}/Qt-Advanced-Docking-System/src
-        )
-    endif()
-endfunction()
 
 # ============================================================================
 # System Libraries
@@ -235,15 +182,13 @@ message(STATUS "Qt found: ${QT_VERSION} at ${Qt${QT_VERSION_MAJOR}_DIR}")
 # ============================================================================
 # Plugins (ASTRA-dependent)
 # ============================================================================
-# Передаем переменные в дочерние проекты через CACHE
-set(THIRDPARTY_DIR "${THIRDPARTY_DIR}" CACHE INTERNAL "Thirdparty directory")
-set(PLATFORM_DIR "${PLATFORM_DIR}" CACHE INTERNAL "Platform directory")
-set(CONFIG_DIR "${CONFIG_DIR}" CACHE INTERNAL "Config directory")
+set(PLUGIN_OUTPUT_DIR "${CMAKE_SOURCE_DIR}/../${CMAKE_BUILD_TYPE}/plugins")
 
 add_subdirectory(${SRC_DIR}/plugins/rastr)
 add_subdirectory(${SRC_DIR}/plugins/ti)
 add_subdirectory(${SRC_DIR}/plugins/barsmdp)
-message(STATUS "ASTRA plugins enabled")
+
+message(STATUS "Plugins output directory: ${PLUGIN_OUTPUT_DIR}")
 
 # qmcr subdirectory
 set(DEPENDENCIES_LOCATION "${THIRDPARTY_DIR}")

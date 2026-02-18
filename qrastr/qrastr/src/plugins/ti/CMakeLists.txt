@@ -17,16 +17,11 @@ find_package(Qt${QT_VERSION_MAJOR} COMPONENTS
 # ============================================================================
 # Output Directories
 # ============================================================================
-if(MSVC)
-    set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}//..//..//..//$<CONFIG>//plugins")
-    set(CMAKE_LIBRARY_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}//..//..//..//$<CONFIG>//plugins")
-    set(CMAKE_RUNTIME_OUTPUT_DIRECTORY "${CMAKE_SOURCE_DIR}//..//..//..//$<CONFIG>//plugins")
-else()
-    set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}//..//..//..//$<CONFIG>//plugins")
-    set(CMAKE_LIBRARY_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}//..//..//..//$<CONFIG>//plugins")
-    set(CMAKE_RUNTIME_OUTPUT_DIRECTORY "${CMAKE_SOURCE_DIR}//..//..//..//$<CONFIG>//plugins")
-endif()
+set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY "${PLUGIN_OUTPUT_DIR}")
+set(CMAKE_LIBRARY_OUTPUT_DIRECTORY "${PLUGIN_OUTPUT_DIR}")
+set(CMAKE_RUNTIME_OUTPUT_DIRECTORY "${PLUGIN_OUTPUT_DIR}")
 
+message("PLUGIN_OUTPUT_DIR ti:        ${PLUGIN_OUTPUT_DIR}")
 # ============================================================================
 # Получаем THIRDPARTY_DIR из главного проекта
 # ============================================================================
@@ -53,7 +48,7 @@ set(PROJECT_SOURCES
     pluginti.cpp
 )
 
-add_library(ti MODULE ${PROJECT_SOURCES})
+add_library(ti SHARED ${PROJECT_SOURCES})
 target_include_directories(ti PRIVATE ${INCLUDES})
 
 # ============================================================================
