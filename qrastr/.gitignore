@@ -85,9 +85,15 @@ Debug
 Release
 
 /thirdparty/*
-!/thirdparty/
 !/thirdparty/build_thirdparty_gcc.sh
 !/thirdparty/build_thirdparty_vs_msvc.bat
+!/thirdparty/.gitkeep
+!/thirdparty/SDL_image/
+!/thirdparty/SDL/
+!/thirdparty/Qt-Advanced-Docking-System/
+!/thirdparty/fmt/
+!/thirdparty/libpqxx/
+!/thirdparty/spdlog/
 
 /lib/*
 !/lib/
