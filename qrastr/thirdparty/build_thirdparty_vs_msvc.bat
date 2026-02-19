@@ -563,7 +563,7 @@ for %%T in (%BUILD_TYPES%) do (
     call :build_library "SDL3_image" "%THIRDPARTY_DIR%\SDL_image" "%%T" "-DSDL3IMAGE_SAMPLES=OFF -DBUILD_SHARED_LIBS=ON"
     call :build_lexilla "%THIRDPARTY_DIR%\lexilla\src" "%%T"
     call :build_library "qtadvanceddocking" "%THIRDPARTY_DIR%\Qt-Advanced-Docking-System" "%%T" "-DBUILD_EXAMPLES=OFF -DBUILD_SHARED_LIBS=ON"
-    call :build_metakit "%THIRDPARTY_DIR%\metakit" "%%T"
+    REM call :build_metakit "%THIRDPARTY_DIR%\metakit" "%%T"
     call :build_qmake_library "ScintillaEditBase" "%THIRDPARTY_DIR%\scintilla\qt\ScintillaEditBase" "%%T" "0"
     call :build_qmake_library "ScintillaEdit" "%THIRDPARTY_DIR%\scintilla\qt\ScintillaEdit" "%%T" "1"
    

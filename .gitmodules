@@ -10,14 +10,6 @@
 	path = qrastr/thirdparty/Qt-Advanced-Docking-System
 	url = https://github.com/githubuser0xFFFF/Qt-Advanced-Docking-System.git
 	branch = master
-[submodule "qrastr/thirdparty/metakit"]
-	path = qrastr/thirdparty/metakit
-	url = https://github.com/jnorthrup/metakit.git
-	branch = master
-[submodule "qrastr/thirdparty/eigen"]
-	path = qrastr/thirdparty/eigen
-	url = https://gitlab.com/libeigen/eigen.git
-	branch = 3.4
 [submodule "qrastr/thirdparty/fmt"]
 	path = qrastr/thirdparty/fmt
 	url = https://github.com/fmtlib/fmt.git

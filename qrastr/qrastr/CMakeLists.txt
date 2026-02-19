@@ -126,14 +126,11 @@ endif()
 
 # ============================================================================
 # System Libraries
-# - header-only библиотеки из thirdparty: Boost, Eigen3, fmt, spdlog
+# - header-only библиотеки из thirdparty: Boost, fmt, spdlog
 # - libpqxx: опционально собирается через add_thirdparty_library (зависит от наличия PostgreSQL)
 # ============================================================================
 add_library(Boost::boost INTERFACE IMPORTED)
 target_include_directories(Boost::boost INTERFACE "${THIRDPARTY_DIR}/boost_1_80_0")
-
-add_library(Eigen3::Eigen INTERFACE IMPORTED)
-target_include_directories(Eigen3::Eigen INTERFACE "${THIRDPARTY_DIR}/eigen")
 
 add_library(Fmt::fmt INTERFACE IMPORTED)
 target_include_directories(Fmt::fmt INTERFACE "${THIRDPARTY_DIR}/fmt/include")
@@ -202,12 +199,14 @@ message(STATUS "qmcr subproject added")
 # ============================================================================
 # Third-Party Libraries
 # ----------------------------------------------------------------------------
-add_thirdparty_library(metakit "${THIRDPARTY_DIR}/metakit"
-    LIB_REAL_NAME "mk4")
 
 add_thirdparty_library(qtadvanceddocking "${THIRDPARTY_DIR}/Qt-Advanced-Docking-System"
     LIB_REAL_NAME "qtadvanceddocking-qt${QT_VERSION_MAJOR}"
     USE_DEBUG_SUFFIX)
+# Дл
+target_include_directories(qtadvanceddocking INTERFACE
+    ${THIRDPARTY_DIR}/Qt-Advanced-Docking-System/src
+)
 
 add_thirdparty_library(SDL3 "${THIRDPARTY_DIR}/SDL")
 add_thirdparty_library(SDL3_image "${THIRDPARTY_DIR}/SDL_image")
@@ -244,9 +243,6 @@ set(PROJECT_INCLUDES
 # Добавляем header-only include directories
 get_target_property(BOOST_INCLUDES Boost::boost INTERFACE_INCLUDE_DIRECTORIES)
 list(APPEND PROJECT_INCLUDES ${BOOST_INCLUDES})
-
-get_target_property(EIGEN3_INCLUDES Eigen3::Eigen INTERFACE_INCLUDE_DIRECTORIES)
-list(APPEND PROJECT_INCLUDES ${EIGEN3_INCLUDES})
 
 get_target_property(SPDLOG_INCLUDES Spdlog::spdlog INTERFACE_INCLUDE_DIRECTORIES)
 list(APPEND PROJECT_INCLUDES ${SPDLOG_INCLUDES})
@@ -348,7 +344,6 @@ if(QT_VERSION_MAJOR EQUAL 6)
 endif()
 
 set(THIRD_PARTY_LIBS
-    metakit
     qtadvanceddocking
     SDL3
     SDL3_image

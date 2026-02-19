@@ -10,7 +10,7 @@
 - **Ninja** *(опционально)* — ускоряет сборку CMake-проектов; если не установлен, скрипт автоматически переключится на `NMake Makefiles`
 - **NASM 3.01** — требуется для сборки `SDL3_image` под MSVC. [Скачать](https://www.nasm.us/pub/nasm/releasebuilds/3.01/win64/)
 - **Python 3.12** — требуется для генерации кода `ScintillaEdit`. Путь к интерпретатору должен быть добавлен в переменную среды `PATH`
- [Скачать](https://www.python.org/downloads/source/)
+ [Скачать](https://www.python.org/downloads/release/python-3120/)
 - **PostgreSQL 18** *(опционально)* — необходим для сборки `libpqxx`
 
 ---
@@ -72,8 +72,9 @@ git submodule update --init --recursive
 
 ---
 
-## Шаг 2. Загрузка Scintilla и Lexilla
+## Шаг 2. Загрузка сторонних библиотек без репозитория
 
+### Scintilla и Lexilla
 Библиотеки **Scintilla** и **Lexilla** не входят в состав submodule и должны быть загружены вручную с официального сайта:
 
 - https://scintilla.org/
@@ -83,6 +84,16 @@ git submodule update --init --recursive
 ```
 ...\rastr\qrastr\thirdparty\scintilla\
 ...\rastr\qrastr\thirdparty\lexilla\
+```
+
+### boost 1.80
+Скачать исходники библиотеки boost 1.80 с официального сайта:
+[Скачать](https://www.boost.org/releases/1.80.0/)
+
+Поместите их в:
+
+```
+...\rastr\qrastr\thirdparty\boost_1_80_0
 ```
 
 ---
@@ -161,7 +172,6 @@ C:\work\rastr\qrastr\
     │   ├── ScintillaEdit
     │   ├── ScintillaEditBase
     │   ├── qtadvanceddocking
-    │   ├── metakit
     │   └── libpqxx
     ├── fmt              ← исходники (submodule)
     ├── spdlog
@@ -169,10 +179,9 @@ C:\work\rastr\qrastr\
     ├── SDL_image
     ├── scintilla        ← скачать вручную
     ├── lexilla          ← скачать вручную
+	├── boost_1_80_0     ← скачать вручную	
     ├── Qt-Advanced-Docking-System
-    ├── metakit
-    ├── libpqxx
-    └── eigen
+    └── libpqxx
 ```
 
 ---

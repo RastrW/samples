@@ -44,11 +44,4 @@ function(add_thirdparty_library LIB_NAME LIB_PATH)
     )
 
     message(STATUS "Using precompiled ${LIB_NAME}: ${${LIB_NAME}_LIBRARY}")
-
-    # Специальные настройки для qtadvanceddocking
-    if("${LIB_NAME}" STREQUAL "qtadvanceddocking")
-        target_include_directories(qtadvanceddocking INTERFACE
-            ${THIRDPARTY_DIR}/Qt-Advanced-Docking-System/src
-        )
-    endif()
 endfunction()

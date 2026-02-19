@@ -737,8 +737,8 @@ for BUILD_TYPE in ${BUILD_TYPES}; do
     echo "==========================================================================="
     echo ""
 
-    build_metakit "${THIRDPARTY_DIR}/metakit" "${BUILD_TYPE}" "0"   # static → libmk4.a
-    build_metakit "${THIRDPARTY_DIR}/metakit" "${BUILD_TYPE}" "1"   # shared → libmk4.soN"
+    # build_metakit "${THIRDPARTY_DIR}/metakit" "${BUILD_TYPE}" "0"   # static → libmk4.a
+    # build_metakit "${THIRDPARTY_DIR}/metakit" "${BUILD_TYPE}" "1"   # shared → libmk4.soN"
 
     # Build libraries in dependency order
     build_library "fmt" "${THIRDPARTY_DIR}/fmt" "${BUILD_TYPE}" \
