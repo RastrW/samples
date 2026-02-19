@@ -1,0 +1,21 @@
+{
+    "forms": [
+        {
+            "addToMenuIndex": 1,
+            "fields": [
+                {
+                    "name": "Id"
+                },
+                {
+                    "name": "Name"
+                },
+                {
+                    "name": "MeteoId"
+                }
+            ],
+            "menuPath": "\\Ветви",
+            "name": "Метеоточки",
+            "tableName": "Meteo"
+        }
+    ]
+}

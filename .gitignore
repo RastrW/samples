@@ -4,4 +4,5 @@ build*
 .vs*
 
 *Presets.json
-Data
+# Data
+!CMakePresets.json.template

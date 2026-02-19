@@ -1,0 +1,814 @@
+{
+    "forms": [
+        {
+            "addToMenuIndex": 1,
+            "fields": [
+                {
+                    "name": "calc_shnt"
+                }
+            ],
+            "menuPath": "\\Несимметрия",
+            "name": "Настройка ТКЗ",
+            "tableName": "com_kz",
+            "vertical": true
+        },
+        {
+            "addToMenuIndex": 1,
+            "fields": [
+                {
+                    "name": "sel"
+                },
+                {
+                    "name": "sta"
+                },
+                {
+                    "name": "sta0"
+                },
+                {
+                    "name": "tip0"
+                },
+                {
+                    "name": "ny"
+                },
+                {
+                    "name": "name"
+                },
+                {
+                    "name": "arm_num"
+                },
+                {
+                    "name": "uhom"
+                },
+                {
+                    "name": "gsh"
+                },
+                {
+                    "name": "bsh"
+                },
+                {
+                    "name": "gsh0"
+                },
+                {
+                    "name": "bsh0"
+                }
+            ],
+            "menuPath": "\\Несимметрия",
+            "name": "Узлы/Несим/ИД",
+            "tableName": "node"
+        },
+        {
+            "addToMenuIndex": 1,
+            "fields": [
+                {
+                    "name": "sel"
+                },
+                {
+                    "name": "sta"
+                },
+                {
+                    "name": "sta0"
+                },
+                {
+                    "name": "tip0"
+                },
+                {
+                    "name": "ny"
+                },
+                {
+                    "name": "name"
+                },
+                {
+                    "name": "uhom"
+                },
+                {
+                    "name": "vras"
+                },
+                {
+                    "name": "delta"
+                },
+                {
+                    "name": "vras1L"
+                },
+                {
+                    "name": "otv1L"
+                },
+                {
+                    "name": "vras1"
+                },
+                {
+                    "name": "delta1"
+                },
+                {
+                    "name": "vras2"
+                },
+                {
+                    "name": "delta2"
+                },
+                {
+                    "name": "vras0"
+                },
+                {
+                    "name": "delta0"
+                },
+                {
+                    "name": "ni1"
+                },
+                {
+                    "name": "ndi1"
+                },
+                {
+                    "name": "ni2"
+                },
+                {
+                    "name": "ndi2"
+                },
+                {
+                    "name": "ni0"
+                },
+                {
+                    "name": "ndi0"
+                }
+            ],
+            "menuPath": "\\Несимметрия",
+            "name": "Узлы/Несим/РC",
+            "tableName": "node"
+        },
+        {
+            "addToMenuIndex": 1,
+            "fields": [
+                {
+                    "name": "sel"
+                },
+                {
+                    "name": "sta"
+                },
+                {
+                    "name": "sta0"
+                },
+                {
+                    "name": "tip0"
+                },
+                {
+                    "name": "ny"
+                },
+                {
+                    "name": "name"
+                },
+                {
+                    "name": "uhom"
+                },
+                {
+                    "name": "Va"
+                },
+                {
+                    "name": "Da"
+                },
+                {
+                    "name": "Vb"
+                },
+                {
+                    "name": "Db"
+                },
+                {
+                    "name": "Vc"
+                },
+                {
+                    "name": "Dc"
+                },
+                {
+                    "name": "niA"
+                },
+                {
+                    "name": "ndiA"
+                },
+                {
+                    "name": "niB"
+                },
+                {
+                    "name": "ndiB"
+                },
+                {
+                    "name": "niC"
+                },
+                {
+                    "name": "ndiC"
+                }
+            ],
+            "menuPath": "\\Несимметрия",
+            "name": "Узлы/Несим/РФ",
+            "tableName": "node"
+        },
+        {
+            "addToMenuIndex": 1,
+            "fields": [
+                {
+                    "name": "sel"
+                },
+                {
+                    "name": "sta"
+                },
+                {
+                    "name": "tip"
+                },
+                {
+                    "name": "sta0"
+                },
+                {
+                    "name": "tip0"
+                },
+                {
+                    "name": "ip"
+                },
+                {
+                    "name": "iq"
+                },
+                {
+                    "name": "np"
+                },
+                {
+                    "name": "name"
+                },
+                {
+                    "name": "r"
+                },
+                {
+                    "name": "x"
+                },
+                {
+                    "name": "g"
+                },
+                {
+                    "name": "b"
+                },
+                {
+                    "name": "bd"
+                },
+                {
+                    "name": "n_anc"
+                },
+                {
+                    "name": "ktr"
+                },
+                {
+                    "name": "r0"
+                },
+                {
+                    "name": "x0"
+                },
+                {
+                    "name": "g0"
+                },
+                {
+                    "name": "b0"
+                },
+                {
+                    "name": "MiGr"
+                },
+                {
+                    "name": "MiGrNum"
+                }
+            ],
+            "menuPath": "\\Несимметрия",
+            "name": "Ветви/Несим/ИД",
+            "tableName": "vetv"
+        },
+        {
+            "addToMenuIndex": 1,
+            "fields": [
+                {
+                    "name": "sel"
+                },
+                {
+                    "name": "sta"
+                },
+                {
+                    "name": "tip"
+                },
+                {
+                    "name": "sta0"
+                },
+                {
+                    "name": "tip0"
+                },
+                {
+                    "name": "ip"
+                },
+                {
+                    "name": "iq"
+                },
+                {
+                    "name": "np"
+                },
+                {
+                    "name": "name"
+                },
+                {
+                    "name": "i1_ip"
+                },
+                {
+                    "name": "di1_ip"
+                },
+                {
+                    "name": "i2_ip"
+                },
+                {
+                    "name": "di2_ip"
+                },
+                {
+                    "name": "i0_ip"
+                },
+                {
+                    "name": "di0_ip"
+                },
+                {
+                    "name": "p1_ip"
+                },
+                {
+                    "name": "q1_ip"
+                },
+                {
+                    "name": "r1_ip"
+                },
+                {
+                    "name": "x1_ip"
+                },
+                {
+                    "name": "i1_iq"
+                },
+                {
+                    "name": "di1_iq"
+                },
+                {
+                    "name": "i2_iq"
+                },
+                {
+                    "name": "di2_iq"
+                },
+                {
+                    "name": "i0_iq"
+                },
+                {
+                    "name": "di0_iq"
+                },
+                {
+                    "name": "p1_iq"
+                },
+                {
+                    "name": "q1_iq"
+                },
+                {
+                    "name": "r1_iq"
+                },
+                {
+                    "name": "x1_iq"
+                }
+            ],
+            "menuPath": "\\Несимметрия",
+            "name": "Ветви/Несим/РС",
+            "tableName": "vetv"
+        },
+        {
+            "addToMenuIndex": 1,
+            "fields": [
+                {
+                    "name": "sel"
+                },
+                {
+                    "name": "sta"
+                },
+                {
+                    "name": "tip"
+                },
+                {
+                    "name": "sta0"
+                },
+                {
+                    "name": "tip0"
+                },
+                {
+                    "name": "ip"
+                },
+                {
+                    "name": "iq"
+                },
+                {
+                    "name": "np"
+                },
+                {
+                    "name": "name"
+                },
+                {
+                    "name": "ia_ip"
+                },
+                {
+                    "name": "dia_ip"
+                },
+                {
+                    "name": "ib_ip"
+                },
+                {
+                    "name": "dib_ip"
+                },
+                {
+                    "name": "ic_ip"
+                },
+                {
+                    "name": "dic_ip"
+                },
+                {
+                    "name": "ia_iq"
+                },
+                {
+                    "name": "dia_iq"
+                },
+                {
+                    "name": "ib_iq"
+                },
+                {
+                    "name": "dib_iq"
+                },
+                {
+                    "name": "ic_iq"
+                },
+                {
+                    "name": "dic_iq"
+                }
+            ],
+            "menuPath": "\\Несимметрия",
+            "name": "Ветви/Несим/РФ",
+            "tableName": "vetv"
+        },
+        {
+            "addToMenuIndex": 1,
+            "fields": [
+                {
+                    "name": "sel"
+                },
+                {
+                    "name": "sta"
+                },
+                {
+                    "name": "tip"
+                },
+                {
+                    "name": "sta0"
+                },
+                {
+                    "name": "tip0"
+                },
+                {
+                    "name": "ip"
+                },
+                {
+                    "name": "iq"
+                },
+                {
+                    "name": "np"
+                },
+                {
+                    "name": "name"
+                },
+                {
+                    "name": "ta"
+                },
+                {
+                    "name": "r_i1"
+                },
+                {
+                    "name": "r_di1"
+                },
+                {
+                    "name": "r_r1"
+                },
+                {
+                    "name": "r_x1"
+                },
+                {
+                    "name": "r_i2"
+                },
+                {
+                    "name": "r_di2"
+                },
+                {
+                    "name": "r_r2"
+                },
+                {
+                    "name": "r_x2"
+                },
+                {
+                    "name": "r_i0"
+                },
+                {
+                    "name": "r_di0"
+                },
+                {
+                    "name": "r_r0"
+                },
+                {
+                    "name": "r_x0"
+                }
+            ],
+            "menuPath": "\\Несимметрия",
+            "name": "Ветви/Несим/Размык",
+            "tableName": "vetv"
+        },
+        {
+            "addToMenuIndex": 1,
+            "fields": [
+                {
+                    "name": "sta"
+                },
+                {
+                    "name": "sta0"
+                },
+                {
+                    "name": "Num"
+                },
+                {
+                    "name": "Name"
+                },
+                {
+                    "name": "Node"
+                },
+                {
+                    "name": "r"
+                },
+                {
+                    "name": "x"
+                },
+                {
+                    "name": "r2"
+                },
+                {
+                    "name": "x2"
+                },
+                {
+                    "name": "r0"
+                },
+                {
+                    "name": "x0"
+                },
+                {
+                    "name": "E"
+                },
+                {
+                    "name": "Delta"
+                },
+                {
+                    "name": "urE"
+                },
+                {
+                    "name": "urDelta"
+                },
+                {
+                    "name": "i1"
+                },
+                {
+                    "name": "di1"
+                },
+                {
+                    "name": "i2"
+                },
+                {
+                    "name": "di2"
+                },
+                {
+                    "name": "i0"
+                },
+                {
+                    "name": "di0"
+                },
+                {
+                    "name": "ia"
+                },
+                {
+                    "name": "dia"
+                },
+                {
+                    "name": "ib"
+                },
+                {
+                    "name": "dib"
+                },
+                {
+                    "name": "ic"
+                },
+                {
+                    "name": "dic"
+                }
+            ],
+            "menuPath": "\\Несимметрия",
+            "name": "Генератор/Несим",
+            "tableName": "Generator"
+        },
+        {
+            "addToMenuIndex": 1,
+            "fields": [
+                {
+                    "name": "MiGr"
+                },
+                {
+                    "name": "MiGrNum1"
+                },
+                {
+                    "name": "MiGrNum2"
+                },
+                {
+                    "name": "r0"
+                },
+                {
+                    "name": "x0"
+                }
+            ],
+            "menuPath": "\\Несимметрия",
+            "name": "Магнитосвязь/Несим",
+            "tableName": "mutind"
+        },
+        {
+            "addToMenuIndex": 1,
+            "fields": [
+                {
+                    "name": "sta"
+                },
+                {
+                    "name": "Num"
+                },
+                {
+                    "name": "NumNS"
+                },
+                {
+                    "name": "Type"
+                },
+                {
+                    "name": "p1"
+                },
+                {
+                    "name": "p2"
+                },
+                {
+                    "name": "p3"
+                },
+                {
+                    "name": "p4"
+                },
+                {
+                    "name": "L"
+                },
+                {
+                    "name": "i1"
+                },
+                {
+                    "name": "di1"
+                },
+                {
+                    "name": "r1"
+                },
+                {
+                    "name": "x1"
+                },
+                {
+                    "name": "i2"
+                },
+                {
+                    "name": "di2"
+                },
+                {
+                    "name": "r2"
+                },
+                {
+                    "name": "x2"
+                },
+                {
+                    "name": "i0"
+                },
+                {
+                    "name": "di0"
+                },
+                {
+                    "name": "r0"
+                },
+                {
+                    "name": "x0"
+                }
+            ],
+            "menuPath": "\\Несимметрия",
+            "name": "Состав/Несим",
+            "tableName": "nonsym"
+        },
+        {
+            "addToMenuIndex": 1,
+            "fields": [
+                {
+                    "name": "m"
+                },
+                {
+                    "name": "L"
+                },
+                {
+                    "name": "num_tr"
+                },
+                {
+                    "name": "a_tt"
+                },
+                {
+                    "name": "ud_r_gr"
+                },
+                {
+                    "name": "L_a_t"
+                },
+                {
+                    "name": "L_b_t"
+                },
+                {
+                    "name": "L_c_t"
+                },
+                {
+                    "name": "L_a_t2"
+                },
+                {
+                    "name": "L_b_t2"
+                },
+                {
+                    "name": "L_c_t2"
+                },
+                {
+                    "name": "d_t"
+                },
+                {
+                    "name": "ud_r_tr"
+                },
+                {
+                    "name": "ud_r_z"
+                },
+                {
+                    "name": "z_op_re"
+                },
+                {
+                    "name": "z_op_im"
+                },
+                {
+                    "name": "L_pr_1"
+                },
+                {
+                    "name": "L_pr_2"
+                },
+                {
+                    "name": "z_ps_1_re"
+                },
+                {
+                    "name": "z_ps_1_im"
+                },
+                {
+                    "name": "i_1_1_re"
+                },
+                {
+                    "name": "i_1_1_im"
+                },
+                {
+                    "name": "i_1_2_re"
+                },
+                {
+                    "name": "i_1_2_im"
+                },
+                {
+                    "name": "i_2_1_re"
+                },
+                {
+                    "name": "i_2_1_im"
+                },
+                {
+                    "name": "i_2_2_re"
+                },
+                {
+                    "name": "i_2_2_im"
+                }
+            ],
+            "menuPath": "\\Несимметрия",
+            "name": "Грозотрос/Несим",
+            "tableName": "kz_gr_trs"
+        },
+        {
+            "addToMenuIndex": 1,
+            "fields": [
+                {
+                    "name": "Num"
+                },
+                {
+                    "name": "i_t_1i_re"
+                },
+                {
+                    "name": "i_t_1i_im"
+                },
+                {
+                    "name": "i_t_2i_re"
+                },
+                {
+                    "name": "i_t_2i_im"
+                }
+            ],
+            "menuPath": "\\Несимметрия",
+            "name": "Грозотрос результат/Несим",
+            "tableName": "kz_gr_trs_res"
+        }
+    ]
+}

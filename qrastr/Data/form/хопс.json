@@ -1,0 +1,116 @@
+{
+    "forms": [
+        {
+            "addToMenuIndex": 1,
+            "fields": [
+                {
+                    "name": "Num"
+                },
+                {
+                    "name": "BlkNum"
+                },
+                {
+                    "name": "BlkXopNum"
+                },
+                {
+                    "name": "Bmax"
+                },
+                {
+                    "name": "Mult"
+                }
+            ],
+            "menuPath": "\\ХОП",
+            "name": "ХОП Блоков",
+            "tableName": "XopBlock"
+        },
+        {
+            "addToMenuIndex": 1,
+            "fields": [
+                {
+                    "name": "NumXop"
+                },
+                {
+                    "name": "NumPnt"
+                },
+                {
+                    "name": "P"
+                },
+                {
+                    "name": "dB1"
+                },
+                {
+                    "name": "dB2"
+                }
+            ],
+            "menuPath": "\\ХОП",
+            "name": "ХОП Блоков (точки)",
+            "tableName": "XopBPnt"
+        },
+        {
+            "addToMenuIndex": 1,
+            "fields": [
+                {
+                    "name": "NumXop"
+                },
+                {
+                    "name": "NumPnt"
+                },
+                {
+                    "name": "P"
+                },
+                {
+                    "name": "dB1"
+                },
+                {
+                    "name": "dB2"
+                }
+            ],
+            "menuPath": "\\ХОП",
+            "name": "ХОП Станций (точки)",
+            "tableName": "XopGPnt"
+        },
+        {
+            "addToMenuIndex": 1,
+            "fields": [
+                {
+                    "name": "Num"
+                },
+                {
+                    "name": "AgrNum"
+                },
+                {
+                    "name": "AgrXopNum"
+                },
+                {
+                    "name": "Bmax"
+                },
+                {
+                    "name": "Mult"
+                }
+            ],
+            "menuPath": "\\ХОП",
+            "name": "ХОП Станций",
+            "tableName": "XopGen"
+        },
+        {
+            "addToMenuIndex": 1,
+            "fields": [
+                {
+                    "name": "Num"
+                },
+                {
+                    "name": "NPoint"
+                },
+                {
+                    "name": "P"
+                },
+                {
+                    "name": "dB"
+                }
+            ],
+            "menuPath": "\\ХОП",
+            "name": "Рабочие ХОП",
+            "tableName": "ReadyXop"
+        }
+    ]
+}

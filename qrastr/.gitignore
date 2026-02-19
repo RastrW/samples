@@ -79,6 +79,27 @@ CMakeLists.txt.user
 build*
 debug*
 release*
+_build
 
 Debug
 Release
+
+/thirdparty/*
+!/thirdparty/build_thirdparty_gcc.sh
+!/thirdparty/build_thirdparty_vs_msvc.bat
+!/thirdparty/.gitkeep
+!/thirdparty/SDL_image/
+!/thirdparty/SDL/
+!/thirdparty/Qt-Advanced-Docking-System/
+!/thirdparty/fmt/
+!/thirdparty/libpqxx/
+!/thirdparty/spdlog/
+
+/lib/*
+!/lib/
+!/lib/build_qtitan_gcc.sh
+!/lib/build_qtitan_vs_msvc.bat
+
+qrastr_log.txt
+
+.qtcreator

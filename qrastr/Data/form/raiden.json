@@ -1,0 +1,285 @@
+{
+    "forms": [
+        {
+            "addToMenuIndex": 2,
+            "fields": [
+                {
+                    "alignment": "right",
+                    "name": "GoRaiden"
+                },
+                {
+                    "alignment": "right",
+                    "name": "ProcessDuration"
+                },
+                {
+                    "alignment": "right",
+                    "name": "Rtol"
+                },
+                {
+                    "alignment": "right",
+                    "name": "Atol"
+                },
+                {
+                    "alignment": "right",
+                    "name": "ResultsFolder"
+                },
+                {
+                    "alignment": "right",
+                    "name": "DisableResultsWriter"
+                },
+                {
+                    "alignment": "right",
+                    "name": "OutStep"
+                },
+                {
+                    "alignment": "right",
+                    "name": "WorkingFolder"
+                },
+                {
+                    "alignment": "right",
+                    "name": "StopOnBranchOOS"
+                },
+                {
+                    "alignment": "right",
+                    "name": "StopOnGeneratorOOS"
+                },
+                {
+                    "alignment": "right",
+                    "name": "AllowDecayDetector"
+                },
+                {
+                    "alignment": "right",
+                    "name": "DecayDetectorCycles"
+                },
+                {
+                    "alignment": "right",
+                    "name": "UseCOI"
+                },
+                {
+                    "alignment": "right",
+                    "name": "ShowAbsoluteAngles"
+                },
+                {
+                    "alignment": "right",
+                    "name": "SecuritySpinReference"
+                },
+                {
+                    "alignment": "right",
+                    "name": "BusFrequencyEstimation"
+                },
+                {
+                    "alignment": "right",
+                    "name": "FrequencyTimeConstant"
+                },
+                {
+                    "alignment": "right",
+                    "name": "MustangDerivativeTimeConstant"
+                },
+                {
+                    "alignment": "right",
+                    "name": "FileLogLevel"
+                },
+                {
+                    "alignment": "right",
+                    "name": "ConsoleLogLevel"
+                },
+                {
+                    "alignment": "right",
+                    "name": "LRCToShuntVmin"
+                },
+                {
+                    "alignment": "right",
+                    "name": "AllowUserOverrideStandardLRC"
+                },
+                {
+                    "alignment": "right",
+                    "name": "GeneratorLessLRC"
+                },
+                {
+                    "alignment": "right",
+                    "name": "LRCSmoothingRange"
+                },
+                {
+                    "alignment": "right",
+                    "name": "ParkParametersDetermination"
+                },
+                {
+                    "alignment": "right",
+                    "name": "ConsiderDampingEquation"
+                },
+                {
+                    "alignment": "right",
+                    "name": "FreqDampingType"
+                },
+                {
+                    "alignment": "right",
+                    "name": "ZeroCrossingTolerance"
+                },
+                {
+                    "alignment": "right",
+                    "name": "ChangeActionsAreCumulative"
+                },
+                {
+                    "alignment": "right",
+                    "name": "HysteresisRtol"
+                },
+                {
+                    "alignment": "right",
+                    "name": "HysteresisAtol"
+                },
+                {
+                    "alignment": "right",
+                    "name": "DerlagToleranceMultiplier"
+                },
+                {
+                    "alignment": "right",
+                    "name": "DontCheckTolOnMinStep"
+                },
+                {
+                    "alignment": "right",
+                    "name": "NewtonMaxNorm"
+                },
+                {
+                    "alignment": "right",
+                    "name": "MinimumStepFailures"
+                },
+                {
+                    "alignment": "right",
+                    "name": "AdamsRingingSuppressionMode"
+                },
+                {
+                    "alignment": "right",
+                    "name": "AdamsIndividualSuppressStepsRange"
+                },
+                {
+                    "alignment": "right",
+                    "name": "AdamsIndividualSuppressionCycles"
+                },
+                {
+                    "alignment": "right",
+                    "name": "AdamsDampingSteps"
+                },
+                {
+                    "alignment": "right",
+                    "name": "AdamsDampingAlpha"
+                },
+                {
+                    "alignment": "right",
+                    "name": "AdamsGlobalSuppressionStep"
+                },
+                {
+                    "alignment": "right",
+                    "name": "RefactorByHRatio"
+                },
+                {
+                    "alignment": "right",
+                    "name": "UseRefactor"
+                },
+                {
+                    "alignment": "right",
+                    "name": "Hmax"
+                },
+                {
+                    "alignment": "right",
+                    "name": "MaxResultFilesCount"
+                },
+                {
+                    "alignment": "right",
+                    "name": "MaxResultFilesSize"
+                },
+                {
+                    "alignment": "right",
+                    "name": "DebugModelNameTemplate"
+                },
+                {
+                    "alignment": "right",
+                    "name": "StepsToOrderChange"
+                },
+                {
+                    "alignment": "right",
+                    "name": "StepsToStepChange"
+                },
+                {
+                    "alignment": "right",
+                    "name": "LFImbalance"
+                },
+                {
+                    "alignment": "right",
+                    "name": "LFFlat"
+                },
+                {
+                    "alignment": "right",
+                    "name": "LFStartup"
+                },
+                {
+                    "alignment": "right",
+                    "name": "SeidellIterations"
+                },
+                {
+                    "alignment": "right",
+                    "name": "SeidellStep"
+                },
+                {
+                    "alignment": "right",
+                    "name": "EnableSwitchIteration"
+                },
+                {
+                    "alignment": "right",
+                    "name": "MaxIterations"
+                },
+                {
+                    "alignment": "right",
+                    "name": "LFFormulation"
+                },
+                {
+                    "alignment": "right",
+                    "name": "NodeAngleNewtonStep"
+                },
+                {
+                    "alignment": "right",
+                    "name": "BranchAngleNewtonStep"
+                },
+                {
+                    "alignment": "right",
+                    "name": "VoltageNewtonStep"
+                },
+                {
+                    "alignment": "right",
+                    "name": "ForceSwitchLambda"
+                },
+                {
+                    "alignment": "right",
+                    "name": "AllowNegativeLRC"
+                },
+                {
+                    "alignment": "right",
+                    "name": "LRCMinSlope"
+                },
+                {
+                    "alignment": "right",
+                    "name": "LRCMaxSlope"
+                },
+                {
+                    "alignment": "right",
+                    "name": "MaxPVPQSwitches"
+                },
+                {
+                    "alignment": "right",
+                    "name": "PVPQSwitchesPerIteration"
+                },
+                {
+                    "alignment": "right",
+                    "name": "DiffEquationType"
+                },
+                {
+                    "alignment": "right",
+                    "name": "VarSearchStackDepth"
+                }
+            ],
+            "menuPath": "\\Raiden",
+            "name": "Динамика Raiden",
+            "tableName": "RaidenParameters",
+            "vertical": true
+        }
+    ]
+}

@@ -1,0 +1,37 @@
+<RCC>
+    <qresource prefix="/">
+        <file>images/copy.png</file>
+        <file>images/cut.png</file>
+        <file>images/new.png</file>
+        <file>images/open.png</file>
+        <file>images/paste.png</file>
+        <file>images/save.png</file>
+        <file>images/Rastr3_rgm_16x16.png</file>
+        <file>images/sortasc.png</file>
+        <file>images/sortdesc.png</file>
+        <file>images/Rastr3_grid_insrow_16x16.png</file>
+        <file>images/Rastr3_grid_delrow_16x16.png</file>
+        <file>images/Bee.png</file>
+        <file>images/column_edit.png</file>
+        <file>images/Rastr3_grid_addrow_16x16.png</file>
+        <file>images/Rastr3_grid_duprow_16x161.png</file>
+        <file>images/Save_all.png</file>
+        <file>images/mdp_16.png</file>
+        <file>images/TKZ_16.png</file>
+        <file>images/TKZ_48.png</file>
+        <file>images/calc_PTI.png</file>
+        <file>images/filtr_1.png</file>
+        <file>images/rastr.png</file>
+        <file>images/document_new.png</file>
+        <file>images/disk_blue.png</file>
+        <file>images/folder_out.png</file>
+        <file>images/about.png</file>
+        <file>images/book_yellow.png</file>
+        <file>images/lightbulb_on.png</file>
+        <file>images/delete.png</file>
+        <file>images/warning.png</file>
+        <file>images/RecalcDor.png</file>
+        <file>images/UpdateTablesTI.png</file>
+        <file>images/cx195.svg</file>
+    </qresource>
+</RCC>

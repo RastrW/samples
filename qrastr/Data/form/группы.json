@@ -1,0 +1,237 @@
+{
+    "forms": [
+        {
+            "addToMenuIndex": 1,
+            "fields": [
+                {
+                    "name": "nu"
+                },
+                {
+                    "name": "name"
+                },
+                {
+                    "name": "ptg"
+                },
+                {
+                    "name": "KPO"
+                },
+                {
+                    "name": "pg"
+                },
+                {
+                    "name": "pg_min"
+                },
+                {
+                    "name": "pg_max"
+                }
+            ],
+            "menuPath": "\\Группы",
+            "name": "ГОУ",
+            "tableName": "gou"
+        },
+        {
+            "addToMenuIndex": 1,
+            "fields": [
+                {
+                    "name": "nu"
+                },
+                {
+                    "name": "name"
+                },
+                {
+                    "name": "pg"
+                },
+                {
+                    "name": "pg_min"
+                },
+                {
+                    "name": "pg_max"
+                }
+            ],
+            "menuPath": "\\Группы",
+            "name": "Генераторные (ОДУ)",
+            "tableName": "gg_ODU"
+        },
+        {
+            "addToMenuIndex": 1,
+            "fields": [
+                {
+                    "name": "nu"
+                },
+                {
+                    "name": "name"
+                },
+                {
+                    "name": "pg"
+                },
+                {
+                    "name": "pg_min"
+                },
+                {
+                    "name": "pg_max"
+                }
+            ],
+            "menuPath": "\\Группы",
+            "name": "Генераторные (ЦДУ)",
+            "tableName": "gg_CDU"
+        },
+        {
+            "addToMenuIndex": 1,
+            "fields": [
+                {
+                    "name": "nng"
+                },
+                {
+                    "name": "name"
+                },
+                {
+                    "name": "pop"
+                },
+                {
+                    "name": "poq"
+                }
+            ],
+            "menuPath": "\\Группы",
+            "name": "Нагрузочные (ЦДУ)",
+            "tableName": "nagr"
+        },
+        {
+            "addToMenuIndex": 1,
+            "fields": [
+                {
+                    "name": "nga"
+                },
+                {
+                    "name": "name"
+                },
+                {
+                    "name": "pg"
+                },
+                {
+                    "name": "pn"
+                },
+                {
+                    "name": "dp"
+                },
+                {
+                    "name": "pop"
+                },
+                {
+                    "name": "vnp"
+                }
+            ],
+            "menuPath": "\\Группы",
+            "name": "Нагрузочные (ОДУ)",
+            "tableName": "ngroup"
+        },
+        {
+            "addToMenuIndex": 1,
+            "fields": [
+                {
+                    "name": "nsa"
+                },
+                {
+                    "name": "name"
+                },
+                {
+                    "name": "pg"
+                },
+                {
+                    "name": "pn"
+                },
+                {
+                    "name": "dp"
+                },
+                {
+                    "name": "pop"
+                },
+                {
+                    "name": "vnp"
+                },
+                {
+                    "name": "qg"
+                },
+                {
+                    "name": "qn"
+                },
+                {
+                    "name": "dq"
+                },
+                {
+                    "name": "poq"
+                },
+                {
+                    "name": "vnq"
+                }
+            ],
+            "menuPath": "\\Группы",
+            "name": "ЗСП",
+            "tableName": "area4"
+        },
+        {
+            "fields": [
+                {
+                    "name": "sta"
+                },
+                {
+                    "name": "_nsa_na"
+                },
+                {
+                    "name": "_nsa_ny"
+                },
+                {
+                    "name": "_nsa_name"
+                },
+                {
+                    "name": "_nsa_pl"
+                },
+                {
+                    "name": "div4"
+                },
+                {
+                    "name": "_nsa_dp"
+                },
+                {
+                    "name": "_nsa_dv"
+                }
+            ],
+            "name": "_Ветви5",
+            "tableName": "vetv"
+        },
+        {
+            "addToMenuIndex": 1,
+            "detailAssignment": "_tmpny=nsa",
+            "detailQueryColumnName": "_navet",
+            "fields": [
+                {
+                    "name": "empty"
+                },
+                {
+                    "name": "nsa"
+                },
+                {
+                    "name": "name"
+                },
+                {
+                    "name": "vnp"
+                },
+                {
+                    "name": "pn"
+                },
+                {
+                    "name": "pg"
+                },
+                {
+                    "name": "dp"
+                },
+                {
+                    "name": "empty"
+                }
+            ],
+            "hasDetailForm": true,
+            "menuPath": "_Ветви5\\Группы",
+            "name": "ЗСП+Ветви",
+            "tableName": "area4"
+        }
+    ]
+}
