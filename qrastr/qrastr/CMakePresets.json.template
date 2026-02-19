@@ -27,7 +27,8 @@
       "binaryDir": "${sourceDir}/build/debug",
       "cacheVariables": {
         "CMAKE_BUILD_TYPE": "Debug",
-        "ASTRA_ROOT": "CHANGE_ME_TO_YOUR_ASTRA_PATH"
+        "ASTRA_ROOT": "/home/administrator/Документы/astra",
+        "QT_DIR": "/home/administrator/Qt/5.15.2/gcc_64/lib/cmake/Qt5"
       }
     },
     {
@@ -36,7 +37,8 @@
       "binaryDir": "${sourceDir}/build/release",
       "cacheVariables": {
         "CMAKE_BUILD_TYPE": "Release",
-        "ASTRA_ROOT": "CHANGE_ME_TO_YOUR_ASTRA_PATH"
+        "ASTRA_ROOT": "/home/administrator/Документы/astra",
+        "QT_DIR": "/home/administrator/Qt/5.15.2/gcc_64/lib/cmake/Qt5"
       }
     }
   ]

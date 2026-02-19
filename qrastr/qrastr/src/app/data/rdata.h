@@ -107,7 +107,7 @@ public:
         long indx = IRastrPayload{columns->FindIndex(str_name_)}.Value();
         if (indx < 0)
         {
-            qDebug()<<"rdata->title(): "<<str_name_<< "column not found! ";
+            qDebug()<<"rdata->title(): "<<QString::fromStdString(str_name_)<< "column not found! ";
             std::string _tmp = "->no column!";
             return _tmp.append(str_name_);
         }

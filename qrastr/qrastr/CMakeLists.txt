@@ -151,28 +151,39 @@ endif()
 # ============================================================================
 # Qt
 # ============================================================================
+if(NOT QT_DIR)
+    message(FATAL_ERROR "QT_DIR must be set in CMakePresets.json")
+endif()
+
+list(APPEND CMAKE_PREFIX_PATH "${QT_DIR}")
+
 if(WIN32)
-    list(APPEND CMAKE_PREFIX_PATH "${QT_DIR}")
-    find_package(Qt6 REQUIRED CONFIG)
+    find_package(Qt6 REQUIRED CONFIG COMPONENTS Core)
     set(QT_VERSION_MAJOR 6)
 elseif(UNIX)
-    list(APPEND CMAKE_PREFIX_PATH "${QT_DIR}")
-    find_package(Qt5 REQUIRED CONFIG)
+    find_package(Qt5 REQUIRED CONFIG COMPONENTS Core)
     set(QT_VERSION_MAJOR 5)
 endif()
 
 message("QT_DIR: ${QT_DIR}")
 
-find_package(Qt${QT_VERSION_MAJOR} REQUIRED COMPONENTS
+# Базовые компоненты для всех версий Qt
+set(QT_COMPONENTS
     Core
     Widgets
     PrintSupport
     Xml
     Test
     LinguistTools
-    SvgWidgets
     Svg
 )
+
+# Qt6-специфичные компоненты
+if(QT_VERSION_MAJOR EQUAL 6)
+    list(APPEND QT_COMPONENTS SvgWidgets Core5Compat)
+endif()
+
+find_package(Qt${QT_VERSION_MAJOR} REQUIRED COMPONENTS ${QT_COMPONENTS})
 
 # Qt6 требует дополнительный модуль для совместимости с Qt5
 if(QT_VERSION_MAJOR EQUAL 6)
@@ -344,12 +355,14 @@ set(QT_LIBS
     Qt${QT_VERSION_MAJOR}::PrintSupport
     Qt${QT_VERSION_MAJOR}::Xml
     Qt${QT_VERSION_MAJOR}::Test
-    Qt${QT_VERSION_MAJOR}::SvgWidgets
     Qt${QT_VERSION_MAJOR}::Svg
 )
 
 if(QT_VERSION_MAJOR EQUAL 6)
-    list(APPEND QT_LIBS Qt${QT_VERSION_MAJOR}::Core5Compat)
+    list(APPEND QT_LIBS
+        Qt${QT_VERSION_MAJOR}::SvgWidgets
+        Qt${QT_VERSION_MAJOR}::Core5Compat
+    )
 endif()
 
 set(THIRD_PARTY_LIBS

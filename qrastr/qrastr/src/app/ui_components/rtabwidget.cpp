@@ -697,7 +697,7 @@ void RtabWidget::slot_endResetModel(std::string tname)
     // Установим видимые столбцы
     int ncols = view->getColumnCount();
     int sz = (prm->getRdata())->size();
-    qDebug()<<"onRTDM_EndResetModel"<<tname<<": ncols(view) = "<<ncols;
+    qDebug()<<"onRTDM_EndResetModel"<<QString::fromStdString(tname)<<": ncols(view) = "<<ncols;
     for (const RCol& rcol : *prm->getRdata())
     {
         column_qt = (Qtitan::GridTableColumn *)view->getColumn(rcol.index);

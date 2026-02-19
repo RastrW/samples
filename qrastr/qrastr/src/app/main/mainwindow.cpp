@@ -20,7 +20,9 @@
 #include <QInputDialog>
 #include <QApplication>
 #include <QMdiSubWindow>
+#if (QT_VERSION >= QT_VERSION_CHECK(6, 0, 0))
 #include <QtSvgWidgets/QSvgWidget>
+#endif
 #include <QSvgRenderer>
 
 #include <spdlog/spdlog.h>
@@ -347,6 +349,7 @@ void MainWindow::slot_openGraph(){
 
     auto dw = new ads::CDockWidget( "Графика", this);
 
+#if (QT_VERSION >= QT_VERSION_CHECK(6, 0, 0))
     //Using QSvgWidget
     QSvgWidget *svgWidget = new QSvgWidget;
     svgWidget->load(QStringLiteral(":/images/cx195.svg"));
@@ -354,7 +357,7 @@ void MainWindow::slot_openGraph(){
     connect( dw, SIGNAL( closed() ), svgWidget, SLOT( OnClose() ) );
     auto area = m_dockManager->addDockWidgetTab(ads::BottomAutoHideArea, dw);
     dw->setFeature(ads::CDockWidget::DockWidgetDeleteOnClose, true);
-
+#endif
 
 #if(!defined(SDL_NO))
     SDL_Init(SDL_INIT_VIDEO); // Basics of SDL, init what you need to use
