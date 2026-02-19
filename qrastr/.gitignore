@@ -95,3 +95,5 @@ Release
 !/lib/build_qtitan_vs_msvc.bat
 
 qrastr_log.txt
+
+.qtcreator

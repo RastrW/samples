@@ -86,20 +86,18 @@ else()
     message(STATUS "THIRDPARTY_DIR: ${THIRDPARTY_DIR}")
 endif()
 
-# Путь к библиотеке ASTRA с бинарными файлами
-set(ASTRA_BIN_ROOT "${CMAKE_CURRENT_SOURCE_DIR}/../lib/astra")
+message(STATUS "ASTRA_ROOT: ${ASTRA_ROOT}")
 
-if(NOT IS_DIRECTORY ${ASTRA_BIN_ROOT})
-    message(FATAL_ERROR "ASTRA binary directory not found: ${ASTRA_BIN_ROOT}")
+if(NOT IS_DIRECTORY ${ASTRA_ROOT})
+    message(FATAL_ERROR "ASTRA_ROOT not found: ${ASTRA_ROOT}")
 endif()
 
-message(STATUS "ASTRA_BIN_ROOT: ${ASTRA_BIN_ROOT}")
+# Составляем CMAKE_PREFIX_PATH на базе ASTRA_ROOT
+list(APPEND CMAKE_PREFIX_PATH "${ASTRA_ROOT}/lib/cmake")
 
 # Ищем конфигурацию ASTRA
-# CONFIG означает: FindCOMCK.cmake — даже не ищется, ищется comck-config.cmake
-# HINTS вместо list(APPEND CMAKE_PREFIX_PATH "${PATH}")
-find_package(COMCK CONFIG HINTS "${ASTRA_BIN_ROOT}/lib/cmake/COMCK")
-find_package(Astra CONFIG HINTS "${ASTRA_BIN_ROOT}/lib/cmake/Astra")
+find_package(COMCK CONFIG REQUIRED)
+find_package(Astra CONFIG REQUIRED)
 
 if(NOT COMCK_FOUND)
     message(FATAL_ERROR "COMCK not found")
@@ -153,7 +151,18 @@ endif()
 # ============================================================================
 # Qt
 # ============================================================================
-find_package(QT NAMES Qt6 Qt5 REQUIRED COMPONENTS Core)
+if(WIN32)
+    list(APPEND CMAKE_PREFIX_PATH "${QT_DIR}")
+    find_package(Qt6 REQUIRED CONFIG)
+    set(QT_VERSION_MAJOR 6)
+elseif(UNIX)
+    list(APPEND CMAKE_PREFIX_PATH "${QT_DIR}")
+    find_package(Qt5 REQUIRED CONFIG)
+    set(QT_VERSION_MAJOR 5)
+endif()
+
+message("QT_DIR: ${QT_DIR}")
+
 find_package(Qt${QT_VERSION_MAJOR} REQUIRED COMPONENTS
     Core
     Widgets
@@ -252,8 +261,8 @@ list(APPEND PROJECT_INCLUDES ${FMT_INCLUDES})
 
 # Добавляем ASTRA include директории
 list(APPEND PROJECT_INCLUDES
-    ${ASTRA_BIN_ROOT}/include
-    ${ASTRA_BIN_ROOT}/include/comck
+    ${ASTRA_ROOT}/include
+    ${ASTRA_ROOT}/include/comck
 )
 # ============================================================================
 # Source Files
@@ -358,8 +367,8 @@ endif()
 # Astra
 set(ASTRA_LIBS)
 list(APPEND ASTRA_LIBS
-    "${ASTRA_BIN_ROOT}/lib/${LIB_PREFIX}astra${LIB_SUFFIX}"
-    "${ASTRA_BIN_ROOT}/lib/${LIB_PREFIX}COMCK${LIB_SUFFIX}"
+    "${ASTRA_ROOT}/lib/${LIB_PREFIX}astra${LIB_SUFFIX}"
+    "${ASTRA_ROOT}/lib/${LIB_PREFIX}COMCK${LIB_SUFFIX}"
 )
 
 # 2) Составляем окончательный список с учётом опций
@@ -424,10 +433,10 @@ endif()
 
 add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
     COMMAND ${CMAKE_COMMAND} -E copy_if_different
-        "${ASTRA_BIN_ROOT}/${ASTRA_FOLDER}/${LIB_PREFIX}astra${SHLIB_SUFFIX}"
+        "${ASTRA_ROOT}/${ASTRA_FOLDER}/${LIB_PREFIX}astra${SHLIB_SUFFIX}"
         "$<TARGET_FILE_DIR:${PROJECT_NAME}>/plugins/"
     COMMAND ${CMAKE_COMMAND} -E copy_if_different
-        "${ASTRA_BIN_ROOT}/${ASTRA_FOLDER}/${LIB_PREFIX}COMCK${SHLIB_SUFFIX}"
+        "${ASTRA_ROOT}/${ASTRA_FOLDER}/${LIB_PREFIX}COMCK${SHLIB_SUFFIX}"
         "$<TARGET_FILE_DIR:${PROJECT_NAME}>/plugins/"
     COMMENT "Copying ASTRA"
 )
