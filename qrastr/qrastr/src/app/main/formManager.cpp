@@ -61,6 +61,7 @@ void FormManager::openForm(const CUIForm& form) {
         m_parentWidget);
 
     prtw->setPyHlp(m_pPyHlp);
+    //prtw->setPyHlp(m_pyHelper.get());
     // Выравнивание данных по шаблону, выравнивание текста по левому краю
     prtw->widebyshabl();
     

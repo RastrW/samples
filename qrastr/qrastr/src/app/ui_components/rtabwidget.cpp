@@ -417,6 +417,10 @@ void RtabWidget::contextMenu(ContextMenuEventArgs* args)
     menu_linked_forms = CunstructLinkedFormsMenu( m_UIForm.Name());
     args->contextMenu()->addMenu(menu_linked_forms);
 
+    QMenu *menu_linked_macro;
+    menu_linked_macro = CunstructLinkedMacroMenu( m_UIForm.Name());
+    args->contextMenu()->addMenu(menu_linked_macro);
+
     args->contextMenu()->addAction(condFormatAction);
     connect(condFormatAction, &QAction::triggered, this, [&]() {
         emit editCondFormats(column);

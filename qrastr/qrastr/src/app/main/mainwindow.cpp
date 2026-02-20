@@ -98,18 +98,20 @@ void MainWindow::initialize(
     m_calcController = std::make_unique<CalculationController>(
         qastra, qti, qbarsmdp, this);
     
-    // 4. FormManager
+    // 4. Python helper
+    m_pyHelper = std::make_unique<PyHlp>(*qastra->getRastr().get());
+
+    // 5. FormManager
     m_rtdm.setQAstra(qastra.get());
     m_formManager = std::make_unique<FormManager>(
         qastra, &m_rtdm, m_dockManager, m_pyHelper.get(), this);
     m_formManager->setForms(forms);
     
-    // 5. UIBuilder
+    // 6. UIBuilder
     m_uiBuilder = std::make_unique<UIBuilder>(this);
     m_uiBuilder->buildAll();
     
-    // 6. Python helper
-    m_pyHelper = std::make_unique<PyHlp>(*qastra->getRastr().get());
+
     
     // ========== НАСТРОЙКА КОМПОНЕНТОВ ==========
     setupDockWidgets();
