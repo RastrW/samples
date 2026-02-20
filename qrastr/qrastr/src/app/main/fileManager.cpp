@@ -85,11 +85,6 @@ int FileManager::openFiles() {
                     if (res == IPlainRastrRetCode::Ok) {
                         setCurrentFile(rfile, QString::fromStdString(str_path_to_shablon));
 
-                        // Запоминаем для сохранения в appsettings
-                        Params::get_instance()->addStartLoadFileTemplate(
-                            rfile.toStdString(),
-                            str_path_to_shablon);
-
                         spdlog::info("File loaded {}", rfile.toStdString());
                         successCount++;
                     } else {

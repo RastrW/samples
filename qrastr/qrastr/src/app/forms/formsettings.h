@@ -13,7 +13,8 @@ class FormSettings
 public:
     explicit FormSettings(QWidget *parent = nullptr);
     bool init(const std::shared_ptr<QAstra>& sp_qastra);
-    void populateSettingsTree( _tree_item& ti_root, QTreeWidgetItem* ptwi_parent );
+    void populateSettingsTree( _tree_item& ti_root,
+                              QTreeWidgetItem* ptwi_parent );
     void setButtonSaveEnabled(bool bl_new_val);
     void setAppSettingsChanged();
     void closeEvent(QCloseEvent *event) override;
