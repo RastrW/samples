@@ -303,6 +303,7 @@ file(GLOB_RECURSE PROJECT_SOURCES
     "${APP_DIR}/astra/*.cpp"
     "${APP_DIR}/astra/*.h"
     "${APP_DIR}/astra/astra_headers/*.h"
+    "${APP_DIR}/astra/astra_headers/*.hpp"
     "${SRC_DIR}/plugins/rastr/plugin_interfaces.h"
     "${APP_DIR}/main.cpp"
 )

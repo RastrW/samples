@@ -15,7 +15,7 @@
 		- Linux: `"ASTRA_ROOT": "/path/to/astra"`
 	*Qt:
 		- Windows: `"QT_DIR": "C:/path/to/lib/cmake/Qt6"`
-		- На Linux Qt обычно находится в системных путях и параметр не требуется (ПРОВЕРИТЬ!)
+		- На Linux: `"/home/administrator/Qt/5.15.2/gcc_64/lib/cmake/Qt5"`
 3. Откройте проект в Qt Creator и соберите
 
 4. При изменении содержимого CMakePresets необходимо выполнять "Build->Reload CMake Presets"

@@ -57,7 +57,8 @@ int FileManager::openFiles() {
     const QString qstr_filter_no_template = "No template (*)";
     
     // Получаем список шаблонов из Params
-    const Params::_v_template_exts v_template_ext = Params::get_instance()->getTemplateExts();
+    const Params::_v_template_exts v_template_ext =
+        Params::get_instance()->getTemplateExts();
     
     //Загружаем каждый выбранный файл
     for (const QString& rfile : selectedFiles) {
@@ -83,6 +84,12 @@ int FileManager::openFiles() {
                     
                     if (res == IPlainRastrRetCode::Ok) {
                         setCurrentFile(rfile, QString::fromStdString(str_path_to_shablon));
+
+                        // Запоминаем для сохранения в appsettings
+                        Params::get_instance()->addStartLoadFileTemplate(
+                            rfile.toStdString(),
+                            str_path_to_shablon);
+
                         spdlog::info("File loaded {}", rfile.toStdString());
                         successCount++;
                     } else {
@@ -93,7 +100,7 @@ int FileManager::openFiles() {
                     break;
                 }
             }
-            
+
             if (!bl_find_template) {
                 spdlog::error("Template not found for: {}", rfile.toStdString());
                 emit fileLoadError(QString("Template not found for: %1").arg(rfile));

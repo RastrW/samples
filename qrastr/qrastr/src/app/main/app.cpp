@@ -64,6 +64,10 @@ bool App::init(){
 
         spdlog::info( "ReadSetting: {}", res);
         spdlog::info( "Log: {}", path_log.generic_u8string() );
+
+        connect(this, &QApplication::aboutToQuit, this, [this](){
+            writeSettings();
+        });
     }catch(const std::exception& ex){
         exclog(ex);
         return false;
@@ -104,13 +108,13 @@ bool App::readSettings(){
                                   p_params->getDirData().path().toStdString());
             }
             if(!p_params->readJsonFile(str_path_2_conf)){
-                QMessageBox mb;
-                // так лучше не делать ,смешение строк qt и std это боль.
-                std::string ss = "error in files load";
-                QString str = QString::fromUtf8(ss.c_str());
-                mb.setText(str);
+                //повреждённый JSON или проблемы с правами доступа
                 m_v_cache_log.add(spdlog::level::err,
-                                  "ReadJsonFile {}", str.toStdString());
+                                  "ReadJsonFile failed: {}", str_path_2_conf);
+                QMessageBox mb(QMessageBox::Icon::Critical,
+                               QObject::tr("Error"),
+                               QObject::tr("Failed to parse appsettings.json.\n"
+                                           "Check file for errors or delete it to reset defaults."));
                 mb.exec();
                 return false;
             }
@@ -384,7 +388,13 @@ bool App::start(){
 }
 
 bool App::writeSettings(){
-    QSettings settings(Params::pch_org_qrastr_);
-    QString qstr = settings.fileName();
-    return true;
+    auto* const p_params = Params::get_instance();
+    if(!p_params) return false;
+
+    const fs::path& path = p_params->getFileAppsettings();
+    if(path.empty()){
+        spdlog::warn("writeSettings: appsettings path is empty");
+        return false;
+    }
+    return p_params->writeJsonFile(path);
 }

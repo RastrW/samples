@@ -22,8 +22,7 @@ public:
     ///<Чтение/запись файла appsettings.json
     bool readJsonFile (const fs::path& path_2_json);
     bool writeJsonFile(const fs::path& path_2_json)const;
-    static bool templ_sort_func(const std::pair<std::string,std::string> &p1,
-                                const std::pair<std::string,std::string> &p2);
+
     bool readTemplates();
     bool readForms    ();
     bool readFormsExists();
@@ -86,6 +85,9 @@ public:
     const _v_template_exts& getTemplateExts(){
         return m_template_exts_;
     }
+
+    void addStartLoadFileTemplate(const std::string& file,
+                                  const std::string& templ);
 private:
     QDir                  dir_Data_;
     QDir                  dir_SHABLON_;
@@ -104,6 +106,10 @@ private:
     // Список файлов в папке Data/SHABLON
     _v_template_exts      m_template_exts_;
     std::unique_ptr<CUIFormsCollection> upCUIFormsCollection_;
+
+    static bool templ_sort_func(const std::pair<std::string,std::string> &p1,
+                                const std::pair<std::string,std::string> &p2);
+
 public:
     static constexpr const char pch_org_qrastr_[]=                "QRastr";
     static constexpr const char pch_dir_data_[]=                  "Data";
