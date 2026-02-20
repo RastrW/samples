@@ -25,6 +25,7 @@ FormManager::FormManager
     assert(m_qastra != nullptr);
     assert(m_rtdm != nullptr);
     assert(m_dockManager != nullptr);
+    assert(m_pPyHlp != nullptr);
 }
 
 void FormManager::setForms(const std::list<CUIForm>& forms) {
@@ -61,7 +62,7 @@ void FormManager::openForm(const CUIForm& form) {
         m_parentWidget);
 
     prtw->setPyHlp(m_pPyHlp);
-    //prtw->setPyHlp(m_pyHelper.get());
+
     // Выравнивание данных по шаблону, выравнивание текста по левому краю
     prtw->widebyshabl();
     
