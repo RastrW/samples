@@ -354,11 +354,12 @@ set(QT_LIBS
     Qt${QT_VERSION_MAJOR}::PrintSupport
     Qt${QT_VERSION_MAJOR}::Xml
     Qt${QT_VERSION_MAJOR}::Test
-    Qt${QT_VERSION_MAJOR}::Svg
+
 )
 
 if(QT_VERSION_MAJOR EQUAL 6)
     list(APPEND QT_LIBS
+        Qt${QT_VERSION_MAJOR}::Svg
         Qt${QT_VERSION_MAJOR}::SvgWidgets
         Qt${QT_VERSION_MAJOR}::Core5Compat
     )
