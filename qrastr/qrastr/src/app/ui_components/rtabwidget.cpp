@@ -552,7 +552,7 @@ void RtabWidget::onOpenLinkedForm( LinkedForm _lf)
 
 void RtabWidget::onOpenLinkedMacro( LinkedMacro _lm)
 {
-    qDebug()<<"call linked macro:"<<_lm.macrofile;
+    qDebug()<<"call linked macro:"<<_lm.macrofile.c_str();
 
     //Макросы ищем в \Data\contextmacro заменяя расчширение .vbs -> .py
     std::filesystem::path path_macrofile = QDir::currentPath().toStdString().c_str();
