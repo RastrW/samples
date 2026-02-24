@@ -179,27 +179,30 @@ bool Params::readTemplates(){
 }
 
 bool Params::readForms(){
-    try{
+    try {
         upCUIFormsCollection_ = std::make_unique<CUIFormsCollection>();
-        for(const Params::_v_forms::value_type &form : m_start_load_forms_){
-            fs::path path_file_form  {path_forms};
-            path_file_form /= stringutils::utf8_decode(form);
 
-            auto t_сollection = std::make_unique<CUIFormsCollection>();
-            if (path_file_form.extension() == ".fm")
-                *t_сollection = CUIFormCollectionSerializerBinary
-                                       (path_file_form).Deserialize();
-            else
-                *t_сollection = CUIFormCollectionSerializerJson
-                                       (path_file_form).Deserialize();
-            for(const  CUIForm& uiform : t_сollection->Forms()){
-                upCUIFormsCollection_->Forms().emplace_back(uiform);
+        for(const auto& form : m_start_load_forms_) {
+            fs::path path_file_form = fs::path(path_forms) / stringutils::utf8_decode(form);
+
+            CUIFormsCollection temporary_collection;
+
+            if (path_file_form.extension() == ".fm") {
+                temporary_collection = CUIFormCollectionSerializerBinary(path_file_form).Deserialize();
+            } else {
+                temporary_collection = CUIFormCollectionSerializerJson(path_file_form).Deserialize();
+            }
+
+            // Переносим формы из временной коллекции в основную
+            for(auto& uiform : temporary_collection.Forms()) {
+                // Используем std::move, чтобы не копировать тяжелые объекты форм
+                upCUIFormsCollection_->Forms().emplace_back(std::move(uiform));
             }
         }
-    }catch(const std::exception& ex){
+    } catch(const std::exception& ex) {
         exclog(ex);
         return false;
-    }catch(...){
+    } catch(...) {
         exclog();
         return false;
     }
@@ -222,20 +225,4 @@ bool Params::readFormsExists(){
         return false;
     }
     return true;
-}
-
-
-void Params::addStartLoadFileTemplate(const std::string& file,
-                                      const std::string& templ){
-    // Избегаем дублирования
-    auto it = std::find_if(m_start_load_file_templates_.begin(),
-                           m_start_load_file_templates_.end(),
-                           [&file](const _v_file_templates::value_type& p){
-                               return p.first == file;
-                           });
-    if(it != m_start_load_file_templates_.end()){
-        it->second = templ; // Обновляем шаблон если файл уже есть
-    }else{
-        m_start_load_file_templates_.emplace_back(file, templ);
-    }
 }

@@ -1,61 +1,121 @@
 #include "formsettingsonloadtemplates.h"
-#include "ui_formsettingsonloadtemplates.h"
-#include "params.h"
 
-FormSettingsOnLoadTemplates::FormSettingsOnLoadTemplates(QWidget *parent) :
-    QDialog(parent),
-    ui(new Ui::FormSettingsOnLoadTemplates){
-    ui->setupUi(this);
-    ui->twTemplates->setColumnCount(2);
-    //ui->twTemplates->setShowGrid(true);
-    ui->twTemplates->setSelectionMode(QAbstractItemView::SingleSelection);
-    ui->twTemplates->setSelectionBehavior(QAbstractItemView::SelectRows);
-    //QStringList headers;
-    //headers<<""<<"Template";
-    //ui->twTemplates->setHorizontalHeaderLabels(headers);
-    ui->twTemplates->horizontalHeader()->setStretchLastSection(true);
+#include <spdlog/spdlog.h>
+#include <QTableWidget>
+#include <QVBoxLayout>
+#include <QHeaderView>
 
-    ui->twTemplates->resizeColumnsToContents();
-    ui->twTemplates->resizeRowsToContents();
-    ui->twTemplates->verticalHeader()->setVisible(false); // hide row numbers
-    ui->twTemplates->horizontalHeader()->setVisible(false);
+SettingsOnLoadTemplatesWidget::SettingsOnLoadTemplatesWidget(QWidget *parent)
+    : SettingsStackedItemWidget(parent)
+    , pTableWidget_(nullptr) {
+    setupUI();
 }
-FormSettingsOnLoadTemplates::~FormSettingsOnLoadTemplates(){
-    delete ui;
+
+void SettingsOnLoadTemplatesWidget::setupUI() {
+    QVBoxLayout* mainLayout = new QVBoxLayout(this);
+    mainLayout->setContentsMargins(10, 10, 10, 10);
+
+    // Создаем таблицу для шаблонов
+    pTableWidget_ = new QTableWidget(this);
+    pTableWidget_->setColumnCount(2);
+    pTableWidget_->setHorizontalHeaderLabels(QStringList() << tr("Выбрать") << tr("Шаблон"));
+    pTableWidget_->setSelectionMode(QAbstractItemView::SingleSelection);
+    pTableWidget_->setSelectionBehavior(QAbstractItemView::SelectRows);
+    pTableWidget_->horizontalHeader()->setStretchLastSection(true);
+    pTableWidget_->verticalHeader()->setVisible(false);
+    pTableWidget_->horizontalHeader()->setVisible(false);
+
+    mainLayout->addWidget(pTableWidget_);
+    setLayout(mainLayout);
+
+    // Подключаем сигнал изменения элемента таблицы
+    connect(pTableWidget_, &QTableWidget::itemChanged,
+            this, &SettingsOnLoadTemplatesWidget::onItemChanged);
+
+    populateTemplates();
 }
-void FormSettingsOnLoadTemplates::showEvent( QShowEvent* event ) {
-    QWidget::showEvent( event );
-    const Params::_v_templates& v_templates{ Params::get_instance()->getStartLoadTemplates() };
-    const Params::_v_template_exts& v_template_ext{ Params::get_instance()->getTemplateExts() };
-    ui->twTemplates->setRowCount(0);
-    int n_row_num = 0;
-    for(const Params::_v_template_exts::value_type& template_ext : v_template_ext){
-        ui->twTemplates->insertRow(n_row_num);
-        QTableWidgetItem* ptwi_checkbox = new QTableWidgetItem();
-        ptwi_checkbox->data(Qt::CheckStateRole);
-        ptwi_checkbox->setCheckState(Qt::Unchecked);
-        for(const Params::_v_templates::value_type& templ : v_templates){
-            const std::string str_templ_in_table{ template_ext.first + template_ext.second };
-            if(str_templ_in_table == templ){
-                ptwi_checkbox->setCheckState(Qt::Checked);
+
+void SettingsOnLoadTemplatesWidget::populateTemplates() {
+    // Отключаем сигналы при заполнении таблицы, чтобы избежать
+    // множественных сигналов settingsChanged()
+    disconnect(pTableWidget_, &QTableWidget::itemChanged,
+               this, &SettingsOnLoadTemplatesWidget::onItemChanged);
+
+    pTableWidget_->setRowCount(0);
+
+    // Получаем список доступных шаблонов
+    const Params::_v_templates& v_templates =
+        Params::get_instance()->getStartLoadTemplates();
+
+    // Получаем все возможные расширения шаблонов
+    const Params::_v_template_exts& v_template_ext =
+        Params::get_instance()->getTemplateExts();
+
+    // Заполняем таблицу
+    int row_num = 0;
+    for (const auto& template_ext : v_template_ext) {
+        pTableWidget_->insertRow(row_num);
+
+        // Создаем чекбокс для выбора
+        QTableWidgetItem* pItemCheckbox = new QTableWidgetItem();
+        pItemCheckbox->setCheckState(Qt::Unchecked);
+        pItemCheckbox->setData(Qt::CheckStateRole, Qt::Unchecked);
+
+        // Проверяем, включен ли этот шаблон в список загрузки
+        const std::string str_template_full =
+            template_ext.first + template_ext.second;
+
+        for (const auto& templ : v_templates) {
+            if (str_template_full == templ) {
+                pItemCheckbox->setCheckState(Qt::Checked);
+                spdlog::debug("Template {} is marked as selected", str_template_full);
+                break;
             }
         }
-        ui->twTemplates->setItem( n_row_num, n_colnum_checked_, ptwi_checkbox );
-        QTableWidgetItem* ptwi_templatename = new QTableWidgetItem( QString("%1%2").arg(template_ext.first.c_str()).arg(template_ext.second.c_str()) );
-        ptwi_templatename->setFlags(Qt::ItemIsSelectable|Qt::ItemIsEnabled);
-        ui->twTemplates->setItem( n_row_num, n_colnum_templatename_, ptwi_templatename );
-        n_row_num++;
+
+        pTableWidget_->setItem(row_num, COLUMN_CHECKED, pItemCheckbox);
+
+        // Создаем элемент с именем шаблона (не редактируемый)
+        QString qstr_template_name = QString("%1%2")
+                                         .arg(QString::fromStdString(template_ext.first))
+                                         .arg(QString::fromStdString(template_ext.second));
+
+        QTableWidgetItem* pItemName = new QTableWidgetItem(qstr_template_name);
+        pItemName->setFlags(Qt::ItemIsSelectable | Qt::ItemIsEnabled);
+        pTableWidget_->setItem(row_num, COLUMN_NAME, pItemName);
+
+        row_num++;
     }
-}
-void FormSettingsOnLoadTemplates::on_pbApply_clicked(){
-    Params::_v_templates v_templates_new;
-    for( int n_rownum = 0; n_rownum < ui->twTemplates->rowCount() ; n_rownum++ ){
-        const QTableWidgetItem* ptwi_checkbox = ui->twTemplates->item( n_rownum, n_colnum_checked_ );
-        if(Qt::Checked == ptwi_checkbox->checkState()){
-            const QTableWidgetItem* ptwi_templatename = ui->twTemplates->item( n_rownum, n_colnum_templatename_ );
-            v_templates_new.emplace_back(ptwi_templatename->text().toStdString());
-        }
-    }
-    Params::get_instance()->setStartLoadTemplates(v_templates_new);
+
+    pTableWidget_->resizeColumnsToContents();
+
+    // Переподключаем сигнал после заполнения
+    connect(pTableWidget_, &QTableWidget::itemChanged,
+            this, &SettingsOnLoadTemplatesWidget::onItemChanged);
 }
 
+void SettingsOnLoadTemplatesWidget::onItemChanged(QTableWidgetItem* item) {
+    if (item->column() == COLUMN_CHECKED) {
+        m_pendingTemplates.clear();  // Собираем в m_pendingTemplates
+
+        for (int row = 0; row < pTableWidget_->rowCount(); ++row) {
+            QTableWidgetItem* pItemCheckbox = pTableWidget_->item(row, COLUMN_CHECKED);
+            if (pItemCheckbox && pItemCheckbox->checkState() == Qt::Checked) {
+                QTableWidgetItem* pItemName = pTableWidget_->item(row, COLUMN_NAME);
+                if (pItemName) {
+                    m_pendingTemplates.emplace_back(pItemName->text().toStdString());
+                }
+            }
+        }
+
+        m_hasChanges = true;
+        emit settingsChanged();  // Сигнал для SettingsDialog
+    }
+}
+
+void SettingsOnLoadTemplatesWidget::applyChanges() {
+    if (m_hasChanges) {
+        Params::get_instance()->setStartLoadTemplates(m_pendingTemplates);
+        m_hasChanges = false;
+    }
+}

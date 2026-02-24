@@ -85,9 +85,6 @@ public:
     const _v_template_exts& getTemplateExts(){
         return m_template_exts_;
     }
-
-    void addStartLoadFileTemplate(const std::string& file,
-                                  const std::string& templ);
 private:
     QDir                  dir_Data_;
     QDir                  dir_SHABLON_;

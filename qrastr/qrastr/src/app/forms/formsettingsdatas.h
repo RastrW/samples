@@ -1,23 +1,37 @@
-#ifndef FORMSETTINGSDATAS_H
-#define FORMSETTINGSDATAS_H
 #pragma once
+#include "formsettingsstackeditem.h"
 
-#include <QWidget>
+class QGroupBox;
+class QSpinBox;
+class QPushButton;
+class QCheckBox;
+class QLineEdit;
 
-namespace Ui {
-class FormSettingsDatas;
-}
-
-class FormSettingsDatas : public QWidget
-{
+class DataSettingsWidget : public SettingsStackedItemWidget {
     Q_OBJECT
 
 public:
-    explicit FormSettingsDatas(QWidget *parent = nullptr);
-    ~FormSettingsDatas();
+    explicit DataSettingsWidget(QWidget *parent = nullptr);
+    ~DataSettingsWidget() = default;
 
+    void applyChanges() override {}
+private slots:
+    /// Восстановить директорию пользователя по умолчанию
+    void onRestoreUserDirectoryClicked();
+
+    /// Обработчик выбора пути к XML протоколу
+    void onSelectXmlProtocolPath();
 private:
-    Ui::FormSettingsDatas *ui;
-};
+    /// Создать UI элементы
+    void setupUI();
 
-#endif // FORMSETTINGSDATAS_H
+    // UI элементы
+    QGroupBox*  pGroupBoxMaintenance_ {nullptr};
+    QSpinBox*   pSpinBoxNumItems_ {nullptr};
+    QPushButton* pPushButtonRestore_ {nullptr};
+
+    QGroupBox*  pGroupBoxHistory_ {nullptr};
+    QCheckBox*  pCheckBoxRememberHistory_ {nullptr};
+    QPushButton* pPushButtonSelectXmlPath_ {nullptr};
+    QLineEdit*  pLineEditXmlPath_ {nullptr};
+};

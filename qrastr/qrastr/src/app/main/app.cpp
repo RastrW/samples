@@ -64,10 +64,6 @@ bool App::init(){
 
         spdlog::info( "ReadSetting: {}", res);
         spdlog::info( "Log: {}", path_log.generic_u8string() );
-
-        connect(this, &QApplication::aboutToQuit, this, [this](){
-            writeSettings();
-        });
     }catch(const std::exception& ex){
         exclog(ex);
         return false;

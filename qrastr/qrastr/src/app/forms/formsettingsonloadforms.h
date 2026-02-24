@@ -1,27 +1,39 @@
-#ifndef FORMSETTINGSONLOADFORMS_H
-#define FORMSETTINGSONLOADFORMS_H
 #pragma once
+#include "formsettingsstackeditem.h"
 
-#include <QWidget>
+#include "params.h"
 
-namespace Ui {
-class FormSettingsOnLoadForms;
-}
+class QTableWidgetItem;
+class QTableWidget;
 
-class FormSettingsOnLoadForms : public QWidget
-{
+/// @class Виджет для выбора форм, загружаемых при старте приложения
+class SettingsOnLoadFormsWidget : public SettingsStackedItemWidget {
     Q_OBJECT
 
 public:
-    explicit FormSettingsOnLoadForms(QWidget *parent = nullptr);
-    ~FormSettingsOnLoadForms();
-    void showEvent( QShowEvent* event )override;
+    explicit SettingsOnLoadFormsWidget(QWidget *parent = nullptr);
+    ~SettingsOnLoadFormsWidget() = default;
+
+    /// Обновить содержимое при показе виджета
+    void applyChanges() override;
 private slots:
-    void on_pbApply_clicked();
+    /// Обработчик изменения состояния чекбокса в таблице
+    void onItemChanged(QTableWidgetItem* item);
+
 private:
-    Ui::FormSettingsOnLoadForms *ui;
-    static constexpr const int n_colnum_checked_  = 0;
-    static constexpr const int n_colnum_formname_ = 1;
+    /// Создать и настроить UI элементы
+    void setupUI();
+
+    /// Заполнить таблицу доступными формами
+    void populateForms();
+
+private:
+    QTableWidget* pTableWidget_;  ///< Таблица с чекбоксами форм
+    Params::_v_forms
+                m_pendingForms;  // Временное хранилище
+    bool m_hasChanges {false};
+    /// Индексы колонок в таблице
+    static constexpr const int COLUMN_CHECKED = 0;      ///< Колонка с чекбоксом
+    static constexpr const int COLUMN_NAME = 1;         ///< Колонка с именем формы
 };
 
-#endif // FORMSETTINGSONLOADFORMS_H
