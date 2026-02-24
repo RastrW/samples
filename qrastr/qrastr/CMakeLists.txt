@@ -14,7 +14,7 @@ message(STATUS "CMake version: ${CMAKE_VERSION}")
 # ============================================================================
 # Инициализация проекта
 # ============================================================================
-cmake_policy(SET CMP0167 NEW) # In CMake 3.30+, the FindBoost module has been removed. Using BoostConfig.cmake
+#cmake_policy(SET CMP0167 NEW) # In CMake 3.30+, the FindBoost module has been removed. Using BoostConfig.cmake
 project(qrastr VERSION 0.1 LANGUAGES CXX C)
 
 # ============================================================================
