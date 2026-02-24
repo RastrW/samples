@@ -175,12 +175,11 @@ set(QT_COMPONENTS
     Xml
     Test
     LinguistTools
-    Svg
 )
 
 # Qt6-специфичные компоненты
 if(QT_VERSION_MAJOR EQUAL 6)
-    list(APPEND QT_COMPONENTS SvgWidgets Core5Compat)
+    list(APPEND QT_COMPONENTS Svg SvgWidgets Core5Compat)
 endif()
 
 find_package(Qt${QT_VERSION_MAJOR} REQUIRED COMPONENTS ${QT_COMPONENTS})
