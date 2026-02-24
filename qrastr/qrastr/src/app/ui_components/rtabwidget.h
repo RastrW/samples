@@ -79,8 +79,8 @@ public slots:
     void OpenImportCSVForm();
 
     void SetSelection(std::string Selection);
-    void SetDirectCodeEntry(size_t column);
-    void editCondFormats(size_t column);
+    void SetDirectCodeEntry(std::size_t column);
+    void editCondFormats(std::size_t column);
     void onCondFormatsModified();
     void SetLinkedForm( LinkedForm _lf);
     void onOpenLinkedForm(LinkedForm _lf );    // ТИ:Каналы ; id1=%d & id2=0 & prv_num<8 ; 801

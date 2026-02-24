@@ -562,7 +562,7 @@ void RtabWidget::onOpenLinkedMacro( LinkedMacro _lm)
 
     if( !fs::exists(path_macrofile.c_str()))
     {
-        qDebug()<<"context macro not found:"<<path_macrofile;
+        qDebug()<<"context macro not found:"<<path_macrofile.c_str();
         return;
     }
 
@@ -586,13 +586,13 @@ void RtabWidget::onOpenLinkedMacro( LinkedMacro _lm)
 }
 
 
-void RtabWidget::SetDirectCodeEntry(size_t column)
+void RtabWidget::SetDirectCodeEntry(std::size_t column)
 {
     RCol* prcol = prm->getRCol(column);
     prcol->directcode = !prcol->directcode;
     SetEditor(*prcol);
 }
-void RtabWidget::editCondFormats(size_t column)
+void RtabWidget::editCondFormats(std::size_t column)
 {
     std::vector<CondFormat> condFormats;
     CondFormat condFormat;
