@@ -8,9 +8,9 @@
 #include <QList>
 #include <list>
 #include <memory>
+#include <rtablesdatamanager.h>
 
 class QAstra;
-class RTablesDataManager;
 class RtabWidget;
 class CUIForm;
 class PyHlp;
@@ -32,9 +32,8 @@ class FormManager : public QObject {
 public:
     explicit FormManager(
         std::shared_ptr<QAstra> qastra,
-        RTablesDataManager* rtdm,
         ads::CDockManager* dockManager,
-        PyHlp* pPyHlp,
+        std::shared_ptr<PyHlp> pPyHlp,
         QWidget* parent = nullptr
     );
     ~FormManager() = default;
@@ -88,10 +87,10 @@ public slots:
 private:
     // ========== Зависимости ==========
     std::shared_ptr<QAstra> m_qastra;
-    RTablesDataManager* m_rtdm;
     ads::CDockManager* m_dockManager;
     QWidget* m_parentWidget;
-    PyHlp* m_pPyHlp;
+    std::shared_ptr<PyHlp> m_pPyHlp;
+    RTablesDataManager m_rtdm;                  // Менеджер данных таблиц
     // ========== Состояние ==========
     std::list<CUIForm> m_forms;                     // Статические формы
     QMap<QString, int> m_formNameToIndex;           // Быстрый поиск

@@ -58,7 +58,7 @@ public slots:
     void on_calc_end();
     void OnClose();
     void contextMenu(ContextMenuEventArgs* args);
-    void setPyHlp(PyHlp* pPyHlp);
+    void setPyHlp(std::shared_ptr<PyHlp> pPyHlp);
 
     void onItemPressed(CellClickEventArgs* _index);
     void onfocusRowChanged( int _row_old,int _row_new);
@@ -104,7 +104,7 @@ public:
     Qtitan::Grid* m_grid;
     Qtitan::GridTableView* view;
     LinkedForm m_lf;
-    PyHlp* pPyHlp_{nullptr};
+    std::shared_ptr<PyHlp> pPyHlp_;
 private:
     RTableView* ptv;
     int column;                         // for header

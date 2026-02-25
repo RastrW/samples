@@ -101,7 +101,7 @@ RtabWidget::RtabWidget(QAstra* pqastra,CUIForm UIForm, RTablesDataManager* pRTDM
     connect(m_pRTDM, &RTablesDataManager::sig_EndResetModel,this,  &RtabWidget::slot_endResetModel);
 }
 
-void RtabWidget::setPyHlp(PyHlp* pPyHlp)
+void RtabWidget::setPyHlp(std::shared_ptr<PyHlp> pPyHlp)
 {
     pPyHlp_ = pPyHlp;
 }

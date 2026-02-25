@@ -11,26 +11,25 @@
 
 FormManager::FormManager
     (std::shared_ptr<QAstra> qastra,
-     RTablesDataManager* rtdm,
      ads::CDockManager* dockManager,
-     PyHlp* pPyHlp,
+     std::shared_ptr<PyHlp> pPyHlp,
      QWidget* parent)
     : QObject(parent)
     , m_qastra(qastra)
-    , m_rtdm(rtdm)
     , m_dockManager(dockManager)
     , m_pPyHlp(pPyHlp)
     , m_parentWidget(parent)
 {
     assert(m_qastra != nullptr);
-    assert(m_rtdm != nullptr);
     assert(m_dockManager != nullptr);
     assert(m_pPyHlp != nullptr);
+
+   m_rtdm.setQAstra(qastra.get());
 }
 
 void FormManager::setForms(const std::list<CUIForm>& forms) {
     m_forms = forms;
-    m_rtdm->setForms(&m_forms);
+    m_rtdm.setForms(&m_forms);
     
     // Создаём индекс для быстрого поиска
     int index = 0;
@@ -57,7 +56,7 @@ void FormManager::openForm(const CUIForm& form) {
     RtabWidget* prtw = new RtabWidget(
         m_qastra.get(),
         form,
-        m_rtdm,
+        &m_rtdm,
         m_dockManager,
         m_parentWidget);
 

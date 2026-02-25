@@ -462,7 +462,7 @@ void McrWnd::showEvent(QShowEvent *event)
 {
 }
 
-void McrWnd::setPyHlp(PyHlp* pPyHlp)
+void McrWnd::setPyHlp(std::shared_ptr<PyHlp> pPyHlp)
 {
   pPyHlp_ = pPyHlp;
 }

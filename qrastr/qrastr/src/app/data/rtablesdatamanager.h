@@ -61,4 +61,47 @@ private:
       * все её экземляры закрыты, так как удаления из хранилища пока нет.
       * */
     std::map<std::string,std::shared_ptr<QDataBlock>> mpTables;
+
+    // =========================================================================
+    //  Обработчики отдельных типов событий
+    // =========================================================================
+    /**
+     * @brief EventHints::ChangeAll — все таблицы изменились (например, загрузка файла).
+     * Сбрасывает и перечитывает каждый кешированный блок.
+     */
+    void handleChangeAll();
+    /**
+     * @brief EventHints::ChangeTable — изменилась схема таблицы (добавлена/удалена колонка).
+     * Полная перезагрузка блока включая структуру колонок.
+     */
+    void handleChangeTable(const std::string& tname);
+    /**
+     * @brief EventHints::ChangeColumn — изменились все значения одной колонки.
+     * Перечитывает только указанную колонку построчно.
+     */
+    void handleChangeColumn(const std::string& tname, const std::string& cname);
+    /**
+     * @brief EventHints::ChangeRow — изменились все колонки одной строки.
+     * Перечитывает все колонки для строки row.
+     */
+    void handleChangeRow(const std::string& tname, long row);
+    /**
+     * @brief EventHints::ChangeData — изменилось одно значение (tname, cname, row).
+     * Перечитывает всю строку для атомарности обновления.
+     */
+    void handleChangeData(const std::string& tname,
+                          const std::string& cname,
+                          long row);
+    /// @brief EventHints::AddRow — новая строка добавлена в конец таблицы. */
+    void handleAddRow(const std::string& tname, long row);
+    /// @brief EventHints::InsertRow — строка вставлена в позицию row. */
+    void handleInsertRow(const std::string& tname, long row);
+    /// @brief EventHints::DeleteRow — строка row удалена. */
+    void handleDeleteRow(const std::string& tname, long row);
+
+    // =========================================================================
+    //  Вспомогательные методы доступа к плагину
+    // =========================================================================
+    /// @brief Найти кешированный блок или вернуть nullptr
+    QDataBlock* findCachedBlock(const std::string& tname);
 };
