@@ -17,7 +17,7 @@ REM Qtitan root is the script directory
 set "QTITAN_ROOT=%SCRIPT_DIR%"
 
 REM Qt path
-set "QT_PATH=C:\Qt\6.9.3\msvc2022_64"
+set "QT_PATH=C:\Qt\6.7.0\msvc2019_64"
 
 REM MSVC environment
 set "VCVARS=C:\Program Files\Microsoft Visual Studio\2022\Enterprise\VC\Auxiliary\Build\vcvarsall.bat"

@@ -34,7 +34,7 @@ void DataSettingsWidget::setupUI() {
     pSpinBoxNumItems_->setMinimum(1);
     pSpinBoxNumItems_->setMaximum(100);
     pSpinBoxNumItems_->setValue(10);
-    pSpinBoxNumItems_->setMaximumWidth(80);
+    pSpinBoxNumItems_->setMinimumWidth(80);
 
     hLayoutNumItems->addWidget(labelNumItems);
     hLayoutNumItems->addWidget(pSpinBoxNumItems_);

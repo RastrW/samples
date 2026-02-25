@@ -11,7 +11,7 @@ REM Paths - adjust these as needed
 REM ---------------------------------------------------------------------------
 set "VCVARS=C:\Program Files\Microsoft Visual Studio\2022\Enterprise\VC\Auxiliary\Build\vcvarsall.bat"
 set "CMAKE_BIN=C:\Qt\Tools\CMake_64\bin\cmake.exe"
-set "QT_DIR=C:\Qt\6.9.3\msvc2022_64"
+set "QT_DIR=C:\Qt\6.7.0\msvc2019_64"
 set "PYTHON_BIN=C:\Users\kappes-ad\AppData\Local\Programs\Python\Python312\python.exe"
 set "POSTGRESQL_ROOT=C:\Program Files\PostgreSQL\18"
 REM Необходимо установить nasm: https://www.nasm.us/pub/nasm/releasebuilds/3.01/win64/
