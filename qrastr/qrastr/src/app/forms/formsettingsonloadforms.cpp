@@ -1,52 +1,115 @@
 #include "formsettingsonloadforms.h"
-#include "ui_formsettingsonloadforms.h"
 #include "params.h"
+#include <QTableWidget>
+#include <QVBoxLayout>
+#include <QHeaderView>
+#include <spdlog/spdlog.h>
 
-FormSettingsOnLoadForms::FormSettingsOnLoadForms(QWidget *parent) :
-    QWidget(parent),
-    ui(new Ui::FormSettingsOnLoadForms){
-    ui->setupUi(this);
-    ui->twForms->setColumnCount(2);
-    ui->twForms->setSelectionMode(QAbstractItemView::SingleSelection);
-    ui->twForms->setSelectionBehavior(QAbstractItemView::SelectRows);
-    ui->twForms->horizontalHeader()->setStretchLastSection(true);
-    ui->twForms->resizeColumnsToContents();
-    ui->twForms->resizeRowsToContents();
-    ui->twForms->verticalHeader()->setVisible(false); // hide row numbers
-    ui->twForms->horizontalHeader()->setVisible(false);
+SettingsOnLoadFormsWidget::SettingsOnLoadFormsWidget(QWidget *parent)
+    : SettingsStackedItemWidget(parent)
+    , pTableWidget_(nullptr) {
+    setupUI();
 }
-void FormSettingsOnLoadForms::showEvent( QShowEvent* event ){
-    ui->twForms->setRowCount(0);
-    int n_row_num = 0;
-    for(const auto& form_exists_name : Params::get_instance()->getFormsExists()){
-        ui->twForms->insertRow(n_row_num);
-        QTableWidgetItem* ptwi_checkbox = new QTableWidgetItem();
-        ptwi_checkbox->data(Qt::CheckStateRole);
-        ptwi_checkbox->setCheckState(Qt::Unchecked);
-        for(const auto& form_load_name: Params::get_instance()->getStartLoadForms()){
-            if(form_exists_name == form_load_name){
-                ptwi_checkbox->setCheckState(Qt::Checked);
+
+void SettingsOnLoadFormsWidget::setupUI() {
+    QVBoxLayout* mainLayout = new QVBoxLayout(this);
+    mainLayout->setContentsMargins(10, 10, 10, 10);
+
+    // Создаем таблицу для форм
+    pTableWidget_ = new QTableWidget(this);
+    pTableWidget_->setColumnCount(2);
+    pTableWidget_->setHorizontalHeaderLabels(QStringList() << tr("Выбрать") << tr("Форма"));
+    pTableWidget_->setSelectionMode(QAbstractItemView::SingleSelection);
+    pTableWidget_->setSelectionBehavior(QAbstractItemView::SelectRows);
+    pTableWidget_->horizontalHeader()->setStretchLastSection(true);
+    pTableWidget_->verticalHeader()->setVisible(false);
+    pTableWidget_->horizontalHeader()->setVisible(false);
+
+    mainLayout->addWidget(pTableWidget_);
+    setLayout(mainLayout);
+
+    // Подключаем сигнал изменения элемента таблицы
+    connect(pTableWidget_, &QTableWidget::itemChanged,
+            this, &SettingsOnLoadFormsWidget::onItemChanged);
+
+    populateForms();
+}
+
+void SettingsOnLoadFormsWidget::populateForms() {
+    // Отключаем сигналы при заполнении таблицы, чтобы избежать
+    // множественных сигналов settingsChanged()
+    disconnect(pTableWidget_, &QTableWidget::itemChanged,
+               this, &SettingsOnLoadFormsWidget::onItemChanged);
+
+    pTableWidget_->setRowCount(0);
+
+    // Получаем список всех доступных форм
+    const Params::_v_forms& v_forms_exists =
+        Params::get_instance()->getFormsExists();
+
+    // Получаем список форм, загружаемых при старте
+    const Params::_v_forms& v_forms_start_load =
+        Params::get_instance()->getStartLoadForms();
+
+    // Заполняем таблицу
+    int row_num = 0;
+    for (const auto& form_name : v_forms_exists) {
+        pTableWidget_->insertRow(row_num);
+
+        // Создаем чекбокс для выбора
+        QTableWidgetItem* pItemCheckbox = new QTableWidgetItem();
+        pItemCheckbox->setCheckState(Qt::Unchecked);
+        pItemCheckbox->setData(Qt::CheckStateRole, Qt::Unchecked);
+
+        // Проверяем, включена ли эта форма в список загрузки при старте
+        for (const auto& form_load : v_forms_start_load) {
+            if (form_name == form_load) {
+                pItemCheckbox->setCheckState(Qt::Checked);
+                break;
             }
         }
-        ui->twForms->setItem( n_row_num, n_colnum_checked_, ptwi_checkbox );
-        QTableWidgetItem* ptwi_formname = new QTableWidgetItem( QString("%1").arg(form_exists_name.c_str()) );
-        ptwi_formname->setFlags(Qt::ItemIsSelectable|Qt::ItemIsEnabled);
-        ui->twForms->setItem( n_row_num, n_colnum_formname_, ptwi_formname );
-        n_row_num++;
+
+        pTableWidget_->setItem(row_num, COLUMN_CHECKED, pItemCheckbox);
+
+        // Создаем элемент с именем формы (не редактируемый)
+        QTableWidgetItem* pItemName =
+            new QTableWidgetItem(QString::fromStdString(form_name));
+        pItemName->setFlags(Qt::ItemIsSelectable | Qt::ItemIsEnabled);
+        pTableWidget_->setItem(row_num, COLUMN_NAME, pItemName);
+
+        row_num++;
     }
-}
-FormSettingsOnLoadForms::~FormSettingsOnLoadForms(){
-    delete ui;
-}
-void FormSettingsOnLoadForms::on_pbApply_clicked(){
-    Params::_v_forms v_forms_load_new;
-    for( int n_rownum = 0; n_rownum < ui->twForms->rowCount() ; n_rownum++ ){
-        const QTableWidgetItem* ptwi_checkbox = ui->twForms->item( n_rownum, n_colnum_checked_ );
-        if(Qt::Checked == ptwi_checkbox->checkState()){
-            const QTableWidgetItem* ptwi_formname = ui->twForms->item( n_rownum, n_colnum_formname_ );
-            v_forms_load_new.emplace_back(ptwi_formname->text().toStdString());
-        }
-    }
-    Params::get_instance()->setStartLoadForms(v_forms_load_new);
+
+    pTableWidget_->resizeColumnsToContents();
+
+    // Переподключаем сигнал после заполнения
+    connect(pTableWidget_, &QTableWidget::itemChanged,
+            this, &SettingsOnLoadFormsWidget::onItemChanged);
 }
 
+void SettingsOnLoadFormsWidget::onItemChanged(QTableWidgetItem* item) {
+    if (item->column() == COLUMN_CHECKED) {
+        m_pendingForms.clear();
+
+        for (int row = 0; row < pTableWidget_->rowCount(); ++row) {
+            QTableWidgetItem* pItemCheckbox = pTableWidget_->item(row, COLUMN_CHECKED);
+            // Если чекбокс отмечен, добавляем форму в список
+            if (pItemCheckbox && pItemCheckbox->checkState() == Qt::Checked) {
+                QTableWidgetItem* pItemName = pTableWidget_->item(row, COLUMN_NAME);
+                if (pItemName) {
+                    m_pendingForms.emplace_back(pItemName->text().toStdString());
+                }
+            }
+        }
+
+        m_hasChanges = true;
+        emit settingsChanged();
+    }
+}
+
+void SettingsOnLoadFormsWidget::applyChanges() {
+    if (m_hasChanges) {
+        Params::get_instance()->setStartLoadForms(m_pendingForms);
+        m_hasChanges = false;
+    }
+}

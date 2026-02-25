@@ -58,9 +58,6 @@ private:
     QMap<QString, QMenu*> m_menus;
     QMap<QString, QToolBar*> m_toolBars;
 
-    // Константы
-    static constexpr int kMaxRecentFiles = 10;
-
     // Методы создания
     void createFileActions();
     void createCalcActions();

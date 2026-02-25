@@ -107,7 +107,7 @@ private:
     QString m_currentDir;
     QMap<QString, QString> m_loadedFiles;
     // ========== Константы ==========
-    static constexpr int m_maxRecentFiles = 10;
+
     static constexpr const char* m_recentFilesKey = "recentFileList";
     
     // ========== Вспомогательные методы ==========

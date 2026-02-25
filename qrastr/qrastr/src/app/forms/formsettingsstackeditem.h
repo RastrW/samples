@@ -1,15 +1,13 @@
-#ifndef FORMSETTINGSSTACKEDITEM_H
-#define FORMSETTINGSSTACKEDITEM_H
 #pragma once
+#include <QWidget>
 
-class FormSettings;
-class FormSettingsStackedItem
-{
+class SettingsStackedItemWidget : public QWidget{
+    Q_OBJECT
 public:
-    FormSettingsStackedItem(FormSettings* pfm_settings);
-    FormSettings* getFormSettings();
-private:
-    FormSettings* pfm_settings_ = nullptr;
-};
+    SettingsStackedItemWidget(QWidget *parent = nullptr);
 
-#endif // FORMSETTINGSSTACKEDITEM_H
+    virtual void applyChanges() = 0;
+signals:
+    /// Сигнал об изменении настроек
+    void settingsChanged();
+};
