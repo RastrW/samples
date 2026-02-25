@@ -55,6 +55,7 @@ bool Params::readJsonFile(const fs::path& path_2_json){
         if(j_start.contains(pch_json_start_forms_) &&
             j_start[pch_json_start_forms_].is_array()){
             for(const nlohmann::json& j_form : j_start[pch_json_start_forms_]){
+                std::string name = j_form.get<std::string>();
                 m_start_load_forms_.emplace_back(j_form.get<std::string>());
             }
         }else{
@@ -215,7 +216,9 @@ bool Params::readFormsExists(){
         for(const auto& entry : fs::directory_iterator(path_forms)){
             fs::path path_form = entry.path();
             std::string str_form_name = path_form.filename().u8string();
-            m_forms_exists_.emplace_back(str_form_name);
+            if (path_form.extension() == ".fm") {
+                m_forms_exists_.emplace_back(str_form_name);
+            }
         }
     }catch(const std::exception& ex){
         exclog(ex);

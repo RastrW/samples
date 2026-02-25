@@ -61,7 +61,7 @@ void SettingsDialog::setupUI() {
 }
 
 SettingsDialog::~SettingsDialog(){
-    spdlog::info("Delete object FormSettings");
+    //spdlog::info("Delete object FormSettings");
 }
 
 bool SettingsDialog::init(const std::shared_ptr<QAstra>& sp_qastra) {
@@ -129,9 +129,7 @@ bool SettingsDialog::init(const std::shared_ptr<QAstra>& sp_qastra) {
                                      w_modules);
 
     // Установить первый виджет по умолчанию
-    if (!m_itemToWidget.isEmpty()) {
-        m_sw->setCurrentWidget(m_itemToWidget.first());
-    }
+    m_sw->setCurrentWidget(p_data_settings);
 
     return true;
 }
@@ -174,8 +172,9 @@ void SettingsDialog::onTreeItemClicked(const QModelIndex &index) {
     }
 
     // Получить виджет из map
-    if (m_itemToWidget.contains(item)) {
-        QWidget* widget = m_itemToWidget[item];
+    auto it = m_itemToWidget.find(item);
+    if (it != m_itemToWidget.end()) {
+        QWidget* widget = it->second;
 
         // Проверить, что виджет действительно в стеке
         int widgetIndex = m_sw->indexOf(widget);

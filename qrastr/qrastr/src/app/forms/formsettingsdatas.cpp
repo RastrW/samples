@@ -9,6 +9,7 @@
 #include <QCheckBox>
 #include <QLineEdit>
 #include <spdlog/spdlog.h>
+#include "params.h"
 
 DataSettingsWidget::DataSettingsWidget(QWidget *parent)
     : SettingsStackedItemWidget(parent) {
@@ -96,6 +97,13 @@ void DataSettingsWidget::setupUI() {
 
     connect(pPushButtonSelectXmlPath_, &QPushButton::clicked,
             this, &DataSettingsWidget::onSelectXmlProtocolPath);
+
+    connect(pSpinBoxNumItems_, QOverload<int>::of(&QSpinBox::valueChanged),
+            [=](int newValue){
+                m_hasChanges = true;
+                m_maxRecent = newValue;
+                emit settingsChanged();
+            });
 }
 
 void DataSettingsWidget::onRestoreUserDirectoryClicked() {
@@ -115,7 +123,6 @@ void DataSettingsWidget::onRestoreUserDirectoryClicked() {
     if (msgBox.exec() == QMessageBox::Yes) {
         // Логика восстановления директории
         spdlog::info("Директория пользователя восстановлена");
-
         emit settingsChanged();
     }
 }
@@ -128,6 +135,14 @@ void DataSettingsWidget::onSelectXmlProtocolPath() {
 
     if (!filePath.isEmpty()) {
         pLineEditXmlPath_->setText(filePath);
-        spdlog::info("XML protocol path selected: {}", filePath.toStdString());
+        m_hasChanges = true;
+        spdlog::info("Выбран путь к XML-протоколу: {}", filePath.toStdString());
+    }
+}
+
+void DataSettingsWidget::applyChanges() {
+    if (m_hasChanges) {
+        Params::get_instance()->setMaxRecentFiles(m_maxRecent);
+        m_hasChanges = false;
     }
 }

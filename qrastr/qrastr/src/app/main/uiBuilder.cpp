@@ -7,6 +7,7 @@
 #include <QStyle>
 #include <QToolBar>
 #include <QStatusBar>
+#include "params.h"
 
 UIBuilder::UIBuilder(QMainWindow* mainWindow)
     : QObject(mainWindow)
@@ -69,9 +70,9 @@ void UIBuilder::createFileActions() {
               "Ctrl+Q",
               tr("Exit the application"));
 
-    // НЕДАВНИЕ ФАЙЛЫ (10 действий)
+    // НЕДАВНИЕ ФАЙЛЫ
     // Создаём массив действий для недавних файлов
-    for (int i = 0; i < kMaxRecentFiles; ++i) {
+    for (int i = 0; i < Params::get_instance()->getMaxRecentFiles(); ++i) {
         QString actionName = QString("recentFile%1").arg(i);
         QAction* recentAction = new QAction(m_mainWindow);
         recentAction->setVisible(false);
@@ -235,7 +236,7 @@ void UIBuilder::buildMenuBar() {
 
     // Подменю "Последние" (недавние файлы)
     m_menus["recentFiles"] = m_menus["file"]->addMenu(tr("&Последние"));
-    for (int i = 0; i < kMaxRecentFiles; ++i) {
+    for (int i = 0; i < Params::get_instance()->getMaxRecentFiles(); ++i) {
         QString actionName = QString("recentFile%1").arg(i);
         m_menus["recentFiles"]->addAction(m_actions[actionName]);
     }
@@ -373,7 +374,8 @@ QToolBar* UIBuilder::toolBarByName(const QString& name) const {
 }
 
 void UIBuilder::updateRecentFileActions(const QStringList& recentFiles) {
-    int numRecentFiles = qMin(recentFiles.size(), kMaxRecentFiles);
+    int numRecentFiles = qMin(recentFiles.size(),
+                              Params::get_instance()->getMaxRecentFiles());
 
     for (int i = 0; i < numRecentFiles; ++i) {
         QString actionName = QString("recentFile%1").arg(i);
@@ -412,7 +414,7 @@ void UIBuilder::updateRecentFileActions(const QStringList& recentFiles) {
     }
 
     // Скрываем неиспользуемые действия
-    for (int j = numRecentFiles; j < kMaxRecentFiles; ++j) {
+    for (int j = numRecentFiles; j < Params::get_instance()->getMaxRecentFiles(); ++j) {
         QString actionName = QString("recentFile%1").arg(j);
         QAction* action = m_actions[actionName];
         if (action) {

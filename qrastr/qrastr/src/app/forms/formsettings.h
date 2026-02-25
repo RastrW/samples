@@ -40,7 +40,7 @@ private:
     QStackedWidget* m_sw {nullptr};
     bool m_settingsChanged {false};
 
-    QMap<QTreeWidgetItem*, QWidget*>
+    std::unordered_map<QTreeWidgetItem*, QWidget*>
         m_itemToWidget;
 
     // Кэш всех создаваемых виджетов

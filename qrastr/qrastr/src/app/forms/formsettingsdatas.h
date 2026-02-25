@@ -14,11 +14,10 @@ public:
     explicit DataSettingsWidget(QWidget *parent = nullptr);
     ~DataSettingsWidget() = default;
 
-    void applyChanges() override {}
+    void applyChanges() override;
 private slots:
     /// Восстановить директорию пользователя по умолчанию
     void onRestoreUserDirectoryClicked();
-
     /// Обработчик выбора пути к XML протоколу
     void onSelectXmlProtocolPath();
 private:
@@ -34,4 +33,7 @@ private:
     QCheckBox*  pCheckBoxRememberHistory_ {nullptr};
     QPushButton* pPushButtonSelectXmlPath_ {nullptr};
     QLineEdit*  pLineEditXmlPath_ {nullptr};
+
+    int m_maxRecent;  // Временное хранилище
+    bool m_hasChanges {false};
 };

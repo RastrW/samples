@@ -245,8 +245,9 @@ void FileManager::addToRecentFiles(const QString& filePath,
     QStringList files = settings.value(m_recentFilesKey).toStringList();
     files.removeAll(_fileshabl);
     files.prepend(_fileshabl);
-    
-    while (files.size() > m_maxRecentFiles) {
+
+    auto* const p_params = Params::get_instance();
+    while (files.size() > p_params->getMaxRecentFiles()) {
         files.removeLast();
     }
     
