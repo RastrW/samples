@@ -32,12 +32,13 @@
 #include "formexportcsv.h"
 #include "formimportcsv2.h"
 #include "qmcr/pyhlp.h"
+#include <QToolBar>
 
 namespace ads{ class CDockManager; }
 
-
-RtabWidget::RtabWidget(CUIForm UIForm,QWidget *parent) :
-      QWidget(parent)
+RtabWidget::RtabWidget(QAstra* pqastra,CUIForm UIForm, RTablesDataManager* pRTDM,
+                       ads::CDockManager* pDockManager, QWidget *parent)
+    : QWidget(parent)
 {
     m_UIForm = UIForm;
     ptv = new RTableView(this);
@@ -51,28 +52,42 @@ RtabWidget::RtabWidget(CUIForm UIForm,QWidget *parent) :
 
     view = m_grid->view< Qtitan::GridTableView>();
 
-
     view->options().setGridLines(Qtitan::LinesBoth);
     view->options().setGridLineWidth(1);
 
     view->tableOptions().setColumnAutoWidth(true);
-    view->options().setSelectionPolicy(GridViewOptions::MultiCellSelection);    //user can select several cells at time. Hold shift key to select multiple cells.
+    //user can select several cells at time. Hold shift key to select multiple cells.
+    view->options().setSelectionPolicy(GridViewOptions::MultiCellSelection);
     view->options().setColumnHidingOnGroupingEnabled(false);
-    view->options().setFilterAutoHide(true);                     // Sets the value that indicates whether the filter panel can automatically hide or not.
-    view->options().setFocusFrameEnabled(true);                  // Sets the painting the doted frame around the cell with focus to the enabled. By default frame is enabled.
-    view->options().setGroupsHeader(false);                      // Sets the visibility status of the grid grouping panel to groupsHeader.
+    // Sets the value that indicates whether the filter panel can automatically hide or not.
+    view->options().setFilterAutoHide(true);
+    // Sets the painting the doted frame around the cell with focus to the enabled. By default frame is enabled.
+    view->options().setFocusFrameEnabled(true);
+    // Sets the visibility status of the grid grouping panel to groupsHeader.
+    view->options().setGroupsHeader(false);
     view->options().setScrollRowStyle(Qtitan::ScrollItemStyle::ScrollByItem);
-    view->options().setShowWaitCursor(true);                    // Enables or disables wait cursor if grid is busy for lengthy operations with data like sorting or grouping.
+    // Enables or disables wait cursor if grid is busy for lengthy operations with data like sorting or grouping.
+    view->options().setShowWaitCursor(true);
+
+    view->options().setRubberBandSelection(true);        // Выделение "резинкой"
+    view->tableOptions().setColumnsHeader(true);
+    view->tableOptions().setRowsQuickSelection(true);
 
     ///@todo Вынести в опцию контекстного меню (example MultiSelection)
     view->tableOptions().setRowFrozenButtonVisible(true);
     view->tableOptions().setFrozenPlaceQuickSelection(true);
-}
 
-RtabWidget::RtabWidget(QAstra* pqastra,CUIForm UIForm, RTablesDataManager* pRTDM,
-                       ads::CDockManager* pDockManager, QWidget *parent)
-    : RtabWidget{UIForm,parent}
-{
+    QShortcut *sC_CTRL_I = new QShortcut( QKeySequence(Qt::CTRL | Qt::Key_I),
+                                         this,nullptr,nullptr, Qt::WidgetWithChildrenShortcut);
+    QShortcut *sC_CTRL_D = new QShortcut( QKeySequence(Qt::CTRL | Qt::Key_D), this);
+    QShortcut *sC_CTRL_R = new QShortcut( QKeySequence(Qt::CTRL | Qt::Key_R), this);
+    QShortcut *sC_CTRL_A = new QShortcut( QKeySequence(Qt::CTRL | Qt::Key_A), this);
+
+    connect(sC_CTRL_I, &QShortcut::activated, this, &RtabWidget::insertRow_qtitan);
+    connect(sC_CTRL_A, &QShortcut::activated, this, &RtabWidget::AddRow);
+    connect(sC_CTRL_R, &QShortcut::activated, this, &RtabWidget::DuplicateRow_qtitan);
+    connect(sC_CTRL_D, &QShortcut::activated, this, &RtabWidget::deleteRow_qtitan);
+
     m_selection = "";
     m_pqastra = pqastra;
     m_pRTDM = pRTDM;
@@ -101,9 +116,40 @@ RtabWidget::RtabWidget(QAstra* pqastra,CUIForm UIForm, RTablesDataManager* pRTDM
     connect(m_pRTDM, &RTablesDataManager::sig_EndResetModel,this,  &RtabWidget::slot_endResetModel);
 }
 
+QWidget* RtabWidget::createDockContent() {
+    setupToolbar();
+
+    QWidget* wrapper = new QWidget(this);
+    QVBoxLayout* layout = new QVBoxLayout(wrapper);
+    layout->setContentsMargins(0, 0, 0, 0);
+    layout->setSpacing(0);
+    layout->addWidget(m_toolbar);
+    layout->addWidget(m_grid);
+    return wrapper;
+}
+
 void RtabWidget::setPyHlp(std::shared_ptr<PyHlp> pPyHlp)
 {
     pPyHlp_ = pPyHlp;
+}
+
+void RtabWidget::setupToolbar() {
+    m_toolbar = new QToolBar(this);
+    m_toolbar->setToolButtonStyle(Qt::ToolButtonTextBesideIcon);
+    m_toolbar->setIconSize(QSize(16, 16));
+
+    // Qtitan::Grid имеет встроенную кнопку поиска/фильтрации
+    // Операции с данными
+    m_actAddRow = m_toolbar->addAction(QIcon(":/icons/add.png"), "Добавить");
+    m_actInsertRow = m_toolbar->addAction(QIcon(":/icons/insert.png"), "Вставить");
+    m_actDeleteRow = m_toolbar->addAction(QIcon(":/icons/delete.png"), "Удалить");
+    m_actDuplicateRow = m_toolbar->addAction(QIcon(":/icons/duplicate.png"), "Дублировать");
+    QAction* printAction = m_toolbar->addAction(QIcon(":/icons/print.png"), "Печать");
+
+    connect(m_actAddRow,       &QAction::triggered, this, &RtabWidget::AddRow);
+    connect(m_actInsertRow,    &QAction::triggered, this, &RtabWidget::insertRow_qtitan);
+    connect(m_actDeleteRow,    &QAction::triggered, this, &RtabWidget::deleteRow_qtitan);
+    connect(m_actDuplicateRow, &QAction::triggered, this, &RtabWidget::DuplicateRow_qtitan);
 }
 
 void RtabWidget::closeEvent(QCloseEvent *event)
@@ -131,27 +177,20 @@ void RtabWidget::OnClose()
 
 void RtabWidget::CreateModel(QAstra* pqastra, CUIForm* pUIForm)
 {
-    //prm = std::unique_ptr<RModel>(new RModel(nullptr, pqastra, m_pRTDM ));
     prm = std::unique_ptr<RModel>(new RModel(this, pqastra, m_pRTDM ));
-    //proxyModel = new QSortFilterProxyModel(prm.get()); // used for sorting: create proxy //https://doc.qt.io/qt-5/qsortfilterproxymodel.html#details
-    //proxyModel->setSourceModel(prm.get());
     prm->setForm(pUIForm);
     prm->populateDataFromRastr();
 
     view->beginUpdate();
     view->setModel(prm.get());
-    //ptv->setModel(proxyModel);
 
     SetEditors();
 
     //Порядок колонок как в форме
     int vi = 0;
-    for (const auto &f : pUIForm->Fields())
-    {
-        for (const RCol& rcol : *prm->getRdata())
-        {
-            if (f.Name() == rcol.str_name_)
-            {
+    for (const auto &f : pUIForm->Fields()){
+        for (const RCol& rcol : *prm->getRdata()){
+            if (f.Name() == rcol.str_name_){
                 column_qt = (Qtitan::GridTableColumn *)view->getColumn(rcol.index);
                 column_qt->setVisualIndex(vi++);
                 continue;
@@ -179,10 +218,6 @@ void RtabWidget::CreateModel(QAstra* pqastra, CUIForm* pUIForm)
         }
 
     view->endUpdate();
-
-
-    //new QAbstractItemModelTester( prm.get(), QAbstractItemModelTester::FailureReportingMode::Warning, this);
-
 
     this->update();
     this->repaint();
@@ -221,7 +256,8 @@ void RtabWidget::SetEditor(RCol& rcol)
         else
          column_qt->setEditorType(GridEditor::Numeric);
     }
-    if (rcol.com_prop_tt == enComPropTT::COM_PR_INT && !rcol.nameref_.empty() && contains(prm->mm_nameref_,rcol.index))
+    if (rcol.com_prop_tt == enComPropTT::COM_PR_INT &&
+        !rcol.nameref_.empty() && contains(prm->mm_nameref_,rcol.index))
     {
         if (!rcol.directcode)
         {
@@ -275,12 +311,12 @@ void RtabWidget::SetEditor(RCol& rcol)
 
 void RtabWidget::on_calc_begin()
 {
-    // TO DO something
+    ///@todo something
     //view->beginUpdate();
 }
 void RtabWidget::on_calc_end()
 {
-    // TO DO something
+   ///@todo  something
    // view->endUpdate();
 }
 
@@ -378,16 +414,6 @@ void RtabWidget::contextMenu(ContextMenuEventArgs* args)
                            this,
                            &RtabWidget::OpenGroupCorrection);
 
-    QShortcut *sC_CTRL_I = new QShortcut( QKeySequence(Qt::CTRL | Qt::Key_I),
-                                         this,nullptr,nullptr, Qt::WidgetWithChildrenShortcut);
-    QShortcut *sC_CTRL_D = new QShortcut( QKeySequence(Qt::CTRL | Qt::Key_D), this);
-    QShortcut *sC_CTRL_R = new QShortcut( QKeySequence(Qt::CTRL | Qt::Key_R), this);
-    QShortcut *sC_CTRL_A = new QShortcut( QKeySequence(Qt::CTRL | Qt::Key_A), this);
-
-    connect(sC_CTRL_I, &QShortcut::activated, this, &RtabWidget::insertRow_qtitan);
-    connect(sC_CTRL_A, &QShortcut::activated, this, &RtabWidget::AddRow);
-    connect(sC_CTRL_R, &QShortcut::activated, this, &RtabWidget::DuplicateRow_qtitan);
-    connect(sC_CTRL_D, &QShortcut::activated, this, &RtabWidget::deleteRow_qtitan);
     args->contextMenu()->addSeparator();
     args->contextMenu()->addAction(tr("Выравнивание: по шаблону"),
                                    this, &RtabWidget::widebyshabl);

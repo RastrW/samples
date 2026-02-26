@@ -2,7 +2,6 @@
 #include "filtertableheader.h"
 #include <QScrollBar>
 
-
 RTableCornerButton::RTableCornerButton(QWidget *parent)
     : QAbstractButton(parent)
 {
@@ -67,5 +66,4 @@ void RTableView::CornerButtonPressed()
 {
     emit onCornerButtonPressed();
 }
-
 

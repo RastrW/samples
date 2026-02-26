@@ -8,13 +8,20 @@
 #include "qastra.h"
 #include "astra_headers/UIForms.h"
 
-/* Класс для управления данными из метакита
- * - Централизованное хранение данных таблиц
- * - Обработка событий от QAstra (EventHints)
- * - Управление жизненным циклом DataBlock
- * - Синхронизация данных между расчётным ядром и UI
- * - Реализация паттерна "1 DataBlock : N Views"
-*/
+/**
+ * @class Централизованный кеш табличных данных и маршрутизатор событий от расчётного ядра.
+ *
+ * Ответственности:
+ *  1. Хранит кеш mpTables: map<имя_таблицы, shared_ptr<QDataBlock>>.
+ *     Один QDataBlock на таблицу, независимо от числа открытых окон.
+ *  2. Слушает сигнал QAstra::onRastrHint и преобразует hint-события плагина
+ *     в Qt-сигналы (sig_dataChanged, sig_BeginResetModel, …).
+ *  3. RModel подписывается на эти сигналы и уведомляет View об изменениях.
+ *
+ * Время жизни QDataBlock:
+ *   Блок удаляется из кеша при следующем вызове get(), если use_count() == 1
+ *   (то есть ни одно открытое окно не держит shared_ptr).
+ */
 class RTablesDataManager : public QObject
 {
     Q_OBJECT
@@ -24,7 +31,14 @@ public:
     CUIForm* getForm ( std::string _name);
     ///< Обработчик событий от Rastr
     void onRastrHint(const _hint_data& hint_data);
-    ///<Получение/создание DataBlock
+    /**
+     * Получить (или создать) QDataBlock для таблицы tname.
+     *
+     * Побочный эффект: перед поиском очищает "мёртвые" блоки (use_count == 1).
+     * Это дешевле, чем хранить неиспользуемые данные при пересчётах.
+     * @param tname  имя таблицы плагина (например "node", "vetv")
+     * @param Cols   строка колонок через запятую ("ny,name,uhom")
+     */
     std::shared_ptr<QDataBlock>
         get(std::string tname, std::string Cols);
 
@@ -87,7 +101,6 @@ private:
     void handleChangeRow(const std::string& tname, long row);
     /**
      * @brief EventHints::ChangeData — изменилось одно значение (tname, cname, row).
-     * Перечитывает всю строку для атомарности обновления.
      */
     void handleChangeData(const std::string& tname,
                           const std::string& cname,

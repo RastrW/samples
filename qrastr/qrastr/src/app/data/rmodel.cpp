@@ -19,7 +19,6 @@ RModel::RModel(QObject *parent, QAstra* pqastra, RTablesDataManager* pRTDM)
 bool RModel::populateDataFromRastr(){
 
     try{
-        //beginResetModel();
         up_rdata = std::unique_ptr<RData>(new RData(pqastra_,pUIForm_->TableName()));
         up_rdata->Initialize(*pUIForm_,pqastra_);
         up_rdata->populate_qastra(this->pqastra_,pRTDM_);
@@ -104,7 +103,6 @@ bool RModel::populateDataFromRastr(){
                 mm_nameref_.insert(std::make_pair(rcol.index,map_string));
             }
         }
-        //endResetModel();
     }
     catch(...)
     {
@@ -218,7 +216,7 @@ bool RModel::setData(const QModelIndex &index, const QVariant &value, int role)
     IRastrColumnsPtr columns{table->Columns()};
     IRastrColumnPtr col_ptr{ columns->Item(iter_col->str_name_) };
 
-    if (data(index, role) != value)
+    if (value != data(index, role))
     {
         switch((*iter_col).en_data_){
             case RCol::_en_data::DATA_BOOL:
@@ -327,14 +325,15 @@ void RModel::addCondFormat(const bool isRowIdFormat, size_t column, const CondFo
 
 void RModel::setCondFormats(const bool isRowIdFormat, size_t column, const std::vector<CondFormat>& condFormats)
 {
-    if(isRowIdFormat)
+    if(isRowIdFormat){
         m_mRowIdFormats[column] = condFormats;
-    else if (!contains(m_mCondFormats, column))
-    {
+    }
+    else if (!contains(m_mCondFormats, column)){
         m_mCondFormats.insert(make_pair(column,condFormats));
     }
-    else
+    else{
         m_mCondFormats[column] = condFormats;
+    }
    // emit layoutChanged();
 }
 
@@ -354,16 +353,12 @@ QVariant RModel::getMatchingCondFormat(const std::map<size_t, std::vector<CondFo
     // if the condition matches the current data, return the associated format.
     for (const CondFormat& eachCondFormat : mCondFormats.at(column)) {
         if (isNumber && !contains(eachCondFormat.sqlCondition(), '\''))
-            //sql = "SELECT " + value.toStdString() + " " + eachCondFormat.sqlCondition();
             sql = value.toStdString() + " " + eachCondFormat.sqlCondition();
         else
-            //sql = "SELECT " + sqlb::escapeString(value.toStdString()) + " " + eachCondFormat.sqlCondition();
-            //sql = "SELECT " + value.toStdString() + " " + eachCondFormat.sqlCondition();
             sql = value.toStdString() + " " + eachCondFormat.sqlCondition();
 
         // Empty filter means: apply format to any row.
         // Query the DB for the condition, waiting in case there is a loading in progress.
-        //if (eachCondFormat.filter().isEmpty() || m_db.querySingleValueFromDb(sql, false, DBBrowserDB::Wait) == "1")
         /*
          * Похоже тут стоит попробовать написать парсер string to bool
         */

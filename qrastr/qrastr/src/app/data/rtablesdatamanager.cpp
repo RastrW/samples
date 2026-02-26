@@ -92,6 +92,7 @@ long RTablesDataManager::column_index(std::string tname , std::string _col_name)
     IRastrPayload res{columns->FindIndex(_col_name)};
     return res.Value();
 }
+
 void  RTablesDataManager::getDataBlock(std::string tname , std::string Cols , QDataBlock& QDB)
 {
     FieldDataOptions Options;
@@ -104,12 +105,14 @@ void  RTablesDataManager::getDataBlock(std::string tname , std::string Cols , QD
 
     IRastrResultVerify(table->DataBlock(Cols, QDB, Options));
 }
+
 void  RTablesDataManager::getDataBlock(std::string tname , std::string Cols , QDataBlock& QDB,FieldDataOptions Options )
 {
     IRastrTablesPtr tablesx{ m_pqastra->getRastr()->Tables() };
     IRastrTablePtr table{ tablesx->Item(tname) };
     IRastrResultVerify(table->DataBlock(Cols, QDB, Options));
 }
+
 void  RTablesDataManager::getDataBlock(std::string tname , QDataBlock& QDB,FieldDataOptions Options )
 {
     std::string Cols = getTCols(tname);
@@ -118,6 +121,7 @@ void  RTablesDataManager::getDataBlock(std::string tname , QDataBlock& QDB,Field
     IRastrColumnsPtr columns{ table->Columns() };
     IRastrResultVerify(table->DataBlock(Cols, QDB, Options));
 }
+
 void  RTablesDataManager::getDataBlock(std::string tname , QDataBlock& QDB)
 {
     FieldDataOptions Options;

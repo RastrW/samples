@@ -25,27 +25,40 @@ class LinkedForm;
 class PyHlp;
 
 /**
- * @brief
-    - Отображение табличных данных в QTitan Grid
-    - Управление взаимодействием пользователя с таблицей
-    - Обработка контекстных меню
-    - Связывание с RModel
-    - Поддержка условного форматирования
-    - Управление связанными формами
+ * @brief Виджет, отображающий одну таблицу Rastr в QTitan Grid.
+ *
+ * Жизненный цикл:
+ *   1. FormManager создаёт RtabWidget, передавая QAstra*, CUIForm, RTDM*, DockManager*.
+
+
+ *   4. closeEvent(): отключает сигналы LinkedForm, сбрасывает pnparray_.
+ *
+ * Связанные формы (LinkedForm):
+ *   onOpenLinkedForm() создаёт новый RtabWidget в нижней панели Dock
+ *   и подписывает его на события фокусирования строки родительской формы.
  */
 class RtabWidget : public QWidget
 {
     Q_OBJECT
 public:
-    explicit RtabWidget(CUIForm UIForm,QWidget *parent = nullptr);
+    /** @brief
+     *  Конструктор:
+     *      a) создаёт QTitan Grid и настраивает опции отображения;
+     *      b) привязывает горячие клавиши (Ctrl+I/A/R/D);
+     *      c) вызывает CreateModel() — строит RModel и заполняет данные.
+    */
     explicit RtabWidget(QAstra* pqastra, CUIForm UIForm,
-                        RTablesDataManager* pRTDM, ads::CDockManager* pDockManager ,QWidget *parent = nullptr);
+                        RTablesDataManager* pRTDM,
+                        ads::CDockManager* pDockManager ,QWidget *parent = nullptr);
     virtual ~RtabWidget() = default;
 
     void closeEvent(QCloseEvent* event) override;
+    QWidget* createDockContent();
 private:  
     void setTableView(QTableView& tv, RModel& mm, int myltiplier = 10);
     void setTableView(Qtitan::GridTableView& tv, RModel& mm, int myltiplier = 10 );
+
+    void setupToolbar();
 
     std::tuple<int,double> GetSumSelected();
     QMenu* CunstructLinkedFormsMenu(std::string form_name);
@@ -89,23 +102,35 @@ public slots:
     void onOpenLinkedMacro(LinkedMacro _lm );
 
 private slots:
+    /** @brief
+     * a) создаёт RModel, вызывает setForm/populateDataFromRastr;
+     * b) подключает сигналы RTDM к слотам RModel (обновления данных);
+     * c) устанавливает редакторы колонок (SetEditors);
+     * d) восстанавливает условное форматирование из JSON.
+    */
     void CreateModel(QAstra* pqastra,CUIForm* pUIForm);
     void SetEditors();
     void SetEditor(RCol& _prcol);
-
 public:
     std::unique_ptr<RModel> prm;
     CUIForm m_UIForm;
     QAstra* m_pqastra;
     RTablesDataManager* m_pRTDM;
     ads::CDockManager* m_DockManager;
-
-    //QTtitanGrid
+private:
     Qtitan::Grid* m_grid;
     Qtitan::GridTableView* view;
     LinkedForm m_lf;
     std::shared_ptr<PyHlp> pPyHlp_;
-private:
+
+    QToolBar* m_toolbar;
+
+    // Действия в toolbar
+    QAction* m_actAddRow;
+    QAction* m_actInsertRow;
+    QAction* m_actDeleteRow;
+    QAction* m_actDuplicateRow;
+
     RTableView* ptv;
     int column;                         // for header
     int row;
@@ -113,4 +138,5 @@ private:
     std::string m_selection;                                      // Текущая выборка
     std::map<int, std::vector<CondFormat>> m_MapcondFormatVector; // column , vector<CondFormat>
     std::map<QString,bool> m_ColumnsVisible;
+
 };

@@ -71,7 +71,7 @@ void FormManager::openForm(const CUIForm& form) {
     // Докирование
     auto dw = new ads::CDockWidget(QString::fromStdString(form.Name()),
                                     m_parentWidget);
-    dw->setWidget(prtw->m_grid);
+    dw->setWidget(prtw->createDockContent());
     dw->setFeature(ads::CDockWidget::DockWidgetDeleteOnClose, true);
     
     auto area = m_dockManager->addDockWidgetTab(ads::TopDockWidgetArea, dw);

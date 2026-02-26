@@ -28,13 +28,12 @@ class RTableView : public QTableView
 public:
     explicit RTableView(QWidget *parent = nullptr);
     void generateFilters(int count);
-
 signals:
     void onCornerButtonPressed();
 protected slots:
     void CornerButtonPressed();
 
 protected:
-     RTableCornerButton cornerButton;
-     FilterTableHeader* m_tableHeader;
+    RTableCornerButton cornerButton;
+    FilterTableHeader* m_tableHeader;
 };
