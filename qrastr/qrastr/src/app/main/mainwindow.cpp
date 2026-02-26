@@ -370,7 +370,6 @@ void MainWindow::slot_openGraph(){
 
     SdlChild->SDLInit();
 #endif
-
 }
 
 void MainWindow::slot_about(){
