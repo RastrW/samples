@@ -22,8 +22,7 @@ public:
     ///<Чтение/запись файла appsettings.json
     bool readJsonFile (const fs::path& path_2_json);
     bool writeJsonFile(const fs::path& path_2_json)const;
-    static bool templ_sort_func(const std::pair<std::string,std::string> &p1,
-                                const std::pair<std::string,std::string> &p2);
+
     bool readTemplates();
     bool readForms    ();
     bool readFormsExists();
@@ -86,6 +85,13 @@ public:
     const _v_template_exts& getTemplateExts(){
         return m_template_exts_;
     }
+
+    int getMaxRecentFiles(){
+        return m_maxRecentFiles;
+    }
+    void setMaxRecentFiles(int max){
+        m_maxRecentFiles = max;
+    }
 private:
     QDir                  dir_Data_;
     QDir                  dir_SHABLON_;
@@ -94,16 +100,22 @@ private:
     /// Список загрузок по appsettings:
     // Файл для загрузки и соответствющие ему шаблоны
     _v_templates          m_start_load_templates_;
-    // Список файлов из папки Data/form
+    // Список файлов из папки Data/form (только .fm формат)
+    ///@note Использование json форм приводит к падению при их загрузке
     _v_forms              m_start_load_forms_;
     // Список файлов из папки Data/SHABLON
     _v_file_templates     m_start_load_file_templates_;
     /// Список всех возможных файлов
-    // Список файлов в папке Data/form
+    // Список файлов в папке Data/form (только .fm формат)
     _v_forms              m_forms_exists_;
     // Список файлов в папке Data/SHABLON
     _v_template_exts      m_template_exts_;
     std::unique_ptr<CUIFormsCollection> upCUIFormsCollection_;
+
+    static bool templ_sort_func(const std::pair<std::string,std::string> &p1,
+                                const std::pair<std::string,std::string> &p2);
+
+    int m_maxRecentFiles {10};
 public:
     static constexpr const char pch_org_qrastr_[]=                "QRastr";
     static constexpr const char pch_dir_data_[]=                  "Data";

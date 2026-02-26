@@ -1,9 +1,6 @@
 #include "formsettingsstackeditem.h"
-#include "formsettings.h"
 
-FormSettingsStackedItem::FormSettingsStackedItem(FormSettings* pfm_settings)
-    : pfm_settings_{pfm_settings}{
-}
-FormSettings* FormSettingsStackedItem::getFormSettings(){
-    return pfm_settings_;
+SettingsStackedItemWidget::SettingsStackedItemWidget(QWidget *parent)
+    : QWidget (parent){
+
 }

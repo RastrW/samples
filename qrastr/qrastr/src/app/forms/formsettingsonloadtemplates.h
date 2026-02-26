@@ -1,26 +1,44 @@
-#ifndef FORMSETTINGSONLOADTEMPLATES_H
-#define FORMSETTINGSONLOADTEMPLATES_H
 #pragma once
+#include "formsettingsstackeditem.h"
 
-#include <QDialog>
+#include "params.h"
 
-namespace Ui {
-class FormSettingsOnLoadTemplates;
-}
+class QTableWidgetItem;
+class QTableWidget;
 
-class FormSettingsOnLoadTemplates
-    : public QDialog{
+/// @class Виджет для выбора шаблонов, загружаемых при старте приложения
+class SettingsOnLoadTemplatesWidget : public SettingsStackedItemWidget {
     Q_OBJECT
+
 public:
-    explicit FormSettingsOnLoadTemplates(QWidget *parent = nullptr);
-    ~FormSettingsOnLoadTemplates();
-    void showEvent( QShowEvent* event )override;
-    static constexpr const int n_colnum_checked_      = 0;
-    static constexpr const int n_colnum_templatename_ = 1;
+    explicit SettingsOnLoadTemplatesWidget(QWidget *parent = nullptr);
+    ~SettingsOnLoadTemplatesWidget() = default;
+
+    /// Обновить содержимое при показе виджета
+    void applyChanges() override;
+signals:
+    /// Сигнал об изменении выбранных шаблонов
+    void settingsChanged();
+
 private slots:
-    void on_pbApply_clicked();
+    /// Обработчик изменения состояния чекбокса в таблице
+    void onItemChanged(QTableWidgetItem* item);
+
 private:
-    Ui::FormSettingsOnLoadTemplates *ui;
+    /// Создать и настроить UI элементы
+    void setupUI();
+
+    /// Заполнить таблицу доступными шаблонами
+    void populateTemplates();
+
+private:
+    QTableWidget* pTableWidget_;  ///< Таблица с чекбоксами шаблонов
+    Params::_v_templates
+        m_pendingTemplates;  // Временное хранилище
+    bool m_hasChanges {false};
+
+    /// Индексы колонок в таблице
+    static constexpr const int COLUMN_CHECKED = 0;
+    static constexpr const int COLUMN_NAME = 1;
 };
 
-#endif // FORMSETTINGSONLOADTEMPLATES_H

@@ -58,7 +58,8 @@ void SettingsManager::flushLogCache() {
 }
 
 void SettingsManager::showFormSettings(std::shared_ptr<QAstra> qastra) {
-    FormSettings* pformSettings = new FormSettings();
+    SettingsDialog* pformSettings = new SettingsDialog();
     pformSettings->init(qastra);
+    pformSettings->setAttribute(Qt::WA_DeleteOnClose);
     pformSettings->show();
 }

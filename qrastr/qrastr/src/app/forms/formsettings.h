@@ -1,32 +1,49 @@
-#ifndef FORMSETTINGS_H
-#define FORMSETTINGS_H
 #pragma once
 
-#include <QtWidgets>
+#include <QDialog>
+
+class QTreeWidgetItem;
 class QAstra;
+class QTreeWidget;
+class QStackedWidget;
+class SettingsStackedItemWidget;
 
-class FormSettings
-    : public QWidget{
+class SettingsDialog : public QDialog {
     Q_OBJECT
-    struct _tree_item;
-    using _v_tree_items = std::vector<_tree_item>;
-public:
-    explicit FormSettings(QWidget *parent = nullptr);
-    bool init(const std::shared_ptr<QAstra>& sp_qastra);
-    void populateSettingsTree( _tree_item& ti_root, QTreeWidgetItem* ptwi_parent );
-    void setButtonSaveEnabled(bool bl_new_val);
-    void setAppSettingsChanged();
-    void closeEvent(QCloseEvent *event) override;
-signals:
-public slots:
-    void onBtnSaveClick();
-private:
-    std::shared_ptr<QAstra> sp_qastra_;
-    _tree_item*      pti_settings_root_ = nullptr;
-    QPushButton*     ppb_save_settings_ = nullptr;
-    QTreeWidget*     ptw_sections_      = nullptr;
-    QStackedWidget*  psw_               = nullptr;
-    bool             bl_app_settings_chnged_ = false;
-};
 
-#endif // FORMSETTINGS_H
+public:
+    explicit SettingsDialog(QWidget *parent = nullptr);
+    ~SettingsDialog();
+
+    bool init(const std::shared_ptr<QAstra>& sp_qastra);
+    void closeEvent(QCloseEvent *event) override;
+
+public slots:
+    void onBtnApplyClick();
+
+private slots:
+    void onTreeItemClicked(const QModelIndex &index);
+
+private:
+    // Добавить элемент в дерево и связать с виджетом
+    QTreeWidgetItem* addTreePage(
+        QTreeWidgetItem* parent,
+        const QString& caption,
+        QWidget* widget);
+
+    void setAppSettingsChanged();
+    void setupUI();
+
+    std::shared_ptr<QAstra> m_qAstra;
+    QPushButton* m_pbApplySettings {nullptr};
+    QTreeWidget* m_twSections {nullptr};
+    QStackedWidget* m_sw {nullptr};
+    bool m_settingsChanged {false};
+
+    std::unordered_map<QTreeWidgetItem*, QWidget*>
+        m_itemToWidget;
+
+    // Кэш всех создаваемых виджетов
+    std::vector<SettingsStackedItemWidget*>
+        m_settingWidgets;
+};
