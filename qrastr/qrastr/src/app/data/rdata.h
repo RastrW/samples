@@ -29,8 +29,6 @@ public:
         emplace_back(rcol);
         return static_cast<int>(size());
     }
-
-    void Initialize(CUIForm _form, QAstra* _pqastra);
     /**
      * Получает (или создаёт, если ещё нет) общий QDataBlock из RTablesDataManager.
      * После этого вызова pnparray_ указывает на тот же объект, что и у других

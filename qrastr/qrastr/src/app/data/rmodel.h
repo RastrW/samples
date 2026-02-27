@@ -91,6 +91,24 @@ public:
 private:
     bool isBinary(const QByteArray& index) const;
     bool m_emitSignals;
+    /**
+     * @brief Пересоздаёт RData: читает структуру колонок из плагина.
+     *        Нужно при первом открытии и при ChangeTable.
+     *        После вызова mm_nameref_ / m_enum_ / pnparray_ ещё НЕ заполнены.
+     */
+    bool rebuildStructure();
+    /**
+     * @brief Перестраивает справочники m_enum_, mm_nameref_, mm_superenum_.
+     *        Требует, чтобы rebuildStructure() уже был вызван.
+     *        Нужно при первом открытии и при ChangeTable.
+     */
+    bool rebuildLookups();
+    /**
+     * @brief Обновляет только указатель на QDataBlock через RTDM.
+     *        Вызывается при slot_EndResetModel — данные изменились,
+     *        структура осталась прежней.
+     */
+    bool reloadData();
     // Return matching conditional format color/font or invalid value, otherwise.
     // Only format roles are expected in role (Qt::ItemDataRole)
     QVariant getMatchingCondFormat(std::size_t row, std::size_t column, const QString& value, int role) const;

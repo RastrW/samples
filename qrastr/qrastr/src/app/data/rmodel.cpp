@@ -113,6 +113,90 @@ bool RModel::populateDataFromRastr(){
     return true;
 };
 
+bool RModel::rebuildStructure()
+{
+    up_rdata = std::make_unique<RData>(pqastra_ ,*pUIForm_);
+    return true;
+}
+
+bool RModel::rebuildLookups()
+{
+    m_enum_.clear();
+    mm_superenum_.clear();
+    mm_nameref_.clear();
+
+    for (RCol& rcol : *up_rdata)
+    {
+        rcol.setNameRef(rcol.NameRef());
+
+        if (rcol.getComPropTT() == enComPropTT::COM_PR_ENUM)
+        {
+            QStringList list;
+            std::map<size_t, std::string> map_string;
+            int i = 0;
+            for (const auto& val : split(rcol.getNameRef(), '|')) {
+                list.append(QString::fromStdString(val));
+                map_string.emplace(i++, val);
+            }
+            m_enum_.emplace(rcol.getIndex(), std::move(list));
+        }
+
+        if (rcol.getComPropTT() == enComPropTT::COM_PR_SUPERENUM && !rcol.getNameRef().empty())
+        {
+            std::vector<std::string> parts = split(rcol.getNameRef(), '.');
+            if (parts.size() > 2)
+            {
+                QDataBlock QDB;
+                long indx1 = pRTDM_->column_index(parts[0], parts[1]);
+                long indx2 = pRTDM_->column_index(parts[0], parts[2]);
+                if (indx1 > -1 && indx2 > -1)
+                {
+                    pRTDM_->getDataBlock(parts[0], parts[2] + "," + parts[1], QDB);
+                    std::map<size_t, std::string> map_string;
+                    map_string.emplace(0, "не задано");
+                    for (int i = 0; i < QDB.RowsCount(); ++i) {
+                        long        key = std::visit(ToLong(),   QDB.Get(i, 0));
+                        std::string val = std::visit(ToString(), QDB.Get(i, 1));
+                        map_string.emplace(key, val);
+                    }
+                    mm_superenum_.emplace(rcol.getIndex(), std::move(map_string));
+                }
+            }
+        }
+
+        if (rcol.getComPropTT() == enComPropTT::COM_PR_INT && !rcol.getNameRef().empty())
+        {
+            size_t nopen  = rcol.getNameRef().find('[');
+            size_t nclose = rcol.getNameRef().find(']');
+            std::string table = rcol.getNameRef().substr(0, nopen);
+            std::string col   = rcol.getNameRef().substr(nopen + 1, nclose - nopen - 1);
+
+            long nameIndx = pRTDM_->column_index(table, "name");
+            std::string cols = col + "," + (nameIndx > -1 ? std::string("name") : col);
+
+            QDataBlock QDB;
+            pRTDM_->getDataBlock(table, cols, QDB);
+
+            std::map<size_t, std::string> map_string;
+            map_string.emplace(0, "не задано");
+            for (int i = 0; i < QDB.RowsCount(); ++i) {
+                long        key = std::visit(ToLong(),   QDB.Get(i, 0));
+                std::string val = std::visit(ToString(), QDB.Get(i, 1));
+                map_string.emplace(key, val);
+            }
+            mm_nameref_.emplace(rcol.getIndex(), std::move(map_string));
+        }
+    }
+    return true;
+}
+
+bool RModel::reloadData()
+{
+    up_rdata->populate_qastra(this->pqastra_, pRTDM_);
+    return true;
+}
+
+
 int RModel::rowCount(const QModelIndex & /*parent*/) const{
     return static_cast<int>(up_rdata->pnparray_->RowsCount());
 }

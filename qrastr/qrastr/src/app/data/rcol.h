@@ -12,10 +12,11 @@ using WrapperExceptionType = std::runtime_error;
 using _vt = std::variant< bool,long, double, std::string >;
 typedef std::vector< _vt > _col_data ;
 
-
 /**
  * @brief Метаданные и вспомогательные операции для одной колонки таблицы Rastr.
  * Каждый геттер (name(), title(), desc(), …) делает отдельный вызов в плагин.
+ * @todo подумать о том, чтобы кешировать данные при создании объекта, чтобы скоратить количество вызовов в плагин
+ * Но необходимо понимать, какие из них неизменяемы, а, если нет, то в каких случаях изменяются
  */
 class RCol
     : public _col_data

@@ -560,7 +560,9 @@ void RtabWidget::onOpenLinkedForm( LinkedForm _lf)
         return;
 
     RtabWidget *prtw = new RtabWidget(m_pqastra,*pUIForm,m_pRTDM,m_DockManager,this);
-    _lf.vconn.push_back(connect(view, &GridTableView::focusRowChanged, prtw, &RtabWidget::onfocusRowChanged));
+    _lf.vconn.push_back
+        (connect(view, &GridTableView::focusRowChanged,
+         prtw, &RtabWidget::onfocusRowChanged));
 
     prtw->SetLinkedForm(_lf);
 
