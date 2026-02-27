@@ -53,8 +53,7 @@ public:
      * Вызывается:
      *   1. При первом открытии формы (из RtabWidget::CreateModel).
      *   2. При slot_EndResetModel — после полного сброса таблицы.
-     *
-     * Стоимость: обращается к плагину для каждой колонки, читает DataBlock для
+     *   обращается к плагину для каждой колонки, читает DataBlock для
      * SUPERENUM и NAMEREF-ссылок.
      */
     bool populateDataFromRastr();

@@ -7,6 +7,7 @@
 #include <QRegularExpression>
 #include "QtitanGrid.h"
 #include <string_bool.h>
+#include <spdlog/spdlog.h>
 
 RModel::RModel(QObject *parent, QAstra* pqastra, RTablesDataManager* pRTDM)
     : QAbstractTableModel(parent)
@@ -123,9 +124,13 @@ int RModel::columnCount(const QModelIndex & /*parent*/) const{
 
 QVariant RModel::data(const QModelIndex &index, int role) const
 {
-    int row = index.row();
     int col = index.column();
+    if (col < 0 || static_cast<size_t>(col) >= up_rdata->size()){
+        //spdlog::error("Выход за границы модели");
+        return QVariant();
+    }
 
+    int row = index.row();
     QVariant item;
     std::string item_str;
     QVariant condFormatColor;
@@ -135,6 +140,7 @@ QVariant RModel::data(const QModelIndex &index, int role) const
 
     if (role == Qt::BackgroundRole )
     {
+            ///@todo временная заливка ячейки (1,2) красным — удалить перед релизом
             if (row == 1 && col == 2)  //change background only for cell(1,2)
                 return QBrush(Qt::red);
             item_str = std::visit(ToString(),up_rdata->pnparray_->Get(row,col));

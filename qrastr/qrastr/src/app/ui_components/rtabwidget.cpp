@@ -159,14 +159,6 @@ void RtabWidget::closeEvent(QCloseEvent *event)
     for(auto conn : m_lf.vconn)
         disconnect(conn);
 
-    if (event->spontaneous()) {
-        qDebug("The close button was clicked");
-        // do event->ignore();
-        // or QWidget::closeEvent(event);
-    } else {
-        QWidget::closeEvent(event);
-    }
-
     this->prm->getRdata()->pnparray_.reset();
 };
 
@@ -320,15 +312,15 @@ void RtabWidget::on_calc_end()
    // view->endUpdate();
 }
 
-void RtabWidget::setTableView(QTableView& tv, RModel& mm, int myltiplier  )
+void RtabWidget::setTableView(QTableView& tv, RModel& mm, int multiplier  )
 {
     // Ширина колонок
     view->beginUpdate();
     for (auto cw : mm.ColumnsWidth())
-        tv.setColumnWidth(std::get<0>(cw),std::get<1>(cw)*myltiplier);
+        tv.setColumnWidth(std::get<0>(cw),std::get<1>(cw)*multiplier);
     view->endUpdate();
 }
-void RtabWidget::setTableView(Qtitan::GridTableView& tv, RModel& mm, int myltiplier  )
+void RtabWidget::setTableView(Qtitan::GridTableView& tv, RModel& mm, int multiplier  )
 {
     tv.beginUpdate();
     view->tableOptions().setColumnAutoWidth(false);
@@ -336,7 +328,7 @@ void RtabWidget::setTableView(Qtitan::GridTableView& tv, RModel& mm, int myltipl
     // Выравнивание
     for (auto cw : mm.ColumnsWidth())
     {
-        tv.getColumn(std::get<0>(cw))->setWidth(std::get<1>(cw)*myltiplier);
+        tv.getColumn(std::get<0>(cw))->setWidth(std::get<1>(cw)*multiplier);
         tv.getColumn(std::get<0>(cw))->setTextAlignment(Qt::AlignLeft);
     }
     tv.endUpdate();
@@ -345,13 +337,13 @@ void RtabWidget::setTableView(Qtitan::GridTableView& tv, RModel& mm, int myltipl
 // QTitanGrid: ContextMenu
 void RtabWidget::contextMenu(ContextMenuEventArgs* args)
 {
-    column = args->hitInfo().columnIndex();
-    row = args->hitInfo().row().rowIndex();
+    m_contextMenuColumn = args->hitInfo().columnIndex();
+    m_contextMenuRow = args->hitInfo().row().rowIndex();
     QString qstr_col_props = "";
     RCol* prcol = nullptr;
-    if (column >= 0)
+    if (m_contextMenuColumn >= 0)
     {
-        prcol = prm->getRCol(column);
+        prcol = prm->getRCol(m_contextMenuColumn);
         std::string str_col_prop = prcol->desc() + " |"+ prcol->title() + "| -(" + prcol->name() + "), [" +prcol->unit() + "]";
         qstr_col_props = str_col_prop.c_str();
     }
@@ -435,25 +427,25 @@ void RtabWidget::contextMenu(ContextMenuEventArgs* args)
           actdirectcode->setChecked(true);
         args->contextMenu()->addAction(actdirectcode);
         connect(actdirectcode, &QAction::triggered, this, [&]() {
-            emit SetDirectCodeEntry(column);
+            emit SetDirectCodeEntry(m_contextMenuColumn);
         });
     }
 
     QMenu *menu_linked_forms;
-    menu_linked_forms = CunstructLinkedFormsMenu( m_UIForm.Name());
+    menu_linked_forms = ConstructLinkedFormsMenu( m_UIForm.Name());
     args->contextMenu()->addMenu(menu_linked_forms);
 
     QMenu *menu_linked_macro;
-    menu_linked_macro = CunstructLinkedMacroMenu( m_UIForm.Name());
+    menu_linked_macro = ConstructLinkedMacroMenu( m_UIForm.Name());
     args->contextMenu()->addMenu(menu_linked_macro);
 
     args->contextMenu()->addAction(condFormatAction);
     connect(condFormatAction, &QAction::triggered, this, [&]() {
-        emit editCondFormats(column);
+        emit editCondFormats(m_contextMenuColumn);
     });
 }
 
-QMenu* RtabWidget::CunstructLinkedFormsMenu(std::string form_name)
+QMenu* RtabWidget::ConstructLinkedFormsMenu(std::string form_name)
 {
     QMenu *menu=new QMenu(this);
     menu->setTitle("Связанные формы");
@@ -477,8 +469,7 @@ QMenu* RtabWidget::CunstructLinkedFormsMenu(std::string form_name)
             //lf.FillBindVals();
             for (const auto key : split( lf.bind ,','))
             {
-                int col = prm->getRdata()->mCols_.at(key);
-                long val = std::visit(ToLong(),prm->getRdata()->pnparray_->Get(row,col));
+                long val = getLongValue(key, m_contextMenuRow);
                 lf.vbindvals.push_back(val);
             }
 
@@ -492,7 +483,7 @@ QMenu* RtabWidget::CunstructLinkedFormsMenu(std::string form_name)
     return menu;
 }
 
-QMenu* RtabWidget::CunstructLinkedMacroMenu(std::string form_name)
+QMenu* RtabWidget::ConstructLinkedMacroMenu(std::string form_name)
 {
     QMenu *menu=new QMenu(this);
     menu->setTitle("Макрос");
@@ -531,19 +522,22 @@ QMenu* RtabWidget::CunstructLinkedMacroMenu(std::string form_name)
 void RtabWidget::SetLinkedForm( LinkedForm _lf)
 {
     m_lf = _lf;
-
+    //Строим строку выборки из LinkedForm
     std::string Selection = _lf.get_selection_result();
     IRastrTablesPtr tablesx{ m_pqastra->getRastr()->Tables() };
     IRastrPayload tablecount{ tablesx->Count() };
     IRastrTablePtr table{ tablesx->Item(prm->getRdata()->t_name_)};
+    //передаём выборку в плагин
     IPlainRastrResult* pres = table->SetSelection(Selection);
 
     DataBlock<FieldVariantData> variant_block;
+    //Получаем индексы подходящих строк через
     IRastrPayload keys = table->Key();
     IRastrResultVerify(table->DataBlock(keys.Value(), variant_block));
     auto vind = variant_block.IndexesVector();
 
     GridFilterGroupCondition* groupCondition = new GridFilterGroupCondition(view->filter());
+    //Создаём CustomFilterCondition для QTitan Grid с этими индексами
     CustomFilterCondition* condition = new CustomFilterCondition(view->filter());
 
     groupCondition->addCondition(condition);
@@ -551,6 +545,7 @@ void RtabWidget::SetLinkedForm( LinkedForm _lf)
         condition->addRow(rind);
 
     view->filter()->setCondition(groupCondition, true );
+    //Активируем фильтр — Grid показывает только нужные строки.
     view->filter()->setActive(true);
     view->showFilterPanel();
 }
@@ -599,9 +594,9 @@ void RtabWidget::onOpenLinkedMacro( LinkedMacro _lm)
                         std::istreambuf_iterator<char>());
 
     // В начало макроса добавим индекс строки и информацию для отладки
-    std::string debug_info = fmt::format("rastr.print(f\"run contextmacro: {}[row={}]\")\n",_lm.macrofile,row).c_str();
+    std::string debug_info = fmt::format("rastr.print(f\"run contextmacro: {}[row={}]\")\n",_lm.macrofile,m_contextMenuRow).c_str();
     std::string aRow{"aRow="};
-    aRow.append(std::to_string(row));
+    aRow.append(std::to_string(m_contextMenuRow));
     aRow.append("\n");
     content.insert(0,aRow);
     content.insert(0,debug_info);
@@ -707,7 +702,7 @@ void RtabWidget::widebydata()
 
 void RtabWidget::OpenColPropForm()
 {
-    RCol* prcol = prm->getRCol(column);
+    RCol* prcol = prm->getRCol(m_contextMenuColumn);
     ColPropForm* PropForm = new ColPropForm(prm->getRdata(),ptv,view, prcol);
     PropForm->show();
 }
@@ -720,7 +715,7 @@ void RtabWidget::OpenSelectionForm()
 
 void RtabWidget::OpenGroupCorrection()
 {
-    RCol* prcol = prm->getRCol(column);
+    RCol* prcol = prm->getRCol(m_contextMenuColumn);
     formgroupcorrection* fgc =  new formgroupcorrection(prm->getRdata(),prcol,this);
     this->on_calc_begin();
     fgc->show();
@@ -786,7 +781,6 @@ std::tuple<int,double> RtabWidget::GetSumSelected()
     return std::make_tuple(number,total);
 }
 
-
 void RtabWidget::slot_beginResetModel(std::string tname)
 {
     if (this->m_UIForm.TableName() != tname)
@@ -796,15 +790,13 @@ void RtabWidget::slot_beginResetModel(std::string tname)
 
     // Запомним видимые столбцы
     int ncols = view->getColumnCount();
-    //qDebug()<<"onRTDM_BeginResetModel"<<tname<<": ncols(view) = "<<ncols;
-
     for (int i = 0 ; i < ncols ; i++)
     {
         column_qt = (Qtitan::GridTableColumn *)view->getColumn(i);
         m_ColumnsVisible.insert(std::make_pair(column_qt->caption() , column_qt->isVisible() ));
-        //qDebug()<<i<<":"<<column_qt->caption()<<" - "<<column_qt->isVisible();
     }
 }
+
 void RtabWidget::slot_endResetModel(std::string tname)
 {
     if (this->m_UIForm.TableName() != tname)
@@ -828,4 +820,9 @@ void RtabWidget::slot_endResetModel(std::string tname)
         }
     }
     view->endUpdate();
+}
+
+int RtabWidget::getLongValue(const std::string& key, long row){
+    int col = prm->getRdata()->mCols_.at(key);
+    return std::visit(ToLong(), prm->getRdata()->pnparray_->Get(row,col));
 }

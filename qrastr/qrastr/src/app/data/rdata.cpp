@@ -2,6 +2,12 @@
 
 void RData::Initialize(CUIForm _form, QAstra* _pqastra)
 {
+    // исключить дублирование при повторной инициализации
+    this->clear();
+    mCols_.clear();
+    vCols_.clear();
+    m_str_cols.clear();
+
     t_title_ = _form.Name().c_str();
 
     IRastrTablesPtr tablesx{ _pqastra->getRastr()->Tables() };
