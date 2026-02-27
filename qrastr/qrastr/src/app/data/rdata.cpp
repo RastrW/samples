@@ -36,13 +36,9 @@ RData::RData(QAstra* _pqastra, const CUIForm& _form)
         m_str_cols.append(",");
 
         RCol rc;
-        rc.str_name_ = col_Name;
-        rc.table_name_ = t_name_;
-        rc.title_ = col_Title;
-        rc.index = index;
-        rc.setMeta(_pqastra);
         //Сначала все колонки добавляются с hidden=true,
-        rc.hidden = true;
+        rc.initialize(col_Name, t_name_, col_Title, index);
+        rc.setMeta(_pqastra);
 
         int nRes = AddCol(rc);
         Q_ASSERT(nRes>=0);
@@ -56,8 +52,8 @@ RData::RData(QAstra* _pqastra, const CUIForm& _form)
     {
         for  (RCol &rc : *this)
         {
-            if (rc.str_name_ == f.Name())
-                rc.hidden = false;
+            if (rc.getStrName() == f.Name())
+                rc.setHidden(false);
         }
     }
 
@@ -70,7 +66,7 @@ RData::RData(QAstra* _pqastra, const CUIForm& _form)
 std::string RData::getCommaSeparatedFieldNames(){
     std::string str_tmp;
     for( const RCol& col_data : *this ) {
-        str_tmp += col_data.str_name_;
+        str_tmp += col_data.getStrName();
         str_tmp += ",";
     }
     if(str_tmp.length()>0){
@@ -80,9 +76,9 @@ std::string RData::getCommaSeparatedFieldNames(){
 }
 void RData::Trace() const {
     for(const RCol& col : *this){
-        qDebug() << " col: " << col.str_name_.c_str();
+        qDebug() << " col: " << col.getStrName().c_str();
         for(const _col_data::value_type& cdata : col ){
-            switch(col.en_data_){
+            switch(col.getEnData()){
             case RCol::_en_data::DATA_INT :
                 qDebug()<<"cdata : "<< std::get<long>(cdata);
                 break;
@@ -118,13 +114,13 @@ std::string RData::get_cols(bool visible)
     if (visible)
     {
         for  (RCol &rc : *this)
-            if (!rc.hidden)
-                ret_cols += rc.str_name_ + ",";
+            if (!rc.isHidden())
+                ret_cols += rc.getStrName() + ",";
     }
     else
     {
         for  (RCol &rc : *this)
-            ret_cols += rc.str_name_ + ",";
+            ret_cols += rc.getStrName() + ",";
     }
 
     if (!ret_cols.empty())

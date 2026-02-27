@@ -20,7 +20,7 @@ RModel::RModel(QObject *parent, QAstra* pqastra, RTablesDataManager* pRTDM)
 bool RModel::populateDataFromRastr(){
 
     try{
-        up_rdata = std::unique_ptr<RData>(new RData(pqastra_,*pUIForm_));
+        up_rdata = std::make_unique<RData>(pqastra_ ,*pUIForm_);
         up_rdata->populate_qastra(this->pqastra_,pRTDM_);
 
         m_enum_.clear();
@@ -29,23 +29,23 @@ bool RModel::populateDataFromRastr(){
 
         for (RCol &rcol : *up_rdata)
         {
-            rcol.nameref_ =  rcol.NameRef();
+            rcol.setNameRef(rcol.NameRef());
 
-            if (rcol.com_prop_tt == enComPropTT::COM_PR_ENUM)   // ex: Нет|Квадр.|Лин.|Комбинир.
+            if (rcol.getComPropTT() == enComPropTT::COM_PR_ENUM)   // ex: Нет|Квадр.|Лин.|Комбинир.
             {
                 QStringList list;
                 std::map<size_t,std::string> map_string;
                 char delimiter = '|';
 
                 int i = 0;
-                for (auto val : split(rcol.nameref_,delimiter))
+                for (auto val : split(rcol.getNameRef(),delimiter))
                 {
                     list.append(QString(val.c_str()));
                     map_string.insert(std::make_pair(i++,val));
                 }
-                m_enum_.insert(std::make_pair(rcol.index,list));
+                m_enum_.insert(std::make_pair(rcol.getIndex(),list));
             }
-            if (rcol.com_prop_tt == enComPropTT::COM_PR_SUPERENUM && !rcol.nameref_.empty()) // ex: ti_prv.Name.Num
+            if (rcol.getComPropTT() == enComPropTT::COM_PR_SUPERENUM && !rcol.getNameRef().empty()) // ex: ti_prv.Name.Num
             {
                 QStringList list;
                 std::map<size_t,std::string> map_string ;
@@ -54,7 +54,7 @@ bool RModel::populateDataFromRastr(){
                 char delimiter = '.';
 
                 int i = 0;
-                for (const auto &val : split(rcol.nameref_,delimiter))
+                for (const auto &val : split(rcol.getNameRef(),delimiter))
                     vsuperenum.push_back(val);
                 if (vsuperenum.size() > 2)
                 {
@@ -72,18 +72,18 @@ bool RModel::populateDataFromRastr(){
                             map_string.insert(std::make_pair(ind_ref_val,str_ref_val));
                         }
                     }
-                    mm_superenum_.insert(std::make_pair(rcol.index,map_string));
+                    mm_superenum_.insert(std::make_pair(rcol.getIndex(),map_string));
                 }
             }
-            if (rcol.com_prop_tt == enComPropTT::COM_PR_INT && !rcol.nameref_.empty())  // ex: node[na]
+            if (rcol.getComPropTT() == enComPropTT::COM_PR_INT && !rcol.getNameRef().empty())  // ex: node[na]
             {
                 std::map<size_t,std::string> map_string ;
                 map_string.insert(std::make_pair(0,"не задано"));
 
-                int nopen = rcol.nameref_.find_first_of('[');
-                int nclose = rcol.nameref_.find_first_of(']');
-                std::string table = rcol.nameref_.substr(0,nopen);
-                std::string col = rcol.nameref_.substr(nopen+1,rcol.nameref_.length() - nopen - 2);
+                int nopen = rcol.getNameRef().find_first_of('[');
+                int nclose = rcol.getNameRef().find_first_of(']');
+                std::string table = rcol.getNameRef().substr(0,nopen);
+                std::string col = rcol.getNameRef().substr(nopen+1,rcol.getNameRef().length() - nopen - 2);
                 QDataBlock QDB;
                 long name_indx = pRTDM_->column_index(table,"name");
                 std::string cols = "";
@@ -100,7 +100,7 @@ bool RModel::populateDataFromRastr(){
                     list.append(str_ref_val.c_str());
                     map_string.insert(std::make_pair(ind_ref_val,str_ref_val));
                 }
-                mm_nameref_.insert(std::make_pair(rcol.index,map_string));
+                mm_nameref_.insert(std::make_pair(rcol.getIndex(),map_string));
             }
         }
     }
@@ -152,7 +152,7 @@ QVariant RModel::data(const QModelIndex &index, int role) const
     {
             item = std::visit(ToQVariant(),up_rdata->pnparray_->Get(row,col));
 
-        if (!prc->directcode)
+        if (!prc->isDirectCode())
         {
             if (contains(m_enum_,col) )
                 //if (contains(m_enum_.at(col),item.toInt()) )  // win not compile
@@ -217,25 +217,26 @@ bool RModel::setData(const QModelIndex &index, const QVariant &value, int role)
     RData::iterator iter_col = up_rdata->begin() + col;
 
     IRastrTablesPtr tablesx{this->pqastra_->getRastr()->Tables()};
-    IRastrTablePtr table{ tablesx->Item(iter_col->table_name_) };
+    IRastrTablePtr table{ tablesx->Item(iter_col->getTableName()) };
     IRastrColumnsPtr columns{table->Columns()};
-    IRastrColumnPtr col_ptr{ columns->Item(iter_col->str_name_) };
+    IRastrColumnPtr col_ptr{ columns->Item(iter_col->getStrName()) };
 
     if (value != data(index, role))
     {
-        switch((*iter_col).en_data_){
+        switch((*iter_col).getEnData()){
             case RCol::_en_data::DATA_BOOL:
             {
                 bool val =  value.toBool();
                 FieldVariantData vd(val);
                 IRastrResultVerify(col_ptr->SetValue(row,val));
-                qDebug() << "set: "<<up_rdata->t_name_.c_str()<<"."<< (*iter_col).str_name_.c_str() << "(" << row << ")=" <<val;
+                qDebug() << "set: "<<up_rdata->t_name_.c_str()<<"."
+                         << (*iter_col).getStrName().c_str() << "(" << row << ")=" <<val;
                 break;
              }
             case RCol::_en_data::DATA_INT:
             {
                 long val = 0;
-                if (!(*iter_col).directcode)
+                if (!(*iter_col).isDirectCode())
                 {
                     if (contains(m_enum_,col))       // ENUM
                     {
@@ -267,7 +268,7 @@ bool RModel::setData(const QModelIndex &index, const QVariant &value, int role)
 
                 FieldVariantData vd(val);
                 IRastrResultVerify(col_ptr->SetValue(row,val));
-                qDebug() << "set: "<<up_rdata->t_name_.c_str()<<"."<< (*iter_col).str_name_.c_str() << "(" << row << ")=" <<val;
+                qDebug() << "set: "<<up_rdata->t_name_.c_str()<<"."<< (*iter_col).getStrName().c_str() << "(" << row << ")=" <<val;
 
                 break;
             }
@@ -276,7 +277,7 @@ bool RModel::setData(const QModelIndex &index, const QVariant &value, int role)
                 std::string val =  value.toString().toStdString().c_str();
                 FieldVariantData vd(val);
                 IRastrResultVerify(col_ptr->SetValue(row,val));
-                qDebug() << "set: "<<up_rdata->t_name_.c_str()<<"."<< (*iter_col).str_name_.c_str() ;//<< "(" << row << ")=" <<  val;
+                qDebug() << "set: "<<up_rdata->t_name_.c_str()<<"."<< (*iter_col).getStrName().c_str() ;//<< "(" << row << ")=" <<  val;
                 break;
             }
                 break;
@@ -285,7 +286,7 @@ bool RModel::setData(const QModelIndex &index, const QVariant &value, int role)
                 double val =  value.toDouble();
                 FieldVariantData vd(val);
                 IRastrResultVerify(col_ptr->SetValue(row,val));
-                qDebug() << "set: "<<up_rdata->t_name_.c_str()<<"."<< (*iter_col).str_name_.c_str() << "(" << row << ")=" <<val;
+                qDebug() << "set: "<<up_rdata->t_name_.c_str()<<"."<< (*iter_col).getStrName().c_str() << "(" << row << ")=" <<val;
             }
                 break;
         default :
@@ -551,7 +552,7 @@ void RModel::slot_EndInsertRow(std::string _t_name)
 
 bool RModel::isBinary(const QModelIndex& index) const
 {
-    switch (this->up_rdata->at(index.column()).en_data_)
+    switch (this->up_rdata->at(index.column()).getEnData())
    {
        case RCol::_en_data::DATA_BOOL:
            return false;

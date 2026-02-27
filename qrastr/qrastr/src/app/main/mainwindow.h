@@ -113,7 +113,6 @@ private:
     
     // ========== ВСПОМОГАТЕЛЬНЫЕ КОМПОНЕНТЫ ==========
     std::shared_ptr<PyHlp> m_pyHelper;          // Python helper (для выполнения макросов)
-
     
     // ========== ИНИЦИАЛИЗАЦИЯ ==========
     void setupDockWidgets();

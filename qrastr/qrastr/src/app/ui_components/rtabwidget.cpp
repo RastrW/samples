@@ -182,8 +182,8 @@ void RtabWidget::CreateModel(QAstra* pqastra, CUIForm* pUIForm)
     int vi = 0;
     for (const auto &f : pUIForm->Fields()){
         for (const RCol& rcol : *prm->getRdata()){
-            if (f.Name() == rcol.str_name_){
-                column_qt = (Qtitan::GridTableColumn *)view->getColumn(rcol.index);
+            if (f.Name() == rcol. getStrName()){
+                column_qt = (Qtitan::GridTableColumn *)view->getColumn(rcol.getIndex());
                 column_qt->setVisualIndex(vi++);
                 continue;
             }
@@ -196,7 +196,7 @@ void RtabWidget::CreateModel(QAstra* pqastra, CUIForm* pUIForm)
 
     // Заливка колонок цветом по правилам CondFormat
     for (RCol& rcol : *prm->getRdata())
-        m_MapcondFormatVector.emplace(rcol.index, std::vector<CondFormat>());
+        m_MapcondFormatVector.emplace(rcol.getIndex(), std::vector<CondFormat>());
 
     std::map<int, std::vector<CondFormat>> cfv;
 
@@ -220,27 +220,27 @@ void RtabWidget::SetEditors()
     for (RCol& rcol : *prm->getRdata())
     {
         SetEditor(rcol);
-        qDebug()<<"Col index"<<rcol.index<<"Col Name:"<<rcol.name().c_str();
+        qDebug()<<"Col index"<<rcol.getIndex()<<"Col Name:"<<rcol.name().c_str();
     }
 }
 
 void RtabWidget::SetEditor(RCol& rcol)
 {
     view->beginUpdate();
-    column_qt = (Qtitan::GridTableColumn *)view->getColumn(rcol.index);
+    column_qt = (Qtitan::GridTableColumn *)view->getColumn(rcol.getIndex());
     if (column_qt == nullptr)
         return;
 
-    column_qt->setVisible(!rcol.hidden);
+    column_qt->setVisible(!rcol.isHidden());
 
     //Настройки отображения колонок по типам
-    if (rcol.com_prop_tt == enComPropTT::COM_PR_ENUM)
+    if (rcol.getComPropTT() == enComPropTT::COM_PR_ENUM)
     {
-        if (!rcol.directcode)
+        if (!rcol.isDirectCode())
         {
             column_qt->setEditorType(GridEditor::ComboBox);
 
-            QStringList list = prm->m_enum_.at(rcol.index);
+            QStringList list = prm->m_enum_.at(rcol.getIndex());
 
             column_qt->editorRepository()->setDefaultValue(list.at(0), Qt::EditRole);
             column_qt->editorRepository()->setDefaultValue(list, (Qt::ItemDataRole)Qtitan::ComboBoxRole);
@@ -248,15 +248,15 @@ void RtabWidget::SetEditor(RCol& rcol)
         else
          column_qt->setEditorType(GridEditor::Numeric);
     }
-    if (rcol.com_prop_tt == enComPropTT::COM_PR_INT &&
-        !rcol.nameref_.empty() && contains(prm->mm_nameref_,rcol.index))
+    if (rcol.getComPropTT() == enComPropTT::COM_PR_INT &&
+        !rcol.getNameRef().empty() && contains(prm->mm_nameref_,rcol.getIndex()))
     {
-        if (!rcol.directcode)
+        if (!rcol.isDirectCode())
         {
             column_qt->setEditorType(GridEditor::ComboBox);
             //QStringList list = prm->mnamerefs_.at(rcol.index);
             QStringList list;
-            for (auto val : prm->mm_nameref_.at(rcol.index))
+            for (auto val : prm->mm_nameref_.at(rcol.getIndex()))
                 list.append(val.second.c_str());
             column_qt->editorRepository()->setDefaultValue(list.at(0), Qt::EditRole);
             column_qt->editorRepository()->setDefaultValue(list, (Qt::ItemDataRole)Qtitan::ComboBoxRole);
@@ -266,15 +266,16 @@ void RtabWidget::SetEditor(RCol& rcol)
             column_qt->setEditorType(GridEditor::Numeric);
         }
     }
-    if (rcol.com_prop_tt == enComPropTT::COM_PR_SUPERENUM && !rcol.nameref_.empty() && contains(prm->mm_superenum_,rcol.index) )
+    if (rcol.getComPropTT() == enComPropTT::COM_PR_SUPERENUM &&
+        !rcol.getNameRef().empty() && contains(prm->mm_superenum_,rcol.getIndex()) )
     {
         //rcol.directcode = true;         // DEBUG
 
-        if (!rcol.directcode)
+        if (!rcol.isDirectCode())
         {
             column_qt->setEditorType(GridEditor::ComboBox);
             QStringList list;
-            for (auto val : prm->mm_superenum_.at(rcol.index))
+            for (auto val : prm->mm_superenum_.at(rcol.getIndex()))
                 list.append(val.second.c_str());
             column_qt->editorRepository()->setDefaultValue(list.at(0), Qt::EditRole);
             column_qt->editorRepository()->setDefaultValue(list, (Qt::ItemDataRole)Qtitan::ComboBoxRole);
@@ -283,7 +284,7 @@ void RtabWidget::SetEditor(RCol& rcol)
             column_qt->setEditorType(GridEditor::Numeric);
     }
 
-    if (rcol.com_prop_tt == enComPropTT::COM_PR_REAL)
+    if (rcol.getComPropTT() == enComPropTT::COM_PR_REAL)
     {
         int prec = std::atoi(rcol.prec().c_str());
 
@@ -293,7 +294,7 @@ void RtabWidget::SetEditor(RCol& rcol)
         ((Qtitan::GridNumericEditorRepository *)column_qt->editorRepository())->setDecimals(prec);
     }
 
-    if (rcol.com_prop_tt == enComPropTT::COM_PR_BOOL)
+    if (rcol.getComPropTT() == enComPropTT::COM_PR_BOOL)
     {
         column_qt->setEditorType(GridEditor::CheckBox);
         ((Qtitan::GridCheckBoxEditorRepository *)column_qt->editorRepository())->setAppearance(GridCheckBox::StyledAppearance);
@@ -419,11 +420,12 @@ void RtabWidget::contextMenu(ContextMenuEventArgs* args)
     args->contextMenu()->addAction(tr("Выборка"),
                                    this, &RtabWidget::OpenSelectionForm);
 
-    if ( (!prcol->nameref_.empty() && prcol->com_prop_tt == enComPropTT::COM_PR_INT) || (prcol->com_prop_tt == enComPropTT::COM_PR_SUPERENUM) )
+    if ((!prcol->getNameRef().empty() && prcol->getComPropTT() == enComPropTT::COM_PR_INT)
+        || (prcol->getComPropTT() == enComPropTT::COM_PR_SUPERENUM))
     {
         QAction* actdirectcode=new QAction("Прямой ввод кода", this);
         actdirectcode->setCheckable(true);
-        if ( !(prcol == nullptr) && prcol->directcode)
+        if ( !(prcol == nullptr) && prcol->isDirectCode())
           actdirectcode->setChecked(true);
         args->contextMenu()->addAction(actdirectcode);
         connect(actdirectcode, &QAction::triggered, this, [&]() {
@@ -606,11 +608,10 @@ void RtabWidget::onOpenLinkedMacro( LinkedMacro _lm)
 
 }
 
-
 void RtabWidget::SetDirectCodeEntry(std::size_t column)
 {
     RCol* prcol = prm->getRCol(column);
-    prcol->directcode = !prcol->directcode;
+    prcol->invertDirectCodeStatus();
     SetEditor(*prcol);
 }
 void RtabWidget::editCondFormats(std::size_t column)
@@ -811,7 +812,7 @@ void RtabWidget::slot_endResetModel(std::string tname)
     qDebug()<<"onRTDM_EndResetModel"<<QString::fromStdString(tname)<<": ncols(view) = "<<ncols;
     for (const RCol& rcol : *prm->getRdata())
     {
-        column_qt = (Qtitan::GridTableColumn *)view->getColumn(rcol.index);
+        column_qt = (Qtitan::GridTableColumn *)view->getColumn(rcol.getIndex());
         column_qt->setVisible(false);
         if (contains(m_ColumnsVisible, column_qt->caption()))
         {

@@ -18,10 +18,10 @@ formgroupcorrection::formgroupcorrection(RData* _prdata,RCol* _prcol, QWidget *p
     for ( auto &col : *prdata_)
     {
         std::string par = str_par;
-        par.append(col.str_name_).append("[").append(col.title_).append("]");
+        par.append(col.getStrName()).append("[").append(col.getTitle()).append("]");
         ui->comboBox->addItem(par.c_str());
     }
-    ui->comboBox->setCurrentIndex(prcol_->index);
+    ui->comboBox->setCurrentIndex(prcol_->getIndex());
 }
 
 formgroupcorrection::~formgroupcorrection()

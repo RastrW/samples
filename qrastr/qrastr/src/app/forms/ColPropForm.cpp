@@ -101,7 +101,7 @@ void ColPropForm::on_btn_ok_clicked()
 
     IRastrResultVerify{prdata->pqastra_->getRastr()->SetLockEvent(false)};
 
-    Qtitan::GridTableColumn* column_qt = (Qtitan::GridTableColumn *)view->getColumn(prcol->index);
+    Qtitan::GridTableColumn* column_qt = (Qtitan::GridTableColumn *)view->getColumn(prcol->getIndex());
     ((Qtitan::GridNumericEditorRepository *)column_qt->editorRepository())->setDecimals(getPrec().toInt());
 
     this->close();
