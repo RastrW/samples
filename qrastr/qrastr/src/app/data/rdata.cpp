@@ -1,12 +1,9 @@
 #include "rdata.h"
 
-void RData::Initialize(CUIForm _form, QAstra* _pqastra)
+RData::RData(QAstra* _pqastra, const CUIForm& _form)
 {
-    // исключить дублирование при повторной инициализации
-    this->clear();
-    mCols_.clear();
-    vCols_.clear();
-    m_str_cols.clear();
+    pqastra_ = _pqastra;
+    t_name_ = _form.TableName();
 
     t_title_ = _form.Name().c_str();
 
@@ -55,7 +52,7 @@ void RData::Initialize(CUIForm _form, QAstra* _pqastra)
 
     //Скрыть колонки не входящие в форму
     //Скрытые колонки всё равно присутствуют в pnparray_
-    for (CUIFormField &f : _form.Fields())
+    for (const CUIFormField &f : _form.Fields())
     {
         for  (RCol &rc : *this)
         {

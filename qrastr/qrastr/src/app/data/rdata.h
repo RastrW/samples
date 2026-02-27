@@ -19,23 +19,17 @@ typedef std::vector<std::string> _vstr;
 class RData
     : public std::vector<RCol> {
 public:
-    RData(QAstra* _pqastra, std::string _t_name)
-    {
-        pqastra_ = _pqastra;
-        t_name_ = _t_name;
-    }
+    /** Строит вектор RCol по метаданным плагина.
+     * @note reserve() вызывается ДО push_back, иначе при reallocate
+     * указатели на элементы вектора инвалидируются и RCol теряют данные.
+     */
+    RData(QAstra* _pqastra, const CUIForm& _form);
 
     int AddCol(const RCol& rcol){
         emplace_back(rcol);
         return static_cast<int>(size());
     }
-    /** @brief
-     * Строит вектор RCol по метаданным плагина.
-     *
-     * @note reserve() вызывается ДО push_back, иначе при reallocate
-     * указатели на элементы вектора инвалидируются и RCol теряют данные.
 
-     */
     void Initialize(CUIForm _form, QAstra* _pqastra);
     /**
      * Получает (или создаёт, если ещё нет) общий QDataBlock из RTablesDataManager.

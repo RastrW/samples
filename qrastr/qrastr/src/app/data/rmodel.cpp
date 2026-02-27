@@ -20,8 +20,7 @@ RModel::RModel(QObject *parent, QAstra* pqastra, RTablesDataManager* pRTDM)
 bool RModel::populateDataFromRastr(){
 
     try{
-        up_rdata = std::unique_ptr<RData>(new RData(pqastra_,pUIForm_->TableName()));
-        up_rdata->Initialize(*pUIForm_,pqastra_);
+        up_rdata = std::unique_ptr<RData>(new RData(pqastra_,*pUIForm_));
         up_rdata->populate_qastra(this->pqastra_,pRTDM_);
 
         m_enum_.clear();

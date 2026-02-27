@@ -234,56 +234,14 @@ void RTablesDataManager::handleChangeColumn(const std::string& tname,
     QDataBlock* pqdb = findCachedBlock(tname);
     if (!pqdb) return;
 
+    const long colIdx = getColIndex(tname, cname);
+    if (colIdx < 0) return;
+
     emit sig_BeginResetModel(tname);
 
-    IRastrTablesPtr tables{ m_pqastra->getRastr()->Tables() };
-    IRastrTablePtr  table { tables->Item(tname) };
-
-    // Читаем одну колонку в промежуточный блок
-    DataBlock<FieldVariantData> col_block;
-    IRastrResultVerify(table->DataBlock(cname, col_block));
-
-    const long     col_ind  = getColIndex(tname, cname);
-    const ePropType col_type = getColType(tname, cname);
-    const long rows = static_cast<long>(pqdb->RowsCount());
-
-    for (long i = 0; i < rows; ++i)
-    {
-        // Преобразуем вариант к нужному типу и записываем в кеш.
-        switch (col_type)
-        {
-        case ePropType::Double:
-            pqdb->Set(i, col_ind, std::visit(ToDouble(), col_block.Get(i, 0)));
-            break;
-        case ePropType::Int:
-        case ePropType::Enum:
-        case ePropType::Superenum:
-        case ePropType::Enpic:
-        case ePropType::Color:
-            pqdb->Set(i, col_ind, std::visit(ToLong(), col_block.Get(i, 0)));
-            break;
-        case ePropType::String:
-            pqdb->Set(i, col_ind, std::visit(ToString(), col_block.Get(i, 0)));
-            break;
-        case ePropType::Bool:
-            ///@note возможно, всё таки надо через visit, прописав ToBool
-            /// Если в variant в данный момент лежит не bool, а, например,
-            /// long (даже если это 0 или 1) или double, программа выбросит
-            /// исключение std::bad_variant_access и, если его не поймать, аварийно завершится.
-            try
-            {
-                pqdb->Set(i, col_ind, std::get<bool>(col_block.Get(i, 0)));
-            }catch(...){
-                spdlog::error("Ошибка преобразования колонки bool для {} {}",
-                              tname.c_str(),
-                              cname.c_str());
-            }
-            break;
-        default:
-            spdlog::error("RTDM::handleChangeColumn: unknown col type for {}", cname.c_str());
-            break;
-        }
-    }
+    const long nRows = static_cast<long>(pqdb->RowsCount());
+    for (long row = 0; row < nRows; ++row)
+        pqdb->Set(row, colIdx, m_pqastra->GetVal(tname, cname, row));
 
     emit sig_EndResetModel(tname);
 }
@@ -292,16 +250,14 @@ void RTablesDataManager::handleChangeRow(const std::string& tname, long row)
 {
     // Изменились все колонки одной строки.
     // Перечитываем строку целиком через Column::Value().
-    qInfo() << "ENTER handleChangeRow for table:" << tname.c_str();
     QDataBlock* pqdb = findCachedBlock(tname);
     if (!pqdb) return;
 
     IRastrTablesPtr tables  { m_pqastra->getRastr()->Tables() };
     IRastrTablePtr  table   { tables->Item(tname) };
     IRastrColumnsPtr columns{ table->Columns() };
-    IRastrPayload colsCount { columns->Count() };
+    const long ncols = IRastrPayload{ columns->Count() }.Value();
 
-    const long ncols = colsCount.Value();
     for (long i = 0; i < ncols; ++i)
     {
         IRastrColumnPtr  col      { columns->Item(i) };
@@ -320,62 +276,16 @@ void RTablesDataManager::handleChangeData(const std::string& tname,
     QDataBlock* pqdb = findCachedBlock(tname);
     if (!pqdb) return;
 
-    const long pnparr_nrows = static_cast<long>(pqdb->RowsCount());
-    const long pnparr_ncols = static_cast<long>(pqdb->ColumnsCount());
+    const long colIdx = getColIndex(tname, cname);
+    if (colIdx < 0 || colIdx >= static_cast<long>(pqdb->ColumnsCount())) return;
+    if (row  < 0 || row  >= static_cast<long>(pqdb->RowsCount()))        return;
 
-    const long col_ind = getColIndex(tname, cname);
-    if (col_ind < 0 || col_ind >= pnparr_ncols) return;
-    if (row  < 0 || row  >= pnparr_nrows)       return;
-
-    IRastrTablesPtr  tables { m_pqastra->getRastr()->Tables() };
-    IRastrTablePtr   table   { tables->Item(tname) };
-    IRastrColumnsPtr columns { table->Columns() };
-    IRastrColumnPtr  col     { columns->Item(cname) };
-
-    ///@note Читаем одно значение через Value() — безопасно даже для новых строк.
-    /// DataBlock("", VDB) с пустым списком колонок падает сразу после AddRow.
-    /// вместо DataBlock("", VDB) — читаем только ту колонку, которая изменилась (col->Value(row)).
-    /// Это то, что делает handleChangeColumn, но для одной строки.
-    /// Плагин нормально отдаёт одно значение через Value() даже для новой строки —
-    /// а вот DataBlock с пустым списком колонок пытается вычислить все поля сразу,
-    /// включая формульные, и на неустановившейся строке падает.
-    IRastrVariantPtr v_ptr{ col->Value(row) };
-
-    // определяем тип колонки и вызываем соответствующий типизированный метод.
-    const ePropType col_type = getColType(tname, cname);
-    switch (col_type){
-    case ePropType::Double:{
-        IRastrPayload<double> val{ v_ptr->Double() };
-        pqdb->Set(row, col_ind, static_cast<double>(val.Value()));
-        break;
-    }
-    case ePropType::Int: //Все эти типы обрабатываются одним блоком ниже
-    case ePropType::Enum:
-    case ePropType::Superenum:
-    case ePropType::Enpic:
-    case ePropType::Color:{
-        IRastrPayload<long> val{ v_ptr->Long() };
-        pqdb->Set(row, col_ind, static_cast<long>(val.Value()));
-        break;
-    }
-    case ePropType::String:{
-        IRastrPayload<const std::string> val{ v_ptr->String() };
-        pqdb->Set(row, col_ind, std::string(val.Value()));
-        break;
-    }
-    case ePropType::Bool:{
-        IRastrPayload<bool> val{ v_ptr->Bool() };
-        pqdb->Set(row, col_ind, val.Value());
-        break;
-    }
-    default:
-        qWarning() << "handleChangeData: unhandled type for col"
-                   << cname.c_str();
-        break;
-    }
+    ///@note устанавливаем значение только для конкретной ячейки, т.к.
+    /// Ранее была установка DataBlock("", VDB) с пустым списком колонок, он падает сразу после AddRow.
+    pqdb->Set(row, colIdx, m_pqastra->GetVal(tname, cname, row));
 
     ///@note добавлен вызов сигнала, уведомляющий об изменении по аналогии
-    emit sig_dataChanged(tname, row, col_ind, row, col_ind);
+    emit sig_dataChanged(tname, row, colIdx, row, colIdx);
 }
 
 void RTablesDataManager::handleAddRow(const std::string& tname, long row)
