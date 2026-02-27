@@ -40,7 +40,8 @@ public:
      * Вызывается один раз при построении создании Initialize().
      */
     void setMeta(QAstra* _pqastra);
-    void calc(std::string expression , std::string selection) const;
+    void calc(const std::string& expression ,
+              const std::string& selection) const;
 
     ///Получить значение
     long getIndex() const{ return m_index; }
@@ -50,8 +51,8 @@ public:
     _en_data getEnData() const{ return m_en_data; }
     const std::string& getNameRef() const{ return m_nameref; }
     const std::string& getTableName() const{ return m_table_name; }
-    std::string getStrName() const{ return m_str_name; }
-    std::string getTitle() const{ return m_title;}
+    const std::string& getStrName() const{ return m_str_name; }
+    const std::string& getTitle() const{ return m_title;}
 
     std::string name() const;
     std::string Type() const;
@@ -86,7 +87,7 @@ public:
         m_index = index;
     }
     void setNameRef(const std::string& nameRef){ m_nameref = nameRef; }
-    void setHidden(bool hidden){ hidden = hidden; }
+    void setHidden(bool hidden){ m_hidden = hidden; }
 private:
     nlohmann::json j_meta_;
     QAstra* pqastra_;

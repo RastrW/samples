@@ -39,8 +39,7 @@ std::string RCol::name() const{
     IRastrTablePtr table{ tablesx->Item(m_table_name) };
     IRastrColumnsPtr columns{ table->Columns() };
     IRastrColumnPtr col_ptr{ columns->Item(m_str_name) };
-    std::string str_name = IRastrPayload(IRastrVariantPtr(col_ptr->Property(FieldProperties::Name))->String()).Value();
-    return str_name;
+    return IRastrPayload(IRastrVariantPtr(col_ptr->Property(FieldProperties::Name))->String()).Value();
 }
 
 std::string RCol::Type() const{
@@ -48,8 +47,7 @@ std::string RCol::Type() const{
     IRastrTablePtr table{ tablesx->Item(m_table_name) };
     IRastrColumnsPtr columns{ table->Columns() };
     IRastrColumnPtr col_ptr{ columns->Item(m_str_name) };
-    std::string str_Type = IRastrPayload(IRastrVariantPtr(col_ptr->Property(FieldProperties::Type))->String()).Value();
-    return str_Type;
+    return IRastrPayload(IRastrVariantPtr(col_ptr->Property(FieldProperties::Type))->String()).Value();
 }
 
 std::string RCol::width() const{
@@ -57,8 +55,7 @@ std::string RCol::width() const{
     IRastrTablePtr table{ tablesx->Item(m_table_name) };
     IRastrColumnsPtr columns{ table->Columns() };
     IRastrColumnPtr col_ptr{ columns->Item(m_str_name) };
-    std::string str_width = IRastrPayload(IRastrVariantPtr(col_ptr->Property(FieldProperties::Width))->String()).Value();
-    return str_width;
+    return IRastrPayload(IRastrVariantPtr(col_ptr->Property(FieldProperties::Width))->String()).Value();
 }
 
 std::string RCol::title() const{
@@ -73,8 +70,7 @@ std::string RCol::title() const{
         return _tmp.append(m_str_name);
     }
     IRastrColumnPtr col_ptr{ columns->Item(m_str_name) };
-    std::string str_title = IRastrPayload(IRastrVariantPtr(col_ptr->Property(FieldProperties::Title))->String()).Value();
-    return str_title;
+    return IRastrPayload(IRastrVariantPtr(col_ptr->Property(FieldProperties::Title))->String()).Value();
 }
 
 std::string RCol::desc() const{
@@ -82,8 +78,7 @@ std::string RCol::desc() const{
     IRastrTablePtr table{ tablesx->Item(m_table_name) };
     IRastrColumnsPtr columns{ table->Columns() };
     IRastrColumnPtr col_ptr{ columns->Item(m_str_name) };
-    std::string str_desc = IRastrPayload(IRastrVariantPtr(col_ptr->Property(FieldProperties::Description))->String()).Value();
-    return str_desc;
+    return IRastrPayload(IRastrVariantPtr(col_ptr->Property(FieldProperties::Description))->String()).Value();
 }
 
 std::string RCol::prec() const{
@@ -91,8 +86,7 @@ std::string RCol::prec() const{
     IRastrTablePtr table{ tablesx->Item(m_table_name) };
     IRastrColumnsPtr columns{ table->Columns() };
     IRastrColumnPtr col_ptr{ columns->Item(m_str_name) };
-    std::string str_prec = IRastrPayload(IRastrVariantPtr(col_ptr->Property(FieldProperties::Precision))->String()).Value();
-    return str_prec;
+    return IRastrPayload(IRastrVariantPtr(col_ptr->Property(FieldProperties::Precision))->String()).Value();
 }
 
 std::string RCol::set_prec(std::string str_prec) const{
@@ -118,8 +112,7 @@ std::string RCol::expr() const{
     IRastrTablePtr table{ tablesx->Item(m_table_name) };
     IRastrColumnsPtr columns{ table->Columns() };
     IRastrColumnPtr col_ptr{ columns->Item(m_str_name) };
-    std::string str_expr = IRastrPayload(IRastrVariantPtr(col_ptr->Property(FieldProperties::Expression))->String()).Value();
-    return str_expr;
+    return IRastrPayload(IRastrVariantPtr(col_ptr->Property(FieldProperties::Expression))->String()).Value();
 }
 
 std::string RCol::AFOR() const{
@@ -127,8 +120,7 @@ std::string RCol::AFOR() const{
     IRastrTablePtr table{ tablesx->Item(m_table_name) };
     IRastrColumnsPtr columns{ table->Columns() };
     IRastrColumnPtr col_ptr{ columns->Item(m_str_name) };
-    std::string str_AFOR = IRastrPayload(IRastrVariantPtr(col_ptr->Property(FieldProperties::AFOR))->String()).Value();
-    return str_AFOR;
+    return IRastrPayload(IRastrVariantPtr(col_ptr->Property(FieldProperties::AFOR))->String()).Value();
 }
 
 std::string RCol::IsActiveFormula() const{
@@ -136,8 +128,7 @@ std::string RCol::IsActiveFormula() const{
     IRastrTablePtr table{ tablesx->Item(m_table_name) };
     IRastrColumnsPtr columns{ table->Columns() };
     IRastrColumnPtr col_ptr{ columns->Item(m_str_name) };
-    std::string str_IsActiveFormula = IRastrPayload(IRastrVariantPtr(col_ptr->Property(FieldProperties::IsActiveFormula))->String()).Value();
-    return str_IsActiveFormula;
+    return IRastrPayload(IRastrVariantPtr(col_ptr->Property(FieldProperties::IsActiveFormula))->String()).Value();
 }
 
 std::string RCol::NameRef() const{
@@ -145,8 +136,7 @@ std::string RCol::NameRef() const{
     IRastrTablePtr table{ tablesx->Item(m_table_name) };
     IRastrColumnsPtr columns{ table->Columns() };
     IRastrColumnPtr col_ptr{ columns->Item(m_str_name) };
-    std::string str_NameRef = IRastrPayload(IRastrVariantPtr(col_ptr->Property(FieldProperties::NameRef))->String()).Value();
-    return str_NameRef;
+    return IRastrPayload(IRastrVariantPtr(col_ptr->Property(FieldProperties::NameRef))->String()).Value();
 }
 
 std::string RCol::Min() const{
@@ -154,8 +144,7 @@ std::string RCol::Min() const{
     IRastrTablePtr table{ tablesx->Item(m_table_name) };
     IRastrColumnsPtr columns{ table->Columns() };
     IRastrColumnPtr col_ptr{ columns->Item(m_str_name) };
-    std::string str_Min = IRastrPayload(IRastrVariantPtr(col_ptr->Property(FieldProperties::Min))->String()).Value();
-    return str_Min;
+    return IRastrPayload(IRastrVariantPtr(col_ptr->Property(FieldProperties::Min))->String()).Value();
 }
 
 std::string RCol::Max() const{
@@ -163,8 +152,7 @@ std::string RCol::Max() const{
     IRastrTablePtr table{ tablesx->Item(m_table_name) };
     IRastrColumnsPtr columns{ table->Columns() };
     IRastrColumnPtr col_ptr{ columns->Item(m_str_name) };
-    std::string str_Max = IRastrPayload(IRastrVariantPtr(col_ptr->Property(FieldProperties::Max))->String()).Value();
-    return str_Max;
+    return IRastrPayload(IRastrVariantPtr(col_ptr->Property(FieldProperties::Max))->String()).Value();
 }
 
 std::string RCol::Scale() const{
@@ -172,8 +160,7 @@ std::string RCol::Scale() const{
     IRastrTablePtr table{ tablesx->Item(m_table_name) };
     IRastrColumnsPtr columns{ table->Columns() };
     IRastrColumnPtr col_ptr{ columns->Item(m_str_name) };
-    std::string str_Scale = IRastrPayload(IRastrVariantPtr(col_ptr->Property(FieldProperties::Scale))->String()).Value();
-    return str_Scale;
+    return IRastrPayload(IRastrVariantPtr(col_ptr->Property(FieldProperties::Scale))->String()).Value();
 }
 
 std::string RCol::Cache() const{
@@ -181,8 +168,7 @@ std::string RCol::Cache() const{
     IRastrTablePtr table{ tablesx->Item(m_table_name) };
     IRastrColumnsPtr columns{ table->Columns() };
     IRastrColumnPtr col_ptr{ columns->Item(m_str_name) };
-    std::string str_Cache = IRastrPayload(IRastrVariantPtr(col_ptr->Property(FieldProperties::Cache))->String()).Value();
-    return str_Cache;
+    return IRastrPayload(IRastrVariantPtr(col_ptr->Property(FieldProperties::Cache))->String()).Value();
 }
 
 std::string RCol::unit() const{
@@ -190,8 +176,7 @@ std::string RCol::unit() const{
     IRastrTablePtr table{ tablesx->Item(m_table_name) };
     IRastrColumnsPtr columns{ table->Columns() };
     IRastrColumnPtr col_ptr{ columns->Item(m_str_name) };
-    std::string str_unit = IRastrPayload(IRastrVariantPtr(col_ptr->Property(FieldProperties::Unit))->String()).Value();
-    return str_unit;
+    return IRastrPayload(IRastrVariantPtr(col_ptr->Property(FieldProperties::Unit))->String()).Value();
 }
 
 std::string RCol::Prop(FieldProperties _Prop) const{
@@ -199,11 +184,12 @@ std::string RCol::Prop(FieldProperties _Prop) const{
     IRastrTablePtr table{ tablesx->Item(m_table_name) };
     IRastrColumnsPtr columns{ table->Columns() };
     IRastrColumnPtr col_ptr{ columns->Item(m_str_name) };
-    std::string str_prop = IRastrPayload(IRastrVariantPtr(col_ptr->Property(_Prop))->String()).Value();
-    return str_prop;
+    return IRastrPayload(IRastrVariantPtr(col_ptr->Property(_Prop))->String()).Value();
 }
 
-void RCol::calc(std::string expression , std::string selection) const{
+void RCol::calc(const std::string& expression,
+                const std::string& selection) const{
+
     IRastrTablesPtr tablesx{ pqastra_->getRastr()->Tables() };
     IRastrTablePtr table{ tablesx->Item(m_table_name) };
     IRastrResultVerify(table->SetSelection(selection));
