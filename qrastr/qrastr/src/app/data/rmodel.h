@@ -27,7 +27,7 @@ class RModel : public QAbstractTableModel
     std::unique_ptr<RData> up_rdata;
     CUIForm* pUIForm_;
 public:
-    //Справочные данные (загружаются в populateDataFromRastr):
+    //Справочные данные:
     //индекс -> список строк: ex. БАЗА|Ген|Нагр|Ген+
     std::map<std::size_t,QStringList> m_enum_;
     //колонки со ссылкой: код -> отображаемое имя: ex.RefCol -> node[na]
@@ -39,6 +39,7 @@ signals:
 public slots:
     void slot_DataChanged(std::string _t_name, int row_from,int col_from ,int row_to,int col_to);
     void slot_BeginResetModel(std::string _t_name);
+    ///@todo Нужна ли загрузка справочных данных rebuildBackInfo() при сбросе модели?
     void slot_EndResetModel(std::string _t_name);
     void slot_BeginInsertRow(std::string _t_name,int first, int last);
     void slot_EndInsertRow(std::string _t_name);
@@ -91,33 +92,20 @@ public:
 private:
     bool isBinary(const QByteArray& index) const;
     bool m_emitSignals;
-    /**
-     * @brief Пересоздаёт RData: читает структуру колонок из плагина.
-     *        Нужно при первом открытии и при ChangeTable.
-     *        После вызова mm_nameref_ / m_enum_ / pnparray_ ещё НЕ заполнены.
-     */
-    bool rebuildStructure();
-    /**
-     * @brief Перестраивает справочники m_enum_, mm_nameref_, mm_superenum_.
-     *        Требует, чтобы rebuildStructure() уже был вызван.
-     *        Нужно при первом открытии и при ChangeTable.
-     */
-    bool rebuildLookups();
-    /**
-     * @brief Обновляет только указатель на QDataBlock через RTDM.
-     *        Вызывается при slot_EndResetModel — данные изменились,
-     *        структура осталась прежней.
-     */
-    bool reloadData();
+    /// @brief Пересоздаёт RData: читает структуру колонок из плагина.
+    void rebuildStructure();
+    /// @brief Перестраивает справочники.
+    void rebuildBackInfo();
+    /// @brief Обновляет только указатель на QDataBlock через RTDM.
+    void reloadData();
     // Return matching conditional format color/font or invalid value, otherwise.
     // Only format roles are expected in role (Qt::ItemDataRole)
     QVariant getMatchingCondFormat(std::size_t row, std::size_t column, const QString& value, int role) const;
     QVariant getMatchingCondFormat(const std::map<std::size_t, std::vector<CondFormat>>& mCondFormats, std::size_t row, std::size_t column, const QString& value, int role) const;
-    /** @note Условное форматирование:
-    *   m_mCondFormats   — правила форматирования по значению ячейки
-    *   m_mRowIdFormats  — правила по идентификатору строки
-    */
+    /// @note Условное форматирование:
+    /// 1. Правила форматирования по значению ячейки
     std::map<std::size_t, std::vector<CondFormat>> m_mRowIdFormats;
+    /// 2. Правила по идентификатору строки
     std::map<std::size_t, std::vector<CondFormat>> m_mCondFormats;
 
 

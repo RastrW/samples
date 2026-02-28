@@ -106,14 +106,21 @@ RtabWidget::RtabWidget(QAstra* pqastra,CUIForm UIForm, RTablesDataManager* pRTDM
 
     CreateModel(pqastra,&m_UIForm);
 
-    connect(m_pRTDM, &RTablesDataManager::sig_dataChanged,this->prm.get(), &RModel::slot_DataChanged);
-    connect(m_pRTDM, &RTablesDataManager::sig_BeginResetModel,this->prm.get(), &RModel::slot_BeginResetModel);
-    connect(m_pRTDM, &RTablesDataManager::sig_EndResetModel,this->prm.get(), &RModel::slot_EndResetModel);
-    connect(m_pRTDM, &RTablesDataManager::sig_BeginInsertRow,this->prm.get(), &RModel::slot_BeginInsertRow);
-    connect(m_pRTDM, &RTablesDataManager::sig_EndInsertRow,this->prm.get(), &RModel::slot_EndInsertRow);
+    connect(m_pRTDM, &RTablesDataManager::sig_dataChanged,this->prm.get(),
+            &RModel::slot_DataChanged);
+    connect(m_pRTDM, &RTablesDataManager::sig_BeginResetModel,this->prm.get(),
+            &RModel::slot_BeginResetModel);
+    connect(m_pRTDM, &RTablesDataManager::sig_EndResetModel,this->prm.get(),
+            &RModel::slot_EndResetModel);
+    connect(m_pRTDM, &RTablesDataManager::sig_BeginInsertRow,this->prm.get(),
+            &RModel::slot_BeginInsertRow);
+    connect(m_pRTDM, &RTablesDataManager::sig_EndInsertRow,this->prm.get(),
+            &RModel::slot_EndInsertRow);
 
-    connect(m_pRTDM, &RTablesDataManager::sig_BeginResetModel,this, &RtabWidget::slot_beginResetModel);
-    connect(m_pRTDM, &RTablesDataManager::sig_EndResetModel,this,  &RtabWidget::slot_endResetModel);
+    connect(m_pRTDM, &RTablesDataManager::sig_BeginResetModel,this,
+            &RtabWidget::slot_beginResetModel);
+    connect(m_pRTDM, &RTablesDataManager::sig_EndResetModel,this,
+            &RtabWidget::slot_endResetModel);
 }
 
 QWidget* RtabWidget::createDockContent() {
