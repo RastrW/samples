@@ -107,6 +107,4 @@ private:
     std::map<std::size_t, std::vector<CondFormat>> m_mRowIdFormats;
     /// 2. Правила по идентификатору строки
     std::map<std::size_t, std::vector<CondFormat>> m_mCondFormats;
-
-
 };

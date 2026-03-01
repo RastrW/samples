@@ -19,7 +19,6 @@
 #include "CondFormatManager.h"
 #include "condformatjson.h"
 #include "linkedform.h"
-#include "customFilterCondition.h"
 
 #include <QtitanGrid.h>
 #include <utils.h>
@@ -27,34 +26,40 @@
 #include <DockManager.h>
 #include <QCloseEvent>
 
+
 #include "formselection.h"
 #include "formgroupcorrection.h"
 #include "formexportcsv.h"
 #include "formimportcsv2.h"
 #include "qmcr/pyhlp.h"
 #include <QToolBar>
-
-namespace ads{ class CDockManager; }
+#include "linkedformcontroller.h"
+#include "rtableview.h"
+#include "ColPropForm.h"
 
 RtabWidget::RtabWidget(QAstra* pqastra,CUIForm UIForm, RTablesDataManager* pRTDM,
                        ads::CDockManager* pDockManager, QWidget *parent)
-    : QWidget(parent)
+    : QWidget(parent),
+    m_UIForm {UIForm},
+    m_pqastra {pqastra},
+    m_pRTDM {pRTDM},
+    m_DockManager {pDockManager}
 {
-    m_UIForm = UIForm;
     ptv = new RTableView(this);
 
+    //  Настройка QTitan Grid
     Grid::loadTranslation();
     m_grid = new Qtitan::Grid(this);
-    if (m_UIForm.Vertical())
+    if (m_UIForm.Vertical()){
         m_grid->setViewType(Qtitan::Grid::TableViewVertical);
-    else
+    }
+    else{
         m_grid->setViewType(Qtitan::Grid::TableView);
+    }
 
     view = m_grid->view< Qtitan::GridTableView>();
-
     view->options().setGridLines(Qtitan::LinesBoth);
     view->options().setGridLineWidth(1);
-
     view->tableOptions().setColumnAutoWidth(true);
     //user can select several cells at time. Hold shift key to select multiple cells.
     view->options().setSelectionPolicy(GridViewOptions::MultiCellSelection);
@@ -68,15 +73,14 @@ RtabWidget::RtabWidget(QAstra* pqastra,CUIForm UIForm, RTablesDataManager* pRTDM
     view->options().setScrollRowStyle(Qtitan::ScrollItemStyle::ScrollByItem);
     // Enables or disables wait cursor if grid is busy for lengthy operations with data like sorting or grouping.
     view->options().setShowWaitCursor(true);
-
     view->options().setRubberBandSelection(true);        // Выделение "резинкой"
     view->tableOptions().setColumnsHeader(true);
     view->tableOptions().setRowsQuickSelection(true);
-
     ///@todo Вынести в опцию контекстного меню (example MultiSelection)
     view->tableOptions().setRowFrozenButtonVisible(true);
     view->tableOptions().setFrozenPlaceQuickSelection(true);
 
+    //  Горячие клавиши
     QShortcut *sC_CTRL_I = new QShortcut( QKeySequence(Qt::CTRL | Qt::Key_I),
                                          this,nullptr,nullptr, Qt::WidgetWithChildrenShortcut);
     QShortcut *sC_CTRL_D = new QShortcut( QKeySequence(Qt::CTRL | Qt::Key_D), this);
@@ -88,15 +92,10 @@ RtabWidget::RtabWidget(QAstra* pqastra,CUIForm UIForm, RTablesDataManager* pRTDM
     connect(sC_CTRL_R, &QShortcut::activated, this, &RtabWidget::DuplicateRow_qtitan);
     connect(sC_CTRL_D, &QShortcut::activated, this, &RtabWidget::deleteRow_qtitan);
 
-    m_selection = "";
-    m_pqastra = pqastra;
-    m_pRTDM = pRTDM;
-    m_DockManager = pDockManager;
-
     resize(800,500);
     setWindowFlags(Qt::WindowMinimizeButtonHint | Qt::WindowMinMaxButtonsHint | Qt::WindowCloseButtonHint);
     setWindowModality(Qt::ApplicationModal);
-
+    //  Grid-соединения
     connect(this, &RtabWidget::CondFormatsModified,this, &RtabWidget::onCondFormatsModified);
 
     //QTitan
@@ -121,23 +120,51 @@ RtabWidget::RtabWidget(QAstra* pqastra,CUIForm UIForm, RTablesDataManager* pRTDM
             &RtabWidget::slot_beginResetModel);
     connect(m_pRTDM, &RTablesDataManager::sig_EndResetModel,this,
             &RtabWidget::slot_endResetModel);
+
+    m_linkedFormCtrl = std::make_unique<LinkedFormController>(
+        m_pqastra,
+        m_pRTDM,
+        m_DockManager,
+        view,
+        prm.get(),
+        m_UIForm,
+        this);
 }
 
-QWidget* RtabWidget::createDockContent() {
-    setupToolbar();
-
+QWidget* RtabWidget::createDockContent(bool addToolbar) {
     QWidget* wrapper = new QWidget(this);
     QVBoxLayout* layout = new QVBoxLayout(wrapper);
     layout->setContentsMargins(0, 0, 0, 0);
     layout->setSpacing(0);
-    layout->addWidget(m_toolbar);
-    layout->addWidget(m_grid);
+
+    if (addToolbar){
+        setupToolbar();
+        layout->addWidget(m_toolbar);
+        layout->addWidget(m_grid);
+    }else{
+        layout->addWidget(m_grid);
+    }
+
     return wrapper;
 }
 
-void RtabWidget::setPyHlp(std::shared_ptr<PyHlp> pPyHlp)
-{
+void RtabWidget::setPyHlp(std::shared_ptr<PyHlp> pPyHlp){
     pPyHlp_ = pPyHlp;
+    if (m_linkedFormCtrl){
+        m_linkedFormCtrl->setPyHlp(pPyHlp);
+    }
+}
+
+int RtabWidget::getLongValue(const std::string& key, long row){
+    int col = prm->getRdata()->mCols_.at(key);
+    return std::visit(ToLong(), prm->getRdata()->pnparray_->Get(row,col));
+}
+
+void RtabWidget::applyLinkedFormFromController(const LinkedForm& lf)
+{
+    // Точка входа для родительского LinkedFormController:
+    // он вызывает этот метод на дочернем RtabWidget.
+    m_linkedFormCtrl->applyLinkedForm(lf);
 }
 
 void RtabWidget::setupToolbar() {
@@ -161,12 +188,15 @@ void RtabWidget::setupToolbar() {
 
 void RtabWidget::closeEvent(QCloseEvent *event)
 {
-    qDebug()<<"RtabWidget::Destructor "<< "[" <<m_UIForm.Name().c_str() << "]";
-    QWidget::closeEvent(event);
-    for(auto conn : m_lf.vconn)
-        disconnect(conn);
+    qDebug() << "RtabWidget::closeEvent [" << m_UIForm.Name().c_str() << "]";
 
-    this->prm->getRdata()->pnparray_.reset();
+    // Контроллер отключает Qt-соединения связанных форм
+    m_linkedFormCtrl->disconnectAll();
+
+    // Освобождаем DataBlock — модель перестаёт держать shared_ptr
+    prm->getRdata()->pnparray_.reset();
+
+    QWidget::closeEvent(event);
 };
 
 void RtabWidget::OnClose()
@@ -176,7 +206,7 @@ void RtabWidget::OnClose()
 
 void RtabWidget::CreateModel(QAstra* pqastra, CUIForm* pUIForm)
 {
-    prm = std::unique_ptr<RModel>(new RModel(this, pqastra, m_pRTDM ));
+    prm = std::make_unique<RModel>(this, pqastra, m_pRTDM);
     prm->setForm(pUIForm);
     prm->populateDataFromRastr();
 
@@ -187,12 +217,13 @@ void RtabWidget::CreateModel(QAstra* pqastra, CUIForm* pUIForm)
 
     //Порядок колонок как в форме
     int vi = 0;
-    for (const auto &f : pUIForm->Fields()){
+    for (const auto& f : pUIForm->Fields()){
         for (const RCol& rcol : *prm->getRdata()){
-            if (f.Name() == rcol. getStrName()){
-                column_qt = (Qtitan::GridTableColumn *)view->getColumn(rcol.getIndex());
+            if (f.Name() == rcol.getStrName()){
+                column_qt = static_cast<GridTableColumn*>(
+                    view->getColumn(rcol.getIndex()));
                 column_qt->setVisualIndex(vi++);
-                continue;
+                break;
             }
         }
     }
@@ -202,19 +233,19 @@ void RtabWidget::CreateModel(QAstra* pqastra, CUIForm* pUIForm)
     //    static_cast<GridTableColumn *>(view->getColumn(i))->setMenuButtonVisible(true);
 
     // Заливка колонок цветом по правилам CondFormat
-    for (RCol& rcol : *prm->getRdata())
+    for (RCol& rcol : *prm->getRdata()){
         m_MapcondFormatVector.emplace(rcol.getIndex(), std::vector<CondFormat>());
+    }
 
     std::map<int, std::vector<CondFormat>> cfv;
-
     CondFormatJson cfj(prm->getRdata()->t_name_ , prm->getRdata()->vCols_ ,cfv );
     cfj.from_json();
-    for (auto &[key,val] : cfj.get_mcf())
-        if (m_MapcondFormatVector.find(key) != m_MapcondFormatVector.end() )
-        {
+    for (auto &[key,val] : cfj.get_mcf()){
+        if (m_MapcondFormatVector.find(key) != m_MapcondFormatVector.end() ){
             m_MapcondFormatVector.at(key) = val;
             prm->setCondFormats(false, key, val);
         }
+    }
 
     view->endUpdate();
 
@@ -235,8 +266,10 @@ void RtabWidget::SetEditor(RCol& rcol)
 {
     view->beginUpdate();
     column_qt = (Qtitan::GridTableColumn *)view->getColumn(rcol.getIndex());
-    if (column_qt == nullptr)
+    if (!column_qt){
+        view->endUpdate();
         return;
+    }
 
     column_qt->setVisible(!rcol.isHidden());
 
@@ -256,55 +289,52 @@ void RtabWidget::SetEditor(RCol& rcol)
          column_qt->setEditorType(GridEditor::Numeric);
     }
     if (rcol.getComPropTT() == enComPropTT::COM_PR_INT &&
-        !rcol.getNameRef().empty() && contains(prm->mm_nameref_,rcol.getIndex()))
-    {
-        if (!rcol.isDirectCode())
-        {
+        !rcol.getNameRef().empty() && contains(prm->mm_nameref_,rcol.getIndex())){
+        if (!rcol.isDirectCode()){
             column_qt->setEditorType(GridEditor::ComboBox);
             //QStringList list = prm->mnamerefs_.at(rcol.index);
             QStringList list;
-            for (auto val : prm->mm_nameref_.at(rcol.getIndex()))
+            for (auto val : prm->mm_nameref_.at(rcol.getIndex())){
                 list.append(val.second.c_str());
+            }
             column_qt->editorRepository()->setDefaultValue(list.at(0), Qt::EditRole);
             column_qt->editorRepository()->setDefaultValue(list, (Qt::ItemDataRole)Qtitan::ComboBoxRole);
         }
-        else
-        {
+        else{
             column_qt->setEditorType(GridEditor::Numeric);
         }
     }
     if (rcol.getComPropTT() == enComPropTT::COM_PR_SUPERENUM &&
-        !rcol.getNameRef().empty() && contains(prm->mm_superenum_,rcol.getIndex()) )
-    {
-        //rcol.directcode = true;         // DEBUG
-
-        if (!rcol.isDirectCode())
-        {
+        !rcol.getNameRef().empty() && contains(prm->mm_superenum_,rcol.getIndex()) ){
+        if (!rcol.isDirectCode()){
             column_qt->setEditorType(GridEditor::ComboBox);
             QStringList list;
-            for (auto val : prm->mm_superenum_.at(rcol.getIndex()))
+            for (auto val : prm->mm_superenum_.at(rcol.getIndex())){
                 list.append(val.second.c_str());
+            }
             column_qt->editorRepository()->setDefaultValue(list.at(0), Qt::EditRole);
             column_qt->editorRepository()->setDefaultValue(list, (Qt::ItemDataRole)Qtitan::ComboBoxRole);
         }
-        else
+        else{
             column_qt->setEditorType(GridEditor::Numeric);
+        }
     }
 
-    if (rcol.getComPropTT() == enComPropTT::COM_PR_REAL)
-    {
-        int prec = std::atoi(rcol.prec().c_str());
-
+    if (rcol.getComPropTT() == enComPropTT::COM_PR_REAL){
+        const int prec = std::atoi(rcol.prec().c_str());
         column_qt->setEditorType(GridEditor::Numeric);
-        ((Qtitan::GridNumericEditorRepository *)column_qt->editorRepository())->setMinimum(-100000);
-        ((Qtitan::GridNumericEditorRepository *)column_qt->editorRepository())->setMaximum(100000);
-        ((Qtitan::GridNumericEditorRepository *)column_qt->editorRepository())->setDecimals(prec);
+        auto* repo = static_cast<GridNumericEditorRepository*>(
+            column_qt->editorRepository());
+        repo->setMinimum(-100000);
+        repo->setMaximum( 100000);
+        repo->setDecimals(prec);
     }
 
     if (rcol.getComPropTT() == enComPropTT::COM_PR_BOOL)
     {
         column_qt->setEditorType(GridEditor::CheckBox);
-        ((Qtitan::GridCheckBoxEditorRepository *)column_qt->editorRepository())->setAppearance(GridCheckBox::StyledAppearance);
+        ((Qtitan::GridCheckBoxEditorRepository *)column_qt->editorRepository())->
+            setAppearance(GridCheckBox::StyledAppearance);
     }
     view->endUpdate();
 }
@@ -314,25 +344,39 @@ void RtabWidget::on_calc_begin()
     ///@todo something
     //view->beginUpdate();
 }
+
 void RtabWidget::on_calc_end()
 {
    ///@todo  something
    // view->endUpdate();
 }
 
+void RtabWidget::widebyshabl()
+{
+    setTableView(*ptv,*prm);
+    setTableView(*view,*prm);
+}
+
+void RtabWidget::widebydata()
+{
+    ptv->resizeColumnsToContents();
+    view->tableOptions().setColumnAutoWidth(true);
+}
+
 void RtabWidget::setTableView(QTableView& tv, RModel& mm, int multiplier  )
 {
     // Ширина колонок
     view->beginUpdate();
-    for (auto cw : mm.ColumnsWidth())
+    for (auto cw : mm.ColumnsWidth()){
         tv.setColumnWidth(std::get<0>(cw),std::get<1>(cw)*multiplier);
+    }
     view->endUpdate();
 }
+
 void RtabWidget::setTableView(Qtitan::GridTableView& tv, RModel& mm, int multiplier  )
 {
     tv.beginUpdate();
     view->tableOptions().setColumnAutoWidth(false);
-    // Ширина колонок
     // Выравнивание
     for (auto cw : mm.ColumnsWidth())
     {
@@ -342,7 +386,6 @@ void RtabWidget::setTableView(Qtitan::GridTableView& tv, RModel& mm, int multipl
     tv.endUpdate();
 }
 
-// QTitanGrid: ContextMenu
 void RtabWidget::contextMenu(ContextMenuEventArgs* args)
 {
     m_contextMenuColumn = args->hitInfo().columnIndex();
@@ -376,11 +419,6 @@ void RtabWidget::contextMenu(ContextMenuEventArgs* args)
 #endif
 
     args->contextMenu()->addSeparator();
-
-    QAction* insRowAct = new QAction((QIcon(":/images/Rastr3_grid_insrow_16x16.png"),tr("Вставить"),this));
-    insRowAct->setShortcut(tr("Ctrl+I"));
-    insRowAct->setStatusTip(tr("Вставить строку"));
-    insRowAct->setShortcutContext(Qt::WidgetWithChildrenShortcut);
 
     ///@todo
     // В Qtitane не работают шорткаты, хотя del встроенный работает.
@@ -440,13 +478,11 @@ void RtabWidget::contextMenu(ContextMenuEventArgs* args)
         });
     }
 
-    QMenu *menu_linked_forms;
-    menu_linked_forms = ConstructLinkedFormsMenu( m_UIForm.Name());
-    args->contextMenu()->addMenu(menu_linked_forms);
-
-    QMenu *menu_linked_macro;
-    menu_linked_macro = ConstructLinkedMacroMenu( m_UIForm.Name());
-    args->contextMenu()->addMenu(menu_linked_macro);
+    //  Подменю «Связанные формы» и «Макрос»
+    args->contextMenu()->addMenu(
+        m_linkedFormCtrl->buildLinkedFormsMenu(m_contextMenuRow));
+    args->contextMenu()->addMenu(
+        m_linkedFormCtrl->buildLinkedMacroMenu(m_contextMenuRow));
 
     args->contextMenu()->addAction(condFormatAction);
     connect(condFormatAction, &QAction::triggered, this, [&]() {
@@ -454,213 +490,10 @@ void RtabWidget::contextMenu(ContextMenuEventArgs* args)
     });
 }
 
-QMenu* RtabWidget::ConstructLinkedFormsMenu(std::string form_name)
+void RtabWidget::onfocusRowChanged(int /*row_old*/, int row_new)
 {
-    QMenu *menu=new QMenu(this);
-    menu->setTitle("Связанные формы");
-
-    std::vector<int> vbindvals;
-    auto table_context_form = m_pRTDM->get("formcontext","");
-
-    size_t ind = 0;
-    for (int irow = 0; irow<table_context_form->RowsCount();irow++)
-    {
-        std::string form = std::get<std::string>(table_context_form->Get(irow,0));
-        if (form_name == form)
-        {
-            LinkedForm lf;
-
-            lf.linkedform = std::visit(ToString(),table_context_form->Get(irow,1));
-            lf.linkedname = std::visit(ToString(),table_context_form->Get(irow,2));
-            lf.selection  = std::visit(ToString(),table_context_form->Get(irow,3));
-            lf.bind       = std::visit(ToString(),table_context_form->Get(irow,4));
-            lf.pbaseform = this;
-            //lf.FillBindVals();
-            for (const auto key : split( lf.bind ,','))
-            {
-                long val = getLongValue(key, m_contextMenuRow);
-                lf.vbindvals.push_back(val);
-            }
-
-            QAction* LinkedFormAction = new QAction(lf.linkedname.c_str(), menu);
-            menu->addAction(LinkedFormAction);
-            connect(LinkedFormAction, &QAction::triggered, [this, lf] {
-                onOpenLinkedForm(lf); });
-        }
-    }
-
-    return menu;
-}
-
-QMenu* RtabWidget::ConstructLinkedMacroMenu(std::string form_name)
-{
-    QMenu *menu=new QMenu(this);
-    menu->setTitle("Макрос");
-
-    std::vector<int> vbindvals;
-    auto table_context_macro = m_pRTDM->get("macrocontext","");
-    size_t ind = 0;
-    for (int irow = 0; irow<table_context_macro->RowsCount();irow++)
-    {
-        std::string form = std::visit(ToString(),table_context_macro->Get(irow,0));
-        if (form_name == form)
-        {
-            long form_type = std::visit(ToLong(),table_context_macro->Get(irow,6));
-            long defappendix  = std::visit(ToLong(),table_context_macro->Get(irow,4));
-
-            if (form_type == 0 && defappendix )
-            {
-                LinkedMacro lm;
-                lm.col = std::visit(ToString(),table_context_macro->Get(irow,1));
-                lm.macrofile = std::visit(ToString(),table_context_macro->Get(irow,2));
-                lm.macrodesc  = std::visit(ToString(),table_context_macro->Get(irow,3));
-                lm.addstr       = std::visit(ToString(),table_context_macro->Get(irow,5));
-                lm.pbaseform = this;
-
-                QAction* LinkedFormAction = new QAction(lm.macrodesc.c_str(), menu);
-                menu->addAction(LinkedFormAction);
-                connect(LinkedFormAction, &QAction::triggered, [this, lm] {
-                    onOpenLinkedMacro(lm); });
-            }
-        }
-    }
-
-    return menu;
-}
-
-void RtabWidget::SetLinkedForm( LinkedForm _lf)
-{
-    m_lf = _lf;
-    //Строим строку выборки из LinkedForm
-    std::string Selection = _lf.get_selection_result();
-    IRastrTablesPtr tablesx{ m_pqastra->getRastr()->Tables() };
-    IRastrPayload tablecount{ tablesx->Count() };
-    IRastrTablePtr table{ tablesx->Item(prm->getRdata()->t_name_)};
-    //передаём выборку в плагин
-    IPlainRastrResult* pres = table->SetSelection(Selection);
-
-    DataBlock<FieldVariantData> variant_block;
-    //Получаем индексы подходящих строк через
-    IRastrPayload keys = table->Key();
-    IRastrResultVerify(table->DataBlock(keys.Value(), variant_block));
-    auto vind = variant_block.IndexesVector();
-
-    GridFilterGroupCondition* groupCondition = new GridFilterGroupCondition(view->filter());
-    //Создаём CustomFilterCondition для QTitan Grid с этими индексами
-    CustomFilterCondition* condition = new CustomFilterCondition(view->filter());
-
-    groupCondition->addCondition(condition);
-    for (long rind : vind)
-        condition->addRow(rind);
-
-    view->filter()->setCondition(groupCondition, true );
-    //Активируем фильтр — Grid показывает только нужные строки.
-    view->filter()->setActive(true);
-    view->showFilterPanel();
-}
-
-
-void RtabWidget::onOpenLinkedForm( LinkedForm _lf)
-{
-    CUIForm* pUIForm   = m_pRTDM->getForm(_lf.linkedform);
-    if (pUIForm == nullptr)
-        return;
-
-    RtabWidget *prtw = new RtabWidget(m_pqastra,*pUIForm,m_pRTDM,m_DockManager,this);
-    _lf.vconn.push_back
-        (connect(view, &GridTableView::focusRowChanged,
-         prtw, &RtabWidget::onfocusRowChanged));
-
-    prtw->SetLinkedForm(_lf);
-
-    auto dw = new ads::CDockWidget( stringutils::MkToUtf8(pUIForm->Name()).c_str(), this);
-    dw->setWidget(prtw->m_grid);
-    connect(dw, &ads::CDockWidget::closed, prtw, &RtabWidget::OnClose);
-
-    auto area = m_DockManager->addDockWidgetTab(ads::BottomAutoHideArea, dw);
-    dw->setFeature(ads::CDockWidget::DockWidgetDeleteOnClose, true);
-    prtw->show();
-}
-
-void RtabWidget::onOpenLinkedMacro( LinkedMacro _lm)
-{
-    qDebug()<<"call linked macro:"<<_lm.macrofile.c_str();
-
-    //Макросы ищем в \Data\contextmacro заменяя расчширение .vbs -> .py
-    std::filesystem::path path_macrofile = QDir::currentPath().toStdString().c_str();
-    path_macrofile.append("contextmacro");
-    path_macrofile.append(_lm.macrofile);
-    path_macrofile.replace_extension(".py");
-
-    if( !fs::exists(path_macrofile.c_str()))
-    {
-        qDebug()<<"context macro not found:"<<path_macrofile.c_str();
-        return;
-    }
-
-    std::ifstream file(path_macrofile);
-
-    // Чтение файла в строку
-    std::string content((std::istreambuf_iterator<char>(file)),
-                        std::istreambuf_iterator<char>());
-
-    // В начало макроса добавим индекс строки и информацию для отладки
-    std::string debug_info = fmt::format("rastr.print(f\"run contextmacro: {}[row={}]\")\n",_lm.macrofile,m_contextMenuRow).c_str();
-    std::string aRow{"aRow="};
-    aRow.append(std::to_string(m_contextMenuRow));
-    aRow.append("\n");
-    content.insert(0,aRow);
-    content.insert(0,debug_info);
-
-    // тестовый макрос: узлы -> Отметить остров
-    const PyHlp::enPythonResult PythonResult{ pPyHlp_->Run( content.data() ) };
-
-}
-
-void RtabWidget::SetDirectCodeEntry(std::size_t column)
-{
-    RCol* prcol = prm->getRCol(column);
-    prcol->invertDirectCodeStatus();
-    SetEditor(*prcol);
-}
-void RtabWidget::editCondFormats(std::size_t column)
-{
-    std::vector<CondFormat> condFormats;
-    CondFormat condFormat;
-    CondFormatManager condFormatDialog(m_MapcondFormatVector[column],
-                                            "UTF-8", this);
-
-    QString title= prm->headerData(static_cast<int>(column), Qt::Horizontal, Qt::DisplayRole).toString();
-    condFormatDialog.setWindowTitle(tr("Conditional formats for \"%1\"").
-                                    arg(prm->headerData(static_cast<int>(column), Qt::Horizontal, Qt::DisplayRole).toString()));
-    if (condFormatDialog.exec()) {
-        std::vector<CondFormat> condFormatVector = condFormatDialog.getCondFormats();
-        prm->setCondFormats(false, column, condFormatVector);
-        m_MapcondFormatVector.at(column) = condFormatVector;
-
-        emit CondFormatsModified();
-    }
-}
-void RtabWidget::onCondFormatsModified()
-{
-    CondFormatJson cfj(prm->getRdata()->t_name_ , prm->getRdata()->vCols_ ,m_MapcondFormatVector );
-    cfj.save_json();
-}
-
-void RtabWidget::onfocusRowChanged( int _row_old,int _row_new)
-{
-    qDebug()<<"Linked form catch rowchanged: old row" <<_row_old<< ", row new"<<_row_new;
-
-    m_lf.row = _row_new;
-    m_lf.FillBindVals();
-    SetLinkedForm(m_lf);
-}
-
-void RtabWidget::onItemPressed( CellClickEventArgs* _args)
-{
-    int row = _args->cell().rowIndex();
-    int col = _args->cell().columnIndex();
-    qDebug()<<"Pressed:" <<row<< ","<<col;
+    qDebug() << "RtabWidget::onfocusRowChanged: row =" << row_new;
+    m_linkedFormCtrl->onParentRowChanged(row_new);
 }
 
 void RtabWidget::AddRow()
@@ -697,17 +530,54 @@ void RtabWidget::deleteRow_qtitan()
     view->endUpdate();
 }
 
-
-void RtabWidget::widebyshabl()
+void RtabWidget::editCondFormats(std::size_t column)
 {
-    setTableView(*ptv,*prm);
-    setTableView(*view,*prm);
+    std::vector<CondFormat> condFormats;
+    CondFormat condFormat;
+    CondFormatManager condFormatDialog(m_MapcondFormatVector[column],
+                                       "UTF-8", this);
+
+    QString title= prm->headerData(static_cast<int>(column), Qt::Horizontal, Qt::DisplayRole).toString();
+    condFormatDialog.setWindowTitle(tr("Conditional formats for \"%1\"").
+                                    arg(prm->headerData(static_cast<int>(column), Qt::Horizontal, Qt::DisplayRole).toString()));
+    if (condFormatDialog.exec()) {
+        std::vector<CondFormat> condFormatVector = condFormatDialog.getCondFormats();
+        prm->setCondFormats(false, column, condFormatVector);
+        m_MapcondFormatVector.at(column) = condFormatVector;
+
+        emit CondFormatsModified();
+    }
 }
 
-void RtabWidget::widebydata()
+void RtabWidget::onCondFormatsModified()
 {
-    ptv->resizeColumnsToContents();
-    view->tableOptions().setColumnAutoWidth(true);
+    CondFormatJson cfj(prm->getRdata()->t_name_ , prm->getRdata()->vCols_ ,m_MapcondFormatVector );
+    cfj.save_json();
+}
+
+
+void RtabWidget::SetSelection(std::string Selection)
+{
+    m_selection = Selection;
+    IRastrTablesPtr tablesx{ m_pqastra->getRastr()->Tables() };
+    IRastrTablePtr table{ tablesx->Item(prm->getRdata()->t_name_) };
+    IPlainRastrResult* pres = table->SetSelection(Selection);
+
+    DataBlock<FieldVariantData> variant_block;
+    IRastrPayload keys = table->Key();
+    IRastrResultVerify(table->DataBlock(keys.Value(), variant_block));
+    auto vind = variant_block.IndexesVector();
+    for(int ir = 0 ; ir < prm->rowCount() ; ir++)
+    {
+        ptv->setRowHidden(ir,true);
+        // TO DO: add hide rows for view
+    }
+
+    for (IndexT &ind : vind)
+    {
+        qDebug() << ind;
+        ptv->setRowHidden(ind,false);
+    }
 }
 
 void RtabWidget::OpenColPropForm()
@@ -744,37 +614,27 @@ void RtabWidget::OpenImportCSVForm()
     ImportCsv->show();
 }
 
-void RtabWidget::SetSelection(std::string Selection)
+void RtabWidget::SetDirectCodeEntry(std::size_t column)
 {
-    m_selection = Selection;
-    IRastrTablesPtr tablesx{ m_pqastra->getRastr()->Tables() };
-    IRastrPayload tablecount{ tablesx->Count() };
-    IRastrTablePtr table{ tablesx->Item(prm->getRdata()->t_name_) };
-    IPlainRastrResult* pres = table->SetSelection(Selection);
-
-    DataBlock<FieldVariantData> variant_block;
-    IRastrPayload keys = table->Key();
-    IRastrResultVerify(table->DataBlock(keys.Value(), variant_block));
-    auto vind = variant_block.IndexesVector();
-    for(int ir = 0 ; ir < prm->rowCount() ; ir++)
-    {
-        ptv->setRowHidden(ir,true);
-        // TO DO: add hide rows for view
-    }
-
-    for (IndexT &ind : vind)
-    {
-        qDebug() << ind;
-        ptv->setRowHidden(ind,false);
-    }
+    RCol* prcol = prm->getRCol(column);
+    prcol->invertDirectCodeStatus();
+    SetEditor(*prcol);
 }
 
-std::tuple<int,double> RtabWidget::GetSumSelected()
+void RtabWidget::onItemPressed( CellClickEventArgs* _args)
 {
-    // QModelIndexList selected = this->ptv->selectionModel()->selectedIndexes();
+    int row = _args->cell().rowIndex();
+    int col = _args->cell().columnIndex();
+    qDebug()<<"Pressed:" <<row<< ","<<col;
+}
+
+std::tuple<int,double>
+RtabWidget::GetSumSelected()
+{
     QModelIndexList selected = view->selection()->selectedIndexes();
-    if (selected.empty())
-        return (std::make_tuple(0,0));
+    if (selected.empty()){
+        return {0, 0.0};
+    }
 
     int number = 0;
     double total = 0;
@@ -788,7 +648,7 @@ std::tuple<int,double> RtabWidget::GetSumSelected()
             number++;
         }
     }
-    return std::make_tuple(number,total);
+    return {number,total};
 }
 
 void RtabWidget::slot_beginResetModel(std::string tname)
@@ -812,27 +672,17 @@ void RtabWidget::slot_endResetModel(std::string tname)
     if (this->m_UIForm.TableName() != tname)
         return;
 
-    //view->setModel(prm.get());
-    //SetEditors();
-
     // Установим видимые столбцы
     int ncols = view->getColumnCount();
     int sz = (prm->getRdata())->size();
     qDebug()<<"onRTDM_EndResetModel"<<QString::fromStdString(tname)<<": ncols(view) = "<<ncols;
-    for (const RCol& rcol : *prm->getRdata())
-    {
+    for (const RCol& rcol : *prm->getRdata()){
         column_qt = (Qtitan::GridTableColumn *)view->getColumn(rcol.getIndex());
         column_qt->setVisible(false);
-        if (contains(m_ColumnsVisible, column_qt->caption()))
-        {
-            //qDebug()<<rcol.index<<":"<<column_qt->caption()<<" - "<<column_qt->isVisible();
+        if (contains(m_ColumnsVisible, column_qt->caption())){
             column_qt->setVisible(m_ColumnsVisible.at(column_qt->caption()));
         }
     }
     view->endUpdate();
 }
 
-int RtabWidget::getLongValue(const std::string& key, long row){
-    int col = prm->getRdata()->mCols_.at(key);
-    return std::visit(ToLong(), prm->getRdata()->pnparray_->Get(row,col));
-}

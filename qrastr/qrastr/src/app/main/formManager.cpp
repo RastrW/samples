@@ -8,6 +8,8 @@
 #include <spdlog/spdlog.h>
 #include <QFileInfo>
 #include "qmcr/pyhlp.h"
+#include <astra/stringutils.h>
+#include "utils.h"
 
 FormManager::FormManager
     (std::shared_ptr<QAstra> qastra,
