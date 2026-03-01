@@ -413,7 +413,7 @@ RModel::ColumnsWidth()
     return cw;
 }
 
-RCol* RModel::getRCol(int col)
+RCol* RModel::getRCol(int col) const
 {
     RData::iterator iter_col = up_rdata->begin() + col;
     return &(*iter_col);
@@ -578,3 +578,63 @@ bool RModel::isBinary(const QByteArray& data) const
     return true;
 }
 
+RModel::ColumnEditorInfo
+RModel::getColumnEditorInfo(int colIndex) const
+{
+    ColumnEditorInfo info;
+    const RCol* col = getRCol(colIndex);
+    if (!col) return info;
+
+    const auto propTT = col->getComPropTT();
+
+    switch (propTT)
+    {
+    case enComPropTT::COM_PR_BOOL:
+        info.editorType = ColumnEditorInfo::Type::CheckBox;
+        break;
+
+    case enComPropTT::COM_PR_REAL:
+        info.editorType = ColumnEditorInfo::Type::Numeric;
+        info.decimals   = std::atoi(col->prec().c_str());
+        break;
+
+    case enComPropTT::COM_PR_ENUM:
+        if (!col->isDirectCode() && m_enum_.count(colIndex)) {
+            info.editorType = ColumnEditorInfo::Type::ComboBox;
+            info.comboItems = m_enum_.at(colIndex);
+        } else {
+            info.editorType = ColumnEditorInfo::Type::Numeric;
+        }
+        break;
+
+    case enComPropTT::COM_PR_INT:
+        if (!col->isDirectCode()
+            && !col->getNameRef().empty()
+            && mm_nameref_.count(colIndex))
+        {
+            info.editorType = ColumnEditorInfo::Type::ComboBox;
+            for (const auto& [k, v] : mm_nameref_.at(colIndex))
+                info.comboItems.append(QString::fromStdString(v));
+        } else {
+            info.editorType = ColumnEditorInfo::Type::Numeric;
+        }
+        break;
+
+    case enComPropTT::COM_PR_SUPERENUM:
+        if (!col->isDirectCode()
+            && !col->getNameRef().empty()
+            && mm_superenum_.count(colIndex))
+        {
+            info.editorType = ColumnEditorInfo::Type::ComboBox;
+            for (const auto& [k, v] : mm_superenum_.at(colIndex))
+                info.comboItems.append(QString::fromStdString(v));
+        } else {
+            info.editorType = ColumnEditorInfo::Type::Numeric;
+        }
+        break;
+
+    default:
+        break;
+    }
+    return info;
+}

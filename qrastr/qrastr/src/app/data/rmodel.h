@@ -18,22 +18,12 @@ struct ToQVariant {
     QVariant operator()(const std::string& value) { return std::string(value).c_str(); }
 };
 
+
+
 ///@brief Qt модель для связи QDataBlock с QTableView/QTitan Grid
 class RModel : public QAbstractTableModel
 {
     Q_OBJECT
-    QAstra* pqastra_;
-    RTablesDataManager* pRTDM_;
-    std::unique_ptr<RData> up_rdata;
-    CUIForm* pUIForm_;
-public:
-    //Справочные данные:
-    //индекс -> список строк: ex. БАЗА|Ген|Нагр|Ген+
-    std::map<std::size_t,QStringList> m_enum_;
-    //колонки со ссылкой: код -> отображаемое имя: ex.RefCol -> node[na]
-    std::map<std::size_t, std::map<std::size_t, std::string>> mm_nameref_;
-    // код -> отображаемое имя: ex. ti_prv.Name.Num
-    std::map<std::size_t, std::map<std::size_t, std::string>> mm_superenum_;
 signals:
     void editCompleted(const QString &);
 public slots:
@@ -44,6 +34,16 @@ public slots:
     void slot_BeginInsertRow(std::string _t_name,int first, int last);
     void slot_EndInsertRow(std::string _t_name);
 public:
+    struct ColumnEditorInfo {
+        enum class Type { None, Numeric, CheckBox, ComboBox };
+
+        Type        editorType = Type::None;
+        QStringList comboItems;       // для ComboBox
+        int         decimals   = 2;   // для Numeric
+        double      minVal     = -1e6;
+        double      maxVal     =  1e6;
+    };
+
     RModel(QObject *parent, QAstra* pqastra,RTablesDataManager* pRTDM);
     int rowCount(const QModelIndex &parent = QModelIndex()) const override;
     int columnCount(const QModelIndex &parent = QModelIndex()) const override;
@@ -59,7 +59,7 @@ public:
      */
     bool populateDataFromRastr();
     std::vector<std::tuple<int,int>>  ColumnsWidth ();
-    RCol* getRCol(int n_col);
+    RCol* getRCol(int n_col) const;
     int getIndexCol(std::string _col);
     RData* getRdata();
     inline bool emitSignals() const { return m_emitSignals; }
@@ -89,6 +89,7 @@ public:
     void addCondFormat(const bool isRowIdFormat, std::size_t column, const CondFormat& condFormat);
     void setCondFormats(const bool isRowIdFormat, std::size_t column, const std::vector<CondFormat>& condFormats);
 
+    ColumnEditorInfo getColumnEditorInfo(int colIndex) const;
 private:
     bool isBinary(const QByteArray& index) const;
     bool m_emitSignals;
@@ -102,9 +103,22 @@ private:
     // Only format roles are expected in role (Qt::ItemDataRole)
     QVariant getMatchingCondFormat(std::size_t row, std::size_t column, const QString& value, int role) const;
     QVariant getMatchingCondFormat(const std::map<std::size_t, std::vector<CondFormat>>& mCondFormats, std::size_t row, std::size_t column, const QString& value, int role) const;
+
+    QAstra* pqastra_;
+    RTablesDataManager* pRTDM_;
+    std::unique_ptr<RData> up_rdata;
+    CUIForm* pUIForm_;
     /// @note Условное форматирование:
     /// 1. Правила форматирования по значению ячейки
     std::map<std::size_t, std::vector<CondFormat>> m_mRowIdFormats;
     /// 2. Правила по идентификатору строки
     std::map<std::size_t, std::vector<CondFormat>> m_mCondFormats;
+
+    //Справочные данные:
+    //индекс -> список строк: ex. БАЗА|Ген|Нагр|Ген+
+    std::map<std::size_t,QStringList> m_enum_;
+    //колонки со ссылкой: код -> отображаемое имя: ex.RefCol -> node[na]
+    std::map<std::size_t, std::map<std::size_t, std::string>> mm_nameref_;
+    // код -> отображаемое имя: ex. ti_prv.Name.Num
+    std::map<std::size_t, std::map<std::size_t, std::string>> mm_superenum_;
 };

@@ -85,20 +85,21 @@ private slots:
      * d) восстанавливает условное форматирование из JSON.
     */
     void CreateModel(QAstra* pqastra,CUIForm* pUIForm);
-    void SetEditors();
-    void SetEditor(RCol& _prcol);
+    void applyAllColumnEditors ();
+    void applyColumnEditor(int colIndex);
 private:
     void setTableView(QTableView& tv, RModel& mm, int multiplier = 10);
-    void setTableView(Qtitan::GridTableView& tv, RModel& mm, int multiplier = 10 );
+    void setTableView(Qtitan::GridTableView& tv, RModel& mm,
+                      int multiplier = 10 );
 
     void setupToolbar();
 
     std::tuple<int,double> GetSumSelected();
 
     Qtitan::Grid* m_grid;
-    Qtitan::GridTableView* view;
+    Qtitan::GridTableView* m_view;
     std::shared_ptr<PyHlp> pPyHlp_;
-    std::unique_ptr<RModel> prm;
+    std::unique_ptr<RModel> m_model;
     std::unique_ptr<LinkedFormController> m_linkedFormCtrl;
     CUIForm m_UIForm;
     QAstra* m_pqastra;
@@ -111,13 +112,14 @@ private:
     QAction* m_actInsertRow;
     QAction* m_actDeleteRow;
     QAction* m_actDuplicateRow;
+    QAction* m_groupCorrection;
 
     RTableView* ptv;
     // Колонка и строка, зафиксированные в момент открытия контекстного меню.
     int m_contextMenuColumn;
     int m_contextMenuRow;
     Qtitan::GridTableColumn* column_qt;
-    std::string m_selection {""};                                      // Текущая выборка
+    std::string m_selection {""}; // Текущая выборка
     std::map<int, std::vector<CondFormat>>
         m_MapcondFormatVector; // column , vector<CondFormat>
     std::map<QString,bool> m_ColumnsVisible;

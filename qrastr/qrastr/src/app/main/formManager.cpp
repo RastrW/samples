@@ -53,30 +53,29 @@ void FormManager::openForm(const CUIForm& form) {
     }
     
     spdlog::info("Прочитана таблица [{}] - [{}]", form.Name(), form.TableName());
-    
+
+    // Докирование
+    auto dw = new ads::CDockWidget(QString::fromStdString(form.Name()),
+                                    m_parentWidget);
+    dw->setFeature(ads::CDockWidget::DockWidgetDeleteOnClose, true);
+
     // Создание виджета формы
     RtabWidget* prtw = new RtabWidget(
         m_qastra.get(),
         form,
         &m_rtdm,
         m_dockManager,
-        m_parentWidget);
+        dw);
 
     prtw->setPyHlp(m_pPyHlp);
-
     // Выравнивание данных по шаблону, выравнивание текста по левому краю
     prtw->widebyshabl();
-    
     // Подключение сигналов расчётов
     setupFormConnections(prtw);
-    
-    // Докирование
-    auto dw = new ads::CDockWidget(QString::fromStdString(form.Name()),
-                                    m_parentWidget);
+
     dw->setWidget(prtw->createDockContent());
-    dw->setFeature(ads::CDockWidget::DockWidgetDeleteOnClose, true);
-    
-    auto area = m_dockManager->addDockWidgetTab(ads::TopDockWidgetArea, dw);
+
+    m_dockManager->addDockWidgetTab(ads::TopDockWidgetArea, dw);
     
     // Обработка закрытия
     connect(dw, &ads::CDockWidget::closed, prtw, &RtabWidget::OnClose);
