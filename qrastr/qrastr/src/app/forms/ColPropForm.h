@@ -2,11 +2,11 @@
 
 #include <QWidget>
 #include <QString>
-#include "rtableview.h"
 
 namespace Ui {
 class ColPropForm;
 }
+namespace Qtitan   { class GridTableView; }
 
 class RData;
 class RCol;

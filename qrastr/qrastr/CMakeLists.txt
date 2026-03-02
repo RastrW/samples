@@ -246,7 +246,6 @@ set(PROJECT_INCLUDES
     ${SRC_DIR}/
     ${APP_DIR}/astra/
     ${APP_DIR}/data/
-    ${APP_DIR}/delegates/
     ${APP_DIR}/formatting/
     ${APP_DIR}/forms/
     ${APP_DIR}/main/
@@ -284,8 +283,6 @@ file(GLOB_RECURSE PROJECT_SOURCES
     "${APP_DIR}/data/*.h"
     "${APP_DIR}/ui_components/*.cpp"
     "${APP_DIR}/ui_components/*.h"
-    "${APP_DIR}/delegates/*.cpp"
-    "${APP_DIR}/delegates/*.h"
     "${APP_DIR}/forms/*.cpp"
     "${APP_DIR}/forms/*.h"
     "${APP_DIR}/forms/*.ui"

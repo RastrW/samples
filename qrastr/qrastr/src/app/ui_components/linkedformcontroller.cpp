@@ -196,7 +196,7 @@ void LinkedFormController::openLinkedForm(LinkedForm lf)
         stringutils::MkToUtf8(pUIForm->Name()).c_str(), m_parentWidget);
     dw->setWidget(child->createDockContent(false));
     dw->setFeature(ads::CDockWidget::DockWidgetDeleteOnClose, true);
-    connect(dw, &ads::CDockWidget::closed, child, &RtabWidget::OnClose);
+    connect(dw, &ads::CDockWidget::closed, child, &RtabWidget::slot_close);
 
     m_dockManager->addDockWidgetTab(ads::BottomAutoHideArea, dw);
     child->show();

@@ -10,14 +10,9 @@
 #include <QBuffer>
 #include <QDateTime>
 #include <QProgressDialog>
-#include "CondFormat.h"
 #include "qastra.h"
-#include "delegatecombobox.h"
 #include <QShortcut>
 #include <QPalette>
-#include "CondFormat.h"
-#include "CondFormatManager.h"
-#include "condformatjson.h"
 #include "linkedform.h"
 
 #include <QtitanGrid.h>
@@ -25,6 +20,7 @@
 #include <QAbstractItemModelTester>
 #include <DockManager.h>
 #include <QCloseEvent>
+#include <QTableView>
 
 
 #include "formselection.h"
@@ -163,8 +159,8 @@ void RtabWidget::setupConnections(){
 
     //QTitan
     //Connect Grid's context menu handler.
-    connect(m_view, &GridTableView::contextMenu, this, &RtabWidget::contextMenu);
-    connect(m_view, &GridTableView::cellClicked, this, &RtabWidget::onItemPressed);
+    connect(m_view, &GridTableView::contextMenu, this, &RtabWidget::slot_contextMenu);
+    connect(m_view, &GridTableView::cellClicked, this, &RtabWidget::slot_itemPressed);
 }
 
 void RtabWidget::setPyHlp(std::shared_ptr<PyHlp> pPyHlp){
@@ -257,7 +253,7 @@ void RtabWidget::closeEvent(QCloseEvent *event)
     QWidget::closeEvent(event);
 };
 
-void RtabWidget::OnClose()
+void RtabWidget::slot_close()
 {
     this->close();
 }
@@ -278,6 +274,7 @@ void RtabWidget::createModel()
     for (const auto& f : m_UIForm.Fields()){
         for (const RCol& rcol : *m_model->getRdata()){
             if (f.Name() == rcol.getStrName()){
+                Qtitan::GridTableColumn* column_qt;
                 column_qt = static_cast<GridTableColumn*>(
                     m_view->getColumn(rcol.getIndex()));
                 column_qt->setVisualIndex(vi++);
@@ -402,7 +399,7 @@ void RtabWidget::setTableView(Qtitan::GridTableView& tv, RModel& mm, int multipl
     tv.endUpdate();
 }
 
-void RtabWidget::contextMenu(ContextMenuEventArgs* args)
+void RtabWidget::slot_contextMenu(ContextMenuEventArgs* args)
 {
     // MenuContext живёт только здесь, на стеке — НЕ поле класса
     MenuContext ctx;
@@ -552,34 +549,11 @@ void RtabWidget::SetSelection(std::string selection)
     m_view->showFilterPanel();
 }
 
-void RtabWidget::onItemPressed( CellClickEventArgs* _args)
+void RtabWidget::slot_itemPressed( CellClickEventArgs* _args)
 {
     int row = _args->cell().rowIndex();
     int col = _args->cell().columnIndex();
     qDebug()<<"Pressed:" <<row<< ","<<col;
-}
-
-std::tuple<int,double>
-RtabWidget::GetSumSelected()
-{
-    QModelIndexList selected = m_view->selection()->selectedIndexes();
-    if (selected.empty()){
-        return {0, 0.0};
-    }
-
-    int number = 0;
-    double total = 0;
-
-    for (QModelIndex item : selected) {
-        bool ok;
-        double value = item.data().toDouble(&ok);
-
-        if (ok) {
-            total += value;
-            number++;
-        }
-    }
-    return {number,total};
 }
 
 void RtabWidget::slot_beginResetModel(std::string tname)

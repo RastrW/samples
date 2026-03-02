@@ -1,6 +1,7 @@
 #include "ColPropForm.h"
 #include "ui_ColPropForm.h"
 #include "rmodel.h"
+#include <QtitanGrid.h>
 
 ColPropForm::ColPropForm(RData* _prdata, Qtitan::GridTableView* _view, RCol* _prcol,QWidget *parent) :
     QWidget(parent),

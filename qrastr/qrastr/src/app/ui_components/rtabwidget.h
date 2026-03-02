@@ -1,7 +1,6 @@
 #pragma once
 #include <QWidget>
 #include "UIForms.h"
-#include "CondFormat.h"
 #include "QtitanGrid.h"
 
 namespace ads{ class CDockManager; }
@@ -17,7 +16,6 @@ class RTablesDataManager;
 class RModel;
 class RCol;
 class QTableView;
-class RTableView;
 class ContextMenuBuilder;
 class CondFormatController;
 
@@ -44,14 +42,16 @@ public:
     int getLongValue(const std::string& key, long row);
     /// @brief Применяет LinkedForm через контроллер.
     void applyLinkedFormFromController(const LinkedForm& lf);
-public slots:
+    void setPyHlp(std::shared_ptr<PyHlp> pPyHlp);
     void on_calc_begin();
     void on_calc_end();
-    void OnClose();
-    void contextMenu(ContextMenuEventArgs* args);
-    void setPyHlp(std::shared_ptr<PyHlp> pPyHlp);
+public slots:
 
-    void onItemPressed(CellClickEventArgs* _index);
+    void slot_close();
+    void slot_contextMenu(ContextMenuEventArgs* args);
+
+    //нажатие на яячейку таблицы
+    void slot_itemPressed(CellClickEventArgs* _index);
     void slot_focusRowChanged( int _row_old,int _row_new);
 
     void slot_addRow();
@@ -99,14 +99,13 @@ private:
     void setupToolbar();
     void setupShortcuts();
     void setupConnections();
-    std::tuple<int,double> GetSumSelected();
 
     Qtitan::Grid* m_grid;
     Qtitan::GridTableView* m_view;
     std::shared_ptr<PyHlp> pPyHlp_;
 
     // ── Компоненты ──
-        std::unique_ptr<RModel> m_model;
+    std::unique_ptr<RModel> m_model;
     std::unique_ptr<LinkedFormController> m_linkedFormCtrl;
     std::unique_ptr<ContextMenuBuilder>   m_menuBuilder;
     std::unique_ptr<CondFormatController> m_condFormatCtrl;
@@ -124,7 +123,6 @@ private:
     QAction* m_actDuplicateRow;
     QAction* m_groupCorrection;
 
-    Qtitan::GridTableColumn* column_qt;
     std::string m_selection {""}; // Текущая выборка
     std::map<QString,bool> m_columnsVisible;
 };

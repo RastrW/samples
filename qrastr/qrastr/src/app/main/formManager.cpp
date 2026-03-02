@@ -78,7 +78,7 @@ void FormManager::openForm(const CUIForm& form) {
     m_dockManager->addDockWidgetTab(ads::TopDockWidgetArea, dw);
     
     // Обработка закрытия
-    connect(dw, &ads::CDockWidget::closed, prtw, &RtabWidget::OnClose);
+    connect(dw, &ads::CDockWidget::closed, prtw, &RtabWidget::slot_close);
     connect(dw, &ads::CDockWidget::closed,
             this, [this, prtw, formName = form.Name()]() {
                 // Удаляем из списка открытых форм
