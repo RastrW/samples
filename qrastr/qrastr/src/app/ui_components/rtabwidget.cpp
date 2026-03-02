@@ -37,6 +37,7 @@
 #include "ColPropForm.h"
 #include "contextMenuBuilder.h"
 #include "customFilterCondition.h"
+#include "condFormatController.h"
 
 RtabWidget::RtabWidget(QAstra* pqastra,CUIForm UIForm, RTablesDataManager* pRTDM,
                        ads::CDockManager* pDockManager, QWidget *parent)
@@ -87,15 +88,6 @@ RtabWidget::RtabWidget(QAstra* pqastra,CUIForm UIForm, RTablesDataManager* pRTDM
     setupShortcuts();
 
     createModel();
-
-    m_linkedFormCtrl = std::make_unique<LinkedFormController>(
-        m_pqastra,
-        m_pRTDM,
-        m_DockManager,
-        m_view,
-        m_model.get(),
-        m_UIForm,
-        this);
 
     m_menuBuilder = std::make_unique<ContextMenuBuilder>(
         m_view,
@@ -279,7 +271,7 @@ void RtabWidget::createModel()
     m_view->beginUpdate();
     m_view->setModel(m_model.get());
 
-    applyAllColumnEditors ();
+    applyAllColumnEditors();
 
     //Порядок колонок как в форме
     int vi = 0;
@@ -298,22 +290,20 @@ void RtabWidget::createModel()
     //for (int i = 0; i < view->getColumnCount(); ++i)
     //    static_cast<GridTableColumn *>(view->getColumn(i))->setMenuButtonVisible(true);
 
-    // Заливка колонок цветом по правилам CondFormat
-    for (RCol& rcol : *m_model->getRdata()){
-        m_MapcondFormatVector.emplace(rcol.getIndex(), std::vector<CondFormat>());
-    }
-
-    std::map<int, std::vector<CondFormat>> cfv;
-    CondFormatJson cfj(m_model->getRdata()->t_name_ , m_model->getRdata()->vCols_ ,cfv );
-    cfj.from_json();
-    for (auto &[key,val] : cfj.get_mcf()){
-        if (m_MapcondFormatVector.find(key) != m_MapcondFormatVector.end() ){
-            m_MapcondFormatVector.at(key) = val;
-            m_model->setCondFormats(false, key, val);
-        }
-    }
-
     m_view->endUpdate();
+
+    m_linkedFormCtrl = std::make_unique<LinkedFormController>(
+        m_pqastra,
+        m_pRTDM,
+        m_DockManager,
+        m_view,
+        m_model.get(),
+        m_UIForm,
+        this);
+
+    m_condFormatCtrl = std::make_unique<CondFormatController>(
+        m_model.get(), m_view, this);
+    m_condFormatCtrl->loadFromJson();
 
     ///@todo проверить необходимо в этих сигналах
     this->update();
@@ -467,16 +457,21 @@ void RtabWidget::slot_deleteRow()
 
 void RtabWidget::slot_groupCorrection()
 {
-    RCol* prcol = m_model->getRCol(m_contextMenuColumn);
+    const int col = m_view->selection()->cell().columnIndex();
+    RCol* prcol = m_model->getRCol(col);
+    if (!prcol){
+        return;
+    }
     formgroupcorrection* fgc =  new formgroupcorrection(m_model->getRdata(),prcol,this);
     this->on_calc_begin();
     fgc->show();
     this->on_calc_end();
 }
 
-void RtabWidget::slot_openColProp()
+void RtabWidget::slot_openColProp(int col)
 {
-    RCol* prcol = m_model->getRCol(m_contextMenuColumn);
+    RCol* prcol = m_model->getRCol(col);
+    if (!prcol) return;
     ColPropForm* PropForm = new ColPropForm(m_model->getRdata(), m_view, prcol);
     PropForm->show();
 }
@@ -512,38 +507,15 @@ void RtabWidget::slot_directCodeToggle(std::size_t column)
 
 void RtabWidget::slot_condFormatsEdit(std::size_t column)
 {
-    std::vector<CondFormat> condFormats;
-    CondFormat condFormat;
-    CondFormatManager condFormatDialog(m_MapcondFormatVector[column],
-                                       "UTF-8", this);
-
-    QString title= m_model->headerData(static_cast<int>(column), Qt::Horizontal, Qt::DisplayRole).toString();
-    condFormatDialog.setWindowTitle(tr("Conditional formats for \"%1\"").
-                                    arg(m_model->headerData(static_cast<int>(column), Qt::Horizontal, Qt::DisplayRole).toString()));
-    if (condFormatDialog.exec()) {
-        std::vector<CondFormat> condFormatVector = condFormatDialog.getCondFormats();
-        m_model->setCondFormats(false, column, condFormatVector);
-        m_MapcondFormatVector.at(column) = condFormatVector;
-
-        condFormatsModified();
-    }
+    m_condFormatCtrl->editCondFormats(static_cast<std::size_t>(column));
 }
 
-void RtabWidget::slot_widthByTemplate()
-{
+void RtabWidget::slot_widthByTemplate(){
     setTableView(*m_view,*m_model);
 }
 
-void RtabWidget::slot_widthByData()
-{
+void RtabWidget::slot_widthByData(){
     m_view->tableOptions().setColumnAutoWidth(true);
-}
-
-void RtabWidget::condFormatsModified()
-{
-    CondFormatJson cfj(m_model->getRdata()->t_name_,
-                       m_model->getRdata()->vCols_ ,m_MapcondFormatVector );
-    cfj.save_json();
 }
 
 void RtabWidget::SetSelection(std::string selection)

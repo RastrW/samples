@@ -19,6 +19,7 @@ class RCol;
 class QTableView;
 class RTableView;
 class ContextMenuBuilder;
+class CondFormatController;
 
 ///@brief Виджет, отображающий одну таблицу Rastr в QTitan Grid.
 class RtabWidget : public QWidget
@@ -64,7 +65,7 @@ public slots:
     void slot_widthByData();
 
     //  Формы инструментов
-    void slot_openColProp();
+    void slot_openColProp(int col);
     void slot_openSelection();
 
     void slot_openExportCSVForm();
@@ -99,14 +100,17 @@ private:
     void setupShortcuts();
     void setupConnections();
     std::tuple<int,double> GetSumSelected();
-    void condFormatsModified();
 
     Qtitan::Grid* m_grid;
     Qtitan::GridTableView* m_view;
     std::shared_ptr<PyHlp> pPyHlp_;
-    std::unique_ptr<RModel> m_model;
+
+    // ── Компоненты ──
+        std::unique_ptr<RModel> m_model;
     std::unique_ptr<LinkedFormController> m_linkedFormCtrl;
     std::unique_ptr<ContextMenuBuilder>   m_menuBuilder;
+    std::unique_ptr<CondFormatController> m_condFormatCtrl;
+
     CUIForm m_UIForm;
     QAstra* m_pqastra;
     RTablesDataManager* m_pRTDM;
@@ -120,12 +124,7 @@ private:
     QAction* m_actDuplicateRow;
     QAction* m_groupCorrection;
 
-    // Колонка и строка, зафиксированные в момент открытия контекстного меню.
-    int m_contextMenuColumn;
-    int m_contextMenuRow;
     Qtitan::GridTableColumn* column_qt;
     std::string m_selection {""}; // Текущая выборка
-    std::map<int, std::vector<CondFormat>>
-        m_MapcondFormatVector; // column , vector<CondFormat>
     std::map<QString,bool> m_columnsVisible;
 };
