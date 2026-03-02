@@ -70,16 +70,15 @@ void FormManager::openForm(const CUIForm& form) {
     prtw->setPyHlp(m_pPyHlp);
     // Выравнивание данных по шаблону, выравнивание текста по левому краю
     prtw->slot_widthByTemplate();
-    // Подключение сигналов расчётов
-    setupFormConnections(prtw);
-
+    // Добавляем в список открытых форм
+    // Сигналы будут передаваться через onCalculationStarted/Finished
+    m_openForms.append(prtw);
     dw->setWidget(prtw->createDockContent());
 
     m_dockManager->addDockWidgetTab(ads::TopDockWidgetArea, dw);
     
     // Обработка закрытия
     connect(dw, &ads::CDockWidget::closed, prtw, &RtabWidget::OnClose);
-    
     connect(dw, &ads::CDockWidget::closed,
             this, [this, prtw, formName = form.Name()]() {
                 // Удаляем из списка открытых форм
@@ -111,16 +110,6 @@ void FormManager::openFormByName(const QString& formName) {
     
     int index = m_formNameToIndex[formName];
     openFormByIndex(index);
-}
-
-void FormManager::setupFormConnections(RtabWidget* widget) {
-    if (!widget) {
-        return;
-    }
-    
-    // Добавляем в список открытых форм
-    // Сигналы будут передаваться через onCalculationStarted/Finished
-    m_openForms.append(widget);
 }
 
 void FormManager::onCalculationStarted() {

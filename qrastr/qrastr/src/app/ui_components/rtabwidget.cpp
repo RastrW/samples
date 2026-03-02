@@ -34,9 +34,9 @@
 #include "qmcr/pyhlp.h"
 #include <QToolBar>
 #include "linkedformcontroller.h"
-#include "rtableview.h"
 #include "ColPropForm.h"
 #include "contextMenuBuilder.h"
+#include "customFilterCondition.h"
 
 RtabWidget::RtabWidget(QAstra* pqastra,CUIForm UIForm, RTablesDataManager* pRTDM,
                        ads::CDockManager* pDockManager, QWidget *parent)
@@ -46,15 +46,12 @@ RtabWidget::RtabWidget(QAstra* pqastra,CUIForm UIForm, RTablesDataManager* pRTDM
     m_pRTDM {pRTDM},
     m_DockManager {pDockManager}
 {
-    ptv = new RTableView(this);
-
     //  Настройка QTitan Grid
     Grid::loadTranslation();
     m_grid = new Qtitan::Grid(this);
     if (m_UIForm.Vertical()){
         m_grid->setViewType(Qtitan::Grid::TableViewVertical);
-    }
-    else{
+    }else{
         m_grid->setViewType(Qtitan::Grid::TableView);
     }
 
@@ -89,34 +86,7 @@ RtabWidget::RtabWidget(QAstra* pqastra,CUIForm UIForm, RTablesDataManager* pRTDM
     //  Горячие клавиши
     setupShortcuts();
 
-    resize(800,500);
-    setWindowFlags(Qt::WindowMinimizeButtonHint | Qt::WindowMinMaxButtonsHint | Qt::WindowCloseButtonHint);
-    setWindowModality(Qt::ApplicationModal);
-    //  Grid-соединения
-    connect(this, &RtabWidget::CondFormatsModified,this, &RtabWidget::onCondFormatsModified);
-
-    //QTitan
-    //Connect Grid's context menu handler.
-    connect(m_view, &GridTableView::contextMenu, this, &RtabWidget::contextMenu);
-    connect(m_view, &GridTableView::cellClicked, this, &RtabWidget::onItemPressed);
-
     createModel();
-
-    connect(m_pRTDM, &RTablesDataManager::sig_dataChanged,this->m_model.get(),
-            &RModel::slot_DataChanged);
-    connect(m_pRTDM, &RTablesDataManager::sig_BeginResetModel,this->m_model.get(),
-            &RModel::slot_BeginResetModel);
-    connect(m_pRTDM, &RTablesDataManager::sig_EndResetModel,this->m_model.get(),
-            &RModel::slot_EndResetModel);
-    connect(m_pRTDM, &RTablesDataManager::sig_BeginInsertRow,this->m_model.get(),
-            &RModel::slot_BeginInsertRow);
-    connect(m_pRTDM, &RTablesDataManager::sig_EndInsertRow,this->m_model.get(),
-            &RModel::slot_EndInsertRow);
-
-    connect(m_pRTDM, &RTablesDataManager::sig_BeginResetModel,this,
-            &RtabWidget::slot_beginResetModel);
-    connect(m_pRTDM, &RTablesDataManager::sig_EndResetModel,this,
-            &RtabWidget::slot_endResetModel);
 
     m_linkedFormCtrl = std::make_unique<LinkedFormController>(
         m_pqastra,
@@ -132,6 +102,46 @@ RtabWidget::RtabWidget(QAstra* pqastra,CUIForm UIForm, RTablesDataManager* pRTDM
         m_linkedFormCtrl.get(),
         this);
 
+    setupConnections();
+
+    resize(800,500);
+    setWindowFlags(Qt::WindowMinimizeButtonHint | Qt::WindowMinMaxButtonsHint
+                   | Qt::WindowCloseButtonHint);
+    setWindowModality(Qt::ApplicationModal);
+}
+
+QWidget* RtabWidget::createDockContent(bool addToolbar) {
+    QWidget* wrapper = new QWidget(this);
+    auto*    layout  = new QVBoxLayout(wrapper);
+    layout->setContentsMargins(0, 0, 0, 0);
+    layout->setSpacing(0);
+
+    if (addToolbar) {
+        setupToolbar();
+        layout->addWidget(m_toolbar);
+    }
+    layout->addWidget(m_grid);
+    return wrapper;
+}
+
+void RtabWidget::setupConnections(){
+    //RTablesDataManager -> RModel
+    connect(m_pRTDM, &RTablesDataManager::sig_dataChanged,this->m_model.get(),
+            &RModel::slot_DataChanged);
+    connect(m_pRTDM, &RTablesDataManager::sig_BeginResetModel,this->m_model.get(),
+            &RModel::slot_BeginResetModel);
+    connect(m_pRTDM, &RTablesDataManager::sig_EndResetModel,this->m_model.get(),
+            &RModel::slot_EndResetModel);
+    connect(m_pRTDM, &RTablesDataManager::sig_BeginInsertRow,this->m_model.get(),
+            &RModel::slot_BeginInsertRow);
+    connect(m_pRTDM, &RTablesDataManager::sig_EndInsertRow,this->m_model.get(),
+            &RModel::slot_EndInsertRow);
+    //RTablesDataManager -> RtabWidget
+    connect(m_pRTDM, &RTablesDataManager::sig_BeginResetModel,this,
+            &RtabWidget::slot_beginResetModel);
+    connect(m_pRTDM, &RTablesDataManager::sig_EndResetModel,this,
+            &RtabWidget::slot_endResetModel);
+    //ContextMenuBuilder -> RtabWidget
     connect(m_menuBuilder.get(), &ContextMenuBuilder::sig_addRow,
             this, &RtabWidget::slot_addRow);
     connect(m_menuBuilder.get(), &ContextMenuBuilder::sig_insertRow,
@@ -142,43 +152,27 @@ RtabWidget::RtabWidget(QAstra* pqastra,CUIForm UIForm, RTablesDataManager* pRTDM
             this, &RtabWidget::slot_duplicateRow);
     connect(m_menuBuilder.get(), &ContextMenuBuilder::sig_groupCorrection,
             this, &RtabWidget::slot_groupCorrection);
-
     connect(m_menuBuilder.get(), &ContextMenuBuilder::sig_colProp,
             this, &RtabWidget::slot_openColProp);
     connect(m_menuBuilder.get(), &ContextMenuBuilder::sig_selection,
             this, &RtabWidget::slot_openSelection);
-
     connect(m_menuBuilder.get(), &ContextMenuBuilder::sig_exportCsv,
             this, &RtabWidget::slot_openExportCSVForm);
     connect(m_menuBuilder.get(), &ContextMenuBuilder::sig_importCsv,
             this, &RtabWidget::slot_openImportCSVForm);
-
     connect(m_menuBuilder.get(), &ContextMenuBuilder::sig_widthByTemplate,
             this, &RtabWidget::slot_widthByTemplate);
     connect(m_menuBuilder.get(), &ContextMenuBuilder::sig_widthByData,
             this, &RtabWidget::slot_widthByData);
-
     connect(m_menuBuilder.get(), &ContextMenuBuilder::sig_directCodeToggle,
             this, &RtabWidget::slot_directCodeToggle);
     connect(m_menuBuilder.get(), &ContextMenuBuilder::sig_condFormatsEdit,
             this, &RtabWidget::slot_condFormatsEdit);
-}
 
-QWidget* RtabWidget::createDockContent(bool addToolbar) {
-    QWidget* wrapper = new QWidget(this);
-    QVBoxLayout* layout = new QVBoxLayout(wrapper);
-    layout->setContentsMargins(0, 0, 0, 0);
-    layout->setSpacing(0);
-
-    if (addToolbar){
-        setupToolbar();
-        layout->addWidget(m_toolbar);
-        layout->addWidget(m_grid);
-    }else{
-        layout->addWidget(m_grid);
-    }
-
-    return wrapper;
+    //QTitan
+    //Connect Grid's context menu handler.
+    connect(m_view, &GridTableView::contextMenu, this, &RtabWidget::contextMenu);
+    connect(m_view, &GridTableView::cellClicked, this, &RtabWidget::onItemPressed);
 }
 
 void RtabWidget::setPyHlp(std::shared_ptr<PyHlp> pPyHlp){
@@ -321,6 +315,7 @@ void RtabWidget::createModel()
 
     m_view->endUpdate();
 
+    ///@todo проверить необходимо в этих сигналах
     this->update();
     this->repaint();
 }
@@ -394,18 +389,6 @@ void RtabWidget::on_calc_end()
    // view->endUpdate();
 }
 
-void RtabWidget::slot_widthByTemplate()
-{
-    setTableView(*ptv,*m_model);
-    setTableView(*m_view,*m_model);
-}
-
-void RtabWidget::slot_widthByData()
-{
-    ptv->resizeColumnsToContents();
-    m_view->tableOptions().setColumnAutoWidth(true);
-}
-
 void RtabWidget::setTableView(QTableView& tv, RModel& mm, int multiplier  )
 {
     // Ширина колонок
@@ -442,9 +425,9 @@ void RtabWidget::contextMenu(ContextMenuEventArgs* args)
     m_menuBuilder->populate(args->contextMenu(), ctx);
 }
 
-void RtabWidget::onfocusRowChanged(int /*row_old*/, int row_new)
+void RtabWidget::slot_focusRowChanged(int /*row_old*/, int row_new)
 {
-    qDebug() << "RtabWidget::onfocusRowChanged: row =" << row_new;
+    ///@todo соединение только для дочернего виджета LinkedFormController
     m_linkedFormCtrl->onParentRowChanged(row_new);
 }
 
@@ -542,39 +525,59 @@ void RtabWidget::slot_condFormatsEdit(std::size_t column)
         m_model->setCondFormats(false, column, condFormatVector);
         m_MapcondFormatVector.at(column) = condFormatVector;
 
-        emit CondFormatsModified();
+        condFormatsModified();
     }
 }
 
-void RtabWidget::onCondFormatsModified()
+void RtabWidget::slot_widthByTemplate()
+{
+    setTableView(*m_view,*m_model);
+}
+
+void RtabWidget::slot_widthByData()
+{
+    m_view->tableOptions().setColumnAutoWidth(true);
+}
+
+void RtabWidget::condFormatsModified()
 {
     CondFormatJson cfj(m_model->getRdata()->t_name_,
                        m_model->getRdata()->vCols_ ,m_MapcondFormatVector );
     cfj.save_json();
 }
 
-void RtabWidget::SetSelection(std::string Selection)
+void RtabWidget::SetSelection(std::string selection)
 {
-    m_selection = Selection;
+    ///@todo скрыть строки, которые не удовлетворяют выборки
+    /// Выполнено по аналогии с applyLinkedForm(LinkedForm lf)
+    /// Но фильтр не работает по той колонке, куда указана мышь
+    /// А в редакторе фильтра указаны Узлы, при чем условие фильтра -
+    /// узел 0 (всегда, если его изменить, то фильтрация выполнится, но только по узлу)
+    m_selection = selection;
+
+    // Передаём строку выборки в плагин
     IRastrTablesPtr tablesx{ m_pqastra->getRastr()->Tables() };
-    IRastrTablePtr table{ tablesx->Item(m_model->getRdata()->t_name_) };
-    IPlainRastrResult* pres = table->SetSelection(Selection);
+    IRastrTablePtr  table{ tablesx->Item(m_model->getRdata()->t_name_) };
+    table->SetSelection(selection);
 
-    DataBlock<FieldVariantData> variant_block;
-    IRastrPayload keys = table->Key();
-    IRastrResultVerify(table->DataBlock(keys.Value(), variant_block));
-    auto vind = variant_block.IndexesVector();
-    for(int ir = 0 ; ir < m_model->rowCount() ; ir++)
-    {
-        ptv->setRowHidden(ir,true);
-        // TO DO: add hide rows for view
-    }
+    // Получаем индексы строк, прошедших выборку
+    DataBlock<FieldVariantData> variantBlock;
+    const IRastrPayload keys = table->Key();
+    IRastrResultVerify(table->DataBlock(keys.Value(), variantBlock));
+    const auto indices = variantBlock.IndexesVector();
 
-    for (IndexT &ind : vind)
-    {
-        qDebug() << ind;
-        ptv->setRowHidden(ind,false);
-    }
+    //Создаём CustomFilterCondition для QTitan Grid с этими индексами
+    auto* groupCondition = new GridFilterGroupCondition(m_view->filter());
+    auto* condition      = new CustomFilterCondition(m_view->filter());
+    groupCondition->addCondition(condition);
+
+    for (long idx : indices)
+        condition->addRow(idx);
+
+    //Активируем фильтр — Grid показывает только нужные строки.
+    m_view->filter()->setCondition(groupCondition, true);
+    m_view->filter()->setActive(true);
+    m_view->showFilterPanel();
 }
 
 void RtabWidget::onItemPressed( CellClickEventArgs* _args)
@@ -609,34 +612,28 @@ RtabWidget::GetSumSelected()
 
 void RtabWidget::slot_beginResetModel(std::string tname)
 {
-    if (this->m_UIForm.TableName() != tname)
-        return;
-
+    if (m_UIForm.TableName() != tname) return;
     m_view->beginUpdate();
-
-    // Запомним видимые столбцы
-    int ncols = m_view->getColumnCount();
-    for (int i = 0 ; i < ncols ; i++)
-    {
-        column_qt = (Qtitan::GridTableColumn *)m_view->getColumn(i);
-        m_ColumnsVisible.insert(std::make_pair(column_qt->caption() , column_qt->isVisible() ));
+    // Запоминаем видимость колонок
+    m_columnsVisible.clear();
+    for (int i = 0; i < m_view->getColumnCount(); ++i) {
+        auto* col = static_cast<Qtitan::GridTableColumn*>(m_view->getColumn(i));
+        m_columnsVisible[col->caption()] = col->isVisible();
     }
 }
 
 void RtabWidget::slot_endResetModel(std::string tname)
 {
-    if (this->m_UIForm.TableName() != tname)
-        return;
-
-    // Установим видимые столбцы
-    int ncols = m_view->getColumnCount();
-    int sz = (m_model->getRdata())->size();
-    qDebug()<<"onRTDM_EndResetModel"<<QString::fromStdString(tname)<<": ncols(view) = "<<ncols;
-    for (const RCol& rcol : *m_model->getRdata()){
-        column_qt = (Qtitan::GridTableColumn *)m_view->getColumn(rcol.getIndex());
-        column_qt->setVisible(false);
-        if (contains(m_ColumnsVisible, column_qt->caption())){
-            column_qt->setVisible(m_ColumnsVisible.at(column_qt->caption()));
+    if (m_UIForm.TableName() != tname) return;
+    // Восстанавливаем видимость
+    for (const RCol& rcol : *m_model->getRdata()) {
+        auto* col = static_cast<Qtitan::GridTableColumn*>(
+            m_view->getColumn(rcol.getIndex()));
+        if (!col) continue;
+        col->setVisible(false);
+        auto it = m_columnsVisible.find(col->caption());
+        if (it != m_columnsVisible.end()){
+            col->setVisible(it->second);
         }
     }
     m_view->endUpdate();

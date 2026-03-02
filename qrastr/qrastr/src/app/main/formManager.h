@@ -104,9 +104,6 @@ private:
     CUIForm* findFormByName(const QString& name);
     CUIForm* findFormByIndex(int index);
 
-    /// @brief Подключить сигналы расчётов к виджету формы
-    void setupFormConnections(RtabWidget* widget);
-
     /// @brief Построить иерархию меню из MenuPath форм
     QMap<QString, QMenu*> buildMenuStructure(QMenu* rootMenu);
 };

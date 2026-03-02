@@ -186,7 +186,7 @@ void LinkedFormController::openLinkedForm(LinkedForm lf)
     // и будет отключён при закрытии дочернего виджета.
     lf.vconn.push_back(
         connect(m_view, &Qtitan::GridTableView::focusRowChanged,
-                child,  &RtabWidget::onfocusRowChanged));
+                child,  &RtabWidget::slot_focusRowChanged));
 
     // Передаём LinkedForm в дочерний контроллер — он сохранит vconn
     child->applyLinkedFormFromController(lf);

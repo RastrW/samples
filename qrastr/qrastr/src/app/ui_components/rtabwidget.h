@@ -43,8 +43,6 @@ public:
     int getLongValue(const std::string& key, long row);
     /// @brief Применяет LinkedForm через контроллер.
     void applyLinkedFormFromController(const LinkedForm& lf);
-signals:
-    void CondFormatsModified();
 public slots:
     void on_calc_begin();
     void on_calc_end();
@@ -53,7 +51,7 @@ public slots:
     void setPyHlp(std::shared_ptr<PyHlp> pPyHlp);
 
     void onItemPressed(CellClickEventArgs* _index);
-    void onfocusRowChanged( int _row_old,int _row_new);
+    void slot_focusRowChanged( int _row_old,int _row_new);
 
     void slot_addRow();
     void slot_insertRow();
@@ -76,7 +74,6 @@ public slots:
     void slot_condFormatsEdit(std::size_t column);
 
     void SetSelection(std::string Selection);
-    void onCondFormatsModified();
 
     void slot_beginResetModel(std::string tname);
     void slot_endResetModel(std::string tname);
@@ -89,7 +86,7 @@ private:
     void setTableView(Qtitan::GridTableView& tv, RModel& mm,
                       int multiplier = 10 );
     /// Блокирует горячие клавиши заданные по умолчанию в Qtitan
-    bool eventFilter(QObject* obj, QEvent* event) override;  // ← п.8
+    bool eventFilter(QObject* obj, QEvent* event) override;
     /** @brief
      * a) создаёт RModel, вызывает setForm/populateDataFromRastr;
      * b) подключает сигналы RTDM к слотам RModel (обновления данных);
@@ -100,8 +97,9 @@ private:
 
     void setupToolbar();
     void setupShortcuts();
-
+    void setupConnections();
     std::tuple<int,double> GetSumSelected();
+    void condFormatsModified();
 
     Qtitan::Grid* m_grid;
     Qtitan::GridTableView* m_view;
@@ -122,7 +120,6 @@ private:
     QAction* m_actDuplicateRow;
     QAction* m_groupCorrection;
 
-    RTableView* ptv;
     // Колонка и строка, зафиксированные в момент открытия контекстного меню.
     int m_contextMenuColumn;
     int m_contextMenuRow;
@@ -130,5 +127,5 @@ private:
     std::string m_selection {""}; // Текущая выборка
     std::map<int, std::vector<CondFormat>>
         m_MapcondFormatVector; // column , vector<CondFormat>
-    std::map<QString,bool> m_ColumnsVisible;
+    std::map<QString,bool> m_columnsVisible;
 };
