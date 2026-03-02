@@ -131,13 +131,13 @@ bool Params::writeJsonFile(const fs::path& path_2_json)const {
         nlohmann::json j_file;
         j_file[pch_json_start_] = j_start;
 
-        qInfo() << "write JSON file: [" << path_2_json.string() << "]\n";
+        qInfo() << "write JSON file: [" << QString::fromStdString(path_2_json.string()) << "]\n";
         std::ofstream ofs(path_2_json);
         if(ofs.is_open()){
             ofs << j_file.dump(1, ' ');
             ofs.close();
         }else{
-            qCritical() <<"Can't open file for write: [{}]", path_2_json.string();
+            qCritical() <<"Can't open file for write: [{}]", QString::fromStdString(path_2_json.string());
             return false;
         }
     }catch(const std::exception& ex){

@@ -22,7 +22,7 @@ public slots:
     void onBtnApplyClick();
 
 private slots:
-    void onTreeItemClicked(const QModelIndex &index);
+    void onTreeItemClicked(QTreeWidgetItem *item, int column);
 
 private:
     // Добавить элемент в дерево и связать с виджетом

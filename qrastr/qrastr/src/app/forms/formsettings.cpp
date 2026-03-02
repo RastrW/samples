@@ -56,7 +56,7 @@ void SettingsDialog::setupUI() {
     layout->addLayout(hLayoutButtons);
     setLayout(layout);
 
-    connect(m_twSections, &QTreeWidget::clicked,
+    connect(m_twSections, &QTreeWidget::itemClicked,
             this, &SettingsDialog::onTreeItemClicked);
 }
 
@@ -164,9 +164,7 @@ QTreeWidgetItem* SettingsDialog::addTreePage(
     return item;
 }
 
-void SettingsDialog::onTreeItemClicked(const QModelIndex &index) {
-    QTreeWidgetItem* item = m_twSections->itemFromIndex(index);
-
+void SettingsDialog::onTreeItemClicked(QTreeWidgetItem *item, int column) {
     if (item == nullptr) {
         return;
     }
