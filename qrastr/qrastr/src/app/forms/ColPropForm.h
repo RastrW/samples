@@ -16,7 +16,7 @@ class ColPropForm : public QWidget
     Q_OBJECT
 
 public:
-    explicit ColPropForm(RData* prdata,RTableView* ptv,
+    explicit ColPropForm(RData* prdata,
                          Qtitan::GridTableView* view,
                          RCol* prcol, QWidget *parent = nullptr);
 
@@ -41,7 +41,6 @@ private slots:
     void on_btn_ok_clicked();
 
 private:
-    RTableView* ptv;
     Qtitan::GridTableView* view;
     Ui::ColPropForm *ui;
     RData* prdata;

@@ -36,6 +36,7 @@
 #include "linkedformcontroller.h"
 #include "rtableview.h"
 #include "ColPropForm.h"
+#include "contextMenuBuilder.h"
 
 RtabWidget::RtabWidget(QAstra* pqastra,CUIForm UIForm, RTablesDataManager* pRTDM,
                        ads::CDockManager* pDockManager, QWidget *parent)
@@ -80,17 +81,13 @@ RtabWidget::RtabWidget(QAstra* pqastra,CUIForm UIForm, RTablesDataManager* pRTDM
     m_view->tableOptions().setRowFrozenButtonVisible(true);
     m_view->tableOptions().setFrozenPlaceQuickSelection(true);
 
-    //  Горячие клавиши
-    QShortcut *sC_CTRL_I = new QShortcut( QKeySequence(Qt::CTRL | Qt::Key_I),
-                                         this,nullptr,nullptr, Qt::WidgetWithChildrenShortcut);
-    QShortcut *sC_CTRL_D = new QShortcut( QKeySequence(Qt::CTRL | Qt::Key_D), this);
-    QShortcut *sC_CTRL_R = new QShortcut( QKeySequence(Qt::CTRL | Qt::Key_R), this);
-    QShortcut *sC_CTRL_A = new QShortcut( QKeySequence(Qt::CTRL | Qt::Key_A), this);
+    // ── Блокируем встроенные в Qtitan события ──────────────────────────────────
+    m_grid->installEventFilter(this);
+    if (m_grid->viewport())
+        m_grid->viewport()->installEventFilter(this);
 
-    connect(sC_CTRL_I, &QShortcut::activated, this, &RtabWidget::insertRow_qtitan);
-    connect(sC_CTRL_A, &QShortcut::activated, this, &RtabWidget::AddRow);
-    connect(sC_CTRL_R, &QShortcut::activated, this, &RtabWidget::DuplicateRow_qtitan);
-    connect(sC_CTRL_D, &QShortcut::activated, this, &RtabWidget::deleteRow_qtitan);
+    //  Горячие клавиши
+    setupShortcuts();
 
     resize(800,500);
     setWindowFlags(Qt::WindowMinimizeButtonHint | Qt::WindowMinMaxButtonsHint | Qt::WindowCloseButtonHint);
@@ -103,7 +100,7 @@ RtabWidget::RtabWidget(QAstra* pqastra,CUIForm UIForm, RTablesDataManager* pRTDM
     connect(m_view, &GridTableView::contextMenu, this, &RtabWidget::contextMenu);
     connect(m_view, &GridTableView::cellClicked, this, &RtabWidget::onItemPressed);
 
-    CreateModel(pqastra,&m_UIForm);
+    createModel();
 
     connect(m_pRTDM, &RTablesDataManager::sig_dataChanged,this->m_model.get(),
             &RModel::slot_DataChanged);
@@ -129,6 +126,42 @@ RtabWidget::RtabWidget(QAstra* pqastra,CUIForm UIForm, RTablesDataManager* pRTDM
         m_model.get(),
         m_UIForm,
         this);
+
+    m_menuBuilder = std::make_unique<ContextMenuBuilder>(
+        m_view,
+        m_linkedFormCtrl.get(),
+        this);
+
+    connect(m_menuBuilder.get(), &ContextMenuBuilder::sig_addRow,
+            this, &RtabWidget::slot_addRow);
+    connect(m_menuBuilder.get(), &ContextMenuBuilder::sig_insertRow,
+            this, &RtabWidget::slot_insertRow);
+    connect(m_menuBuilder.get(), &ContextMenuBuilder::sig_deleteRow,
+            this, &RtabWidget::slot_deleteRow);
+    connect(m_menuBuilder.get(), &ContextMenuBuilder::sig_duplicateRow,
+            this, &RtabWidget::slot_duplicateRow);
+    connect(m_menuBuilder.get(), &ContextMenuBuilder::sig_groupCorrection,
+            this, &RtabWidget::slot_groupCorrection);
+
+    connect(m_menuBuilder.get(), &ContextMenuBuilder::sig_colProp,
+            this, &RtabWidget::slot_openColProp);
+    connect(m_menuBuilder.get(), &ContextMenuBuilder::sig_selection,
+            this, &RtabWidget::slot_openSelection);
+
+    connect(m_menuBuilder.get(), &ContextMenuBuilder::sig_exportCsv,
+            this, &RtabWidget::slot_openExportCSVForm);
+    connect(m_menuBuilder.get(), &ContextMenuBuilder::sig_importCsv,
+            this, &RtabWidget::slot_openImportCSVForm);
+
+    connect(m_menuBuilder.get(), &ContextMenuBuilder::sig_widthByTemplate,
+            this, &RtabWidget::slot_widthByTemplate);
+    connect(m_menuBuilder.get(), &ContextMenuBuilder::sig_widthByData,
+            this, &RtabWidget::slot_widthByData);
+
+    connect(m_menuBuilder.get(), &ContextMenuBuilder::sig_directCodeToggle,
+            this, &RtabWidget::slot_directCodeToggle);
+    connect(m_menuBuilder.get(), &ContextMenuBuilder::sig_condFormatsEdit,
+            this, &RtabWidget::slot_condFormatsEdit);
 }
 
 QWidget* RtabWidget::createDockContent(bool addToolbar) {
@@ -180,11 +213,49 @@ void RtabWidget::setupToolbar() {
     m_actDuplicateRow = m_toolbar->addAction(QIcon(":/images/Rastr3_grid_duprow_16x161.png"), "Дублировать");
     m_groupCorrection = m_toolbar->addAction(QIcon(":/images/column_edit.png"), "Групповая коррекция");
 
-    connect(m_actAddRow,       &QAction::triggered, this, &RtabWidget::AddRow);
-    connect(m_actInsertRow,    &QAction::triggered, this, &RtabWidget::insertRow_qtitan);
-    connect(m_actDeleteRow,    &QAction::triggered, this, &RtabWidget::deleteRow_qtitan);
-    connect(m_actDuplicateRow, &QAction::triggered, this, &RtabWidget::DuplicateRow_qtitan);
-    connect(m_groupCorrection, &QAction::triggered, this, &RtabWidget::OpenGroupCorrection);
+    connect(m_actAddRow,       &QAction::triggered, this, &RtabWidget::slot_addRow);
+    connect(m_actInsertRow,    &QAction::triggered, this, &RtabWidget::slot_insertRow);
+    connect(m_actDeleteRow,    &QAction::triggered, this, &RtabWidget::slot_deleteRow);
+    connect(m_actDuplicateRow, &QAction::triggered, this, &RtabWidget::slot_duplicateRow);
+    connect(m_groupCorrection, &QAction::triggered, this, &RtabWidget::slot_groupCorrection);
+}
+
+void RtabWidget::setupShortcuts(){
+    // Qt::WidgetWithChildrenShortcut + parent=m_grid:
+    // шорткат срабатывает, когда фокус внутри m_grid или его дочерних виджетов.
+    // Это именно то, что нужно: работает когда пользователь в таблице,
+    // и НЕ конфликтует с другими открытыми формами.
+    struct Def { QKeySequence key; void (RtabWidget::*slot)(); };
+    const Def defs[] = {
+                        { Qt::CTRL | Qt::Key_I, &RtabWidget::slot_insertRow    },
+                        { Qt::CTRL | Qt::Key_A, &RtabWidget::slot_addRow       },
+                        { Qt::CTRL | Qt::Key_R, &RtabWidget::slot_duplicateRow },
+                        { Qt::CTRL | Qt::Key_D, &RtabWidget::slot_deleteRow    },
+                        };
+
+    for (const auto& d : defs) {
+        auto* sc = new QShortcut(d.key, m_grid);
+        sc->setContext(Qt::WidgetWithChildrenShortcut);
+        connect(sc, &QShortcut::activated, this, d.slot);
+    }
+}
+
+bool RtabWidget::eventFilter(QObject* obj, QEvent* event)
+{
+    if (event->type() == QEvent::KeyPress) {
+        // Срабатываем только если событие пришло от нашего grid или viewport
+        bool fromGrid = (obj == m_grid)
+                        || (m_grid && m_grid->isAncestorOf(qobject_cast<QWidget*>(obj)));
+        if (fromGrid) {
+            auto* ke = static_cast<QKeyEvent*>(event);
+            if (ke->key() == Qt::Key_Delete ||
+                ke->key() == Qt::Key_F5) {
+                // Поглощаем событие
+                return true;
+            }
+        }
+    }
+    return QWidget::eventFilter(obj, event);
 }
 
 void RtabWidget::closeEvent(QCloseEvent *event)
@@ -205,10 +276,10 @@ void RtabWidget::OnClose()
     this->close();
 }
 
-void RtabWidget::CreateModel(QAstra* pqastra, CUIForm* pUIForm)
+void RtabWidget::createModel()
 {
-    m_model = std::make_unique<RModel>(this, pqastra, m_pRTDM);
-    m_model->setForm(pUIForm);
+    m_model = std::make_unique<RModel>(this, m_pqastra, m_pRTDM);
+    m_model->setForm(&m_UIForm);
     m_model->populateDataFromRastr();
 
     m_view->beginUpdate();
@@ -218,7 +289,7 @@ void RtabWidget::CreateModel(QAstra* pqastra, CUIForm* pUIForm)
 
     //Порядок колонок как в форме
     int vi = 0;
-    for (const auto& f : pUIForm->Fields()){
+    for (const auto& f : m_UIForm.Fields()){
         for (const RCol& rcol : *m_model->getRdata()){
             if (f.Name() == rcol.getStrName()){
                 column_qt = static_cast<GridTableColumn*>(
@@ -311,7 +382,6 @@ void RtabWidget::applyColumnEditor(int colIndex)
     }
 }
 
-
 void RtabWidget::on_calc_begin()
 {
     ///@todo something
@@ -324,13 +394,13 @@ void RtabWidget::on_calc_end()
    // view->endUpdate();
 }
 
-void RtabWidget::widebyshabl()
+void RtabWidget::slot_widthByTemplate()
 {
     setTableView(*ptv,*m_model);
     setTableView(*m_view,*m_model);
 }
 
-void RtabWidget::widebydata()
+void RtabWidget::slot_widthByData()
 {
     ptv->resizeColumnsToContents();
     m_view->tableOptions().setColumnAutoWidth(true);
@@ -361,123 +431,15 @@ void RtabWidget::setTableView(Qtitan::GridTableView& tv, RModel& mm, int multipl
 
 void RtabWidget::contextMenu(ContextMenuEventArgs* args)
 {
-    QMenu* menu = args->contextMenu();
+    // MenuContext живёт только здесь, на стеке — НЕ поле класса
+    MenuContext ctx;
+    ctx.column = args->hitInfo().columnIndex();
+    ctx.row    = args->hitInfo().row().rowIndex();
+    ctx.col    = (ctx.column >= 0) ? m_model->getRCol(ctx.column) : nullptr;
 
-    // Перебираем встроенные экшены и удаляем ненужные
-    const QList<QAction*> actions = menu->actions();
-    for (QAction* act : actions)
-    {
-        const QString text = act->text();
-        // Убираем "Подогнать" (Fit) и "Удалить строку" (Delete row)
-        if (text.contains("Подогнать", Qt::CaseInsensitive) ||
-            text.contains("Удалить",   Qt::CaseInsensitive))
-        {
-            menu->removeAction(act);
-            act->setShortcut(QKeySequence());
-            act->deleteLater(); // если нужно освободить память
-        }
-    }
+    if (!ctx.col) return;
 
-    m_contextMenuColumn = args->hitInfo().columnIndex();
-    m_contextMenuRow = args->hitInfo().row().rowIndex();
-    QString qstr_col_props = "";
-    RCol* prcol = nullptr;
-    if (m_contextMenuColumn >= 0)
-    {
-        prcol = m_model->getRCol(m_contextMenuColumn);
-        std::string str_col_prop = prcol->desc() + " |"+ prcol->title() + "| -(" + prcol->name() + "), [" +prcol->unit() + "]";
-        qstr_col_props = str_col_prop.c_str();
-    }
-    if (!prcol)
-        return;
-
-    QAction* condFormatAction = new QAction(QIcon(":/icons/edit_cond_formats"),
-                                            tr("Условное форматирование"),  args->contextMenu());
-
-    args->contextMenu()->addSeparator();
-    args->contextMenu()->addAction(
-        qstr_col_props,
-        this,
-        &RtabWidget::OpenColPropForm);
-
-
-    std::tuple<int,double> item_sum = GetSumSelected();
-#if(defined(_MSC_VER))
-    args->contextMenu()->addAction("Сумма: " + QString::number(std::get<1>(item_sum))+" Элементов: " + QString::number(std::get<0>(item_sum)),this,nullptr);
-#else
-    args->contextMenu()->addAction( QString("Сумма: ") + QString::number(std::get<1>(item_sum))+QString(" Элементов: ") + QString::number(std::get<0>(item_sum)) );
-#endif
-
-    args->contextMenu()->addSeparator();
-
-    ///@todo
-    // В Qtitane не работают шорткаты, хотя del встроенный работает.
-    args->contextMenu()->addAction(
-                           QIcon(":/images/Rastr3_grid_insrow_16x16.png"),
-                           tr("Вставить"),
-                           this,
-                           &RtabWidget::insertRow_qtitan
-                           )->setShortcut(QKeySequence(Qt::CTRL | Qt::Key_I));
-    args->contextMenu()->addAction(
-                           QIcon(":/images/Rastr3_grid_addrow_16x16.png"),
-                           tr("Добавить"),
-                           this,
-                           &RtabWidget::AddRow
-                           )->setShortcut(QKeySequence(Qt::CTRL | Qt::Key_A));
-    args->contextMenu()->addAction(
-                           QIcon(":/images/Rastr3_grid_duprow_16x161.png"),
-                           tr("Дублировать"),
-                           this,
-                           &RtabWidget::DuplicateRow_qtitan
-                           )->setShortcut(QKeySequence(Qt::CTRL | Qt::Key_R));
-    args->contextMenu()->addAction(
-                           QIcon(":/images/Rastr3_grid_delrow_16x16.png"),
-                           tr("Удалить"),
-                           this,
-                           &RtabWidget::deleteRow_qtitan
-                           )->setShortcut(QKeySequence(Qt::CTRL | Qt::Key_D));
-    args->contextMenu()->addAction(
-                           QIcon(":/images/column_edit.png"),
-                           tr("Групповая коррекция"),
-                           this,
-                           &RtabWidget::OpenGroupCorrection);
-
-    args->contextMenu()->addSeparator();
-    args->contextMenu()->addAction(tr("Выравнивание: по шаблону"),
-                                   this, &RtabWidget::widebyshabl);
-    args->contextMenu()->addAction(tr("Выравнивание: по данным"),
-                                   this, &RtabWidget::widebydata);
-    args->contextMenu()->addSeparator();
-    args->contextMenu()->addAction(tr("Экспорт CSV"),
-                                   this, &RtabWidget::OpenExportCSVForm);
-    args->contextMenu()->addAction(tr("Импорт CSV"),
-                                   this, &RtabWidget::OpenImportCSVForm);
-    args->contextMenu()->addAction(tr("Выборка"),
-                                   this, &RtabWidget::OpenSelectionForm);
-
-    if ((!prcol->getNameRef().empty() && prcol->getComPropTT() == enComPropTT::COM_PR_INT)
-        || (prcol->getComPropTT() == enComPropTT::COM_PR_SUPERENUM))
-    {
-        QAction* actdirectcode=new QAction("Прямой ввод кода", this);
-        actdirectcode->setCheckable(true);
-        if ( !(prcol == nullptr) && prcol->isDirectCode())
-          actdirectcode->setChecked(true);
-        args->contextMenu()->addAction(actdirectcode);
-        connect(actdirectcode, &QAction::triggered, this, [&]() {
-            emit SetDirectCodeEntry(m_contextMenuColumn);
-        });
-    }
-
-    //  Подменю «Связанные формы» и «Макрос»
-    args->contextMenu()->addMenu(
-        m_linkedFormCtrl->buildLinkedFormsMenu(m_contextMenuRow));
-    args->contextMenu()->addMenu(
-        m_linkedFormCtrl->buildLinkedMacroMenu(m_contextMenuRow));
-
-    args->contextMenu()->addAction(condFormatAction);
-    connect(condFormatAction, &QAction::triggered, this, [&]() {
-        emit editCondFormats(m_contextMenuColumn);
-    });
+    m_menuBuilder->populate(args->contextMenu(), ctx);
 }
 
 void RtabWidget::onfocusRowChanged(int /*row_old*/, int row_new)
@@ -486,14 +448,14 @@ void RtabWidget::onfocusRowChanged(int /*row_old*/, int row_new)
     m_linkedFormCtrl->onParentRowChanged(row_new);
 }
 
-void RtabWidget::AddRow()
+void RtabWidget::slot_addRow()
 {
     m_view->beginUpdate();
     m_model->AddRow();
     m_view->endUpdate();
 }
 
-void RtabWidget::insertRow_qtitan()
+void RtabWidget::slot_insertRow()
 {
     int row = m_view->selection()->cell().rowIndex();
 
@@ -502,7 +464,7 @@ void RtabWidget::insertRow_qtitan()
     m_view->endUpdate();
 }
 
-void RtabWidget::DuplicateRow_qtitan()
+void RtabWidget::slot_duplicateRow()
 {
     int row = m_view->selection()->cell().rowIndex();
 
@@ -511,7 +473,7 @@ void RtabWidget::DuplicateRow_qtitan()
     m_view->endUpdate();
 }
 
-void RtabWidget::deleteRow_qtitan()
+void RtabWidget::slot_deleteRow()
 {
     int row = m_view->selection()->cell().rowIndex();
 
@@ -520,7 +482,52 @@ void RtabWidget::deleteRow_qtitan()
     m_view->endUpdate();
 }
 
-void RtabWidget::editCondFormats(std::size_t column)
+void RtabWidget::slot_groupCorrection()
+{
+    RCol* prcol = m_model->getRCol(m_contextMenuColumn);
+    formgroupcorrection* fgc =  new formgroupcorrection(m_model->getRdata(),prcol,this);
+    this->on_calc_begin();
+    fgc->show();
+    this->on_calc_end();
+}
+
+void RtabWidget::slot_openColProp()
+{
+    RCol* prcol = m_model->getRCol(m_contextMenuColumn);
+    ColPropForm* PropForm = new ColPropForm(m_model->getRdata(), m_view, prcol);
+    PropForm->show();
+}
+
+void RtabWidget::slot_openSelection()
+{
+    FormSelection* Selection = new FormSelection(this->m_selection, this);
+    Selection->show();
+}
+
+void RtabWidget::slot_openExportCSVForm()
+{
+    formexportcsv* ExportCsv = new formexportcsv( m_model->getRdata(),this);
+    ExportCsv->show();
+}
+
+void RtabWidget::slot_openImportCSVForm()
+{
+    formimportcsv2* ImportCsv = new formimportcsv2( m_model->getRdata(),this);
+    ImportCsv->show();
+}
+
+void RtabWidget::slot_directCodeToggle(std::size_t column)
+{
+    RCol* prcol = m_model->getRCol(column);
+    if (!prcol) return;
+    prcol->invertDirectCodeStatus();
+
+    m_view->beginUpdate();
+    applyColumnEditor(column);
+    m_view->endUpdate();
+}
+
+void RtabWidget::slot_condFormatsEdit(std::size_t column)
 {
     std::vector<CondFormat> condFormats;
     CondFormat condFormat;
@@ -546,7 +553,6 @@ void RtabWidget::onCondFormatsModified()
     cfj.save_json();
 }
 
-
 void RtabWidget::SetSelection(std::string Selection)
 {
     m_selection = Selection;
@@ -569,47 +575,6 @@ void RtabWidget::SetSelection(std::string Selection)
         qDebug() << ind;
         ptv->setRowHidden(ind,false);
     }
-}
-
-void RtabWidget::OpenColPropForm()
-{
-    RCol* prcol = m_model->getRCol(m_contextMenuColumn);
-    ColPropForm* PropForm = new ColPropForm(m_model->getRdata(),ptv,m_view, prcol);
-    PropForm->show();
-}
-
-void RtabWidget::OpenSelectionForm()
-{
-    FormSelection* Selection = new FormSelection(this->m_selection, this);
-    Selection->show();
-}
-
-void RtabWidget::OpenGroupCorrection()
-{
-    RCol* prcol = m_model->getRCol(m_contextMenuColumn);
-    formgroupcorrection* fgc =  new formgroupcorrection(m_model->getRdata(),prcol,this);
-    this->on_calc_begin();
-    fgc->show();
-    this->on_calc_end();
-}
-
-void RtabWidget::OpenExportCSVForm()
-{
-    formexportcsv* ExportCsv = new formexportcsv( m_model->getRdata(),this);
-    ExportCsv->show();
-}
-
-void RtabWidget::OpenImportCSVForm()
-{
-    formimportcsv2* ImportCsv = new formimportcsv2( m_model->getRdata(),this);
-    ImportCsv->show();
-}
-
-void RtabWidget::SetDirectCodeEntry(std::size_t column)
-{
-    RCol* prcol = m_model->getRCol(column);
-    prcol->invertDirectCodeStatus();
-    applyColumnEditor(column);
 }
 
 void RtabWidget::onItemPressed( CellClickEventArgs* _args)

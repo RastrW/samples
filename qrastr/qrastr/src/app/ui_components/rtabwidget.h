@@ -18,6 +18,7 @@ class RModel;
 class RCol;
 class QTableView;
 class RTableView;
+class ContextMenuBuilder;
 
 ///@brief Виджет, отображающий одну таблицу Rastr в QTitan Grid.
 class RtabWidget : public QWidget
@@ -54,45 +55,51 @@ public slots:
     void onItemPressed(CellClickEventArgs* _index);
     void onfocusRowChanged( int _row_old,int _row_new);
 
-    void AddRow();
-    void insertRow_qtitan();
-    void DuplicateRow_qtitan();
-    void deleteRow_qtitan();
+    void slot_addRow();
+    void slot_insertRow();
+    void slot_duplicateRow();
+    void slot_deleteRow();
+    void slot_groupCorrection();
     // ширина по шаблону
-    void widebyshabl();
+    void slot_widthByTemplate();
     // ширина по контенту
-    void widebydata();
+    void slot_widthByData();
 
     //  Формы инструментов
-    void OpenColPropForm();
-    void OpenSelectionForm();
-    void OpenGroupCorrection();
-    void OpenExportCSVForm();
-    void OpenImportCSVForm();
-    void SetDirectCodeEntry(std::size_t column);
+    void slot_openColProp();
+    void slot_openSelection();
+
+    void slot_openExportCSVForm();
+    void slot_openImportCSVForm();
+
+    void slot_directCodeToggle(std::size_t column);
+    void slot_condFormatsEdit(std::size_t column);
 
     void SetSelection(std::string Selection);
-    void editCondFormats(std::size_t column);
     void onCondFormatsModified();
 
     void slot_beginResetModel(std::string tname);
     void slot_endResetModel(std::string tname);
 private slots:
-    /** @brief
-     * a) создаёт RModel, вызывает setForm/populateDataFromRastr;
-     * b) подключает сигналы RTDM к слотам RModel (обновления данных);
-     * c) устанавливает редакторы колонок (SetEditors);
-     * d) восстанавливает условное форматирование из JSON.
-    */
-    void CreateModel(QAstra* pqastra,CUIForm* pUIForm);
+
     void applyAllColumnEditors ();
     void applyColumnEditor(int colIndex);
 private:
     void setTableView(QTableView& tv, RModel& mm, int multiplier = 10);
     void setTableView(Qtitan::GridTableView& tv, RModel& mm,
                       int multiplier = 10 );
+    /// Блокирует горячие клавиши заданные по умолчанию в Qtitan
+    bool eventFilter(QObject* obj, QEvent* event) override;  // ← п.8
+    /** @brief
+     * a) создаёт RModel, вызывает setForm/populateDataFromRastr;
+     * b) подключает сигналы RTDM к слотам RModel (обновления данных);
+     * c) устанавливает редакторы колонок (SetEditors);
+     * d) восстанавливает условное форматирование из JSON.
+    */
+    void createModel();
 
     void setupToolbar();
+    void setupShortcuts();
 
     std::tuple<int,double> GetSumSelected();
 
@@ -101,6 +108,7 @@ private:
     std::shared_ptr<PyHlp> pPyHlp_;
     std::unique_ptr<RModel> m_model;
     std::unique_ptr<LinkedFormController> m_linkedFormCtrl;
+    std::unique_ptr<ContextMenuBuilder>   m_menuBuilder;
     CUIForm m_UIForm;
     QAstra* m_pqastra;
     RTablesDataManager* m_pRTDM;

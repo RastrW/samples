@@ -2,11 +2,10 @@
 #include "ui_ColPropForm.h"
 #include "rmodel.h"
 
-ColPropForm::ColPropForm(RData* _prdata, RTableView* _ptv, Qtitan::GridTableView* _view, RCol* _prcol,QWidget *parent) :
+ColPropForm::ColPropForm(RData* _prdata, Qtitan::GridTableView* _view, RCol* _prcol,QWidget *parent) :
     QWidget(parent),
     ui(new Ui::ColPropForm)
 {
-    ptv = _ptv;
     view = _view;
     prdata = _prdata;
 

@@ -69,7 +69,7 @@ void FormManager::openForm(const CUIForm& form) {
 
     prtw->setPyHlp(m_pPyHlp);
     // Выравнивание данных по шаблону, выравнивание текста по левому краю
-    prtw->widebyshabl();
+    prtw->slot_widthByTemplate();
     // Подключение сигналов расчётов
     setupFormConnections(prtw);
 
