@@ -3,14 +3,13 @@
 #include "rmodel.h"
 #include <QtitanGrid.h>
 
-ColPropForm::ColPropForm(RData* _prdata, Qtitan::GridTableView* _view, RCol* _prcol,QWidget *parent) :
-    QWidget(parent),
-    ui(new Ui::ColPropForm)
-{
-    view = _view;
-    prdata = _prdata;
-
-    prcol = _prcol;
+ColPropForm::ColPropForm(RData* prdata, Qtitan::GridTableView* view,
+                         RCol* prcol,QWidget *parent) :
+    QDialog(parent),
+    ui(new Ui::ColPropForm),
+    m_prdata{prdata},
+    m_prcol{prcol},
+    m_view{view}{
     std::string title = prdata->t_name_ + "[" +prdata->t_title_ + "]." + prcol->name() + "[" +prcol->title() + "]" ;
     setWindowTitle(title.c_str());
     windowTitle();
@@ -22,7 +21,6 @@ ColPropForm::ColPropForm(RData* _prdata, Qtitan::GridTableView* _view, RCol* _pr
     setPrec(prcol->prec().c_str());
     setExpr(prcol->expr().c_str());
 }
-
 
 ColPropForm::~ColPropForm()
 {
@@ -90,20 +88,33 @@ void ColPropForm::on_btn_cancel_clicked()
 void ColPropForm::on_btn_ok_clicked()
 {
     ///@todo: need change propertires
+    IRastrResultVerify{m_prdata->pqastra_->getRastr()->SetLockEvent(true)};
+    m_prcol->set_prec(getPrec().toStdString().c_str());
 
-    IRastrResultVerify{prdata->pqastra_->getRastr()->SetLockEvent(true)};
-    prcol->set_prec(getPrec().toStdString().c_str());
+    m_prcol->set_prop(FieldProperties::Description, getDesc().toStdString());
+    m_prcol->set_prop(FieldProperties::Expression, getExpr().toStdString());
+    m_prcol->set_prop(FieldProperties::Title, getTitle().toStdString());
+    m_prcol->set_prop(FieldProperties::Width, getWidth().toStdString());
 
-    prcol->set_prop(FieldProperties::Description, getDesc().toStdString());
-    prcol->set_prop(FieldProperties::Expression, getExpr().toStdString());
-    prcol->set_prop(FieldProperties::Title, getTitle().toStdString());
-    prcol->set_prop(FieldProperties::Width, getWidth().toStdString());
+    IRastrResultVerify{m_prdata->pqastra_->getRastr()->SetLockEvent(false)};
+    long testIndex = m_prcol->getIndex();
 
-    IRastrResultVerify{prdata->pqastra_->getRastr()->SetLockEvent(false)};
+    // 1. Получаем колонку с правильным приведением типов
+    auto* tableView = static_cast<Qtitan::GridTableView*>(m_view);
+    auto* column_base = tableView->getColumn(m_prcol->getIndex());
+    auto* column_qt = static_cast<Qtitan::GridTableColumn*>(column_base);
 
-    Qtitan::GridTableColumn* column_qt = (Qtitan::GridTableColumn *)view->getColumn(prcol->getIndex());
-    ((Qtitan::GridNumericEditorRepository *)column_qt->editorRepository())->setDecimals(getPrec().toInt());
+    // 2. Устанавливаем точность (Decimals)
+    if (column_qt) {
+        // 3. Вызываем editorRepository()
+        Qtitan::GridEditorRepository* repo = column_qt->editorRepository();
 
+        // 4. Приводим репозиторий к числовому типу и устанавливаем точность
+        auto* numEditor = qobject_cast<Qtitan::GridNumericEditorRepository*>(repo);
+        if (numEditor) {
+            numEditor->setDecimals(getPrec().toInt());
+        }
+    }
     this->close();
 }
 

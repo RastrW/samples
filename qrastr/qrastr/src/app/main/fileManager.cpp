@@ -211,7 +211,9 @@ bool FileManager::saveAll() {
         m_loadedFiles,
         m_parentWidget
     );
-    
+
+    fsaveall->setAttribute(Qt::WA_DeleteOnClose);
+
     fsaveall->show();
     
     return true;
@@ -357,7 +359,8 @@ QString FileManager::findTemplateByExtension(const QString& filePath) const {
 
 bool FileManager::showNewFileDialog(QStringList& selectedTemplates) {
     FormFileNew* pformFileNew = new FormFileNew(m_parentWidget);
-    
+    pformFileNew->setAttribute(Qt::WA_DeleteOnClose);
+
     if (QDialog::Accepted != pformFileNew->exec()) {
         return false;
     }

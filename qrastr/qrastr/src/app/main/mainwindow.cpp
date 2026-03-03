@@ -373,6 +373,7 @@ void MainWindow::showIdopDialog() {
     emit sig_calcBegin();
     
     formcalcidop* dialog = new formcalcidop(m_qastra.get(), this);
+    dialog->setAttribute(Qt::WA_DeleteOnClose);
     dialog->show();
 
     emit sig_calcEnd();

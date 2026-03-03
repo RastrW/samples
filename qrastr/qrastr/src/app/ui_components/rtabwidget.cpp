@@ -489,6 +489,8 @@ void RtabWidget::slot_groupCorrection()
         return;
     }
     formgroupcorrection* fgc =  new formgroupcorrection(m_model->getRdata(),prcol,this);
+    fgc->setAttribute(Qt::WA_DeleteOnClose);
+
     this->on_calc_begin();
     fgc->show();
     this->on_calc_end();
@@ -498,8 +500,10 @@ void RtabWidget::slot_openColProp(int col)
 {
     RCol* prcol = m_model->getRCol(col);
     if (!prcol) return;
-    ColPropForm* PropForm = new ColPropForm(m_model->getRdata(), m_view, prcol);
-    PropForm->show();
+    ColPropForm* propDialog = new ColPropForm(m_model->getRdata(),
+                                            m_view, prcol, this);
+    propDialog->setAttribute(Qt::WA_DeleteOnClose);
+    propDialog->exec();
 }
 
 void RtabWidget::slot_openSelection()
@@ -509,22 +513,25 @@ void RtabWidget::slot_openSelection()
     RCol* prcol = m_model->getRCol(col);
     std::string colName = prcol ? prcol->name() : "";
 
-    FormSelection* Selection = new FormSelection(m_selection,colName, this);
-    connect(Selection, &FormSelection::sig_selectionAccepted,
+    FormSelection* selectionDialog = new FormSelection(m_selection,colName, this);
+    connect(selectionDialog, &FormSelection::sig_selectionAccepted,
             this, &RtabWidget::slot_setFiltrForSelection);
-    Selection->show();
+    selectionDialog->setAttribute(Qt::WA_DeleteOnClose);
+    selectionDialog->show();
 }
 
 void RtabWidget::slot_openExportCSVForm()
 {
-    formexportcsv* ExportCsv = new formexportcsv( m_model->getRdata(),this);
-    ExportCsv->show();
+    formexportcsv* exportCsvDialog = new formexportcsv( m_model->getRdata(),this);
+    exportCsvDialog->setAttribute(Qt::WA_DeleteOnClose);
+    exportCsvDialog->show();
 }
 
 void RtabWidget::slot_openImportCSVForm()
 {
-    formimportcsv2* ImportCsv = new formimportcsv2( m_model->getRdata(),this);
-    ImportCsv->show();
+    formimportcsv2* importCsvDialog = new formimportcsv2( m_model->getRdata(),this);
+    importCsvDialog->setAttribute(Qt::WA_DeleteOnClose);
+    importCsvDialog->show();
 }
 
 void RtabWidget::slot_directCodeToggle(std::size_t column)

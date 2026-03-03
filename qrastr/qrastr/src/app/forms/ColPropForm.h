@@ -1,6 +1,6 @@
 #pragma once
 
-#include <QWidget>
+#include <QDialog>
 #include <QString>
 
 namespace Ui {
@@ -11,7 +11,7 @@ namespace Qtitan   { class GridTableView; }
 class RData;
 class RCol;
 
-class ColPropForm : public QWidget
+class ColPropForm : public QDialog
 {
     Q_OBJECT
 
@@ -41,8 +41,8 @@ private slots:
     void on_btn_ok_clicked();
 
 private:
-    Qtitan::GridTableView* view;
     Ui::ColPropForm *ui;
-    RData* prdata;
-    RCol* prcol;
+    Qtitan::GridTableView* m_view;
+    RData* m_prdata;
+    RCol* m_prcol;
 };
