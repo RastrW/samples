@@ -95,13 +95,12 @@ void ColPropForm::on_btn_ok_clicked()
     m_prcol->set_prop(FieldProperties::Expression, getExpr().toStdString());
     m_prcol->set_prop(FieldProperties::Title, getTitle().toStdString());
     m_prcol->set_prop(FieldProperties::Width, getWidth().toStdString());
-
+    long textind = m_prcol->getIndex();
     IRastrResultVerify{m_prdata->pqastra_->getRastr()->SetLockEvent(false)};
-    long testIndex = m_prcol->getIndex();
 
     // 1. Получаем колонку с правильным приведением типов
     auto* tableView = static_cast<Qtitan::GridTableView*>(m_view);
-    auto* column_base = tableView->getColumn(m_prcol->getIndex());
+    auto* column_base = tableView->getColumn(textind);
     auto* column_qt = static_cast<Qtitan::GridTableColumn*>(column_base);
 
     // 2. Устанавливаем точность (Decimals)

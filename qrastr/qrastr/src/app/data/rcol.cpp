@@ -71,6 +71,7 @@ std::string RCol::title() const{
     }
     IRastrColumnPtr col_ptr{ columns->Item(m_str_name) };
     return IRastrPayload(IRastrVariantPtr(col_ptr->Property(FieldProperties::Title))->String()).Value();
+
 }
 
 std::string RCol::desc() const{

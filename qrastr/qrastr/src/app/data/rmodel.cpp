@@ -134,7 +134,7 @@ QVariant RModel::data(const QModelIndex &index, int role) const
 
     if (role == Qt::BackgroundRole )
     {
-            ///@todo временная заливка ячейки (1,2) красным — удалить перед релизом
+        ///@todo временная заливка ячейки (1,2) красным — удалить перед релизом
             if (row == 1 && col == 2)  //change background only for cell(1,2)
                 return QBrush(Qt::red);
             item_str = std::visit(ToString(),up_rdata->pnparray_->Get(row,col));
@@ -191,6 +191,7 @@ QVariant RModel::data(const QModelIndex &index, int role) const
 QVariant RModel::headerData(int section, Qt::Orientation orientation, int role) const
 {
     if (role == Qt::DisplayRole && orientation == Qt::Horizontal) {
+        //std::string title = up_rdata.get()->at(section).title().c_str();
         return up_rdata.get()->at(section).title().c_str();
     }
     if (role == Qt::DisplayRole && orientation == Qt::Vertical) {
@@ -292,7 +293,8 @@ bool RModel::setData(const QModelIndex &index, const QVariant &value, int role)
         if (emitSignals())
         {
             emit dataChanged(index,index );
-            emit changePersistentIndex(index,index);
+            //сигнал используется при реструктуризации модели (удаление/вставка строк), не при изменении данных.
+            //emit changePersistentIndex(index,index);
         }
         return true;
     }
@@ -524,14 +526,16 @@ void RModel::slot_DataChanged(std::string _t_name, int row_from,int col_from ,in
 
 void RModel::slot_BeginResetModel(std::string _t_name)
 {
-    if (this->getRdata()->t_name_ == _t_name)
+    if (this->getRdata()->t_name_ == _t_name){
         beginResetModel();
+    }
 }
 
 void RModel::slot_EndResetModel(std::string _t_name)
 {
     if (this->getRdata()->t_name_ == _t_name)
     {
+        ///@note при сборсе обязательно целиком пересоздавать data
         populateDataFromRastr();
         endResetModel();
     }

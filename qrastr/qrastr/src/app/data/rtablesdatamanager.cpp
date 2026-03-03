@@ -189,26 +189,24 @@ QDataBlock* RTablesDataManager::findCachedBlock(const std::string& tname)
 void RTablesDataManager::handleChangeAll()
 {
     // Все таблицы изменились — типично при загрузке нового файла расчёта.
-    // Сбрасываем и перечитываем каждый кешированный блок.
     /// @note сигналы (sig_BeginResetModel/sig_EndResetModel) могут изменять mpTables,
-    /// поэтому только копирование
-    for (auto [tname, sp_QDB] : mpTables)
-    {
+    /// поэтому только копирование сначала собираем список ключей:
+    std::vector<std::string> keys;
+    for (auto& [k, v] : mpTables) keys.push_back(k);
+    // Сбрасываем и перечитываем каждый кешированный блок.
+    for (const auto& tname : keys) {
+        auto it = mpTables.find(tname);
+        if (it == mpTables.end()) continue;
         emit sig_BeginResetModel(tname);
-        sp_QDB->Clear();
-        getDataBlock(tname, *sp_QDB);
+        it->second->Clear();
+        getDataBlock(tname, *it->second);
         emit sig_EndResetModel(tname);
-    }
-
-    for (auto& p : mpTables) {
-        qInfo() << "  -" << p.first.c_str() << "use_count=" << p.second.use_count();
     }
 }
 
 void RTablesDataManager::handleChangeTable(const std::string& tname)
 {
-    // Структура таблицы изменилась (добавлена/удалена колонка).
-    // Необходима полная перезагрузка: и данных, и метаданных колонок.
+    ///@todo не понятно, как добиться вызова этого события
     qInfo() << "ENTER handleChangeTable for table:" << tname.c_str();
     QDataBlock* pqdb = findCachedBlock(tname);
     if (!pqdb) return;
