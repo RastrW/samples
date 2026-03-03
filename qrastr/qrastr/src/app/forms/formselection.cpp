@@ -2,21 +2,29 @@
 #include "ui_formselection.h"
 #include "rtabwidget.h"
 
-FormSelection::FormSelection(std::string colName,
+FormSelection::FormSelection(std::string selection,
+                             std::string colName,
                              QWidget *parent)
     : QDialog(parent),
     ui(new Ui::FormSelection),
+    m_selection{selection},
     m_colName{colName}
 {
     ui->setupUi(this);
     ui->textEdit->setFocus();
-    std::string hint;
-    if (!colName.empty()){
-        hint = m_colName + "=";
+
+    if (m_selection.empty()){
+        std::string hint;
+        if (!colName.empty()){
+            hint = m_colName + "=";
+        }else{
+            hint = m_colName;
+        }
+
+        ui->textEdit->setPlaceholderText("Пример для выбранного столбца: " + QString::fromStdString(m_colName) + ">10");
     }else{
-        hint = m_colName;
+        ui->textEdit->setPlainText(m_selection.c_str());
     }
-    ui->textEdit->setPlainText(  hint.c_str());
 }
 
 FormSelection::~FormSelection()

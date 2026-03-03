@@ -28,11 +28,16 @@ signals:
     void editCompleted(const QString &);
 public slots:
     void slot_DataChanged(std::string _t_name, int row_from,int col_from ,int row_to,int col_to);
+    //сброс модели
     void slot_BeginResetModel(std::string _t_name);
     ///@todo Нужна ли загрузка справочных данных rebuildBackInfo() при сбросе модели?
     void slot_EndResetModel(std::string _t_name);
+    //вставка строки
     void slot_BeginInsertRow(std::string _t_name,int first, int last);
     void slot_EndInsertRow(std::string _t_name);
+    //удаление строки
+    void slot_BeginRemoveRows(std::string tname, int first, int last);
+    void slot_EndRemoveRows(std::string tname);
 public:
     struct ColumnEditorInfo {
         enum class Type { None, Numeric, CheckBox, ComboBox };

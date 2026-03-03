@@ -11,8 +11,9 @@ class FormSelection : public QDialog
     Q_OBJECT
 
 public:
-    explicit FormSelection(std::string colName,
-                           QWidget *parent = nullptr);
+    explicit FormSelection( std::string selection,
+                            std::string colName,
+                            QWidget *parent = nullptr);
     ~FormSelection();
 signals:
     void sig_selectionAccepted(std::string selection);
@@ -21,5 +22,6 @@ private slots:
 
 private:
     std::string m_colName;
+    std::string m_selection;
     Ui::FormSelection *ui;
 };

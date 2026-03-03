@@ -550,6 +550,16 @@ void RModel::slot_EndInsertRow(std::string _t_name)
         endInsertRows();
 }
 
+void RModel::slot_BeginRemoveRows(std::string tname, int first, int last){
+    if (getRdata()->t_name_ == tname)
+        beginRemoveRows(QModelIndex(), first, last);
+}
+
+void RModel::slot_EndRemoveRows(std::string tname){
+    if (getRdata()->t_name_ == tname)
+        endRemoveRows();
+}
+
 bool RModel::isBinary(const QModelIndex& index) const
 {
     switch (this->up_rdata->at(index.column()).getEnData())

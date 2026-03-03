@@ -452,6 +452,35 @@ void RtabWidget::slot_deleteRow()
     m_view->endUpdate();
 }
 
+void RtabWidget::slot_beginResetModel(std::string tname)
+{
+    if (m_UIForm.TableName() != tname) return;
+    m_view->beginUpdate();
+    // Запоминаем видимость колонок
+    m_columnsVisible.clear();
+    for (int i = 0; i < m_view->getColumnCount(); ++i) {
+        auto* col = static_cast<Qtitan::GridTableColumn*>(m_view->getColumn(i));
+        m_columnsVisible[col->caption()] = col->isVisible();
+    }
+}
+
+void RtabWidget::slot_endResetModel(std::string tname)
+{
+    if (m_UIForm.TableName() != tname) return;
+    // Восстанавливаем видимость
+    for (const RCol& rcol : *m_model->getRdata()) {
+        auto* col = static_cast<Qtitan::GridTableColumn*>(
+            m_view->getColumn(rcol.getIndex()));
+        if (!col) continue;
+        col->setVisible(false);
+        auto it = m_columnsVisible.find(col->caption());
+        if (it != m_columnsVisible.end()){
+            col->setVisible(it->second);
+        }
+    }
+    m_view->endUpdate();
+}
+
 void RtabWidget::slot_groupCorrection()
 {
     const int col = m_view->selection()->cell().columnIndex();
@@ -480,7 +509,7 @@ void RtabWidget::slot_openSelection()
     RCol* prcol = m_model->getRCol(col);
     std::string colName = prcol ? prcol->name() : "";
 
-    FormSelection* Selection = new FormSelection(colName, this);
+    FormSelection* Selection = new FormSelection(m_selection,colName, this);
     connect(Selection, &FormSelection::sig_selectionAccepted,
             this, &RtabWidget::slot_setFiltrForSelection);
     Selection->show();
@@ -552,34 +581,5 @@ void RtabWidget::slot_itemPressed( CellClickEventArgs* _args)
     int row = _args->cell().rowIndex();
     int col = _args->cell().columnIndex();
     qDebug()<<"Pressed:" <<row<< ","<<col;
-}
-
-void RtabWidget::slot_beginResetModel(std::string tname)
-{
-    if (m_UIForm.TableName() != tname) return;
-    m_view->beginUpdate();
-    // Запоминаем видимость колонок
-    m_columnsVisible.clear();
-    for (int i = 0; i < m_view->getColumnCount(); ++i) {
-        auto* col = static_cast<Qtitan::GridTableColumn*>(m_view->getColumn(i));
-        m_columnsVisible[col->caption()] = col->isVisible();
-    }
-}
-
-void RtabWidget::slot_endResetModel(std::string tname)
-{
-    if (m_UIForm.TableName() != tname) return;
-    // Восстанавливаем видимость
-    for (const RCol& rcol : *m_model->getRdata()) {
-        auto* col = static_cast<Qtitan::GridTableColumn*>(
-            m_view->getColumn(rcol.getIndex()));
-        if (!col) continue;
-        col->setVisible(false);
-        auto it = m_columnsVisible.find(col->caption());
-        if (it != m_columnsVisible.end()){
-            col->setVisible(it->second);
-        }
-    }
-    m_view->endUpdate();
 }
 

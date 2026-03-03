@@ -60,7 +60,10 @@ signals:
     void sig_EndResetModel(std::string tname);
     ///< вставка строки
     void sig_BeginInsertRow(std::string tname,int first,int last);
-    void sig_EndInsertRow(std::string tname);
+    void sig_EndInsertRow(std::string tname);\
+    ///< удаление строк
+    void sig_BeginRemoveRows(std::string tname,int first,int last);
+    void sig_EndRemoveRows(std::string tname);
     ///< обновление представлений
     void sig_UpdateModel(std::string tname);
     void sig_UpdateView(std::string tname);

@@ -316,8 +316,7 @@ void RTablesDataManager::handleDeleteRow(const std::string& tname, long row)
     QDataBlock* pqdb = findCachedBlock(tname);
     if (!pqdb) return;
 
-    /// @todo убедиться, что BeginResetModel/EndResetModel сброс необходим
-    emit sig_BeginResetModel(tname);
+    emit sig_BeginRemoveRows(tname, row, row);
     pqdb->DeleteRow(row);
-    emit sig_EndResetModel(tname);
+    emit sig_EndRemoveRows(tname);
 }
