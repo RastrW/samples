@@ -6,7 +6,7 @@
 #include <string>
 
 #include "linkedform.h"
-#include "UIforms.h"
+#include "UIForms.h"
 
 class QAstra;
 class RTablesDataManager;
