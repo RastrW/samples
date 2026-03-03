@@ -50,7 +50,8 @@ int main(int argc, char *argv[]){
                  app.getQBarsMDPPtr(),
                  app.getForms());
 
-    w.show();
+    app.flushLogCache();
 
+    w.show();
     return app.exec();
 }

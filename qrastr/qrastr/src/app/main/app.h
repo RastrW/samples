@@ -34,6 +34,9 @@ public:
     std::shared_ptr<QAstra> getQAstraPtr(){ return m_sp_qastra;}
     std::shared_ptr<QTI> getQTIPtr(){ return m_sp_qti;}
     std::shared_ptr<QBarsMDP> getQBarsMDPPtr(){ return m_sp_qbarsmdp;}
+    // Сбросить накопленные за время start() сообщения в логгер
+    // Вызывать ПОСЛЕ того, как Qt-синки подключены (после MainWindow::initialize())
+    void flushLogCache();
 private:
     // Переопределённые методы Qt
     ///@brief Обработка событий Qt

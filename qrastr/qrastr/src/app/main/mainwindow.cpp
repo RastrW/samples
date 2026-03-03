@@ -96,15 +96,15 @@ void MainWindow::initialize(
     m_fileManager = std::make_unique<FileManager>(qastra, this);
     
     // 3. CalculationController
-    m_calcController = std::make_unique<CalculationController>(
-        qastra, qti, qbarsmdp, this);
+    m_calcController = std::make_unique<CalculationController>
+        (qastra, qti, qbarsmdp, this);
     
     // 4. Python helper
     m_pyHelper = std::make_shared<PyHlp>(*qastra->getRastr().get());
 
     // 5. FormManager
-    m_formManager = std::make_unique<FormManager>(
-        qastra, m_dockManager, m_pyHelper, this);
+    m_formManager = std::make_unique<FormManager>
+        (qastra, m_dockManager, m_pyHelper, this);
     m_formManager->setForms(forms);
     
     // 6. UIBuilder

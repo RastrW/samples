@@ -49,21 +49,37 @@ bool App::init(){
     try{
         auto logg = std::make_shared<spdlog::logger>( "qrastr" );
         spdlog::set_default_logger(logg);
+        logg->set_pattern("[%H:%M:%S.%e] [%^%l%$] %v");
 
         auto console_sink = std::make_shared<spdlog::sinks::stdout_color_sink_mt>();
         logg->sinks().push_back(console_sink);
+
         bool res = readSettings();
 
         const bool bl_res = QDir::setCurrent(Params::get_instance()->getDirData().path());
             assert(bl_res==true);
+
         fs::path path_log{ Params::get_instance()->getDirData().absolutePath().toStdString() };
         path_log /= L"qrastr_log.txt";
-        auto rotating_sink = std::make_shared<spdlog::sinks::rotating_file_sink_mt>( path_log.string(), 1024*1024*1, 3);
-        std::vector<spdlog::sink_ptr> sinks{ console_sink, rotating_sink };
-        logg->sinks().push_back(rotating_sink);
 
-        spdlog::info( "ReadSetting: {}", res);
-        spdlog::info( "Log: {}", path_log.generic_u8string() );
+        // Архивируем лог прошлого сеанса
+        fs::path path_log_prev = path_log;
+        path_log_prev.replace_filename("qrastr_log_prev.txt");
+        try {
+            if (fs::exists(path_log))
+                fs::rename(path_log, path_log_prev);
+        } catch (const fs::filesystem_error& e) {
+            // не критично
+        }
+
+        auto file_sink = std::make_shared<spdlog::sinks::rotating_file_sink_mt>
+            ( path_log.string(), 1024*1024*1, 3);
+        logg->sinks().push_back(file_sink);
+
+        // Теперь есть консоль + файл — сбрасываем кэш readSettings
+        spdlog::info("ReadSetting: {}", res);
+        spdlog::info("Log: {}", path_log.generic_u8string());
+        m_v_cache_log.flush(); // ранние сообщения уйдут в консоль и файл
     }catch(const std::exception& ex){
         exclog(ex);
         return false;
@@ -325,16 +341,17 @@ bool App::start(){
     try{
         auto* const p_params = Params::get_instance();
         QDir::setCurrent(p_params->getDirData().absolutePath());
+
         if (!loadPlugins()){
             return false;
         }
+
         if(nullptr!=m_sp_qastra){
             const QDir dir = p_params->getDirSHABLON();
 #if(QT_VERSION > QT_VERSION_CHECK(5, 16, 0))
             const std::filesystem::path path_templates = p_params->getDirSHABLON().filesystemCanonicalPath();
 #else
             std::filesystem::path path_templates = p_params->getDirSHABLON().canonicalPath().toStdString();
-            //assert(!"what?");
 #endif
             const Params::_v_templates v_templates{ p_params->getStartLoadTemplates() };
             for(const Params::_v_templates::value_type& templ_to_load : v_templates){
@@ -343,11 +360,15 @@ bool App::start(){
                 IPlainRastrRetCode res =
                     m_sp_qastra->Load( eLoadCode::RG_REPL, "", path_template.string() );
                 if(res != IPlainRastrRetCode::Ok){
-                    spdlog::error("wheh read file");
+                    m_v_cache_log.add(spdlog::level::err,
+                                      "Failed to load template: {}", templ_to_load);
                     QMessageBox mb( QMessageBox::Icon::Critical, QObject::tr("Error"),
                                    QString("error: wheh read file : %1").arg(templ_to_load.c_str())
                                    );
                     mb.exec();
+                }else {
+                    m_v_cache_log.add(spdlog::level::info,
+                                      "Template loaded: {}", templ_to_load);
                 }
             }
             for(const Params::_v_file_templates::value_type& file_template
@@ -358,20 +379,26 @@ bool App::start(){
                     m_sp_qastra->Load( eLoadCode::RG_REPL, file_template.first,
                                       path_template.string() );
                 if(res != IPlainRastrRetCode::Ok){
-                    spdlog::error("wheh read file");
+                    m_v_cache_log.add(spdlog::level::err,
+                                      "Failed to load file template: {}", file_template.first);
                     QMessageBox mb( QMessageBox::Icon::Critical, QObject::tr("Error"),
                                    QString("error: wheh read file : %1").arg(file_template.first.c_str())
                                    );
                     mb.exec();
+                } else {
+                    m_v_cache_log.add(spdlog::level::info,
+                                      "File template loaded: {}", file_template.first);
                 }
             }
         }
-        spdlog::info("ReadForms");
+        m_v_cache_log.add(spdlog::level::info, "ReadForms: starting");
         if(!readForms()){
-            spdlog::error("Can't read forms");
+            m_v_cache_log.add(spdlog::level::err, "Can't read forms");
             QMessageBox mb(QMessageBox::Icon::Critical, QObject::tr("Error"),
                            QObject::tr("Can't read forms"));
             mb.exec();
+        }else {
+            m_v_cache_log.add(spdlog::level::info, "ReadForms: OK");
         }
     }catch(const std::exception& ex){
         exclog(ex);
@@ -393,4 +420,8 @@ bool App::writeSettings(){
         return false;
     }
     return p_params->writeJsonFile(path);
+}
+
+void App::flushLogCache() {
+    m_v_cache_log.flush();
 }
