@@ -36,17 +36,13 @@ public:
     
     /**
      * @brief Инициализировать главное окно
-     * @param qastra плагин Rastr
-     * @param qti плагин TI
-     * @param qbarsmdp плагин BarsMDP
      * @param forms список форм
      */
     void initialize(
         std::shared_ptr<QAstra> qastra,
         std::shared_ptr<QTI> qti,
         std::shared_ptr<QBarsMDP> qbarsmdp,
-        const std::list<CUIForm>& forms
-    );
+        const std::list<CUIForm>& forms);
     
 signals:
     // Файл загружен
@@ -116,6 +112,7 @@ private:
     
     // ========== ИНИЦИАЛИЗАЦИЯ ==========
     void setupDockWidgets();
-    void setupLogging();
+    void setupLogSinks();
+    void setupRastrConnections();
     void setupConnections();
 };

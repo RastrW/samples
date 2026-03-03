@@ -71,6 +71,10 @@ MainWindow::MainWindow()
                              now->widget()->setFocus();
                          }
                      });
+
+    // Создаём виджеты протоколов и СРАЗУ добавляем Qt-синки в логгер.
+    setupDockWidgets();
+    setupLogSinks();
 }
 
 MainWindow::~MainWindow() = default;
@@ -79,54 +83,42 @@ void MainWindow::initialize(
     std::shared_ptr<QAstra> qastra,
     std::shared_ptr<QTI> qti,
     std::shared_ptr<QBarsMDP> qbarsmdp,
-    const std::list<CUIForm>& forms) {
-    // Сохранение плагинов
-    m_qastra = qastra;
-    m_qti = qti;
+    const std::list<CUIForm>& forms)
+{
+    m_qastra   = qastra;
+    m_qti      = qti;
     m_qbarsmdp = qbarsmdp;
-    
+
     // ========== СОЗДАНИЕ КОМПОНЕНТОВ ==========
-    // 1. SettingsManager (первым - нужен для загрузки настроек)
+    // SettingsManager нужен первым для загрузки настроек
     m_settingsManager = std::make_unique<SettingsManager>(this);
     m_settingsManager->loadWindowGeometry(this);
     // Restore the state of toolbars and dock widgets (menus are part of the overall layout)
     restoreState(m_settingsManager->getSettings("mainWindowState"));
-
-    // 2. FileManager
-    m_fileManager = std::make_unique<FileManager>(qastra, this);
-    
-    // 3. CalculationController
-    m_calcController = std::make_unique<CalculationController>
-        (qastra, qti, qbarsmdp, this);
-    
-    // 4. Python helper
-    m_pyHelper = std::make_shared<PyHlp>(*qastra->getRastr().get());
-
-    // 5. FormManager
-    m_formManager = std::make_unique<FormManager>
-        (qastra, m_dockManager, m_pyHelper, this);
+    m_fileManager    = std::make_unique<FileManager>(m_qastra, this);
+    m_calcController = std::make_unique<CalculationController>(
+        m_qastra, m_qti, m_qbarsmdp, this);
+    m_pyHelper       = std::make_shared<PyHlp>(*m_qastra->getRastr().get());
+    m_formManager    = std::make_unique<FormManager>(
+        m_qastra, m_dockManager, m_pyHelper, this);
     m_formManager->setForms(forms);
-    
-    // 6. UIBuilder
-    m_uiBuilder = std::make_unique<UIBuilder>(this);
+    m_uiBuilder      = std::make_unique<UIBuilder>(this);
     m_uiBuilder->buildAll();
 
     // ========== НАСТРОЙКА КОМПОНЕНТОВ ==========
-    setupDockWidgets();
-    setupLogging();
+    setupRastrConnections();
     setupConnections();
     slot_updateRecentFiles();
-    
+
     // Построение меню форм
     m_formManager->buildFormsMenu(
         m_uiBuilder->openMenu(),
-        m_uiBuilder->calcParametersMenu()
-    );
+        m_uiBuilder->calcParametersMenu());
     m_formManager->buildPropertiesMenu(m_uiBuilder->propertiesMenu());
-    
+
     // Вывод кэшированных логов
     m_settingsManager->flushLogCache();
-    
+
     spdlog::info("MainWindow initialized successfully");
 }
 
@@ -149,21 +141,25 @@ void MainWindow::setupDockWidgets() {
     m_dockManager->addDockWidgetTab(ads::BottomDockWidgetArea, dockMainProtocol);
 }
 
-void MainWindow::setupLogging() {
+void MainWindow::setupLogSinks() {
     auto logger = spdlog::default_logger();
-    
-    // Sink для окна протокола (макросы)
+
+    // После этого вызова все spdlog::info/warn/error
+    // пойдут в McrWnd и FormProtocol
     auto qtSink = std::make_shared<spdlog::sinks::qt_sink_mt>(
-        m_globalProtocol, "onQStringAppendProtocol"
-    );
+        m_globalProtocol, "onQStringAppendProtocol");
     logger->sinks().push_back(qtSink);
-    
-    // Sink для главного протокола
+
     auto protocolSink = std::make_shared<spdlog::sinks::qt_sink_mt>(
         m_mainProtocol, "onAppendProtocol");
     logger->sinks().push_back(protocolSink);
-    
-    // Подключение логов от Rastr
+}
+
+void MainWindow::setupRastrConnections() {
+    // Второй поток данных — структурированные _log_data от Rastr
+    // (StageId, иконки, вложенность) — идут напрямую в виджеты,
+    // минуя spdlog, потому что плоская строка Qt-синка эту
+    // структуру передать не может
     connect(m_qastra.get(), &QAstra::onRastrLog,
             m_mainProtocol, &FormProtocol::onRastrLog);
     connect(m_qastra.get(), &QAstra::onRastrLog,
