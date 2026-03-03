@@ -1,7 +1,10 @@
 #include "rdata.h"
 
-void RData::Initialize(CUIForm _form, QAstra* _pqastra)
+RData::RData(QAstra* _pqastra, const CUIForm& _form)
 {
+    pqastra_ = _pqastra;
+    t_name_ = _form.TableName();
+
     t_title_ = _form.Name().c_str();
 
     IRastrTablesPtr tablesx{ _pqastra->getRastr()->Tables() };
@@ -19,7 +22,7 @@ void RData::Initialize(CUIForm _form, QAstra* _pqastra)
     reserve( n_reserve);                // Без reserve RCol данные обнуляются видимио при reallocation  If a reallocation happens, all contained elements are modified.
     qDebug() << "reserve : " << n_reserve <<" ok";
 
-    str_cols_ = "";
+    m_str_cols = "";
     // Берем все колонки таблицы
     for (long index{ 0 }; index < ColumnsCount.Value(); index++)
     {
@@ -29,16 +32,13 @@ void RData::Initialize(CUIForm _form, QAstra* _pqastra)
         std::string col_Title = IRastrPayload(IRastrVariantPtr((col)->Property(FieldProperties::Title))->String()).Value();
 
         vCols_.push_back(col_Name);
-        str_cols_.append(col_Name);
-        str_cols_.append(",");
+        m_str_cols.append(col_Name);
+        m_str_cols.append(",");
 
         RCol rc;
-        rc.str_name_ = col_Name;
-        rc.table_name_ = t_name_;
-        rc.title_ = col_Title;
-        rc.index = index;
+        //Сначала все колонки добавляются с hidden=true,
+        rc.initialize(col_Name, t_name_, col_Title, index);
         rc.setMeta(_pqastra);
-        rc.hidden = true;
 
         int nRes = AddCol(rc);
         Q_ASSERT(nRes>=0);
@@ -47,44 +47,54 @@ void RData::Initialize(CUIForm _form, QAstra* _pqastra)
     }
 
     //Скрыть колонки не входящие в форму
-    for (CUIFormField &f : _form.Fields())
+    //Скрытые колонки всё равно присутствуют в pnparray_
+    for (const CUIFormField &f : _form.Fields())
     {
         for  (RCol &rc : *this)
         {
-            if (rc.str_name_ == f.Name())
-                rc.hidden = false;
+            if (rc.getStrName() == f.Name())
+                rc.setHidden(false);
         }
     }
 
-    if(str_cols_.length()>0)
-        str_cols_.pop_back();
+    if(m_str_cols.length()>0)
+        m_str_cols.pop_back();
     qDebug() << "Open Table : " << t_name_.c_str();
-    qDebug() << "Fields : " << str_cols_.c_str();
+    qDebug() << "Fields : " << m_str_cols.c_str();
 }
 
-void RData::Initialize(nlohmann::json _j_Fields , nlohmann::json _j_metas,_vstr _vstr_fields_form)
-{
+std::string RData::getCommaSeparatedFieldNames(){
     std::string str_tmp;
-    std::string str_json;
-
-    for(const nlohmann::json& j_field : _j_Fields){
-        for(const nlohmann::json& j_meta : _j_metas ){
-            const std::string str_Name = j_meta["Name"];
-            if(j_field == str_Name){ // for make same order like in a form
-                RCol rc;
-                rc.str_name_ = str_Name;
-                rc.setMeta( j_meta );
-
-                int nRes = AddCol(rc); Q_ASSERT(nRes>=0);
+    for( const RCol& col_data : *this ) {
+        str_tmp += col_data.getStrName();
+        str_tmp += ",";
+    }
+    if(str_tmp.length()>0){
+        str_tmp.erase(str_tmp.length()-1);
+    }
+    return str_tmp;
+}
+void RData::Trace() const {
+    for(const RCol& col : *this){
+        qDebug() << " col: " << col.getStrName().c_str();
+        for(const _col_data::value_type& cdata : col ){
+            switch(col.getEnData()){
+            case RCol::_en_data::DATA_INT :
+                qDebug()<<"cdata : "<< std::get<long>(cdata);
+                break;
+            case RCol::_en_data::DATA_DBL :
+                qDebug()<<"cdata : "<< std::get<double>(cdata);
+                break;
+            case RCol::_en_data::DATA_STR :
+                qDebug()<<"cdata : "<< std::get<std::string>(cdata).c_str();
+                break;
+            default:
+                qDebug()<<"cdata : unknown!! ";
                 break;
             }
+            //qDebug()<<"cdata : "<< std::to_string(cdata).c_str();
         }
     }
-}
-
-void RData::populate()
-{
-    throw  std::runtime_error("called absolete function");
 }
 
 void RData::populate_qastra(QAstra* _pqastra, RTablesDataManager* _pRTDM )
@@ -95,7 +105,7 @@ void RData::populate_qastra(QAstra* _pqastra, RTablesDataManager* _pRTDM )
      * если такая таблица уже есть берем указатель на нее, если нет
      * тогда создаем в менеджере и отдаем указатель
     */
-    pnparray_ = _pRTDM->get(t_name_,str_cols_);
+    pnparray_ = _pRTDM->get(t_name_, m_str_cols);
 }
 
 std::string RData::get_cols(bool visible)
@@ -104,13 +114,13 @@ std::string RData::get_cols(bool visible)
     if (visible)
     {
         for  (RCol &rc : *this)
-            if (!rc.hidden)
-                ret_cols += rc.str_name_ + ",";
+            if (!rc.isHidden())
+                ret_cols += rc.getStrName() + ",";
     }
     else
     {
         for  (RCol &rc : *this)
-            ret_cols += rc.str_name_ + ",";
+            ret_cols += rc.getStrName() + ",";
     }
 
     if (!ret_cols.empty())
@@ -123,12 +133,4 @@ void RData::clear_data(){
     for(RCol& col: *this){
         col.clear();
     }
-}
-
-bool RData::AddRow(int index ){
-    return true;
-}
-
-bool RData::RemoveRDMRow(int index ){
-    return true;
 }

@@ -8,7 +8,7 @@
       "cacheVariables": {
         "CMAKE_BUILD_TYPE": "Debug",
         "ASTRA_ROOT": "CHANGE_ME_TO_YOUR_ASTRA_PATH",
-        "QT_DIR": "C:/Qt/6.9.3/msvc2022_64/lib/cmake/Qt6"
+        "QT_DIR": "C:/Qt/6.9.3/msvc2022_64/lib/cmake"
       }
     },
     {
@@ -18,7 +18,7 @@
       "cacheVariables": {
         "CMAKE_BUILD_TYPE": "Release",
         "ASTRA_ROOT": "CHANGE_ME_TO_YOUR_ASTRA_PATH",
-        "QT_DIR": "C:/Qt/6.9.3/msvc2022_64/lib/cmake/Qt6"
+        "QT_DIR": "C:/Qt/6.9.3/msvc2022_64/lib/cmake"
       }
     },
     {

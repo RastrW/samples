@@ -34,7 +34,7 @@ public:
     void closeEvent(QCloseEvent *event) override;
     void encode(std::string& data);
     void encode(std::string& data_out, const QString& qstr_in);
-    void setPyHlp(PyHlp* pPyHlp);
+    void setPyHlp(std::shared_ptr<PyHlp> pPyHlp);
 signals:
 public slots:
     void onRastrLog(const _log_data&);
@@ -59,5 +59,5 @@ private:
     Tst2_Dialog*   tst2_dlg_{ nullptr};
     DlgFindRepl*   pdlgFindRepl_{ nullptr};
     long           n_stage_max_id_ = 0;
-    PyHlp*         pPyHlp_{nullptr};
+    std::shared_ptr<PyHlp> pPyHlp_;
 };

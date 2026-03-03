@@ -1,0 +1,262 @@
+#include "linkedformcontroller.h"
+
+#include "rtabwidget.h"
+
+#include "qastra.h"
+#include "rtablesdatamanager.h"
+#include "rmodel.h"
+#include "rdata.h"
+#include "qmcr/pyhlp.h"
+#include "customFilterCondition.h"
+#include "utils.h"
+
+#include <DockManager.h>
+#include <DockWidget.h>
+#include <QtitanGrid.h>
+
+#include <QDir>
+#include <QDebug>
+
+#include <filesystem>
+#include <fstream>
+#include <fmt/format.h>
+#include <spdlog/spdlog.h>
+
+namespace fs = std::filesystem;
+
+LinkedFormController::LinkedFormController(
+    QAstra*                  qastra,
+    RTablesDataManager*      rtdm,
+    ads::CDockManager*       dockManager,
+    Qtitan::GridTableView*   view,
+    RModel*                  model,
+    const CUIForm&           form,
+    QWidget*                 parentWidget)
+    : QObject(parentWidget)
+    , m_qastra(qastra)
+    , m_rtdm(rtdm)
+    , m_dockManager(dockManager)
+    , m_view(view)
+    , m_model(model)
+    , m_form(form)
+    , m_parentWidget(parentWidget)
+{}
+
+void LinkedFormController::setPyHlp(std::shared_ptr<PyHlp> pyHlp)
+{
+    m_pyHlp = pyHlp;
+}
+
+void LinkedFormController::disconnectAll()
+{
+    for (auto& conn : m_lf.vconn)
+        QObject::disconnect(conn);
+    m_lf.vconn.clear();
+}
+
+QMenu* LinkedFormController::buildLinkedFormsMenu(int contextRow)
+{
+    QMenu* menu = new QMenu(m_parentWidget);
+    menu->setTitle("Связанные формы");
+
+    auto table = m_rtdm->get("formcontext", "");
+
+    for (int irow = 0; irow < table->RowsCount(); ++irow)
+    {
+        const std::string formName =
+            std::get<std::string>(table->Get(irow, 0));
+
+        if (m_form.Name() != formName)
+            continue;
+
+        LinkedForm lf;
+        lf.linkedform = std::visit(ToString(), table->Get(irow, 1));
+        lf.linkedname = std::visit(ToString(), table->Get(irow, 2));
+        lf.selection  = std::visit(ToString(), table->Get(irow, 3));
+        lf.bind       = std::visit(ToString(), table->Get(irow, 4));
+        lf.pbaseform  = static_cast<RtabWidget*>(m_parentWidget);
+
+        // Заполняем bind-значения из текущей строки контекстного меню
+        for (const auto& key : split(lf.bind, ','))
+            lf.vbindvals.push_back(getLongValue(key, contextRow));
+
+        QAction* action = new QAction(
+            QString::fromStdString(lf.linkedname), menu);
+        menu->addAction(action);
+
+        // lf захватывается по значению — каждое действие имеет свой снимок
+        connect(action, &QAction::triggered, this, [this, lf]() {
+            openLinkedForm(lf);
+        });
+    }
+
+    return menu;
+}
+
+QMenu* LinkedFormController::buildLinkedMacroMenu(int contextRow)
+{
+    QMenu* menu = new QMenu(m_parentWidget);
+    menu->setTitle("Макрос");
+
+    auto table = m_rtdm->get("macrocontext", "");
+
+    for (int irow = 0; irow < table->RowsCount(); ++irow){
+        const std::string formName =
+            std::visit(ToString(), table->Get(irow, 0));
+
+        if (m_form.Name() != formName)
+            continue;
+
+        const long formType   = std::visit(ToLong(), table->Get(irow, 6));
+        const long defAppendix = std::visit(ToLong(), table->Get(irow, 4));
+
+        // Показываем только записи типа 0 с флагом defappendix
+        if (formType != 0 || !defAppendix)
+            continue;
+
+        LinkedMacro lm;
+        lm.col       = std::visit(ToString(), table->Get(irow, 1));
+        lm.macrofile = std::visit(ToString(), table->Get(irow, 2));
+        lm.macrodesc = std::visit(ToString(), table->Get(irow, 3));
+        lm.addstr    = std::visit(ToString(), table->Get(irow, 5));
+        lm.pbaseform = static_cast<RtabWidget*>(m_parentWidget);
+
+        QAction* action = new QAction(
+            QString::fromStdString(lm.macrodesc), menu);
+        menu->addAction(action);
+
+        connect(action, &QAction::triggered, this, [this, lm, contextRow]() {
+            openLinkedMacro(lm, contextRow);
+        });
+    }
+
+    return menu;
+}
+
+void LinkedFormController::applyLinkedForm(LinkedForm lf)
+{
+    m_lf = lf;
+
+    const std::string selection = lf.get_selection_result();
+
+    // Передаём строку выборки в плагин
+    IRastrTablesPtr tablesx{ m_qastra->getRastr()->Tables() };
+    IRastrTablePtr  table{ tablesx->Item(m_model->getRdata()->t_name_) };
+    table->SetSelection(selection);
+
+    // Получаем индексы строк, прошедших выборку
+    DataBlock<FieldVariantData> variantBlock;
+    const IRastrPayload keys = table->Key();
+    IRastrResultVerify(table->DataBlock(keys.Value(), variantBlock));
+    const auto indices = variantBlock.IndexesVector();
+
+	//Создаём CustomFilterCondition для QTitan Grid с этими индексами
+    auto* groupCondition = new GridFilterGroupCondition(m_view->filter());
+    auto* condition      = new CustomFilterCondition(m_view->filter());
+    groupCondition->addCondition(condition);
+
+    for (long idx : indices)
+        condition->addRow(idx);
+	
+	//Активируем фильтр — Grid показывает только нужные строки.
+    m_view->filter()->setCondition(groupCondition, true);
+    m_view->filter()->setActive(true);
+    m_view->showFilterPanel();
+}
+
+void LinkedFormController::openLinkedForm(LinkedForm lf)
+{
+    CUIForm* pUIForm = m_rtdm->getForm(lf.linkedform);
+    if (pUIForm  == nullptr)
+    {
+        //spdlog::warn("LinkedFormController: форма [{}] не найдена",
+        //             lf.linkedform);
+        return;
+    }
+
+    // Создаём дочерний виджет — он заведёт собственный LinkedFormController
+    RtabWidget* child = new RtabWidget(
+        m_qastra, *pUIForm, m_rtdm, m_dockManager, m_parentWidget);
+
+    if (m_pyHlp)
+        child->setPyHlp(m_pyHlp);
+
+    // смена фокусной строки в НАШЕМ view => обновление дочерней формы.
+    // Соединение сохраняем в lf.vconn, который потом уйдёт в child->m_lf
+    // и будет отключён при закрытии дочернего виджета.
+    lf.vconn.push_back(
+        connect(m_view, &Qtitan::GridTableView::focusRowChanged,
+                child,  &RtabWidget::slot_focusRowChanged));
+
+    // Передаём LinkedForm в дочерний контроллер — он сохранит vconn
+    child->applyLinkedFormFromController(lf);
+
+    // Добавляем в нижнюю авто-скрытую панель Dock
+    auto* dw = new ads::CDockWidget(
+        stringutils::MkToUtf8(pUIForm->Name()).c_str(), m_parentWidget);
+    dw->setWidget(child->createDockContent(false));
+    dw->setFeature(ads::CDockWidget::DockWidgetDeleteOnClose, true);
+    connect(dw, &ads::CDockWidget::closed, child, &RtabWidget::slot_close);
+
+    m_dockManager->addDockWidgetTab(ads::BottomAutoHideArea, dw);
+    child->show();
+}
+
+void LinkedFormController::openLinkedMacro(LinkedMacro lm, int contextRow)
+{
+    qDebug() << "LinkedFormController: run macro" << lm.macrofile.c_str();
+
+    // Макросы лежат в <рабочая директория>/contextmacro/  с расширением .py
+    fs::path macroPath = QDir::currentPath().toStdString();
+    macroPath /= "contextmacro";
+    macroPath /= lm.macrofile;
+    macroPath.replace_extension(".py");
+
+    if (!fs::exists(macroPath))
+    {
+        qDebug() << "context macro not found:" << macroPath.c_str();
+        return;
+    }
+
+    std::ifstream file(macroPath);
+    std::string content(
+        (std::istreambuf_iterator<char>(file)),
+         std::istreambuf_iterator<char>());
+
+    // Вставляем в начало макроса отладочный вывод и переменную aRow
+    const std::string debugLine = fmt::format(
+        "rastr.print(f\"run contextmacro: {}[row={}]\")\n",
+        lm.macrofile, contextRow);
+    const std::string aRowLine =
+        "aRow=" + std::to_string(contextRow) + "\n";
+
+    content.insert(0, aRowLine);
+    content.insert(0, debugLine);
+
+    if (m_pyHlp)
+        m_pyHlp->Run(content.data());
+    else
+        qWarning() << "LinkedFormController: PyHlp не установлен, макрос не выполнен";
+}
+
+void LinkedFormController::onParentRowChanged(int newRow)
+{
+    qDebug() << "LinkedFormController::onParentRowChanged: row =" << newRow;
+
+    m_lf.row = newRow;
+
+    // FillBindVals обращается к pbaseform->getLongValue —
+    // публичному методу RtabWidget, изменений не требует.
+    m_lf.FillBindVals();
+
+    applyLinkedForm(m_lf);
+}
+
+int LinkedFormController::getLongValue(const std::string& col, long row)
+{
+    // Читаем значение напрямую из кешированного DataBlock модели.
+    // Используется только при построении меню (начальное заполнение vbindvals).
+    const int colIdx = m_model->getRdata()->mCols_.at(col);
+    return std::visit(ToLong(),
+                      m_model->getRdata()->pnparray_->Get(row, colIdx));
+}

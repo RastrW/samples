@@ -276,39 +276,35 @@ void FileManager::openRecentFile(const QString& fileAndTemplate) {
     setCurrentFile(qslist[0], QString::fromStdString(shabl));
 }
 
-bool FileManager::showOpenDialog(QStringList& selectedFiles, QString& selectedFilter) {
+bool FileManager::showOpenDialog(QStringList& selectedFiles, QString& selectedFilter)
+{
     QFileDialog fileDlg(m_parentWidget, tr("Open Rastr files"));
-    fileDlg.setOption(QFileDialog::DontUseNativeDialog, true);
-    fileDlg.setViewMode(QFileDialog::Detail);
-    
+
     fileDlg.setFileMode(QFileDialog::ExistingFiles);
-    
-    QString qstr_filter = buildFileFilter();
-    fileDlg.setNameFilter(qstr_filter);
-    
-    if (!m_currentDir.isEmpty()) {
+    fileDlg.setNameFilter(buildFileFilter());
+
+    if (!m_currentDir.isEmpty()){
         fileDlg.setDirectory(m_currentDir);
     }
-    
-    int n_res = fileDlg.exec();
-    if (QDialog::Accepted != n_res) {
+
+    if (fileDlg.exec() != QDialog::Accepted){
         return false;
     }
-    
+
     selectedFiles = fileDlg.selectedFiles();
     selectedFilter = fileDlg.selectedNameFilter();
-    
+
     return !selectedFiles.isEmpty();
 }
 
 QString FileManager::showSaveDialog() {
+
     QFileDialog fileDlg(m_parentWidget, tr("Save Rastr file"));
+
     fileDlg.setAcceptMode(QFileDialog::AcceptSave);
-    fileDlg.setOption(QFileDialog::DontUseNativeDialog, true);
     fileDlg.setViewMode(QFileDialog::Detail);
-    
-    QString qstr_filter = buildFileFilter();
-    fileDlg.setNameFilter(qstr_filter);
+
+    fileDlg.setNameFilter(buildFileFilter());
     fileDlg.selectNameFilter("режим (*.rg2)");
     
     fileDlg.setFileMode(QFileDialog::AnyFile);
@@ -316,9 +312,8 @@ QString FileManager::showSaveDialog() {
     if (!m_currentDir.isEmpty()) {
         fileDlg.setDirectory(m_currentDir);
     }
-    
-    int n_res = fileDlg.exec();
-    if (QDialog::Accepted != n_res) {
+
+    if (fileDlg.exec() != QDialog::Accepted) {
         return QString();
     }
     

@@ -96,24 +96,21 @@ void MainWindow::initialize(
     m_fileManager = std::make_unique<FileManager>(qastra, this);
     
     // 3. CalculationController
-    m_calcController = std::make_unique<CalculationController>(
-        qastra, qti, qbarsmdp, this);
+    m_calcController = std::make_unique<CalculationController>
+        (qastra, qti, qbarsmdp, this);
     
     // 4. Python helper
-    m_pyHelper = std::make_unique<PyHlp>(*qastra->getRastr().get());
+    m_pyHelper = std::make_shared<PyHlp>(*qastra->getRastr().get());
 
     // 5. FormManager
-    m_rtdm.setQAstra(qastra.get());
-    m_formManager = std::make_unique<FormManager>(
-        qastra, &m_rtdm, m_dockManager, m_pyHelper.get(), this);
+    m_formManager = std::make_unique<FormManager>
+        (qastra, m_dockManager, m_pyHelper, this);
     m_formManager->setForms(forms);
     
     // 6. UIBuilder
     m_uiBuilder = std::make_unique<UIBuilder>(this);
     m_uiBuilder->buildAll();
-    
 
-    
     // ========== НАСТРОЙКА КОМПОНЕНТОВ ==========
     setupDockWidgets();
     setupLogging();
@@ -344,7 +341,7 @@ void MainWindow::slot_openMcrDialog(){
     McrWnd* pMcrWnd = new McrWnd( this, McrWnd::_en_role::macro_dlg );
     connect(m_qastra.get(), &QAstra::onRastrPrint, pMcrWnd, &McrWnd::onRastrPrint);
 
-    pMcrWnd->setPyHlp(m_pyHelper.get());
+    pMcrWnd->setPyHlp(m_pyHelper);
     pMcrWnd->show();
 }
 
@@ -373,7 +370,6 @@ void MainWindow::slot_openGraph(){
 
     SdlChild->SDLInit();
 #endif
-
 }
 
 void MainWindow::slot_about(){

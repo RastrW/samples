@@ -26,183 +26,30 @@ void  RTablesDataManager::onRastrHint(const _hint_data& hint_data)
     long row = hint_data.n_indx;
     std::string cname = hint_data.str_column;
     std::string tname = hint_data.str_table;
-    qDebug() << "Hint: type: " << (long)(hint_data.hint) << " tname: " <<tname.c_str() << " col_name: " << cname.c_str();
+    qInfo() << "RTDM hint:"
+             << static_cast<int>(hint_data.hint)
+             << "table:" << tname.c_str()
+             << "col:"   << cname.c_str()
+             << "row:"   << row;
 
-    std::map<std::string,std::shared_ptr<QDataBlock>>::iterator it;
     switch (hint_data.hint)
     {
-    case EventHints::ChangeAll:
-        for (auto [tname,sp_QDB] :  mpTables)
-        {
-            emit sig_BeginResetModel(tname);
-            sp_QDB->Clear();
-            getDataBlock(tname,(*sp_QDB.get()));
-            emit sig_EndResetModel(tname);
-        }
-        break;
-    case EventHints::ChangeTable:
-        emit sig_BeginResetModel(tname);
-        it = mpTables.find(tname);
-        if (it != mpTables.end() )
-        {
-            //it->second->Clear();
-            //GetDataBlock(tname,(*it->second.get()));
-            //emit RTDM_UpdateModel(tname);
-
-            // TO DO:
-            // Вызвать чтение свойств столбцов
-            // emit RTDM_UpdateProperties
-
-        }
-        emit sig_EndResetModel(tname);
-        break;
-    case EventHints::ChangeColumn:
-        it = mpTables.find(tname);
-        if (it != mpTables.end() )
-        {
-            emit sig_BeginResetModel(tname);
-            IRastrTablesPtr tables{ m_pqastra->getRastr()->Tables() };
-            IRastrTablePtr table{ tables->Item(tname) };
-            DataBlock<FieldVariantData> variant_block;
-            IRastrResultVerify(table->DataBlock(cname, variant_block));
-
-            long col_ind = getColIndex(tname,cname);
-            ePropType col_type = getColType(tname,cname);
-            for (size_t i = 0; i < (*it).second->RowsCount() ; i++)
-            {
-                switch (col_type)
-                {
-                    case ePropType::Double:
-                        it->second->Set(i,col_ind,  std::visit(ToDouble(),variant_block.Get(i,0)));
-                    break;
-                    case ePropType::Int:
-                    case ePropType::Enum:
-                    case ePropType::Superenum:
-                    case ePropType::Enpic:
-                    case ePropType::Color:
-                        it->second->Set(i,col_ind,  std::visit(ToLong(),variant_block.Get(i,0)));
-                        break;
-                    case ePropType::String:
-                        it->second->Set(i,col_ind,  std::visit(ToString(),variant_block.Get(i,0)));
-                        break;
-                    default:
-                        break;
-                }
-            }
-            emit sig_EndResetModel(tname);
-        }
-        break;
-
-    case EventHints::ChangeRow:
-        it = mpTables.find(tname);
-        if (it != mpTables.end() )
-        {
-            //emit RTDM_BeginResetModel(tname);
-
-            QDataBlock* pqdb = it->second.get();
-            IRastrTablesPtr tablesx{ m_pqastra->getRastr()->Tables() };
-            IRastrPayload tablecount{ tablesx->Count() };
-            IRastrTablePtr table{ tablesx->Item(tname) };
-            IRastrObjectPtr<IPlainRastrColumns> columns{ table->Columns() };
-            IRastrPayload columnscount{columns->Count()};
-            for (int i = 0 ; i < columnscount.Value(); i++)
-            {
-                IRastrColumnPtr col {columns->Item(i)};
-                IRastrVariantPtr value_ptr{ col->Value(row) };
-                pqdb->Set(row,i,value_ptr);
-            }
-            emit sig_dataChanged(tname,row,0,row,columnscount.Value());
-           // emit RTDM_EndResetModel(tname);
-        }
-        break;
-
-    case EventHints::ChangeData:
-        it = mpTables.find(tname);
-        if (it != mpTables.end() )
-        {
-            //emit RTDM_BeginResetModel(tname);
-            QDataBlock* pqdb = it->second.get();
-            long col_ind = getColIndex(tname,cname);
-
-            IRastrTablesPtr tablesx{ m_pqastra->getRastr()->Tables() };
-            IRastrPayload tablecount{ tablesx->Count() };
-            IRastrTablePtr table{ tablesx->Item(tname) };
-            IRastrObjectPtr<IPlainRastrColumns> columns{ table->Columns() };
-            IRastrPayload rowscount{table->Size()};
-            IRastrColumnPtr col {columns->Item(cname)};
-            IRastrVariantPtr v_ptr{ col->Value(row) };
-            IRastrPayload columnscount{columns->Count()};
-            long cols_cnt = columnscount.Value();
-            long rows_cnt = rowscount.Value();
-
-            long pnparr_nrows = it->second->RowsCount();
-            long pnparr_ncols = it->second->ColumnsCount();
-
-            //Было
-            //FieldVariantData val = m_pqastra->GetVal(tname,cname,row);
-            //pqdb->Set(row,col_ind,val);
-
-            //Стало: обновляем всю строку
-            // ERROR: При добавлении строки в таблицу узлы и при попытке получить это строку в VDB падает где то в разюоршике формул
-            DataBlock<FieldVariantData> VDB;
-            VDB.IndexesVector() = {row};
-            try {
-                IRastrResultVerify(table->DataBlock("", VDB));
-            }
-            catch (...) {
-                FieldDataOptions Options;
-                Options.SetEnumAsInt(TriBool::True);
-                Options.SetSuperEnumAsInt(TriBool::True);
-                Options.SetEditatableColumnsOnly(true);
-                IRastrResultVerify(table->DataBlock("", VDB, Options));
-            }
-            for (int i = 0 ; i < columnscount.Value(); i++)
-            {
-                size_t ind = row * columnscount.Value() + i;
-                size_t ind_vdb = 0 * columnscount.Value() + i;
-                pqdb->Data()[ind] = VDB.Data()[ind_vdb];
-            }
-        }
-        break;
-
-    case EventHints::AddRow:
-        it = mpTables.find(tname);
-        if (it != mpTables.end() )
-        {
-            emit sig_BeginInsertRow(tname,row,row);
-            QDataBlock* pqdb = it->second.get();
-            pqdb->AddRow();
-            emit sig_EndInsertRow(tname);
-        }
-        break;
-
-    case EventHints::InsertRow:
-        it = mpTables.find(tname);
-        if (it != mpTables.end() )
-        {
-            emit sig_BeginInsertRow(tname,row,row);
-            QDataBlock* pqdb = it->second.get();
-            pqdb->InsertRow(row);
-            emit sig_EndInsertRow(tname);
-        }
-        break;
-    case EventHints::DeleteRow:
-        it = mpTables.find(tname);
-        if (it != mpTables.end() )
-        {
-            emit sig_BeginResetModel(tname);
-            QDataBlock* pqdb = it->second.get();
-            pqdb->DeleteRow(row);
-            emit sig_EndResetModel(tname);
-        }
-        break;
-
+    case EventHints::ChangeAll:    handleChangeAll();                    break;
+    case EventHints::ChangeTable:  handleChangeTable(tname);             break;
+    case EventHints::ChangeColumn: handleChangeColumn(tname, cname);     break;
+    case EventHints::ChangeRow:    handleChangeRow(tname, row);          break;
+    case EventHints::ChangeData:   handleChangeData(tname, cname, row);  break;
+    case EventHints::AddRow:       handleAddRow(tname, row);             break;
+    case EventHints::InsertRow:    handleInsertRow(tname, row);          break;
+    case EventHints::DeleteRow:    handleDeleteRow(tname, row);          break;
     default:
+        spdlog::error("RTDM: unknown EventHint: {}", static_cast<int>(hint_data.hint));
         break;
     }
 }
 
-std::shared_ptr<QDataBlock>  RTablesDataManager::get(std::string tname, std::string Cols)
+std::shared_ptr<QDataBlock>
+RTablesDataManager::get(std::string tname, std::string Cols)
 {
     /*
      * Перед получением таблицы из RTDM удалим таблицы на которые никто не ссылается,
@@ -245,6 +92,7 @@ long RTablesDataManager::column_index(std::string tname , std::string _col_name)
     IRastrPayload res{columns->FindIndex(_col_name)};
     return res.Value();
 }
+
 void  RTablesDataManager::getDataBlock(std::string tname , std::string Cols , QDataBlock& QDB)
 {
     FieldDataOptions Options;
@@ -257,12 +105,14 @@ void  RTablesDataManager::getDataBlock(std::string tname , std::string Cols , QD
 
     IRastrResultVerify(table->DataBlock(Cols, QDB, Options));
 }
+
 void  RTablesDataManager::getDataBlock(std::string tname , std::string Cols , QDataBlock& QDB,FieldDataOptions Options )
 {
     IRastrTablesPtr tablesx{ m_pqastra->getRastr()->Tables() };
     IRastrTablePtr table{ tablesx->Item(tname) };
     IRastrResultVerify(table->DataBlock(Cols, QDB, Options));
 }
+
 void  RTablesDataManager::getDataBlock(std::string tname , QDataBlock& QDB,FieldDataOptions Options )
 {
     std::string Cols = getTCols(tname);
@@ -271,6 +121,7 @@ void  RTablesDataManager::getDataBlock(std::string tname , QDataBlock& QDB,Field
     IRastrColumnsPtr columns{ table->Columns() };
     IRastrResultVerify(table->DataBlock(Cols, QDB, Options));
 }
+
 void  RTablesDataManager::getDataBlock(std::string tname , QDataBlock& QDB)
 {
     FieldDataOptions Options;
@@ -325,4 +176,148 @@ ePropType  RTablesDataManager::getColType(std::string tname,std::string cname)
     ePropType res = IRastrPayload(col->Type()).Value();
 
     return res;
+}
+
+QDataBlock* RTablesDataManager::findCachedBlock(const std::string& tname)
+{
+    // Вспомогательный метод: все handle* вызывают его первым.
+    // Если таблица не кешируется (не была открыта) — ничего обновлять не нужно.
+    auto it = mpTables.find(tname);
+    return (it != mpTables.end()) ? it->second.get() : nullptr;
+}
+
+void RTablesDataManager::handleChangeAll()
+{
+    // Все таблицы изменились — типично при загрузке нового файла расчёта.
+    // Сбрасываем и перечитываем каждый кешированный блок.
+    /// @note сигналы (sig_BeginResetModel/sig_EndResetModel) могут изменять mpTables,
+    /// поэтому только копирование
+    for (auto [tname, sp_QDB] : mpTables)
+    {
+        emit sig_BeginResetModel(tname);
+        sp_QDB->Clear();
+        getDataBlock(tname, *sp_QDB);
+        emit sig_EndResetModel(tname);
+    }
+
+    for (auto& p : mpTables) {
+        qInfo() << "  -" << p.first.c_str() << "use_count=" << p.second.use_count();
+    }
+}
+
+void RTablesDataManager::handleChangeTable(const std::string& tname)
+{
+    // Структура таблицы изменилась (добавлена/удалена колонка).
+    // Необходима полная перезагрузка: и данных, и метаданных колонок.
+    qInfo() << "ENTER handleChangeTable for table:" << tname.c_str();
+    QDataBlock* pqdb = findCachedBlock(tname);
+    if (!pqdb) return;
+
+    emit sig_BeginResetModel(tname);
+
+    //it->second->Clear();
+    //GetDataBlock(tname,(*it->second.get()));
+    //emit RTDM_UpdateModel(tname);
+
+    // TO DO:
+    // Вызвать чтение свойств столбцов
+    // emit RTDM_UpdateProperties
+
+    emit sig_EndResetModel(tname);
+}
+
+void RTablesDataManager::handleChangeColumn(const std::string& tname,
+                                            const std::string& cname)
+{
+    // Изменились все значения одной колонки (например, после групповой коррекции).
+    // Перечитываем только эту колонку, не трогая остальные.
+    QDataBlock* pqdb = findCachedBlock(tname);
+    if (!pqdb) return;
+
+    const long colIdx = getColIndex(tname, cname);
+    if (colIdx < 0) return;
+
+    emit sig_BeginResetModel(tname);
+
+    const long nRows = static_cast<long>(pqdb->RowsCount());
+    for (long row = 0; row < nRows; ++row)
+        pqdb->Set(row, colIdx, m_pqastra->GetVal(tname, cname, row));
+
+    emit sig_EndResetModel(tname);
+}
+
+void RTablesDataManager::handleChangeRow(const std::string& tname, long row)
+{
+    // Изменились все колонки одной строки.
+    // Перечитываем строку целиком через Column::Value().
+    QDataBlock* pqdb = findCachedBlock(tname);
+    if (!pqdb) return;
+
+    IRastrTablesPtr tables  { m_pqastra->getRastr()->Tables() };
+    IRastrTablePtr  table   { tables->Item(tname) };
+    IRastrColumnsPtr columns{ table->Columns() };
+    const long ncols = IRastrPayload{ columns->Count() }.Value();
+
+    for (long i = 0; i < ncols; ++i)
+    {
+        IRastrColumnPtr  col      { columns->Item(i) };
+        IRastrVariantPtr val_ptr  { col->Value(row) };
+        pqdb->Set(row, i, val_ptr);
+    }
+
+    // Точечный сигнал: изменилась только строка row, все колонки
+    emit sig_dataChanged(tname, row, 0, row, ncols);
+}
+
+void RTablesDataManager::handleChangeData(const std::string& tname,
+                                          const std::string& cname,
+                                          long row)
+{
+    QDataBlock* pqdb = findCachedBlock(tname);
+    if (!pqdb) return;
+
+    const long colIdx = getColIndex(tname, cname);
+    if (colIdx < 0 || colIdx >= static_cast<long>(pqdb->ColumnsCount())) return;
+    if (row  < 0 || row  >= static_cast<long>(pqdb->RowsCount()))        return;
+
+    ///@note устанавливаем значение только для конкретной ячейки, т.к.
+    /// Ранее была установка DataBlock("", VDB) с пустым списком колонок, он падает сразу после AddRow.
+    pqdb->Set(row, colIdx, m_pqastra->GetVal(tname, cname, row));
+
+    ///@note добавлен вызов сигнала, уведомляющий об изменении по аналогии
+    emit sig_dataChanged(tname, row, colIdx, row, colIdx);
+}
+
+void RTablesDataManager::handleAddRow(const std::string& tname, long row)
+{
+    // Строка добавлена в конец таблицы.
+    // QDataBlock::AddRow() выделяет место под новую строку (данные будут 0/пусто).
+    QDataBlock* pqdb = findCachedBlock(tname);
+    if (!pqdb) return;
+
+    emit sig_BeginInsertRow(tname, row, row);
+    pqdb->AddRow();
+    emit sig_EndInsertRow(tname);
+}
+
+void RTablesDataManager::handleInsertRow(const std::string& tname, long row)
+{
+    // Строка вставлена в позицию row (InsertRow сдвигает остальные вниз).
+    QDataBlock* pqdb = findCachedBlock(tname);
+    if (!pqdb) return;
+
+    emit sig_BeginInsertRow(tname, row, row);
+    pqdb->InsertRow(row);
+    emit sig_EndInsertRow(tname);
+}
+
+void RTablesDataManager::handleDeleteRow(const std::string& tname, long row)
+{
+    QDataBlock* pqdb = findCachedBlock(tname);
+    if (!pqdb) return;
+
+    /// @todo убедиться, что BeginResetModel/EndResetModel сброс необходим
+    emit sig_BeginResetModel(tname);
+    pqdb->DeleteRow(row);
+    emit sig_EndResetModel(tname);
 }

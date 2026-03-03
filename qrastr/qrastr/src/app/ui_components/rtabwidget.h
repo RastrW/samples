@@ -1,116 +1,128 @@
 #pragma once
-
-#include <QObject>
 #include <QWidget>
-#include <QTableView>
-#include <QHeaderView>
-#include <QMouseEvent>
-#include <QMenu>
-#include <QVBoxLayout>
-#include <QSortFilterProxyModel>
-#include "ColPropForm.h"
-
-#include "rmodel.h"
-#include "rtableview.h"
-#include "rtablesdatamanager.h"
-
-#include "linkedform.h"
+#include "UIForms.h"
+#include "QtitanGrid.h"
 
 namespace ads{ class CDockManager; }
 
 class RtabWidget;
 class QMimeData;
 class QAstra;
-class LinkedForm;
 class PyHlp;
+class LinkedFormController;
+class LinkedForm;
+class QToolBar;
+class RTablesDataManager;
+class RModel;
+class RCol;
+class QTableView;
+class ContextMenuBuilder;
+class CondFormatController;
 
-/**
- * @brief
-    - Отображение табличных данных в QTitan Grid
-    - Управление взаимодействием пользователя с таблицей
-    - Обработка контекстных меню
-    - Связывание с RModel
-    - Поддержка условного форматирования
-    - Управление связанными формами
- */
+///@brief Виджет, отображающий одну таблицу Rastr в QTitan Grid.
 class RtabWidget : public QWidget
 {
     Q_OBJECT
 public:
-    explicit RtabWidget(CUIForm UIForm,QWidget *parent = nullptr);
+    /** @brief
+     *  Конструктор:
+     *      a) создаёт QTitan Grid и настраивает опции отображения;
+     *      b) привязывает горячие клавиши (Ctrl+I/A/R/D);
+     *      c) вызывает CreateModel() — строит RModel и заполняет данные.
+    */
     explicit RtabWidget(QAstra* pqastra, CUIForm UIForm,
-                        RTablesDataManager* pRTDM, ads::CDockManager* pDockManager ,QWidget *parent = nullptr);
+                        RTablesDataManager* pRTDM,
+                        ads::CDockManager* pDockManager,
+                        QWidget *parent = nullptr);
     virtual ~RtabWidget() = default;
-
+    //отключает сигналы LinkedForm, сбрасывает pnparray_.
     void closeEvent(QCloseEvent* event) override;
-private:  
-    void setTableView(QTableView& tv, RModel& mm, int myltiplier = 10);
-    void setTableView(Qtitan::GridTableView& tv, RModel& mm, int myltiplier = 10 );
+    QWidget* createDockContent(bool addToolbar = true);
 
-    std::tuple<int,double> GetSumSelected();
-    QMenu* CunstructLinkedFormsMenu(std::string form_name);
-    QMenu* CunstructLinkedMacroMenu(std::string form_name);
-
-signals:
-    void CondFormatsModified();
-public slots:
+    int getLongValue(const std::string& key, long row);
+    /// @brief Применяет LinkedForm через контроллер.
+    void applyLinkedFormFromController(const LinkedForm& lf);
+    void setPyHlp(std::shared_ptr<PyHlp> pPyHlp);
     void on_calc_begin();
     void on_calc_end();
-    void OnClose();
-    void contextMenu(ContextMenuEventArgs* args);
-    void setPyHlp(PyHlp* pPyHlp);
+public slots:
 
-    void onItemPressed(CellClickEventArgs* _index);
-    void onfocusRowChanged( int _row_old,int _row_new);
+    void slot_close();
+    void slot_contextMenu(ContextMenuEventArgs* args);
 
-    void AddRow();
-    void insertRow_qtitan();
-    void DuplicateRow_qtitan();
-    void deleteRow_qtitan();
+    //нажатие на яячейку таблицы
+    void slot_itemPressed(CellClickEventArgs* _index);
+    void slot_focusRowChanged( int _row_old,int _row_new);
+
+    void slot_addRow();
+    void slot_insertRow();
+    void slot_duplicateRow();
+    void slot_deleteRow();
+    void slot_groupCorrection();
     // ширина по шаблону
-    void widebyshabl();
+    void slot_widthByTemplate();
     // ширина по контенту
-    void widebydata();
-    void OpenColPropForm();
-    void OpenSelectionForm();
+    void slot_widthByData();
 
-    void OpenGroupCorrection();
-    void OpenExportCSVForm();
-    void OpenImportCSVForm();
+    //  Формы инструментов
+    void slot_openColProp(int col);
+    void slot_openSelection();
+
+    void slot_openExportCSVForm();
+    void slot_openImportCSVForm();
+
+    void slot_directCodeToggle(std::size_t column);
+    void slot_condFormatsEdit(std::size_t column);
 
     void SetSelection(std::string Selection);
-    void SetDirectCodeEntry(std::size_t column);
-    void editCondFormats(std::size_t column);
-    void onCondFormatsModified();
-    void SetLinkedForm( LinkedForm _lf);
-    void onOpenLinkedForm(LinkedForm _lf );    // ТИ:Каналы ; id1=%d & id2=0 & prv_num<8 ; 801
+
     void slot_beginResetModel(std::string tname);
     void slot_endResetModel(std::string tname);
-    void onOpenLinkedMacro(LinkedMacro _lm );
-
 private slots:
-    void CreateModel(QAstra* pqastra,CUIForm* pUIForm);
-    void SetEditors();
-    void SetEditor(RCol& _prcol);
 
-public:
-    std::unique_ptr<RModel> prm;
+    void applyAllColumnEditors ();
+    void applyColumnEditor(int colIndex);
+private:
+    void setTableView(QTableView& tv, RModel& mm, int multiplier = 10);
+    void setTableView(Qtitan::GridTableView& tv, RModel& mm,
+                      int multiplier = 10 );
+    /// Блокирует горячие клавиши заданные по умолчанию в Qtitan
+    bool eventFilter(QObject* obj, QEvent* event) override;
+    /** @brief
+     * a) создаёт RModel, вызывает setForm/populateDataFromRastr;
+     * b) подключает сигналы RTDM к слотам RModel (обновления данных);
+     * c) устанавливает редакторы колонок (SetEditors);
+     * d) восстанавливает условное форматирование из JSON.
+    */
+    void createModel();
+
+    void setupToolbar();
+    void setupShortcuts();
+    void setupConnections();
+
+    Qtitan::Grid* m_grid;
+    Qtitan::GridTableView* m_view;
+    std::shared_ptr<PyHlp> pPyHlp_;
+
+    // ── Компоненты ──
+    std::unique_ptr<RModel> m_model;
+    std::unique_ptr<LinkedFormController> m_linkedFormCtrl;
+    std::unique_ptr<ContextMenuBuilder>   m_menuBuilder;
+    std::unique_ptr<CondFormatController> m_condFormatCtrl;
+
     CUIForm m_UIForm;
     QAstra* m_pqastra;
     RTablesDataManager* m_pRTDM;
     ads::CDockManager* m_DockManager;
 
-    //QTtitanGrid
-    Qtitan::Grid* m_grid;
-    Qtitan::GridTableView* view;
-    LinkedForm m_lf;
-    PyHlp* pPyHlp_{nullptr};
-private:
-    RTableView* ptv;
-    int column;                         // for header
-    int row;
-    Qtitan::GridTableColumn* column_qt;
-    std::string m_selection;                                      // Текущая выборка
-    std::map<int, std::vector<CondFormat>> m_MapcondFormatVector; // column , vector<CondFormat>
-    std::map<QString,bool> m_ColumnsVisible;
+    QToolBar* m_toolbar;
+    // Действия в toolbar
+    QAction* m_actAddRow;
+    QAction* m_actInsertRow;
+    QAction* m_actDeleteRow;
+    QAction* m_actDuplicateRow;
+    QAction* m_groupCorrection;
+
+    std::string m_selection {""}; // Текущая выборка
+    std::map<QString,bool> m_columnsVisible;
 };

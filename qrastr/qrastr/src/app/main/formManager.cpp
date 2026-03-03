@@ -8,29 +8,30 @@
 #include <spdlog/spdlog.h>
 #include <QFileInfo>
 #include "qmcr/pyhlp.h"
+#include <astra/stringutils.h>
+#include "utils.h"
 
 FormManager::FormManager
     (std::shared_ptr<QAstra> qastra,
-     RTablesDataManager* rtdm,
      ads::CDockManager* dockManager,
-     PyHlp* pPyHlp,
+     std::shared_ptr<PyHlp> pPyHlp,
      QWidget* parent)
     : QObject(parent)
     , m_qastra(qastra)
-    , m_rtdm(rtdm)
     , m_dockManager(dockManager)
     , m_pPyHlp(pPyHlp)
     , m_parentWidget(parent)
 {
     assert(m_qastra != nullptr);
-    assert(m_rtdm != nullptr);
     assert(m_dockManager != nullptr);
     assert(m_pPyHlp != nullptr);
+
+   m_rtdm.setQAstra(qastra.get());
 }
 
 void FormManager::setForms(const std::list<CUIForm>& forms) {
     m_forms = forms;
-    m_rtdm->setForms(&m_forms);
+    m_rtdm.setForms(&m_forms);
     
     // Создаём индекс для быстрого поиска
     int index = 0;
@@ -52,34 +53,32 @@ void FormManager::openForm(const CUIForm& form) {
     }
     
     spdlog::info("Прочитана таблица [{}] - [{}]", form.Name(), form.TableName());
-    
+
+    // Докирование
+    auto dw = new ads::CDockWidget(QString::fromStdString(form.Name()),
+                                    m_parentWidget);
+    dw->setFeature(ads::CDockWidget::DockWidgetDeleteOnClose, true);
+
     // Создание виджета формы
     RtabWidget* prtw = new RtabWidget(
         m_qastra.get(),
         form,
-        m_rtdm,
+        &m_rtdm,
         m_dockManager,
-        m_parentWidget);
+        dw);
 
     prtw->setPyHlp(m_pPyHlp);
-
     // Выравнивание данных по шаблону, выравнивание текста по левому краю
-    prtw->widebyshabl();
-    
-    // Подключение сигналов расчётов
-    setupFormConnections(prtw);
-    
-    // Докирование
-    auto dw = new ads::CDockWidget(QString::fromStdString(form.Name()),
-                                    m_parentWidget);
-    dw->setWidget(prtw->m_grid);
-    dw->setFeature(ads::CDockWidget::DockWidgetDeleteOnClose, true);
-    
-    auto area = m_dockManager->addDockWidgetTab(ads::TopDockWidgetArea, dw);
+    prtw->slot_widthByTemplate();
+    // Добавляем в список открытых форм
+    // Сигналы будут передаваться через onCalculationStarted/Finished
+    m_openForms.append(prtw);
+    dw->setWidget(prtw->createDockContent());
+
+    m_dockManager->addDockWidgetTab(ads::TopDockWidgetArea, dw);
     
     // Обработка закрытия
-    connect(dw, &ads::CDockWidget::closed, prtw, &RtabWidget::OnClose);
-    
+    connect(dw, &ads::CDockWidget::closed, prtw, &RtabWidget::slot_close);
     connect(dw, &ads::CDockWidget::closed,
             this, [this, prtw, formName = form.Name()]() {
                 // Удаляем из списка открытых форм
@@ -111,16 +110,6 @@ void FormManager::openFormByName(const QString& formName) {
     
     int index = m_formNameToIndex[formName];
     openFormByIndex(index);
-}
-
-void FormManager::setupFormConnections(RtabWidget* widget) {
-    if (!widget) {
-        return;
-    }
-    
-    // Добавляем в список открытых форм
-    // Сигналы будут передаваться через onCalculationStarted/Finished
-    m_openForms.append(widget);
 }
 
 void FormManager::onCalculationStarted() {

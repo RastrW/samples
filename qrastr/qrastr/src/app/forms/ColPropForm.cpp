@@ -1,12 +1,12 @@
 #include "ColPropForm.h"
 #include "ui_ColPropForm.h"
 #include "rmodel.h"
+#include <QtitanGrid.h>
 
-ColPropForm::ColPropForm(RData* _prdata, RTableView* _ptv, Qtitan::GridTableView* _view, RCol* _prcol,QWidget *parent) :
+ColPropForm::ColPropForm(RData* _prdata, Qtitan::GridTableView* _view, RCol* _prcol,QWidget *parent) :
     QWidget(parent),
     ui(new Ui::ColPropForm)
 {
-    ptv = _ptv;
     view = _view;
     prdata = _prdata;
 
@@ -101,7 +101,7 @@ void ColPropForm::on_btn_ok_clicked()
 
     IRastrResultVerify{prdata->pqastra_->getRastr()->SetLockEvent(false)};
 
-    Qtitan::GridTableColumn* column_qt = (Qtitan::GridTableColumn *)view->getColumn(prcol->index);
+    Qtitan::GridTableColumn* column_qt = (Qtitan::GridTableColumn *)view->getColumn(prcol->getIndex());
     ((Qtitan::GridNumericEditorRepository *)column_qt->editorRepository())->setDecimals(getPrec().toInt());
 
     this->close();

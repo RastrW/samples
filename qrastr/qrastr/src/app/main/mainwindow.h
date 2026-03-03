@@ -3,7 +3,7 @@
 #include <QMainWindow>
 #include <memory>
 #include <list>
-#include <rtablesdatamanager.h>
+
 
 class FileManager;
 class CalculationController;
@@ -112,8 +112,7 @@ private:
     FormProtocol* m_mainProtocol = nullptr;     // Главный протокол
     
     // ========== ВСПОМОГАТЕЛЬНЫЕ КОМПОНЕНТЫ ==========
-    std::unique_ptr<PyHlp> m_pyHelper;          // Python helper (для выполнения макросов)
-    RTablesDataManager m_rtdm;                  // Менеджер данных таблиц
+    std::shared_ptr<PyHlp> m_pyHelper;          // Python helper (для выполнения макросов)
     
     // ========== ИНИЦИАЛИЗАЦИЯ ==========
     void setupDockWidgets();
