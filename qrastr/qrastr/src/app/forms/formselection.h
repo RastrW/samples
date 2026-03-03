@@ -1,5 +1,3 @@
-#ifndef FORMSELECTION_H
-#define FORMSELECTION_H
 #pragma once
 
 #include <QDialog>
@@ -13,15 +11,15 @@ class FormSelection : public QDialog
     Q_OBJECT
 
 public:
-    explicit FormSelection( std::string _selection ,QWidget *parent = nullptr);
+    explicit FormSelection(std::string colName,
+                           QWidget *parent = nullptr);
     ~FormSelection();
-
+signals:
+    void sig_selectionAccepted(std::string selection);
 private slots:
     void on_buttonBox_accepted();
 
 private:
-    std::string selection;
+    std::string m_colName;
     Ui::FormSelection *ui;
 };
-
-#endif // FORMSELECTION_H

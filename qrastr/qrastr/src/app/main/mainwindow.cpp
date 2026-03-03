@@ -25,7 +25,6 @@
 #include <QSvgRenderer>
 #endif
 
-
 #include <spdlog/spdlog.h>
 
 #include "calculationController.h"
@@ -33,7 +32,6 @@
 #include "formManager.h"
 #include "settingsManager.h"
 #include "uiBuilder.h"
-#include "cacheLog.h"
 
 MainWindow::MainWindow()
     : QMainWindow(){
@@ -133,6 +131,7 @@ void MainWindow::setupDockWidgets() {
     
     // Главный протокол
     m_mainProtocol = new FormProtocol(this);
+    //Если необходимо, чтобы в FormProtocol был вывод spdlog, необходимо включить эту настройку
     m_mainProtocol->setIgnoreAppendProtocol(true);
 
     auto dockMainProtocol = new ads::CDockWidget("protocolMain", this);
@@ -145,7 +144,7 @@ void MainWindow::setupLogSinks() {
     auto logger = spdlog::default_logger();
 
     // После этого вызова все spdlog::info/warn/error
-    // пойдут в McrWnd и FormProtocol
+    // пойдут в McrWnd и FormProtocol(если отключен игнор)
     auto qtSink = std::make_shared<spdlog::sinks::qt_sink_mt>(
         m_globalProtocol, "onQStringAppendProtocol");
     logger->sinks().push_back(qtSink);
@@ -157,9 +156,6 @@ void MainWindow::setupLogSinks() {
 
 void MainWindow::setupRastrConnections() {
     // Второй поток данных — структурированные _log_data от Rastr
-    // (StageId, иконки, вложенность) — идут напрямую в виджеты,
-    // минуя spdlog, потому что плоская строка Qt-синка эту
-    // структуру передать не может
     connect(m_qastra.get(), &QAstra::onRastrLog,
             m_mainProtocol, &FormProtocol::onRastrLog);
     connect(m_qastra.get(), &QAstra::onRastrLog,

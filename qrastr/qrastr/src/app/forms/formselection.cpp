@@ -2,14 +2,21 @@
 #include "ui_formselection.h"
 #include "rtabwidget.h"
 
-FormSelection::FormSelection(std::string _selection ,QWidget *parent)
-    : QDialog(parent)
-    , ui(new Ui::FormSelection)
+FormSelection::FormSelection(std::string colName,
+                             QWidget *parent)
+    : QDialog(parent),
+    ui(new Ui::FormSelection),
+    m_colName{colName}
 {
-    selection = _selection;
     ui->setupUi(this);
     ui->textEdit->setFocus();
-    ui->textEdit->setPlainText(  selection.c_str());
+    std::string hint;
+    if (!colName.empty()){
+        hint = m_colName + "=";
+    }else{
+        hint = m_colName;
+    }
+    ui->textEdit->setPlainText(  hint.c_str());
 }
 
 FormSelection::~FormSelection()
@@ -19,8 +26,7 @@ FormSelection::~FormSelection()
 
 void FormSelection::on_buttonBox_accepted()
 {
-    RtabWidget* pRTW = static_cast<RtabWidget*>(this->parent());
     QString selection = ui->textEdit->toPlainText();
-    pRTW->SetSelection(selection.toStdString());
+    emit sig_selectionAccepted(selection.toStdString());
 }
 

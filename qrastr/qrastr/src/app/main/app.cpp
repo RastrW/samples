@@ -62,16 +62,6 @@ bool App::init(){
         fs::path path_log{ Params::get_instance()->getDirData().absolutePath().toStdString() };
         path_log /= L"qrastr_log.txt";
 
-        // Архивируем лог прошлого сеанса
-        fs::path path_log_prev = path_log;
-        path_log_prev.replace_filename("qrastr_log_prev.txt");
-        try {
-            if (fs::exists(path_log))
-                fs::rename(path_log, path_log_prev);
-        } catch (const fs::filesystem_error& e) {
-            // не критично
-        }
-
         auto file_sink = std::make_shared<spdlog::sinks::rotating_file_sink_mt>
             ( path_log.string(), 1024*1024*1, 3);
         logg->sinks().push_back(file_sink);

@@ -475,7 +475,14 @@ void RtabWidget::slot_openColProp(int col)
 
 void RtabWidget::slot_openSelection()
 {
-    FormSelection* Selection = new FormSelection(this->m_selection, this);
+    // Передаём имя колонки, по которой открыто меню
+    int col = m_view->selection()->cell().columnIndex();
+    RCol* prcol = m_model->getRCol(col);
+    std::string colName = prcol ? prcol->name() : "";
+
+    FormSelection* Selection = new FormSelection(colName, this);
+    connect(Selection, &FormSelection::sig_selectionAccepted,
+            this, &RtabWidget::slot_setFiltrForSelection);
     Selection->show();
 }
 
@@ -515,35 +522,26 @@ void RtabWidget::slot_widthByData(){
     m_view->tableOptions().setColumnAutoWidth(true);
 }
 
-void RtabWidget::SetSelection(std::string selection)
+void RtabWidget::slot_setFiltrForSelection(std::string selection)
 {
-    ///@todo скрыть строки, которые не удовлетворяют выборки
-    /// Выполнено по аналогии с applyLinkedForm(LinkedForm lf)
-    /// Но фильтр не работает по той колонке, куда указана мышь
-    /// А в редакторе фильтра указаны Узлы, при чем условие фильтра -
-    /// узел 0 (всегда, если его изменить, то фильтрация выполнится, но только по узлу)
+    // selection должен быть в формате = "pg=10"
     m_selection = selection;
 
-    // Передаём строку выборки в плагин
     IRastrTablesPtr tablesx{ m_pqastra->getRastr()->Tables() };
     IRastrTablePtr  table{ tablesx->Item(m_model->getRdata()->t_name_) };
     table->SetSelection(selection);
 
-    // Получаем индексы строк, прошедших выборку
     DataBlock<FieldVariantData> variantBlock;
     const IRastrPayload keys = table->Key();
     IRastrResultVerify(table->DataBlock(keys.Value(), variantBlock));
     const auto indices = variantBlock.IndexesVector();
 
-    //Создаём CustomFilterCondition для QTitan Grid с этими индексами
     auto* groupCondition = new GridFilterGroupCondition(m_view->filter());
     auto* condition      = new CustomFilterCondition(m_view->filter());
     groupCondition->addCondition(condition);
-
     for (long idx : indices)
         condition->addRow(idx);
 
-    //Активируем фильтр — Grid показывает только нужные строки.
     m_view->filter()->setCondition(groupCondition, true);
     m_view->filter()->setActive(true);
     m_view->showFilterPanel();

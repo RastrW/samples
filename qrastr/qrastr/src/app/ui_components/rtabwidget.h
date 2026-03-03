@@ -74,7 +74,7 @@ public slots:
     void slot_directCodeToggle(std::size_t column);
     void slot_condFormatsEdit(std::size_t column);
 
-    void SetSelection(std::string Selection);
+    void slot_setFiltrForSelection(std::string selection);
 
     void slot_beginResetModel(std::string tname);
     void slot_endResetModel(std::string tname);
