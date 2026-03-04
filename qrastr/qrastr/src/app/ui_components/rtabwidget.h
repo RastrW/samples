@@ -34,7 +34,7 @@ public:
                         RTablesDataManager* pRTDM,
                         ads::CDockManager* pDockManager,
                         QWidget *parent = nullptr);
-    virtual ~RtabWidget() = default;
+    virtual ~RtabWidget();
     //отключает сигналы LinkedForm, сбрасывает pnparray_.
     void closeEvent(QCloseEvent* event) override;
     QWidget* createDockContent(bool addToolbar = true);
@@ -124,5 +124,6 @@ private:
     QAction* m_groupCorrection;
 
     std::string m_selection {""}; // Текущая выборка
-    std::map<QString,bool> m_columnsVisible;
+    std::map<QString,bool>
+        m_columnsVisible;
 };

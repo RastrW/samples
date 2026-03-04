@@ -74,6 +74,8 @@ RtabWidget::RtabWidget(QAstra* pqastra,CUIForm UIForm, RTablesDataManager* pRTDM
     ///@todo Вынести в опцию контекстного меню (example MultiSelection)
     m_view->tableOptions().setRowFrozenButtonVisible(true);
     m_view->tableOptions().setFrozenPlaceQuickSelection(true);
+    //отключить встроенное меню Qtitan
+    //m_view->options().setMainMenuDisabled(true);
 
     // ── Блокируем встроенные в Qtitan события ──────────────────────────────────
     m_grid->installEventFilter(this);
@@ -89,6 +91,7 @@ RtabWidget::RtabWidget(QAstra* pqastra,CUIForm UIForm, RTablesDataManager* pRTDM
         m_view,
         m_linkedFormCtrl.get(),
         this);
+    m_menuBuilder->initMenu(this);
 
     setupConnections();
 
@@ -96,6 +99,12 @@ RtabWidget::RtabWidget(QAstra* pqastra,CUIForm UIForm, RTablesDataManager* pRTDM
     setWindowFlags(Qt::WindowMinimizeButtonHint | Qt::WindowMinMaxButtonsHint
                    | Qt::WindowCloseButtonHint);
     setWindowModality(Qt::ApplicationModal);
+
+    //qApp->installEventFilter(this);
+}
+
+RtabWidget::~RtabWidget() {
+    //qApp->removeEventFilter(this);
 }
 
 QWidget* RtabWidget::createDockContent(bool addToolbar) {
@@ -413,15 +422,33 @@ void RtabWidget::setTableView(Qtitan::GridTableView& tv, RModel& mm, int multipl
 
 void RtabWidget::slot_contextMenu(ContextMenuEventArgs* args)
 {
-    // MenuContext живёт только здесь, на стеке — НЕ поле класса
-    MenuContext ctx;
-    ctx.column = args->hitInfo().columnIndex();
-    ctx.row    = args->hitInfo().row().rowIndex();
-    ctx.col    = (ctx.column >= 0) ? m_model->getRCol(ctx.column) : nullptr;
+    QElapsedTimer stepTimer;
+    stepTimer.start();
 
-    if (!ctx.col) return;
+    args->setHandled(true);
 
-    m_menuBuilder->populate(args->contextMenu(), ctx);
+    qInfo() << "[slot_contextMenu] Step 0 setHandled:"
+            << stepTimer.elapsed() << "ms";
+    stepTimer.restart();
+
+    const int column = args->hitInfo().columnIndex();
+    const int row    = args->hitInfo().row().rowIndex();
+    if (column < 0) return;
+
+    RCol* col = m_model->getRCol(column);
+    if (!col) return;
+
+    qInfo() << "[slot_contextMenu] Step 1 (checks):"
+            << stepTimer.elapsed() << "ms";
+    stepTimer.restart();
+
+    MenuContext ctx { column, row, col };
+    QMenu* menu = m_menuBuilder->prepareForShow(ctx);
+
+    qInfo() << "[slot_contextMenu] Step 2 (menu->exec):"
+            << stepTimer.elapsed() << "ms";
+
+    menu->exec(QCursor::pos());
 }
 
 void RtabWidget::slot_focusRowChanged(int /*row_old*/, int row_new)

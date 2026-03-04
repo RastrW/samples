@@ -54,20 +54,13 @@ void LinkedFormController::disconnectAll()
     m_lf.vconn.clear();
 }
 
-QMenu* LinkedFormController::buildLinkedFormsMenu(int contextRow)
+void LinkedFormController::buildLinkedFormsMenu(int contextRow, QMenu* menu)
 {
-    QMenu* menu = new QMenu(m_parentWidget);
-    menu->setTitle("Связанные формы");
-
     auto table = m_rtdm->get("formcontext", "");
 
-    for (int irow = 0; irow < table->RowsCount(); ++irow)
-    {
-        const std::string formName =
-            std::get<std::string>(table->Get(irow, 0));
-
-        if (m_form.Name() != formName)
-            continue;
+    for (int irow = 0; irow < table->RowsCount(); ++irow) {
+        const std::string formName = std::get<std::string>(table->Get(irow, 0));
+        if (m_form.Name() != formName) continue;
 
         LinkedForm lf;
         lf.linkedform = std::visit(ToString(), table->Get(irow, 1));
@@ -75,44 +68,30 @@ QMenu* LinkedFormController::buildLinkedFormsMenu(int contextRow)
         lf.selection  = std::visit(ToString(), table->Get(irow, 3));
         lf.bind       = std::visit(ToString(), table->Get(irow, 4));
         lf.pbaseform  = static_cast<RtabWidget*>(m_parentWidget);
-
         // Заполняем bind-значения из текущей строки контекстного меню
         for (const auto& key : split(lf.bind, ','))
             lf.vbindvals.push_back(getLongValue(key, contextRow));
 
         QAction* action = new QAction(
             QString::fromStdString(lf.linkedname), menu);
-        menu->addAction(action);
-
         // lf захватывается по значению — каждое действие имеет свой снимок
-        connect(action, &QAction::triggered, this, [this, lf]() {
-            openLinkedForm(lf);
-        });
+        connect(action, &QAction::triggered,
+                this, [this, lf]() { openLinkedForm(lf); });
+        menu->addAction(action);
     }
-
-    return menu;
 }
 
-QMenu* LinkedFormController::buildLinkedMacroMenu(int contextRow)
+void LinkedFormController::buildLinkedMacroMenu(int contextRow, QMenu* menu)
 {
-    QMenu* menu = new QMenu(m_parentWidget);
-    menu->setTitle("Макрос");
-
     auto table = m_rtdm->get("macrocontext", "");
 
-    for (int irow = 0; irow < table->RowsCount(); ++irow){
-        const std::string formName =
-            std::visit(ToString(), table->Get(irow, 0));
+    for (int irow = 0; irow < table->RowsCount(); ++irow) {
+        const std::string formName = std::visit(ToString(), table->Get(irow, 0));
+        if (m_form.Name() != formName) continue;
 
-        if (m_form.Name() != formName)
-            continue;
-
-        const long formType   = std::visit(ToLong(), table->Get(irow, 6));
+        const long formType    = std::visit(ToLong(), table->Get(irow, 6));
         const long defAppendix = std::visit(ToLong(), table->Get(irow, 4));
-
-        // Показываем только записи типа 0 с флагом defappendix
-        if (formType != 0 || !defAppendix)
-            continue;
+        if (formType != 0 || !defAppendix) continue;
 
         LinkedMacro lm;
         lm.col       = std::visit(ToString(), table->Get(irow, 1));
@@ -123,14 +102,12 @@ QMenu* LinkedFormController::buildLinkedMacroMenu(int contextRow)
 
         QAction* action = new QAction(
             QString::fromStdString(lm.macrodesc), menu);
+        connect(action, &QAction::triggered,
+                this, [this, lm, contextRow]() {
+                    openLinkedMacro(lm, contextRow);
+                });
         menu->addAction(action);
-
-        connect(action, &QAction::triggered, this, [this, lm, contextRow]() {
-            openLinkedMacro(lm, contextRow);
-        });
     }
-
-    return menu;
 }
 
 void LinkedFormController::applyLinkedForm(LinkedForm lf)
