@@ -21,7 +21,7 @@
 #include <DockManager.h>
 #include <QCloseEvent>
 #include <QTableView>
-
+#include <QMessageBox>
 
 #include "formselection.h"
 #include "formgroupcorrection.h"
@@ -262,8 +262,20 @@ void RtabWidget::createModel()
 {
     m_model = std::make_unique<RModel>(this, m_pqastra, m_pRTDM);
     m_model->setForm(&m_UIForm);
-    m_model->populateDataFromRastr();
-
+    if (!m_model->populateDataFromRastr())
+    {
+        // Таблица не найдена в плагине (файл не загружен или имя неверно).
+        // Модель пуста — показываем сообщение и прекращаем инициализацию.
+        //spdlog::error("RtabWidget: populateDataFromRastr failed for table [{}]",
+        //              m_UIForm.TableName());
+        QMessageBox::warning(
+            this,
+            tr("Ошибка открытия таблицы"),
+            tr("Таблица \"%1\" недоступна.\n"
+               "Убедитесь, что файл данных загружен.")
+                .arg(QString::fromStdString(m_UIForm.Name())));
+        return;   // m_model валиден, но пуст — Grid не инициализируем
+    }
     m_view->beginUpdate();
     m_view->setModel(m_model.get());
 
@@ -551,7 +563,9 @@ void RtabWidget::slot_condFormatsEdit(std::size_t column)
 }
 
 void RtabWidget::slot_widthByTemplate(){
-    setTableView(*m_view,*m_model);
+    if (m_view != nullptr && m_view != nullptr){
+       setTableView(*m_view,*m_model);
+    }
 }
 
 void RtabWidget::slot_widthByData(){

@@ -67,26 +67,28 @@ void FormManager::openForm(const CUIForm& form) {
         m_dockManager,
         dw);
 
-    prtw->setPyHlp(m_pPyHlp);
-    // Выравнивание данных по шаблону, выравнивание текста по левому краю
-    prtw->slot_widthByTemplate();
-    // Добавляем в список открытых форм
-    // Сигналы будут передаваться через onCalculationStarted/Finished
-    m_openForms.append(prtw);
-    dw->setWidget(prtw->createDockContent());
+    if (prtw != nullptr){
+        prtw->setPyHlp(m_pPyHlp);
+        // Выравнивание данных по шаблону, выравнивание текста по левому краю
+        prtw->slot_widthByTemplate();
+        // Добавляем в список открытых форм
+        // Сигналы будут передаваться через onCalculationStarted/Finished
+        m_openForms.append(prtw);
+        dw->setWidget(prtw->createDockContent());
 
-    m_dockManager->addDockWidgetTab(ads::TopDockWidgetArea, dw);
-    
-    // Обработка закрытия
-    connect(dw, &ads::CDockWidget::closed, prtw, &RtabWidget::slot_close);
-    connect(dw, &ads::CDockWidget::closed,
-            this, [this, prtw, formName = form.Name()]() {
-                // Удаляем из списка открытых форм
-                m_openForms.removeOne(prtw);
-                emit formClosed(QString::fromStdString(formName));
-            });
-    
-    m_activeForm = prtw;
+        m_dockManager->addDockWidgetTab(ads::TopDockWidgetArea, dw);
+        // Обработка закрытия
+        connect(dw, &ads::CDockWidget::closed, prtw, &RtabWidget::slot_close);
+        connect(dw, &ads::CDockWidget::closed,
+                this, [this, prtw, formName = form.Name()]() {
+                    // Удаляем из списка открытых форм
+                    m_openForms.removeOne(prtw);
+                    emit formClosed(QString::fromStdString(formName));
+                });
+
+        m_activeForm = prtw;
+    }
+
     emit formOpened(QString::fromStdString(form.Name()));
     emit activeFormChanged(prtw);
 }

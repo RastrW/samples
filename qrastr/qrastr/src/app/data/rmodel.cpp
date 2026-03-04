@@ -408,10 +408,11 @@ std::vector<std::tuple<int,int>>
 RModel::ColumnsWidth()
 {
     std::vector<std::tuple<int,int>> cw;
-
-    int i = 0;
-    for(RCol& col : *up_rdata)
-        cw.emplace_back(i++,std::stoi(col.width()));
+    if (up_rdata != nullptr){
+        int i = 0;
+        for(RCol& col : *up_rdata)
+            cw.emplace_back(i++,std::stoi(col.width()));
+    }
     return cw;
 }
 
