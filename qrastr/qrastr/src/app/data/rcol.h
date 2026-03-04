@@ -9,18 +9,13 @@ using WrapperExceptionType = std::runtime_error;
 
 #include <astra/IPlainRastrWrappers.h>
 
-using _vt = std::variant< bool,long, double, std::string >;
-typedef std::vector< _vt > _col_data ;
-
 /**
  * @brief Метаданные и вспомогательные операции для одной колонки таблицы Rastr.
  * Каждый геттер (name(), title(), desc(), …) делает отдельный вызов в плагин.
  * @todo подумать о том, чтобы кешировать данные при создании объекта, чтобы скоратить количество вызовов в плагин
  * Но необходимо понимать, какие из них неизменяемы, а, если нет, то в каких случаях изменяются
  */
-class RCol
-    : public _col_data
-{
+class RCol{
 public:
     enum _en_data{ // in _col_data
         DATA_ERR =  -1,
@@ -29,9 +24,7 @@ public:
         DATA_DBL =   2,
         DATA_STR =   3
     };
-    template <typename... Args>
-    RCol(Args&&... args)
-        : _col_data{args...} {}
+    RCol() = default;
 
     virtual ~RCol() = default;
     ///@todo следует реализовать

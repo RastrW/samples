@@ -74,28 +74,6 @@ std::string RData::getCommaSeparatedFieldNames(){
     }
     return str_tmp;
 }
-void RData::Trace() const {
-    for(const RCol& col : *this){
-        qDebug() << " col: " << col.getStrName().c_str();
-        for(const _col_data::value_type& cdata : col ){
-            switch(col.getEnData()){
-            case RCol::_en_data::DATA_INT :
-                qDebug()<<"cdata : "<< std::get<long>(cdata);
-                break;
-            case RCol::_en_data::DATA_DBL :
-                qDebug()<<"cdata : "<< std::get<double>(cdata);
-                break;
-            case RCol::_en_data::DATA_STR :
-                qDebug()<<"cdata : "<< std::get<std::string>(cdata).c_str();
-                break;
-            default:
-                qDebug()<<"cdata : unknown!! ";
-                break;
-            }
-            //qDebug()<<"cdata : "<< std::to_string(cdata).c_str();
-        }
-    }
-}
 
 void RData::populate_qastra(QAstra* _pqastra, RTablesDataManager* _pRTDM )
 {
@@ -127,10 +105,4 @@ std::string RData::get_cols(bool visible)
         ret_cols.pop_back();
 
     return ret_cols;
-}
-
-void RData::clear_data(){
-    for(RCol& col: *this){
-        col.clear();
-    }
 }
