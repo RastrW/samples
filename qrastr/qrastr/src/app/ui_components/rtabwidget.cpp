@@ -285,7 +285,7 @@ void RtabWidget::createModel()
     int vi = 0;
     for (const auto& f : m_UIForm.Fields()){
         for (const RCol& rcol : *m_model->getRdata()){
-            if (f.Name() == rcol.getStrName()){
+            if (f.Name() == rcol.getColName()){
                 Qtitan::GridTableColumn* column_qt;
                 column_qt = static_cast<GridTableColumn*>(
                     m_view->getColumn(rcol.getIndex()));
@@ -523,7 +523,7 @@ void RtabWidget::slot_openSelection()
     // Передаём имя колонки, по которой открыто меню
     int col = m_view->selection()->cell().columnIndex();
     RCol* prcol = m_model->getRCol(col);
-    std::string colName = prcol ? prcol->name() : "";
+    std::string colName = prcol ? prcol->getColName() : "";
 
     FormSelection* selectionDialog = new FormSelection(m_selection,colName, this);
     connect(selectionDialog, &FormSelection::sig_selectionAccepted,

@@ -36,10 +36,10 @@ void ContextMenuBuilder::populate(QMenu* menu, const MenuContext& ctx)
 
     // ── 2. Информация о колонке ────────────────────────────────────────────
     {
-        std::string desc = ctx.col->desc()
-                         + " |" + ctx.col->title()
-                         + "| -(" + ctx.col->name()
-                         + "), [" + ctx.col->unit() + "]";
+        std::string desc = ctx.col->getDesc()
+                         + " |" + ctx.col->getTitle()
+                         + "| -(" + ctx.col->getColName()
+                         + "), [" + ctx.col->getUnit() + "]";
         menu->addSeparator();
         // Захватываем col в лямбду по значению индекса, не по указателю —
         // указатель ctx.col действителен только на время populate()

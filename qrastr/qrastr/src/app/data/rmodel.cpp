@@ -50,7 +50,7 @@ void RModel::rebuildBackInfo()
 
     for (RCol& rcol : *up_rdata)
     {
-        rcol.setNameRef(rcol.NameRef());
+        rcol.setNameRef(rcol.getNameRef());
 
         if (rcol.getComPropTT() == enComPropTT::COM_PR_ENUM) // ex: Нет|Квадр.|Лин.|Комбинир.
         {
@@ -192,7 +192,7 @@ QVariant RModel::headerData(int section, Qt::Orientation orientation, int role) 
 {
     if (role == Qt::DisplayRole && orientation == Qt::Horizontal) {
         //std::string title = up_rdata.get()->at(section).title().c_str();
-        return up_rdata.get()->at(section).title().c_str();
+        return up_rdata.get()->at(section).getTitle().c_str();
     }
     if (role == Qt::DisplayRole && orientation == Qt::Vertical) {
         return section + 1;
@@ -216,7 +216,7 @@ bool RModel::setData(const QModelIndex &index, const QVariant &value, int role)
     IRastrTablesPtr tablesx{this->pqastra_->getRastr()->Tables()};
     IRastrTablePtr table{ tablesx->Item(iter_col->getTableName()) };
     IRastrColumnsPtr columns{table->Columns()};
-    IRastrColumnPtr col_ptr{ columns->Item(iter_col->getStrName()) };
+    IRastrColumnPtr col_ptr{ columns->Item(iter_col->getColName()) };
 
     if (value != data(index, role))
     {
@@ -227,7 +227,7 @@ bool RModel::setData(const QModelIndex &index, const QVariant &value, int role)
                 FieldVariantData vd(val);
                 IRastrResultVerify(col_ptr->SetValue(row,val));
                 qDebug() << "set: "<<up_rdata->t_name_.c_str()<<"."
-                         << (*iter_col).getStrName().c_str() << "(" << row << ")=" <<val;
+                         << (*iter_col).getColName().c_str() << "(" << row << ")=" <<val;
                 break;
              }
             case RCol::_en_data::DATA_INT:
@@ -265,7 +265,7 @@ bool RModel::setData(const QModelIndex &index, const QVariant &value, int role)
 
                 FieldVariantData vd(val);
                 IRastrResultVerify(col_ptr->SetValue(row,val));
-                qDebug() << "set: "<<up_rdata->t_name_.c_str()<<"."<< (*iter_col).getStrName().c_str() << "(" << row << ")=" <<val;
+                qDebug() << "set: "<<up_rdata->t_name_.c_str()<<"."<< (*iter_col).getColName().c_str() << "(" << row << ")=" <<val;
 
                 break;
             }
@@ -274,7 +274,7 @@ bool RModel::setData(const QModelIndex &index, const QVariant &value, int role)
                 std::string val =  value.toString().toStdString().c_str();
                 FieldVariantData vd(val);
                 IRastrResultVerify(col_ptr->SetValue(row,val));
-                qDebug() << "set: "<<up_rdata->t_name_.c_str()<<"."<< (*iter_col).getStrName().c_str() ;//<< "(" << row << ")=" <<  val;
+                qDebug() << "set: "<<up_rdata->t_name_.c_str()<<"."<< (*iter_col).getColName().c_str() ;//<< "(" << row << ")=" <<  val;
                 break;
             }
                 break;
@@ -283,7 +283,7 @@ bool RModel::setData(const QModelIndex &index, const QVariant &value, int role)
                 double val =  value.toDouble();
                 FieldVariantData vd(val);
                 IRastrResultVerify(col_ptr->SetValue(row,val));
-                qDebug() << "set: "<<up_rdata->t_name_.c_str()<<"."<< (*iter_col).getStrName().c_str() << "(" << row << ")=" <<val;
+                qDebug() << "set: "<<up_rdata->t_name_.c_str()<<"."<< (*iter_col).getColName().c_str() << "(" << row << ")=" <<val;
             }
                 break;
         default :
@@ -411,7 +411,7 @@ RModel::ColumnsWidth()
     if (up_rdata != nullptr){
         int i = 0;
         for(RCol& col : *up_rdata)
-            cw.emplace_back(i++,std::stoi(col.width()));
+            cw.emplace_back(i++,std::stoi(col.getWidth()));
     }
     return cw;
 }
@@ -426,7 +426,7 @@ int RModel::getIndexCol(std::string _col)
 {
     for (int i = 0 ; i<this->columnCount(); i++)
     {
-        if (this->getRCol(i)->name() == _col)
+        if (this->getRCol(i)->getColName() == _col)
             return i;
     }
     return -1;
@@ -565,29 +565,6 @@ void RModel::slot_EndRemoveRows(std::string tname){
         endRemoveRows();
 }
 
-bool RModel::isBinary(const QModelIndex& index) const
-{
-    switch (this->up_rdata->at(index.column()).getEnData())
-   {
-       case RCol::_en_data::DATA_BOOL:
-           return false;
-           break;
-       case RCol::_en_data::DATA_INT:
-        return true;
-           break;
-       case RCol::_en_data::DATA_DBL:
-           return true;
-           break;
-       case RCol::_en_data::DATA_STR:
-           return false;
-           break;
-       default:
-           Q_ASSERT(!"unknown type");
-           return true;
-           break;
-   }
-}
-
 bool RModel::isBinary(const QByteArray& data) const
 {
     return true;
@@ -610,7 +587,7 @@ RModel::getColumnEditorInfo(int colIndex) const
 
     case enComPropTT::COM_PR_REAL:
         info.editorType = ColumnEditorInfo::Type::Numeric;
-        info.decimals   = std::atoi(col->prec().c_str());
+        info.decimals   = std::atoi(col->getPrec().c_str());
         break;
 
     case enComPropTT::COM_PR_ENUM:

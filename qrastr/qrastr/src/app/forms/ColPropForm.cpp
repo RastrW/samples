@@ -10,16 +10,17 @@ ColPropForm::ColPropForm(RData* prdata, Qtitan::GridTableView* view,
     m_prdata{prdata},
     m_prcol{prcol},
     m_view{view}{
-    std::string title = prdata->t_name_ + "[" +prdata->t_title_ + "]." + prcol->name() + "[" +prcol->title() + "]" ;
+    std::string title = prdata->t_name_ + "[" +prdata->t_title_ + "]." +
+                        prcol->getColName() + "[" +prcol->getTitle() + "]" ;
     setWindowTitle(title.c_str());
     windowTitle();
     ui->setupUi(this);
-    setName(prcol->name().c_str());
-    setTitle(prcol->title().c_str());
-    setDesc(prcol->desc().c_str());
-    setWidth(prcol->width().c_str());
-    setPrec(prcol->prec().c_str());
-    setExpr(prcol->expr().c_str());
+    setName(prcol->getColName().c_str());
+    setTitle(prcol->getTitle().c_str());
+    setDesc(prcol->getDesc().c_str());
+    setWidth(prcol->getWidth().c_str());
+    setPrec(prcol->getPrec().c_str());
+    setExpr(prcol->getExpr().c_str());
 }
 
 ColPropForm::~ColPropForm()
@@ -88,15 +89,23 @@ void ColPropForm::on_btn_cancel_clicked()
 void ColPropForm::on_btn_ok_clicked()
 {
     ///@todo: need change propertires
-    IRastrResultVerify{m_prdata->pqastra_->getRastr()->SetLockEvent(true)};
-    m_prcol->set_prec(getPrec().toStdString().c_str());
+    IRastrResultVerify{m_prdata->getAstra()->getRastr()->SetLockEvent(true)};
+    m_prcol->set_prec(m_prdata->getAstra(), getPrec().toStdString().c_str());
 
-    m_prcol->set_prop(FieldProperties::Description, getDesc().toStdString());
-    m_prcol->set_prop(FieldProperties::Expression, getExpr().toStdString());
-    m_prcol->set_prop(FieldProperties::Title, getTitle().toStdString());
-    m_prcol->set_prop(FieldProperties::Width, getWidth().toStdString());
+    m_prcol->set_prop(m_prdata->getAstra(),
+                      FieldProperties::Description,
+                      getDesc().toStdString());
+    m_prcol->set_prop(m_prdata->getAstra(),
+                      FieldProperties::Expression,
+                      getExpr().toStdString());
+    m_prcol->set_prop(m_prdata->getAstra(),
+                      FieldProperties::Title,
+                      getTitle().toStdString());
+    m_prcol->set_prop(m_prdata->getAstra(),
+                      FieldProperties::Width,
+                      getWidth().toStdString());
     long textind = m_prcol->getIndex();
-    IRastrResultVerify{m_prdata->pqastra_->getRastr()->SetLockEvent(false)};
+    IRastrResultVerify{m_prdata->getAstra()->getRastr()->SetLockEvent(false)};
 
     // 1. Получаем колонку с правильным приведением типов
     auto* tableView = static_cast<Qtitan::GridTableView*>(m_view);

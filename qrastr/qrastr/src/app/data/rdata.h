@@ -24,6 +24,7 @@ public:
      * указатели на элементы вектора инвалидируются и RCol теряют данные.
      */
     RData(QAstra* _pqastra, const CUIForm& _form);
+    QAstra* getAstra() const { return m_qastra; }
 
     int AddCol(const RCol& rcol){
         emplace_back(rcol);
@@ -39,7 +40,6 @@ public:
 
     std::string getCommaSeparatedFieldNames();
 
-    QAstra* pqastra_;
     std::string t_name_ = "";
     std::string t_title_ = "";
 
@@ -48,4 +48,5 @@ public:
     std::map<std::string, int> mCols_; ///< map<имя_колонки, индекс> для быстрого поиска колонки по имени.
 private:
     std::string m_str_cols = "";       ///< vCols_ в виде строки имен столбцов ex: "ny,pn,qn,vras"
+    QAstra* m_qastra;
 };

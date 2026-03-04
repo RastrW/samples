@@ -44,7 +44,7 @@ void formexportcsv::accept()
     std::string selection = ui->lineEdit_4->text().toStdString();
 
 
-    IRastrTablesPtr tablesx{ prdata_->pqastra_->getRastr()->Tables() };
+    IRastrTablesPtr tablesx{ prdata_->getAstra()->getRastr()->Tables() };
     IRastrTablePtr table{ tablesx->Item(table_name) };
     if (!selection.empty())
         IRastrResultVerify{table->SetSelection(selection)};

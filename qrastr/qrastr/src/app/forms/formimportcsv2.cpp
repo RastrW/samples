@@ -38,7 +38,7 @@ void formimportcsv2::on_buttonBox_accepted()
     std::string cols = ui->lineEdit_params->text().toStdString();
     std::string selection = ui->lineEdit_viborka->text().toStdString();
 
-    IRastrTablesPtr tablesx{ prdata_->pqastra_->getRastr()->Tables() };
+    IRastrTablesPtr tablesx{ prdata_->getAstra()->getRastr()->Tables() };
     IRastrTablePtr table{ tablesx->Item(table_name) };
 
     eCSVCode kod = eCSVCode::Replace;

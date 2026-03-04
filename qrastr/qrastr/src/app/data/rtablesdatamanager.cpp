@@ -206,7 +206,15 @@ void RTablesDataManager::handleChangeAll()
 
 void RTablesDataManager::handleChangeTable(const std::string& tname)
 {
-    ///@todo не понятно, как добиться вызова этого события
+    ///@note Вызыывается:
+    /// writeTable
+    /// Table::SetSize
+    /// Table::SwapRows
+    /// Table::AddTable - создание новой таблицы через параметры
+    /// Column::SetProperty - изменение свойств поля
+    /// Columns::RemoveAll
+    /// Columns::Remove
+    /// CalcRgm
     qInfo() << "ENTER handleChangeTable for table:" << tname.c_str();
     QDataBlock* pqdb = findCachedBlock(tname);
     if (!pqdb) return;
@@ -227,8 +235,10 @@ void RTablesDataManager::handleChangeTable(const std::string& tname)
 void RTablesDataManager::handleChangeColumn(const std::string& tname,
                                             const std::string& cname)
 {
-    // Изменились все значения одной колонки (например, после групповой коррекции).
-    // Перечитываем только эту колонку, не трогая остальные.
+    /// Изменились все значения одной колонки:
+    /// - групповой коррекция
+    /// - при изменении содержимого одной ячейки может быть вызван при наличии связанной формулы в колонке
+    ///@todo Полный сброс модели в этом случае излишне
     QDataBlock* pqdb = findCachedBlock(tname);
     if (!pqdb) return;
 

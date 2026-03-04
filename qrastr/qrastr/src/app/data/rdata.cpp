@@ -1,8 +1,8 @@
 #include "rdata.h"
 
-RData::RData(QAstra* _pqastra, const CUIForm& _form)
-{
-    pqastra_ = _pqastra;
+RData::RData(QAstra* _pqastra, const CUIForm& _form):
+    m_qastra{_pqastra}{
+
     t_name_ = _form.TableName();
 
     t_title_ = _form.Name().c_str();
@@ -27,9 +27,7 @@ RData::RData(QAstra* _pqastra, const CUIForm& _form)
     for (long index{ 0 }; index < ColumnsCount.Value(); index++)
     {
         IRastrColumnPtr col{ columns->Item(index) };
-        std::string col_Type = IRastrPayload(IRastrVariantPtr((col)->Property(FieldProperties::Type))->String()).Value();
         std::string col_Name = IRastrPayload(col->Name()).Value();
-        std::string col_Title = IRastrPayload(IRastrVariantPtr((col)->Property(FieldProperties::Title))->String()).Value();
 
         vCols_.push_back(col_Name);
         m_str_cols.append(col_Name);
@@ -37,7 +35,7 @@ RData::RData(QAstra* _pqastra, const CUIForm& _form)
 
         RCol rc;
         //Сначала все колонки добавляются с hidden=true,
-        rc.initialize(col_Name, t_name_, col_Title, index);
+        rc.initialize(col_Name, t_name_, index);
         rc.setMeta(_pqastra);
 
         int nRes = AddCol(rc);
@@ -52,7 +50,7 @@ RData::RData(QAstra* _pqastra, const CUIForm& _form)
     {
         for  (RCol &rc : *this)
         {
-            if (rc.getStrName() == f.Name())
+            if (rc.getColName() == f.Name())
                 rc.setHidden(false);
         }
     }
@@ -66,7 +64,7 @@ RData::RData(QAstra* _pqastra, const CUIForm& _form)
 std::string RData::getCommaSeparatedFieldNames(){
     std::string str_tmp;
     for( const RCol& col_data : *this ) {
-        str_tmp += col_data.getStrName();
+        str_tmp += col_data.getColName();
         str_tmp += ",";
     }
     if(str_tmp.length()>0){
@@ -93,12 +91,12 @@ std::string RData::get_cols(bool visible)
     {
         for  (RCol &rc : *this)
             if (!rc.isHidden())
-                ret_cols += rc.getStrName() + ",";
+                ret_cols += rc.getColName() + ",";
     }
     else
     {
         for  (RCol &rc : *this)
-            ret_cols += rc.getStrName() + ",";
+            ret_cols += rc.getColName() + ",";
     }
 
     if (!ret_cols.empty())

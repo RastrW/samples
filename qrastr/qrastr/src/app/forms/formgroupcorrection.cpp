@@ -18,7 +18,7 @@ formgroupcorrection::formgroupcorrection(RData* _prdata,RCol* _prcol, QWidget *p
     for ( auto &col : *prdata_)
     {
         std::string par = str_par;
-        par.append(col.getStrName()).append("[").append(col.getTitle()).append("]");
+        par.append(col.getColName()).append("[").append(col.getTitle()).append("]");
         ui->comboBox->addItem(par.c_str());
     }
     ui->comboBox->setCurrentIndex(prcol_->getIndex());
@@ -33,7 +33,7 @@ void formgroupcorrection::on_buttonBox_accepted()
 {
     selection_ = ui->lineEdit_selection->text().toStdString();
     expression_ = ui->lineEdit_expression->text().toStdString();
-    prcol_->calc(expression_,selection_);
+    prcol_->calc(prdata_->getAstra(), expression_,selection_);
     this->close();
 }
 
