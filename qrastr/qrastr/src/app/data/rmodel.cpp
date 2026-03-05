@@ -301,153 +301,13 @@ bool RModel::setData(const QModelIndex &index, const QVariant &value, int role)
     return false;
 }
 
-static void addCondFormatToMap(std::map<size_t, std::vector<CondFormat>>& mCondFormats, size_t column, const CondFormat& condFormat)
-{
-    // If the condition is already present in the vector, update that entry and respect the order, since two entries with the same
-    // condition do not make sense.
-    auto it = std::find_if(mCondFormats[column].begin(), mCondFormats[column].end(), [condFormat](const CondFormat& format) {
-        return format.sqlCondition() == condFormat.sqlCondition();
-    });
-    // Replace cond-format if present. push it back if it's a conditionless format (apply to every cell in column) or insert
-    // as first element otherwise.
-    if(it != mCondFormats[column].end()) {
-        *it = condFormat;
-    } else if (condFormat.filter().isEmpty())
-        mCondFormats[column].push_back(condFormat);
-    else
-        mCondFormats[column].insert(mCondFormats[column].begin(), condFormat);
-}
-
-void RModel::addCondFormat(const bool isRowIdFormat, size_t column, const CondFormat& condFormat)
-{
-    if(isRowIdFormat)
-        addCondFormatToMap(m_mRowIdFormats, column, condFormat);
-    else
-        addCondFormatToMap(m_mCondFormats, column, condFormat);
-    emit layoutChanged();
-}
-
-void RModel::setCondFormats(const bool isRowIdFormat, size_t column, const std::vector<CondFormat>& condFormats)
-{
-    if(isRowIdFormat){
-        m_mRowIdFormats[column] = condFormats;
-    }
-    else if (!contains(m_mCondFormats, column)){
-        m_mCondFormats.insert(make_pair(column,condFormats));
-    }
-    else{
-        m_mCondFormats[column] = condFormats;
-    }
-   // emit layoutChanged();
-}
-
-QVariant RModel::getMatchingCondFormat(const std::map<size_t, std::vector<CondFormat>>& mCondFormats, size_t row,size_t column, const QString& value, int role) const
-{
-    if (!mCondFormats.count(column))
-        return QVariant();
-
-    bool isNumber;
-    value.toDouble(&isNumber);
-    std::string sql;
-
-    if (!isNumber)
-        return QVariant();
-
-    // For each conditional format for this column,
-    // if the condition matches the current data, return the associated format.
-    for (const CondFormat& eachCondFormat : mCondFormats.at(column)) {
-        if (isNumber && !contains(eachCondFormat.sqlCondition(), '\''))
-            sql = value.toStdString() + " " + eachCondFormat.sqlCondition();
-        else
-            sql = value.toStdString() + " " + eachCondFormat.sqlCondition();
-
-        // Empty filter means: apply format to any row.
-        // Query the DB for the condition, waiting in case there is a loading in progress.
-        /*
-         * Похоже тут стоит попробовать написать парсер string to bool
-        */
-        STRING_BOOL SB(sql);
-        std::vector<std::string> replace_vals = SB.Check();
-        for (std::string &op : replace_vals )
-        {
-            if (contains(up_rdata->mCols_,op))
-            {
-                int cind = this->up_rdata->mCols_.at(op);
-                //up_rdata->pnparray_->Get(row,cind);
-                double ditem = std::visit(ToDouble(),up_rdata->pnparray_->Get(row,cind));
-                std::string sitem = std::to_string(ditem);
-                SB.replace(op,sitem);
-            }
-        }
-        if (eachCondFormat.filter().isEmpty() || SB.res())
-            switch (role) {
-            case Qt::ForegroundRole:
-                return eachCondFormat.foregroundColor();
-            case Qt::BackgroundRole:
-                return eachCondFormat.backgroundColor();
-            case Qt::FontRole:
-                return eachCondFormat.font();
-            case Qt::TextAlignmentRole:
-                return static_cast<int>(eachCondFormat.alignmentFlag() | Qt::AlignVCenter);
-            }
-    }
-    return QVariant();
-}
-
-QVariant RModel::getMatchingCondFormat(size_t row, size_t column, const QString& value, int role) const
-{
-    QVariant format;
-
-    if (m_mCondFormats.count(column))
-        return getMatchingCondFormat(m_mCondFormats, row, column,value, role);
-    else
-        return QVariant();
-}
-
-std::vector<std::tuple<int,int>>
-RModel::ColumnsWidth()
-{
-    std::vector<std::tuple<int,int>> cw;
-    if (up_rdata != nullptr){
-        int i = 0;
-        for(RCol& col : *up_rdata)
-            cw.emplace_back(i++,std::stoi(col.getWidth()));
-    }
-    return cw;
-}
-
-RCol* RModel::getRCol(int col) const
-{
-    RData::iterator iter_col = up_rdata->begin() + col;
-    return &(*iter_col);
-}
-
-int RModel::getIndexCol(std::string _col)
-{
-    for (int i = 0 ; i<this->columnCount(); i++)
-    {
-        if (this->getRCol(i)->getColName() == _col)
-            return i;
-    }
-    return -1;
-}
-
-RData* RModel::getRdata()
-{
-    return up_rdata.get();
-}
-
 bool RModel::AddRow(size_t count ,const QModelIndex &parent)
 {
     IRastrTablesPtr tablesx{ this->pqastra_->getRastr()->Tables() };
-    IRastrPayload tablecount{ tablesx->Count() };
     IRastrTablePtr table{ tablesx->Item(getRdata()->t_name_) };
-    IRastrPayload sz{table->Size()};
-
-    //IPlainRastrResult* pres = this->pqastra_->getRastr()->SetLockEvent(true);
-    for (size_t i = 0 ; i < count ; i++ )
+    for (size_t i = 0 ; i < count ; i++ ){
         IRastrResultVerify{ table->AddRow()};
-    //pres = this->pqastra_->getRastr()->SetLockEvent(false);
+    }
 
     return true;
 }
@@ -455,12 +315,10 @@ bool RModel::AddRow(size_t count ,const QModelIndex &parent)
 bool RModel::insertRows(int row, int count, const QModelIndex &parent)
 {
     IRastrTablesPtr tablesx{ this->pqastra_->getRastr()->Tables() };
-    IRastrPayload tablecount{ tablesx->Count() };
     IRastrTablePtr table{ tablesx->Item(getRdata()->t_name_) };
-    IRastrPayload sz{table->Size()};
-
-    for (size_t i = 0 ; i < count ; i++ )
+    for (size_t i = 0 ; i < count ; i++ ){
         IRastrResultVerify{table->InsertRow(row)};
+    }
 
     return true;
 }
@@ -468,17 +326,12 @@ bool RModel::insertRows(int row, int count, const QModelIndex &parent)
 bool RModel::DuplicateRow(int row, const QModelIndex &parent)
 {
     IRastrTablesPtr tablesx{ this->pqastra_->getRastr()->Tables() };
-    IRastrPayload tablecount{ tablesx->Count() };
     IRastrTablePtr table{ tablesx->Item(getRdata()->t_name_) };
-    IRastrPayload sz{table->Size()};
 
-    //beginInsertRows(parent,sz.Value(),sz.Value());
-    IRastrResultVerify{table->DuplicateRow(row)}; // send EventHints::InsertRow
-    //endInsertRows();
+    IRastrResultVerify{table->DuplicateRow(row)};
 
     //Дублируем данные в клиенте
     this->up_rdata->pnparray_->DuplicateRow(row);
-
 
     return true;
 }
@@ -494,14 +347,12 @@ bool RModel::insertColumns(int column, int count, const QModelIndex &parent)
 bool RModel::removeRows(int row, int count, const QModelIndex &parent)
 {
     IRastrTablesPtr tablesx{ this->pqastra_->getRastr()->Tables() };
-    IRastrPayload tablecount{ tablesx->Count() };
     IRastrTablePtr table{ tablesx->Item(getRdata()->t_name_) };
-    IRastrPayload sz{table->Size()};
 
-    //beginRemoveRows(parent,sz.Value(),sz.Value() + count -1);
     beginRemoveRows(parent,row,row + count -1);
-    for (size_t i = 0 ; i < count ; i++ )
+    for (size_t i = 0 ; i < count ; i++ ){
        IRastrResultVerify{table->DeleteRow(row)};
+    }
     endRemoveRows();
 
     return true;
@@ -517,57 +368,54 @@ bool RModel::removeColumns(int column, int count, const QModelIndex &parent)
 
 void RModel::slot_DataChanged(std::string _t_name, int row_from,int col_from ,int row_to,int col_to)
 {
-    if (this->getRdata()->t_name_ == _t_name)
-    {
-        QModelIndex top_left = this->index(row_from,col_from);
-        QModelIndex bottom_right = this->index(row_to,col_to);
-        emit dataChanged(top_left,bottom_right);
-    }
+    if (getRdata()->t_name_ != _t_name) return;
+    QModelIndex top_left     = index(row_from, col_from);
+    QModelIndex bottom_right = index(row_to,   col_to);
+    emit dataChanged(top_left, bottom_right);
 }
 
 void RModel::slot_BeginResetModel(std::string _t_name)
 {
-    if (this->getRdata()->t_name_ == _t_name){
+    if (getRdata()->t_name_ == _t_name){
         beginResetModel();
     }
 }
 
 void RModel::slot_EndResetModel(std::string _t_name)
 {
-    if (this->getRdata()->t_name_ == _t_name)
-    {
+    if (this->getRdata()->t_name_ == _t_name){
         ///@note при сборсе обязательно целиком пересоздавать data
+        /// populateDataFromRastr() вызывается МЕЖДУ beginResetModel и endResetModel.
+        /// В этот момент View не обращается к модели — безопасно полностью
+        ///пересоздать RData.
         populateDataFromRastr();
         endResetModel();
     }
 }
 
-void RModel::slot_BeginInsertRow(std::string _t_name,int first, int last)
-{
-    const QModelIndex parent = QModelIndex();
-    if (this->getRdata()->t_name_ == _t_name)
-        beginInsertRows(parent,first,last);
+void RModel::slot_BeginInsertRow(std::string _t_name,int first, int last){
+    if (getRdata()->t_name_ == _t_name){
+        beginInsertRows(QModelIndex(), first, last);
+    }
 }
 
-void RModel::slot_EndInsertRow(std::string _t_name)
-{
-    if (this->getRdata()->t_name_ == _t_name)
+void RModel::slot_EndInsertRow(std::string _t_name){
+
+    if (this->getRdata()->t_name_ == _t_name){
         endInsertRows();
+    }
 }
 
 void RModel::slot_BeginRemoveRows(std::string tname, int first, int last){
-    if (getRdata()->t_name_ == tname)
+    if (getRdata()->t_name_ == tname){
         beginRemoveRows(QModelIndex(), first, last);
+    }
 }
 
 void RModel::slot_EndRemoveRows(std::string tname){
-    if (getRdata()->t_name_ == tname)
+    if (getRdata()->t_name_ == tname){
         endRemoveRows();
-}
-
-bool RModel::isBinary(const QByteArray& data) const
-{
-    return true;
+    }
 }
 
 RModel::ColumnEditorInfo
@@ -629,4 +477,126 @@ RModel::getColumnEditorInfo(int colIndex) const
         break;
     }
     return info;
+}
+
+static void addCondFormatToMap(std::map<size_t, std::vector<CondFormat>>& mCondFormats, size_t column, const CondFormat& condFormat)
+{
+    // If the condition is already present in the vector, update that entry and respect the order, since two entries with the same
+    // condition do not make sense.
+    auto it = std::find_if(mCondFormats[column].begin(), mCondFormats[column].end(), [condFormat](const CondFormat& format) {
+        return format.sqlCondition() == condFormat.sqlCondition();
+    });
+    // Replace cond-format if present. push it back if it's a conditionless format (apply to every cell in column) or insert
+    // as first element otherwise.
+    if(it != mCondFormats[column].end()) {
+        *it = condFormat;
+    } else if (condFormat.filter().isEmpty())
+        mCondFormats[column].push_back(condFormat);
+    else
+        mCondFormats[column].insert(mCondFormats[column].begin(), condFormat);
+}
+
+void RModel::addCondFormat(const bool isRowIdFormat, size_t column, const CondFormat& condFormat)
+{
+    if(isRowIdFormat)
+        addCondFormatToMap(m_mRowIdFormats, column, condFormat);
+    else
+        addCondFormatToMap(m_mCondFormats, column, condFormat);
+    emit layoutChanged();
+}
+
+void RModel::setCondFormats(const bool isRowIdFormat, size_t column, const std::vector<CondFormat>& condFormats)
+{
+    if(isRowIdFormat){
+        m_mRowIdFormats[column] = condFormats;
+    }
+    else if (!contains(m_mCondFormats, column)){
+        m_mCondFormats.insert(make_pair(column,condFormats));
+    }
+    else{
+        m_mCondFormats[column] = condFormats;
+    }
+}
+
+QVariant RModel::getMatchingCondFormat(const std::map<size_t, std::vector<CondFormat>>& mCondFormats, size_t row,size_t column, const QString& value, int role) const
+{
+    if (!mCondFormats.count(column))
+        return QVariant();
+
+    bool isNumber;
+    value.toDouble(&isNumber);
+
+    if (!isNumber)
+        return QVariant();
+
+    // For each conditional format for this column,
+    // if the condition matches the current data, return the associated format.
+    for (const CondFormat& eachCondFormat : mCondFormats.at(column)) {
+        std::string sql = value.toStdString() + " " + eachCondFormat.sqlCondition();
+
+        // Empty filter means: apply format to any row.
+        // Query the DB for the condition, waiting in case there is a loading in progress.
+        /*
+         * Похоже тут стоит попробовать написать парсер string to bool
+        */
+        STRING_BOOL SB(sql);
+        std::vector<std::string> replace_vals = SB.Check();
+        for (std::string &op : replace_vals ){
+            if (contains(up_rdata->mCols_,op))
+            {
+                int cind = this->up_rdata->mCols_.at(op);
+                //up_rdata->pnparray_->Get(row,cind);
+                double ditem = std::visit(ToDouble(),up_rdata->pnparray_->Get(row,cind));
+                SB.replace(op,std::to_string(ditem));
+            }
+        }
+        if (eachCondFormat.filter().isEmpty() || SB.res())
+            switch (role) {
+            case Qt::ForegroundRole:
+                return eachCondFormat.foregroundColor();
+            case Qt::BackgroundRole:
+                return eachCondFormat.backgroundColor();
+            case Qt::FontRole:
+                return eachCondFormat.font();
+            case Qt::TextAlignmentRole:
+                return static_cast<int>(eachCondFormat.alignmentFlag() | Qt::AlignVCenter);
+            }
+    }
+    return QVariant();
+}
+
+QVariant RModel::getMatchingCondFormat(size_t row, size_t column, const QString& value, int role) const
+{
+    if (!m_mCondFormats.count(column))
+        return QVariant();
+    return getMatchingCondFormat(m_mCondFormats, row, column, value, role);
+}
+
+std::vector<std::tuple<int,int>>
+RModel::ColumnsWidth(){
+    std::vector<std::tuple<int,int>> cw;
+    if (!up_rdata) return cw;
+    int i = 0;
+    for (RCol& col : *up_rdata)
+        cw.emplace_back(i++, std::stoi(col.getWidth()));
+    return cw;
+}
+
+RCol* RModel::getRCol(int col) const{
+    return &(*(up_rdata->begin() + col));
+}
+
+int RModel::getIndexCol(std::string _col)
+{
+    for (int i = 0 ; i< columnCount(); i++){
+        if (getRCol(i)->getColName() == _col){
+            return i;
+        }
+    }
+    return -1;
+}
+
+RData* RModel::getRdata()
+{
+    return up_rdata.get();
 }

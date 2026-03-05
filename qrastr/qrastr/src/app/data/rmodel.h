@@ -95,7 +95,6 @@ public:
 
     ColumnEditorInfo getColumnEditorInfo(int colIndex) const;
 private:
-    bool isBinary(const QByteArray& index) const;
     bool m_emitSignals;
     /// @brief Пересоздаёт RData: читает структуру колонок из плагина.
     void rebuildStructure();

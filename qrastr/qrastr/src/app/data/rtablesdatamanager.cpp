@@ -13,10 +13,10 @@ void  RTablesDataManager::setForms ( std::list<CUIForm>* _lstUIForms)
 
 CUIForm*  RTablesDataManager::getForm ( std::string _name)
 {
-    for (CUIForm &form : *m_plstUIForms)
-    {
-        if (stringutils::MkToUtf8(form.Name()) == _name)
+    for (CUIForm &form : *m_plstUIForms){
+        if (stringutils::MkToUtf8(form.Name()) == _name){
             return &form;
+        }
     }
     return nullptr;
 }
@@ -69,14 +69,13 @@ RTablesDataManager::get(std::string tname, std::string Cols)
     }
 
     auto it = mpTables.find(tname);
-    if (it != mpTables.end() )
-    {
+    if (it != mpTables.end() ){
         return it->second;
-    }else{
-        qDebug()<<"RTDM: add Table" << tname.c_str();
-        mpTables.insert(std::make_pair(tname, std::make_shared<QDataBlock>()));
-        getDataBlock(tname,Cols,*mpTables.find(tname)->second);
     }
+
+    qDebug()<<"RTDM: add Table" << tname.c_str();
+    mpTables.insert(std::make_pair(tname, std::make_shared<QDataBlock>()));
+    getDataBlock(tname,Cols,*mpTables.find(tname)->second);
 
     return mpTables.find(tname)->second;
 }
@@ -85,8 +84,9 @@ long RTablesDataManager::column_index(std::string tname , std::string _col_name)
 {
     IRastrTablesPtr tablesx{ m_pqastra->getRastr()->Tables() };
     IRastrPayload tindex{tablesx->FindIndex(tname)};
-    if ( tindex.Value() < 0 )
+    if ( tindex.Value() < 0 ){
         return -1;
+    }
     IRastrTablePtr table{ tablesx->Item(tname) };
     IRastrColumnsPtr columns{ table->Columns() };
     IRastrPayload res{columns->FindIndex(_col_name)};
@@ -118,7 +118,6 @@ void  RTablesDataManager::getDataBlock(std::string tname , QDataBlock& QDB,Field
     std::string Cols = getTCols(tname);
     IRastrTablesPtr tablesx{ m_pqastra->getRastr()->Tables() };
     IRastrTablePtr table{ tablesx->Item(tname) };
-    IRastrColumnsPtr columns{ table->Columns() };
     IRastrResultVerify(table->DataBlock(Cols, QDB, Options));
 }
 
@@ -141,41 +140,37 @@ std::string  RTablesDataManager::getTCols(std::string tname)
     IRastrPayload ColumnsCount{ columns->Count() };
 
     // Берем все колонки таблицы
-    for (long index{ 0 }; index < ColumnsCount.Value(); index++)
-    {
-        IRastrColumnPtr col{ columns->Item(index) };
-        std::string col_Type = IRastrPayload(IRastrVariantPtr((col)->Property(FieldProperties::Type))->String()).Value();
-        std::string col_Name = IRastrPayload(IRastrVariantPtr((col)->Property(FieldProperties::Name))->String()).Value();
-
+    for (long index{ 0 }; index < ColumnsCount.Value(); index++){
+        IRastrColumnPtr col     { columns->Item(index) };
+        std::string     col_Name = IRastrPayload(col->Name()).Value();
         str_cols_.append(col_Name);
         str_cols_.append(",");
     }
-    if(str_cols_.length()>0)
-        str_cols_.pop_back();
 
+    if (!str_cols_.empty()){
+        str_cols_.pop_back();
+    }
     return str_cols_;
 }
+
 long  RTablesDataManager::getColIndex(std::string tname,std::string cname)
 {
-    std::string str_cols_ = "";
     IRastrTablesPtr tablesx{ m_pqastra->getRastr()->Tables() };
     IRastrTablePtr table{ tablesx->Item(tname) };
     IRastrColumnsPtr columns{ table->Columns() };
     IRastrColumnPtr col{ columns->Item(cname) };
-    long res = IRastrPayload(col->Index()).Value();
 
-    return res;
+    return IRastrPayload(col->Index()).Value();
 }
+
 ePropType  RTablesDataManager::getColType(std::string tname,std::string cname)
 {
-    std::string str_cols_ = "";
     IRastrTablesPtr tablesx{ m_pqastra->getRastr()->Tables() };
     IRastrTablePtr table{ tablesx->Item(tname) };
     IRastrColumnsPtr columns{ table->Columns() };
     IRastrColumnPtr col{ columns->Item(cname) };
-    ePropType res = IRastrPayload(col->Type()).Value();
 
-    return res;
+    return IRastrPayload(col->Type()).Value();
 }
 
 QDataBlock* RTablesDataManager::findCachedBlock(const std::string& tname)
@@ -196,10 +191,12 @@ void RTablesDataManager::handleChangeAll()
     // Сбрасываем и перечитываем каждый кешированный блок.
     for (const auto& tname : keys) {
         auto it = mpTables.find(tname);
-        if (it == mpTables.end()) continue;
+        if (it == mpTables.end()){continue;}
         emit sig_BeginResetModel(tname);
+
         it->second->Clear();
         getDataBlock(tname, *it->second);
+
         emit sig_EndResetModel(tname);
     }
 }
@@ -230,11 +227,14 @@ void RTablesDataManager::handleChangeColumn(const std::string& tname,
     if (colIdx < 0) return;
 
     const long nRows = static_cast<long>(pqdb->RowsCount());
-    for (long row = 0; row < nRows; ++row)
+    for (long row = 0; row < nRows; ++row){
         pqdb->Set(row, colIdx, m_pqastra->GetVal(tname, cname, row));
+    }
 
     //Обновляем все строки только одного столбца
-    emit sig_dataChanged(tname, 0, colIdx, nRows - 1, colIdx);
+    if (nRows > 0){
+        emit sig_dataChanged(tname, 0, colIdx, nRows - 1, colIdx);
+    }
 }
 
 void RTablesDataManager::handleChangeRow(const std::string& tname, long row)
@@ -256,7 +256,7 @@ void RTablesDataManager::handleChangeRow(const std::string& tname, long row)
         pqdb->Set(row, i, val_ptr);
     }
 
-    // Точечный сигнал: изменилась только строка row, все колонки
+    // изменились все колонки только одной строка row,
     emit sig_dataChanged(tname, row, 0, row, ncols);
 }
 
@@ -265,11 +265,11 @@ void RTablesDataManager::handleChangeData(const std::string& tname,
                                           long row)
 {
     QDataBlock* pqdb = findCachedBlock(tname);
-    if (!pqdb) return;
+    if (!pqdb){ return;}
 
     const long colIdx = getColIndex(tname, cname);
-    if (colIdx < 0 || colIdx >= static_cast<long>(pqdb->ColumnsCount())) return;
-    if (row  < 0 || row  >= static_cast<long>(pqdb->RowsCount()))        return;
+    if (colIdx < 0 || colIdx >= static_cast<long>(pqdb->ColumnsCount())){return;}
+    if (row  < 0 || row  >= static_cast<long>(pqdb->RowsCount())){return;}
 
     ///@note устанавливаем значение только для конкретной ячейки, т.к.
     /// Ранее была установка DataBlock("", VDB) с пустым списком колонок, он падает сразу после AddRow.
