@@ -191,7 +191,7 @@ QVariant RModel::data(const QModelIndex &index, int role) const
 QVariant RModel::headerData(int section, Qt::Orientation orientation, int role) const
 {
     if (role == Qt::DisplayRole && orientation == Qt::Horizontal) {
-        //std::string title = up_rdata.get()->at(section).title().c_str();
+        std::string title = up_rdata.get()->at(section).getTitle().c_str();
         return up_rdata.get()->at(section).getTitle().c_str();
     }
     if (role == Qt::DisplayRole && orientation == Qt::Vertical) {

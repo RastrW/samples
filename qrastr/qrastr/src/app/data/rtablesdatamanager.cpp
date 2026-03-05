@@ -206,28 +206,16 @@ void RTablesDataManager::handleChangeAll()
 
 void RTablesDataManager::handleChangeTable(const std::string& tname)
 {
-    ///@note Вызыывается:
-    /// writeTable
-    /// Table::SetSize
-    /// Table::SwapRows
-    /// Table::AddTable - создание новой таблицы через параметры
-    /// Column::SetProperty - изменение свойств поля
-    /// Columns::RemoveAll
-    /// Columns::Remove
-    /// CalcRgm
+
     qInfo() << "ENTER handleChangeTable for table:" << tname.c_str();
     QDataBlock* pqdb = findCachedBlock(tname);
     if (!pqdb) return;
 
     emit sig_BeginResetModel(tname);
 
-    //it->second->Clear();
-    //GetDataBlock(tname,(*it->second.get()));
-    //emit RTDM_UpdateModel(tname);
-
-    // TO DO:
-    // Вызвать чтение свойств столбцов
-    // emit RTDM_UpdateProperties
+    // Перезагружаем данные И структуру
+    pqdb->Clear();
+    getDataBlock(tname, *pqdb); // читает всё заново из плагина
 
     emit sig_EndResetModel(tname);
 }
@@ -235,23 +223,18 @@ void RTablesDataManager::handleChangeTable(const std::string& tname)
 void RTablesDataManager::handleChangeColumn(const std::string& tname,
                                             const std::string& cname)
 {
-    /// Изменились все значения одной колонки:
-    /// - групповой коррекция
-    /// - при изменении содержимого одной ячейки может быть вызван при наличии связанной формулы в колонке
-    ///@todo Полный сброс модели в этом случае излишне
     QDataBlock* pqdb = findCachedBlock(tname);
     if (!pqdb) return;
 
     const long colIdx = getColIndex(tname, cname);
     if (colIdx < 0) return;
 
-    emit sig_BeginResetModel(tname);
-
     const long nRows = static_cast<long>(pqdb->RowsCount());
     for (long row = 0; row < nRows; ++row)
         pqdb->Set(row, colIdx, m_pqastra->GetVal(tname, cname, row));
 
-    emit sig_EndResetModel(tname);
+    //Обновляем все строки только одного столбца
+    emit sig_dataChanged(tname, 0, colIdx, nRows - 1, colIdx);
 }
 
 void RTablesDataManager::handleChangeRow(const std::string& tname, long row)

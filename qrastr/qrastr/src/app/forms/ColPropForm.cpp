@@ -106,7 +106,6 @@ void ColPropForm::on_btn_ok_clicked()
                       getWidth().toStdString());
     long textind = m_prcol->getIndex();
     IRastrResultVerify{m_prdata->getAstra()->getRastr()->SetLockEvent(false)};
-
     // 1. Получаем колонку с правильным приведением типов
     auto* tableView = static_cast<Qtitan::GridTableView*>(m_view);
     auto* column_base = tableView->getColumn(textind);

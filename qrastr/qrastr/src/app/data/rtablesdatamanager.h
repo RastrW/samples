@@ -85,6 +85,15 @@ private:
     /**
      * @brief EventHints::ChangeAll — все таблицы изменились (например, загрузка файла).
      * Сбрасывает и перечитывает каждый кешированный блок.
+     * @note Вызыывается при:
+     *     - writeTable
+     *     - Table::SetSize
+     *     - Table::SwapRows
+     *     - Table::AddTable - создание новой таблицы через параметры
+     *     - Column::SetProperty - изменение свойств поля
+     *     - Columns::RemoveAll
+     *     - Columns::Remove
+     *     - CalcRgm
      */
     void handleChangeAll();
     /**
@@ -95,11 +104,15 @@ private:
     /**
      * @brief EventHints::ChangeColumn — изменились все значения одной колонки.
      * Перечитывает только указанную колонку построчно.
+
      */
     void handleChangeColumn(const std::string& tname, const std::string& cname);
     /**
      * @brief EventHints::ChangeRow — изменились все колонки одной строки.
      * Перечитывает все колонки для строки row.
+     * Изменились все значения одной колонки:
+     * - групповой коррекция
+     * - при изменении содержимого одной ячейки может быть вызван при наличии связанной формулы в колонке
      */
     void handleChangeRow(const std::string& tname, long row);
     /**
