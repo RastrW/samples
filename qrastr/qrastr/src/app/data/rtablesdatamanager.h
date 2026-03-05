@@ -17,10 +17,10 @@
  *  2. Слушает сигнал QAstra::onRastrHint и преобразует hint-события плагина
  *     в Qt-сигналы (sig_dataChanged, sig_BeginResetModel, …).
  *  3. RModel подписывается на эти сигналы и уведомляет View об изменениях.
+ *  4. Является единственной точкой записи в плагин через setValue().
  *
  * Время жизни QDataBlock:
- *   Блок удаляется из кеша при следующем вызове get(), если use_count() == 1
- *   (то есть ни одно открытое окно не держит shared_ptr).
+ *   Блок удаляется из кеша при следующем вызове get(), если use_count() == 1.
  */
 class RTablesDataManager : public QObject
 {
@@ -44,6 +44,15 @@ public:
 
     long column_index(std::string tname, std::string _col_name);
     void getDataBlock(std::string tname, std::string Cols, QDataBlock& QDB);
+
+    /** @brief Централизованная запись в плагин.
+    * RModel::setData больше НЕ вызывает emit dataChanged вручную —
+    * обновление View приходит ровно один раз, через цепочку хинтов.
+    */
+    void setValue(const std::string& tname,
+                  const std::string& cname,
+                  long               row,
+                  const FieldVariantData& value);
 private:
     void getDataBlock(std::string tname, std::string Cols, QDataBlock& QDB, FieldDataOptions Options );
     void getDataBlock(std::string tname, QDataBlock& QDB, FieldDataOptions Options );

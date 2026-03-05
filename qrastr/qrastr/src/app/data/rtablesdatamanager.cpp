@@ -80,6 +80,41 @@ RTablesDataManager::get(std::string tname, std::string Cols)
     return mpTables.find(tname)->second;
 }
 
+void RTablesDataManager::setValue(const std::string&      tname,
+                                  const std::string&      cname,
+                                  long                    row,
+                                  const FieldVariantData& value)
+{
+    IRastrTablesPtr  tables  { m_pqastra->getRastr()->Tables() };
+    IRastrTablePtr   table   { tables->Item(tname) };
+    IRastrColumnsPtr columns { table->Columns() };
+    IRastrColumnPtr  col_ptr { columns->Item(cname) };
+
+    std::visit([&](const auto& v)
+               {
+                   using VT = std::decay_t<decltype(v)>;
+
+                   if constexpr (std::is_same_v<VT, bool>)
+                       IRastrResultVerify(col_ptr->SetValue(row, v));
+
+                   else if constexpr (std::is_same_v<VT, long>)
+                       IRastrResultVerify(col_ptr->SetValue(row, v));
+
+                   else if constexpr (std::is_same_v<VT, double>)
+                       IRastrResultVerify(col_ptr->SetValue(row, v));
+
+                   else if constexpr (std::is_same_v<VT, uint64_t>)
+                       // uint64_t → приводим к long явно, чтобы устранить неоднозначность
+                       IRastrResultVerify(col_ptr->SetValue(row, static_cast<long>(v)));
+
+                   else if constexpr (std::is_same_v<VT, std::string>)
+                       IRastrResultVerify(col_ptr->SetValue(row, v));
+
+                   // std::monostate — значение не задано, ничего не делаем
+
+               }, value);
+}
+
 long RTablesDataManager::column_index(std::string tname , std::string _col_name)
 {
     IRastrTablesPtr tablesx{ m_pqastra->getRastr()->Tables() };

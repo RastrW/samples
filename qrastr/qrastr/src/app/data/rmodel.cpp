@@ -52,25 +52,22 @@ void RModel::rebuildBackInfo()
     {
         rcol.setNameRef(rcol.getNameRef());
 
-        if (rcol.getComPropTT() == enComPropTT::COM_PR_ENUM) // ex: Нет|Квадр.|Лин.|Комбинир.
-        {
+        if (rcol.getComPropTT() == enComPropTT::COM_PR_ENUM){ // ex: Нет|Квадр.|Лин.|Комбинир.
             QStringList list;
-            int i = 0;
             for (const auto& val : split(rcol.getNameRef(), '|')) {
                 list.append(QString::fromStdString(val));
             }
             m_enum_.emplace(rcol.getIndex(), std::move(list));
         }
-        if (rcol.getComPropTT() == enComPropTT::COM_PR_SUPERENUM && !rcol.getNameRef().empty()) // ex: ti_prv.Name.Num
-        {
+        if (rcol.getComPropTT() == enComPropTT::COM_PR_SUPERENUM && !rcol.getNameRef().empty()){ // ex: ti_prv.Name.Num
             std::vector<std::string> parts {split(rcol.getNameRef(), '.')};
             if (parts.size() > 2)
             {
-                QDataBlock QDB;
                 long indx1 = pRTDM_->column_index(parts[0], parts[1]);
                 long indx2 = pRTDM_->column_index(parts[0], parts[2]);
                 if (indx1 > -1 && indx2 > -1)
                 {
+                    QDataBlock QDB;
                     pRTDM_->getDataBlock(parts[0], parts[2] + "," + parts[1], QDB);
                     std::map<size_t, std::string> map_string;
                     map_string.emplace(0, "не задано");
@@ -182,8 +179,6 @@ QVariant RModel::data(const QModelIndex &index, int role) const
                 .arg(index.row() + 1)
                 .arg(index.column() +1);
     }
-    else
-            return QVariant();
 
     return QVariant();
 }
@@ -206,99 +201,89 @@ RModel::flags(const QModelIndex &index) const
     return Qt::ItemIsEditable | Qt::ItemIsSelectable |  QAbstractTableModel::flags(index) ;
 }
 
-bool RModel::setData(const QModelIndex &index, const QVariant &value, int role)
+bool RModel::setData(const QModelIndex& index, const QVariant& value, int role)
 {
-    int col = index.column();
-    int row = index.row();
+    const int col = index.column();
+    const int row = index.row();
+
+    if (value == data(index, role))
+        return false;
 
     RData::iterator iter_col = up_rdata->begin() + col;
 
-    IRastrTablesPtr tablesx{this->pqastra_->getRastr()->Tables()};
-    IRastrTablePtr table{ tablesx->Item(iter_col->getTableName()) };
-    IRastrColumnsPtr columns{table->Columns()};
-    IRastrColumnPtr col_ptr{ columns->Item(iter_col->getColName()) };
+    const std::string& tname   = iter_col->getTableName();
+    const std::string& colName = iter_col->getColName();
 
-    if (value != data(index, role))
+    FieldVariantData vd;   // разрешённое значение для передачи в плагин
+
+    switch (iter_col->getEnData())
     {
-        switch((*iter_col).getEnData()){
-            case RCol::_en_data::DATA_BOOL:
-            {
-                bool val =  value.toBool();
-                FieldVariantData vd(val);
-                IRastrResultVerify(col_ptr->SetValue(row,val));
-                qDebug() << "set: "<<up_rdata->t_name_.c_str()<<"."
-                         << (*iter_col).getColName().c_str() << "(" << row << ")=" <<val;
-                break;
-             }
-            case RCol::_en_data::DATA_INT:
-            {
-                long val = 0;
-                if (!(*iter_col).isDirectCode())
-                {
-                    if (contains(m_enum_,col))       // ENUM
-                    {
-                        int i =0;
-                        for (const auto &mval : m_enum_.at(col))
-                        {
-                            if (mval == value)
-                                val = i;
-                            i++;
-                        }
-                    }
-                    else if (contains(mm_superenum_,col))     // SUPER_ENUM
-                    {
-                        for (const auto &[mkey,mval] : mm_superenum_.at(col) )
-                            if (mval == value.toString().toStdString())
-                                val = mkey;
-                    }
-                    else if (contains(mm_nameref_,col))     // RefCol: node[na]
-                    {
-                        for (const auto &[mkey,mval] : mm_nameref_.at(col) )
-                            if (mval == value.toString().toStdString())
-                                val = mkey;
-                    }
-                    else
-                        val =  value.toInt();
-                }
-                else
-                    val =  value.toInt();
-
-                FieldVariantData vd(val);
-                IRastrResultVerify(col_ptr->SetValue(row,val));
-                qDebug() << "set: "<<up_rdata->t_name_.c_str()<<"."<< (*iter_col).getColName().c_str() << "(" << row << ")=" <<val;
-
-                break;
-            }
-            case RCol::_en_data::DATA_STR:
-            {
-                std::string val =  value.toString().toStdString().c_str();
-                FieldVariantData vd(val);
-                IRastrResultVerify(col_ptr->SetValue(row,val));
-                qDebug() << "set: "<<up_rdata->t_name_.c_str()<<"."<< (*iter_col).getColName().c_str() ;//<< "(" << row << ")=" <<  val;
-                break;
-            }
-                break;
-            case RCol::_en_data::DATA_DBL:
-            {
-                double val =  value.toDouble();
-                FieldVariantData vd(val);
-                IRastrResultVerify(col_ptr->SetValue(row,val));
-                qDebug() << "set: "<<up_rdata->t_name_.c_str()<<"."<< (*iter_col).getColName().c_str() << "(" << row << ")=" <<val;
-            }
-                break;
-        default :
-                break;
-        }
-
-        if (emitSignals())
-        {
-            emit dataChanged(index,index );
-            //сигнал используется при реструктуризации модели (удаление/вставка строк), не при изменении данных.
-            //emit changePersistentIndex(index,index);
-        }
-        return true;
+    case RCol::_en_data::DATA_BOOL:
+    {
+        bool val = value.toBool();
+        vd = val;
+        qDebug() << "set: " << tname.c_str() << "."
+                 << colName.c_str() << "(" << row << ")=" << val;
+        break;
     }
-    return false;
+    case RCol::_en_data::DATA_INT:
+    {
+        long val = 0;
+        if (!iter_col->isDirectCode())
+        {
+            if (contains(m_enum_, col)) // ENUM
+            {
+                int i = 0;
+                for (const auto& mval : m_enum_.at(col)) {
+                    if (mval == value) { val = i; break; }
+                    ++i;
+                }
+            }
+            else if (contains(mm_superenum_, col)) // SUPER_ENUM
+            {
+                for (const auto& [mkey, mval] : mm_superenum_.at(col))
+                    if (mval == value.toString().toStdString()) { val = mkey; break; }
+            }
+            else if (contains(mm_nameref_, col)) // RefCol: node[na]
+            {
+                for (const auto& [mkey, mval] : mm_nameref_.at(col))
+                    if (mval == value.toString().toStdString()) { val = mkey; break; }
+            }
+            else
+                val = value.toInt();
+        }
+        else
+            val = value.toInt();
+
+        vd = val;
+        qDebug() << "set: " << tname.c_str() << "."
+                 << colName.c_str() << "(" << row << ")=" << val;
+        break;
+    }
+    case RCol::_en_data::DATA_STR:
+    {
+        std::string val = value.toString().toStdString();
+        vd = val;
+        qDebug() << "set: " << tname.c_str() << "." << colName.c_str();
+        break;
+    }
+    case RCol::_en_data::DATA_DBL:
+    {
+        double val = value.toDouble();
+        vd = val;
+        qDebug() << "set: " << tname.c_str() << "."
+                 << colName.c_str() << "(" << row << ")=" << val;
+        break;
+    }
+    default:
+        return false;
+    }
+
+    // Запись через RTDM — единственная точка доступа к плагину.
+    // emit dataChanged НЕ вызывается: плагин сгенерирует ChangeData-хинт,
+    // RTDM обновит QDataBlock и испустит sig_dataChanged → View обновится один раз.
+    pRTDM_->setValue(tname, colName, row, vd);
+    return true;
 }
 
 bool RModel::AddRow(size_t count ,const QModelIndex &parent)
@@ -331,7 +316,7 @@ bool RModel::DuplicateRow(int row, const QModelIndex &parent)
     IRastrResultVerify{table->DuplicateRow(row)};
 
     //Дублируем данные в клиенте
-    this->up_rdata->pnparray_->DuplicateRow(row);
+    up_rdata->pnparray_->DuplicateRow(row);
 
     return true;
 }
@@ -349,11 +334,9 @@ bool RModel::removeRows(int row, int count, const QModelIndex &parent)
     IRastrTablesPtr tablesx{ this->pqastra_->getRastr()->Tables() };
     IRastrTablePtr table{ tablesx->Item(getRdata()->t_name_) };
 
-    beginRemoveRows(parent,row,row + count -1);
     for (size_t i = 0 ; i < count ; i++ ){
        IRastrResultVerify{table->DeleteRow(row)};
     }
-    endRemoveRows();
 
     return true;
 }
@@ -479,7 +462,8 @@ RModel::getColumnEditorInfo(int colIndex) const
     return info;
 }
 
-static void addCondFormatToMap(std::map<size_t, std::vector<CondFormat>>& mCondFormats, size_t column, const CondFormat& condFormat)
+static void addCondFormatToMap(std::map<size_t, std::vector<CondFormat>>& mCondFormats,
+                               size_t column, const CondFormat& condFormat)
 {
     // If the condition is already present in the vector, update that entry and respect the order, since two entries with the same
     // condition do not make sense.
@@ -496,7 +480,8 @@ static void addCondFormatToMap(std::map<size_t, std::vector<CondFormat>>& mCondF
         mCondFormats[column].insert(mCondFormats[column].begin(), condFormat);
 }
 
-void RModel::addCondFormat(const bool isRowIdFormat, size_t column, const CondFormat& condFormat)
+void RModel::addCondFormat(const bool isRowIdFormat, size_t column,
+                           const CondFormat& condFormat)
 {
     if(isRowIdFormat)
         addCondFormatToMap(m_mRowIdFormats, column, condFormat);
@@ -505,7 +490,8 @@ void RModel::addCondFormat(const bool isRowIdFormat, size_t column, const CondFo
     emit layoutChanged();
 }
 
-void RModel::setCondFormats(const bool isRowIdFormat, size_t column, const std::vector<CondFormat>& condFormats)
+void RModel::setCondFormats(const bool isRowIdFormat, size_t column,
+                            const std::vector<CondFormat>& condFormats)
 {
     if(isRowIdFormat){
         m_mRowIdFormats[column] = condFormats;
@@ -518,7 +504,9 @@ void RModel::setCondFormats(const bool isRowIdFormat, size_t column, const std::
     }
 }
 
-QVariant RModel::getMatchingCondFormat(const std::map<size_t, std::vector<CondFormat>>& mCondFormats, size_t row,size_t column, const QString& value, int role) const
+QVariant RModel::getMatchingCondFormat
+    (const std::map<size_t, std::vector<CondFormat>>& mCondFormats,
+     size_t row,size_t column, const QString& value, int role) const
 {
     if (!mCondFormats.count(column))
         return QVariant();

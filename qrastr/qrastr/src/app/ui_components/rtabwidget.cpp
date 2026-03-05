@@ -133,6 +133,10 @@ void RtabWidget::setupConnections(){
             &RModel::slot_BeginInsertRow);
     connect(m_pRTDM, &RTablesDataManager::sig_EndInsertRow,this->m_model.get(),
             &RModel::slot_EndInsertRow);
+    connect(m_pRTDM, &RTablesDataManager::sig_BeginRemoveRows,this->m_model.get(),
+            &RModel::slot_BeginRemoveRows);
+    connect(m_pRTDM, &RTablesDataManager::sig_EndRemoveRows,this->m_model.get(),
+            &RModel::slot_EndRemoveRows);
     //RTablesDataManager -> RtabWidget
     connect(m_pRTDM, &RTablesDataManager::sig_BeginResetModel,this,
             &RtabWidget::slot_beginResetModel);
