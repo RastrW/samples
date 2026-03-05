@@ -1,127 +1,122 @@
 #include "ColPropForm.h"
-#include "ui_ColPropForm.h"
-#include "rmodel.h"
+#include "rdata.h"
 #include <QtitanGrid.h>
+#include <QPlainTextEdit>
+#include <QLineEdit>
+#include <QHBoxLayout>
 
 ColPropForm::ColPropForm(RData* prdata, Qtitan::GridTableView* view,
-                         RCol* prcol,QWidget *parent) :
-    QDialog(parent),
-    ui(new Ui::ColPropForm),
-    m_prdata{prdata},
-    m_prcol{prcol},
-    m_view{view}{
-    std::string title = prdata->t_name_ + "[" +prdata->t_title_ + "]." +
-                        prcol->getColName() + "[" +prcol->getTitle() + "]" ;
-    setWindowTitle(title.c_str());
-    windowTitle();
-    ui->setupUi(this);
-    setName(prcol->getColName().c_str());
-    setTitle(prcol->getTitle().c_str());
-    setDesc(prcol->getDesc().c_str());
-    setWidth(prcol->getWidth().c_str());
-    setPrec(prcol->getPrec().c_str());
-    setExpr(prcol->getExpr().c_str());
+                         RCol* prcol, QWidget *parent)
+    : QDialog(parent)
+    , m_prdata(prdata)
+    , m_prcol(prcol)
+    , m_view(view){
+
+    std::string title = prdata->t_name_ + "[" + prdata->t_title_ + "]." +
+                        prcol->getColName() + "[" + prcol->getTitle() + "]";
+    setWindowTitle(QString::fromStdString(title));
+    setWindowModality(Qt::ApplicationModal);
+    setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Fixed);
+
+    setupUi();
+
+    m_leName->setText(QString::fromStdString(prcol->getColName()));
+    m_leTitle->setText(QString::fromStdString(prcol->getTitle()));
+    m_teDescr->appendPlainText(QString::fromStdString(prcol->getDesc()));
+    m_leWidth->setText(QString::fromStdString(prcol->getWidth()));
+    m_lePrecision->setText(QString::fromStdString(prcol->getPrec()));
+    m_leExpression->setText(QString::fromStdString(prcol->getExpr()));
 }
 
-ColPropForm::~ColPropForm()
+void ColPropForm::setupUi()
 {
-    delete ui;
-}
+    m_leName       = new QLineEdit;
+    m_leName->setReadOnly(true);
+    m_leName->setModified(false);
 
-//Setter
-void ColPropForm::setName(const QString& name)
-{
-    ui->te_name->appendPlainText(name);
-}
-void ColPropForm::setTitle(const QString& title)
-{
-    ui->te_title->appendPlainText(title);
-}
-void ColPropForm::setDesc(const QString& desc)
-{
-    ui->te_descr->appendPlainText(desc);
-}
-void ColPropForm::setWidth(const QString &width)
-{
-    ui->te_width->appendPlainText(width);
-}
-void ColPropForm::setPrec(const QString &prec)
-{
-    ui->te_precision->appendPlainText(prec);
-}
-void ColPropForm::setExpr(const QString &expr)
-{
-    ui->te_expression->appendPlainText(expr);
-}
+    m_leTitle      = new QLineEdit;
+    m_teDescr      = new QPlainTextEdit;
+    m_leWidth      = new QLineEdit;
+    m_lePrecision  = new QLineEdit;
+    m_leExpression = new QLineEdit;
 
-//Getter
-QString ColPropForm::getName()
-{
-   return ui->te_name->toPlainText();
-}
-QString ColPropForm::getTitle()
-{
-    return ui->te_title->toPlainText();
-}
-QString ColPropForm::getDesc()
-{
-    return ui->te_descr->toPlainText();
-}
-QString ColPropForm::getWidth()
-{
-    return ui->te_width->toPlainText();
-}
-QString ColPropForm::getPrec()
-{
-    return ui->te_precision->toPlainText();
-}
-QString ColPropForm::getExpr()
-{
-    return ui->te_expression->toPlainText();
-}
+    QLabel* lWidth = new QLabel(tr("Ширина"));
+    QLabel* lPrec = new QLabel(tr("Точность"));
 
-//Slots
-void ColPropForm::on_btn_cancel_clicked()
-{
-    this->close();
+    // --- Кнопки ---
+    auto* btn_ok     = new QPushButton(tr("ОК"));
+    auto* btn_cancel = new QPushButton(tr("Отмена"));
+
+    auto* rowButtons = new QHBoxLayout;
+    rowButtons->addStretch();
+    rowButtons->addWidget(btn_ok);
+    rowButtons->addWidget(btn_cancel);
+
+    connect(btn_ok,     &QPushButton::clicked, this, &ColPropForm::on_btn_ok_clicked);
+    connect(btn_cancel, &QPushButton::clicked, this, &ColPropForm::close);
+
+    // --- Основной layout ---
+    auto* grid = new QGridLayout(this);
+    grid->setContentsMargins(10, 10, 10, 10);
+    grid->setVerticalSpacing(10);
+
+    grid->addWidget(new QLabel(tr("Имя")),       0, 0, 1, 1, Qt::AlignVCenter);
+    grid->addWidget(m_leName,                    0, 1, 1, 3);
+
+    grid->addWidget(new QLabel(tr("Название")),  1, 0, Qt::AlignVCenter);
+    grid->addWidget(m_leTitle,                   1, 1, 1, 3);
+
+    grid->addWidget(new QLabel(tr("Описание")),  2, 0, 1, 1, Qt::AlignTop);
+    grid->addWidget(m_teDescr,                   2, 1, 1, 3);
+
+    grid->addWidget(lWidth,              3, 0, 1, 1);
+    grid->addWidget(m_leWidth,           3, 1, 1, 1);
+    grid->addWidget(lPrec,               3, 2, 1, 1);
+    grid->addWidget(m_lePrecision,       3, 3, 1, 1);
+
+    grid->addWidget(new QLabel(tr("Формула")), 4, 0, 1, 1, Qt::AlignVCenter);
+    grid->addWidget(m_leExpression,             4, 1, 1, 3);
+
+    grid->addLayout(rowButtons,                5, 2, 1, 2);
+
+    setLayout(grid);
 }
 
 void ColPropForm::on_btn_ok_clicked()
 {
-    ///@todo: need change propertires
     IRastrResultVerify{m_prdata->getAstra()->getRastr()->SetLockEvent(true)};
-    m_prcol->set_prec(m_prdata->getAstra(), getPrec().toStdString().c_str());
+
+    m_prcol->set_prec(m_prdata->getAstra(),
+                      m_lePrecision->text().toStdString().c_str());
 
     m_prcol->set_prop(m_prdata->getAstra(),
                       FieldProperties::Description,
-                      getDesc().toStdString());
+                      m_teDescr->toPlainText().toStdString());
     m_prcol->set_prop(m_prdata->getAstra(),
                       FieldProperties::Expression,
-                      getExpr().toStdString());
+                      m_leExpression->text().toStdString());
     m_prcol->set_prop(m_prdata->getAstra(),
                       FieldProperties::Title,
-                      getTitle().toStdString());
+                      m_leTitle->text().toStdString());
     m_prcol->set_prop(m_prdata->getAstra(),
                       FieldProperties::Width,
-                      getWidth().toStdString());
+                      m_leWidth->text().toStdString());
+
     long textind = m_prcol->getIndex();
     IRastrResultVerify{m_prdata->getAstra()->getRastr()->SetLockEvent(false)};
     // 1. Получаем колонку с правильным приведением типов
-    auto* tableView = static_cast<Qtitan::GridTableView*>(m_view);
+    auto* tableView   = static_cast<Qtitan::GridTableView*>(m_view);
     auto* column_base = tableView->getColumn(textind);
-    auto* column_qt = static_cast<Qtitan::GridTableColumn*>(column_base);
-
+    auto* column_qt   = static_cast<Qtitan::GridTableColumn*>(column_base);
     // 2. Устанавливаем точность (Decimals)
     if (column_qt) {
         // 3. Вызываем editorRepository()
         Qtitan::GridEditorRepository* repo = column_qt->editorRepository();
-
         // 4. Приводим репозиторий к числовому типу и устанавливаем точность
         auto* numEditor = qobject_cast<Qtitan::GridNumericEditorRepository*>(repo);
-        if (numEditor) {
-            numEditor->setDecimals(getPrec().toInt());
-        }
+        if (numEditor)
+            numEditor->setDecimals(m_lePrecision->text().toInt());
     }
-    this->close();
-}
 
+    close();
+}
