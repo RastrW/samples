@@ -1,31 +1,29 @@
-#ifndef FORMGROUPCORRECTION_H
-#define FORMGROUPCORRECTION_H
 #pragma once
 
 #include <QDialog>
-#include "rmodel.h"
-
-namespace Ui {
-class formgroupcorrection;
-}
+class RData;
+class RCol;
+class QComboBox;
+class QLabel;
+class QRadioButton;
+class QLineEdit;
 
 class formgroupcorrection : public QDialog
 {
     Q_OBJECT
-
 public:
-    explicit formgroupcorrection(RData* _prdata,RCol* prcol,QWidget *parent = nullptr);
-    ~formgroupcorrection();
-
+    explicit formgroupcorrection(RData* _prdata, RCol* prcol,
+                                 QWidget *parent = nullptr);
+    virtual ~formgroupcorrection() = default;
 private slots:
     void on_buttonBox_accepted();
 
 private:
-    RData* prdata_;
-    RCol* prcol_;
-    std::string selection_;
-    std::string expression_;
-    Ui::formgroupcorrection *ui;
-};
+    RData*        m_prdata;
+    RCol*         m_prcol;
+    std::string   m_selection;
+    std::string   m_expression;
 
-#endif // FORMGROUPCORRECTION_H
+    QLineEdit*    m_leExpression;
+    QLineEdit*    m_leSelection;
+};

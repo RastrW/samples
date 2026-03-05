@@ -1,31 +1,28 @@
-#ifndef FORMCALCIDOP_H
-#define FORMCALCIDOP_H
 #pragma once
 
 #include <QDialog>
-#include "qastra.h"
 
 
-namespace Ui {
-class formcalcidop;
-}
+class QLineEdit;
+class QLabel;
+class QDateTimeEdit;
+class QAstra;
 
 class formcalcidop : public QDialog
 {
     Q_OBJECT
-
 public:
-    explicit formcalcidop(QAstra* pqastra,QWidget *parent = nullptr);
-    ~formcalcidop();
-
+    explicit formcalcidop(QAstra* pqastra, QWidget *parent = nullptr);
+    virtual ~formcalcidop() = default;
 private slots:
     void on_buttonBox_accepted();
     void on_checkBox_checkStateChanged(const Qt::CheckState &arg1);
 
 private:
-    Ui::formcalcidop *ui;
     QAstra* pqastra;
-
+    QLineEdit*    m_leTemperature;
+    QLineEdit*    m_leEmergencyLoading;
+    QLineEdit*    m_leSelection;
+    QLabel*       m_lData;
+    QDateTimeEdit* m_dateTimeEdit;
 };
-
-#endif // FORMCALCIDOP_H

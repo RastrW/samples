@@ -1,95 +1,102 @@
 #include "formsaveall.h"
-#include "ui_formsaveall.h"
 #include <QSettings>
 #include <QFileInfo>
 #include <QDir>
-#include "utils.h"
+#include <QTableWidget>
+#include <QHeaderView>
+#include <QDialogButtonBox>
+#include <QVBoxLayout>
+#include "qastra.h"
 
-formsaveall::formsaveall( QAstra* _pqastra, QMap<QString,QString> _mFilesLoad,QWidget *parent)
-    : QDialog(parent)
-    , ui(new Ui::formsaveall)
+formsaveall::formsaveall(QAstra* pqastra, QMap<QString,QString> _mFilesLoad, QWidget *parent)
+    : QDialog(parent), m_pqastra(pqastra), m_FilesLoad(_mFilesLoad)
 {
+    setWindowTitle(tr("Сохранение файлов"));
+    setWindowModality(Qt::ApplicationModal);
+    setSizeGripEnabled(true);
+    setModal(true);
+    resize(800, 300);
 
-    pqastra =    _pqastra;
-    mFilesLoad = _mFilesLoad;
-    ui->setupUi(this);
-    ui->twSaveFiles->setColumnCount(4);
-    ui->twSaveFiles->setSelectionMode(QAbstractItemView::SingleSelection);
-    ui->twSaveFiles->setSelectionBehavior(QAbstractItemView::SelectItems);
-    ui->twSaveFiles->horizontalHeader()->setStretchLastSection(true);
-    //ui->twSaveFiles->resizeColumnsToContents();
-    ui->twSaveFiles->resizeRowsToContents();
-    ui->twSaveFiles->verticalHeader()->setVisible(false); // hide row numbers
+    m_twSaveFiles = new QTableWidget();
+    m_twSaveFiles->setColumnCount(4);
+    m_twSaveFiles->setSelectionMode(QAbstractItemView::SingleSelection);
+    m_twSaveFiles->setSelectionBehavior(QAbstractItemView::SelectItems);
+    m_twSaveFiles->horizontalHeader()->setStretchLastSection(true);
+    m_twSaveFiles->verticalHeader()->setVisible(false);
+    m_twSaveFiles->setSortingEnabled(true);
+    m_twSaveFiles->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
+
     QStringList headers;
-    headers << "Сохранить" << "Шаблон" << "Файл"<<"путь";
-    ui->twSaveFiles->setHorizontalHeaderLabels(headers);
-    ui->twSaveFiles->setColumnWidth(static_cast<int>(_cols::save),80);
-    ui->twSaveFiles->setColumnWidth(static_cast<int>(_cols::templ),120);
-    ui->twSaveFiles->setColumnWidth(static_cast<int>(_cols::file),120);
-    ui->twSaveFiles->setColumnWidth(static_cast<int>(_cols::path),400);
-    //ui->twSaveFiles->horizontalHeader()->setVisible(false);
+    headers << "Сохранить" << "Шаблон" << "Файл" << "Путь";
+    m_twSaveFiles->setHorizontalHeaderLabels(headers);
+    m_twSaveFiles->setColumnWidth(static_cast<int>(_cols::save),  80);
+    m_twSaveFiles->setColumnWidth(static_cast<int>(_cols::templ), 120);
+    m_twSaveFiles->setColumnWidth(static_cast<int>(_cols::file),  120);
+    m_twSaveFiles->setColumnWidth(static_cast<int>(_cols::path),  400);
+
+    QDialogButtonBox* buttonBox = new QDialogButtonBox(
+        QDialogButtonBox::Ok | QDialogButtonBox::Cancel, this);
+    connect(buttonBox, &QDialogButtonBox::accepted, this, &formsaveall::on_buttonBox_accepted);
+    connect(buttonBox, &QDialogButtonBox::rejected, this, &QDialog::reject);
+
+    QVBoxLayout* mainLayout = new QVBoxLayout(this);
+    mainLayout->addWidget(m_twSaveFiles);
+    mainLayout->addWidget(buttonBox);
 }
 
-formsaveall::~formsaveall()
+void formsaveall::showEvent(QShowEvent* event)
 {
-    delete ui;
-}
-
-void formsaveall::showEvent( QShowEvent* event )
-{
-    ui->twSaveFiles->setRowCount(0);
+    QDialog::showEvent(event);
+    m_twSaveFiles->setRowCount(0);
     int n_row_num = 0;
 #if QT_VERSION < QT_VERSION_CHECK(6, 0, 0)
-    for (auto [_shabl,_file] : asKeyValueRange(mFilesLoad) ) {
+    for (auto [_shabl, _file] : asKeyValueRange(mFilesLoad)) {
 #else
-    for (auto [_shabl,_file] : mFilesLoad.asKeyValueRange() ) {
+    for (auto [_shabl, _file] : m_FilesLoad.asKeyValueRange()) {
 #endif
-        dir_shabl = QFileInfo(_shabl).path();   // assume all templates at one directory
-        ui->twSaveFiles->insertRow(n_row_num);
+        m_dirShabl = QFileInfo(_shabl).path(); // assume all templates at one directory
+        m_twSaveFiles->insertRow(n_row_num);
+
         QTableWidgetItem* ptwi_checkbox = new QTableWidgetItem();
-        ptwi_checkbox->data(Qt::CheckStateRole);
         ptwi_checkbox->setCheckState(Qt::Checked);
-        ui->twSaveFiles->setItem( n_row_num, static_cast<int>(_cols::save), ptwi_checkbox );
-
-        QTableWidgetItem* ptwi_shabl = new QTableWidgetItem(  QFileInfo(_shabl).fileName());
-        ui->twSaveFiles->setItem( n_row_num, static_cast<int>(_cols::templ), ptwi_shabl );
-
-        QTableWidgetItem* ptwi_file = new QTableWidgetItem(    QFileInfo(_file).fileName() );
-        ui->twSaveFiles->setItem( n_row_num, static_cast<int>(_cols::file), ptwi_file );
-
-        QTableWidgetItem* ptwi_path = new QTableWidgetItem(  QFileInfo(_file).path());
-        ui->twSaveFiles->setItem( n_row_num, static_cast<int>(_cols::path), ptwi_path );
-
+        ptwi_checkbox->data(Qt::CheckStateRole);
+        m_twSaveFiles->setItem(n_row_num, static_cast<int>(_cols::save),
+                               ptwi_checkbox);
+        m_twSaveFiles->setItem(n_row_num, static_cast<int>(_cols::templ),
+                               new QTableWidgetItem(QFileInfo(_shabl).fileName()));
+        m_twSaveFiles->setItem(n_row_num, static_cast<int>(_cols::file),
+                               new QTableWidgetItem(QFileInfo(_file).fileName()));
+        m_twSaveFiles->setItem(n_row_num, static_cast<int>(_cols::path),
+                               new QTableWidgetItem(QFileInfo(_file).path()));
         n_row_num++;
     }
 }
 
 void formsaveall::on_buttonBox_accepted()
 {
-    QTableWidget *twSaveFiles = ui->twSaveFiles;
-    for( int n_rownum = 0; n_rownum < twSaveFiles->rowCount() ; n_rownum++ ){
-        const QTableWidgetItem* ptwi_checkbox = twSaveFiles->item( n_rownum, static_cast<int>(_cols::save) );
-        if(Qt::Checked == ptwi_checkbox->checkState()){
-            const QTableWidgetItem* ptwi_shabl = twSaveFiles->item( n_rownum, static_cast<int>(_cols::templ) );
-            const QTableWidgetItem* ptwi_file = twSaveFiles->item( n_rownum, static_cast<int>(_cols::file) );
-            const QTableWidgetItem* ptwi_path = twSaveFiles->item( n_rownum, static_cast<int>(_cols::path) );
-
-
+    for (int n_rownum = 0; n_rownum < m_twSaveFiles->rowCount(); n_rownum++) {
+        const QTableWidgetItem* ptwi_checkbox =
+            m_twSaveFiles->item(n_rownum, static_cast<int>(_cols::save));
+        if (Qt::Checked == ptwi_checkbox->checkState()) {
+            const QTableWidgetItem* ptwi_shabl =
+                m_twSaveFiles->item(n_rownum, static_cast<int>(_cols::templ));
+            const QTableWidgetItem* ptwi_file  =
+                m_twSaveFiles->item(n_rownum, static_cast<int>(_cols::file));
+            const QTableWidgetItem* ptwi_path  =
+                m_twSaveFiles->item(n_rownum, static_cast<int>(_cols::path));
 
             QFileInfo qfileinfo;
-            qfileinfo.setFile(QDir(ptwi_path->text()),ptwi_file->text());
+            qfileinfo.setFile(QDir(ptwi_path->text()), ptwi_file->text());
 
             QFileInfo qshablinfo;
-            qshablinfo.setFile(dir_shabl,ptwi_shabl->text());
+            qshablinfo.setFile(m_dirShabl, ptwi_shabl->text());
 
-            std::string sfile = qfileinfo.absoluteFilePath().toStdString().c_str();
-            std::string sshabl;
-            if (qshablinfo.isFile() )
-                sshabl = qshablinfo.absoluteFilePath().toStdString().c_str();
-            else
-                sshabl = "";
+            std::string sfile  = qfileinfo.absoluteFilePath().toStdString().c_str();
+            std::string sshabl = qshablinfo.isFile()
+                                     ? qshablinfo.absoluteFilePath().toStdString().c_str()
+                                     : "";
 
-            pqastra->Save(sfile,sshabl);
+            m_pqastra->Save(sfile, sshabl);
         }
     }
 }

@@ -34,6 +34,7 @@
 #include "contextMenuBuilder.h"
 #include "customFilterCondition.h"
 #include "condFormatController.h"
+#include "rmodel.h"
 
 RtabWidget::RtabWidget(QAstra* pqastra,CUIForm UIForm, RTablesDataManager* pRTDM,
                        ads::CDockManager* pDockManager, QWidget *parent)

@@ -1,37 +1,28 @@
-#ifndef FORMSAVEALL_H
-#define FORMSAVEALL_H
 #pragma once
 
 #include <QDialog>
-#include "qastra.h"
 #include <QDir>
 
 class QAstra;
-
-namespace Ui {
-class formsaveall;
-}
+class QTableWidget;
 
 class formsaveall : public QDialog
 {
     Q_OBJECT
-
 public:
-    explicit formsaveall(QAstra* _pqastra,QMap<QString,QString> _mFilesLoad,QWidget  *parent = nullptr);
-    ~formsaveall();
-    void showEvent( QShowEvent* event )override;
+    explicit formsaveall(QAstra* pqastra, QMap<QString,QString> _mFilesLoad,
+                         QWidget *parent = nullptr);
+
+    void showEvent(QShowEvent* event) override;
 
 private slots:
     void on_buttonBox_accepted();
 
 private:
-    Ui::formsaveall *ui;
-    QAstra* pqastra;
-    QDir dir_shabl;
-    QMap<QString,QString> mFilesLoad;
+    QAstra*              m_pqastra;
+    QDir                 m_dirShabl;
+    QMap<QString,QString> m_FilesLoad;
+    QTableWidget*        m_twSaveFiles;
 
-    enum class _cols : int  { save , templ , file , path };
-
+    enum class _cols : int { save, templ, file, path };
 };
-
-#endif // FORMSAVEALL_H
