@@ -1,11 +1,7 @@
 #pragma once
 
 #include <QApplication>
-#include <QDir>
-#include <QObject>
-#include <spdlog/spdlog.h>
 #include "cacheLog.h"
-
 class QAstra;
 class QTI;
 class QBarsMDP;

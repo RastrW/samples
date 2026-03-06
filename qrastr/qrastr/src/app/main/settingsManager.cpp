@@ -2,7 +2,7 @@
 #include "qastra.h"
 #include "formsettings.h"
 #include "cacheLog.h"
-
+#include <QMainWindow>
 #include <spdlog/spdlog.h>
 
 SettingsManager::SettingsManager(QObject* parent)
@@ -39,6 +39,10 @@ bool SettingsManager::loadWindowGeometry(QMainWindow* window) {
     }
     
     return true;
+}
+
+QByteArray SettingsManager::getSettings(const QString& name){
+    return m_settings.value(name).toByteArray();
 }
 
 bool SettingsManager::saveWindowGeometry(QMainWindow* window) {

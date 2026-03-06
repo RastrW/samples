@@ -10,6 +10,8 @@
 #include "qmcr/pyhlp.h"
 #include <astra/stringutils.h>
 #include "utils.h"
+using WrapperExceptionType = std::runtime_error;
+#include "astra/IPlainRastrWrappers.h"
 
 FormManager::FormManager
     (std::shared_ptr<QAstra> qastra,

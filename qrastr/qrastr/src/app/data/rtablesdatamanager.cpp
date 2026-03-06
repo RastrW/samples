@@ -1,4 +1,9 @@
 #include "rtablesdatamanager.h"
+#include "qastra.h"
+using WrapperExceptionType = std::runtime_error;
+#include "astra/IPlainRastrWrappers.h"
+#include "astra_headers/UIForms.h"
+#include "QDataBlocks.h"
 
 void RTablesDataManager::setQAstra( QAstra* _pqastra)
 {

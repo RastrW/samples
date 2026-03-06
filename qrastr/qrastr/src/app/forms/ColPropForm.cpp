@@ -4,6 +4,8 @@
 #include <QPlainTextEdit>
 #include <QLineEdit>
 #include <QHBoxLayout>
+#include "qastra.h"
+#include <astra/IPlainRastrWrappers.h>
 
 ColPropForm::ColPropForm(RData* prdata, Qtitan::GridTableView* view,
                          RCol* prcol, QWidget *parent)

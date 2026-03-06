@@ -35,6 +35,10 @@
 #include "customFilterCondition.h"
 #include "condFormatController.h"
 #include "rmodel.h"
+#include "rtablesdatamanager.h"
+#include "qastra.h"
+#include "rdata.h"
+#include "QDataBlocks.h"
 
 RtabWidget::RtabWidget(QAstra* pqastra,CUIForm UIForm, RTablesDataManager* pRTDM,
                        ads::CDockManager* pDockManager, QWidget *parent)
@@ -280,8 +284,8 @@ void RtabWidget::createModel()
     {
         // Таблица не найдена в плагине (файл не загружен или имя неверно).
         // Модель пуста — показываем сообщение и прекращаем инициализацию.
-        //spdlog::error("RtabWidget: populateDataFromRastr failed for table [{}]",
-        //              m_UIForm.TableName());
+        spdlog::error("RtabWidget: populateDataFromRastr failed for table [{}]",
+                      m_UIForm.TableName());
         QMessageBox::warning(
             this,
             tr("Ошибка открытия таблицы"),

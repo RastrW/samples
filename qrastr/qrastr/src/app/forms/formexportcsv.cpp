@@ -9,8 +9,9 @@
 #include <QRadioButton>
 #include <QDialogButtonBox>
 #include <QLabel>
-
+#include "qastra.h"
 #include "rdata.h"
+#include <astra/IPlainRastrWrappers.h>
 
 formexportcsv::formexportcsv(RData* _prdata, QWidget *parent)
     : QDialog(parent), prdata_(_prdata)

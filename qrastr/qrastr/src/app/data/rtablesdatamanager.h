@@ -1,12 +1,11 @@
 #pragma once
-
-#include <map>
-#include <string>
-#include "QDataBlocks.h"
-#include "QVector"
 #include <QObject>
-#include "qastra.h"
-#include "astra_headers/UIForms.h"
+#include "astra/IPlainRastr.h"
+
+class QAstra;
+class CUIForm;
+class QDataBlock;
+class _hint_data;
 
 /**
  * @class Централизованный кеш табличных данных и маршрутизатор событий от расчётного ядра.

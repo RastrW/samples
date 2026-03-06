@@ -1,13 +1,12 @@
 #pragma once
 
 #include "astra_shared.h"
-#include "qastra.h"
+
 #include "json.hpp"
+#include "astra/IPlainRastr.h"
 
 using WrapperExceptionType = std::runtime_error;
-
-
-#include <astra/IPlainRastrWrappers.h>
+class QAstra;
 
 /// @brief Метаданные и вспомогательные операции для одной колонки таблицы Rastr.
 class RCol

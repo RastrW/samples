@@ -1,5 +1,8 @@
 #include "rcol.h"
 
+#include <astra/IPlainRastrWrappers.h>
+#include "qastra.h"
+
 void RCol::setMeta(QAstra* pqastra){
 
     IRastrTablesPtr  tables  { pqastra->getRastr()->Tables() };

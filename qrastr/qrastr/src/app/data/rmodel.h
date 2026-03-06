@@ -1,13 +1,12 @@
 #pragma once
 
 #include <QAbstractTableModel>
-#include <QTimer>
-
-#include "rdata.h"
-#include "qastra.h"
-#include "rtablesdatamanager.h"
-
-#include "CondFormat.h"
+class QAstra;
+class RTablesDataManager;
+class CondFormat;
+class RData;
+class CUIForm;
+class RCol;
 
 struct ToQVariant {
     QVariant operator()(std::monostate) { return { QVariant() }; }
@@ -17,8 +16,6 @@ struct ToQVariant {
     QVariant operator()(const bool& value) { return value; }
     QVariant operator()(const std::string& value) { return std::string(value).c_str(); }
 };
-
-
 
 ///@brief Qt модель для связи QDataBlock с QTableView/QTitan Grid
 class RModel : public QAbstractTableModel
@@ -105,7 +102,8 @@ private:
     // Return matching conditional format color/font or invalid value, otherwise.
     // Only format roles are expected in role (Qt::ItemDataRole)
     QVariant getMatchingCondFormat(std::size_t row, std::size_t column, const QString& value, int role) const;
-    QVariant getMatchingCondFormat(const std::map<std::size_t, std::vector<CondFormat>>& mCondFormats, std::size_t row, std::size_t column, const QString& value, int role) const;
+    QVariant getMatchingCondFormat(const std::map<std::size_t, std::vector<CondFormat>>& mCondFormats,
+                                   std::size_t row, std::size_t column, const QString& value, int role) const;
 
     QAstra* pqastra_;
     RTablesDataManager* pRTDM_;

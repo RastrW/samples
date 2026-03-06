@@ -1,4 +1,9 @@
 #include "rdata.h"
+#include "rtablesdatamanager.h"
+#include "astra_headers/UIForms.h"
+using WrapperExceptionType = std::runtime_error;
+#include "astra/IPlainRastrWrappers.h"
+#include "qastra.h"
 
 RData::RData(QAstra* _pqastra, const CUIForm& _form):
     m_qastra{_pqastra}{
@@ -59,6 +64,13 @@ RData::RData(QAstra* _pqastra, const CUIForm& _form):
         m_str_cols.pop_back();
     qDebug() << "Open Table : " << t_name_.c_str();
     qDebug() << "Fields : " << m_str_cols.c_str();
+}
+
+QAstra* RData::getAstra() const { return m_qastra; }
+
+int RData::AddCol(const RCol& rcol){
+    emplace_back(rcol);
+    return static_cast<int>(size());
 }
 
 std::string RData::getCommaSeparatedFieldNames(){

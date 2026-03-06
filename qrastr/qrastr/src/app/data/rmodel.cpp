@@ -8,6 +8,10 @@
 #include "QtitanGrid.h"
 #include <string_bool.h>
 #include <spdlog/spdlog.h>
+#include "qastra.h"
+#include "rdata.h"
+#include "rtablesdatamanager.h"
+#include "QDataBlocks.h"
 
 RModel::RModel(QObject *parent, QAstra* pqastra, RTablesDataManager* pRTDM)
     : QAbstractTableModel(parent)
@@ -117,7 +121,7 @@ QVariant RModel::data(const QModelIndex &index, int role) const
 {
     int col = index.column();
     if (col < 0 || static_cast<size_t>(col) >= up_rdata->size()){
-        //spdlog::error("Выход за границы модели");
+        spdlog::error("Выход за границы модели");
         return QVariant();
     }
 

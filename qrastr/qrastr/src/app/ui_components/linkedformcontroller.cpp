@@ -21,6 +21,7 @@
 #include <fstream>
 #include <fmt/format.h>
 #include <spdlog/spdlog.h>
+#include "QDataBlocks.h"
 
 namespace fs = std::filesystem;
 
@@ -146,8 +147,8 @@ void LinkedFormController::openLinkedForm(LinkedForm lf)
     CUIForm* pUIForm = m_rtdm->getForm(lf.linkedform);
     if (pUIForm  == nullptr)
     {
-        //spdlog::warn("LinkedFormController: форма [{}] не найдена",
-        //             lf.linkedform);
+        spdlog::warn("LinkedFormController: форма [{}] не найдена",
+                     lf.linkedform);
         return;
     }
 

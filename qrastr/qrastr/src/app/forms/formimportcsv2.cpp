@@ -9,6 +9,8 @@
 #include <QLabel>
 #include <QDialogButtonBox>
 #include "rdata.h"
+#include "qastra.h"
+#include <astra/IPlainRastrWrappers.h>
 
 formimportcsv2::formimportcsv2(RData* prdata, QWidget *parent)
     : QDialog(parent), m_prdata(prdata)
