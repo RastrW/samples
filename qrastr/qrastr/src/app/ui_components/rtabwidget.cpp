@@ -13,6 +13,10 @@
 #include "qastra.h"
 #include <QShortcut>
 #include <QPalette>
+#include <QStandardItem>
+#include "qastra.h"
+#include <QShortcut>
+#include <QPalette>
 #include "linkedform.h"
 
 #include <QtitanGrid.h>
@@ -387,7 +391,11 @@ void RtabWidget::applyColumnEditor(int colIndex)
                 static_cast<Qt::ItemDataRole>(Qtitan::ComboBoxRole));
         }
         break;
-
+    case RModel::ColumnEditorInfo::Type::ComboBoxPicture:
+    {
+        column_qt->setEditorType(Qtitan::GridEditor::ComboBoxPicture);
+        break;
+    }
     case RModel::ColumnEditorInfo::Type::None:
     default:
         break;

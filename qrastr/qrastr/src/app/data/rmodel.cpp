@@ -13,12 +13,44 @@
 #include "rtablesdatamanager.h"
 #include "QDataBlocks.h"
 
+static QMap<int,int> parseEnpicNameref(const std::string& nameref)
+{
+    QMap<int,int> result;
+    QString s = QString::fromStdString(nameref);
+    // Заменяем разделители на пробел, не удаляем
+    s.replace(';', ' ').replace('(', ' ').replace(')', ' ').replace(',', ' ');
+
+    const QStringList parts = s.split(' ', Qt::SkipEmptyParts);
+    for (int i = 0; i < parts.size(); ++i)
+    {
+        bool ok = false;
+        int iconIdx = parts[i].trimmed().toInt(&ok);
+        if (ok)
+            result[i] = iconIdx;
+    }
+    return result;
+}
+
+static QIcon iconByQtitanIndex(int idx)
+{
+    // Временное соответствие для демонстрации
+    switch (idx % 4)
+    {
+    case 0: return QIcon(":/images/grid/checkMark.png");
+    case 1: return QIcon(":/images/grid/cross.png");
+    case 2: return QIcon(":/images/grid/left.png");
+    case 3: return QIcon(":/images/grid/right.png");
+    }
+    return QIcon(":/images/grid/checkMark.png");
+}
+
 RModel::RModel(QObject *parent, QAstra* pqastra, RTablesDataManager* pRTDM)
     : QAbstractTableModel(parent)
     , pqastra_(pqastra)
     , pRTDM_(pRTDM)
 {
     setEmitSignals(true);
+
 }
 
 bool RModel::populateDataFromRastr(){
@@ -51,6 +83,7 @@ void RModel::rebuildBackInfo()
     m_enum_.clear();
     mm_superenum_.clear();
     mm_nameref_.clear();
+    m_pictureEnums_.clear();
 
     for (RCol& rcol : *up_rdata)
     {
@@ -106,15 +139,29 @@ void RModel::rebuildBackInfo()
             }
             mm_nameref_.emplace(rcol.getIndex(), std::move(map_string));
         }
+        if (rcol.getComPropTT() == enComPropTT::COM_PR_ENPIC)
+        {
+            qDebug() << "ENPIC col:" << rcol.getColName().c_str()
+            << "nameref:" << rcol.getNameRef().c_str();
+
+            QMap<int,int> iconMap = parseEnpicNameref(rcol.getNameRef());
+
+            QList<PictureItem> items;
+            for (auto it = iconMap.begin(); it != iconMap.end(); ++it)
+            {
+                items.append({
+                    QString::number(it.key()),
+                    it.value(),
+                    iconByQtitanIndex(it.value())
+                });
+            }
+            m_pictureEnums_.emplace(rcol.getIndex(), std::move(items));
+            for (const auto& [k, v] : m_pictureEnums_)
+                qInfo() << "  col=" << k << "items=" << v.size();
+        }
     }
-}
 
-int RModel::rowCount(const QModelIndex & /*parent*/) const{
-    return static_cast<int>(up_rdata->pnparray_->RowsCount());
-}
-
-int RModel::columnCount(const QModelIndex & /*parent*/) const{
-    return static_cast<int>(up_rdata->pnparray_->ColumnsCount());
+    qInfo() << "rebuildBackInfo done. m_pictureEnums_ keys:";
 }
 
 QVariant RModel::data(const QModelIndex &index, int role) const
@@ -133,58 +180,161 @@ QVariant RModel::data(const QModelIndex &index, int role) const
     RData::iterator iter_col = up_rdata->begin() + col;
     RCol* prc =  &(*iter_col);
 
+    //qInfo() << "[ENPIC] m_pictureEnums_ size=" << m_pictureEnums_.size();
     if (role == Qt::BackgroundRole )
     {
         ///@todo временная заливка ячейки (1,2) красным — удалить перед релизом
-            if (row == 1 && col == 2)  //change background only for cell(1,2)
-                return QBrush(Qt::red);
-            item_str = std::visit(ToString(),up_rdata->pnparray_->Get(row,col));
-            condFormatColor = getMatchingCondFormat(row, col, item_str.c_str(), role);
-            if (condFormatColor.isValid())
-                return condFormatColor;
+        if (row == 1 && col == 2)  //change background only for cell(1,2)
+            return QBrush(Qt::red);
+        item_str = std::visit(ToString(),up_rdata->pnparray_->Get(row,col));
+        condFormatColor = getMatchingCondFormat(row, col, item_str.c_str(), role);
+        if (condFormatColor.isValid())
+            return condFormatColor;
     }
     else if ( (role == Qt::DisplayRole ) ||
-              (role == Qt::EditRole ))
+             (role == Qt::EditRole ))
     {
-            item = std::visit(ToQVariant(),up_rdata->pnparray_->Get(row,col));
+        item = std::visit(ToQVariant(),up_rdata->pnparray_->Get(row,col));
 
         if (!prc->isDirectCode())
         {
             if (contains(m_enum_,col) )
                 //if (contains(m_enum_.at(col),item.toInt()) )  // win not compile
-                    return m_enum_.at(col).at(item.toInt());
+                return m_enum_.at(col).at(item.toInt());
 
             if (contains(mm_superenum_,col))
                 if (contains(mm_superenum_.at(col),item.toInt()))
                     return mm_superenum_.at(col).at(item.toInt()).c_str();
+
+            if (contains(m_pictureEnums_, col))
+            {
+                int value = item.toInt();
+                const auto& list = m_pictureEnums_.at(col);
+                if (value >= 0 && value < list.size())
+                    return list[value].label;
+            }
         }
 
         return item;
     }
-    else if  (role == Qtitan::ComboBoxRole)
+    else if (role == Qt::DecorationRole)
     {
+        if (contains(m_pictureEnums_, col))
+        {
+            int value = std::visit(ToLong(), up_rdata->pnparray_->Get(row, col));
+            const auto& list = m_pictureEnums_.at(col);
+            if (value >= 0 && value < list.size())
+                return list[value].icon;
+        }
+    }
+    else if (role == Qtitan::ComboBoxRole)
+    {
+        if (contains(m_pictureEnums_, col))
+        {
+            QVariantList list;
+            for (const auto& p : m_pictureEnums_.at(col))
+            {
+                QVariantList item;
+                item << p.icon << p.label;
+                list << QVariant(item);
+            }
+            return list;
+        }
+
         QStringList list;
-        if (contains(m_enum_,col) )
+        if (contains(m_enum_, col))
             list = m_enum_.at(col);
-
-        if (contains(mm_nameref_,col) )
-            for (const auto &val : mm_nameref_.at(col))
-                list.append(val.second.c_str());
-
-        if (contains(mm_superenum_,col) )
-            for (const auto &val : mm_superenum_.at(col))
-                list.append(val.second.c_str());
-
+        if (contains(mm_nameref_, col))
+            for (const auto& [k, v] : mm_nameref_.at(col))
+                list.append(QString::fromStdString(v));
+        if (contains(mm_superenum_, col))
+            for (const auto& [k, v] : mm_superenum_.at(col))
+                list.append(QString::fromStdString(v));
         return list;
     }
     else if (role ==  Qt::ToolTipRole)
     {
-            return QString("Row %1, Column %2")
-                .arg(index.row() + 1)
-                .arg(index.column() +1);
+        return QString("Row %1, Column %2")
+        .arg(index.row() + 1)
+            .arg(index.column() +1);
     }
 
     return QVariant();
+}
+
+RModel::ColumnEditorInfo
+RModel::getColumnEditorInfo(int colIndex) const
+{
+    ColumnEditorInfo info;
+    const RCol* col = getRCol(colIndex);
+    if (!col) return info;
+
+    const auto propTT = col->getComPropTT();
+
+    switch (propTT)
+    {
+    case enComPropTT::COM_PR_BOOL:
+        info.editorType = ColumnEditorInfo::Type::CheckBox;
+        break;
+
+    case enComPropTT::COM_PR_REAL:
+        info.editorType = ColumnEditorInfo::Type::Numeric;
+        info.decimals   = std::atoi(col->getPrec().c_str());
+        break;
+
+    case enComPropTT::COM_PR_ENUM:
+        if (!col->isDirectCode() && m_enum_.count(colIndex)) {
+            info.editorType = ColumnEditorInfo::Type::ComboBox;
+            info.comboItems = m_enum_.at(colIndex);
+        } else {
+            info.editorType = ColumnEditorInfo::Type::Numeric;
+        }
+        break;
+
+    case enComPropTT::COM_PR_INT:
+        if (!col->isDirectCode()
+            && !col->getNameRef().empty()
+            && mm_nameref_.count(colIndex))
+        {
+            info.editorType = ColumnEditorInfo::Type::ComboBox;
+            for (const auto& [k, v] : mm_nameref_.at(colIndex))
+                info.comboItems.append(QString::fromStdString(v));
+        } else {
+            info.editorType = ColumnEditorInfo::Type::Numeric;
+        }
+        break;
+
+    case enComPropTT::COM_PR_SUPERENUM:
+        if (!col->isDirectCode()
+            && !col->getNameRef().empty()
+            && mm_superenum_.count(colIndex))
+        {
+            info.editorType = ColumnEditorInfo::Type::ComboBox;
+            for (const auto& [k, v] : mm_superenum_.at(colIndex))
+                info.comboItems.append(QString::fromStdString(v));
+        } else {
+            info.editorType = ColumnEditorInfo::Type::Numeric;
+        }
+        break;
+    case enComPropTT::COM_PR_ENPIC:
+        if (!col->isDirectCode()) {
+            info.editorType = ColumnEditorInfo::Type::ComboBoxPicture;
+        } else {
+            info.editorType = ColumnEditorInfo::Type::Numeric;
+        }
+        break;
+    default:
+        break;
+    }
+    return info;
+}
+
+int RModel::rowCount(const QModelIndex & /*parent*/) const{
+    return static_cast<int>(up_rdata->pnparray_->RowsCount());
+}
+
+int RModel::columnCount(const QModelIndex & /*parent*/) const{
+    return static_cast<int>(up_rdata->pnparray_->ColumnsCount());
 }
 
 QVariant RModel::headerData(int section, Qt::Orientation orientation, int role) const
@@ -403,67 +553,6 @@ void RModel::slot_EndRemoveRows(std::string tname){
     if (getRdata()->t_name_ == tname){
         endRemoveRows();
     }
-}
-
-RModel::ColumnEditorInfo
-RModel::getColumnEditorInfo(int colIndex) const
-{
-    ColumnEditorInfo info;
-    const RCol* col = getRCol(colIndex);
-    if (!col) return info;
-
-    const auto propTT = col->getComPropTT();
-
-    switch (propTT)
-    {
-    case enComPropTT::COM_PR_BOOL:
-        info.editorType = ColumnEditorInfo::Type::CheckBox;
-        break;
-
-    case enComPropTT::COM_PR_REAL:
-        info.editorType = ColumnEditorInfo::Type::Numeric;
-        info.decimals   = std::atoi(col->getPrec().c_str());
-        break;
-
-    case enComPropTT::COM_PR_ENUM:
-        if (!col->isDirectCode() && m_enum_.count(colIndex)) {
-            info.editorType = ColumnEditorInfo::Type::ComboBox;
-            info.comboItems = m_enum_.at(colIndex);
-        } else {
-            info.editorType = ColumnEditorInfo::Type::Numeric;
-        }
-        break;
-
-    case enComPropTT::COM_PR_INT:
-        if (!col->isDirectCode()
-            && !col->getNameRef().empty()
-            && mm_nameref_.count(colIndex))
-        {
-            info.editorType = ColumnEditorInfo::Type::ComboBox;
-            for (const auto& [k, v] : mm_nameref_.at(colIndex))
-                info.comboItems.append(QString::fromStdString(v));
-        } else {
-            info.editorType = ColumnEditorInfo::Type::Numeric;
-        }
-        break;
-
-    case enComPropTT::COM_PR_SUPERENUM:
-        if (!col->isDirectCode()
-            && !col->getNameRef().empty()
-            && mm_superenum_.count(colIndex))
-        {
-            info.editorType = ColumnEditorInfo::Type::ComboBox;
-            for (const auto& [k, v] : mm_superenum_.at(colIndex))
-                info.comboItems.append(QString::fromStdString(v));
-        } else {
-            info.editorType = ColumnEditorInfo::Type::Numeric;
-        }
-        break;
-
-    default:
-        break;
-    }
-    return info;
 }
 
 static void addCondFormatToMap(std::map<size_t, std::vector<CondFormat>>& mCondFormats,

@@ -33,5 +33,9 @@
         <file>images/RecalcDor.png</file>
         <file>images/UpdateTablesTI.png</file>
         <file>images/cx195.svg</file>
+		<file>images/grid/checkMark.png</file>
+		<file>images/grid/cross.png</file>
+		<file>images/grid/left.png</file>
+		<file>images/grid/right.png</file>
     </qresource>
 </RCC>

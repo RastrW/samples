@@ -1,6 +1,8 @@
 #pragma once
 
 #include <QAbstractTableModel>
+#include <QIcon>
+
 class QAstra;
 class RTablesDataManager;
 class CondFormat;
@@ -37,13 +39,16 @@ public slots:
     void slot_EndRemoveRows(std::string tname);
 public:
     struct ColumnEditorInfo {
-        enum class Type { None, Numeric, CheckBox, ComboBox };
+        enum class Type { None, Numeric, CheckBox, ComboBox, ComboBoxPicture };
 
         Type        editorType = Type::None;
-        QStringList comboItems;       // для ComboBox
-        int         decimals   = 2;   // для Numeric
+        QStringList comboItems;
+        int         decimals   = 2;
         double      minVal     = -1e6;
         double      maxVal     =  1e6;
+
+        struct PicItem { QIcon icon; QString label; };
+        QList<PicItem> picItems;
     };
 
     RModel(QObject *parent, QAstra* pqastra,RTablesDataManager* pRTDM);
@@ -122,4 +127,11 @@ private:
     std::map<std::size_t, std::map<std::size_t, std::string>> mm_nameref_;
     // код -> отображаемое имя: ex. ti_prv.Name.Num
     std::map<std::size_t, std::map<std::size_t, std::string>> mm_superenum_;
+
+    struct PictureItem {
+        QString label;
+        int     qtitanIconIndex; // индекс из nameref
+        QIcon   icon;            // кешированная иконка
+    };
+    std::map<std::size_t, QList<PictureItem>> m_pictureEnums_;
 };
