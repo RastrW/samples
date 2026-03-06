@@ -16,18 +16,58 @@
 static QMap<int,int> parseEnpicNameref(const std::string& nameref)
 {
     QMap<int,int> result;
-    QString s = QString::fromStdString(nameref);
-    // Заменяем разделители на пробел, не удаляем
-    s.replace(';', ' ').replace('(', ' ').replace(')', ' ').replace(',', ' ');
+    QString s = QString::fromStdString(nameref).trimmed();
 
-    const QStringList parts = s.split(' ', Qt::SkipEmptyParts);
-    for (int i = 0; i < parts.size(); ++i)
+    // Если нет групп (нет ';') — просто плоский список иконок
+    // "2,0,1,4,5" -> value=0 -> иконка 2, value=1 -> иконка 0, ...
+    if (!s.contains(';'))
     {
-        bool ok = false;
-        int iconIdx = parts[i].trimmed().toInt(&ok);
-        if (ok)
-            result[i] = iconIdx;
+        int fieldVal = 0;
+        for (const QString& t : s.split(',', Qt::SkipEmptyParts)) {
+            bool ok = false;
+            int iconIdx = t.trimmed().toInt(&ok);
+            if (ok)
+                result[fieldVal++] = iconIdx;
+        }
+        return result;
     }
+
+    // Разбиваем на группы по ';', убираем скобки
+    QStringList groups;
+    for (const QString& part : s.split(';', Qt::SkipEmptyParts))
+        groups << QString(part).remove('(').remove(')').trimmed();
+
+    auto parseGroup = [](const QString& g) -> QList<int> {
+        QList<int> res;
+        if (g.isEmpty()) return res;
+        for (const QString& t : g.split(',', Qt::SkipEmptyParts)) {
+            bool ok = false;
+            int v = t.trimmed().toInt(&ok);
+            if (ok) res << v;
+        }
+        return res;
+    };
+
+    // Группа 0: РисункиИстинаЛожь — [0]=иконка для value=1, [1]=иконка для value=0
+    if (!groups.isEmpty()) {
+        QList<int> g = parseGroup(groups[0]);
+        if (g.size() >= 1) result[1] = g[0];
+        if (g.size() >= 2) result[0] = g[1];
+    }
+
+    // Группа 1: РисункиИстина — значения начинаются с 2
+    int nextVal = 2;
+    if (groups.size() >= 2) {
+        for (int idx : parseGroup(groups[1]))
+            result[nextVal++] = idx;
+    }
+
+    // Группа 2: РисункиЛожь — значения продолжаются
+    if (groups.size() >= 3) {
+        for (int idx : parseGroup(groups[2]))
+            result[nextVal++] = idx;
+    }
+
     return result;
 }
 
@@ -157,13 +197,12 @@ void RModel::rebuildBackInfo()
             QMap<int,int> iconMap = parseEnpicNameref(rcol.getNameRef());
 
             QList<PictureItem> items;
-            for (auto it = iconMap.begin(); it != iconMap.end(); ++it)
-            {
-                items.append({
-                    "",
-                    it.value(),
-                    iconByQtitanIndex(it.value())
-                });
+            if (!iconMap.isEmpty()) {
+                int maxVal = iconMap.lastKey();
+                for (int v = 0; v <= maxVal; ++v) {
+                    QPixmap px = iconMap.contains(v) ? iconByQtitanIndex(iconMap[v]) : QPixmap();
+                    items.append({ "", iconMap.value(v, -1), px });
+                }
             }
             m_pictureEnums_.emplace(rcol.getIndex(), std::move(items));
         }
@@ -204,7 +243,7 @@ QVariant RModel::data(const QModelIndex &index, int role) const
         if (!prc->isDirectCode())
         {
             // Для ENPIC используем pluginIdx, для остальных — col
-            if (contains(m_pictureEnums_, pluginIdx))   // <-- было col
+            if (contains(m_pictureEnums_, pluginIdx))
             {
                 int value = item.toInt();
                 const auto& list = m_pictureEnums_.at(pluginIdx);
@@ -213,7 +252,6 @@ QVariant RModel::data(const QModelIndex &index, int role) const
             }
 
             if (contains(m_enum_,col) )
-                //if (contains(m_enum_.at(col),item.toInt()) )  // win not compile
                 return m_enum_.at(col).at(item.toInt());
 
             if (contains(mm_superenum_,col))
@@ -240,7 +278,7 @@ QVariant RModel::data(const QModelIndex &index, int role) const
             QVariantList result;
             for (const auto& p : m_pictureEnums_.at(pluginIdx))
             {
-                // Передаём QPixmap напрямую — именно это ожидает qtn_qvariant_to_pixmap
+                // qtn_qvariant_to_pixmap ожидает QPixmap
                 result << p.image;
             }
             return result;
