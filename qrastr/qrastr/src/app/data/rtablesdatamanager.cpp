@@ -65,10 +65,10 @@ RTablesDataManager::get(std::string tname, std::string Cols)
     auto endIter = mpTables.end();
     for(; iter != endIter; ) {
         if (iter->second.use_count() == 1) {
-            qDebug()<<"RTDM: delete table with use_count() = 1 -> " <<iter->first.c_str();
+            qInfo()<<"RTDM: delete table with use_count() = 1 -> " <<iter->first.c_str();
             iter = mpTables.erase(iter);
         } else {
-            qDebug()<<"RTDM: " << iter->first.c_str() <<" use_count() =  " <<iter->second.use_count();
+            qInfo()<<"RTDM: " << iter->first.c_str() <<" use_count() =  " <<iter->second.use_count();
             ++iter;
         }
     }
@@ -78,7 +78,7 @@ RTablesDataManager::get(std::string tname, std::string Cols)
         return it->second;
     }
 
-    qDebug()<<"RTDM: add Table" << tname.c_str();
+    qInfo()<<"RTDM: add Table" << tname.c_str();
     mpTables.insert(std::make_pair(tname, std::make_shared<QDataBlock>()));
     getDataBlock(tname,Cols,*mpTables.find(tname)->second);
 

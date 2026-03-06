@@ -34,8 +34,14 @@
         <file>images/UpdateTablesTI.png</file>
         <file>images/cx195.svg</file>
 		<file>images/grid/checkMark.png</file>
+		<file>images/grid/exclamationMark.png</file>
 		<file>images/grid/cross.png</file>
-		<file>images/grid/left.png</file>
-		<file>images/grid/right.png</file>
+		<file>images/grid/blueFlag.png</file>
+		<file>images/grid/leftBreaker.png</file>
+		<file>images/grid/rightBreaker.png</file>
+		<file>images/grid/redArrowLeft.png</file>
+		<file>images/grid/redArrowRight.png</file>
+		<file>images/grid/greenArrowLeft.png</file>
+		<file>images/grid/greenArrowRight.png</file>
     </qresource>
 </RCC>

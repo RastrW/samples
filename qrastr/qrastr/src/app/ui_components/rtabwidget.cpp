@@ -264,7 +264,7 @@ bool RtabWidget::eventFilter(QObject* obj, QEvent* event)
 
 void RtabWidget::closeEvent(QCloseEvent *event)
 {
-    qDebug() << "RtabWidget::closeEvent [" << m_UIForm.Name().c_str() << "]";
+    qInfo() << "RtabWidget::closeEvent [" << m_UIForm.Name().c_str() << "]";
 
     // Контроллер отключает Qt-соединения связанных форм
     m_linkedFormCtrl->disconnectAll();
@@ -393,7 +393,16 @@ void RtabWidget::applyColumnEditor(int colIndex)
         break;
     case RModel::ColumnEditorInfo::Type::ComboBoxPicture:
     {
-        column_qt->setEditorType(Qtitan::GridEditor::ComboBoxPicture);
+        // GridPictureComboBoxEditorRepository -- НЕВЕРНО, это редактор одной картинки
+        // Используем обычный ComboBox — он умеет иконки через ComboBoxRole
+        column_qt->setEditorType(GridEditor::ComboBox);
+        // Если нужна кастомная ширина под иконки:
+        auto* repo = static_cast<Qtitan::GridComboBoxEditorRepository*>(
+            column_qt->editorRepository());
+        repo->setComboBoxEditable(false);
+
+        qInfo() << "applyColumnEditor ENPIC col=" << colIndex
+                 << "picItems=" << info.picItems.size();
         break;
     }
     case RModel::ColumnEditorInfo::Type::None:
@@ -645,6 +654,6 @@ void RtabWidget::slot_itemPressed( CellClickEventArgs* _args)
 {
     int row = _args->cell().rowIndex();
     int col = _args->cell().columnIndex();
-    qDebug()<<"Pressed:" <<row<< ","<<col;
+    qInfo()<<"Pressed:" <<row<< ","<<col;
 }
 

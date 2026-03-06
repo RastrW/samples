@@ -47,7 +47,7 @@ public:
         double      minVal     = -1e6;
         double      maxVal     =  1e6;
 
-        struct PicItem { QIcon icon; QString label; };
+        struct PicItem { QPixmap image; QString label; };
         QList<PicItem> picItems;
     };
 
@@ -131,7 +131,7 @@ private:
     struct PictureItem {
         QString label;
         int     qtitanIconIndex; // индекс из nameref
-        QIcon   icon;            // кешированная иконка
+        QPixmap   image;
     };
     std::map<std::size_t, QList<PictureItem>> m_pictureEnums_;
 };

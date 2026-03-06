@@ -31,17 +31,31 @@ static QMap<int,int> parseEnpicNameref(const std::string& nameref)
     return result;
 }
 
-static QIcon iconByQtitanIndex(int idx)
+static QPixmap iconByQtitanIndex(int idx)
 {
-    // Временное соответствие для демонстрации
-    switch (idx % 4)
-    {
-    case 0: return QIcon(":/images/grid/checkMark.png");
-    case 1: return QIcon(":/images/grid/cross.png");
-    case 2: return QIcon(":/images/grid/left.png");
-    case 3: return QIcon(":/images/grid/right.png");
+    QString path;
+
+    switch (idx) {
+    case 0: path = ":/images/grid/checkMark.png"; break;
+    case 1: path = ":/images/grid/exclamationMark.png";     break;
+    case 2: path = ":/images/grid/cross.png";      break;
+    case 3: path = ":/images/grid/blueFlag.png";     break;
+    case 4: path = ":/images/grid/leftBreaker.png"; break;
+    case 5: path = ":/images/grid/rightBreaker.png";     break;
+    case 6: path = ":/images/grid/redArrowLeft.png";      break;
+    case 7: path = ":/images/grid/redArrowRight.png";     break;
+    case 8: path = ":/images/grid/greenArrowLeft.png";      break;
+    case 9: path = ":/images/grid/greenArrowRight.png";     break;
     }
-    return QIcon(":/images/grid/checkMark.png");
+
+    QPixmap px(path);
+
+    if (px.isNull())
+        qWarning() << "iconByQtitanIndex: pixmap is NULL for idx=" << idx;
+
+    px = px.scaled(16, 16, Qt::KeepAspectRatio, Qt::SmoothTransformation);
+
+    return px;
 }
 
 RModel::RModel(QObject *parent, QAstra* pqastra, RTablesDataManager* pRTDM)
@@ -61,7 +75,7 @@ bool RModel::populateDataFromRastr(){
         rebuildBackInfo();
     }
     catch (...) {
-        qDebug() << "ERROR! populateDataFromRastr: "
+        qCritical() << "ERROR! populateDataFromRastr: "
                  << (up_rdata ? up_rdata->t_name_.c_str() : "<null>");
         return false;
     }
@@ -139,29 +153,21 @@ void RModel::rebuildBackInfo()
             }
             mm_nameref_.emplace(rcol.getIndex(), std::move(map_string));
         }
-        if (rcol.getComPropTT() == enComPropTT::COM_PR_ENPIC)
-        {
-            qDebug() << "ENPIC col:" << rcol.getColName().c_str()
-            << "nameref:" << rcol.getNameRef().c_str();
-
+        if (rcol.getComPropTT() == enComPropTT::COM_PR_ENPIC){
             QMap<int,int> iconMap = parseEnpicNameref(rcol.getNameRef());
 
             QList<PictureItem> items;
             for (auto it = iconMap.begin(); it != iconMap.end(); ++it)
             {
                 items.append({
-                    QString::number(it.key()),
+                    "",
                     it.value(),
                     iconByQtitanIndex(it.value())
                 });
             }
             m_pictureEnums_.emplace(rcol.getIndex(), std::move(items));
-            for (const auto& [k, v] : m_pictureEnums_)
-                qInfo() << "  col=" << k << "items=" << v.size();
         }
     }
-
-    qInfo() << "rebuildBackInfo done. m_pictureEnums_ keys:";
 }
 
 QVariant RModel::data(const QModelIndex &index, int role) const
@@ -177,10 +183,9 @@ QVariant RModel::data(const QModelIndex &index, int role) const
     std::string item_str;
     QVariant condFormatColor;
 
-    RData::iterator iter_col = up_rdata->begin() + col;
-    RCol* prc =  &(*iter_col);
+    RCol* prc = &(*( up_rdata->begin() + col ));
+    const std::size_t pluginIdx = static_cast<std::size_t>(prc->getIndex());
 
-    //qInfo() << "[ENPIC] m_pictureEnums_ size=" << m_pictureEnums_.size();
     if (role == Qt::BackgroundRole )
     {
         ///@todo временная заливка ячейки (1,2) красным — удалить перед релизом
@@ -198,6 +203,15 @@ QVariant RModel::data(const QModelIndex &index, int role) const
 
         if (!prc->isDirectCode())
         {
+            // Для ENPIC используем pluginIdx, для остальных — col
+            if (contains(m_pictureEnums_, pluginIdx))   // <-- было col
+            {
+                int value = item.toInt();
+                const auto& list = m_pictureEnums_.at(pluginIdx);
+                if (value >= 0 && value < list.size())
+                    return list[value].label;
+            }
+
             if (contains(m_enum_,col) )
                 //if (contains(m_enum_.at(col),item.toInt()) )  // win not compile
                 return m_enum_.at(col).at(item.toInt());
@@ -205,42 +219,32 @@ QVariant RModel::data(const QModelIndex &index, int role) const
             if (contains(mm_superenum_,col))
                 if (contains(mm_superenum_.at(col),item.toInt()))
                     return mm_superenum_.at(col).at(item.toInt()).c_str();
-
-            if (contains(m_pictureEnums_, col))
-            {
-                int value = item.toInt();
-                const auto& list = m_pictureEnums_.at(col);
-                if (value >= 0 && value < list.size())
-                    return list[value].label;
-            }
         }
 
         return item;
     }
     else if (role == Qt::DecorationRole)
     {
-        if (contains(m_pictureEnums_, col))
+        if (contains(m_pictureEnums_, pluginIdx))
         {
             int value = std::visit(ToLong(), up_rdata->pnparray_->Get(row, col));
-            const auto& list = m_pictureEnums_.at(col);
+            const auto& list = m_pictureEnums_.at(pluginIdx);
             if (value >= 0 && value < list.size())
-                return list[value].icon;
+                return list[value].image;
         }
     }
     else if (role == Qtitan::ComboBoxRole)
     {
-        if (contains(m_pictureEnums_, col))
+        if (contains(m_pictureEnums_, pluginIdx))
         {
-            QVariantList list;
-            for (const auto& p : m_pictureEnums_.at(col))
+            QVariantList result;
+            for (const auto& p : m_pictureEnums_.at(pluginIdx))
             {
-                QVariantList item;
-                item << p.icon << p.label;
-                list << QVariant(item);
+                // Передаём QPixmap напрямую — именно это ожидает qtn_qvariant_to_pixmap
+                result << p.image;
             }
-            return list;
+            return result;
         }
-
         QStringList list;
         if (contains(m_enum_, col))
             list = m_enum_.at(col);
@@ -317,12 +321,18 @@ RModel::getColumnEditorInfo(int colIndex) const
         }
         break;
     case enComPropTT::COM_PR_ENPIC:
-        if (!col->isDirectCode()) {
+    {
+        // Ключ в m_pictureEnums_ — это plugin-индекс, не позиционный
+        const std::size_t pluginIdx = static_cast<std::size_t>(col->getIndex());
+        if (!col->isDirectCode() && m_pictureEnums_.count(pluginIdx)) {
             info.editorType = ColumnEditorInfo::Type::ComboBoxPicture;
+            for (const auto& p : m_pictureEnums_.at(pluginIdx))
+                info.picItems.append({ p.image, p.label });
         } else {
             info.editorType = ColumnEditorInfo::Type::Numeric;
         }
         break;
+    }
     default:
         break;
     }
@@ -376,7 +386,7 @@ bool RModel::setData(const QModelIndex& index, const QVariant& value, int role)
     {
         bool val = value.toBool();
         vd = val;
-        qDebug() << "set: " << tname.c_str() << "."
+        qInfo() << "set: " << tname.c_str() << "."
                  << colName.c_str() << "(" << row << ")=" << val;
         break;
     }
@@ -410,7 +420,7 @@ bool RModel::setData(const QModelIndex& index, const QVariant& value, int role)
             val = value.toInt();
 
         vd = val;
-        qDebug() << "set: " << tname.c_str() << "."
+        qInfo() << "set: " << tname.c_str() << "."
                  << colName.c_str() << "(" << row << ")=" << val;
         break;
     }
@@ -418,14 +428,14 @@ bool RModel::setData(const QModelIndex& index, const QVariant& value, int role)
     {
         std::string val = value.toString().toStdString();
         vd = val;
-        qDebug() << "set: " << tname.c_str() << "." << colName.c_str();
+        qInfo() << "set: " << tname.c_str() << "." << colName.c_str();
         break;
     }
     case RCol::_en_data::DATA_DBL:
     {
         double val = value.toDouble();
         vd = val;
-        qDebug() << "set: " << tname.c_str() << "."
+        qInfo() << "set: " << tname.c_str() << "."
                  << colName.c_str() << "(" << row << ")=" << val;
         break;
     }
