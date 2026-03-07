@@ -102,10 +102,7 @@ RModel::RModel(QObject *parent, QAstra* pqastra, RTablesDataManager* pRTDM)
     : QAbstractTableModel(parent)
     , pqastra_(pqastra)
     , pRTDM_(pRTDM)
-{
-    setEmitSignals(true);
-
-}
+{}
 
 bool RModel::populateDataFromRastr(){
 

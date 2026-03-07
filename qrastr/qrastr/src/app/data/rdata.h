@@ -2,7 +2,6 @@
 
 #include "rcol.h"
 
-typedef std::vector<std::string> _vstr;
 class CUIForm;
 class RTablesDataManager;
 class QDataBlock;

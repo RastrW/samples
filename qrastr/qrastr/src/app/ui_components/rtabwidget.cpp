@@ -520,29 +520,45 @@ void RtabWidget::slot_deleteRow()
 void RtabWidget::slot_beginResetModel(std::string tname)
 {
     if (m_UIForm.TableName() != tname) return;
+
     m_view->beginUpdate();
-    // Запоминаем видимость колонок
+
+    // Сохраняем видимость по имени колонки (не по caption — он может меняться)
     m_columnsVisible.clear();
-    for (int i = 0; i < m_view->getColumnCount(); ++i) {
-        auto* col = static_cast<Qtitan::GridTableColumn*>(m_view->getColumn(i));
-        m_columnsVisible[col->caption()] = col->isVisible();
+    for (const RCol& rcol : *m_model->getRdata()) {
+        auto* col = static_cast<Qtitan::GridTableColumn*>(
+            m_view->getColumn(rcol.getIndex()));
+        m_columnsVisible[QString::fromStdString(rcol.getColName())]
+            = col ? col->isVisible() : true;
     }
 }
 
 void RtabWidget::slot_endResetModel(std::string tname)
 {
     if (m_UIForm.TableName() != tname) return;
-    // Восстанавливаем видимость
+
+    // Восстанавливаем видимость и переназначаем редакторы.
+    // К этому моменту RModel::slot_EndResetModel уже вызвал
+    // populateDataFromRastr() — новые RData/RCol уже готовы.
     for (const RCol& rcol : *m_model->getRdata()) {
         auto* col = static_cast<Qtitan::GridTableColumn*>(
             m_view->getColumn(rcol.getIndex()));
         if (!col) continue;
-        col->setVisible(false);
-        auto it = m_columnsVisible.find(col->caption());
-        if (it != m_columnsVisible.end()){
-            col->setVisible(it->second);
-        }
+
+        // Восстанавливаем видимость
+        auto it = m_columnsVisible.find(
+            QString::fromStdString(rcol.getColName()));
+        col->setVisible(it != m_columnsVisible.end() ? it->second : true);
+
+        // Синхронизируем caption с обновлённым заголовком модели.
+        // Qtitan кеширует caption независимо от headerData() — нужно
+        // обновить вручную после сброса.
+        QVariant title = m_model->headerData(
+            rcol.getIndex(), Qt::Horizontal, Qt::DisplayRole);
+        if (title.isValid())
+            col->setCaption(title.toString());
     }
+
     m_view->endUpdate();
 }
 

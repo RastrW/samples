@@ -26,6 +26,8 @@ class RModel : public QAbstractTableModel
 signals:
     void editCompleted(const QString &);
 public slots:
+    ///@brief Уведомление:
+    /// плагин генерирует хинт → RTDM ловит → испускает сигнал → слот вызывает beginInsertRows / endInsertRows у Qt
     void slot_DataChanged(std::string _t_name, int row_from,int col_from ,int row_to,int col_to);
     //сброс модели
     void slot_BeginResetModel(std::string _t_name);
@@ -69,8 +71,6 @@ public:
     RCol* getRCol(int n_col) const;
     int getIndexCol(std::string _col);
     RData* getRdata();
-    inline bool emitSignals() const { return m_emitSignals; }
-    inline void setEmitSignals(bool b)  { m_emitSignals = b; }
 
     //"2.4 Setting up Headers for Columns and Rows"
     QVariant headerData(int section, Qt::Orientation orientation, int role) const override;
@@ -79,15 +79,19 @@ public:
     bool setData(const QModelIndex &index, const QVariant &value, int role = Qt::EditRole) override;
     Qt::ItemFlags flags(const QModelIndex &index) const override;
 
-    // Add data:
-    bool AddRow(std::size_t count = 1,const QModelIndex &parent = QModelIndex());
-    bool DuplicateRow(int row, const QModelIndex &parent = QModelIndex());
-    bool insertRows(int row, int count, const QModelIndex &parent = QModelIndex()) override;
-    bool insertColumns(int column, int count, const QModelIndex &parent = QModelIndex()) override;
-
-    // Remove data:
-    bool removeRows(int row, int count, const QModelIndex &parent = QModelIndex()) override;
-    bool removeColumns(int column, int count, const QModelIndex &parent = QModelIndex()) override;
+    ///@brief Запись: пользователь → вызов API плагина
+    bool AddRow(std::size_t count = 1,
+                const QModelIndex &parent = QModelIndex());
+    bool DuplicateRow(int row,
+                      const QModelIndex &parent = QModelIndex());
+    bool insertRows(int row, int count,
+                    const QModelIndex &parent = QModelIndex()) override;
+    bool insertColumns(int column, int count,
+                       const QModelIndex &parent = QModelIndex()) override;
+    bool removeRows(int row, int count,
+                    const QModelIndex &parent = QModelIndex()) override;
+    bool removeColumns(int column, int count,
+                       const QModelIndex &parent = QModelIndex()) override;
 
     // Conditional formats are of two kinds: regular conditional formats (including condition-free formats applying to any value in the
     // column) and formats applying to a particular row-id and which have always precedence over the first kind and whose filter apply
@@ -97,7 +101,6 @@ public:
 
     ColumnEditorInfo getColumnEditorInfo(int colIndex) const;
 private:
-    bool m_emitSignals;
     /// @brief Пересоздаёт RData: читает структуру колонок из плагина.
     void rebuildStructure();
     /// @brief Перестраивает справочники.
@@ -127,7 +130,6 @@ private:
     std::map<std::size_t, std::map<std::size_t, std::string>> mm_nameref_;
     // код -> отображаемое имя: ex. ti_prv.Name.Num
     std::map<std::size_t, std::map<std::size_t, std::string>> mm_superenum_;
-
     struct PictureItem {
         QString label;
         int     qtitanIconIndex; // индекс из nameref
