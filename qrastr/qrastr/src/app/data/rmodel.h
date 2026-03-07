@@ -26,7 +26,7 @@ class RModel : public QAbstractTableModel
 signals:
     void editCompleted(const QString &);
 public slots:
-    ///@brief Уведомление:
+    ///@brief Уведомление от RTDM:
     /// плагин генерирует хинт → RTDM ловит → испускает сигнал → слот вызывает beginInsertRows / endInsertRows у Qt
     void slot_DataChanged(std::string _t_name, int row_from,int col_from ,int row_to,int col_to);
     //сброс модели
@@ -54,8 +54,7 @@ public:
     };
 
     RModel(QObject *parent, QAstra* pqastra,RTablesDataManager* pRTDM);
-    int rowCount(const QModelIndex &parent = QModelIndex()) const override;
-    int columnCount(const QModelIndex &parent = QModelIndex()) const override;
+
     QVariant data(const QModelIndex &index, int role = Qt::DisplayRole) const override;
     void setForm( CUIForm* _pUIForm) { pUIForm_ = _pUIForm; };
     /** @brief
@@ -67,7 +66,7 @@ public:
      * SUPERENUM и NAMEREF-ссылок.
      */
     bool populateDataFromRastr();
-    std::vector<std::tuple<int,int>>  ColumnsWidth ();
+    std::vector<std::tuple<int,int>>  columnsWidth ();
     RCol* getRCol(int n_col) const;
     int getIndexCol(std::string _col);
     RData* getRdata();
@@ -78,11 +77,13 @@ public:
     //"2.5 The Minimal Editing Example"
     bool setData(const QModelIndex &index, const QVariant &value, int role = Qt::EditRole) override;
     Qt::ItemFlags flags(const QModelIndex &index) const override;
-
+    //  QAbstractTableModel: размеры
+    int rowCount(const QModelIndex &parent = QModelIndex()) const override;
+    int columnCount(const QModelIndex &parent = QModelIndex()) const override;
     ///@brief Запись: пользователь → вызов API плагина
-    bool AddRow(std::size_t count = 1,
+    bool addRow(std::size_t count = 1,
                 const QModelIndex &parent = QModelIndex());
-    bool DuplicateRow(int row,
+    bool duplicateRow(int row,
                       const QModelIndex &parent = QModelIndex());
     bool insertRows(int row, int count,
                     const QModelIndex &parent = QModelIndex()) override;
@@ -101,6 +102,8 @@ public:
 
     ColumnEditorInfo getColumnEditorInfo(int colIndex) const;
 private:
+
+    //  Инициализация модели
     /// @brief Пересоздаёт RData: читает структуру колонок из плагина.
     void rebuildStructure();
     /// @brief Перестраивает справочники.
@@ -112,6 +115,8 @@ private:
     QVariant getMatchingCondFormat(std::size_t row, std::size_t column, const QString& value, int role) const;
     QVariant getMatchingCondFormat(const std::map<std::size_t, std::vector<CondFormat>>& mCondFormats,
                                    std::size_t row, std::size_t column, const QString& value, int role) const;
+    QMap<int,int> parseEnpicNameref(const std::string& nameref) const;
+    QPixmap iconByQtitanIndex(int idx) const;
 
     QAstra* pqastra_;
     RTablesDataManager* pRTDM_;

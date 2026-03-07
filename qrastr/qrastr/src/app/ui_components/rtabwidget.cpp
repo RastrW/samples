@@ -74,6 +74,8 @@ RtabWidget::RtabWidget(QAstra* pqastra,CUIForm UIForm, RTablesDataManager* pRTDM
     m_view->options().setFocusFrameEnabled(true);
     // Sets the visibility status of the grid grouping panel to groupsHeader.
     m_view->options().setGroupsHeader(false);
+    // ScrollByPixel значительно быстрее ScrollByItem при большом числе строк:
+    // не требует пересчёта высот всех строк при каждом шаге скроллинга.
     m_view->options().setScrollRowStyle(Qtitan::ScrollItemStyle::ScrollByItem);
     // Enables or disables wait cursor if grid is busy for lengthy operations with data like sorting or grouping.
     m_view->options().setShowWaitCursor(true);
@@ -343,10 +345,8 @@ void RtabWidget::createModel()
 
 void RtabWidget::applyAllColumnEditors()
 {
-    m_view->beginUpdate();
     for (int i = 0; i < m_model->columnCount(); ++i)
         applyColumnEditor(i);
-    m_view->endUpdate();
 }
 
 void RtabWidget::applyColumnEditor(int colIndex)
@@ -423,39 +423,28 @@ void RtabWidget::on_calc_end()
    // view->endUpdate();
 }
 
-void RtabWidget::setTableView(QTableView& tv, RModel& mm, int multiplier  )
+void RtabWidget::setTableView(int multiplier  )
 {
-    // Ширина колонок
     m_view->beginUpdate();
-    for (auto cw : mm.ColumnsWidth()){
-        tv.setColumnWidth(std::get<0>(cw),std::get<1>(cw)*multiplier);
+    m_view->tableOptions().setColumnAutoWidth(false);
+    // Выравнивание
+    for (auto [idx, width] : m_model->columnsWidth()) {
+        m_view->getColumn(idx)->setWidth(width * multiplier);
+        m_view->getColumn(idx)->setTextAlignment(Qt::AlignLeft);
     }
     m_view->endUpdate();
 }
 
-void RtabWidget::setTableView(Qtitan::GridTableView& tv, RModel& mm, int multiplier  )
-{
-    tv.beginUpdate();
-    m_view->tableOptions().setColumnAutoWidth(false);
-    // Выравнивание
-    for (auto cw : mm.ColumnsWidth())
-    {
-        tv.getColumn(std::get<0>(cw))->setWidth(std::get<1>(cw)*multiplier);
-        tv.getColumn(std::get<0>(cw))->setTextAlignment(Qt::AlignLeft);
-    }
-    tv.endUpdate();
-}
-
 void RtabWidget::slot_contextMenu(ContextMenuEventArgs* args)
 {
-    QElapsedTimer stepTimer;
-    stepTimer.start();
+    //QElapsedTimer stepTimer;
+    //stepTimer.start();
 
     args->setHandled(true);
 
-    qInfo() << "[slot_contextMenu] Step 0 setHandled:"
-            << stepTimer.elapsed() << "ms";
-    stepTimer.restart();
+    //qInfo() << "[slot_contextMenu] Step 0 setHandled:"
+    //        << stepTimer.elapsed() << "ms";
+    //stepTimer.restart();
 
     const int column = args->hitInfo().columnIndex();
     const int row    = args->hitInfo().row().rowIndex();
@@ -464,15 +453,8 @@ void RtabWidget::slot_contextMenu(ContextMenuEventArgs* args)
     RCol* col = m_model->getRCol(column);
     if (!col) return;
 
-    qInfo() << "[slot_contextMenu] Step 1 (checks):"
-            << stepTimer.elapsed() << "ms";
-    stepTimer.restart();
-
     MenuContext ctx { column, row, col };
     QMenu* menu = m_menuBuilder->prepareForShow(ctx);
-
-    qInfo() << "[slot_contextMenu] Step 2 (menu->exec):"
-            << stepTimer.elapsed() << "ms";
 
     menu->exec(QCursor::pos());
 }
@@ -486,7 +468,7 @@ void RtabWidget::slot_focusRowChanged(int /*row_old*/, int row_new)
 void RtabWidget::slot_addRow()
 {
     m_view->beginUpdate();
-    m_model->AddRow();
+    m_model->addRow();
     m_view->endUpdate();
 }
 
@@ -504,7 +486,7 @@ void RtabWidget::slot_duplicateRow()
     int row = m_view->selection()->cell().rowIndex();
 
     m_view->beginUpdate();
-    m_model->DuplicateRow(row);
+    m_model->duplicateRow(row);
     m_view->endUpdate();
 }
 
@@ -572,9 +554,7 @@ void RtabWidget::slot_groupCorrection()
     formgroupcorrection* fgc =  new formgroupcorrection(m_model->getRdata(),prcol,this);
     fgc->setAttribute(Qt::WA_DeleteOnClose);
 
-    this->on_calc_begin();
     fgc->show();
-    this->on_calc_end();
 }
 
 void RtabWidget::slot_openColProp(int col)
@@ -628,12 +608,12 @@ void RtabWidget::slot_directCodeToggle(std::size_t column)
 
 void RtabWidget::slot_condFormatsEdit(std::size_t column)
 {
-    m_condFormatCtrl->editCondFormats(static_cast<std::size_t>(column));
+    m_condFormatCtrl->editCondFormats(column);
 }
 
 void RtabWidget::slot_widthByTemplate(){
-    if (m_view != nullptr && m_view != nullptr){
-       setTableView(*m_view,*m_model);
+    if (m_view != nullptr && m_model != nullptr){
+       setTableView();
     }
 }
 

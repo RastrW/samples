@@ -83,9 +83,7 @@ private slots:
     void applyAllColumnEditors ();
     void applyColumnEditor(int colIndex);
 private:
-    void setTableView(QTableView& tv, RModel& mm, int multiplier = 10);
-    void setTableView(Qtitan::GridTableView& tv, RModel& mm,
-                      int multiplier = 10 );
+    void setTableView(int multiplier = 10 );
     /// Блокирует горячие клавиши заданные по умолчанию в Qtitan
     bool eventFilter(QObject* obj, QEvent* event) override;
     /** @brief

@@ -13,7 +13,7 @@
 #include "rtablesdatamanager.h"
 #include "QDataBlocks.h"
 
-static QMap<int,int> parseEnpicNameref(const std::string& nameref)
+QMap<int,int> RModel::parseEnpicNameref(const std::string& nameref) const
 {
     QMap<int,int> result;
     QString s = QString::fromStdString(nameref).trimmed();
@@ -71,7 +71,7 @@ static QMap<int,int> parseEnpicNameref(const std::string& nameref)
     return result;
 }
 
-static QPixmap iconByQtitanIndex(int idx)
+QPixmap RModel::iconByQtitanIndex(int idx) const
 {
     QString path;
 
@@ -139,18 +139,19 @@ void RModel::rebuildBackInfo()
     for (RCol& rcol : *up_rdata)
     {
         rcol.setNameRef(rcol.getNameRef());
-
-        if (rcol.getComPropTT() == enComPropTT::COM_PR_ENUM){ // ex: Нет|Квадр.|Лин.|Комбинир.
+        const size_t idx = static_cast<size_t>(rcol.getIndex());
+        // ── ENUM: "Нет|Квадр.|Лин.|Комбинир." ────────────────────────────
+        if (rcol.getComPropTT() == enComPropTT::COM_PR_ENUM){
             QStringList list;
             for (const auto& val : split(rcol.getNameRef(), '|')) {
                 list.append(QString::fromStdString(val));
             }
-            m_enum_.emplace(rcol.getIndex(), std::move(list));
+            m_enum_.emplace(idx, std::move(list));
         }
-        if (rcol.getComPropTT() == enComPropTT::COM_PR_SUPERENUM && !rcol.getNameRef().empty()){ // ex: ti_prv.Name.Num
+        // ── SUPERENUM: "ti_prv.Name.Num" ─────────────────────────────────
+        if (rcol.getComPropTT() == enComPropTT::COM_PR_SUPERENUM && !rcol.getNameRef().empty()){
             std::vector<std::string> parts {split(rcol.getNameRef(), '.')};
-            if (parts.size() > 2)
-            {
+            if (parts.size() > 2){
                 long indx1 = pRTDM_->column_index(parts[0], parts[1]);
                 long indx2 = pRTDM_->column_index(parts[0], parts[2]);
                 if (indx1 > -1 && indx2 > -1)
@@ -164,31 +165,37 @@ void RModel::rebuildBackInfo()
                         std::string val = std::visit(ToString(), QDB.Get(i, 1));
                         map_string.emplace(key, val);
                     }
-                    mm_superenum_.emplace(rcol.getIndex(), std::move(map_string));
+                    mm_superenum_.emplace(idx, std::move(map_string));
                 }
             }
         }
-        if (rcol.getComPropTT() == enComPropTT::COM_PR_INT && !rcol.getNameRef().empty()) // ex: node[na]
-        {
-            size_t nopen  = rcol.getNameRef().find('[');
-            size_t nclose = rcol.getNameRef().find(']');
-            std::string table = rcol.getNameRef().substr(0, nopen);
-            std::string col   = rcol.getNameRef().substr(nopen + 1, nclose - nopen - 1);
+        // ── NAMEREF: "node[na]" ───────────────────────────────────────────
+        if (rcol.getComPropTT() == enComPropTT::COM_PR_INT && !rcol.getNameRef().empty()){
+                const auto& ref = rcol.getNameRef();
+                size_t nopen  = ref.find('[');
+                size_t nclose = ref.find(']');
+                if (nopen == std::string::npos || nclose == std::string::npos)
+                    continue;
 
-            long nameIndx = pRTDM_->column_index(table, "name");
-            std::string cols = col + "," + (nameIndx > -1 ? std::string("name") : col);
+                std::string table = ref.substr(0, nopen);
+                std::string col   = ref.substr(nopen + 1, nclose - nopen - 1);
 
-            QDataBlock QDB;
-            pRTDM_->getDataBlock(table, cols, QDB);
+                long nameIndx = pRTDM_->column_index(table, "name");
+                std::string cols = col + "," +
+                                   (nameIndx > -1 ? std::string("name") : col);
 
-            std::map<size_t, std::string> map_string;
-            map_string.emplace(0, "не задано");
-            for (int i = 0; i < QDB.RowsCount(); ++i) {
-                long        key = std::visit(ToLong(),   QDB.Get(i, 0));
-                std::string val = std::visit(ToString(), QDB.Get(i, 1));
-                map_string.emplace(key, val);
-            }
-            mm_nameref_.emplace(rcol.getIndex(), std::move(map_string));
+                QDataBlock qdb;
+                pRTDM_->getDataBlock(table, cols, qdb);
+
+                std::map<size_t, std::string> map;
+                map.emplace(0, "не задано");
+                for (int i = 0; i < qdb.RowsCount(); ++i) {
+                    size_t      key = static_cast<size_t>(
+                        std::visit(ToLong(), qdb.Get(i, 0)));
+                    std::string val = std::visit(ToString(), qdb.Get(i, 1));
+                    map.emplace(key, std::move(val));
+                }
+                mm_nameref_.emplace(idx, std::move(map));
         }
         if (rcol.getComPropTT() == enComPropTT::COM_PR_ENPIC){
             QMap<int,int> iconMap = parseEnpicNameref(rcol.getNameRef());
@@ -268,8 +275,7 @@ QVariant RModel::data(const QModelIndex &index, int role) const
                 return list[value].image;
         }
     }
-    else if (role == Qtitan::ComboBoxRole)
-    {
+    else if (role == Qtitan::ComboBoxRole){
         if (contains(m_pictureEnums_, pluginIdx))
         {
             QVariantList result;
@@ -281,13 +287,13 @@ QVariant RModel::data(const QModelIndex &index, int role) const
             return result;
         }
         QStringList list;
-        if (contains(m_enum_, col))
-            list = m_enum_.at(col);
-        if (contains(mm_nameref_, col))
-            for (const auto& [k, v] : mm_nameref_.at(col))
+        if (auto it = m_enum_.find(col); it != m_enum_.end())
+            list = it->second;
+        if (auto it = mm_nameref_.find(col); it != mm_nameref_.end())
+            for (const auto& [k, v] : it->second)
                 list.append(QString::fromStdString(v));
-        if (contains(mm_superenum_, col))
-            for (const auto& [k, v] : mm_superenum_.at(col))
+        if (auto it = mm_superenum_.find(col); it != mm_superenum_.end())
+            for (const auto& [k, v] : it->second)
                 list.append(QString::fromStdString(v));
         return list;
     }
@@ -385,7 +391,6 @@ int RModel::columnCount(const QModelIndex & /*parent*/) const{
 QVariant RModel::headerData(int section, Qt::Orientation orientation, int role) const
 {
     if (role == Qt::DisplayRole && orientation == Qt::Horizontal) {
-        std::string title = up_rdata.get()->at(section).getTitle().c_str();
         return up_rdata.get()->at(section).getTitle().c_str();
     }
     if (role == Qt::DisplayRole && orientation == Qt::Vertical) {
@@ -415,63 +420,56 @@ bool RModel::setData(const QModelIndex& index, const QVariant& value, int role)
 
     FieldVariantData vd;   // разрешённое значение для передачи в плагин
 
-    switch (iter_col->getEnData())
-    {
-    case RCol::_en_data::DATA_BOOL:
-    {
-        bool val = value.toBool();
-        vd = val;
-        qInfo() << "set: " << tname.c_str() << "."
-                 << colName.c_str() << "(" << row << ")=" << val;
+    switch (iter_col->getEnData()){
+    case RCol::_en_data::DATA_BOOL:{
+        vd = value.toBool();
         break;
     }
-    case RCol::_en_data::DATA_INT:
-    {
+    case RCol::DATA_INT:{
         long val = 0;
+        const size_t idx = static_cast<size_t>(col);
+
         if (!iter_col->isDirectCode())
         {
-            if (contains(m_enum_, col)) // ENUM
-            {
+            auto itEnum = m_enum_.find(idx);
+            if (itEnum != m_enum_.end()) {
+                // ENUM: ищем позицию строки в списке
                 int i = 0;
-                for (const auto& mval : m_enum_.at(col)) {
-                    if (mval == value) { val = i; break; }
+                for (const auto& s : itEnum->second) {
+                    if (s == value) { val = i; break; }
                     ++i;
                 }
             }
-            else if (contains(mm_superenum_, col)) // SUPER_ENUM
+            else if (auto itSuper = mm_superenum_.find(idx);
+                     itSuper != mm_superenum_.end())
             {
-                for (const auto& [mkey, mval] : mm_superenum_.at(col))
-                    if (mval == value.toString().toStdString()) { val = mkey; break; }
+                // SUPERENUM: ищем ключ по строковому значению
+                for (const auto& [k, v] : itSuper->second)
+                    if (v == value.toString().toStdString()) { val = static_cast<long>(k); break; }
             }
-            else if (contains(mm_nameref_, col)) // RefCol: node[na]
+            else if (auto itRef = mm_nameref_.find(idx);
+                     itRef != mm_nameref_.end())
             {
-                for (const auto& [mkey, mval] : mm_nameref_.at(col))
-                    if (mval == value.toString().toStdString()) { val = mkey; break; }
+                // NAMEREF: аналогично
+                for (const auto& [k, v] : itRef->second)
+                    if (v == value.toString().toStdString()) { val = static_cast<long>(k); break; }
             }
-            else
+            else {
                 val = value.toInt();
+            }
         }
-        else
+        else {
             val = value.toInt();
-
+        }
         vd = val;
-        qInfo() << "set: " << tname.c_str() << "."
-                 << colName.c_str() << "(" << row << ")=" << val;
         break;
     }
-    case RCol::_en_data::DATA_STR:
-    {
-        std::string val = value.toString().toStdString();
-        vd = val;
-        qInfo() << "set: " << tname.c_str() << "." << colName.c_str();
+    case RCol::_en_data::DATA_STR:{
+        vd = value.toString().toStdString();
         break;
     }
-    case RCol::_en_data::DATA_DBL:
-    {
-        double val = value.toDouble();
-        vd = val;
-        qInfo() << "set: " << tname.c_str() << "."
-                 << colName.c_str() << "(" << row << ")=" << val;
+    case RCol::_en_data::DATA_DBL:{
+        vd = value.toDouble();
         break;
     }
     default:
@@ -485,7 +483,7 @@ bool RModel::setData(const QModelIndex& index, const QVariant& value, int role)
     return true;
 }
 
-bool RModel::AddRow(size_t count ,const QModelIndex &parent)
+bool RModel::addRow(size_t count ,const QModelIndex &parent)
 {
     IRastrTablesPtr tablesx{ this->pqastra_->getRastr()->Tables() };
     IRastrTablePtr table{ tablesx->Item(getRdata()->t_name_) };
@@ -496,8 +494,8 @@ bool RModel::AddRow(size_t count ,const QModelIndex &parent)
     return true;
 }
 
-bool RModel::insertRows(int row, int count, const QModelIndex &parent)
-{
+bool RModel::insertRows(int row, int count, const QModelIndex &parent){
+
     IRastrTablesPtr tablesx{ this->pqastra_->getRastr()->Tables() };
     IRastrTablePtr table{ tablesx->Item(getRdata()->t_name_) };
     for (size_t i = 0 ; i < count ; i++ ){
@@ -507,14 +505,14 @@ bool RModel::insertRows(int row, int count, const QModelIndex &parent)
     return true;
 }
 
-bool RModel::DuplicateRow(int row, const QModelIndex &parent)
-{
+bool RModel::duplicateRow(int row, const QModelIndex &parent){
+
     IRastrTablesPtr tablesx{ this->pqastra_->getRastr()->Tables() };
     IRastrTablePtr table{ tablesx->Item(getRdata()->t_name_) };
 
     IRastrResultVerify{table->DuplicateRow(row)};
 
-    //Дублируем данные в клиенте
+    //Дублируем данные в клиенте (иначе дублированная строка будет пустой)
     up_rdata->pnparray_->DuplicateRow(row);
 
     return true;
@@ -699,7 +697,7 @@ QVariant RModel::getMatchingCondFormat(size_t row, size_t column, const QString&
 }
 
 std::vector<std::tuple<int,int>>
-RModel::ColumnsWidth(){
+RModel::columnsWidth(){
     std::vector<std::tuple<int,int>> cw;
     if (!up_rdata) return cw;
     int i = 0;
