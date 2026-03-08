@@ -1,14 +1,15 @@
 #pragma once
 
 #include <QAbstractTableModel>
-#include <QIcon>
+#include "backInfoCache.h"
+#include "condFormatStorage.h"
 
 class QAstra;
 class RTablesDataManager;
-class CondFormat;
-class RData;
 class CUIForm;
+class RData;
 class RCol;
+class CondFormat;
 
 struct ToQVariant {
     QVariant operator()(std::monostate) { return { QVariant() }; }
@@ -23,23 +24,23 @@ struct ToQVariant {
 class RModel : public QAbstractTableModel
 {
     Q_OBJECT
+
 signals:
-    void editCompleted(const QString &);
+    void editCompleted(const QString&);
+
 public slots:
     ///@brief Уведомление от RTDM:
     /// плагин генерирует хинт → RTDM ловит → испускает сигнал → слот вызывает beginInsertRows / endInsertRows у Qt
-    void slot_DataChanged(std::string _t_name, int row_from,int col_from ,int row_to,int col_to);
-    //сброс модели
-    void slot_BeginResetModel(std::string _t_name);
-    ///@todo Нужна ли загрузка справочных данных rebuildBackInfo() при сбросе модели?
-    void slot_EndResetModel(std::string _t_name);
-    //вставка строки
-    void slot_BeginInsertRow(std::string _t_name,int first, int last);
-    void slot_EndInsertRow(std::string _t_name);
-    //удаление строки
-    void slot_BeginRemoveRows(std::string tname, int first, int last);
-    void slot_EndRemoveRows(std::string tname);
+    void slot_DataChanged(std::string tName, int rowFrom, int colFrom, int rowTo, int colTo);
+    void slot_BeginResetModel(std::string tName);
+    void slot_EndResetModel(std::string tName);
+    void slot_BeginInsertRow(std::string tName, int first, int last);
+    void slot_EndInsertRow(std::string tName);
+    void slot_BeginRemoveRows(std::string tName, int first, int last);
+    void slot_EndRemoveRows(std::string tName);
+
 public:
+    // Описание редактора для конкретной колонки — используется делегатом.
     struct ColumnEditorInfo {
         enum class Type { None, Numeric, CheckBox, ComboBox, ComboBoxPicture };
 
@@ -53,92 +54,63 @@ public:
         QList<PicItem> picItems;
     };
 
-    RModel(QObject *parent, QAstra* pqastra,RTablesDataManager* pRTDM);
+    explicit RModel(QObject* parent, QAstra* pqastra, RTablesDataManager* pRTDM);
 
-    QVariant data(const QModelIndex &index, int role = Qt::DisplayRole) const override;
-    void setForm( CUIForm* _pUIForm) { pUIForm_ = _pUIForm; };
+    void setForm(CUIForm* pUIForm) { m_UIform = pUIForm; }
+
     /** @brief
      * Перестроение структуры данных модели.
      * Вызывается:
      *   1. При первом открытии формы (из RtabWidget::CreateModel).
      *   2. При slot_EndResetModel — после полного сброса таблицы.
-     *   обращается к плагину для каждой колонки, читает DataBlock для
-     * SUPERENUM и NAMEREF-ссылок.
-     */
+     *   обращается к плагину для каждой колонки, читает DataBlock для BackInfoCache
+    */
     bool populateDataFromRastr();
-    std::vector<std::tuple<int,int>>  columnsWidth ();
-    RCol* getRCol(int n_col) const;
-    int getIndexCol(std::string _col);
+
+    // ── QAbstractTableModel interface ────────────────────────────────────────
+    int      rowCount   (const QModelIndex& parent = {}) const override;
+    int      columnCount(const QModelIndex& parent = {}) const override;
+    QVariant data       (const QModelIndex& index, int role = Qt::DisplayRole) const override;
+    QVariant headerData (int section, Qt::Orientation orientation, int role)   const override;
+    bool     setData    (const QModelIndex& index, const QVariant& value, int role = Qt::EditRole) override;
+    Qt::ItemFlags flags (const QModelIndex& index) const override;
+    ///@brief Запись: пользователь → вызов API плагина
+    // ── Строки / колонки ─────────────────────────────────────────────────────
+    bool addRow      (size_t count = 1,  const QModelIndex& parent = {});
+    bool duplicateRow(int row,           const QModelIndex& parent = {});
+    bool insertRows  (int row,   int count, const QModelIndex& parent = {}) override;
+    bool insertColumns(int col,  int count, const QModelIndex& parent = {}) override;
+    bool removeRows  (int row,   int count, const QModelIndex& parent = {}) override;
+    bool removeColumns(int col,  int count, const QModelIndex& parent = {}) override;
+
+    // ── Условное форматирование ──────────────────────────────────────────────
+    void addCondFormat (bool isRowIdFormat, size_t column, const CondFormat& condFormat);
+    void setCondFormats(bool isRowIdFormat, size_t column, const std::vector<CondFormat>& condFormats);
+
+    // ── Утилиты ──────────────────────────────────────────────────────────────
+    ColumnEditorInfo            getColumnEditorInfo(int colIndex) const;
+    std::vector<std::tuple<int,int>> columnsWidth() const;
+    RCol*  getRCol    (int col) const;
+    int    getIndexCol(std::string col) const;
     RData* getRdata();
 
-    //"2.4 Setting up Headers for Columns and Rows"
-    QVariant headerData(int section, Qt::Orientation orientation, int role) const override;
-
-    //"2.5 The Minimal Editing Example"
-    bool setData(const QModelIndex &index, const QVariant &value, int role = Qt::EditRole) override;
-    Qt::ItemFlags flags(const QModelIndex &index) const override;
-    //  QAbstractTableModel: размеры
-    int rowCount(const QModelIndex &parent = QModelIndex()) const override;
-    int columnCount(const QModelIndex &parent = QModelIndex()) const override;
-    ///@brief Запись: пользователь → вызов API плагина
-    bool addRow(std::size_t count = 1,
-                const QModelIndex &parent = QModelIndex());
-    bool duplicateRow(int row,
-                      const QModelIndex &parent = QModelIndex());
-    bool insertRows(int row, int count,
-                    const QModelIndex &parent = QModelIndex()) override;
-    bool insertColumns(int column, int count,
-                       const QModelIndex &parent = QModelIndex()) override;
-    bool removeRows(int row, int count,
-                    const QModelIndex &parent = QModelIndex()) override;
-    bool removeColumns(int column, int count,
-                       const QModelIndex &parent = QModelIndex()) override;
-
-    // Conditional formats are of two kinds: regular conditional formats (including condition-free formats applying to any value in the
-    // column) and formats applying to a particular row-id and which have always precedence over the first kind and whose filter apply
-    // to the row-id column.
-    void addCondFormat(const bool isRowIdFormat, std::size_t column, const CondFormat& condFormat);
-    void setCondFormats(const bool isRowIdFormat, std::size_t column, const std::vector<CondFormat>& condFormats);
-
-    ColumnEditorInfo getColumnEditorInfo(int colIndex) const;
 private:
+    // ── Условное форматирование (приватная логика) ────────────────────────────
+    // Нужен доступ к up_rdata для подстановки значений → остаётся в RModel.
+    QVariant getMatchingCondFormat(size_t row, size_t col,
+                                   const QString& value, int role) const;
+    QVariant getMatchingCondFormat(const std::map<size_t, std::vector<CondFormat>>& formats,
+                                   size_t row, size_t col,
+                                   const QString& value, int role) const;
 
-    //  Инициализация модели
-    /// @brief Пересоздаёт RData: читает структуру колонок из плагина.
-    void rebuildStructure();
-    /// @brief Перестраивает справочники.
-    void rebuildBackInfo();
-    /// @brief Обновляет только указатель на QDataBlock через RTDM.
-    void reloadData();
-    // Return matching conditional format color/font or invalid value, otherwise.
-    // Only format roles are expected in role (Qt::ItemDataRole)
-    QVariant getMatchingCondFormat(std::size_t row, std::size_t column, const QString& value, int role) const;
-    QVariant getMatchingCondFormat(const std::map<std::size_t, std::vector<CondFormat>>& mCondFormats,
-                                   std::size_t row, std::size_t column, const QString& value, int role) const;
-    QMap<int,int> parseEnpicNameref(const std::string& nameref) const;
-    QPixmap iconByQtitanIndex(int idx) const;
+    // ── Данные ───────────────────────────────────────────────────────────────
+    QAstra*             m_qastra;
+    RTablesDataManager* m_rtdm;
+    CUIForm*            m_UIform {nullptr};
 
-    QAstra* pqastra_;
-    RTablesDataManager* pRTDM_;
-    std::unique_ptr<RData> up_rdata;
-    CUIForm* pUIForm_;
-    /// @note Условное форматирование:
-    /// 1. Правила форматирования по значению ячейки
-    std::map<std::size_t, std::vector<CondFormat>> m_mRowIdFormats;
-    /// 2. Правила по идентификатору строки
-    std::map<std::size_t, std::vector<CondFormat>> m_mCondFormats;
+    std::unique_ptr<RData> m_rdata;
 
-    //Справочные данные:
-    //индекс -> список строк: ex. БАЗА|Ген|Нагр|Ген+
-    std::map<std::size_t,QStringList> m_enum_;
-    //колонки со ссылкой: код -> отображаемое имя: ex.RefCol -> node[na]
-    std::map<std::size_t, std::map<std::size_t, std::string>> mm_nameref_;
-    // код -> отображаемое имя: ex. ti_prv.Name.Num
-    std::map<std::size_t, std::map<std::size_t, std::string>> mm_superenum_;
-    struct PictureItem {
-        QString label;
-        int     qtitanIconIndex; // индекс из nameref
-        QPixmap   image;
-    };
-    std::map<std::size_t, QList<PictureItem>> m_pictureEnums_;
+    BackInfoCache    m_cache;      // справочники ENUM / NAMEREF / SUPERENUM / ENPIC
+    CondFormatStorage m_condFmt;   // условные форматы
 };
+
