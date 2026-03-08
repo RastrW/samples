@@ -31,11 +31,6 @@ void  RTablesDataManager::onRastrHint(const _hint_data& hint_data)
     long row = hint_data.n_indx;
     std::string cname = hint_data.str_column;
     std::string tname = hint_data.str_table;
-    qInfo() << "RTDM hint:"
-             << static_cast<int>(hint_data.hint)
-             << "table:" << tname.c_str()
-             << "col:"   << cname.c_str()
-             << "row:"   << row;
 
     switch (hint_data.hint)
     {
@@ -227,7 +222,12 @@ void RTablesDataManager::handleChangeAll()
     /// @note сигналы (sig_BeginResetModel/sig_EndResetModel) могут изменять mpTables,
     /// поэтому только копирование сначала собираем список ключей:
     std::vector<std::string> keys;
-    for (auto& [k, v] : mpTables) keys.push_back(k);
+    for (auto& [k, v] : mpTables){
+        //только живые таблицы
+        if (v.use_count() > 1){
+            keys.push_back(k);
+        }
+    }
     // Сбрасываем и перечитываем каждый кешированный блок.
     for (const auto& tname : keys) {
         auto it = mpTables.find(tname);
@@ -266,38 +266,33 @@ void RTablesDataManager::handleChangeColumn(const std::string& tname,
     const long colIdx = getColIndex(tname, cname);
     if (colIdx < 0) return;
 
-    const long nRows = static_cast<long>(pqdb->RowsCount());
-    for (long row = 0; row < nRows; ++row){
-        pqdb->Set(row, colIdx, m_pqastra->GetVal(tname, cname, row));
-    }
+    // Один вызов вместо N — плагин сам копирует колонку блоком
+    QDataBlock colBlock;
+    getDataBlock(tname, cname, colBlock);
 
+    const long nRows = static_cast<long>(pqdb->RowsCount());
+    for (long row = 0; row < nRows; ++row)
+        pqdb->Set(row, colIdx, colBlock.Get(row, 0));   // копируем из временного блока
     //Обновляем все строки только одного столбца
-    if (nRows > 0){
+    if (nRows > 0)
         emit sig_dataChanged(tname, 0, colIdx, nRows - 1, colIdx);
-    }
 }
 
 void RTablesDataManager::handleChangeRow(const std::string& tname, long row)
 {
     // Изменились все колонки одной строки.
-    // Перечитываем строку целиком через Column::Value().
+
     QDataBlock* pqdb = findCachedBlock(tname);
     if (!pqdb) return;
 
-    IRastrTablesPtr tables  { m_pqastra->getRastr()->Tables() };
-    IRastrTablePtr  table   { tables->Item(tname) };
-    IRastrColumnsPtr columns{ table->Columns() };
-    const long ncols = IRastrPayload{ columns->Count() }.Value();
-
+    QDataBlock rowBlock;
+    getDataBlock(tname, rowBlock);                     // все колонки, все строки
+    // Копируем только нужную строку
+    const long ncols = static_cast<long>(pqdb->ColumnsCount());
     for (long i = 0; i < ncols; ++i)
-    {
-        IRastrColumnPtr  col      { columns->Item(i) };
-        IRastrVariantPtr val_ptr  { col->Value(row) };
-        pqdb->Set(row, i, val_ptr);
-    }
-
-    // изменились все колонки только одной строка row,
-    emit sig_dataChanged(tname, row, 0, row, ncols);
+        pqdb->Set(row, i, rowBlock.Get(row, i));
+    // изменились все колонки только одной строка row
+    emit sig_dataChanged(tname, row, 0, row, ncols - 1);
 }
 
 void RTablesDataManager::handleChangeData(const std::string& tname,

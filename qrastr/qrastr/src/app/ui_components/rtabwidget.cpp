@@ -76,7 +76,7 @@ RtabWidget::RtabWidget(QAstra* pqastra,CUIForm UIForm, RTablesDataManager* pRTDM
     m_view->options().setGroupsHeader(false);
     // ScrollByPixel значительно быстрее ScrollByItem при большом числе строк:
     // не требует пересчёта высот всех строк при каждом шаге скроллинга.
-    m_view->options().setScrollRowStyle(Qtitan::ScrollItemStyle::ScrollByItem);
+    m_view->options().setScrollRowStyle(Qtitan::ScrollItemStyle::ScrollByPixel);
     // Enables or disables wait cursor if grid is busy for lengthy operations with data like sorting or grouping.
     m_view->options().setShowWaitCursor(true);
     m_view->options().setRubberBandSelection(true);        // Выделение "резинкой"
@@ -268,12 +268,14 @@ void RtabWidget::closeEvent(QCloseEvent *event)
 {
     qInfo() << "RtabWidget::closeEvent [" << m_UIForm.Name().c_str() << "]";
 
+    // Сначала — отключить все входящие сигналы к модели
+    disconnect(m_pRTDM, nullptr, m_model.get(), nullptr);
+    disconnect(m_pRTDM, nullptr, this, nullptr);
+
     // Контроллер отключает Qt-соединения связанных форм
     m_linkedFormCtrl->disconnectAll();
-
     // Освобождаем DataBlock — модель перестаёт держать shared_ptr
     m_model->getRdata()->pnparray_.reset();
-
     QWidget::closeEvent(event);
 };
 

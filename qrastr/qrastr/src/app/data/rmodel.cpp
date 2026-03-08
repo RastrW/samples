@@ -42,7 +42,11 @@ QVariant RModel::headerData(int section, Qt::Orientation orientation, int role) 
 
 Qt::ItemFlags RModel::flags(const QModelIndex& index) const
 {
-    return Qt::ItemIsEditable | Qt::ItemIsSelectable | QAbstractTableModel::flags(index);
+    Qt::ItemFlags f = QAbstractTableModel::flags(index);
+    const RCol* col = getRCol(index.column());
+    if (col && col->getFF() == "1")    // формула активна → только чтение
+        return f | Qt::ItemIsSelectable;
+    return f | Qt::ItemIsEditable | Qt::ItemIsSelectable;
 }
 
 QVariant RModel::data(const QModelIndex& index, int role) const
@@ -58,19 +62,19 @@ QVariant RModel::data(const QModelIndex& index, int role) const
     const RCol&       rcol      = *(m_rdata->begin() + col);
     const size_t      pluginIdx = static_cast<size_t>(rcol.getIndex());
 
-    // ── BackgroundRole ────────────────────────────────────────────────────────
+    // ── BackgroundRole (Фон ячейки) ──────────────────────────────────────────
     if (role == Qt::BackgroundRole) {
         ///@todo временная заливка ячейки (1,2) красным — удалить перед релизом
         if (row == 1 && col == 2) return QBrush(Qt::red);
 
         const QString val = QString::fromStdString(
             std::visit(ToString(), m_rdata->pnparray_->Get(row, col)));
-        QVariant fmt = getMatchingCondFormat(row, col, val, role);
+        QVariant fmt = getMatchingCondFormat(m_condFmt.condFormats(), row, col, val, role);
         if (fmt.isValid()) return fmt;
         return {};
     }
 
-    // ── DisplayRole / EditRole ────────────────────────────────────────────────
+    // ── DisplayRole / EditRole (Текст для отображения/Значение для редактора)─
     if (role == Qt::DisplayRole || role == Qt::EditRole) {
         QVariant item = std::visit(ToQVariant(), m_rdata->pnparray_->Get(row, col));
 
@@ -91,7 +95,7 @@ QVariant RModel::data(const QModelIndex& index, int role) const
         return item;
     }
 
-    // ── DecorationRole ────────────────────────────────────────────────────────
+    // ── DecorationRole (Иконка слева от текста)───────────────────────────────
     if (role == Qt::DecorationRole) {
         if (const auto* pics = m_cache.pictureEnum(pluginIdx)) {
             int v = std::visit(ToLong(), m_rdata->pnparray_->Get(row, col));
@@ -118,9 +122,9 @@ QVariant RModel::data(const QModelIndex& index, int role) const
         return list;
     }
 
-    // ── ToolTipRole ───────────────────────────────────────────────────────────
+    // ── ToolTipRole (Всплывающая подсказка)───────────────────────────────────
     if (role == Qt::ToolTipRole)
-        return QString("Row %1, Column %2").arg(row + 1).arg(col + 1);
+        return QString("[%1, %2]").arg(row + 1).arg(col + 1);
 
     return {};
 }
@@ -290,12 +294,6 @@ void RModel::setCondFormats(bool isRowIdFormat, size_t column,
                             const std::vector<CondFormat>& condFormats)
 {
     m_condFmt.set(isRowIdFormat, column, condFormats);
-}
-
-QVariant RModel::getMatchingCondFormat(size_t row, size_t column,
-                                       const QString& value, int role) const
-{
-    return getMatchingCondFormat(m_condFmt.condFormats(), row, column, value, role);
 }
 
 QVariant RModel::getMatchingCondFormat(const std::map<size_t, std::vector<CondFormat>>& formats,
