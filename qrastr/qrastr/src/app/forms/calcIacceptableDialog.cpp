@@ -1,4 +1,4 @@
-#include "formcalcidop.h"
+#include "calcIacceptableDialog.h"
 #include "qastra.h"
 #include <QGroupBox>
 #include <QLineEdit>
@@ -8,7 +8,7 @@
 #include <QDateTimeEdit>
 #include <QDialogButtonBox>
 
-formcalcidop::formcalcidop(QAstra* _pqastra, QWidget *parent)
+CalcIacceptableDialog::CalcIacceptableDialog(QAstra* _pqastra, QWidget *parent)
     : QDialog(parent), pqastra(_pqastra)
 {
     setWindowTitle(tr("Расчет I доп от Т"));
@@ -52,13 +52,13 @@ formcalcidop::formcalcidop(QAstra* _pqastra, QWidget *parent)
     gbLay2->addWidget(m_dateTimeEdit);
 
     connect(cdMeteo, &QCheckBox::checkStateChanged, this,
-            &formcalcidop::on_checkBox_checkStateChanged);
+            &CalcIacceptableDialog::on_checkBox_checkStateChanged);
 
     // --- ButtonBox ---
     QDialogButtonBox* buttonBox = new QDialogButtonBox(
         QDialogButtonBox::Ok | QDialogButtonBox::Cancel, this);
     connect(buttonBox, &QDialogButtonBox::accepted,
-            this, &formcalcidop::on_buttonBox_accepted);
+            this, &CalcIacceptableDialog::on_buttonBox_accepted);
     connect(buttonBox, &QDialogButtonBox::rejected,
             this, &QDialog::reject);
 
@@ -69,7 +69,7 @@ formcalcidop::formcalcidop(QAstra* _pqastra, QWidget *parent)
     mainLayout->addWidget(buttonBox);
 }
 
-void formcalcidop::on_buttonBox_accepted()
+void CalcIacceptableDialog::on_buttonBox_accepted()
 {
     double temp   = m_leTemperature->text().toDouble();
     double emL  = m_leEmergencyLoading->text().toDouble();
@@ -78,7 +78,7 @@ void formcalcidop::on_buttonBox_accepted()
     accept();
 }
 
-void formcalcidop::on_checkBox_checkStateChanged(const Qt::CheckState &arg1)
+void CalcIacceptableDialog::on_checkBox_checkStateChanged(const Qt::CheckState &arg1)
 {
     bool en = (arg1 == Qt::Checked);
     m_lData->setEnabled(en);

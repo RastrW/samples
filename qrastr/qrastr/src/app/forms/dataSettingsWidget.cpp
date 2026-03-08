@@ -1,4 +1,4 @@
-#include "formsettingsdatas.h"
+#include "dataSettingsWidget.h"
 #include <QFileDialog>
 #include <QMessageBox>
 #include <QVBoxLayout>

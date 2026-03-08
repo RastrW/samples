@@ -6,13 +6,13 @@ class RData;
 class QLineEdit;
 class QRadioButton;
 
-class formimportcsv2 : public QDialog
+class ImportCSV2dialog : public QDialog
 {
     Q_OBJECT
 public:
-    explicit formimportcsv2(RData* prdata,
+    explicit ImportCSV2dialog(RData* prdata,
                             QWidget *parent = nullptr);
-    virtual ~formimportcsv2() = default;
+    virtual ~ImportCSV2dialog() = default;
 private slots:
     void on_pushButton_clicked();
     void on_buttonBox_accepted();

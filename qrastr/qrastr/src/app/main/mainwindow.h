@@ -15,7 +15,7 @@ class QTI;
 class QBarsMDP;
 class QMdiArea;
 class McrWnd;
-class FormProtocol;
+class ProtocolWidget;
 
 class PyHlp;
 class CUIForm;
@@ -105,7 +105,7 @@ private:
     QMdiArea* m_workspace = nullptr;            // Область для множественных документов
     ads::CDockManager* m_dockManager = nullptr; // The main container for Advanced Docking System
     McrWnd* m_globalProtocol = nullptr;                // Глобавльный протокол
-    FormProtocol* m_mainProtocol = nullptr;     // Главный протокол
+    ProtocolWidget* m_mainProtocol = nullptr;     // Главный протокол
     
     // ========== ВСПОМОГАТЕЛЬНЫЕ КОМПОНЕНТЫ ==========
     std::shared_ptr<PyHlp> m_pyHelper;          // Python helper (для выполнения макросов)

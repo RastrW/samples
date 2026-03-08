@@ -112,7 +112,6 @@ private:
     /**
      * @brief EventHints::ChangeColumn — изменились все значения одной колонки.
      * Перечитывает только указанную колонку построчно.
-
      */
     void handleChangeColumn(const std::string& tname, const std::string& cname);
     /**

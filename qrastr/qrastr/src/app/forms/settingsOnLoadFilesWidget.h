@@ -1,5 +1,5 @@
 #pragma once
-#include "formsettingsstackeditem.h"
+#include "settingsStackedItemWidget.h"
 
 class QTableWidgetItem;
 class QTableWidget;

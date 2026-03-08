@@ -5,12 +5,12 @@ class RData;
 class QLineEdit;
 class QRadioButton;
 
-class formexportcsv : public QDialog
+class ExportCSVdialog : public QDialog
 {
     Q_OBJECT
 public:
-    explicit formexportcsv(RData* _prdata, QWidget *parent = nullptr);
-    ~formexportcsv() = default;
+    explicit ExportCSVdialog(RData* _prdata, QWidget *parent = nullptr);
+    ~ExportCSVdialog() = default;
 
 private slots:
     void on_pushButton_clicked();

@@ -13,12 +13,12 @@ class ProtocolTreeItem;
 class ProtocolTreeModel;
 class QTreeView;
 
-class FormProtocol : public QWidget
+class ProtocolWidget : public QWidget
 {
     Q_OBJECT
 public:
-    explicit FormProtocol(QWidget *parent = nullptr);
-    ~FormProtocol() = default;
+    explicit ProtocolWidget(QWidget *parent = nullptr);
+    ~ProtocolWidget() = default;
 
     void setIgnoreAppendProtocol(bool bl_ignore);
 

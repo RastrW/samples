@@ -1,10 +1,10 @@
-#include "formselection.h"
+#include "selectionDialog.h"
 #include <QDialogButtonBox>
 #include <QLineEdit>
 #include <QLabel>
 #include <QVBoxLayout>
 
-FormSelection::FormSelection(std::string selection, std::string colName, QWidget *parent)
+SelectionDialog::SelectionDialog(std::string selection, std::string colName, QWidget *parent)
     : QDialog(parent), m_selection(selection), m_colName(colName)
 {
     setWindowTitle(tr("Выборка"));
@@ -25,7 +25,7 @@ FormSelection::FormSelection(std::string selection, std::string colName, QWidget
     QDialogButtonBox* buttonBox = new QDialogButtonBox(
         QDialogButtonBox::Ok | QDialogButtonBox::Cancel, this);
     connect(buttonBox, &QDialogButtonBox::accepted,
-            this, &FormSelection::on_buttonBox_accepted);
+            this, &SelectionDialog::on_buttonBox_accepted);
     connect(buttonBox, &QDialogButtonBox::rejected,
             this, &QDialog::reject);
 
@@ -35,7 +35,7 @@ FormSelection::FormSelection(std::string selection, std::string colName, QWidget
     mainLayout->addWidget(buttonBox);
 }
 
-void FormSelection::on_buttonBox_accepted(){
+void SelectionDialog::on_buttonBox_accepted(){
 
     emit sig_selectionAccepted(m_textEdit->text().toStdString());
 }

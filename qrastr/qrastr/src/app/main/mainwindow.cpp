@@ -8,9 +8,9 @@
 #include "qti.h"
 #include "qbarsmdp.h"
 #include "mcrwnd.h"
-#include "formprotocol.h"
+#include "protocolWidget.h"
 #include "pyhlp.h"
-#include "formcalcidop.h"
+#include "calcIacceptableDialog.h"
 
 #include <QStatusBar>
 #include <QMessageBox>
@@ -130,7 +130,7 @@ void MainWindow::setupDockWidgets() {
     m_dockManager->addDockWidgetTab(ads::BottomDockWidgetArea, dockProtocol);
     
     // Главный протокол
-    m_mainProtocol = new FormProtocol(this);
+    m_mainProtocol = new ProtocolWidget(this);
     //Если необходимо, чтобы в FormProtocol был вывод spdlog, необходимо включить эту настройку
     m_mainProtocol->setIgnoreAppendProtocol(true);
 
@@ -157,7 +157,7 @@ void MainWindow::setupLogSinks() {
 void MainWindow::setupRastrConnections() {
     // Второй поток данных — структурированные _log_data от Rastr
     connect(m_qastra.get(), &QAstra::onRastrLog,
-            m_mainProtocol, &FormProtocol::onRastrLog);
+            m_mainProtocol, &ProtocolWidget::onRastrLog);
     connect(m_qastra.get(), &QAstra::onRastrLog,
             m_globalProtocol, &McrWnd::onRastrLog);
 }
@@ -372,7 +372,7 @@ void MainWindow::slot_about(){
 void MainWindow::showIdopDialog() {  
     emit sig_calcBegin();
     
-    formcalcidop* dialog = new formcalcidop(m_qastra.get(), this);
+    CalcIacceptableDialog* dialog = new CalcIacceptableDialog(m_qastra.get(), this);
     dialog->setAttribute(Qt::WA_DeleteOnClose);
     dialog->show();
 

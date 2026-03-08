@@ -4,13 +4,13 @@
 
 class QLineEdit;
 
-class FormSelection : public QDialog
+class SelectionDialog : public QDialog
 {
     Q_OBJECT
 public:
-    explicit FormSelection(std::string selection,
+    explicit SelectionDialog(std::string selection,
                            std::string colName, QWidget *parent = nullptr);
-    virtual ~FormSelection() = default;
+    virtual ~SelectionDialog() = default;
 signals:
     void sig_selectionAccepted(std::string selection);
 

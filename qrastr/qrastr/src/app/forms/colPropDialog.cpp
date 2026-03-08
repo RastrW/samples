@@ -1,4 +1,4 @@
-#include "ColPropForm.h"
+#include "colPropDialog.h"
 #include "rdata.h"
 #include <QtitanGrid.h>
 #include <QPlainTextEdit>
@@ -7,7 +7,7 @@
 #include "qastra.h"
 #include <astra/IPlainRastrWrappers.h>
 
-ColPropForm::ColPropForm(RData* prdata, Qtitan::GridTableView* view,
+ColPropDialog::ColPropDialog(RData* prdata, Qtitan::GridTableView* view,
                          RCol* prcol, QWidget *parent)
     : QDialog(parent)
     , m_prdata(prdata)
@@ -30,7 +30,7 @@ ColPropForm::ColPropForm(RData* prdata, Qtitan::GridTableView* view,
     m_leExpression->setText(QString::fromStdString(prcol->getExpr()));
 }
 
-void ColPropForm::setupUi()
+void ColPropDialog::setupUi()
 {
     m_leName       = new QLineEdit;
     m_leName->setReadOnly(true);
@@ -54,8 +54,8 @@ void ColPropForm::setupUi()
     rowButtons->addWidget(btn_ok);
     rowButtons->addWidget(btn_cancel);
 
-    connect(btn_ok,     &QPushButton::clicked, this, &ColPropForm::on_btn_ok_clicked);
-    connect(btn_cancel, &QPushButton::clicked, this, &ColPropForm::close);
+    connect(btn_ok,     &QPushButton::clicked, this, &ColPropDialog::on_btn_ok_clicked);
+    connect(btn_cancel, &QPushButton::clicked, this, &ColPropDialog::close);
 
     // --- Основной layout ---
     auto* grid = new QGridLayout(this);
@@ -84,7 +84,7 @@ void ColPropForm::setupUi()
     setLayout(grid);
 }
 
-void ColPropForm::on_btn_ok_clicked()
+void ColPropDialog::on_btn_ok_clicked()
 {
     IRastrResultVerify{m_prdata->getAstra()->getRastr()->SetLockEvent(true)};
 

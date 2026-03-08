@@ -1,11 +1,11 @@
-#include "formfilenew.h"
+#include "fileNewDialog.h"
 #include "params.h"
 #include <QTableWidget>
 #include <QHeaderView>
 #include <QDialogButtonBox>
 #include <QVBoxLayout>
 
-FormFileNew::FormFileNew(QWidget *parent)
+FileNewDialog::FileNewDialog(QWidget *parent)
     : QDialog(parent)
 {
     setWindowTitle(tr("Открыть новый файл"));
@@ -48,7 +48,7 @@ FormFileNew::FormFileNew(QWidget *parent)
     mainLayout->addWidget(buttonBox);
 }
 
-FormFileNew::_s_checked_templatenames FormFileNew::getCheckedTemplateNames() const
+FileNewDialog::_s_checked_templatenames FileNewDialog::getCheckedTemplateNames() const
 {
     _s_checked_templatenames s_checked_templatenames;
     for (int n_rownum = 0; n_rownum < twTemplates->rowCount(); n_rownum++) {

@@ -5,13 +5,13 @@
 
 class QTableWidget;
 
-class FormFileNew : public QDialog
+class FileNewDialog : public QDialog
 {
     Q_OBJECT
 public:
     using _s_checked_templatenames = std::set<std::string>;
-    explicit FormFileNew(QWidget *parent = nullptr);
-    virtual ~FormFileNew() = default;
+    explicit FileNewDialog(QWidget *parent = nullptr);
+    virtual ~FileNewDialog() = default;
 
     _s_checked_templatenames getCheckedTemplateNames() const;
 

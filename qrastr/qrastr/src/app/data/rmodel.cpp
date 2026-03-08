@@ -134,7 +134,9 @@ bool RModel::setData(const QModelIndex& index, const QVariant& value, int role)
     const int col = index.column();
     const int row = index.row();
 
-    if (value == data(index, role)) return false;
+    // читаем сырое значение из кеша
+    QVariant raw = std::visit(ToQVariant(), m_rdata->pnparray_->Get(row, col));
+    if (raw == value) return false;
 
     RData::iterator iter_col = m_rdata->begin() + col;
     const std::string& tname   = iter_col->getTableName();

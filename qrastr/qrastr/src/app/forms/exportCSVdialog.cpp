@@ -1,4 +1,4 @@
-#include "formexportcsv.h"
+#include "exportCSVdialog.h"
 
 #include <QFileDialog>
 #include <QHBoxLayout>
@@ -13,7 +13,7 @@
 #include "rdata.h"
 #include <astra/IPlainRastrWrappers.h>
 
-formexportcsv::formexportcsv(RData* _prdata, QWidget *parent)
+ExportCSVdialog::ExportCSVdialog(RData* _prdata, QWidget *parent)
     : QDialog(parent), prdata_(_prdata)
 {
     setWindowTitle(tr("Экспорт в формате CSV"));
@@ -23,7 +23,7 @@ formexportcsv::formexportcsv(RData* _prdata, QWidget *parent)
     m_lePath               = new QLineEdit();
     QPushButton* pushButton = new QPushButton("...");
     pushButton->setFixedWidth(32);
-    connect(pushButton, &QPushButton::clicked, this, &formexportcsv::on_pushButton_clicked);
+    connect(pushButton, &QPushButton::clicked, this, &ExportCSVdialog::on_pushButton_clicked);
 
     m_rbOverwrite   = new QRadioButton(tr("Перезаписать"));
     m_rbExtend = new QRadioButton(tr("Дополнить"));
@@ -63,7 +63,7 @@ formexportcsv::formexportcsv(RData* _prdata, QWidget *parent)
     QDialogButtonBox* buttonBox = new QDialogButtonBox(
         QDialogButtonBox::Ok | QDialogButtonBox::Cancel, this);
     connect(buttonBox, &QDialogButtonBox::accepted,
-            this, &formexportcsv::accept);
+            this, &ExportCSVdialog::accept);
     connect(buttonBox, &QDialogButtonBox::rejected,
             this, &QDialog::reject);
 
@@ -73,7 +73,7 @@ formexportcsv::formexportcsv(RData* _prdata, QWidget *parent)
     mainLayout->addWidget(buttonBox);
 }
 
-void formexportcsv::on_pushButton_clicked()
+void ExportCSVdialog::on_pushButton_clicked()
 {
     QFileDialog fileDlg(this);
     fileDlg.setAcceptMode(QFileDialog::AcceptSave);
@@ -84,7 +84,7 @@ void formexportcsv::on_pushButton_clicked()
     m_lePath->setText(m_path.c_str());
 }
 
-void formexportcsv::accept()
+void ExportCSVdialog::accept()
 {
     std::string table_name = m_leTable->text().toStdString();
     std::string div        = m_leSeparator->text().toStdString();

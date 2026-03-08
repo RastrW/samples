@@ -27,14 +27,14 @@
 #include <QTableView>
 #include <QMessageBox>
 
-#include "formselection.h"
-#include "formgroupcorrection.h"
-#include "formexportcsv.h"
-#include "formimportcsv2.h"
+#include "selectionDialog.h"
+#include "groupCorrectionDialog.h"
+#include "exportCSVdialog.h"
+#include "importCSV2dialog.h"
 #include "qmcr/pyhlp.h"
 #include <QToolBar>
 #include "linkedformcontroller.h"
-#include "ColPropForm.h"
+#include "colPropDialog.h"
 #include "contextMenuBuilder.h"
 #include "customFilterCondition.h"
 #include "condFormatController.h"
@@ -553,7 +553,7 @@ void RtabWidget::slot_groupCorrection()
     if (!prcol){
         return;
     }
-    formgroupcorrection* fgc =  new formgroupcorrection(m_model->getRdata(),prcol,this);
+    GroupCorrectionDialog* fgc =  new GroupCorrectionDialog(m_model->getRdata(),prcol,this);
     fgc->setAttribute(Qt::WA_DeleteOnClose);
 
     fgc->show();
@@ -563,7 +563,7 @@ void RtabWidget::slot_openColProp(int col)
 {
     RCol* prcol = m_model->getRCol(col);
     if (!prcol) return;
-    ColPropForm* propDialog = new ColPropForm(m_model->getRdata(),
+    ColPropDialog* propDialog = new ColPropDialog(m_model->getRdata(),
                                             m_view, prcol, this);
     propDialog->setAttribute(Qt::WA_DeleteOnClose);
     propDialog->exec();
@@ -576,8 +576,8 @@ void RtabWidget::slot_openSelection()
     RCol* prcol = m_model->getRCol(col);
     std::string colName = prcol ? prcol->getColName() : "";
 
-    FormSelection* selectionDialog = new FormSelection(m_selection,colName, this);
-    connect(selectionDialog, &FormSelection::sig_selectionAccepted,
+    SelectionDialog* selectionDialog = new SelectionDialog(m_selection,colName, this);
+    connect(selectionDialog, &SelectionDialog::sig_selectionAccepted,
             this, &RtabWidget::slot_setFiltrForSelection);
     selectionDialog->setAttribute(Qt::WA_DeleteOnClose);
     selectionDialog->show();
@@ -585,14 +585,14 @@ void RtabWidget::slot_openSelection()
 
 void RtabWidget::slot_openExportCSVForm()
 {
-    formexportcsv* exportCsvDialog = new formexportcsv( m_model->getRdata(),this);
+    ExportCSVdialog* exportCsvDialog = new ExportCSVdialog( m_model->getRdata(),this);
     exportCsvDialog->setAttribute(Qt::WA_DeleteOnClose);
     exportCsvDialog->show();
 }
 
 void RtabWidget::slot_openImportCSVForm()
 {
-    formimportcsv2* importCsvDialog = new formimportcsv2( m_model->getRdata(),this);
+    ImportCSV2dialog* importCsvDialog = new ImportCSV2dialog( m_model->getRdata(),this);
     importCsvDialog->setAttribute(Qt::WA_DeleteOnClose);
     importCsvDialog->show();
 }

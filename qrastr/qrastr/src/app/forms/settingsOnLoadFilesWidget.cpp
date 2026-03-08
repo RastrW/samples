@@ -1,4 +1,4 @@
-#include "formsettingsonloadfiles.h"
+#include "settingsOnLoadFilesWidget.h"
 #include "params.h"
 #include <QFileDialog>
 #include <QVBoxLayout>

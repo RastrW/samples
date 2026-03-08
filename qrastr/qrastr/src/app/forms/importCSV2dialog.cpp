@@ -1,4 +1,4 @@
-#include "formimportcsv2.h"
+#include "importCSV2dialog.h"
 #include <QFileDialog>
 #include <QGroupBox>
 #include <QLineEdit>
@@ -12,7 +12,7 @@
 #include "qastra.h"
 #include <astra/IPlainRastrWrappers.h>
 
-formimportcsv2::formimportcsv2(RData* prdata, QWidget *parent)
+ImportCSV2dialog::ImportCSV2dialog(RData* prdata, QWidget *parent)
     : QDialog(parent), m_prdata(prdata)
 {
     setWindowTitle(tr("Импорт из формата CSV"));
@@ -22,7 +22,7 @@ formimportcsv2::formimportcsv2(RData* prdata, QWidget *parent)
     m_leFile           = new QLineEdit();
     QPushButton* pushButton = new QPushButton("...");
     pushButton->setFixedWidth(32);
-    connect(pushButton, &QPushButton::clicked, this, &formimportcsv2::on_pushButton_clicked);
+    connect(pushButton, &QPushButton::clicked, this, &ImportCSV2dialog::on_pushButton_clicked);
 
     m_rbAdd    = new QRadioButton(tr("Присоединить"));
     m_rbLoad   = new QRadioButton(tr("Загрузить"));
@@ -67,7 +67,8 @@ formimportcsv2::formimportcsv2(RData* prdata, QWidget *parent)
     // --- ButtonBox ---
     QDialogButtonBox* buttonBox = new QDialogButtonBox(
         QDialogButtonBox::Ok | QDialogButtonBox::Cancel, this);
-    connect(buttonBox, &QDialogButtonBox::accepted, this, &formimportcsv2::on_buttonBox_accepted);
+    connect(buttonBox, &QDialogButtonBox::accepted,
+            this, &ImportCSV2dialog::on_buttonBox_accepted);
     connect(buttonBox, &QDialogButtonBox::rejected, this, &QDialog::reject);
 
     QVBoxLayout* mainLayout = new QVBoxLayout(this);
@@ -76,7 +77,7 @@ formimportcsv2::formimportcsv2(RData* prdata, QWidget *parent)
     mainLayout->addWidget(buttonBox);
 }
 
-void formimportcsv2::on_pushButton_clicked()
+void ImportCSV2dialog::on_pushButton_clicked()
 {
     QFileDialog fileDlg(this);
     fileDlg.setAcceptMode(QFileDialog::AcceptOpen);
@@ -86,7 +87,7 @@ void formimportcsv2::on_pushButton_clicked()
     m_leFile->setText((fileDlg.selectedFiles())[0]);
 }
 
-void formimportcsv2::on_buttonBox_accepted()
+void ImportCSV2dialog::on_buttonBox_accepted()
 {
     std::string table_name = m_leTname->text().toStdString();
     std::string div        = m_leSelection->text().toStdString();

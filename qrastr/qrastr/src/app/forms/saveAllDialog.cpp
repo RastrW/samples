@@ -1,4 +1,4 @@
-#include "formsaveall.h"
+#include "saveAllDialog.h"
 #include <QSettings>
 #include <QFileInfo>
 #include <QDir>
@@ -8,7 +8,7 @@
 #include <QVBoxLayout>
 #include "qastra.h"
 
-formsaveall::formsaveall(QAstra* pqastra, QMap<QString,QString> _mFilesLoad, QWidget *parent)
+SaveAllDialog::SaveAllDialog(QAstra* pqastra, QMap<QString,QString> _mFilesLoad, QWidget *parent)
     : QDialog(parent), m_pqastra(pqastra), m_FilesLoad(_mFilesLoad)
 {
     setWindowTitle(tr("Сохранение файлов"));
@@ -36,7 +36,7 @@ formsaveall::formsaveall(QAstra* pqastra, QMap<QString,QString> _mFilesLoad, QWi
 
     QDialogButtonBox* buttonBox = new QDialogButtonBox(
         QDialogButtonBox::Ok | QDialogButtonBox::Cancel, this);
-    connect(buttonBox, &QDialogButtonBox::accepted, this, &formsaveall::on_buttonBox_accepted);
+    connect(buttonBox, &QDialogButtonBox::accepted, this, &SaveAllDialog::on_buttonBox_accepted);
     connect(buttonBox, &QDialogButtonBox::rejected, this, &QDialog::reject);
 
     QVBoxLayout* mainLayout = new QVBoxLayout(this);
@@ -44,7 +44,7 @@ formsaveall::formsaveall(QAstra* pqastra, QMap<QString,QString> _mFilesLoad, QWi
     mainLayout->addWidget(buttonBox);
 }
 
-void formsaveall::showEvent(QShowEvent* event)
+void SaveAllDialog::showEvent(QShowEvent* event)
 {
     QDialog::showEvent(event);
     m_twSaveFiles->setRowCount(0);
@@ -72,7 +72,7 @@ void formsaveall::showEvent(QShowEvent* event)
     }
 }
 
-void formsaveall::on_buttonBox_accepted()
+void SaveAllDialog::on_buttonBox_accepted()
 {
     for (int n_rownum = 0; n_rownum < m_twSaveFiles->rowCount(); n_rownum++) {
         const QTableWidgetItem* ptwi_checkbox =

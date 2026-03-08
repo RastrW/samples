@@ -8,13 +8,13 @@ class QLabel;
 class QRadioButton;
 class QLineEdit;
 
-class formgroupcorrection : public QDialog
+class GroupCorrectionDialog : public QDialog
 {
     Q_OBJECT
 public:
-    explicit formgroupcorrection(RData* _prdata, RCol* prcol,
+    explicit GroupCorrectionDialog(RData* _prdata, RCol* prcol,
                                  QWidget *parent = nullptr);
-    virtual ~formgroupcorrection() = default;
+    virtual ~GroupCorrectionDialog() = default;
 private slots:
     void on_buttonBox_accepted();
 

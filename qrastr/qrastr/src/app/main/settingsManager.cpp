@@ -1,6 +1,6 @@
 #include "settingsManager.h"
 #include "qastra.h"
-#include "formsettings.h"
+#include "settingsDialog.h"
 #include "cacheLog.h"
 #include <QMainWindow>
 #include <spdlog/spdlog.h>

@@ -8,12 +8,12 @@ class QLabel;
 class QDateTimeEdit;
 class QAstra;
 
-class formcalcidop : public QDialog
+class CalcIacceptableDialog : public QDialog
 {
     Q_OBJECT
 public:
-    explicit formcalcidop(QAstra* pqastra, QWidget *parent = nullptr);
-    virtual ~formcalcidop() = default;
+    explicit CalcIacceptableDialog(QAstra* pqastra, QWidget *parent = nullptr);
+    virtual ~CalcIacceptableDialog() = default;
 private slots:
     void on_buttonBox_accepted();
     void on_checkBox_checkStateChanged(const Qt::CheckState &arg1);

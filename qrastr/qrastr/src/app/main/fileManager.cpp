@@ -1,8 +1,8 @@
 #include "fileManager.h"
 #include "qastra.h"
 #include "params.h"
-#include "formfilenew.h"
-#include "formsaveall.h"
+#include "fileNewDialog.h"
+#include "saveAllDialog.h"
 
 #include <QFileDialog>
 #include <QSettings>
@@ -206,7 +206,7 @@ bool FileManager::saveAll() {
         return false;
     }
 
-    formsaveall* fsaveall = new formsaveall(
+    SaveAllDialog* fsaveall = new SaveAllDialog(
         m_qastra.get(),
         m_loadedFiles,
         m_parentWidget
@@ -358,17 +358,17 @@ QString FileManager::findTemplateByExtension(const QString& filePath) const {
 }
 
 bool FileManager::showNewFileDialog(QStringList& selectedTemplates) {
-    FormFileNew* pformFileNew = new FormFileNew(m_parentWidget);
+    FileNewDialog* pformFileNew = new FileNewDialog(m_parentWidget);
     pformFileNew->setAttribute(Qt::WA_DeleteOnClose);
 
     if (QDialog::Accepted != pformFileNew->exec()) {
         return false;
     }
     
-    const FormFileNew::_s_checked_templatenames s_checked_templatenames = 
+    const FileNewDialog::_s_checked_templatenames s_checked_templatenames =
         pformFileNew->getCheckedTemplateNames();
     
-    for (const FormFileNew::_s_checked_templatenames::value_type& templatename : s_checked_templatenames) {
+    for (const FileNewDialog::_s_checked_templatenames::value_type& templatename : s_checked_templatenames) {
         selectedTemplates.append(QString::fromStdString(templatename));
     }
     

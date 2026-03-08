@@ -1,4 +1,4 @@
-#include "formgroupcorrection.h"
+#include "groupCorrectionDialog.h"
 #include <QRadioButton>
 #include <QComboBox>
 #include <QLabel>
@@ -8,7 +8,7 @@
 #include "rdata.h"
 #include "rcol.h"
 
-formgroupcorrection::formgroupcorrection(RData* _prdata, RCol* _prcol, QWidget *parent)
+GroupCorrectionDialog::GroupCorrectionDialog(RData* _prdata, RCol* _prcol, QWidget *parent)
     : QDialog(parent), m_prdata{_prdata}, m_prcol {_prcol}
 {
     setWindowTitle(tr("Групповая коррекция"));
@@ -57,7 +57,8 @@ formgroupcorrection::formgroupcorrection(RData* _prdata, RCol* _prcol, QWidget *
     // --- ButtonBox ---
     QDialogButtonBox* buttonBox = new QDialogButtonBox(
         QDialogButtonBox::Ok | QDialogButtonBox::Cancel, this);
-    connect(buttonBox, &QDialogButtonBox::accepted, this, &formgroupcorrection::on_buttonBox_accepted);
+    connect(buttonBox, &QDialogButtonBox::accepted, this,
+            &GroupCorrectionDialog::on_buttonBox_accepted);
     connect(buttonBox, &QDialogButtonBox::rejected, this, &QDialog::reject);
 
     QVBoxLayout* mainLayout = new QVBoxLayout(this);
@@ -68,7 +69,7 @@ formgroupcorrection::formgroupcorrection(RData* _prdata, RCol* _prcol, QWidget *
     mainLayout->addWidget(buttonBox);
 }
 
-void formgroupcorrection::on_buttonBox_accepted()
+void GroupCorrectionDialog::on_buttonBox_accepted()
 {
     m_selection  = m_leExpression->text().toStdString();
     m_expression = m_leExpression->text().toStdString();

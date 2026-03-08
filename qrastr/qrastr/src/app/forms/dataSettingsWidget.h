@@ -1,5 +1,5 @@
 #pragma once
-#include "formsettingsstackeditem.h"
+#include "settingsStackedItemWidget.h"
 
 class QGroupBox;
 class QSpinBox;

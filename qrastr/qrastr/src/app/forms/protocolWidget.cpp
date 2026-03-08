@@ -5,14 +5,13 @@
 #include <QGridLayout>
 #include <QTreeView>
 
-#include "formprotocol.h"
+#include "protocolWidget.h"
 #include "protocoltreeitem.h"
 #include "protocoltreemodel.h"
 #include "qastra_events_data.h"
 #include <QtitanGrid.h>
 
-
-FormProtocol::FormProtocol(QWidget *parent)
+ProtocolWidget::ProtocolWidget(QWidget *parent)
     : QWidget(parent)
 {
     setWindowTitle(tr("Form"));
@@ -56,12 +55,12 @@ FormProtocol::FormProtocol(QWidget *parent)
     view->expandToLevel(3);
 }
 
-void FormProtocol::setIgnoreAppendProtocol(bool bl_ignore)
+void ProtocolWidget::setIgnoreAppendProtocol(bool bl_ignore)
 {
     m_ignoreAppendProtocol = bl_ignore;
 }
 
-void FormProtocol::onAppendProtocol(const QString& qstr)
+void ProtocolWidget::onAppendProtocol(const QString& qstr)
 {
     if (m_ignoreAppendProtocol) return;
     auto sp_item = std::make_shared<ProtocolTreeItem>(
@@ -71,7 +70,7 @@ void FormProtocol::onAppendProtocol(const QString& qstr)
     m_protocolTreeModel->layoutChanged();
 }
 
-void FormProtocol::onRastrLog(const _log_data& log_data)
+void ProtocolWidget::onRastrLog(const _log_data& log_data)
 {
     Qtitan::GridTreeView* view = m_ptg->view<Qtitan::GridTreeView>();
     m_protocolTreeModel->layoutAboutToBeChanged();

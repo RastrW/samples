@@ -10,15 +10,15 @@ class RCol;
 class QPlainTextEdit;
 class QLineEdit;
 
-class ColPropForm : public QDialog
+class ColPropDialog : public QDialog
 {
     Q_OBJECT
 
 public:
-    explicit ColPropForm(RData* prdata,
+    explicit ColPropDialog(RData* prdata,
                          Qtitan::GridTableView* view,
                          RCol* prcol, QWidget *parent = nullptr);
-    ~ColPropForm() = default;
+    ~ColPropDialog() = default;
 
 private slots:
     void on_btn_ok_clicked();

@@ -6,11 +6,11 @@
 class QAstra;
 class QTableWidget;
 
-class formsaveall : public QDialog
+class SaveAllDialog : public QDialog
 {
     Q_OBJECT
 public:
-    explicit formsaveall(QAstra* pqastra, QMap<QString,QString> _mFilesLoad,
+    explicit SaveAllDialog(QAstra* pqastra, QMap<QString,QString> _mFilesLoad,
                          QWidget *parent = nullptr);
 
     void showEvent(QShowEvent* event) override;

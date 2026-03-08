@@ -1,4 +1,4 @@
-#include "formsettings.h"
+#include "settingsDialog.h"
 
 #include <QSplitter>
 #include <QVBoxLayout>
@@ -11,10 +11,10 @@
 #include <filesystem>
 #include "qastra.h"
 #include "params.h"
-#include "formsettingsdatas.h"
-#include "formsettingsonloadfiles.h"
-#include "formsettingsonloadtemplates.h"
-#include "formsettingsonloadforms.h"
+#include "dataSettingsWidget.h"
+#include "settingsOnLoadFilesWidget.h"
+#include "settingsOnLoadTemplatesWidget.h"
+#include "settingsOnLoadFormsWidget.h"
 
 SettingsDialog::SettingsDialog(QWidget *parent)
     : QDialog(parent) {
