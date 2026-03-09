@@ -37,13 +37,6 @@
 MainWindow::MainWindow()
     : QMainWindow(){
 
-    m_workspace = new QMdiArea(this);
-    setCentralWidget(m_workspace);
-    
-    // Подключение сигнала активации подокон
-    connect(m_workspace, &QMdiArea::subWindowActivated,
-            this, &MainWindow::slot_subWindowActivated);
-    
     // Настройка Drag & Drop
     setAcceptDrops(true);
     
@@ -328,19 +321,23 @@ void MainWindow::setupConnections() {
             this, &MainWindow::slot_openGraph);
     connect(m_uiBuilder->actionByName("macro"), &QAction::triggered,
             this, &MainWindow::slot_openMcrDialog);
-    const auto* act = m_uiBuilder->actionByName("close");
+    // Закрыть активный dock widget
     connect(m_uiBuilder->actionByName("close"), &QAction::triggered,
-            m_workspace, &QMdiArea::closeActiveSubWindow);
+            this, [this]() {
+                auto* focused = m_dockManager->focusedDockWidget();
+                if (focused) focused->closeDockWidget();
+            });
+
+    // Закрыть все (кроме протоколов — они с CustomCloseHandling)
     connect(m_uiBuilder->actionByName("closeAll"), &QAction::triggered,
-            m_workspace, &QMdiArea::closeAllSubWindows);
-    connect(m_uiBuilder->actionByName("tile"), &QAction::triggered,
-            m_workspace, &QMdiArea::tileSubWindows);
-    connect(m_uiBuilder->actionByName("cascade"), &QAction::triggered,
-            m_workspace, &QMdiArea::cascadeSubWindows);
-    connect(m_uiBuilder->actionByName("next"), &QAction::triggered,
-            m_workspace, &QMdiArea::activateNextSubWindow);
-    connect(m_uiBuilder->actionByName("previous"), &QAction::triggered,
-            m_workspace, &QMdiArea::activatePreviousSubWindow);
+            this, [this]() {
+                for (auto* dw : m_dockManager->openedDockWidgets()) {
+                    if (dw->features().testFlag(
+                            ads::CDockWidget::DockWidgetDeleteOnClose)) {
+                        dw->closeDockWidget();
+                    }
+                }
+            });
     connect(m_uiBuilder->actionByName("about"), &QAction::triggered,
             this, &MainWindow::slot_about);
 }
@@ -445,11 +442,8 @@ void MainWindow::dragEnterEvent(QDragEnterEvent* event) {
 
 void MainWindow::dropEvent(QDropEvent* event) {
     for (const QUrl& url : event->mimeData()->urls()) {
-        QString filePath = url.toLocalFile();
-        m_fileManager->openFile(filePath);
+        m_fileManager->openFile(url.toLocalFile());
     }
-    
-    event->acceptProposedAction();
 }
 
 void MainWindow::slot_subWindowActivated() {
