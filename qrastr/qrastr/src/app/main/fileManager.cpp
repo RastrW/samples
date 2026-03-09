@@ -263,10 +263,20 @@ QStringList FileManager::getRecentFiles() const {
     return settings.value(m_recentFilesKey).toStringList();
 }
 
+void FileManager::registerStartupFile(const QString& fileName,
+                                      const QString& templatePath) {
+    // Только в карту — без addToRecentFiles
+    m_loadedFiles[templatePath] = fileName;
+    if (m_currentFile.isEmpty()) {
+        m_currentFile = fileName;
+        m_currentDir  = QFileInfo(fileName).absolutePath();
+    }
+}
+
 void FileManager::openRecentFile(const QString& fileAndTemplate) {
     QStringList qslist = fileAndTemplate.split("<");
     
-    std::string file = qslist[0].toStdString();
+    std::string file = qslist[0].trimmed().toStdString();
     std::string shabl = "";
     
     if (qslist.size() > 1) {

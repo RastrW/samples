@@ -369,23 +369,45 @@ bool App::start(){
                                       "Template loaded: {}", templ_to_load);
                 }
             }
-            for(const Params::_v_file_templates::value_type& file_template
-                 : p_params->getStartLoadFileTemplates()){
-                std::filesystem::path path_template = path_templates;
-                path_template /= file_template.second;
-                IPlainRastrRetCode res =
-                    m_sp_qastra->Load( eLoadCode::RG_REPL, file_template.first,
-                                      path_template.string() );
-                if(res != IPlainRastrRetCode::Ok){
+            for (const auto& file_template : p_params->getStartLoadFileTemplates()) {
+                fs::path path_file = file_template.first;
+
+                // Проверяем существование до загрузки
+                if (!fs::exists(path_file)) {
+                    Params::_v_file_templates empty;
+                    p_params->setStartLoadFileTemplates(empty);
+                    m_v_cache_log.add(spdlog::level::warn,
+                                      "Startup file not found: {}", path_file.string());
+                    QMessageBox mb(QMessageBox::Icon::Warning,
+                                   QObject::tr("Файл не найден"),
+                                   QString("Файл не найден:\n%1\n\nБудет открыт пустой проект.")
+                                       .arg(QString::fromStdString(path_file.string())));
+                    mb.exec();
+                    continue; // Не падаем — просто пропускаем
+                }
+                try {
+                    fs::path path_template = path_templates / file_template.second;
+                    IPlainRastrRetCode res = m_sp_qastra->Load(
+                        eLoadCode::RG_REPL,
+                        file_template.first,
+                        path_template.string()
+                        );
+                    if (res != IPlainRastrRetCode::Ok) {
+                        Params::_v_file_templates empty;
+                        p_params->setStartLoadFileTemplates(empty);
+                        m_v_cache_log.add(spdlog::level::err,
+                                          "Failed to load file template: {}", file_template.first);
+                    }
+                } catch (const std::exception& ex) {
+                    Params::_v_file_templates empty;
+                    p_params->setStartLoadFileTemplates(empty);
                     m_v_cache_log.add(spdlog::level::err,
-                                      "Failed to load file template: {}", file_template.first);
+                                      "Exception loading startup file {}: {}",
+                                      file_template.first, ex.what());
                     QMessageBox mb( QMessageBox::Icon::Critical, QObject::tr("Error"),
                                    QString("error: wheh read file : %1").arg(file_template.first.c_str())
                                    );
                     mb.exec();
-                } else {
-                    m_v_cache_log.add(spdlog::level::info,
-                                      "File template loaded: {}", file_template.first);
                 }
             }
         }
@@ -406,18 +428,6 @@ bool App::start(){
         return false;
     }
     return true;
-}
-
-bool App::writeSettings(){
-    auto* const p_params = Params::get_instance();
-    if(!p_params) return false;
-
-    const fs::path& path = p_params->getFileAppsettings();
-    if(path.empty()){
-        spdlog::warn("writeSettings: appsettings path is empty");
-        return false;
-    }
-    return p_params->writeJsonFile(path);
 }
 
 void App::flushLogCache() {

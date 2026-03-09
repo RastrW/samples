@@ -32,6 +32,7 @@
 #include "formManager.h"
 #include "settingsManager.h"
 #include "uiBuilder.h"
+#include "params.h"
 
 MainWindow::MainWindow()
     : QMainWindow(){
@@ -94,6 +95,16 @@ void MainWindow::initialize(
     // Restore the state of toolbars and dock widgets (menus are part of the overall layout)
     restoreState(m_settingsManager->getSettings("mainWindowState"));
     m_fileManager    = std::make_unique<FileManager>(m_qastra, this);
+
+    const auto& startFiles = Params::get_instance()->getStartLoadFileTemplates();
+    for (const auto& [file, tmpl] : startFiles) {
+        // Добавляем в карту БЕЗ добавления в "последние"
+        m_fileManager->registerStartupFile(
+            QString::fromStdString(file),
+            QString::fromStdString(tmpl)
+            );
+    }
+
     m_calcController = std::make_unique<CalculationController>(
         m_qastra, m_qti, m_qbarsmdp, this);
     m_pyHelper       = std::make_shared<PyHlp>(*m_qastra->getRastr().get());
@@ -179,7 +190,16 @@ void MainWindow::setupConnections() {
     
     connect(m_uiBuilder->actionByName("saveAll"), &QAction::triggered,
             m_fileManager.get(), &FileManager::saveAll);
-    
+
+    for (int i = 0; i < Params::get_instance()->getMaxRecentFiles(); ++i) {
+        QString name = QString("recentFile%1").arg(i);
+        QAction* act = m_uiBuilder->actionByName(name);
+        if (act) {
+            connect(act, &QAction::triggered, this, [this, act]() {
+                m_fileManager->openRecentFile(act->data().toString());
+            });
+        }
+    }
     // События файлов
     connect(m_fileManager.get(), &FileManager::currentFileChanged,
             this, [this](const QString& file) {
@@ -308,6 +328,7 @@ void MainWindow::setupConnections() {
             this, &MainWindow::slot_openGraph);
     connect(m_uiBuilder->actionByName("macro"), &QAction::triggered,
             this, &MainWindow::slot_openMcrDialog);
+    const auto* act = m_uiBuilder->actionByName("close");
     connect(m_uiBuilder->actionByName("close"), &QAction::triggered,
             m_workspace, &QMdiArea::closeActiveSubWindow);
     connect(m_uiBuilder->actionByName("closeAll"), &QAction::triggered,
@@ -400,7 +421,12 @@ void MainWindow::closeEvent(QCloseEvent* event) {
     m_settingsManager->saveWindowGeometry(this);
     
     spdlog::info("MainWindow closing");
-    
+    //Сохраняем настройки только через окно Парамтры
+    //auto* p = Params::get_instance();
+    //if (p) {
+    //    p->writeJsonFile(p->getFileAppsettings());
+    //}
+
     // Удаление dock manager (иначе незакреплённые окна не закроются)
     if (m_dockManager) {
         m_dockManager->deleteLater();

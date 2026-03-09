@@ -42,7 +42,6 @@ private:
 
     // Методы жизненного цикла
     bool readSettings(); // Чтение appsettings.json
-    bool writeSettings(); // Сохранение настроек
     // Загрузка компонентов
     bool loadPlugins(); // Динамическая загрузка .dll/.so плагинов
     // form files are deployed in form catalog near qrastr.exe

@@ -126,6 +126,7 @@ public:
     static constexpr const char pch_json_start_load_template_[]=  "template";
     static constexpr const char pch_json_start_forms_[]=          "forms";
     static constexpr const char pch_json_start_templates_[]=      "templates";
+    static constexpr const char pch_json_max_recent_files_[] = "maxRecentFiles";
 };
 
 #endif // PARAMS_H
