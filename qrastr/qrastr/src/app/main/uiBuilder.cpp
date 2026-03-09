@@ -6,7 +6,10 @@
 #include <QApplication>
 #include <QStyle>
 #include <QToolBar>
+#include <QStyleFactory>
 #include <QStatusBar>
+#include <QActionGroup>
+#include <QSettings>
 #include "params.h"
 
 UIBuilder::UIBuilder(QMainWindow* mainWindow)
@@ -26,7 +29,7 @@ void UIBuilder::buildAll() {
     createMacroActions();
     createWindowActions();
     createHelpActions();
-
+    createStyleActions();
     // Построение меню и панелей
     buildMenuBar();
     buildToolBars();
@@ -212,6 +215,17 @@ void UIBuilder::createHelpActions() {
               tr("Show the application's About box"));
 }
 
+void UIBuilder::createStyleActions() {
+    // Создаём действие для каждого доступного стиля Qt
+    for (const QString& style : QStyleFactory::keys()) {
+        QString actionName = "style_" + style;
+        QAction* action = new QAction(style, m_mainWindow);
+        action->setCheckable(true);
+        action->setData(style);
+        m_actions[actionName] = action;
+    }
+}
+
 void UIBuilder::buildMenuBar() {
     QMenuBar* menuBar = m_mainWindow->menuBar();
 
@@ -300,6 +314,36 @@ void UIBuilder::buildMenuBar() {
     // МЕНЮ "ПОМОЩЬ"
     m_menus["help"] = menuBar->addMenu(tr("&Помощь"));
     m_menus["help"]->addAction(m_actions["about"]);
+
+    // МЕНЮ "СТИЛЬ"
+    m_menus["style"] = menuBar->addMenu(tr("Стиль"));
+    QActionGroup* styleGroup = new QActionGroup(m_mainWindow);
+    styleGroup->setExclusive(true);
+
+    QString currentStyle = QApplication::style()->objectName();
+
+    for (const QString& style : QStyleFactory::keys()) {
+        QString actionName = "style_" + style;
+        QAction* action = m_actions.value(actionName);
+        if (action) {
+            styleGroup->addAction(action);
+            m_menus["style"]->addAction(action);
+            // Отмечаем текущий стиль
+            if (style.toLower() == currentStyle.toLower()) {
+                action->setChecked(true);
+            }
+        }
+    }
+
+    // Подключаем смену стиля прямо здесь
+    connect(styleGroup, &QActionGroup::triggered,
+            [this](QAction* action) {
+                const QString styleName = action->data().toString();
+                QApplication::setStyle(QStyleFactory::create(styleName));
+                // Сохраняем немедленно:
+                QSettings settings;
+                settings.setValue("appStyle", styleName);
+            });
 }
 
 void UIBuilder::buildToolBars() {

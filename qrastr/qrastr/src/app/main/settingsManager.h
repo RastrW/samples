@@ -24,7 +24,7 @@ public:
     bool loadWindowGeometry(QMainWindow* window);
     /// @brief Сохранить геометрию окна
     bool saveWindowGeometry(QMainWindow* window);
-    
+    void saveValue(const QString& key, const QByteArray& value);
     // ========== Кэширование логов ==========
     /// @brief Вывести кэшированные логи
     void flushLogCache();

@@ -20,7 +20,7 @@ int main(int argc, char *argv[]){
 #if(defined(_MSC_VER))
     SetConsoleOutputCP(CP_UTF8);
 #endif
-    app.setOrganizationName("Trolltech");
+    app.setOrganizationName("STC UE");
     app.setApplicationName("QRastr");
 
     if(!app.init()){

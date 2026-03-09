@@ -371,3 +371,35 @@ void FormManager::cascadeForms() {
         step++;
     }
 }
+
+void FormManager::tileForms() {
+    if (m_openDockWidgets.isEmpty()) return;
+
+    QRect available = m_dockManager->rect();
+    int count = m_openDockWidgets.size();
+
+    // Вычисляем сетку: cols x rows
+    int cols = qMax(1, static_cast<int>(std::ceil(std::sqrt(count))));
+    int rows = (count + cols - 1) / cols;
+
+    int w = available.width()  / cols;
+    int h = available.height() / rows;
+
+    QPoint origin = m_dockManager->mapToGlobal(available.topLeft());
+
+    int i = 0;
+    for (ads::CDockWidget* dw : m_openDockWidgets) {
+        if (!dw) continue;
+
+        dw->setFloating();
+
+        int col = i % cols;
+        int row = i / cols;
+        QPoint pos = origin + QPoint(col * w, row * h);
+
+        if (auto* c = dw->dockContainer(); c && c->isFloating()) {
+            c->window()->setGeometry(pos.x(), pos.y(), w, h);
+        }
+        i++;
+    }
+}

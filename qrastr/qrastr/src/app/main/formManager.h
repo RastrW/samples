@@ -50,7 +50,6 @@ public:
     
     void openFormByName(const QString& formName);
     void openFormByIndex(int index);
-    void cascadeForms();
 
     // ========== Построение меню ==========
     /// @brief Построить меню "Открыть" из статических форм
@@ -74,6 +73,10 @@ signals:
     void activeFormChanged(RtabWidget* form);
     
 public slots:
+    ///@brief Автоматическое размещение форм
+    void cascadeForms();
+    void tileForms();
+
     /// @brief Обработка клика по меню форм
     void onFormMenuTriggered(QAction* action);
     void onFormClosed();  

@@ -87,37 +87,40 @@ void MainWindow::initialize(
     m_settingsManager->loadWindowGeometry(this);
     // Restore the state of toolbars and dock widgets (menus are part of the overall layout)
     restoreState(m_settingsManager->getSettings("mainWindowState"));
-    m_fileManager    = std::make_unique<FileManager>(m_qastra, this);
+
+    m_fileManager = std::make_unique<FileManager>(m_qastra, this);
 
     const auto& startFiles = Params::get_instance()->getStartLoadFileTemplates();
     for (const auto& [file, tmpl] : startFiles) {
         // Добавляем в карту БЕЗ добавления в "последние"
         m_fileManager->registerStartupFile(
             QString::fromStdString(file),
-            QString::fromStdString(tmpl)
-            );
+            QString::fromStdString(tmpl));
     }
 
     m_calcController = std::make_unique<CalculationController>(
         m_qastra, m_qti, m_qbarsmdp, this);
-    m_pyHelper       = std::make_shared<PyHlp>(*m_qastra->getRastr().get());
-    m_formManager    = std::make_unique<FormManager>(
+    m_pyHelper    = std::make_shared<PyHlp>(*m_qastra->getRastr().get());
+    m_formManager = std::make_unique<FormManager>(
         m_qastra, m_dockManager, m_pyHelper, this);
     m_formManager->setForms(forms);
-    m_uiBuilder      = std::make_unique<UIBuilder>(this);
+    m_uiBuilder = std::make_unique<UIBuilder>(this);
     m_uiBuilder->buildAll();
-
     // ========== НАСТРОЙКА КОМПОНЕНТОВ ==========
     setupRastrConnections();
     setupConnections();
     slot_updateRecentFiles();
-
     // Построение меню форм
     m_formManager->buildFormsMenu(
         m_uiBuilder->openMenu(),
         m_uiBuilder->calcParametersMenu());
     m_formManager->buildPropertiesMenu(m_uiBuilder->propertiesMenu());
 
+    // Восстанавливаем состояние ADS после того, как все доки созданы
+    const QByteArray adsState = m_settingsManager->getSettings("ADSState");
+    if (!adsState.isEmpty()) {
+        m_dockManager->restoreState(adsState);
+    }
     // Вывод кэшированных логов
     m_settingsManager->flushLogCache();
 
@@ -311,6 +314,8 @@ void MainWindow::setupConnections() {
             });
     connect(m_uiBuilder->actionByName("cascade"), &QAction::triggered,
             m_formManager.get(), &FormManager::cascadeForms);
+    connect(m_uiBuilder->actionByName("tile"), &QAction::triggered,
+            m_formManager.get(), &FormManager::tileForms);
     // ========== SETTINGSMANAGER ==========
     connect(m_uiBuilder->actionByName("settings"), &QAction::triggered,
             m_settingsManager.get(), [this]() {
@@ -415,21 +420,20 @@ void MainWindow::showMDPPrepareDialog() {
 }
 
 void MainWindow::closeEvent(QCloseEvent* event) {
-    // Сохранение настроек
-    m_settingsManager->saveWindowGeometry(this);
-    
-    spdlog::info("MainWindow closing");
-    //Сохраняем настройки только через окно Парамтры
-    //auto* p = Params::get_instance();
-    //if (p) {
-    //    p->writeJsonFile(p->getFileAppsettings());
-    //}
+    // Сохраняем состояние ADS пока dock manager ещё жив
+    if (m_dockManager) {
+        m_settingsManager->saveValue("ADSState", m_dockManager->saveState());
+    }
 
-    // Удаление dock manager (иначе незакреплённые окна не закроются)
+    // Сохранение геометрии и стиля
+    m_settingsManager->saveWindowGeometry(this);
+
+    spdlog::info("MainWindow closing");
+
     if (m_dockManager) {
         m_dockManager->deleteLater();
     }
-    
+
     QMainWindow::closeEvent(event);
 }
 
