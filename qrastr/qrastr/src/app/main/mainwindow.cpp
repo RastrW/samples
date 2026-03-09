@@ -309,7 +309,8 @@ void MainWindow::setupConnections() {
             this, [](const QString& name) {
                 spdlog::info("Form opened: {}", name.toStdString());
             });
-    
+    connect(m_uiBuilder->actionByName("cascade"), &QAction::triggered,
+            m_formManager.get(), &FormManager::cascadeForms);
     // ========== SETTINGSMANAGER ==========
     connect(m_uiBuilder->actionByName("settings"), &QAction::triggered,
             m_settingsManager.get(), [this]() {

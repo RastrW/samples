@@ -76,15 +76,18 @@ void FormManager::openForm(const CUIForm& form) {
         // Добавляем в список открытых форм
         // Сигналы будут передаваться через onCalculationStarted/Finished
         m_openForms.append(prtw);
+        m_openDockWidgets.append(dw);
+
         dw->setWidget(prtw->createDockContent());
 
         m_dockManager->addDockWidgetTab(ads::TopDockWidgetArea, dw);
         // Обработка закрытия
         connect(dw, &ads::CDockWidget::closed, prtw, &RtabWidget::slot_close);
         connect(dw, &ads::CDockWidget::closed,
-                this, [this, prtw, formName = form.Name()]() {
+                this, [this, prtw, dw, formName = form.Name()]() {
                     // Удаляем из списка открытых форм
                     m_openForms.removeOne(prtw);
+                    m_openDockWidgets.removeOne(dw);
                     emit formClosed(QString::fromStdString(formName));
                 });
 
@@ -334,4 +337,37 @@ QMap<QString, QMenu*> FormManager::buildMenuStructure(QMenu* rootMenu) {
     }
     
     return menuMap;
+}
+
+void FormManager::cascadeForms() {
+    if (m_openDockWidgets.isEmpty()) return;
+
+    // Берём геометрию области dock manager как опорную
+    QRect available = m_dockManager->rect();
+    QPoint origin   = m_dockManager->mapToGlobal(available.topLeft())
+                    + QPoint(20, 20);
+
+    constexpr int kOffset     = 30;  // шаг каскада в пикселях
+    constexpr int kWidth      = 600;
+    constexpr int kHeight     = 400;
+
+    int step = 0;
+    for (ads::CDockWidget* dw : m_openDockWidgets) {
+        if (!dw) continue;
+
+        // Открепляем виджет — делаем floating
+        dw->setFloating();
+
+        QPoint pos = origin + QPoint(step * kOffset, step * kOffset);
+
+        // Позиционируем и задаём размер
+        if (auto* floatContainer = dw->dockContainer()) {
+            if (floatContainer->isFloating()) {
+                floatContainer->window()->setGeometry(
+                    pos.x(), pos.y(), kWidth, kHeight);
+            }
+        }
+
+        step++;
+    }
 }
