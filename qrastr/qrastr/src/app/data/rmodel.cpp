@@ -25,7 +25,6 @@ bool RModel::populateDataFromRastr()
     } catch (...) {
         qCritical() << "ERROR! populateDataFromRastr:"
                     << (m_rdata ? m_rdata->t_name_.c_str() : "<null>");
-        return false;
     }
     return true;
 }

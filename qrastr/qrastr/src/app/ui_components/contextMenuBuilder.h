@@ -26,7 +26,7 @@ public:
     /// Строит персистентный QMenu и все статичные QAction.
     void initMenu(QWidget* menuParent);
     /// обновляет динамические пункты.
-    QMenu* prepareForShow(const MenuContext& ctx);
+    void prepareForShow(const MenuContext& ctx, QMenu* qtitanMenu);
 signals:
     // Сигналы для операций со строками
     void sig_addRow();
@@ -57,9 +57,6 @@ private:
     Qtitan::GridTableView* m_view;
     LinkedFormController*  m_linkedFormCtrl;
 
-    // ── Персистентное меню ──────────────────────────────────────────────
-    QMenu* m_menu         = nullptr;   ///< живёт столько же, сколько builder
-
     // ── Динамические пункты (обновляются при каждом вызове) ────────────
     QAction* m_actDesc    = nullptr;   ///< описание колонки
     QAction* m_actSum     = nullptr;   ///< сумма выделенных
@@ -69,6 +66,18 @@ private:
     QMenu*   m_linkedFormsMenu  = nullptr;
     QMenu*   m_linkedMacrosMenu = nullptr;
 
+    // Статические экшны
+    QAction* m_actInsert    = nullptr;
+    QAction* m_actAdd       = nullptr;
+    QAction* m_actDuplicate = nullptr;
+    QAction* m_actDelete    = nullptr;
+    QAction* m_actGroup     = nullptr;
+    QAction* m_actTmpl      = nullptr;
+    QAction* m_actData      = nullptr;
+    QAction* m_actExport    = nullptr;
+    QAction* m_actImport    = nullptr;
+    QAction* m_actSel       = nullptr;
+    QAction* m_actCF        = nullptr;
     // ── Хранители для отсоединения сигналов ────────────────────────────
     int      m_currentCol = -1;   ///< col при последнем вызове prepareForShow
 };

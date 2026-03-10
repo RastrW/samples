@@ -31,162 +31,112 @@ void ContextMenuBuilder::removeUnwantedBuiltins(QMenu* menu)
 
 void ContextMenuBuilder::initMenu(QWidget* menuParent)
 {
-    m_menu = new QMenu(menuParent);
-    // ── Убираем нежелательные встроенные пункты ────────────────────────
-    removeUnwantedBuiltins(m_menu);
+    // Подменю связанных форм/макросов парентим к menuParent (виджет-хозяин),
+    // чтобы они жили независимо от конкретного QMenu Qtitan
+    m_linkedFormsMenu  = new QMenu(tr("Связанные формы"),  menuParent);
+    m_linkedMacrosMenu = new QMenu(tr("Макрос"),           menuParent);
 
-    // ── Описание колонки ─────────────────────────────────────────────────
-    m_menu->addSeparator();
-    m_actDesc = new QAction(m_menu);
+    // Все статические экшны парентим к this (ContextMenuBuilder),
+    // чтобы они пережили любой отдельный QMenu и не удалялись вместе с ним
+    m_actDesc = new QAction(this);
     connect(m_actDesc, &QAction::triggered,
             this, [this]() { emit sig_colProp(m_currentCol); });
-    m_menu->addAction(m_actDesc);
 
-    // ── Сумма выделенных ─────────────────────────────────────────────────
-    m_actSum = new QAction(m_menu);
+    m_actSum = new QAction(this);
     m_actSum->setEnabled(false);
-    m_menu->addAction(m_actSum);
 
-    m_menu->addSeparator();
+    m_actInsert    = new QAction(QIcon(":/images/Rastr3_grid_insrow_16x16.png"),  tr("Вставить"),            this);
+    m_actAdd       = new QAction(QIcon(":/images/Rastr3_grid_addrow_16x16.png"),  tr("Добавить"),            this);
+    m_actDuplicate = new QAction(QIcon(":/images/Rastr3_grid_duprow_16x161.png"), tr("Дублировать"),         this);
+    m_actDelete    = new QAction(QIcon(":/images/Rastr3_grid_delrow_16x16.png"),  tr("Удалить"),             this);
+    m_actGroup     = new QAction(QIcon(":/images/column_edit.png"),               tr("Групповая коррекция"), this);
 
-    // ── Строковые операции (статика) ─────────────────────────────────────
-    auto* actInsert    = new QAction(QIcon(":/images/Rastr3_grid_insrow_16x16.png"),
-                                  tr("Вставить"),            m_menu);
-    auto* actAdd       = new QAction(QIcon(":/images/Rastr3_grid_addrow_16x16.png"),
-                               tr("Добавить"),            m_menu);
-    auto* actDuplicate = new QAction(QIcon(":/images/Rastr3_grid_duprow_16x161.png"),
-                                     tr("Дублировать"),         m_menu);
-    auto* actDelete    = new QAction(QIcon(":/images/Rastr3_grid_delrow_16x16.png"),
-                                  tr("Удалить"),             m_menu);
-    auto* actGroup     = new QAction(QIcon(":/images/column_edit.png"),
-                                 tr("Групповая коррекция"), m_menu);
+    m_actInsert   ->setShortcut(QKeySequence(Qt::CTRL | Qt::Key_I));
+    m_actAdd      ->setShortcut(QKeySequence(Qt::CTRL | Qt::Key_A));
+    m_actDuplicate->setShortcut(QKeySequence(Qt::CTRL | Qt::Key_R));
+    m_actDelete   ->setShortcut(QKeySequence(Qt::CTRL | Qt::Key_D));
 
-    actInsert   ->setShortcut(QKeySequence(Qt::CTRL | Qt::Key_I));
-    actAdd      ->setShortcut(QKeySequence(Qt::CTRL | Qt::Key_A));
-    actDuplicate->setShortcut(QKeySequence(Qt::CTRL | Qt::Key_R));
-    actDelete   ->setShortcut(QKeySequence(Qt::CTRL | Qt::Key_D));
+    connect(m_actInsert,    &QAction::triggered, this, &ContextMenuBuilder::sig_insertRow);
+    connect(m_actAdd,       &QAction::triggered, this, &ContextMenuBuilder::sig_addRow);
+    connect(m_actDuplicate, &QAction::triggered, this, &ContextMenuBuilder::sig_duplicateRow);
+    connect(m_actDelete,    &QAction::triggered, this, &ContextMenuBuilder::sig_deleteRow);
+    connect(m_actGroup,     &QAction::triggered, this, &ContextMenuBuilder::sig_groupCorrection);
 
-    connect(actInsert,    &QAction::triggered, this, &ContextMenuBuilder::sig_insertRow);
-    connect(actAdd,       &QAction::triggered, this, &ContextMenuBuilder::sig_addRow);
-    connect(actDuplicate, &QAction::triggered, this, &ContextMenuBuilder::sig_duplicateRow);
-    connect(actDelete,    &QAction::triggered, this, &ContextMenuBuilder::sig_deleteRow);
-    connect(actGroup,     &QAction::triggered, this, &ContextMenuBuilder::sig_groupCorrection);
+    m_actTmpl = new QAction(tr("Выравнивание: по шаблону"), this);
+    m_actData = new QAction(tr("Выравнивание: по данным"),  this);
+    connect(m_actTmpl, &QAction::triggered, this, &ContextMenuBuilder::sig_widthByTemplate);
+    connect(m_actData, &QAction::triggered, this, &ContextMenuBuilder::sig_widthByData);
 
-    m_menu->addAction(actInsert);
-    m_menu->addAction(actAdd);
-    m_menu->addAction(actDuplicate);
-    m_menu->addAction(actDelete);
-    m_menu->addAction(actGroup);
+    m_actExport = new QAction(tr("Экспорт CSV"), this);
+    m_actImport = new QAction(tr("Импорт CSV"), this);
+    m_actSel    = new QAction(tr("Выборка"),    this);
+    connect(m_actExport, &QAction::triggered, this, &ContextMenuBuilder::sig_exportCsv);
+    connect(m_actImport, &QAction::triggered, this, &ContextMenuBuilder::sig_importCsv);
+    connect(m_actSel,    &QAction::triggered, this, &ContextMenuBuilder::sig_selection);
 
-    m_menu->addSeparator();
-
-    // ── Выравнивание (статика) ───────────────────────────────────────────
-    auto* actTmpl = new QAction(tr("Выравнивание: по шаблону"), m_menu);
-    auto* actData = new QAction(tr("Выравнивание: по данным"),  m_menu);
-    connect(actTmpl, &QAction::triggered, this, &ContextMenuBuilder::sig_widthByTemplate);
-    connect(actData, &QAction::triggered, this, &ContextMenuBuilder::sig_widthByData);
-    m_menu->addAction(actTmpl);
-    m_menu->addAction(actData);
-
-    m_menu->addSeparator();
-
-    // ── CSV / Выборка (статика) ──────────────────────────────────────────
-    auto* actExport = new QAction(tr("Экспорт CSV"), m_menu);
-    auto* actImport = new QAction(tr("Импорт CSV"), m_menu);
-    auto* actSel    = new QAction(tr("Выборка"),    m_menu);
-    connect(actExport, &QAction::triggered, this, &ContextMenuBuilder::sig_exportCsv);
-    connect(actImport, &QAction::triggered, this, &ContextMenuBuilder::sig_importCsv);
-    connect(actSel,    &QAction::triggered, this, &ContextMenuBuilder::sig_selection);
-    m_menu->addAction(actExport);
-    m_menu->addAction(actImport);
-    m_menu->addAction(actSel);
-
-    // ── Прямой ввод кода (видимость меняется, пункт постоянный) ─────────
-    m_actDirect = new QAction(tr("Прямой ввод кода"), m_menu);
+    m_actDirect = new QAction(tr("Прямой ввод кода"), this);
     m_actDirect->setCheckable(true);
     connect(m_actDirect, &QAction::triggered,
             this, [this]() { emit sig_directCodeToggle(m_currentCol); });
-    m_menu->addAction(m_actDirect);
 
-    // ── Подменю: связанные формы и макросы ──────────────────────────────
-    // Создаём пустые подменю — заполняются в rebuildLinkedSubmenus()
-    m_linkedFormsMenu  = new QMenu(tr("Связанные формы"),  m_menu);
-    m_linkedMacrosMenu = new QMenu(tr("Макрос"),           m_menu);
-    m_menu->addMenu(m_linkedFormsMenu);
-    m_menu->addMenu(m_linkedMacrosMenu);
-
-    // ── Условное форматирование (статика) ────────────────────────────────
-    auto* actCF = new QAction(QIcon(":/icons/edit_cond_formats"),
-                              tr("Условное форматирование"), m_menu);
-    connect(actCF, &QAction::triggered,
+    m_actCF = new QAction(QIcon(":/icons/edit_cond_formats"),
+                          tr("Условное форматирование"), this);
+    connect(m_actCF, &QAction::triggered,
             this, [this]() { emit sig_condFormatsEdit(m_currentCol); });
-    m_menu->addAction(actCF);
 }
 
-QMenu* ContextMenuBuilder::prepareForShow(const MenuContext& ctx)
+void ContextMenuBuilder::prepareForShow(const MenuContext& ctx, QMenu* menu)
 {
-    QElapsedTimer totalTimer;
-    totalTimer.start();
-
-    // ── 0. Установка текущей колонки ─────────────────────────────────────
-    QElapsedTimer stepTimer;
-    stepTimer.start();
-
     m_currentCol = ctx.column;
 
-    qInfo() << "[prepareForShow] Step 0 (set current column):"
-            << stepTimer.elapsed() << "ms";
+    // ── 1. Убираем нежелательные встроенные пункты Qtitan ────────────────
+    removeUnwantedBuiltins(menu);
 
-    // ── 1. Текст описания колонки ─────────────────────────────────────────
-    stepTimer.restart();
-
+    // ── 2. Обновляем динамический текст ──────────────────────────────────
     const std::string desc = ctx.col->getDesc()
                              + " |" + ctx.col->getTitle()
                              + "| -(" + ctx.col->getColName()
                              + "), [" + ctx.col->getUnit() + "]";
     m_actDesc->setText(QString::fromStdString(desc));
 
-    qInfo() << "[prepareForShow] Step 1 (build description text):"
-            << stepTimer.elapsed() << "ms";
-
-    // ── 2. Сумма выделенных ───────────────────────────────────────────────
-    stepTimer.restart();
-
     auto [count, sum] = calcSumSelected();
     m_actSum->setText(
         QString("Сумма: %1   Элементов: %2").arg(sum).arg(count));
 
-    qInfo() << "[prepareForShow] Step 2 (calculate selected sum):"
-            << stepTimer.elapsed() << "ms";
-
     // ── 3. Прямой ввод кода ───────────────────────────────────────────────
-    stepTimer.restart();
-
     const auto propTT = ctx.col->getComPropTT();
     const bool showDirect =
         (!ctx.col->getNameRef().empty() && propTT == enComPropTT::COM_PR_INT)
         || propTT == enComPropTT::COM_PR_SUPERENUM;
-
     m_actDirect->setVisible(showDirect);
     if (showDirect)
         m_actDirect->setChecked(ctx.col->isDirectCode());
 
-    qInfo() << "[prepareForShow] Step 3 (direct code handling):"
-            << stepTimer.elapsed() << "ms";
+    // ── 4. Вставляем custom пункты в Qtitan-меню ───────────────────────────
+    menu->addSeparator();
+    menu->addAction(m_actDesc);
+    menu->addAction(m_actSum);
+    menu->addSeparator();
+    menu->addAction(m_actInsert);
+    menu->addAction(m_actAdd);
+    menu->addAction(m_actDuplicate);
+    menu->addAction(m_actDelete);
+    menu->addAction(m_actGroup);
+    menu->addSeparator();
+    menu->addAction(m_actTmpl);
+    menu->addAction(m_actData);
+    menu->addSeparator();
+    menu->addAction(m_actExport);
+    menu->addAction(m_actImport);
+    menu->addAction(m_actSel);
+    menu->addAction(m_actDirect);
 
-    // ── 4. Связанные подменю ──────────────────────────────────────────────
-    stepTimer.restart();
-
+    // ── 5. Связанные подменю (очищаем и перестраиваем) ───────────────────
     rebuildLinkedSubmenus(ctx.row);
+    menu->addMenu(m_linkedFormsMenu);
+    menu->addMenu(m_linkedMacrosMenu);
 
-    qInfo() << "[prepareForShow] Step 4 (rebuild linked submenus):"
-            << stepTimer.elapsed() << "ms";
-
-    // ── Итоговое время ────────────────────────────────────────────────────
-    qInfo() << "[prepareForShow] TOTAL:"
-            << totalTimer.elapsed() << "ms";
-
-    return m_menu;
+    menu->addAction(m_actCF);
 }
 
 void ContextMenuBuilder::rebuildLinkedSubmenus(int contextRow)

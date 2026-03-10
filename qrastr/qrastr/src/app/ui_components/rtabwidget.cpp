@@ -439,15 +439,6 @@ void RtabWidget::setTableView(int multiplier  )
 
 void RtabWidget::slot_contextMenu(ContextMenuEventArgs* args)
 {
-    //QElapsedTimer stepTimer;
-    //stepTimer.start();
-
-    args->setHandled(true);
-
-    //qInfo() << "[slot_contextMenu] Step 0 setHandled:"
-    //        << stepTimer.elapsed() << "ms";
-    //stepTimer.restart();
-
     const int column = args->hitInfo().columnIndex();
     const int row    = args->hitInfo().row().rowIndex();
     if (column < 0) return;
@@ -456,9 +447,8 @@ void RtabWidget::slot_contextMenu(ContextMenuEventArgs* args)
     if (!col) return;
 
     MenuContext ctx { column, row, col };
-    QMenu* menu = m_menuBuilder->prepareForShow(ctx);
 
-    menu->exec(QCursor::pos());
+    m_menuBuilder->prepareForShow(ctx, args->contextMenu());
 }
 
 void RtabWidget::slot_focusRowChanged(int /*row_old*/, int row_new)

@@ -26,7 +26,7 @@ bool SettingsManager::loadWindowGeometry(QMainWindow* window) {
     QString savedStyle = m_settings.value("appStyle").toString();
     qInfo() << "SavedStyle:" << savedStyle;
     if (savedStyle.isEmpty()){
-        savedStyle = "Fusion";  // защита от старой записи
+        savedStyle = "windows11";
     }
     QApplication::setStyle(QStyleFactory::create(savedStyle));
 
