@@ -10,16 +10,16 @@ class CondFormatStorage
 public:
     // isRowIdFormat == true  → форматы по идентификатору строки (приоритет выше)
     // isRowIdFormat == false → форматы по значению ячейки
-    void add(bool isRowIdFormat, size_t column, const CondFormat& condFormat);
-    void set(bool isRowIdFormat, size_t column, const std::vector<CondFormat>& condFormats);
+    void add(bool isRowIdFormat, std::size_t column, const CondFormat& condFormat);
+    void set(bool isRowIdFormat, std::size_t column, const std::vector<CondFormat>& condFormats);
 
-    const std::map<size_t, std::vector<CondFormat>>& rowIdFormats() const { return m_rowIdFormats; }
-    const std::map<size_t, std::vector<CondFormat>>& condFormats()  const { return m_condFormats;  }
+    const std::map<std::size_t, std::vector<CondFormat>>& rowIdFormats() const { return m_rowIdFormats; }
+    const std::map<std::size_t, std::vector<CondFormat>>& condFormats()  const { return m_condFormats;  }
 
 private:
-    static void addToMap(std::map<size_t, std::vector<CondFormat>>& map,
-                         size_t column, const CondFormat& condFormat);
+    static void addToMap(std::map<std::size_t, std::vector<CondFormat>>& map,
+                         std::size_t column, const CondFormat& condFormat);
 
-    std::map<size_t, std::vector<CondFormat>> m_rowIdFormats;
-    std::map<size_t, std::vector<CondFormat>> m_condFormats;
+    std::map<std::size_t, std::vector<CondFormat>> m_rowIdFormats;
+    std::map<std::size_t, std::vector<CondFormat>> m_condFormats;
 };

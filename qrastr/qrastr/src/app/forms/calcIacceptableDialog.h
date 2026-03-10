@@ -16,7 +16,7 @@ public:
     virtual ~CalcIacceptableDialog() = default;
 private slots:
     void on_buttonBox_accepted();
-    void on_checkBox_checkStateChanged(const Qt::CheckState &arg1);
+    void on_checkBox_checkStateChanged(int state);
 
 private:
     QAstra* pqastra;

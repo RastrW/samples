@@ -2,6 +2,7 @@
 
 #include <QObject>
 #include <QSettings>
+#include <memory>
 
 namespace qrastr {
     class CacheLogVector;
