@@ -237,9 +237,20 @@ void SettingsDialog::onBtnApplyClick() {
             }
         }
     } else {
-        spdlog::error("Файл настроек не найден: {}", path_appsettings.string());
+
+        spdlog::error("Файл настроек не найден: {} и будет создан заново" , path_appsettings.string());
         QMessageBox::warning(this, tr("Ошибка"),
-                             tr("Файл настроек не найден"));
+                             tr("Файл настроек не найден и будет создан заново"));
+
+        if (p_params->writeJsonFile(path_appsettings.string())) {
+            m_settingsChanged = false;
+            m_pbApplySettings->setEnabled(false);
+            spdlog::info("Настройки успешно сохранены");
+        } else {
+            QMessageBox::warning(this, tr("Ошибка"),
+                                 tr("Не удалось сохранить настройки"));
+            spdlog::error("Не удалось сохранить настройки");
+        }
     }
 }
 
