@@ -1,14 +1,10 @@
 #pragma once
 
-#include "astra_headers/UIForms.h"
-#include "rtablesdatamanager.h"
-using WrapperExceptionType = std::runtime_error;
-#include "QDataBlocks.h"
-
-#include <astra/IPlainRastrWrappers.h>
 #include "rcol.h"
 
-typedef std::vector<std::string> _vstr;
+class CUIForm;
+class RTablesDataManager;
+class QDataBlock;
 
 /**
  * @brief Метаданные таблицы: вектор RCol + ссылка на общий плоский массив данных.
@@ -24,25 +20,19 @@ public:
      * указатели на элементы вектора инвалидируются и RCol теряют данные.
      */
     RData(QAstra* _pqastra, const CUIForm& _form);
+    QAstra* getAstra() const;
 
-    int AddCol(const RCol& rcol){
-        emplace_back(rcol);
-        return static_cast<int>(size());
-    }
+    int AddCol(const RCol& rcol);
     /**
      * Получает (или создаёт, если ещё нет) общий QDataBlock из RTablesDataManager.
      * После этого вызова pnparray_ указывает на тот же объект, что и у других
      * открытых окон этой таблицы — данные НЕ дублируются.
      */
-    void populate_qastra(QAstra* _pqastra,RTablesDataManager* _pRTDM);
+    void populate_qastra(QAstra* _pqastra, RTablesDataManager* _pRTDM);
     std::string get_cols(bool visible = true);
 
-    void clear_data();   // Удалить данные (стуктура остается)
-
     std::string getCommaSeparatedFieldNames();
-    void Trace() const;
 
-    QAstra* pqastra_;
     std::string t_name_ = "";
     std::string t_title_ = "";
 
@@ -51,4 +41,5 @@ public:
     std::map<std::string, int> mCols_; ///< map<имя_колонки, индекс> для быстрого поиска колонки по имени.
 private:
     std::string m_str_cols = "";       ///< vCols_ в виде строки имен столбцов ex: "ny,pn,qn,vras"
+    QAstra* m_qastra;
 };

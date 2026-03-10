@@ -1,12 +1,12 @@
 #pragma once
-
-#include <map>
-#include <string>
-#include "QDataBlocks.h"
-#include "QVector"
 #include <QObject>
-#include "qastra.h"
-#include "astra_headers/UIForms.h"
+#include "astra/IPlainRastr.h"
+#include <memory>
+
+class QAstra;
+class CUIForm;
+class QDataBlock;
+class _hint_data;
 
 /**
  * @class Централизованный кеш табличных данных и маршрутизатор событий от расчётного ядра.
@@ -17,10 +17,10 @@
  *  2. Слушает сигнал QAstra::onRastrHint и преобразует hint-события плагина
  *     в Qt-сигналы (sig_dataChanged, sig_BeginResetModel, …).
  *  3. RModel подписывается на эти сигналы и уведомляет View об изменениях.
+ *  4. Является единственной точкой записи в плагин через setValue().
  *
  * Время жизни QDataBlock:
- *   Блок удаляется из кеша при следующем вызове get(), если use_count() == 1
- *   (то есть ни одно открытое окно не держит shared_ptr).
+ *   Блок удаляется из кеша при следующем вызове get(), если use_count() == 1.
  */
 class RTablesDataManager : public QObject
 {
@@ -44,6 +44,15 @@ public:
 
     long column_index(std::string tname, std::string _col_name);
     void getDataBlock(std::string tname, std::string Cols, QDataBlock& QDB);
+
+    /** @brief Централизованная запись в плагин.
+    * RModel::setData больше НЕ вызывает emit dataChanged вручную —
+    * обновление View приходит ровно один раз, через цепочку хинтов.
+    */
+    void setValue(const std::string& tname,
+                  const std::string& cname,
+                  long               row,
+                  const FieldVariantData& value);
 private:
     void getDataBlock(std::string tname, std::string Cols, QDataBlock& QDB, FieldDataOptions Options );
     void getDataBlock(std::string tname, QDataBlock& QDB, FieldDataOptions Options );
@@ -60,7 +69,10 @@ signals:
     void sig_EndResetModel(std::string tname);
     ///< вставка строки
     void sig_BeginInsertRow(std::string tname,int first,int last);
-    void sig_EndInsertRow(std::string tname);
+    void sig_EndInsertRow(std::string tname);\
+    ///< удаление строк
+    void sig_BeginRemoveRows(std::string tname,int first,int last);
+    void sig_EndRemoveRows(std::string tname);
     ///< обновление представлений
     void sig_UpdateModel(std::string tname);
     void sig_UpdateView(std::string tname);
@@ -82,6 +94,15 @@ private:
     /**
      * @brief EventHints::ChangeAll — все таблицы изменились (например, загрузка файла).
      * Сбрасывает и перечитывает каждый кешированный блок.
+     * @note Вызыывается при:
+     *     - writeTable
+     *     - Table::SetSize
+     *     - Table::SwapRows
+     *     - Table::AddTable - создание новой таблицы через параметры
+     *     - Column::SetProperty - изменение свойств поля
+     *     - Columns::RemoveAll
+     *     - Columns::Remove
+     *     - CalcRgm
      */
     void handleChangeAll();
     /**
@@ -97,6 +118,9 @@ private:
     /**
      * @brief EventHints::ChangeRow — изменились все колонки одной строки.
      * Перечитывает все колонки для строки row.
+     * Изменились все значения одной колонки:
+     * - групповой коррекция
+     * - при изменении содержимого одной ячейки может быть вызван при наличии связанной формулы в колонке
      */
     void handleChangeRow(const std::string& tname, long row);
     /**

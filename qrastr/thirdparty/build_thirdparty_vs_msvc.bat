@@ -12,7 +12,7 @@ REM ---------------------------------------------------------------------------
 set "VCVARS=C:\Program Files\Microsoft Visual Studio\2022\Enterprise\VC\Auxiliary\Build\vcvarsall.bat"
 set "CMAKE_BIN=C:\Qt\Tools\CMake_64\bin\cmake.exe"
 set "QT_DIR=C:\Qt\6.7.0\msvc2019_64"
-set "PYTHON_BIN=C:\Users\kappes-ad\AppData\Local\Programs\Python\Python312\python.exe"
+set "PYTHON_BIN=C:\Python312\python.exe"
 set "POSTGRESQL_ROOT=C:\Program Files\PostgreSQL\18"
 REM Необходимо установить nasm: https://www.nasm.us/pub/nasm/releasebuilds/3.01/win64/
 REM Для правильной сборки SDL3_image под msvc
@@ -551,18 +551,18 @@ for %%T in (%BUILD_TYPES%) do (
     echo ===========================================================================
     
     if /i "%%T"=="Debug" (
-        call :build_library "fmt" "%THIRDPARTY_DIR%\fmt" "%%T" "-DFMT_TEST=OFF -DBUILD_SHARED_LIBS=OFF"
-        call :build_library "spdlog" "%THIRDPARTY_DIR%\spdlog" "%%T" "-DSPDLOG_FMT_EXTERNAL=ON -DBUILD_SHARED_LIBS=OFF"
+        REM call :build_library "fmt" "%THIRDPARTY_DIR%\fmt" "%%T" "-DFMT_TEST=OFF -DBUILD_SHARED_LIBS=OFF"
+        REM call :build_library "spdlog" "%THIRDPARTY_DIR%\spdlog" "%%T" "-DSPDLOG_FMT_EXTERNAL=ON -DBUILD_SHARED_LIBS=OFF"
     ) else (
-        call :build_library "fmt" "%THIRDPARTY_DIR%\fmt" "%%T" "-DFMT_TEST=OFF -DBUILD_SHARED_LIBS=OFF -DCMAKE_MSVC_RUNTIME_LIBRARY=MultiThreaded"
-        call :build_library "spdlog" "%THIRDPARTY_DIR%\spdlog" "%%T" "-DSPDLOG_FMT_EXTERNAL=ON -DBUILD_SHARED_LIBS=OFF -DCMAKE_MSVC_RUNTIME_LIBRARY=MultiThreaded"
+        REM call :build_library "fmt" "%THIRDPARTY_DIR%\fmt" "%%T" "-DFMT_TEST=OFF -DBUILD_SHARED_LIBS=OFF -DCMAKE_MSVC_RUNTIME_LIBRARY=MultiThreaded"
+        REM call :build_library "spdlog" "%THIRDPARTY_DIR%\spdlog" "%%T" "-DSPDLOG_FMT_EXTERNAL=ON -DBUILD_SHARED_LIBS=OFF -DCMAKE_MSVC_RUNTIME_LIBRARY=MultiThreaded"
     )
     
 	call :build_scintilla "%THIRDPARTY_DIR%\scintilla" "%%T"   
-    call :build_library "SDL3" "%THIRDPARTY_DIR%\SDL" "%%T" "-DSDL_TESTS=OFF -DSDL_EXAMPLES=OFF -DSDL_INSTALL=ON -DSDL_SHARED=ON -DSDL_STATIC=OFF"
-    call :build_library "SDL3_image" "%THIRDPARTY_DIR%\SDL_image" "%%T" "-DSDL3IMAGE_SAMPLES=OFF -DBUILD_SHARED_LIBS=ON"
-    call :build_lexilla "%THIRDPARTY_DIR%\lexilla\src" "%%T"
-    call :build_library "qtadvanceddocking" "%THIRDPARTY_DIR%\Qt-Advanced-Docking-System" "%%T" "-DBUILD_EXAMPLES=OFF -DBUILD_SHARED_LIBS=ON"
+    REM call :build_library "SDL3" "%THIRDPARTY_DIR%\SDL" "%%T" "-DSDL_TESTS=OFF -DSDL_EXAMPLES=OFF -DSDL_INSTALL=ON -DSDL_SHARED=ON -DSDL_STATIC=OFF"
+    REM call :build_library "SDL3_image" "%THIRDPARTY_DIR%\SDL_image" "%%T" "-DSDL3IMAGE_SAMPLES=OFF -DBUILD_SHARED_LIBS=ON"
+    REM call :build_lexilla "%THIRDPARTY_DIR%\lexilla\src" "%%T"
+    REM call :build_library "qtadvanceddocking" "%THIRDPARTY_DIR%\Qt-Advanced-Docking-System" "%%T" "-DBUILD_EXAMPLES=OFF -DBUILD_SHARED_LIBS=ON"
     REM call :build_metakit "%THIRDPARTY_DIR%\metakit" "%%T"
     call :build_qmake_library "ScintillaEditBase" "%THIRDPARTY_DIR%\scintilla\qt\ScintillaEditBase" "%%T" "0"
     call :build_qmake_library "ScintillaEdit" "%THIRDPARTY_DIR%\scintilla\qt\ScintillaEdit" "%%T" "1"

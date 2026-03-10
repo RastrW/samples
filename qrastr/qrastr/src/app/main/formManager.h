@@ -17,6 +17,7 @@ class PyHlp;
 
 namespace ads {
     class CDockManager;
+    class CDockWidget;
 }
 
 /**
@@ -65,12 +66,17 @@ public:
      */
     void generateDynamicForms(QMenu* menu);
     RtabWidget* activeForm() const { return m_activeForm; }
+
 signals:
     void formOpened(const QString& formName);
     void formClosed(const QString& formName);
     void activeFormChanged(RtabWidget* form);
     
 public slots:
+    ///@brief Автоматическое размещение форм
+    void cascadeForms();
+    void tileForms();
+
     /// @brief Обработка клика по меню форм
     void onFormMenuTriggered(QAction* action);
     void onFormClosed();  
@@ -99,6 +105,7 @@ private:
      * Используется для передачи сигналов расчётов
      */
     QList<RtabWidget*> m_openForms;
+    QList<ads::CDockWidget*>  m_openDockWidgets;
     RtabWidget* m_activeForm = nullptr;
     // ========== Вспомогательные методы ==========
     CUIForm* findFormByName(const QString& name);

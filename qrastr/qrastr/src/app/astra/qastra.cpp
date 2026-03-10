@@ -1,3 +1,5 @@
+#include <QCoreApplication>
+#include <QFile>
 #include "qastra.h"
 #include "common_qrastr.h"
 //#include "UIForms.h"

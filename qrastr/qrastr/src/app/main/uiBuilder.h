@@ -67,6 +67,7 @@ private:
     void createMacroActions();
     void createWindowActions();
     void createHelpActions();
+    void createStyleActions();
 
     QAction* addAction(
         const QString& name,

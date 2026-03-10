@@ -1,0 +1,39 @@
+#pragma once
+
+#include <QDialog>
+#include <QString>
+
+namespace Qtitan   { class GridTableView; }
+
+class RData;
+class RCol;
+class QPlainTextEdit;
+class QLineEdit;
+
+class ColPropDialog : public QDialog
+{
+    Q_OBJECT
+
+public:
+    explicit ColPropDialog(RData* prdata,
+                         Qtitan::GridTableView* view,
+                         RCol* prcol, QWidget *parent = nullptr);
+    ~ColPropDialog() = default;
+
+private slots:
+    void on_btn_ok_clicked();
+
+private:
+    Qtitan::GridTableView* m_view;
+    RData*  m_prdata;
+    RCol*   m_prcol;
+
+    QLineEdit* m_leName;
+    QLineEdit* m_leTitle;
+    QPlainTextEdit* m_teDescr;
+    QLineEdit* m_leWidth;
+    QLineEdit* m_lePrecision;
+    QLineEdit* m_leExpression;
+
+    void setupUi();
+};

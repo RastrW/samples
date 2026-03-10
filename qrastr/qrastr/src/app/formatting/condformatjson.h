@@ -2,7 +2,7 @@
 #define CONDFORMATJSON_H
 #pragma once
 
-#include "CondFormat.h"
+#include "condFormat.h"
 #include <fstream>
 #include <filesystem>
 #include <utils.h>

@@ -34,7 +34,7 @@ public:
                         RTablesDataManager* pRTDM,
                         ads::CDockManager* pDockManager,
                         QWidget *parent = nullptr);
-    virtual ~RtabWidget() = default;
+    virtual ~RtabWidget();
     //отключает сигналы LinkedForm, сбрасывает pnparray_.
     void closeEvent(QCloseEvent* event) override;
     QWidget* createDockContent(bool addToolbar = true);
@@ -74,7 +74,7 @@ public slots:
     void slot_directCodeToggle(std::size_t column);
     void slot_condFormatsEdit(std::size_t column);
 
-    void SetSelection(std::string Selection);
+    void slot_setFiltrForSelection(std::string selection);
 
     void slot_beginResetModel(std::string tname);
     void slot_endResetModel(std::string tname);
@@ -83,9 +83,7 @@ private slots:
     void applyAllColumnEditors ();
     void applyColumnEditor(int colIndex);
 private:
-    void setTableView(QTableView& tv, RModel& mm, int multiplier = 10);
-    void setTableView(Qtitan::GridTableView& tv, RModel& mm,
-                      int multiplier = 10 );
+    void setTableView(int multiplier = 10 );
     /// Блокирует горячие клавиши заданные по умолчанию в Qtitan
     bool eventFilter(QObject* obj, QEvent* event) override;
     /** @brief
@@ -124,5 +122,6 @@ private:
     QAction* m_groupCorrection;
 
     std::string m_selection {""}; // Текущая выборка
-    std::map<QString,bool> m_columnsVisible;
+    std::map<QString,bool>
+        m_columnsVisible;
 };

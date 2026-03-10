@@ -598,16 +598,16 @@ public:
         switch (Col->Type())
         {
         case eFieldVariantType::Monostate:
-           // static_cast<MyDenseDataBlock<FieldVariantData>*>(Col)->Set(0,RowIndex,Value);
+            // static_cast<MyDenseDataBlock<FieldVariantData>*>(Col)->Set(0,RowIndex,Value);
             break;
         case eFieldVariantType::Long:
-           // static_cast<MyDenseDataBlock<long>*>(Col)->Set(0,RowIndex,(const long)Value);
+            // static_cast<MyDenseDataBlock<long>*>(Col)->Set(0,RowIndex,(const long)Value);
             break;
         case eFieldVariantType::Double:
-           // static_cast<MyDenseDataBlock<double>*>(Col)->Set(0,RowIndex,(double)Value);
+            // static_cast<MyDenseDataBlock<double>*>(Col)->Set(0,RowIndex,(double)Value);
             break;
         case eFieldVariantType::String:
-           // static_cast<MyDenseDataBlock<std::string>*>(Col)->Set(0,RowIndex,(std::string)Value);
+            // static_cast<MyDenseDataBlock<std::string>*>(Col)->Set(0,RowIndex,(std::string)Value);
             break;
         case eFieldVariantType::Bool:
             //static_cast<MyDenseDataBlock<bool>*>(Col)->Set(0,RowIndex,(bool)Value);
@@ -668,7 +668,7 @@ protected:
 template<typename T>
 class QDenseDataBlock : public MyDenseDataBlock<T>
 {
-    public :
+public :
     void QDump(long LimitRows = (std::numeric_limits<long>::max)() , long LimitCols = (std::numeric_limits<long>::max)())
     {
         // Нам в дампере пригодится возможность показывать тип

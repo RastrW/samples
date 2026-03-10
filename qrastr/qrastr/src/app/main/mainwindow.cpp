@@ -8,9 +8,9 @@
 #include "qti.h"
 #include "qbarsmdp.h"
 #include "mcrwnd.h"
-#include "formprotocol.h"
+#include "protocolWidget.h"
 #include "pyhlp.h"
-#include "formcalcidop.h"
+#include "calcIacceptableDialog.h"
 
 #include <QStatusBar>
 #include <QMessageBox>
@@ -25,7 +25,6 @@
 #include <QSvgRenderer>
 #endif
 
-
 #include <spdlog/spdlog.h>
 
 #include "calculationController.h"
@@ -33,18 +32,13 @@
 #include "formManager.h"
 #include "settingsManager.h"
 #include "uiBuilder.h"
+#include "params.h"
+#include "UIForms.h"
 #include "cacheLog.h"
 
 MainWindow::MainWindow()
     : QMainWindow(){
 
-    m_workspace = new QMdiArea(this);
-    setCentralWidget(m_workspace);
-    
-    // Подключение сигнала активации подокон
-    connect(m_workspace, &QMdiArea::subWindowActivated,
-            this, &MainWindow::slot_subWindowActivated);
-    
     // Настройка Drag & Drop
     setAcceptDrops(true);
     
@@ -71,6 +65,10 @@ MainWindow::MainWindow()
                              now->widget()->setFocus();
                          }
                      });
+
+    // Создаём виджеты протоколов и СРАЗУ добавляем Qt-синки в логгер.
+    setupDockWidgets();
+    setupLogSinks();
 }
 
 MainWindow::~MainWindow() = default;
@@ -79,54 +77,55 @@ void MainWindow::initialize(
     std::shared_ptr<QAstra> qastra,
     std::shared_ptr<QTI> qti,
     std::shared_ptr<QBarsMDP> qbarsmdp,
-    const std::list<CUIForm>& forms) {
-    // Сохранение плагинов
-    m_qastra = qastra;
-    m_qti = qti;
+    const std::list<CUIForm>& forms)
+{
+    m_qastra   = qastra;
+    m_qti      = qti;
     m_qbarsmdp = qbarsmdp;
-    
+
     // ========== СОЗДАНИЕ КОМПОНЕНТОВ ==========
-    // 1. SettingsManager (первым - нужен для загрузки настроек)
+    // SettingsManager нужен первым для загрузки настроек
     m_settingsManager = std::make_unique<SettingsManager>(this);
     m_settingsManager->loadWindowGeometry(this);
     // Restore the state of toolbars and dock widgets (menus are part of the overall layout)
     restoreState(m_settingsManager->getSettings("mainWindowState"));
 
-    // 2. FileManager
-    m_fileManager = std::make_unique<FileManager>(qastra, this);
-    
-    // 3. CalculationController
-    m_calcController = std::make_unique<CalculationController>
-        (qastra, qti, qbarsmdp, this);
-    
-    // 4. Python helper
-    m_pyHelper = std::make_shared<PyHlp>(*qastra->getRastr().get());
+    m_fileManager = std::make_unique<FileManager>(m_qastra, this);
 
-    // 5. FormManager
-    m_formManager = std::make_unique<FormManager>
-        (qastra, m_dockManager, m_pyHelper, this);
+    const auto& startFiles = Params::get_instance()->getStartLoadFileTemplates();
+    for (const auto& [file, tmpl] : startFiles) {
+        // Добавляем в карту БЕЗ добавления в "последние"
+        m_fileManager->registerStartupFile(
+            QString::fromStdString(file),
+            QString::fromStdString(tmpl));
+    }
+
+    m_calcController = std::make_unique<CalculationController>(
+        m_qastra, m_qti, m_qbarsmdp, this);
+    m_pyHelper    = std::make_shared<PyHlp>(*m_qastra->getRastr().get());
+    m_formManager = std::make_unique<FormManager>(
+        m_qastra, m_dockManager, m_pyHelper, this);
     m_formManager->setForms(forms);
-    
-    // 6. UIBuilder
     m_uiBuilder = std::make_unique<UIBuilder>(this);
     m_uiBuilder->buildAll();
-
     // ========== НАСТРОЙКА КОМПОНЕНТОВ ==========
-    setupDockWidgets();
-    setupLogging();
+    setupRastrConnections();
     setupConnections();
     slot_updateRecentFiles();
-    
     // Построение меню форм
     m_formManager->buildFormsMenu(
         m_uiBuilder->openMenu(),
-        m_uiBuilder->calcParametersMenu()
-    );
+        m_uiBuilder->calcParametersMenu());
     m_formManager->buildPropertiesMenu(m_uiBuilder->propertiesMenu());
-    
+
+    // Восстанавливаем состояние ADS после того, как все доки созданы
+    const QByteArray adsState = m_settingsManager->getSettings("ADSState");
+    if (!adsState.isEmpty()) {
+        m_dockManager->restoreState(adsState);
+    }
     // Вывод кэшированных логов
     m_settingsManager->flushLogCache();
-    
+
     spdlog::info("MainWindow initialized successfully");
 }
 
@@ -140,7 +139,8 @@ void MainWindow::setupDockWidgets() {
     m_dockManager->addDockWidgetTab(ads::BottomDockWidgetArea, dockProtocol);
     
     // Главный протокол
-    m_mainProtocol = new FormProtocol(this);
+    m_mainProtocol = new ProtocolWidget(this);
+    //Если необходимо, чтобы в FormProtocol был вывод spdlog, необходимо включить эту настройку
     m_mainProtocol->setIgnoreAppendProtocol(true);
 
     auto dockMainProtocol = new ads::CDockWidget("protocolMain", this);
@@ -149,23 +149,24 @@ void MainWindow::setupDockWidgets() {
     m_dockManager->addDockWidgetTab(ads::BottomDockWidgetArea, dockMainProtocol);
 }
 
-void MainWindow::setupLogging() {
+void MainWindow::setupLogSinks() {
     auto logger = spdlog::default_logger();
-    
-    // Sink для окна протокола (макросы)
+
+    // После этого вызова все spdlog::info/warn/error
+    // пойдут в McrWnd и FormProtocol(если отключен игнор)
     auto qtSink = std::make_shared<spdlog::sinks::qt_sink_mt>(
-        m_globalProtocol, "onQStringAppendProtocol"
-    );
+        m_globalProtocol, "onQStringAppendProtocol");
     logger->sinks().push_back(qtSink);
-    
-    // Sink для главного протокола
+
     auto protocolSink = std::make_shared<spdlog::sinks::qt_sink_mt>(
         m_mainProtocol, "onAppendProtocol");
     logger->sinks().push_back(protocolSink);
-    
-    // Подключение логов от Rastr
+}
+
+void MainWindow::setupRastrConnections() {
+    // Второй поток данных — структурированные _log_data от Rastr
     connect(m_qastra.get(), &QAstra::onRastrLog,
-            m_mainProtocol, &FormProtocol::onRastrLog);
+            m_mainProtocol, &ProtocolWidget::onRastrLog);
     connect(m_qastra.get(), &QAstra::onRastrLog,
             m_globalProtocol, &McrWnd::onRastrLog);
 }
@@ -187,7 +188,16 @@ void MainWindow::setupConnections() {
     
     connect(m_uiBuilder->actionByName("saveAll"), &QAction::triggered,
             m_fileManager.get(), &FileManager::saveAll);
-    
+
+    for (int i = 0; i < Params::get_instance()->getMaxRecentFiles(); ++i) {
+        QString name = QString("recentFile%1").arg(i);
+        QAction* act = m_uiBuilder->actionByName(name);
+        if (act) {
+            connect(act, &QAction::triggered, this, [this, act]() {
+                m_fileManager->openRecentFile(act->data().toString());
+            });
+        }
+    }
     // События файлов
     connect(m_fileManager.get(), &FileManager::currentFileChanged,
             this, [this](const QString& file) {
@@ -304,7 +314,10 @@ void MainWindow::setupConnections() {
             this, [](const QString& name) {
                 spdlog::info("Form opened: {}", name.toStdString());
             });
-    
+    connect(m_uiBuilder->actionByName("cascade"), &QAction::triggered,
+            m_formManager.get(), &FormManager::cascadeForms);
+    connect(m_uiBuilder->actionByName("tile"), &QAction::triggered,
+            m_formManager.get(), &FormManager::tileForms);
     // ========== SETTINGSMANAGER ==========
     connect(m_uiBuilder->actionByName("settings"), &QAction::triggered,
             m_settingsManager.get(), [this]() {
@@ -316,18 +329,23 @@ void MainWindow::setupConnections() {
             this, &MainWindow::slot_openGraph);
     connect(m_uiBuilder->actionByName("macro"), &QAction::triggered,
             this, &MainWindow::slot_openMcrDialog);
+    // Закрыть активный dock widget
     connect(m_uiBuilder->actionByName("close"), &QAction::triggered,
-            m_workspace, &QMdiArea::closeActiveSubWindow);
+            this, [this]() {
+                auto* focused = m_dockManager->focusedDockWidget();
+                if (focused) focused->closeDockWidget();
+            });
+
+    // Закрыть все (кроме протоколов — они с CustomCloseHandling)
     connect(m_uiBuilder->actionByName("closeAll"), &QAction::triggered,
-            m_workspace, &QMdiArea::closeAllSubWindows);
-    connect(m_uiBuilder->actionByName("tile"), &QAction::triggered,
-            m_workspace, &QMdiArea::tileSubWindows);
-    connect(m_uiBuilder->actionByName("cascade"), &QAction::triggered,
-            m_workspace, &QMdiArea::cascadeSubWindows);
-    connect(m_uiBuilder->actionByName("next"), &QAction::triggered,
-            m_workspace, &QMdiArea::activateNextSubWindow);
-    connect(m_uiBuilder->actionByName("previous"), &QAction::triggered,
-            m_workspace, &QMdiArea::activatePreviousSubWindow);
+            this, [this]() {
+                for (auto* dw : m_dockManager->openedDockWidgets()) {
+                    if (dw->features().testFlag(
+                            ads::CDockWidget::DockWidgetDeleteOnClose)) {
+                        dw->closeDockWidget();
+                    }
+                }
+            });
     connect(m_uiBuilder->actionByName("about"), &QAction::triggered,
             this, &MainWindow::slot_about);
 }
@@ -380,7 +398,8 @@ void MainWindow::slot_about(){
 void MainWindow::showIdopDialog() {  
     emit sig_calcBegin();
     
-    formcalcidop* dialog = new formcalcidop(m_qastra.get(), this);
+    CalcIacceptableDialog* dialog = new CalcIacceptableDialog(m_qastra.get(), this);
+    dialog->setAttribute(Qt::WA_DeleteOnClose);
     dialog->show();
 
     emit sig_calcEnd();
@@ -403,16 +422,20 @@ void MainWindow::showMDPPrepareDialog() {
 }
 
 void MainWindow::closeEvent(QCloseEvent* event) {
-    // Сохранение настроек
+    // Сохраняем состояние ADS пока dock manager ещё жив
+    if (m_dockManager) {
+        m_settingsManager->saveValue("ADSState", m_dockManager->saveState());
+    }
+
+    // Сохранение геометрии и стиля
     m_settingsManager->saveWindowGeometry(this);
-    
+
     spdlog::info("MainWindow closing");
-    
-    // Удаление dock manager (иначе незакреплённые окна не закроются)
+
     if (m_dockManager) {
         m_dockManager->deleteLater();
     }
-    
+
     QMainWindow::closeEvent(event);
 }
 
@@ -426,11 +449,8 @@ void MainWindow::dragEnterEvent(QDragEnterEvent* event) {
 
 void MainWindow::dropEvent(QDropEvent* event) {
     for (const QUrl& url : event->mimeData()->urls()) {
-        QString filePath = url.toLocalFile();
-        m_fileManager->openFile(filePath);
+        m_fileManager->openFile(url.toLocalFile());
     }
-    
-    event->acceptProposedAction();
 }
 
 void MainWindow::slot_subWindowActivated() {

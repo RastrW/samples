@@ -3,7 +3,6 @@
 #include <QDebug>
 #include "mainwindow.h"
 #include "app.h"
-#include "formsettings.h"
 
 int main(int argc, char *argv[]){
     system("chcp 65001");
@@ -21,7 +20,7 @@ int main(int argc, char *argv[]){
 #if(defined(_MSC_VER))
     SetConsoleOutputCP(CP_UTF8);
 #endif
-    app.setOrganizationName("Trolltech");
+    app.setOrganizationName("STC UE");
     app.setApplicationName("QRastr");
 
     if(!app.init()){
@@ -40,15 +39,18 @@ int main(int argc, char *argv[]){
     }
 */
    // SDL_Init(SDL_INIT_VIDEO); // Basics of SDL, init what you need to use
-    MainWindow w;
 
-    if(!app.start()){
+    MainWindow w;
+    if (!app.start()) {
         return 200;
     }
-    w.initialize(app.getQAstraPtr(),
-                 app.getQTIPtr(),
-                 app.getQBarsMDPPtr(),
-                 app.getForms());
+
+    w.initialize(
+        app.getQAstraPtr(),
+        app.getQTIPtr(),
+        app.getQBarsMDPPtr(),
+        app.getForms()
+        );
 
     app.flushLogCache();
 
