@@ -51,7 +51,9 @@ CalcIacceptableDialog::CalcIacceptableDialog(QAstra* _pqastra, QWidget *parent)
     gbLay2->addWidget(m_lData);
     gbLay2->addWidget(m_dateTimeEdit);
 
-    connect(cdMeteo, &QCheckBox::checkStateChanged, this,
+    //connect(cdMeteo, &QCheckBox::checkStateChanged, this,
+     //       &CalcIacceptableDialog::on_checkBox_checkStateChanged);
+    connect(cdMeteo, &QCheckBox::stateChanged, this,
             &CalcIacceptableDialog::on_checkBox_checkStateChanged);
 
     // --- ButtonBox ---
@@ -78,9 +80,10 @@ void CalcIacceptableDialog::on_buttonBox_accepted()
     accept();
 }
 
-void CalcIacceptableDialog::on_checkBox_checkStateChanged(const Qt::CheckState &arg1)
+void CalcIacceptableDialog::on_checkBox_checkStateChanged(int state)
 {
-    bool en = (arg1 == Qt::Checked);
-    m_lData->setEnabled(en);
-    m_dateTimeEdit->setEnabled(en);
+    bool enabled = (state == Qt::Checked);
+
+    m_lData->setEnabled(enabled);
+    m_dateTimeEdit->setEnabled(enabled);
 }

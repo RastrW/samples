@@ -49,19 +49,18 @@ void SaveAllDialog::showEvent(QShowEvent* event)
     QDialog::showEvent(event);
     m_twSaveFiles->setRowCount(0);
     int n_row_num = 0;
-#if QT_VERSION < QT_VERSION_CHECK(6, 0, 0)
-    for (auto [_shabl, _file] : asKeyValueRange(mFilesLoad)) {
-#else
-    for (auto [_shabl, _file] : m_FilesLoad.asKeyValueRange()) {
-#endif
-        m_dirShabl = QFileInfo(_shabl).path(); // assume all templates at one directory
+
+    for (auto it = m_FilesLoad.begin(); it != m_FilesLoad.end(); ++it) {
+        const QString& _shabl = it.key();
+        const QString& _file  = it.value();
+
+        m_dirShabl = QFileInfo(_shabl).path();
         m_twSaveFiles->insertRow(n_row_num);
 
         QTableWidgetItem* ptwi_checkbox = new QTableWidgetItem();
         ptwi_checkbox->setCheckState(Qt::Checked);
-        ptwi_checkbox->data(Qt::CheckStateRole);
-        m_twSaveFiles->setItem(n_row_num, static_cast<int>(_cols::save),
-                               ptwi_checkbox);
+
+        m_twSaveFiles->setItem(n_row_num, static_cast<int>(_cols::save), ptwi_checkbox);
         m_twSaveFiles->setItem(n_row_num, static_cast<int>(_cols::templ),
                                new QTableWidgetItem(QFileInfo(_shabl).fileName()));
         m_twSaveFiles->setItem(n_row_num, static_cast<int>(_cols::file),

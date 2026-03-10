@@ -2,6 +2,7 @@
 
 #include <QDialog>
 #include <QDir>
+#include <QMap>
 
 class QAstra;
 class QTableWidget;

@@ -1,6 +1,7 @@
 #pragma once
 #include <QObject>
 #include "astra/IPlainRastr.h"
+#include <memory>
 
 class QAstra;
 class CUIForm;

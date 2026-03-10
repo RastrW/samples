@@ -33,6 +33,8 @@
 #include "settingsManager.h"
 #include "uiBuilder.h"
 #include "params.h"
+#include "UIForms.h"
+#include "cacheLog.h"
 
 MainWindow::MainWindow()
     : QMainWindow(){

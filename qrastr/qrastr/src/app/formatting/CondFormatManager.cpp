@@ -1,6 +1,6 @@
 #include "CondFormatManager.h"
 #include "ui_CondFormatManager.h"
-#include "CondFormat.h"
+#include "condFormat.h"
 #include "Settings.h"
 #include "filterlineedit.h"
 
