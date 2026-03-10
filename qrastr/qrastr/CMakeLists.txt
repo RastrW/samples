@@ -178,6 +178,7 @@ set(QT_COMPONENTS
     Xml
     Test
     LinguistTools
+    WebEngineWidgets
 )
 
 # Qt6-специфичные компоненты
@@ -352,7 +353,7 @@ set(QT_LIBS
     Qt${QT_VERSION_MAJOR}::PrintSupport
     Qt${QT_VERSION_MAJOR}::Xml
     Qt${QT_VERSION_MAJOR}::Test
-
+    Qt${QT_VERSION_MAJOR}::WebEngineWidgets
 )
 
 if(QT_VERSION_MAJOR EQUAL 6)

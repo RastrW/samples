@@ -20,6 +20,8 @@
 #include <QInputDialog>
 #include <QApplication>
 #include <QMdiSubWindow>
+#include <QWebEngineView>
+
 #if (QT_VERSION >= QT_VERSION_CHECK(6, 0, 0))
 #include <QtSvgWidgets/QSvgWidget>
 #include <QSvgRenderer>
@@ -35,6 +37,7 @@
 #include "params.h"
 #include "UIForms.h"
 #include "cacheLog.h"
+#include "graphServer.h"
 
 MainWindow::MainWindow()
     : QMainWindow(){
@@ -363,31 +366,48 @@ void MainWindow::slot_openMcrDialog(){
     pMcrWnd->show();
 }
 
-void MainWindow::slot_openGraph(){
+void MainWindow::openGraphDock() {
+    auto* dw      = new ads::CDockWidget(tr("Графика"), this);
+    auto* webView = new QWebEngineView(dw);
 
-    auto dw = new ads::CDockWidget( "Графика", this);
-
-#if (QT_VERSION >= QT_VERSION_CHECK(6, 0, 0))
-    //Using QSvgWidget
-    QSvgWidget *svgWidget = new QSvgWidget;
-    svgWidget->load(QStringLiteral(":/images/cx195.svg"));
-    dw->setWidget(svgWidget);
-    connect( dw, SIGNAL( closed() ), svgWidget, SLOT( OnClose() ) );
-    auto area = m_dockManager->addDockWidgetTab(ads::BottomAutoHideArea, dw);
+    dw->setWidget(webView);
     dw->setFeature(ads::CDockWidget::DockWidgetDeleteOnClose, true);
-#endif
+    m_dockManager->addDockWidgetTab(ads::TopDockWidgetArea, dw);
 
-#if(!defined(SDL_NO))
-    SDL_Init(SDL_INIT_VIDEO); // Basics of SDL, init what you need to use
-    SDLChild * SdlChild = new SDLChild(dw);	// Creating the SDL Window and initializing it.
+    // Если сервер уже работает — сразу грузим страницу
+    if (m_graphServer->isRunning()) {
+        webView->load(QUrl("http://127.0.0.0:8081/grf.html"));
+        qInfo() << "webView load";
+    } else {
+        qInfo() << "connection webView";
+        // Иначе ждём сигнала готовности
+        connect(m_graphServer, &GraphServer::sig_ready,
+                webView, [webView]() {
+                    qInfo() << "sig_ready received, calling load";
+                    webView->load(QUrl("http://127.0.0.0:8081/grf.html"));
+                }, Qt::QueuedConnection);
+    }
 
-    dw->setWidget(SdlChild);
-    connect( dw, SIGNAL( closed() ), SdlChild, SLOT( OnClose() ) );
-    auto area = m_dockManager->addDockWidgetTab(ads::BottomAutoHideArea, dw);
-    dw->setFeature(ads::CDockWidget::DockWidgetDeleteOnClose, true);
+    connect(webView, &QWebEngineView::loadFinished,
+            [](bool ok){ qInfo() << "loadFinished" << ok; });
+    connect(webView, &QWebEngineView::loadStarted, []{ qInfo() << "loadStarted"; });
+    // Закрытие вкладки → останавливаем сервер
+    connect(dw, &ads::CDockWidget::closeRequested,
+            m_graphServer, &GraphServer::stop);
+}
 
-    SdlChild->SDLInit();
-#endif
+void MainWindow::slot_openGraph() {
+    if (!m_graphServer) {
+        m_graphServer = new GraphServer(
+            m_qastra->getRastr().get(), this);
+    }
+
+    openGraphDock();
+
+    // Запускаем сервер только если ещё не работает
+    if (!m_graphServer->isRunning()) {
+        m_graphServer->start();
+    }
 }
 
 void MainWindow::slot_about(){
