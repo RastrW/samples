@@ -163,8 +163,7 @@ void AsyncCallback2(int iMSG, const char *params)
     qDebug() << "AsyncCallback2 " << iMSG << endl;
 
 };
-// ---------------------------- Graph ----------------------------
-//void task_run_graph( const std::shared_ptr<IPlainRastr> sp_rastr) {
+
 void task_run_graph( IPlainRastr* sp_rastr) {
     //sp_astra->runGraph();
 
@@ -216,7 +215,6 @@ void task_run_graph( IPlainRastr* sp_rastr) {
                 if (run)
                 {
                     pInitPlainDLL(sp_rastr, qstr_graph2libs_path.toStdString().c_str(), "127.0.0.0", 8081, AsyncCallback2);
-
 
                     for(;;)
                     {
@@ -278,6 +276,7 @@ void task_run_graph( IPlainRastr* sp_rastr) {
         }
     }
 }
+// ----------------------------/ Graph ----------------------------
 
 bool App::loadPlugins(){
     QDir pluginsDir{QDir{QCoreApplication::applicationDirPath()}};
@@ -344,11 +343,6 @@ bool App::loadPlugins(){
 
                     m_sp_qastra = std::make_shared<QAstra>();
                     m_sp_qastra->setRastr(rastr);
-                    //std::thread thread_graph( task_run_graph, rastr.get());
-                    //thread_graph.detach();
-                    //task_run_graph(rastr.get());
-                    int a = 1;
-
                 }catch(const std::exception& ex){
                     exclog(ex);
                     return false;
@@ -465,6 +459,20 @@ bool App::readForms(){
     return true;
 }
 
+bool App::loadGraphlibSVGgenerator(){
+    try{
+        std::thread thread_graph( task_run_graph, m_sp_qastra->getRastr().get());
+        thread_graph.detach();
+    }catch(const std::exception& ex){
+        exclog(ex);
+        return false;
+    }catch(...){
+        exclog();
+        return false;
+    }
+    return true;
+}
+
 std::list<CUIForm>& App::getForms() const {
     assert(nullptr!=upCUIFormsCollection_);
     return upCUIFormsCollection_->Forms();
@@ -555,6 +563,15 @@ bool App::start(){
         }else {
             m_v_cache_log.add(spdlog::level::info, "ReadForms: OK");
         }
+
+        m_v_cache_log.add(spdlog::level::info, "ReadForms: starting");
+        if (!loadGraphlibSVGgenerator())
+        {
+
+        }else {
+            m_v_cache_log.add(spdlog::level::info, "loadGraphlibSVGgenerator: OK");
+        }
+
     }catch(const std::exception& ex){
         exclog(ex);
         return false;
