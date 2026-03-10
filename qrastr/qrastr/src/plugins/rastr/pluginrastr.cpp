@@ -5,6 +5,8 @@
 //#else
 //#endif
 #include <QCoreApplication>
+#include <QFile>
+
 #include <spdlog/spdlog.h>
 using WrapperExceptionType = std::runtime_error;
 //#include "IPlainRastrWrappers.h"
