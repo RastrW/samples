@@ -160,7 +160,7 @@ void AsyncCallback2(int iMSG, const char *params)
     calls.insert(std::make_pair(iMSG, params));
     ws_cv.notify_one();			//пнуть главный поток для обработки асинхронного сообщения
 
-    qDebug() << "AsyncCallback2 " << iMSG << endl;
+    qDebug() << "AsyncCallback2 " << iMSG ;
 
 };
 
@@ -191,26 +191,58 @@ void task_run_graph( IPlainRastr* sp_rastr) {
     const char* pch_name_remoove_graphnode {"RemoveGraphNode"};
     const char* pch_name_move_or_add_graphnode {"MoveOrAddGraphNode"};
 
+    InitPlainDLL_t pInitPlainDLL = nullptr;
+    PutTextLayer_t pPutTextLayer= nullptr;
+    UpdateAllContent_t pUpdateAllContent= nullptr;
+    RemoveGraphNode_t pRemoveGraphNode= nullptr;
+    MoveOrAddGraphNode_t pMoveOrAddGraphNode= nullptr;
+
+
     QString qstr_path_graph{QCoreApplication::applicationDirPath()};
-    qstr_path_graph += "/plugins/libSVGgenerator.so";
-    void *phsvg = dlopen(qstr_path_graph.toStdString().c_str(), RTLD_NOW);
+    void *phsvg = nullptr;
+#if(defined(COMPILE_WIN))
+    {
+        qstr_path_graph += "\\plugins\\SVGgenerator.dll";
+        std::string str_path_graph = qstr_path_graph.toStdString();
+        std::wstring wstr_path_graph = std::wstring(str_path_graph.begin(), str_path_graph.end());
+        //phsvg = LoadLibraryEx(wstr_path_graph.c_str(),nullptr,LOAD_LIBRARY_AS_DATAFILE );
+        phsvg = LoadLibrary(wstr_path_graph.c_str());
+    }
+#else
+    {
+        qstr_path_graph += "/plugins/libSVGgenerator.so";
+        phsvg = dlopen(qstr_path_graph.toStdString().c_str(), RTLD_NOW);
+    }
+#endif
     if(phsvg != nullptr)
     {
-        InitPlainDLL_t pInitPlainDLL = reinterpret_cast<InitPlainDLL_t>(dlsym(phsvg, pch_name_init_plain_dll));
-        PutTextLayer_t pPutTextLayer = reinterpret_cast<PutTextLayer_t>(dlsym(phsvg, pch_name_put_text_llayer));
-        UpdateAllContent_t pUpdateAllContent = reinterpret_cast<UpdateAllContent_t>(dlsym(phsvg, pch_name_update_all_content));
-        RemoveGraphNode_t pRemoveGraphNode = reinterpret_cast<RemoveGraphNode_t>(dlsym(phsvg, pch_name_remoove_graphnode));
-        MoveOrAddGraphNode_t pMoveOrAddGraphNode = reinterpret_cast<MoveOrAddGraphNode_t>(dlsym(phsvg, pch_name_move_or_add_graphnode));
+#if(defined(COMPILE_WIN))
+    {
+        HMODULE hLib = reinterpret_cast<HMODULE>(phsvg);
+        pInitPlainDLL = (InitPlainDLL_t)GetProcAddress(hLib, pch_name_init_plain_dll);
+        pPutTextLayer = (PutTextLayer_t)GetProcAddress(hLib, pch_name_update_all_content);
+        pUpdateAllContent = (UpdateAllContent_t)GetProcAddress(hLib, pch_name_put_text_llayer);
+        pRemoveGraphNode = (RemoveGraphNode_t)GetProcAddress(hLib, pch_name_remoove_graphnode);
+        pMoveOrAddGraphNode = (MoveOrAddGraphNode_t)GetProcAddress(hLib, pch_name_move_or_add_graphnode);
+    }
+#else
+    {
+        pInitPlainDLL = reinterpret_cast<InitPlainDLL_t>(dlsym(phsvg, pch_name_init_plain_dll));
+        pPutTextLayer = reinterpret_cast<PutTextLayer_t>(dlsym(phsvg, pch_name_put_text_llayer));
+        pUpdateAllContent = reinterpret_cast<UpdateAllContent_t>(dlsym(phsvg, pch_name_update_all_content));
+        pRemoveGraphNode = reinterpret_cast<RemoveGraphNode_t>(dlsym(phsvg, pch_name_remoove_graphnode));
+        pMoveOrAddGraphNode = reinterpret_cast<MoveOrAddGraphNode_t>(dlsym(phsvg, pch_name_move_or_add_graphnode));
+    }
+#endif
+
         if(pInitPlainDLL && pPutTextLayer && pUpdateAllContent)
         {
             QString qstr_test_file_path{QCoreApplication::applicationDirPath()};
             QString qstr_graph2libs_path{QCoreApplication::applicationDirPath()};
             qstr_graph2libs_path.append("/plugins/graph2libs.xml");
-            qstr_test_file_path.append("/../Data/Files/all");
 
-            if (sp_rastr != nullptr && QFile::exists(qstr_test_file_path) && QFile::exists(qstr_graph2libs_path))
+            if (sp_rastr != nullptr  && QFile::exists(qstr_graph2libs_path))
             {
-                //sp_rastr->Load(eLoadCode::RG_REPL,qstr_test_file_path.toStdString().c_str(),"");
                 bool run = true;
                 if (run)
                 {
@@ -564,7 +596,7 @@ bool App::start(){
             m_v_cache_log.add(spdlog::level::info, "ReadForms: OK");
         }
 
-        m_v_cache_log.add(spdlog::level::info, "ReadForms: starting");
+        m_v_cache_log.add(spdlog::level::info, "loadGraphlibSVGgenerator: starting");
         if (!loadGraphlibSVGgenerator())
         {
 
