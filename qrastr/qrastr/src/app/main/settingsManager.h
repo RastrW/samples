@@ -2,18 +2,13 @@
 
 #include <QObject>
 #include <QSettings>
-#include <QMainWindow>
-#include <QVariant>
-#include <QString>
-#include <memory>
-
-#include <spdlog/spdlog.h>
 
 namespace qrastr {
     class CacheLogVector;
 }
 
 class QAstra;
+class QMainWindow;
 
 /// @class Менеджер настроек приложения
 class SettingsManager : public QObject {
@@ -29,17 +24,14 @@ public:
     bool loadWindowGeometry(QMainWindow* window);
     /// @brief Сохранить геометрию окна
     bool saveWindowGeometry(QMainWindow* window);
-    
+    void saveValue(const QString& key, const QByteArray& value);
     // ========== Кэширование логов ==========
     /// @brief Вывести кэшированные логи
     void flushLogCache();
     // ========== Настройки форм ==========
     /// @brief Показать диалог настроек форм
-    void showFormSettings(std::shared_ptr<QAstra> qastra);
-
-    QByteArray getSettings(const QString& name){
-        return m_settings.value(name).toByteArray();
-    }
+    void showFormSettings(std::shared_ptr<QAstra> qastra); 
+    QByteArray getSettings(const QString& name);
 private:
     QSettings
         m_settings;

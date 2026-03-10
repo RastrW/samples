@@ -48,13 +48,13 @@ public:
      * @brief Возвращает QMenu «Связанные формы».
      * @param contextRow  строка, на которой было открыто контекстное меню
      */
-    QMenu* buildLinkedFormsMenu(int contextRow);
+    void buildLinkedFormsMenu(int contextRow, QMenu* menu);
 
     /**
      * @brief Возвращает QMenu «Макрос».
      * @param contextRow  строка, на которой было открыто контекстное меню
      */
-    QMenu* buildLinkedMacroMenu(int contextRow);
+    void buildLinkedMacroMenu(int contextRow, QMenu* menu);
     //  Управление связанной формой
     /// @brief Применяет фильтр связанной формы к текущему представлению.
     void applyLinkedForm(LinkedForm lf);

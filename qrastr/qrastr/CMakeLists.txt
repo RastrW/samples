@@ -40,6 +40,10 @@ set(CMAKE_RUNTIME_OUTPUT_DIRECTORY "${CMAKE_SOURCE_DIR}/../${CMAKE_BUILD_TYPE}")
 add_compile_definitions(SDL_NO) #Воспроизведение окон SDL
 add_compile_definitions(QTN_NAMESPACE)
 
+# FMT_HEADER_ONLY должен быть определён глобально — до любого включения fmt/spdlog.
+# Без этого fmt ищет скомпилированную библиотеку, которой нет.
+add_compile_definitions(FMT_HEADER_ONLY)
+
 add_compile_definitions(
     $<$<CONFIG:Debug>:q4_INLINE=0>  # Отключает inline функции в Debug
     $<$<CONFIG:Debug>:YYDEBUG>      # Включает отладочный вывод для yacc/bison парсеров
@@ -132,7 +136,6 @@ target_include_directories(Boost::boost INTERFACE "${THIRDPARTY_DIR}/boost_1_80_
 
 add_library(Fmt::fmt INTERFACE IMPORTED)
 target_include_directories(Fmt::fmt INTERFACE "${THIRDPARTY_DIR}/fmt/include")
-target_compile_definitions(Fmt::fmt INTERFACE FMT_HEADER_ONLY)
 
 add_library(Spdlog::spdlog INTERFACE IMPORTED)
 target_include_directories(Spdlog::spdlog INTERFACE "${THIRDPARTY_DIR}/spdlog/include")
@@ -252,7 +255,6 @@ set(PROJECT_INCLUDES
     ${APP_DIR}/mdi/
     ${APP_DIR}/protocol_tree/
     ${APP_DIR}/sdl/
-    ${APP_DIR}/test/
     ${APP_DIR}/ui_components/
     ${APP_DIR}/utilities/
     ${APP_DIR}/astra/astra_headers
@@ -294,8 +296,6 @@ file(GLOB_RECURSE PROJECT_SOURCES
     "${APP_DIR}/utilities/*.h"
     "${APP_DIR}/sdl/*.cpp"
     "${APP_DIR}/sdl/*.h"
-    "${APP_DIR}/test/*.cpp"
-    "${APP_DIR}/test/*.h"
     "${APP_DIR}/astra/*.cpp"
     "${APP_DIR}/astra/*.h"
     "${APP_DIR}/astra/astra_headers/*.h"

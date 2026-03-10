@@ -10,6 +10,8 @@
 #include "qmcr/pyhlp.h"
 #include <astra/stringutils.h>
 #include "utils.h"
+using WrapperExceptionType = std::runtime_error;
+#include "astra/IPlainRastrWrappers.h"
 
 FormManager::FormManager
     (std::shared_ptr<QAstra> qastra,
@@ -67,26 +69,31 @@ void FormManager::openForm(const CUIForm& form) {
         m_dockManager,
         dw);
 
-    prtw->setPyHlp(m_pPyHlp);
-    // Выравнивание данных по шаблону, выравнивание текста по левому краю
-    prtw->slot_widthByTemplate();
-    // Добавляем в список открытых форм
-    // Сигналы будут передаваться через onCalculationStarted/Finished
-    m_openForms.append(prtw);
-    dw->setWidget(prtw->createDockContent());
+    if (prtw != nullptr){
+        prtw->setPyHlp(m_pPyHlp);
+        // Выравнивание данных по шаблону, выравнивание текста по левому краю
+        prtw->slot_widthByTemplate();
+        // Добавляем в список открытых форм
+        // Сигналы будут передаваться через onCalculationStarted/Finished
+        m_openForms.append(prtw);
+        m_openDockWidgets.append(dw);
 
-    m_dockManager->addDockWidgetTab(ads::TopDockWidgetArea, dw);
-    
-    // Обработка закрытия
-    connect(dw, &ads::CDockWidget::closed, prtw, &RtabWidget::slot_close);
-    connect(dw, &ads::CDockWidget::closed,
-            this, [this, prtw, formName = form.Name()]() {
-                // Удаляем из списка открытых форм
-                m_openForms.removeOne(prtw);
-                emit formClosed(QString::fromStdString(formName));
-            });
-    
-    m_activeForm = prtw;
+        dw->setWidget(prtw->createDockContent());
+
+        m_dockManager->addDockWidgetTab(ads::TopDockWidgetArea, dw);
+        // Обработка закрытия
+        connect(dw, &ads::CDockWidget::closed, prtw, &RtabWidget::slot_close);
+        connect(dw, &ads::CDockWidget::closed,
+                this, [this, prtw, dw, formName = form.Name()]() {
+                    // Удаляем из списка открытых форм
+                    m_openForms.removeOne(prtw);
+                    m_openDockWidgets.removeOne(dw);
+                    emit formClosed(QString::fromStdString(formName));
+                });
+
+        m_activeForm = prtw;
+    }
+
     emit formOpened(QString::fromStdString(form.Name()));
     emit activeFormChanged(prtw);
 }
@@ -330,4 +337,69 @@ QMap<QString, QMenu*> FormManager::buildMenuStructure(QMenu* rootMenu) {
     }
     
     return menuMap;
+}
+
+void FormManager::cascadeForms() {
+    if (m_openDockWidgets.isEmpty()) return;
+
+    // Берём геометрию области dock manager как опорную
+    QRect available = m_dockManager->rect();
+    QPoint origin   = m_dockManager->mapToGlobal(available.topLeft())
+                    + QPoint(20, 20);
+
+    constexpr int kOffset     = 30;  // шаг каскада в пикселях
+    constexpr int kWidth      = 600;
+    constexpr int kHeight     = 400;
+
+    int step = 0;
+    for (ads::CDockWidget* dw : m_openDockWidgets) {
+        if (!dw) continue;
+
+        // Открепляем виджет — делаем floating
+        dw->setFloating();
+
+        QPoint pos = origin + QPoint(step * kOffset, step * kOffset);
+
+        // Позиционируем и задаём размер
+        if (auto* floatContainer = dw->dockContainer()) {
+            if (floatContainer->isFloating()) {
+                floatContainer->window()->setGeometry(
+                    pos.x(), pos.y(), kWidth, kHeight);
+            }
+        }
+
+        step++;
+    }
+}
+
+void FormManager::tileForms() {
+    if (m_openDockWidgets.isEmpty()) return;
+
+    QRect available = m_dockManager->rect();
+    int count = m_openDockWidgets.size();
+
+    // Вычисляем сетку: cols x rows
+    int cols = qMax(1, static_cast<int>(std::ceil(std::sqrt(count))));
+    int rows = (count + cols - 1) / cols;
+
+    int w = available.width()  / cols;
+    int h = available.height() / rows;
+
+    QPoint origin = m_dockManager->mapToGlobal(available.topLeft());
+
+    int i = 0;
+    for (ads::CDockWidget* dw : m_openDockWidgets) {
+        if (!dw) continue;
+
+        dw->setFloating();
+
+        int col = i % cols;
+        int row = i / cols;
+        QPoint pos = origin + QPoint(col * w, row * h);
+
+        if (auto* c = dw->dockContainer(); c && c->isFloating()) {
+            c->window()->setGeometry(pos.x(), pos.y(), w, h);
+        }
+        i++;
+    }
 }

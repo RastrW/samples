@@ -4,6 +4,7 @@
 class RCol;
 class LinkedFormController;
 class QMenu;
+class QAction;
 
 namespace Qtitan{ class GridTableView; }
 
@@ -22,13 +23,10 @@ public:
                                 LinkedFormController*    linkedFormCtrl,
                                 QObject*                 parent = nullptr);
 
-    /**
-     * Заполняет menu, не очищая его.
-     * Встроенные пункты Qtitan сохраняются; нежелательные удаляются.
-     * Все создаваемые QAction имеют parent=menu → утечек нет.
-     */
-    void populate(QMenu* menu, const MenuContext& ctx);
-
+    /// Строит персистентный QMenu и все статичные QAction.
+    void initMenu(QWidget* menuParent);
+    /// обновляет динамические пункты.
+    void prepareForShow(const MenuContext& ctx, QMenu* qtitanMenu);
 signals:
     // Сигналы для операций со строками
     void sig_addRow();
@@ -52,9 +50,34 @@ private:
     /// НЕ вызывает deleteLater — Qtitan владеет этими объектами.
     void removeUnwantedBuiltins(QMenu* menu);
 
+    void buildStaticActions();
+    void rebuildLinkedSubmenus(int contextRow);
     std::tuple<int, double> calcSumSelected() const;
 
-    Qtitan::GridTableView*   m_view;
-    LinkedFormController*    m_linkedFormCtrl;
-    QWidget*                 m_parentWidget;
+    Qtitan::GridTableView* m_view;
+    LinkedFormController*  m_linkedFormCtrl;
+
+    // ── Динамические пункты (обновляются при каждом вызове) ────────────
+    QAction* m_actDesc    = nullptr;   ///< описание колонки
+    QAction* m_actSum     = nullptr;   ///< сумма выделенных
+    QAction* m_actDirect  = nullptr;   ///< прямой ввод кода
+
+    // ── Подменю связанных форм / макросов ───────────────────────────────
+    QMenu*   m_linkedFormsMenu  = nullptr;
+    QMenu*   m_linkedMacrosMenu = nullptr;
+
+    // Статические экшны
+    QAction* m_actInsert    = nullptr;
+    QAction* m_actAdd       = nullptr;
+    QAction* m_actDuplicate = nullptr;
+    QAction* m_actDelete    = nullptr;
+    QAction* m_actGroup     = nullptr;
+    QAction* m_actTmpl      = nullptr;
+    QAction* m_actData      = nullptr;
+    QAction* m_actExport    = nullptr;
+    QAction* m_actImport    = nullptr;
+    QAction* m_actSel       = nullptr;
+    QAction* m_actCF        = nullptr;
+    // ── Хранители для отсоединения сигналов ────────────────────────────
+    int      m_currentCol = -1;   ///< col при последнем вызове prepareForShow
 };

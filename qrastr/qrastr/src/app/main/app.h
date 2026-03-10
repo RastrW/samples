@@ -1,11 +1,7 @@
 #pragma once
 
 #include <QApplication>
-#include <QDir>
-#include <QObject>
-#include <spdlog/spdlog.h>
 #include "cacheLog.h"
-
 class QAstra;
 class QTI;
 class QBarsMDP;
@@ -46,7 +42,6 @@ private:
 
     // Методы жизненного цикла
     bool readSettings(); // Чтение appsettings.json
-    bool writeSettings(); // Сохранение настроек
     // Загрузка компонентов
     bool loadPlugins(); // Динамическая загрузка .dll/.so плагинов
     // form files are deployed in form catalog near qrastr.exe

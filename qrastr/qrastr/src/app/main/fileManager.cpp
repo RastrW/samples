@@ -1,8 +1,8 @@
 #include "fileManager.h"
 #include "qastra.h"
 #include "params.h"
-#include "formfilenew.h"
-#include "formsaveall.h"
+#include "fileNewDialog.h"
+#include "saveAllDialog.h"
 
 #include <QFileDialog>
 #include <QSettings>
@@ -206,12 +206,14 @@ bool FileManager::saveAll() {
         return false;
     }
 
-    formsaveall* fsaveall = new formsaveall(
+    SaveAllDialog* fsaveall = new SaveAllDialog(
         m_qastra.get(),
         m_loadedFiles,
         m_parentWidget
     );
-    
+
+    fsaveall->setAttribute(Qt::WA_DeleteOnClose);
+
     fsaveall->show();
     
     return true;
@@ -261,10 +263,20 @@ QStringList FileManager::getRecentFiles() const {
     return settings.value(m_recentFilesKey).toStringList();
 }
 
+void FileManager::registerStartupFile(const QString& fileName,
+                                      const QString& templatePath) {
+    // Только в карту — без addToRecentFiles
+    m_loadedFiles[templatePath] = fileName;
+    if (m_currentFile.isEmpty()) {
+        m_currentFile = fileName;
+        m_currentDir  = QFileInfo(fileName).absolutePath();
+    }
+}
+
 void FileManager::openRecentFile(const QString& fileAndTemplate) {
     QStringList qslist = fileAndTemplate.split("<");
     
-    std::string file = qslist[0].toStdString();
+    std::string file = qslist[0].trimmed().toStdString();
     std::string shabl = "";
     
     if (qslist.size() > 1) {
@@ -356,16 +368,17 @@ QString FileManager::findTemplateByExtension(const QString& filePath) const {
 }
 
 bool FileManager::showNewFileDialog(QStringList& selectedTemplates) {
-    FormFileNew* pformFileNew = new FormFileNew(m_parentWidget);
-    
+    FileNewDialog* pformFileNew = new FileNewDialog(m_parentWidget);
+    pformFileNew->setAttribute(Qt::WA_DeleteOnClose);
+
     if (QDialog::Accepted != pformFileNew->exec()) {
         return false;
     }
     
-    const FormFileNew::_s_checked_templatenames s_checked_templatenames = 
+    const FileNewDialog::_s_checked_templatenames s_checked_templatenames =
         pformFileNew->getCheckedTemplateNames();
     
-    for (const FormFileNew::_s_checked_templatenames::value_type& templatename : s_checked_templatenames) {
+    for (const FileNewDialog::_s_checked_templatenames::value_type& templatename : s_checked_templatenames) {
         selectedTemplates.append(QString::fromStdString(templatename));
     }
     
