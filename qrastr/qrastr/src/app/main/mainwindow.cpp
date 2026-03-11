@@ -371,25 +371,30 @@ void MainWindow::slot_openMcrDialog(){
 void MainWindow::openGraphDock() {
     auto* dw      = new ads::CDockWidget(tr("Графика"), this);
     auto* webView = new QWebEngineView(dw);
-
     dw->setWidget(webView);
     dw->setFeature(ads::CDockWidget::DockWidgetDeleteOnClose, true);
     m_dockManager->addDockWidgetTab(ads::TopDockWidgetArea, dw);
 
-    // Если сервер уже работает — сразу грузим страницу
-    if (m_graphServer->isRunning()) {
+    // Вспомогательная лямбда — грузим страницу
+    auto loadPage = [webView]() {
+        qInfo() << "[webView] loading page";
         webView->load(QUrl("http://127.0.0.1:8081/grf.html"));
-        qInfo() << "webView load";
+    };
+
+    if (m_graphServer->isRunning()) {
+        // Сервер уже готов — грузим немедленно
+        loadPage();
     } else {
-        qInfo() << "connection webView";
-        // Иначе ждём сигнала готовности
+        // Ждём сигнала; Qt::SingleShotConnection (Qt ≥ 6.0) гарантирует
+        // что соединение само отключится после первого срабатывания,
+        // сколько бы раз ни открывался dok до готовности сервера.
         connect(m_graphServer, &GraphServer::sig_ready,
-                webView, [webView]() {
-                    qInfo() << "sig_ready received, calling load";
-                    webView->load(QUrl("http://127.0.0.1:8081/grf.html"));
-                }, Qt::QueuedConnection);
+                webView, loadPage,
+                static_cast<Qt::ConnectionType>(
+                    Qt::QueuedConnection | Qt::SingleShotConnection));
     }
-    ///@brief проверки:
+
+    // Диагностические подключения
     connect(webView, &QWebEngineView::loadStarted,
             []{ qInfo() << "[webView] loadStarted"; });
     connect(webView, &QWebEngineView::loadProgress,
@@ -398,41 +403,35 @@ void MainWindow::openGraphDock() {
             [](bool ok){ qInfo() << "[webView] loadFinished, ok=" << ok; });
     connect(webView->page(), &QWebEnginePage::urlChanged,
             [](const QUrl& url){ qInfo() << "[webView] urlChanged:" << url; });
-    webView->page()->toHtml([](const QString& html) {
-        qInfo() << "[webView] page HTML length:" << html.size();
-        qInfo() << "[webView] first 500 chars:" << html.left(500);
-    });
-    QTimer::singleShot(2000, this, [webView]() {
-        webView->page()->toHtml([](const QString& html){
-            qDebug() << html.left(1000);
-        });
-    });
 
     // Закрытие вкладки → останавливаем сервер
     connect(dw, &ads::CDockWidget::closeRequested,
             m_graphServer, &GraphServer::stop);
-
-    QString userAgent = webView->page()->profile()->httpUserAgent();
-    qDebug() << "Full User Agent:" << userAgent;
-
-    // Если нужно вычленить только версию Chrome:
-    QStringList parts = userAgent.split(" ");
-    for (const QString &part : parts) {
-        if (part.startsWith("Chrome/")) {
-            qDebug() << "Chromium Version:" << part.mid(7); // отрезаем "Chrome/"
-        }
-    }
 }
 
 void MainWindow::slot_openGraph() {
+    // Пересоздаём сервер только если его нет совсем.
+    // После stop() объект жив (parent=this), но m_thread == nullptr,
+    // поэтому isRunning()==false и start() корректно запустит его снова.
     if (!m_graphServer) {
-        m_graphServer = new GraphServer(
-            m_qastra->getRastr().get(), this);
+        m_graphServer = new GraphServer(m_qastra->getRastr().get(), this);
+
+        // Если сервер упал/остановлен — сбрасываем указатель,
+        // чтобы при следующем slot_openGraph() он был пересоздан.
+        connect(m_graphServer, &GraphServer::sig_stopped,
+                this, [this]() {
+                    qInfo() << "GraphServer stopped";
+                    // deleteLater только если сервер остановили через закрытие дока,
+                    // но не при closeEvent — там мы удаляем сами
+                    if (m_graphServer) {
+                        m_graphServer->deleteLater();
+                        m_graphServer = nullptr;
+                    }
+                });
     }
 
     openGraphDock();
 
-    // Запускаем сервер только если ещё не работает
     if (!m_graphServer->isRunning()) {
         m_graphServer->start();
     }
@@ -473,6 +472,13 @@ void MainWindow::closeEvent(QCloseEvent* event) {
     // Сохраняем состояние ADS пока dock manager ещё жив
     if (m_dockManager) {
         m_settingsManager->saveValue("ADSState", m_dockManager->saveState());
+    }
+
+    // Останавливаем синхронно ДО того, как Qt начнёт рушить объекты
+    if (m_graphServer) {
+        m_graphServer->stop();
+        delete m_graphServer;
+        m_graphServer = nullptr;
     }
 
     // Сохранение геометрии и стиля
