@@ -21,6 +21,7 @@
 #include <QApplication>
 #include <QMdiSubWindow>
 #include <QWebEngineView>
+#include <QTimer>
 
 #if (QT_VERSION >= QT_VERSION_CHECK(6, 0, 0))
 #include <QtSvgWidgets/QSvgWidget>
@@ -376,7 +377,7 @@ void MainWindow::openGraphDock() {
 
     // Если сервер уже работает — сразу грузим страницу
     if (m_graphServer->isRunning()) {
-        webView->load(QUrl("http://127.0.0.0:8081/grf.html"));
+        webView->load(QUrl("http://127.0.0.1:8081/grf.html"));
         qInfo() << "webView load";
     } else {
         qInfo() << "connection webView";
@@ -384,16 +385,34 @@ void MainWindow::openGraphDock() {
         connect(m_graphServer, &GraphServer::sig_ready,
                 webView, [webView]() {
                     qInfo() << "sig_ready received, calling load";
-                    webView->load(QUrl("http://127.0.0.0:8081/grf.html"));
+                    webView->load(QUrl("http://127.0.0.1:8081/grf.html"));
                 }, Qt::QueuedConnection);
     }
-
+    ///@brief проверки:
+    connect(webView, &QWebEngineView::loadStarted,
+            []{ qInfo() << "[webView] loadStarted"; });
+    connect(webView, &QWebEngineView::loadProgress,
+            [](int p){ qInfo() << "[webView] loadProgress:" << p; });
     connect(webView, &QWebEngineView::loadFinished,
-            [](bool ok){ qInfo() << "loadFinished" << ok; });
-    connect(webView, &QWebEngineView::loadStarted, []{ qInfo() << "loadStarted"; });
+            [](bool ok){ qInfo() << "[webView] loadFinished, ok=" << ok; });
+    connect(webView->page(), &QWebEnginePage::urlChanged,
+            [](const QUrl& url){ qInfo() << "[webView] urlChanged:" << url; });
+    webView->page()->toHtml([](const QString& html) {
+        qInfo() << "[webView] page HTML length:" << html.size();
+        qInfo() << "[webView] first 500 chars:" << html.left(500);
+    });
+    QTimer::singleShot(2000, this, [webView]() {
+        webView->page()->toHtml([](const QString& html){
+            qDebug() << html.left(1000);
+        });
+    });
     // Закрытие вкладки → останавливаем сервер
     connect(dw, &ads::CDockWidget::closeRequested,
             m_graphServer, &GraphServer::stop);
+
+    webView->page()->setWebChannel(nullptr); // убедиться что page создана
+    // Включить инспектор:
+    webView->page()->setDevToolsPage(new QWebEnginePage());
 }
 
 void MainWindow::slot_openGraph() {

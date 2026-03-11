@@ -2,6 +2,7 @@
 #include <QCoreApplication>
 #include <QDebug>
 #include <QFile>
+#include <QThread>
 
 #include <dlfcn.h>
 
@@ -39,7 +40,11 @@ void GraphServer::stop() {
         m_dllHandle = nullptr;
     }
     s_instance = nullptr;
-    emit sig_stopped();
+
+    QMetaObject::invokeMethod(this, [this]() {
+        qInfo() << "[sig_stopped] delivered in thread:" << QThread::currentThreadId();
+        emit sig_stopped();
+    }, Qt::QueuedConnection);
 }
 
 void GraphServer::threadFunc() {
@@ -87,11 +92,15 @@ void GraphServer::threadFunc() {
     s_instance = this;
     m_fnInit(m_rastr,
              graphLibsPath.toStdString().c_str(),
-             "127.0.0.0", 8081,
+             "127.0.0.1", 8081,
              &GraphServer::staticCallback);
 
     qInfo() << "InitPlainDLL_t is ready";
-    emit sig_ready();   // можно открывать QWebEngineView
+    // можно открывать QWebEngineView
+    QMetaObject::invokeMethod(this, [this]() {
+        qInfo() << "[sig_ready] delivered in thread:" << QThread::currentThreadId();
+        emit sig_ready();
+    }, Qt::QueuedConnection);
 
     // --- Цикл обработки колбэков ---
     while (!m_stopFlag.load()) {
@@ -129,11 +138,21 @@ void GraphServer::dispatchCallback(int iMSG, const std::string& params) {
         if (m_fnUpdateAll) m_fnUpdateAll();
         break;
     case (int)CB::DeleteNode:
-        // TODO
+            m_fnRemoveNode(std::stoi(params));
         break;
     case (int)CB::MoveNode:
     case (int)CB::AddNode:
-        // TODO:
+    {
+        int start(0), end(0);
+        std::vector<std::string> v;
+        while ((start = params.find_first_not_of('&', end))!= std::string::npos)
+        {
+            end = params.find('&', start);
+            v.push_back(params.substr(start, end - start));
+        }
+        if(v.size() == 3)
+            m_fnMoveOrAdd(std::stoi(v[0]),std::stoi(v[1]), std::stoi(v[2]));
+    }
         break;
     case 1400: case 1401: case 1402: case 1403: case 1404:
         if (m_fnPutTextLayer) m_fnPutTextLayer(iMSG - 1400);

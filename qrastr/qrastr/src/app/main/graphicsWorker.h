@@ -40,13 +40,13 @@ public:
     /// @param projectPath  Путь к корневой директории проекта
     ///                     (там лежат libSVGgenerator.so, graph2libs.xml, all/).
     /// @param astraLibPath Полный путь к libastra.so.
-    /// @param ip           IP-адрес HTTP-сервера (по умолчанию "127.0.0.0").
+    /// @param ip           IP-адрес HTTP-сервера (по умолчанию "127.0.0.1").
     /// @param port         Порт HTTP-сервера (по умолчанию 8081).
     /// @param parent       Родительский QObject.
     explicit GraphicsWorker(
         const std::filesystem::path& projectPath,
         const std::filesystem::path& astraLibPath,
-        const QString& ip   = QStringLiteral("127.0.0.0"),
+        const QString& ip   = QStringLiteral("127.0.0.1"),
         long            port = 8081,
         QObject*        parent = nullptr);
 
