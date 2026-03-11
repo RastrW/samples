@@ -38,7 +38,7 @@ void GraphWorker::slot_process() {
 	m_fnInit(m_rastr,
 			 graphLibsPath.toStdString().c_str(),
 			 "127.0.0.1", 8081,
-			 GraphServer::staticCallback);   // подключение к либе
+             GraphServer::staticCallback);   // подключение к либе
 
 	qInfo() << "GraphWorker: HTTP server ready";
     emit sig_ready();

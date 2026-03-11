@@ -385,7 +385,7 @@ void MainWindow::openGraphDock() {
         // Сервер уже готов — грузим немедленно
         loadPage();
     } else {
-        // Ждём сигнала; Qt::SingleShotConnection (Qt ≥ 6.0) гарантирует
+        // Qt::SingleShotConnection (Qt ≥ 6.0) гарантирует
         // что соединение само отключится после первого срабатывания,
         // сколько бы раз ни открывался dok до готовности сервера.
         connect(m_graphServer, &GraphServer::sig_ready,

@@ -12,7 +12,7 @@ public:
     virtual ~GraphWorker();
 
 public slots:
-    /// Вызывается QThread::started — инициализация и запуск HTTP
+    /// Вызывается QThread::started — инициализация и запуск websocket
     void slot_process();
     /// Принимает колбэки из staticCallback через QueuedConnection — потокобезопасно
     void slot_handleCallback(int iMSG, const QString& params);
