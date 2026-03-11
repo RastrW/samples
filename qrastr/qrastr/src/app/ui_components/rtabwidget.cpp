@@ -471,6 +471,7 @@ void RtabWidget::slot_insertRow()
     m_view->beginUpdate();
     m_model->insertRows(row,1);
     m_view->endUpdate();
+    m_view->setFocusedRowIndex(row);
 }
 
 void RtabWidget::slot_duplicateRow()
@@ -489,6 +490,7 @@ void RtabWidget::slot_deleteRow()
     m_view->beginUpdate();
     m_model->removeRows(row,1);
     m_view->endUpdate();
+    m_view->setFocusedRowIndex(row);
 }
 
 void RtabWidget::slot_beginResetModel(std::string tname)
