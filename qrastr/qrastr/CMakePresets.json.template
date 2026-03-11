@@ -8,7 +8,8 @@
       "cacheVariables": {
         "CMAKE_BUILD_TYPE": "Debug",
         "ASTRA_ROOT": "CHANGE_ME_TO_YOUR_ASTRA_PATH",
-        "QT_DIR": "C:/Qt/6.9.3/msvc2022_64/lib/cmake"
+        "QT_DIR": "C:/Qt/6.9.3/msvc2022_64/lib/cmake",
+		"SVG_DIR": "C:/work/svg_generator"
       }
     },
     {
@@ -18,7 +19,8 @@
       "cacheVariables": {
         "CMAKE_BUILD_TYPE": "Release",
         "ASTRA_ROOT": "CHANGE_ME_TO_YOUR_ASTRA_PATH",
-        "QT_DIR": "C:/Qt/6.9.3/msvc2022_64/lib/cmake"
+        "QT_DIR": "C:/Qt/6.9.3/msvc2022_64/lib/cmake",
+		"SVG_DIR": "C:/work/svg_generator"
       }
     },
     {
@@ -28,7 +30,8 @@
       "cacheVariables": {
         "CMAKE_BUILD_TYPE": "Debug",
         "ASTRA_ROOT": "/home/administrator/Документы/astra",
-        "QT_DIR": "/home/administrator/Qt/5.15.2/gcc_64/lib/cmake/Qt5"
+        "QT_DIR": "/home/administrator/Qt/5.15.2/gcc_64/lib/cmake/Qt5",
+		"SVG_DIR": "/home/administrator/Документы/svg_generator"
       }
     },
     {
@@ -38,7 +41,8 @@
       "cacheVariables": {
         "CMAKE_BUILD_TYPE": "Release",
         "ASTRA_ROOT": "/home/administrator/Документы/astra",
-        "QT_DIR": "/home/administrator/Qt/5.15.2/gcc_64/lib/cmake/Qt5"
+        "QT_DIR": "/home/administrator/Qt/5.15.2/gcc_64/lib/cmake/Qt5",
+		"SVG_DIR": "/home/administrator/Документы/svg_generator"
       }
     }
   ]

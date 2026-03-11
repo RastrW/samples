@@ -454,6 +454,62 @@ add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
 )
 
 # ============================================================================
+# SVGgenerator Library
+# ============================================================================
+if(NOT SVG_DIR)
+    message(FATAL_ERROR "SVG_DIR must be set in CMakePresets.json")
+endif()
+
+if(WIN32)
+    set(SVG_PLATFORM_DIR "${SVG_DIR}/win")
+    set(SVG_LIB_FILE     "${SVG_PLATFORM_DIR}/${CONFIG_DIR}/SVGgenerator.lib")
+    set(SVG_DLL_FILE     "${SVG_PLATFORM_DIR}/${CONFIG_DIR}/SVGgenerator.dll")
+else()
+    set(SVG_PLATFORM_DIR "${SVG_DIR}/linux")
+    set(SVG_LIB_FILE     "${SVG_PLATFORM_DIR}/${CONFIG_DIR}/libSVGgenerator.so")
+    set(SVG_DLL_FILE     "${SVG_LIB_FILE}")
+endif()
+
+if(NOT EXISTS "${SVG_LIB_FILE}")
+    message(FATAL_ERROR "SVGgenerator library not found: ${SVG_LIB_FILE}")
+endif()
+
+# Импортируемая цель
+add_library(SVGgenerator SHARED IMPORTED)
+set_target_properties(SVGgenerator PROPERTIES
+    IMPORTED_LOCATION "${SVG_DLL_FILE}"
+)
+if(WIN32)
+    set_target_properties(SVGgenerator PROPERTIES
+        IMPORTED_IMPLIB "${SVG_LIB_FILE}"
+    )
+endif()
+
+target_link_libraries(${PROJECT_NAME} PRIVATE SVGgenerator)
+
+# Копируем .dll/.so в папку с исполняемым файлом после сборки
+add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
+    COMMAND ${CMAKE_COMMAND} -E copy_if_different
+        "${SVG_DLL_FILE}"
+        "$<TARGET_FILE_DIR:${PROJECT_NAME}>/"
+    COMMENT "Copying SVGgenerator (${CONFIG_DIR})"
+)
+
+if(WIN32 AND CMAKE_BUILD_TYPE MATCHES Debug)
+    set(SVG_PDB_FILE "${SVG_PLATFORM_DIR}/${CONFIG_DIR}/SVGgenerator.pdb")
+    if(EXISTS "${SVG_PDB_FILE}")
+        add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
+            COMMAND ${CMAKE_COMMAND} -E copy_if_different
+                "${SVG_PDB_FILE}"
+                "$<TARGET_FILE_DIR:${PROJECT_NAME}>/"
+            COMMENT "Copying SVGgenerator PDB"
+        )
+    endif()
+endif()
+
+message(STATUS "SVGgenerator: ${SVG_DLL_FILE}")
+
+# ============================================================================
 # Include Directories
 # ============================================================================
 target_include_directories(${PROJECT_NAME} PRIVATE

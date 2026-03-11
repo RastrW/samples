@@ -10,7 +10,7 @@ GraphServer::GraphServer(IPlainRastr* rastr, QObject* parent)
     : QObject(parent), m_rastr(rastr)
 {
     // Имя библиотеки без расширения — QLibrary сам добавит .so / .dll
-    const QString libDir = QCoreApplication::applicationDirPath() + "/plugins/";
+    const QString libDir = QCoreApplication::applicationDirPath() + "/";
 #ifdef Q_OS_WIN
     m_lib.setFileName(libDir + "SVGgenerator");
 #else
@@ -76,7 +76,7 @@ void GraphServer::threadFunc() {
 
     // --- Пути ---
     QString graphLibsPath = QCoreApplication::applicationDirPath()
-                            + "/plugins/graph2libs.xml";
+                            + "/../Data/graphics/graph2libs.xml";
     if (!QFile::exists(graphLibsPath)) {
         qWarning() << "GraphServer: graph2libs.xml not found";
         m_running.store(false);
