@@ -1,11 +1,14 @@
 #include <QLocale>
 #include <QTranslator>
 #include <QDebug>
+#include <QWebEngineSettings>
 #include "mainwindow.h"
 #include "app.h"
 
 int main(int argc, char *argv[]){
     system("chcp 65001");
+    // отключить sandbox ДО создания QApplication
+    qputenv("QTWEBENGINE_DISABLE_SANDBOX", "1");
 
     // устанавливаем ПЕРЕД созданием QApplication
 #if (QT_VERSION >= QT_VERSION_CHECK(6, 0, 0))

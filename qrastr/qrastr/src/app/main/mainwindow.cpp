@@ -20,6 +20,10 @@
 #include <QInputDialog>
 #include <QApplication>
 #include <QMdiSubWindow>
+#include <QWebEngineView>
+#include <QWebEngineProfile>
+#include <QTimer>
+
 #if (QT_VERSION >= QT_VERSION_CHECK(6, 0, 0))
 #include <QtSvgWidgets/QSvgWidget>
 #include <QSvgRenderer>
@@ -35,6 +39,7 @@
 #include "params.h"
 #include "UIForms.h"
 #include "cacheLog.h"
+#include "graphServer.h"
 
 MainWindow::MainWindow()
     : QMainWindow(){
@@ -363,31 +368,73 @@ void MainWindow::slot_openMcrDialog(){
     pMcrWnd->show();
 }
 
-void MainWindow::slot_openGraph(){
-
-    auto dw = new ads::CDockWidget( "Графика", this);
-
-#if (QT_VERSION >= QT_VERSION_CHECK(6, 0, 0))
-    //Using QSvgWidget
-    QSvgWidget *svgWidget = new QSvgWidget;
-    svgWidget->load(QStringLiteral(":/images/cx195.svg"));
-    dw->setWidget(svgWidget);
-    connect( dw, SIGNAL( closed() ), svgWidget, SLOT( OnClose() ) );
-    auto area = m_dockManager->addDockWidgetTab(ads::BottomAutoHideArea, dw);
+void MainWindow::openGraphDock() {
+    auto* dw      = new ads::CDockWidget(tr("Графика"), this);
+    auto* webView = new QWebEngineView(dw);
+    dw->setWidget(webView);
     dw->setFeature(ads::CDockWidget::DockWidgetDeleteOnClose, true);
-#endif
+    m_dockManager->addDockWidgetTab(ads::TopDockWidgetArea, dw);
 
-#if(!defined(SDL_NO))
-    SDL_Init(SDL_INIT_VIDEO); // Basics of SDL, init what you need to use
-    SDLChild * SdlChild = new SDLChild(dw);	// Creating the SDL Window and initializing it.
+    // Вспомогательная лямбда — грузим страницу
+    auto loadPage = [webView]() {
+        qInfo() << "[webView] loading page";
+        webView->load(QUrl("http://127.0.0.1:8081/grf.html"));
+    };
 
-    dw->setWidget(SdlChild);
-    connect( dw, SIGNAL( closed() ), SdlChild, SLOT( OnClose() ) );
-    auto area = m_dockManager->addDockWidgetTab(ads::BottomAutoHideArea, dw);
-    dw->setFeature(ads::CDockWidget::DockWidgetDeleteOnClose, true);
+    if (m_graphServer->isRunning()) {
+        // Сервер уже готов — грузим немедленно
+        loadPage();
+    } else {
+        // Qt::SingleShotConnection (Qt ≥ 6.0) гарантирует
+        // что соединение само отключится после первого срабатывания,
+        // сколько бы раз ни открывался dok до готовности сервера.
+        connect(m_graphServer, &GraphServer::sig_ready,
+                webView, loadPage,
+                static_cast<Qt::ConnectionType>(
+                    Qt::QueuedConnection | Qt::SingleShotConnection));
+    }
 
-    SdlChild->SDLInit();
-#endif
+    // Диагностические подключения
+    connect(webView, &QWebEngineView::loadStarted,
+            []{ qInfo() << "[webView] loadStarted"; });
+    connect(webView, &QWebEngineView::loadProgress,
+            [](int p){ qInfo() << "[webView] loadProgress:" << p; });
+    connect(webView, &QWebEngineView::loadFinished,
+            [](bool ok){ qInfo() << "[webView] loadFinished, ok=" << ok; });
+    connect(webView->page(), &QWebEnginePage::urlChanged,
+            [](const QUrl& url){ qInfo() << "[webView] urlChanged:" << url; });
+
+    // Закрытие вкладки → останавливаем сервер
+    connect(dw, &ads::CDockWidget::closeRequested,
+            m_graphServer, &GraphServer::stop);
+}
+
+void MainWindow::slot_openGraph() {
+    // Пересоздаём сервер только если его нет совсем.
+    // После stop() объект жив (parent=this), но m_thread == nullptr,
+    // поэтому isRunning()==false и start() корректно запустит его снова.
+    if (!m_graphServer) {
+        m_graphServer = new GraphServer(m_qastra->getRastr().get(), this);
+
+        // Если сервер упал/остановлен — сбрасываем указатель,
+        // чтобы при следующем slot_openGraph() он был пересоздан.
+        connect(m_graphServer, &GraphServer::sig_stopped,
+                this, [this]() {
+                    qInfo() << "GraphServer stopped";
+                    // deleteLater только если сервер остановили через закрытие дока,
+                    // но не при closeEvent — там мы удаляем сами
+                    if (m_graphServer) {
+                        m_graphServer->deleteLater();
+                        m_graphServer = nullptr;
+                    }
+                });
+    }
+
+    openGraphDock();
+
+    if (!m_graphServer->isRunning()) {
+        m_graphServer->start();
+    }
 }
 
 void MainWindow::slot_about(){
@@ -425,6 +472,13 @@ void MainWindow::closeEvent(QCloseEvent* event) {
     // Сохраняем состояние ADS пока dock manager ещё жив
     if (m_dockManager) {
         m_settingsManager->saveValue("ADSState", m_dockManager->saveState());
+    }
+
+    // Останавливаем синхронно ДО того, как Qt начнёт рушить объекты
+    if (m_graphServer) {
+        m_graphServer->stop();
+        delete m_graphServer;
+        m_graphServer = nullptr;
     }
 
     // Сохранение геометрии и стиля

@@ -149,167 +149,6 @@ bool App::readSettings(){
     return true;
 }
 
-// ---------------------------- Graph ----------------------------
-std::mutex ws_mutex;
-std::condition_variable ws_cv;
-std::map<int, std::string> calls;
-
-void AsyncCallback2(int iMSG, const char *params)
-{
-    std::scoped_lock<std::mutex> lock(ws_mutex);
-    calls.insert(std::make_pair(iMSG, params));
-    ws_cv.notify_one();			//пнуть главный поток для обработки асинхронного сообщения
-
-    qDebug() << "AsyncCallback2 " << iMSG ;
-
-};
-
-void task_run_graph( IPlainRastr* sp_rastr) {
-    //sp_astra->runGraph();
-
-    // Графика
-    enum class _callbackGraph : int
-    {
-        LayerLoadStart = 1400,
-        FullRefreshControl = 1799,
-        ReverseState = 1800,
-        DeleteNode = 1801,
-        MoveNode = 1802,
-        AddNode = 1803
-    };
-    using AsyncCallback = void(int iMSG, const char *params);
-    //extern "C" SBtype void InitPlainDLL(IPlainRastr* pPLain, const char *libpath, const char* ip, long port, AsyncCallback Hh)
-    using InitPlainDLL_t = void(*)(IPlainRastr* pPLain, const char* libpath, const char* ip, long port, AsyncCallback fn);
-    using PutTextLayer_t = void(*)(long iLayer);
-    using UpdateAllContent_t = void(*)();
-    using RemoveGraphNode_t = void(*)(long inode);
-    using MoveOrAddGraphNode_t = void(*)(long inode,long x,long y);
-
-    const char* pch_name_init_plain_dll {"InitPlainDLL"};
-    const char* pch_name_put_text_llayer {"PutTextLayer"};
-    const char* pch_name_update_all_content{"UpdateAllContent"};
-    const char* pch_name_remoove_graphnode {"RemoveGraphNode"};
-    const char* pch_name_move_or_add_graphnode {"MoveOrAddGraphNode"};
-
-    InitPlainDLL_t pInitPlainDLL = nullptr;
-    PutTextLayer_t pPutTextLayer= nullptr;
-    UpdateAllContent_t pUpdateAllContent= nullptr;
-    RemoveGraphNode_t pRemoveGraphNode= nullptr;
-    MoveOrAddGraphNode_t pMoveOrAddGraphNode= nullptr;
-
-
-    QString qstr_path_graph{QCoreApplication::applicationDirPath()};
-    void *phsvg = nullptr;
-#if(defined(COMPILE_WIN))
-    {
-        qstr_path_graph += "\\plugins\\SVGgenerator.dll";
-        std::string str_path_graph = qstr_path_graph.toStdString();
-        std::wstring wstr_path_graph = std::wstring(str_path_graph.begin(), str_path_graph.end());
-        //phsvg = LoadLibraryEx(wstr_path_graph.c_str(),nullptr,LOAD_LIBRARY_AS_DATAFILE );
-        phsvg = LoadLibrary(wstr_path_graph.c_str());
-    }
-#else
-    {
-        qstr_path_graph += "/plugins/libSVGgenerator.so";
-        phsvg = dlopen(qstr_path_graph.toStdString().c_str(), RTLD_NOW);
-    }
-#endif
-    if(phsvg != nullptr)
-    {
-#if(defined(COMPILE_WIN))
-    {
-        HMODULE hLib = reinterpret_cast<HMODULE>(phsvg);
-        pInitPlainDLL = (InitPlainDLL_t)GetProcAddress(hLib, pch_name_init_plain_dll);
-        pPutTextLayer = (PutTextLayer_t)GetProcAddress(hLib, pch_name_update_all_content);
-        pUpdateAllContent = (UpdateAllContent_t)GetProcAddress(hLib, pch_name_put_text_llayer);
-        pRemoveGraphNode = (RemoveGraphNode_t)GetProcAddress(hLib, pch_name_remoove_graphnode);
-        pMoveOrAddGraphNode = (MoveOrAddGraphNode_t)GetProcAddress(hLib, pch_name_move_or_add_graphnode);
-    }
-#else
-    {
-        pInitPlainDLL = reinterpret_cast<InitPlainDLL_t>(dlsym(phsvg, pch_name_init_plain_dll));
-        pPutTextLayer = reinterpret_cast<PutTextLayer_t>(dlsym(phsvg, pch_name_put_text_llayer));
-        pUpdateAllContent = reinterpret_cast<UpdateAllContent_t>(dlsym(phsvg, pch_name_update_all_content));
-        pRemoveGraphNode = reinterpret_cast<RemoveGraphNode_t>(dlsym(phsvg, pch_name_remoove_graphnode));
-        pMoveOrAddGraphNode = reinterpret_cast<MoveOrAddGraphNode_t>(dlsym(phsvg, pch_name_move_or_add_graphnode));
-    }
-#endif
-
-        if(pInitPlainDLL && pPutTextLayer && pUpdateAllContent)
-        {
-            QString qstr_test_file_path{QCoreApplication::applicationDirPath()};
-            QString qstr_graph2libs_path{QCoreApplication::applicationDirPath()};
-            qstr_graph2libs_path.append("/plugins/graph2libs.xml");
-
-            if (sp_rastr != nullptr  && QFile::exists(qstr_graph2libs_path))
-            {
-                bool run = true;
-                if (run)
-                {
-                    pInitPlainDLL(sp_rastr, qstr_graph2libs_path.toStdString().c_str(), "127.0.0.0", 8081, AsyncCallback2);
-
-                    for(;;)
-                    {
-                        std::unique_lock<std::mutex> lock(ws_mutex);
-                        while(!calls.empty())
-                        {
-                            auto imsg = *calls.begin();
-                            calls.erase(calls.begin());
-                            switch (imsg.first)
-                            {
-                                case (int)_callbackGraph::FullRefreshControl:
-                                {
-                                    pUpdateAllContent();
-                                    break;
-                                }
-                                case (int)_callbackGraph::ReverseState:
-                                {
-                                    std::string params = imsg.second;
-                                    auto it1 = params.find(";");
-                                    if(it1 != std::string::npos)
-                                    {
-                                        std::string tabl = params.substr(0, it1);
-                                    }
-
-                                    break;
-                                }
-                                case (int)_callbackGraph::DeleteNode:
-                                {
-                                    break;
-                                }
-                                case (int)_callbackGraph::MoveNode:
-                                {
-                                    //MoveOrAddGraphNode
-                                    break;
-                                }
-                                case (int)_callbackGraph::AddNode:
-                                {
-                                    //MoveOrAddGraphNode
-                                    break;
-                                }
-                                case 1400:
-                                case 1401:
-                                case 1402:
-                                case 1403:
-                                case 1404:
-                                {
-                                    pPutTextLayer(imsg.first - 1400);
-                                    break;
-                                }
-
-                            default:
-                                break;
-                            }
-                        }
-                        ws_cv.wait(lock);
-                    }
-                }
-            }
-        }
-    }
-}
-// ----------------------------/ Graph ----------------------------
-
 bool App::loadPlugins(){
     QDir pluginsDir{QDir{QCoreApplication::applicationDirPath()}};
     pluginsDir.cd("plugins");
@@ -491,20 +330,6 @@ bool App::readForms(){
     return true;
 }
 
-bool App::loadGraphlibSVGgenerator(){
-    try{
-        std::thread thread_graph( task_run_graph, m_sp_qastra->getRastr().get());
-        thread_graph.detach();
-    }catch(const std::exception& ex){
-        exclog(ex);
-        return false;
-    }catch(...){
-        exclog();
-        return false;
-    }
-    return true;
-}
-
 std::list<CUIForm>& App::getForms() const {
     assert(nullptr!=upCUIFormsCollection_);
     return upCUIFormsCollection_->Forms();
@@ -595,15 +420,7 @@ bool App::start(){
         }else {
             m_v_cache_log.add(spdlog::level::info, "ReadForms: OK");
         }
-
-        m_v_cache_log.add(spdlog::level::info, "loadGraphlibSVGgenerator: starting");
-        if (!loadGraphlibSVGgenerator())
-        {
-
-        }else {
-            m_v_cache_log.add(spdlog::level::info, "loadGraphlibSVGgenerator: OK");
-        }
-
+        m_v_cache_log.add(spdlog::level::info, "ReadForms: starting");
     }catch(const std::exception& ex){
         exclog(ex);
         return false;
