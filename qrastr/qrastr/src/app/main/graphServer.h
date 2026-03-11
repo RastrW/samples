@@ -56,6 +56,7 @@ private:
     // Очередь колбэков
     std::mutex                    m_mutex;
     std::condition_variable       m_cv;
+    ///@note перезапись очереди callback допустима, сообщение, которое не успело отработать игнорируется
     std::map<int, std::string>    m_calls;
 
     // Статический мост: GraphServer* -> AsyncCallback

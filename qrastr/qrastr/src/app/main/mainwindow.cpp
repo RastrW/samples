@@ -21,6 +21,7 @@
 #include <QApplication>
 #include <QMdiSubWindow>
 #include <QWebEngineView>
+#include <QWebEngineProfile>
 #include <QTimer>
 
 #if (QT_VERSION >= QT_VERSION_CHECK(6, 0, 0))
@@ -406,13 +407,21 @@ void MainWindow::openGraphDock() {
             qDebug() << html.left(1000);
         });
     });
+
     // Закрытие вкладки → останавливаем сервер
     connect(dw, &ads::CDockWidget::closeRequested,
             m_graphServer, &GraphServer::stop);
 
-    webView->page()->setWebChannel(nullptr); // убедиться что page создана
-    // Включить инспектор:
-    webView->page()->setDevToolsPage(new QWebEnginePage());
+    QString userAgent = webView->page()->profile()->httpUserAgent();
+    qDebug() << "Full User Agent:" << userAgent;
+
+    // Если нужно вычленить только версию Chrome:
+    QStringList parts = userAgent.split(" ");
+    for (const QString &part : parts) {
+        if (part.startsWith("Chrome/")) {
+            qDebug() << "Chromium Version:" << part.mid(7); // отрезаем "Chrome/"
+        }
+    }
 }
 
 void MainWindow::slot_openGraph() {
