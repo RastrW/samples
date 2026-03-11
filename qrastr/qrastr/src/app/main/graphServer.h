@@ -3,6 +3,7 @@
 #include <thread>
 #include <condition_variable>
 #include <QObject>
+#include <QLibrary>
 #include "astra/IPlainRastr.h"
 
 /**
@@ -27,6 +28,7 @@ signals:
     void sig_stopped();
 private:
     void threadFunc();                        // Тело потока
+    void loadSymbols();
     void dispatchCallback(int iMSG,
                           const std::string& params);
 
@@ -39,7 +41,7 @@ private:
     using MoveOrAddGraphNode_t = void(*)(long, long, long);
 
     IPlainRastr*           m_rastr   = nullptr;
-    void*                  m_dllHandle = nullptr;
+    QLibrary      m_lib;               ///< Кросс-платформенная загрузка .so/.dll
 
     InitPlainDLL_t         m_fnInit          = nullptr;
     PutTextLayer_t         m_fnPutTextLayer  = nullptr;

@@ -4,13 +4,19 @@
 #include <QFile>
 #include <QThread>
 
-#include <dlfcn.h>
-
 GraphServer* GraphServer::s_instance = nullptr;
 
 GraphServer::GraphServer(IPlainRastr* rastr, QObject* parent)
     : QObject(parent), m_rastr(rastr)
-{}
+{
+    // Имя библиотеки без расширения — QLibrary сам добавит .so / .dll
+    const QString libDir = QCoreApplication::applicationDirPath() + "/plugins/";
+#ifdef Q_OS_WIN
+    m_lib.setFileName(libDir + "SVGgenerator");
+#else
+    m_lib.setFileName(libDir + "SVGgenerator");
+#endif
+}
 
 GraphServer::~GraphServer() {
     stop();
@@ -27,7 +33,7 @@ bool GraphServer::start() {
 }
 
 void GraphServer::stop() {
-    if (!m_running.load() && !m_thread.joinable()) return;
+    if (!m_running.load() && !m_thread.joinable() && !m_lib.isLoaded()) return;
 
     m_stopFlag.store(true);
     m_cv.notify_all();          // будим поток, если ждёт
@@ -35,10 +41,12 @@ void GraphServer::stop() {
     if (m_thread.joinable())
         m_thread.join();        // ждём корректного завершения
 
-    if (m_dllHandle) {
-        dlclose(m_dllHandle);
-        m_dllHandle = nullptr;
+    // Выгружаем библиотеку ПОСЛЕ завершения потока
+    if (m_lib.isLoaded()) {
+        m_lib.unload();
+        qInfo() << "GraphServer: library unloaded";
     }
+
     s_instance = nullptr;
 
     QMetaObject::invokeMethod(this, [this]() {
@@ -50,29 +58,18 @@ void GraphServer::stop() {
 void GraphServer::threadFunc() {
     m_running.store(true);
 
-    // --- Загрузка dll ---
-    QString libPath = QCoreApplication::applicationDirPath()
-                      + "/plugins/libSVGgenerator.so";
-
-    m_dllHandle = dlopen(libPath.toStdString().c_str(), RTLD_NOW);
-    if (!m_dllHandle) {
-        qWarning() << "GraphServer: dlopen failed:" << dlerror();
-        m_running.store(false);
+    // --- Загрузка DLL ---
+    if (!m_lib.load()) {
+        qCritical() << "GraphServer: failed to load library:"
+                    << m_lib.errorString();
         return;
     }
+    qInfo() << "GraphServer: library loaded:" << m_lib.fileName();
 
-    qWarning() << "GraphServer: dlopen succesfull";
-
-    m_fnInit       = reinterpret_cast<InitPlainDLL_t>    (dlsym(m_dllHandle, "InitPlainDLL"));
-    m_fnPutTextLayer = reinterpret_cast<PutTextLayer_t>  (dlsym(m_dllHandle, "PutTextLayer"));
-    m_fnUpdateAll  = reinterpret_cast<UpdateAllContent_t>(dlsym(m_dllHandle, "UpdateAllContent"));
-    m_fnRemoveNode = reinterpret_cast<RemoveGraphNode_t> (dlsym(m_dllHandle, "RemoveGraphNode"));
-    m_fnMoveOrAdd  = reinterpret_cast<MoveOrAddGraphNode_t>(dlsym(m_dllHandle, "MoveOrAddGraphNode"));
+    loadSymbols();
 
     if (!m_fnInit || !m_fnPutTextLayer || !m_fnUpdateAll) {
         qWarning() << "GraphServer: required symbols not found";
-        dlclose(m_dllHandle);
-        m_dllHandle = nullptr;
         m_running.store(false);
         return;
     }
@@ -82,8 +79,6 @@ void GraphServer::threadFunc() {
                             + "/plugins/graph2libs.xml";
     if (!QFile::exists(graphLibsPath)) {
         qWarning() << "GraphServer: graph2libs.xml not found";
-        dlclose(m_dllHandle);
-        m_dllHandle = nullptr;
         m_running.store(false);
         return;
     }
@@ -160,6 +155,21 @@ void GraphServer::dispatchCallback(int iMSG, const std::string& params) {
     default:
         break;
     }
+}
+
+void GraphServer::loadSymbols() {
+    auto resolve = [&](const char* name) -> QFunctionPointer {
+        auto fn = m_lib.resolve(name);
+        if (!fn)
+            qWarning() << "GraphServer: symbol not found:" << name;
+        return fn;
+    };
+
+    m_fnInit         = reinterpret_cast<InitPlainDLL_t>      (resolve("InitPlainDLL"));
+    m_fnPutTextLayer = reinterpret_cast<PutTextLayer_t>      (resolve("PutTextLayer"));
+    m_fnUpdateAll    = reinterpret_cast<UpdateAllContent_t>  (resolve("UpdateAllContent"));
+    m_fnRemoveNode   = reinterpret_cast<RemoveGraphNode_t>   (resolve("RemoveGraphNode"));
+    m_fnMoveOrAdd    = reinterpret_cast<MoveOrAddGraphNode_t>(resolve("MoveOrAddGraphNode"));
 }
 
 /*static*/ void GraphServer::staticCallback(int iMSG, const char* params) {
