@@ -2,6 +2,7 @@
 #include <QCoreApplication>
 #include <QLibrary>
 #include <QFile>
+#include <QThread>
 #include "astra/IPlainRastr.h"
 #include "graphServer.h"
 
@@ -13,14 +14,12 @@ GraphWorker::~GraphWorker(){
 }
 
 void GraphWorker::stopFromOutside() {
-    // Потокобезопасно: встаёт в очередь потока worker-а
-    QMetaObject::invokeMethod(this, [this]() {
-        if (m_fnInit) {
-            m_fnInit(nullptr, "", "", 0, nullptr);
-            m_fnInit = nullptr;
-        }
-        emit sig_finished();   // явно сигналим о завершении
-    }, Qt::QueuedConnection);
+    if (m_fnInit) {
+        qInfo() << ">> Calling m_fnInit(nullptr) directly";
+        m_fnInit(nullptr, "", "", 0, nullptr);
+        m_fnInit = nullptr;
+        qInfo() << ">> m_fnInit(nullptr) returned";
+    }
 }
 
 void GraphWorker::slot_process() {
@@ -69,13 +68,17 @@ void GraphWorker::slot_process() {
 		return;
 	}
 
+    qInfo() << ">> slot_process: calling m_fnInit (will block?)";
+
 	m_fnInit(m_rastr,
 			 graphLibsPath.toStdString().c_str(),
 			 "127.0.0.1", 8081,
              GraphServer::staticCallback);   // подключение к либе
 
+    qInfo() << ">> slot_process: m_fnInit RETURNED <--";
 	qInfo() << "GraphWorker: HTTP server ready";
     emit sig_ready();
+    qInfo() << ">> slot_process: sig_ready emitted, exiting slot";
 	// Дальше работает событийный цикл потока:
 	// все handleCallback() придут как queued-сигналы
 }

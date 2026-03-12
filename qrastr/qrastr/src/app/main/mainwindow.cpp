@@ -420,11 +420,9 @@ void MainWindow::slot_openGraph() {
     if (!m_graphServer) {
         m_graphServer = new GraphServer(m_qastra->getRastr().get(), this);
 
-        // Если сервер упал/остановлен — сбрасываем указатель,
-        // чтобы при следующем slot_openGraph() он был пересоздан.
+        // Попадаем сюда только если остановили через закрытие дока
         connect(m_graphServer, &GraphServer::sig_stopped, this, [this]() {
             qInfo() << "GraphServer stopped";
-            // Попадаем сюда только если остановили через закрытие дока
             if (m_graphServer) {
                 delete m_graphServer;
                 m_graphServer = nullptr;

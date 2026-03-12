@@ -55,17 +55,25 @@ bool GraphServer::start() {
 void GraphServer::stop() {
     if (!m_thread || !m_thread->isRunning()) return;
 
+    // Шаг 1: говорим DLL остановить её внутренние потоки
     if (m_worker)
         m_worker->stopFromOutside();
 
-    // Ждём штатного завершения
-    if (!m_thread->wait(5000)) {
-        qWarning() << "GraphServer: thread did not stop in 5 s — terminating";
+    // Шаг 2: даём внутренним потокам DLL время завершиться
+    // Т.к. мы не знаем, когда закончится, ждём.
+    qInfo() << ">> Waiting for DLL internal threads to stop...";
+    QThread::msleep(300);
+    qInfo() << ">> Done waiting";
+
+    // Шаг 3: останавливаем наш QThread
+    m_thread->quit();
+    if (!m_thread->wait(3000)) {
+        qWarning() << "GraphServer: QThread did not stop — terminating";
         m_thread->terminate();
-        m_thread->wait(2000); // ещё одна попытка после terminate
+        m_thread->wait(1000);
     }
 
-    // Только после завершения потока можно безопасно выгружать DLL и удалять объекты
+    // Шаг 4: теперь безопасно выгружать
     if (m_lib.isLoaded()) {
         m_lib.unload();
         qInfo() << "GraphServer: library unloaded";
