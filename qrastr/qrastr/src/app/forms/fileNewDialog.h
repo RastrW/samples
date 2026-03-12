@@ -21,11 +21,13 @@ public:
     static constexpr const int n_colnum_templatename_ = 1;
 
 private slots:
-    void onSelectAllToggled(Qt::CheckState state);
-    void onItemChanged(QTableWidgetItem* item);
+
+    void slot_itemChanged(QTableWidgetItem* item);
 
 private:
-    QTableWidget*     twTemplates;
-    QCheckBox*        cbSelectAll;
+    void selectAllToggled(Qt::CheckState state);
+
+    QTableWidget*     m_twTemplates;
+    QCheckBox*        m_cbSelectAll;
     bool              m_bUpdating = false; // предотвращает рекурсию
 };

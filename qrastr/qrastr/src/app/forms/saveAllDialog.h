@@ -6,6 +6,8 @@
 
 class QAstra;
 class QTableWidget;
+class QCheckBox;
+class QTableWidgetItem;
 
 class SaveAllDialog : public QDialog
 {
@@ -17,13 +19,18 @@ public:
     void showEvent(QShowEvent* event) override;
 
 private slots:
-    void on_buttonBox_accepted();
+    void slot_buttonBoxAccepted();
+    void slot_itemChanged(QTableWidgetItem* item);
 
 private:
-    QAstra*              m_pqastra;
-    QDir                 m_dirShabl;
+    void selectAllToggled(Qt::CheckState state);
+
+    QAstra*               m_pqastra;
+    QDir                  m_dirShabl;
     QMap<QString,QString> m_FilesLoad;
-    QTableWidget*        m_twSaveFiles;
+    QTableWidget*         m_twSaveFiles;
+    QCheckBox*            m_cbSelectAll;
+    bool                  m_bUpdating = false; // предотвращает рекурсию
 
     enum class _cols : int { save, templ, file, path };
 };

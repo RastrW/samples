@@ -16,7 +16,6 @@ GroupCorrectionDialog::GroupCorrectionDialog(RData* _prdata, RCol* _prcol, QWidg
     // --- Row 1: Параметр + comboBox + label_3 ---
     QComboBox* cbParameters = new QComboBox();
     QLabel* lTable = new QLabel();
-
     QString str_lab3 = "в таблице ";
     str_lab3.append(_prdata->t_name_.c_str());
     lTable->setText(str_lab3);
@@ -37,11 +36,16 @@ GroupCorrectionDialog::GroupCorrectionDialog(RData* _prdata, RCol* _prcol, QWidg
 
     // --- Row 2: "radioButton Удалять строки" ---
     QRadioButton* rbDelete = new QRadioButton(tr("Удалять строки"));
+    rbDelete->setChecked(true);
 
     // --- Row 3: radioButton + expression ---
     QRadioButton* rbFormula = new QRadioButton(tr("Формула расчета:"));
-    rbDelete->setChecked(true);
     m_leExpression = new QLineEdit();
+    m_leExpression->setEnabled(false); // неактивен по умолчанию
+
+    // Активировать lineEdit только при выборе rbFormula
+    connect(rbFormula, &QRadioButton::toggled,
+            m_leExpression, &QLineEdit::setEnabled);
 
     QHBoxLayout* row3 = new QHBoxLayout();
     row3->addWidget(rbFormula);
@@ -49,7 +53,6 @@ GroupCorrectionDialog::GroupCorrectionDialog(RData* _prdata, RCol* _prcol, QWidg
 
     // --- Row 4: Выборка ---
     m_leSelection = new QLineEdit();
-
     QHBoxLayout* row4 = new QHBoxLayout();
     row4->addWidget(new QLabel(tr("Выборка")));
     row4->addWidget(m_leSelection);
@@ -57,8 +60,8 @@ GroupCorrectionDialog::GroupCorrectionDialog(RData* _prdata, RCol* _prcol, QWidg
     // --- ButtonBox ---
     QDialogButtonBox* buttonBox = new QDialogButtonBox(
         QDialogButtonBox::Ok | QDialogButtonBox::Cancel, this);
-    connect(buttonBox, &QDialogButtonBox::accepted, this,
-            &GroupCorrectionDialog::on_buttonBox_accepted);
+    connect(buttonBox, &QDialogButtonBox::accepted,
+            this, &GroupCorrectionDialog::on_buttonBox_accepted);
     connect(buttonBox, &QDialogButtonBox::rejected, this, &QDialog::reject);
 
     QVBoxLayout* mainLayout = new QVBoxLayout(this);
