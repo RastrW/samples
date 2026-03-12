@@ -12,7 +12,49 @@ GraphWorker::~GraphWorker(){
     qInfo() << "GraphWorker was deleted";
 }
 
+void GraphWorker::stopFromOutside() {
+    // Потокобезопасно: встаёт в очередь потока worker-а
+    QMetaObject::invokeMethod(this, [this]() {
+        if (m_fnInit) {
+            m_fnInit(nullptr, "", "", 0, nullptr);
+            m_fnInit = nullptr;
+        }
+        emit sig_finished();   // явно сигналим о завершении
+    }, Qt::QueuedConnection);
+}
+
 void GraphWorker::slot_process() {
+    // --- Проверка HTML-ресурсов ---
+    auto res = m_rastr->WorkingFolder();
+    if (!res || res->Code() != IPlainRastrRetCode::Ok) {
+        qWarning() << "Не удалось определить рабочую папку.";
+        if (res) res->Destroy();
+        return;
+    }
+    const QString htmlDir =
+        QString::fromStdString(std::string(*res) + "/html");
+    if (res) res->Destroy();
+
+    const QStringList required = {"grf.css", "grf.js", "grf2.css"};
+    QStringList missing;
+    for (const QString& f : required)
+        if (!QFile::exists(htmlDir + "/" + f))
+            missing << f;
+
+    if (!missing.isEmpty()) {
+        qWarning() << QString("В папке «%1» не найдены файлы:\n%2")
+                                  .arg(htmlDir, missing.join('\n'));
+        return;
+    }
+
+    const QString graphLibsPath =
+        QCoreApplication::applicationDirPath() + "/../Data/graphics/graph2libs.xml";
+    if (!QFile::exists(graphLibsPath)) {
+        qWarning() << "GraphWorker: graph2libs.xml not found";
+        emit sig_finished();
+        return;
+    }
+
 	if (!m_lib->load()) {
 		qCritical() << "GraphWorker: failed to load library:" << m_lib->errorString();
         emit sig_finished();
@@ -23,14 +65,6 @@ void GraphWorker::slot_process() {
 	loadSymbols();
 	if (!m_fnInit || !m_fnPutTextLayer || !m_fnUpdateAll) {
 		qWarning() << "GraphWorker: required symbols not found";
-        emit sig_finished();
-		return;
-	}
-
-	const QString graphLibsPath =
-        QCoreApplication::applicationDirPath() + "/../Data/graphics/graph2libs.xml";
-	if (!QFile::exists(graphLibsPath)) {
-		qWarning() << "GraphWorker: graph2libs.xml not found";
         emit sig_finished();
 		return;
 	}

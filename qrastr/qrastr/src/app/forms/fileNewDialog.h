@@ -1,9 +1,11 @@
 #pragma once
-
 #include <QDialog>
 #include <set>
 
 class QTableWidget;
+class QTableWidgetItem;
+class QCheckBox;
+
 
 class FileNewDialog : public QDialog
 {
@@ -18,6 +20,12 @@ public:
     static constexpr const int n_colnum_checked_      = 0;
     static constexpr const int n_colnum_templatename_ = 1;
 
+private slots:
+    void onSelectAllToggled(Qt::CheckState state);
+    void onItemChanged(QTableWidgetItem* item);
+
 private:
-    QTableWidget* twTemplates;
+    QTableWidget*     twTemplates;
+    QCheckBox*        cbSelectAll;
+    bool              m_bUpdating = false; // предотвращает рекурсию
 };

@@ -2,19 +2,21 @@
 #include <QThread>
 #include <QCoreApplication>
 #include "graphWorker.h"
+#include "astra/IPlainRastr.h"
 
 GraphServer* GraphServer::s_instance = nullptr;
 
 GraphServer::GraphServer(IPlainRastr* rastr, QObject* parent)
-    : QObject(parent), m_rastr(rastr)
-{
+    : QObject(parent),
+    m_rastr(rastr){
+
     const QString libDir = QCoreApplication::applicationDirPath() + "/";
     m_lib.setFileName(libDir + "SVGgenerator");
 }
 
 GraphServer::~GraphServer() {
     stop();
-    qInfo() << "GraphWorker was deleted";
+    qInfo() << "GraphServer was deleted";
 }
 
 bool GraphServer::start() {
@@ -34,19 +36,8 @@ bool GraphServer::start() {
     // Поток завершился → чистим ресурсы и сигналим наружу
     connect(m_thread, &QThread::finished, this, [this]() {
         s_instance = nullptr;
-
-        if (m_lib.isLoaded()) {
-            m_lib.unload();
-            qInfo() << "GraphServer: library unloaded";
-        }
-
-        m_worker->deleteLater();
-        m_worker = nullptr;
-
-        m_thread->deleteLater();
-        m_thread = nullptr;
-
         qInfo() << "[sig_stopped] delivered in thread:" << QThread::currentThreadId();
+        // Чистим синхронно в stop(), здесь только сигнал
         emit sig_stopped();
     });
 
@@ -62,9 +53,29 @@ bool GraphServer::start() {
 }
 
 void GraphServer::stop() {
-    if (!m_thread) return;
-    m_thread->quit();          // просим завершить событийный цикл
-    m_thread->wait();          // ждём корректного завершения
+    if (!m_thread || !m_thread->isRunning()) return;
+
+    if (m_worker)
+        m_worker->stopFromOutside();
+
+    // Ждём штатного завершения
+    if (!m_thread->wait(5000)) {
+        qWarning() << "GraphServer: thread did not stop in 5 s — terminating";
+        m_thread->terminate();
+        m_thread->wait(2000); // ещё одна попытка после terminate
+    }
+
+    // Только после завершения потока можно безопасно выгружать DLL и удалять объекты
+    if (m_lib.isLoaded()) {
+        m_lib.unload();
+        qInfo() << "GraphServer: library unloaded";
+    }
+    if (m_worker) {
+        delete m_worker;
+        m_worker = nullptr;
+    }
+    delete m_thread;
+    m_thread = nullptr;
 }
 
  bool GraphServer::isRunning() const {
