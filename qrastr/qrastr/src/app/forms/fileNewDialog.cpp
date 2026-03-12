@@ -10,7 +10,7 @@ FileNewDialog::FileNewDialog(QWidget *parent)
     : QDialog(parent)
 {
     setWindowTitle(tr("Открыть новый файл"));
-    setWindowIcon(QIcon::fromTheme(QIcon::ThemeIcon::DocumentNew));
+    setWindowIcon(QIcon::fromTheme("document-new"));
     setWindowModality(Qt::ApplicationModal);
     setFixedSize(316, 442);
 
@@ -42,8 +42,9 @@ FileNewDialog::FileNewDialog(QWidget *parent)
     twTemplates->resizeColumnsToContents();
     twTemplates->resizeRowsToContents();
 
-    connect(cbSelectAll, &QCheckBox::checkStateChanged,
-            this, &FileNewDialog::onSelectAllToggled);
+    connect(cbSelectAll, &QCheckBox::clicked, this, [this](bool checked) {
+        onSelectAllToggled(checked ? Qt::Checked : Qt::Unchecked);
+    });
     connect(twTemplates, &QTableWidget::itemChanged,
             this, &FileNewDialog::onItemChanged);
 

@@ -384,13 +384,16 @@ void MainWindow::openGraphDock() {
     if (m_graphServer->isRunning()) {
         loadPage();
     } else {
-        // Qt::SingleShotConnection (Qt ≥ 6.0) гарантирует
-        // что соединение само отключится после первого срабатывания,
+        //гарантируем, что соединение само отключится после первого срабатывания,
         // сколько бы раз ни открывался dok до готовности сервера.
-        connect(m_graphServer, &GraphServer::sig_ready,
-                webView, loadPage,
-                static_cast<Qt::ConnectionType>(
-                    Qt::QueuedConnection | Qt::SingleShotConnection));
+        auto* conn = new QMetaObject::Connection();
+        *conn = connect(m_graphServer, &GraphServer::sig_ready,
+                        webView, [loadPage, conn]() {
+                            loadPage();
+                            QObject::disconnect(*conn);
+                            delete conn;
+                        },
+                        Qt::QueuedConnection);
     }
 
     // Диагностические подключения

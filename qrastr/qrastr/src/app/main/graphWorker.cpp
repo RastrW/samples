@@ -3,6 +3,7 @@
 #include <QLibrary>
 #include <QFile>
 #include <QThread>
+#include <QDebug>
 #include "astra/IPlainRastr.h"
 #include "graphServer.h"
 
