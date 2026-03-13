@@ -28,5 +28,7 @@ private:
     QThread*       m_thread = nullptr;
     GraphWorker*   m_worker = nullptr;
 
-    static GraphServer* s_instance;      // Одно статическое поле => сервер только один
+    //Статическое поле гарантирует, что возможна работа
+    //только одного серверы одновременно (один порт 8081)
+    static GraphServer* s_instance;
 };

@@ -1,20 +1,23 @@
 #include "graphServer.h"
 #include <QThread>
+#include <QDebug>
 #include <QCoreApplication>
 #include "graphWorker.h"
+#include "astra/IPlainRastr.h"
 
 GraphServer* GraphServer::s_instance = nullptr;
 
 GraphServer::GraphServer(IPlainRastr* rastr, QObject* parent)
-    : QObject(parent), m_rastr(rastr)
-{
+    : QObject(parent),
+    m_rastr(rastr){
+
     const QString libDir = QCoreApplication::applicationDirPath() + "/";
     m_lib.setFileName(libDir + "SVGgenerator");
 }
 
 GraphServer::~GraphServer() {
     stop();
-    qInfo() << "GraphWorker was deleted";
+    qInfo() << "GraphServer was deleted";
 }
 
 bool GraphServer::start() {
@@ -34,19 +37,8 @@ bool GraphServer::start() {
     // Поток завершился → чистим ресурсы и сигналим наружу
     connect(m_thread, &QThread::finished, this, [this]() {
         s_instance = nullptr;
-
-        if (m_lib.isLoaded()) {
-            m_lib.unload();
-            qInfo() << "GraphServer: library unloaded";
-        }
-
-        m_worker->deleteLater();
-        m_worker = nullptr;
-
-        m_thread->deleteLater();
-        m_thread = nullptr;
-
         qInfo() << "[sig_stopped] delivered in thread:" << QThread::currentThreadId();
+        // Чистим синхронно в stop(), здесь только сигнал
         emit sig_stopped();
     });
 
@@ -62,9 +54,37 @@ bool GraphServer::start() {
 }
 
 void GraphServer::stop() {
-    if (!m_thread) return;
-    m_thread->quit();          // просим завершить событийный цикл
-    m_thread->wait();          // ждём корректного завершения
+    if (!m_thread || !m_thread->isRunning()) return;
+
+    // Шаг 1: говорим DLL остановить её внутренние потоки
+    if (m_worker)
+        m_worker->stopFromOutside();
+
+    // Шаг 2: даём внутренним потокам DLL время завершиться
+    // Т.к. мы не знаем, когда закончится, ждём.
+    qInfo() << ">> Waiting for DLL internal threads to stop...";
+    QThread::msleep(300);
+    qInfo() << ">> Done waiting";
+
+    // Шаг 3: останавливаем наш QThread
+    m_thread->quit();
+    if (!m_thread->wait(3000)) {
+        qWarning() << "GraphServer: QThread did not stop — terminating";
+        m_thread->terminate();
+        m_thread->wait(1000);
+    }
+
+    // Шаг 4: теперь безопасно выгружать
+    if (m_lib.isLoaded()) {
+        m_lib.unload();
+        qInfo() << "GraphServer: library unloaded";
+    }
+    if (m_worker) {
+        delete m_worker;
+        m_worker = nullptr;
+    }
+    delete m_thread;
+    m_thread = nullptr;
 }
 
  bool GraphServer::isRunning() const {

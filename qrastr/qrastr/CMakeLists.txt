@@ -462,30 +462,11 @@ endif()
 
 if(WIN32)
     set(SVG_PLATFORM_DIR "${SVG_DIR}/win")
-    set(SVG_LIB_FILE     "${SVG_PLATFORM_DIR}/${CONFIG_DIR}/SVGgenerator.lib")
     set(SVG_DLL_FILE     "${SVG_PLATFORM_DIR}/${CONFIG_DIR}/SVGgenerator.dll")
 else()
     set(SVG_PLATFORM_DIR "${SVG_DIR}/linux")
-    set(SVG_LIB_FILE     "${SVG_PLATFORM_DIR}/${CONFIG_DIR}/libSVGgenerator.so")
-    set(SVG_DLL_FILE     "${SVG_LIB_FILE}")
+    set(SVG_DLL_FILE     "${SVG_PLATFORM_DIR}/${CONFIG_DIR}/libSVGgenerator.so")
 endif()
-
-if(NOT EXISTS "${SVG_LIB_FILE}")
-    message(FATAL_ERROR "SVGgenerator library not found: ${SVG_LIB_FILE}")
-endif()
-
-# Импортируемая цель
-add_library(SVGgenerator SHARED IMPORTED)
-set_target_properties(SVGgenerator PROPERTIES
-    IMPORTED_LOCATION "${SVG_DLL_FILE}"
-)
-if(WIN32)
-    set_target_properties(SVGgenerator PROPERTIES
-        IMPORTED_IMPLIB "${SVG_LIB_FILE}"
-    )
-endif()
-
-target_link_libraries(${PROJECT_NAME} PRIVATE SVGgenerator)
 
 # Копируем .dll/.so в папку с исполняемым файлом после сборки
 add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD

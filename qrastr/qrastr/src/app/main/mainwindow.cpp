@@ -375,23 +375,25 @@ void MainWindow::openGraphDock() {
     dw->setFeature(ads::CDockWidget::DockWidgetDeleteOnClose, true);
     m_dockManager->addDockWidgetTab(ads::TopDockWidgetArea, dw);
 
-    // Вспомогательная лямбда — грузим страницу
+    ++m_graphDockCount;
+
     auto loadPage = [webView]() {
-        qInfo() << "[webView] loading page";
         webView->load(QUrl("http://127.0.0.1:8081/grf.html"));
     };
 
     if (m_graphServer->isRunning()) {
-        // Сервер уже готов — грузим немедленно
         loadPage();
     } else {
-        // Qt::SingleShotConnection (Qt ≥ 6.0) гарантирует
-        // что соединение само отключится после первого срабатывания,
+        //гарантируем, что соединение само отключится после первого срабатывания,
         // сколько бы раз ни открывался dok до готовности сервера.
-        connect(m_graphServer, &GraphServer::sig_ready,
-                webView, loadPage,
-                static_cast<Qt::ConnectionType>(
-                    Qt::QueuedConnection | Qt::SingleShotConnection));
+        auto* conn = new QMetaObject::Connection();
+        *conn = connect(m_graphServer, &GraphServer::sig_ready,
+                        webView, [loadPage, conn]() {
+                            loadPage();
+                            QObject::disconnect(*conn);
+                            delete conn;
+                        },
+                        Qt::QueuedConnection);
     }
 
     // Диагностические подключения
@@ -404,9 +406,14 @@ void MainWindow::openGraphDock() {
     connect(webView->page(), &QWebEnginePage::urlChanged,
             [](const QUrl& url){ qInfo() << "[webView] urlChanged:" << url; });
 
-    // Закрытие вкладки → останавливаем сервер
-    connect(dw, &ads::CDockWidget::closeRequested,
-            m_graphServer, &GraphServer::stop);
+    // Останавливаем сервер только когда закрыт ПОСЛЕДНИЙ док
+    connect(dw, &ads::CDockWidget::closeRequested, this, [this]() {
+        if (--m_graphDockCount <= 0) {
+            m_graphDockCount = 0;
+            if (m_graphServer)
+                m_graphServer->stop();
+        }
+    });
 }
 
 void MainWindow::slot_openGraph() {
@@ -416,18 +423,14 @@ void MainWindow::slot_openGraph() {
     if (!m_graphServer) {
         m_graphServer = new GraphServer(m_qastra->getRastr().get(), this);
 
-        // Если сервер упал/остановлен — сбрасываем указатель,
-        // чтобы при следующем slot_openGraph() он был пересоздан.
-        connect(m_graphServer, &GraphServer::sig_stopped,
-                this, [this]() {
-                    qInfo() << "GraphServer stopped";
-                    // deleteLater только если сервер остановили через закрытие дока,
-                    // но не при closeEvent — там мы удаляем сами
-                    if (m_graphServer) {
-                        m_graphServer->deleteLater();
-                        m_graphServer = nullptr;
-                    }
-                });
+        // Попадаем сюда только если остановили через закрытие дока
+        connect(m_graphServer, &GraphServer::sig_stopped, this, [this]() {
+            qInfo() << "GraphServer stopped";
+            if (m_graphServer) {
+                delete m_graphServer;
+                m_graphServer = nullptr;
+            }
+        });
     }
 
     openGraphDock();
@@ -470,25 +473,24 @@ void MainWindow::showMDPPrepareDialog() {
 
 void MainWindow::closeEvent(QCloseEvent* event) {
     // Сохраняем состояние ADS пока dock manager ещё жив
-    if (m_dockManager) {
+    if (m_dockManager)
         m_settingsManager->saveValue("ADSState", m_dockManager->saveState());
-    }
 
     // Останавливаем синхронно ДО того, как Qt начнёт рушить объекты
     if (m_graphServer) {
-        m_graphServer->stop();
+        // Отключаем сигнал, чтобы не сработал deleteLater из слота в slot_openGraph
+        disconnect(m_graphServer, &GraphServer::sig_stopped, this, nullptr);
+        m_graphServer->stop();   // теперь гарантированно завершает поток
         delete m_graphServer;
         m_graphServer = nullptr;
     }
 
-    // Сохранение геометрии и стиля
     m_settingsManager->saveWindowGeometry(this);
-
     spdlog::info("MainWindow closing");
 
-    if (m_dockManager) {
+    // dockManager удаляем ПОСЛЕ того как DLL уже выгружена
+    if (m_dockManager)
         m_dockManager->deleteLater();
-    }
 
     QMainWindow::closeEvent(event);
 }

@@ -2,6 +2,8 @@
 #include <QCoreApplication>
 #include <QLibrary>
 #include <QFile>
+#include <QThread>
+#include <QDebug>
 #include "astra/IPlainRastr.h"
 #include "graphServer.h"
 
@@ -12,7 +14,47 @@ GraphWorker::~GraphWorker(){
     qInfo() << "GraphWorker was deleted";
 }
 
+void GraphWorker::stopFromOutside() {
+    if (m_fnInit) {
+        qInfo() << ">> Calling m_fnInit(nullptr) directly";
+        m_fnInit(nullptr, "", "", 0, nullptr);
+        m_fnInit = nullptr;
+        qInfo() << ">> m_fnInit(nullptr) returned";
+    }
+}
+
 void GraphWorker::slot_process() {
+    // --- Проверка HTML-ресурсов ---
+    auto res = m_rastr->WorkingFolder();
+    if (!res || res->Code() != IPlainRastrRetCode::Ok) {
+        qWarning() << "Не удалось определить рабочую папку.";
+        if (res) res->Destroy();
+        return;
+    }
+    const QString htmlDir =
+        QString::fromStdString(std::string(*res) + "/html");
+    if (res) res->Destroy();
+
+    const QStringList required = {"grf.css", "grf.js", "grf2.css"};
+    QStringList missing;
+    for (const QString& f : required)
+        if (!QFile::exists(htmlDir + "/" + f))
+            missing << f;
+
+    if (!missing.isEmpty()) {
+        qWarning() << QString("В папке «%1» не найдены файлы:\n%2")
+                                  .arg(htmlDir, missing.join('\n'));
+        return;
+    }
+
+    const QString graphLibsPath =
+        QCoreApplication::applicationDirPath() + "/../Data/graphics/graph2libs.xml";
+    if (!QFile::exists(graphLibsPath)) {
+        qWarning() << "GraphWorker: graph2libs.xml not found";
+        emit sig_finished();
+        return;
+    }
+
 	if (!m_lib->load()) {
 		qCritical() << "GraphWorker: failed to load library:" << m_lib->errorString();
         emit sig_finished();
@@ -27,21 +69,17 @@ void GraphWorker::slot_process() {
 		return;
 	}
 
-	const QString graphLibsPath =
-        QCoreApplication::applicationDirPath() + "/../Data/graphics/graph2libs.xml";
-	if (!QFile::exists(graphLibsPath)) {
-		qWarning() << "GraphWorker: graph2libs.xml not found";
-        emit sig_finished();
-		return;
-	}
+    qInfo() << ">> slot_process: calling m_fnInit (will block?)";
 
 	m_fnInit(m_rastr,
 			 graphLibsPath.toStdString().c_str(),
 			 "127.0.0.1", 8081,
              GraphServer::staticCallback);   // подключение к либе
 
+    qInfo() << ">> slot_process: m_fnInit RETURNED <--";
 	qInfo() << "GraphWorker: HTTP server ready";
     emit sig_ready();
+    qInfo() << ">> slot_process: sig_ready emitted, exiting slot";
 	// Дальше работает событийный цикл потока:
 	// все handleCallback() придут как queued-сигналы
 }

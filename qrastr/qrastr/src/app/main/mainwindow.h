@@ -100,6 +100,8 @@ private:
         m_uiBuilder;
     GraphServer*
         m_graphServer = nullptr;
+    //счётчик открытых окон, при m_graphDockCount = 0 => остановка сервера
+    long m_graphDockCount {0};
     // ========== ПЛАГИНЫ ==========
     std::shared_ptr<QAstra> m_qastra;
     std::shared_ptr<QTI> m_qti;
@@ -113,6 +115,7 @@ private:
     // ========== ВСПОМОГАТЕЛЬНЫЕ КОМПОНЕНТЫ ==========
     std::shared_ptr<PyHlp> m_pyHelper;          // Python helper (для выполнения макросов)
     
+
     // ========== ИНИЦИАЛИЗАЦИЯ ==========
     void setupDockWidgets();
     void setupLogSinks();

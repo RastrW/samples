@@ -4,15 +4,18 @@
 #include <QHeaderView>
 #include <QDialogButtonBox>
 #include <QVBoxLayout>
+#include <QCheckBox>
 
 FileNewDialog::FileNewDialog(QWidget *parent)
     : QDialog(parent)
 {
     setWindowTitle(tr("Открыть новый файл"));
-    //setWindowIcon(QIcon::fromTheme(QIcon::ThemeIcon::DocumentNew));
     setWindowIcon(QIcon::fromTheme("document-new"));
     setWindowModality(Qt::ApplicationModal);
     setFixedSize(316, 442);
+
+    cbSelectAll = new QCheckBox(tr("Отметить всё"));
+    cbSelectAll->setTristate(true);
 
     twTemplates = new QTableWidget();
     twTemplates->setColumnCount(2);
@@ -39,14 +42,65 @@ FileNewDialog::FileNewDialog(QWidget *parent)
     twTemplates->resizeColumnsToContents();
     twTemplates->resizeRowsToContents();
 
+    connect(cbSelectAll, &QCheckBox::clicked, this, [this](bool checked) {
+        onSelectAllToggled(checked ? Qt::Checked : Qt::Unchecked);
+    });
+    connect(twTemplates, &QTableWidget::itemChanged,
+            this, &FileNewDialog::onItemChanged);
+
     QDialogButtonBox* buttonBox = new QDialogButtonBox(
         QDialogButtonBox::Ok | QDialogButtonBox::Cancel, this);
     connect(buttonBox, &QDialogButtonBox::accepted, this, &QDialog::accept);
     connect(buttonBox, &QDialogButtonBox::rejected, this, &QDialog::reject);
 
     QVBoxLayout* mainLayout = new QVBoxLayout(this);
+    mainLayout->addWidget(cbSelectAll);
     mainLayout->addWidget(twTemplates);
     mainLayout->addWidget(buttonBox);
+}
+
+void FileNewDialog::onSelectAllToggled(Qt::CheckState state)
+{
+    // Промежуточное состояние пользователь не выбирает вручную —
+    // при клике Qt переходит: Unchecked→Checked или Checked→Unchecked.
+    // Если был PartiallyChecked (выставлен программно), следующий клик
+    // переводит в Checked (выбрать все).
+    if (state == Qt::PartiallyChecked)
+        return;
+
+    m_bUpdating = true;
+    const Qt::CheckState newState = (state == Qt::Checked) ? Qt::Checked : Qt::Unchecked;
+    for (int row = 0; row < twTemplates->rowCount(); ++row) {
+        QTableWidgetItem* item = twTemplates->item(row, n_colnum_checked_);
+        if (item)
+            item->setCheckState(newState);
+    }
+    m_bUpdating = false;
+}
+
+void FileNewDialog::onItemChanged(QTableWidgetItem* item)
+{
+    if (m_bUpdating)
+        return;
+    if (item->column() != n_colnum_checked_)
+        return;
+
+    int nChecked = 0;
+    int nTotal   = twTemplates->rowCount();
+    for (int row = 0; row < nTotal; ++row) {
+        const QTableWidgetItem* cb = twTemplates->item(row, n_colnum_checked_);
+        if (cb && cb->checkState() == Qt::Checked)
+            ++nChecked;
+    }
+
+    m_bUpdating = true;
+    if (nChecked == 0)
+        cbSelectAll->setCheckState(Qt::Unchecked);
+    else if (nChecked == nTotal)
+        cbSelectAll->setCheckState(Qt::Checked);
+    else
+        cbSelectAll->setCheckState(Qt::PartiallyChecked);
+    m_bUpdating = false;
 }
 
 FileNewDialog::_s_checked_templatenames FileNewDialog::getCheckedTemplateNames() const
