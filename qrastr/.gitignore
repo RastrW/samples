@@ -100,8 +100,13 @@ Release
 !/lib/build_qtitan_gcc.sh
 !/lib/build_qtitan_vs_msvc.bat
 
+# Local user settings
 qrastr_log.txt
+Data/appsettings.json
+Data/appsettings_backup.json
 
 .qtcreator
 
 *appsettings*.json
+
+Data/Files/private
