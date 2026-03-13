@@ -222,3 +222,28 @@ C:\work\rastr\qrastr\
 2. Поместите `astra` и `QtitanDataGrid8.2.0_win_qt_6_7` в `...\rastr\qrastr\lib\`
 3. Установите Python 3.12 и добавьте в `PATH`
 4. Откройте проект в Qt Creator и соберите его
+
+## Проблемы с отладочным режимом в AstraLinux:
+1. Анализ:
+При проблемах с запуском отладчика в Qt Creator сначала проверьте Debugger Log (вкладка внизу IDE) и выполните следующие команды в терминале:
+1.1 — проверить текущий уровень ptrace:
+	cat /proc/sys/kernel/yama/ptrace_scope
+Значение 1 — норма. Значение 3 — отладка заблокирована.
+1.2 — проверить активные модули безопасности ядра:
+	cat /sys/kernel/security/lsm
+Если в списке есть parsec — он управляет ptrace_scope.
+
+2. Решение:
+2.1 Проверить, кому принадлежит файл
+	dpkg -S /etc/sysctl.d/999-astra.conf
+Если файл принадлежит пакету astra-safepolicy — он будет восстанавливаться при каждой загрузке. Нужна заморозка файла.
+2.2 Изменить значение и заморозить файл
+	sudo chattr -i /etc/sysctl.d/999-astra.conf
+	sudo sed -i 's/ptrace_scope=3/ptrace_scope=1/' /etc/sysctl.d/999-astra.conf # изменение значения
+	grep ptrace_scope /etc/sysctl.d/999-astra.conf   							# проверить
+	sudo chattr +i /etc/sysctl.d/999-astra.conf									# заморозить
+	sudo reboot																	# Перезагрузить
+	grep ptrace_scope /etc/sysctl.d/999-astra.conf   							# проверить
+
+Примечание: chattr +i запрещает изменение файла даже для root.
+Пакет astra-safepolicy при обновлении выдаст ошибку записи — это не критично. Для отката: sudo chattr -i /etc/sysctl.d/999-astra.conf

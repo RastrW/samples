@@ -108,3 +108,5 @@ Data/appsettings_backup.json
 .qtcreator
 
 *appsettings*.json
+
+Data/Files/private
