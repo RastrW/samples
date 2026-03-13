@@ -1,6 +1,5 @@
 #pragma once
-
-#include <QDialog>
+#include "checkboxListDialog.h"
 #include <QDir>
 #include <QMap>
 
@@ -9,7 +8,7 @@ class QTableWidget;
 class QCheckBox;
 class QTableWidgetItem;
 
-class SaveAllDialog : public QDialog
+class SaveAllDialog : public CheckboxListDialog
 {
     Q_OBJECT
 public:
@@ -20,17 +19,10 @@ public:
 
 private slots:
     void slot_buttonBoxAccepted();
-    void slot_itemChanged(QTableWidgetItem* item);
-
 private:
-    void selectAllToggled(Qt::CheckState state);
-
     QAstra*               m_pqastra;
     QDir                  m_dirShabl;
     QMap<QString,QString> m_FilesLoad;
-    QTableWidget*         m_twSaveFiles;
-    QCheckBox*            m_cbSelectAll;
-    bool                  m_bUpdating = false; // предотвращает рекурсию
 
     enum class _cols : int { save, templ, file, path };
 };

@@ -1,4 +1,6 @@
 #include "checkboxListDialog.h"
+#include <QCheckBox>
+#include <QTableWidget>
 
 CheckboxListDialog::CheckboxListDialog(int checkboxColumn, QWidget* parent)
     : QDialog(parent)

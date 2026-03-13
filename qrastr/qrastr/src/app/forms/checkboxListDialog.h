@@ -3,6 +3,7 @@
 
 class QCheckBox;
 class QTableWidget;
+class QTableWidgetItem;
 
 /// Базовый класс для диалогов с таблицей, первая колонка которой —
 /// чекбоксы, и кнопкой «Отметить всё» над ней.
