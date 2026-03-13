@@ -51,13 +51,13 @@ SDL_AppResult SDL_OK(){
 }
 
 SDL_AppResult SDLChild::SDLInit() {
-
-    HWND qtWindowHandle = (HWND)this->winId();
+    ///@todo ИСПРАВИТЬ - ЭТО РАБОТАЕТ ТОЛЬКО НА  WINNDOWS
+    //HWND qtWindowHandle = (HWND)this->winId();
 
     SDL_PropertiesID props = SDL_CreateProperties();
     SDL_SetStringProperty(props, SDL_PROP_WINDOW_CREATE_TITLE_STRING, "Графика");
     SDL_SetBooleanProperty(props, SDL_PROP_WINDOW_CREATE_RESIZABLE_BOOLEAN, true );
-    SDL_SetPointerProperty(props, SDL_PROP_WINDOW_CREATE_WIN32_HWND_POINTER, qtWindowHandle);
+    //SDL_SetPointerProperty(props, SDL_PROP_WINDOW_CREATE_WIN32_HWND_POINTER, qtWindowHandle);
     SDL_SetNumberProperty(props, SDL_PROP_WINDOW_CREATE_WIDTH_NUMBER, 640);
     SDL_SetNumberProperty(props, SDL_PROP_WINDOW_CREATE_HEIGHT_NUMBER, 480);
 

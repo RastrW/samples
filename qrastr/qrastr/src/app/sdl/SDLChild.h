@@ -9,8 +9,8 @@
 #include <QDir>
 #include <QStandardPaths> // For a more robust temporary location
 
-#include <SDL3\SDL.h>
-#include <SDL3_image\SDL_image.h>
+#include <SDL3/SDL.h>
+#include <SDL3_image/SDL_image.h>
 
 class SDLChild : public QMdiSubWindow {
     Q_OBJECT
