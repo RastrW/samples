@@ -148,11 +148,16 @@ void UIBuilder::createBarsMDPActions() {
 }
 
 void UIBuilder::createGraphActions() {
-    addAction("graph",
-              tr("&graph"),
+    addAction("graphWeb",
+              tr("&graphWeb"),
               "",
               "F10",
-              tr("Графика"));
+              tr("Графика Web"));
+    addAction("graphSDL",
+              tr("&graphSDL"),
+              "",
+              "",
+              tr("Графика SDL"));
 }
 
 void UIBuilder::createMacroActions() {
@@ -270,9 +275,12 @@ void UIBuilder::buildMenuBar() {
     // МЕНЮ "ГРАФИКА"
     m_menus["graph"] = menuBar->addMenu(tr("&Графика"));
     // Используем стандартную иконку Qt для Network
-    QAction* graphAction = m_actions["graph"];
-    graphAction->setIcon(QApplication::style()->standardIcon(QStyle::SP_DriveNetIcon));
-    m_menus["graph"]->addAction(graphAction);
+    QAction* graphWebAction = m_actions["graphWeb"];
+    graphWebAction->setIcon(QApplication::style()->standardIcon(QStyle::SP_DriveNetIcon));
+    m_menus["graph"]->addAction(graphWebAction);
+    QAction* graphSDLAction = m_actions["graphSDL"];
+    graphSDLAction->setIcon(QApplication::style()->standardIcon(QStyle::SP_DriveNetIcon));
+    m_menus["graph"]->addAction(graphSDLAction);
 
     // МЕНЮ "РАСЧЁТЫ"
     m_menus["calc"] = menuBar->addMenu(tr("&Расчеты"));

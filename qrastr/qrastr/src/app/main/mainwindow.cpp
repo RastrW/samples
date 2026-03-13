@@ -41,6 +41,7 @@
 #include "cacheLog.h"
 #include "graphServer.h"
 #include "protocolLogWidget.h"
+#include "SDLChild.h"
 
 MainWindow::MainWindow()
     : QMainWindow(){
@@ -331,8 +332,10 @@ void MainWindow::setupConnections() {
             });
 
     // ========== Окна ==========
-    connect(m_uiBuilder->actionByName("graph"), &QAction::triggered,
-            this, &MainWindow::slot_openGraph);
+    connect(m_uiBuilder->actionByName("graphWeb"), &QAction::triggered,
+            this, &MainWindow::slot_openGraphWeb);
+    connect(m_uiBuilder->actionByName("graphSDL"), &QAction::triggered,
+            this, &MainWindow::slot_openGraphSDL);
     connect(m_uiBuilder->actionByName("macro"), &QAction::triggered,
             this, &MainWindow::slot_openMcrDialog);
     // Закрыть активный dock widget
@@ -370,7 +373,7 @@ void MainWindow::slot_openMcrDialog(){
 }
 
 void MainWindow::openGraphDock() {
-    auto* dw      = new ads::CDockWidget(tr("Графика"), this);
+    auto* dw      = new ads::CDockWidget(tr("Графика Web"), this);
     auto* webView = new QWebEngineView(dw);
     dw->setWidget(webView);
     dw->setFeature(ads::CDockWidget::DockWidgetDeleteOnClose, true);
@@ -417,7 +420,7 @@ void MainWindow::openGraphDock() {
     });
 }
 
-void MainWindow::slot_openGraph() {
+void MainWindow::slot_openGraphWeb() {
     // Пересоздаём сервер только если его нет совсем.
     // После stop() объект жив (parent=this), но m_thread == nullptr,
     // поэтому isRunning()==false и start() корректно запустит его снова.
@@ -439,6 +442,21 @@ void MainWindow::slot_openGraph() {
     if (!m_graphServer->isRunning()) {
         m_graphServer->start();
     }
+}
+
+void MainWindow::slot_openGraphSDL(){
+    SDL_Init(SDL_INIT_VIDEO); // Basics of SDL, init what you need to use
+
+
+    auto dw = new ads::CDockWidget( "Графика SDL", this);
+    SDLChild * SdlChild = new SDLChild(dw);	// Creating the SDL Window and initializing it.
+
+    connect( dw, SIGNAL( closed() ), SdlChild, SLOT( OnClose() ) );
+    dw->setWidget(SdlChild);
+    dw->setFeature(ads::CDockWidget::DockWidgetDeleteOnClose, true);
+    m_dockManager->addDockWidgetTab(ads::TopDockWidgetArea, dw);
+
+    SdlChild->SDLInit();
 }
 
 void MainWindow::slot_about(){

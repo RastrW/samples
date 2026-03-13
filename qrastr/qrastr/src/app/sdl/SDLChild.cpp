@@ -19,20 +19,18 @@ SDLChild::SDLChild(QWidget * parent) : QMdiSubWindow(parent) {
     grey backgrounds.
     */
     Time = new QTimer(this);
-    #if(!defined(SDL_NO))
-        connect(Time, &QTimer::timeout, this, &SDLChild::Render);
-    #endif
+    connect(Time, &QTimer::timeout, this, &SDLChild::Render);
+
     Time->start(1000 / 60);
-#if(!defined(SDL_NO))
+
     RendererRef = 0;
     WindowRef = 0;
-#endif
+
     position = 0;
     dir = 1;
 }
 
 SDLChild::~SDLChild() {
- #if(!defined(SDL_NO))
     SDL_DestroyRenderer(RendererRef);	// Basic SDL garbage collection
     SDL_DestroyWindow(WindowRef);
 
@@ -42,9 +40,8 @@ SDLChild::~SDLChild() {
     RendererRef = 0;
     WindowRef = 0;
     Time = 0;
-    #endif
 }
-#if(!defined(SDL_NO))
+
 SDL_AppResult SDL_Fail(){
     SDL_LogError(SDL_LOG_CATEGORY_CUSTOM, "Error %s", SDL_GetError());
     return SDL_APP_FAILURE;
@@ -198,4 +195,3 @@ SDL_Window * SDLChild::GetWindow() {
 SDL_Renderer * SDLChild::GetRenderer() {
     return RendererRef;
 }
-#endif

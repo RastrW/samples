@@ -82,8 +82,9 @@ private slots:
     // Диалог макросов
     void slot_openMcrDialog();
     //Графика
-    void slot_openGraph();
+    void slot_openGraphWeb();
     void openGraphDock();
+    void slot_openGraphSDL();
 
     void slot_about();
 private:

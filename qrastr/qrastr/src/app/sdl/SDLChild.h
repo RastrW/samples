@@ -9,17 +9,15 @@
 #include <QDir>
 #include <QStandardPaths> // For a more robust temporary location
 
-#if(!defined(SDL_NO))
 #include <SDL3\SDL.h>
 #include <SDL3_image\SDL_image.h>
-#endif
 
 class SDLChild : public QMdiSubWindow {
     Q_OBJECT
 public:
     SDLChild(QWidget * parent);
     ~SDLChild();
-#if(!defined(SDL_NO))
+
     SDL_AppResult SDLInit();
     SDL_AppResult  SDLInit2();
     void SetWindow(SDL_Window * ref);
@@ -32,7 +30,6 @@ private:
 private slots:
     void Render();
     void OnClose();
-#endif
 private:
     QWidget * MainWindowWidget;
     QTimer * Time;
