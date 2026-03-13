@@ -14,6 +14,7 @@ class QAstra;
 class RtabWidget;
 class CUIForm;
 class PyHlp;
+class GraphServer;
 
 namespace ads {
     class CDockManager;
@@ -66,7 +67,7 @@ public:
      */
     void generateDynamicForms(QMenu* menu);
     RtabWidget* activeForm() const { return m_activeForm; }
-
+    void closeGraphServer();
 signals:
     void formOpened(const QString& formName);
     void formClosed(const QString& formName);
@@ -90,6 +91,9 @@ public slots:
      * @note Вызывает on_calc_end() у всех RtabWidget
      */
     void onCalculationFinished();
+    // ========== Графика ==========
+    void openSDLGraph();
+    void openWebGraph();
 private:
     // ========== Зависимости ==========
     std::shared_ptr<QAstra> m_qastra;
@@ -100,6 +104,11 @@ private:
     // ========== Состояние ==========
     std::list<CUIForm> m_forms;                     // Статические формы
     QMap<QString, int> m_formNameToIndex;           // Быстрый поиск
+
+    // ========== Графика ==========
+    GraphServer* m_graphServer  = nullptr;
+    //счётчик открытых окон, при m_graphDockCount = 0 => остановка сервера
+    int          m_graphDockCount = 0;
     /** @brief
      * Список ВСЕХ открытых форм
      * Используется для передачи сигналов расчётов
@@ -110,7 +119,8 @@ private:
     // ========== Вспомогательные методы ==========
     CUIForm* findFormByName(const QString& name);
     CUIForm* findFormByIndex(int index);
-
+    /// @brief Общий метод регистрации dock-виджета в m_openDockWidgets
+    void registerDockWidget(ads::CDockWidget* dw);
     /// @brief Построить иерархию меню из MenuPath форм
     QMap<QString, QMenu*> buildMenuStructure(QMenu* rootMenu);
 };

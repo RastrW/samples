@@ -2,6 +2,7 @@
 #include <QTimer>
 #include <QFile>
 #include <QDir>
+#include <QDebug>
 #include <QResizeEvent>
 
 SDLChild::SDLChild(QWidget* parent) : QWidget(parent) {
@@ -46,7 +47,9 @@ SDL_AppResult SDLChild::SDLInit() {
                            SDL_PROP_WINDOW_CREATE_WIN32_HWND_POINTER,
                            reinterpret_cast<void*>(winId()));
 #elif defined(Q_OS_LINUX)
-     ///@todo Добавить handle на linux
+    SDL_SetNumberProperty(props,
+        SDL_PROP_WINDOW_CREATE_X11_WINDOW_NUMBER,
+        static_cast<Sint64>(winId()));
 #endif
 
     m_window = SDL_CreateWindowWithProperties(props);

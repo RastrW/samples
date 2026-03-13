@@ -16,7 +16,7 @@ class QBarsMDP;
 class QMdiArea;
 class ProtocolLogWidget;
 class ProtocolWidget;
-class GraphServer;
+
 
 class PyHlp;
 class CUIForm;
@@ -81,11 +81,6 @@ private slots:
     void showMDPPrepareDialog();
     // Диалог макросов
     void slot_openMcrDialog();
-    //Графика
-    void slot_openGraphWeb();
-    void openGraphDock();
-    void slot_openGraphSDL();
-
     void slot_about();
 private:
     // ========== КОМПОНЕНТЫ-ДЕЛЕГАТЫ ==========
@@ -99,10 +94,7 @@ private:
         m_settingsManager;
     std::unique_ptr<UIBuilder>
         m_uiBuilder;
-    GraphServer*
-        m_graphServer = nullptr;
-    //счётчик открытых окон, при m_graphDockCount = 0 => остановка сервера
-    long m_graphDockCount {0};
+
     // ========== ПЛАГИНЫ ==========
     std::shared_ptr<QAstra> m_qastra;
     std::shared_ptr<QTI> m_qti;

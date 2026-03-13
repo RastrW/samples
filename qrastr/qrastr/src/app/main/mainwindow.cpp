@@ -20,8 +20,7 @@
 #include <QInputDialog>
 #include <QApplication>
 #include <QMdiSubWindow>
-#include <QWebEngineView>
-#include <QWebEngineProfile>
+
 #include <QTimer>
 
 #if (QT_VERSION >= QT_VERSION_CHECK(6, 0, 0))
@@ -39,9 +38,8 @@
 #include "params.h"
 #include "UIForms.h"
 #include "cacheLog.h"
-#include "graphServer.h"
+
 #include "protocolLogWidget.h"
-#include "SDLChild.h"
 
 MainWindow::MainWindow()
     : QMainWindow(){
@@ -333,9 +331,9 @@ void MainWindow::setupConnections() {
 
     // ========== Окна ==========
     connect(m_uiBuilder->actionByName("graphWeb"), &QAction::triggered,
-            this, &MainWindow::slot_openGraphWeb);
+            m_formManager.get(), &FormManager::openWebGraph);
     connect(m_uiBuilder->actionByName("graphSDL"), &QAction::triggered,
-            this, &MainWindow::slot_openGraphSDL);
+            m_formManager.get(), &FormManager::openSDLGraph);
     connect(m_uiBuilder->actionByName("macro"), &QAction::triggered,
             this, &MainWindow::slot_openMcrDialog);
     // Закрыть активный dock widget
@@ -371,93 +369,6 @@ void MainWindow::slot_openMcrDialog(){
 
     dialog->setPyHlp(m_pyHelper);
     dialog->show();
-}
-
-void MainWindow::openGraphDock() {
-    auto* dw      = new ads::CDockWidget(tr("Графика Web"), this);
-    auto* webView = new QWebEngineView(dw);
-    dw->setWidget(webView);
-    dw->setFeature(ads::CDockWidget::DockWidgetDeleteOnClose, true);
-    m_dockManager->addDockWidgetTab(ads::TopDockWidgetArea, dw);
-
-    ++m_graphDockCount;
-
-    auto loadPage = [webView]() {
-        webView->load(QUrl("http://127.0.0.1:8081/grf.html"));
-    };
-
-    if (m_graphServer->isRunning()) {
-        loadPage();
-    } else {
-        //гарантируем, что соединение само отключится после первого срабатывания,
-        // сколько бы раз ни открывался dok до готовности сервера.
-        auto* conn = new QMetaObject::Connection();
-        *conn = connect(m_graphServer, &GraphServer::sig_ready,
-                        webView, [loadPage, conn]() {
-                            loadPage();
-                            QObject::disconnect(*conn);
-                            delete conn;
-                        },
-                        Qt::QueuedConnection);
-    }
-
-    // Диагностические подключения
-    connect(webView, &QWebEngineView::loadStarted,
-            []{ qInfo() << "[webView] loadStarted"; });
-    connect(webView, &QWebEngineView::loadProgress,
-            [](int p){ qInfo() << "[webView] loadProgress:" << p; });
-    connect(webView, &QWebEngineView::loadFinished,
-            [](bool ok){ qInfo() << "[webView] loadFinished, ok=" << ok; });
-    connect(webView->page(), &QWebEnginePage::urlChanged,
-            [](const QUrl& url){ qInfo() << "[webView] urlChanged:" << url; });
-
-    // Останавливаем сервер только когда закрыт ПОСЛЕДНИЙ док
-    connect(dw, &ads::CDockWidget::closeRequested, this, [this]() {
-        if (--m_graphDockCount <= 0) {
-            m_graphDockCount = 0;
-            if (m_graphServer)
-                m_graphServer->stop();
-        }
-    });
-}
-
-void MainWindow::slot_openGraphWeb() {
-    // Пересоздаём сервер только если его нет совсем.
-    // После stop() объект жив (parent=this), но m_thread == nullptr,
-    // поэтому isRunning()==false и start() корректно запустит его снова.
-    if (!m_graphServer) {
-        m_graphServer = new GraphServer(m_qastra->getRastr().get(), this);
-
-        // Попадаем сюда только если остановили через закрытие дока
-        connect(m_graphServer, &GraphServer::sig_stopped, this, [this]() {
-            qInfo() << "GraphServer stopped";
-            if (m_graphServer) {
-                delete m_graphServer;
-                m_graphServer = nullptr;
-            }
-        });
-    }
-
-    openGraphDock();
-
-    if (!m_graphServer->isRunning()) {
-        m_graphServer->start();
-    }
-}
-
-void MainWindow::slot_openGraphSDL(){
-    SDL_Init(SDL_INIT_VIDEO); // Basics of SDL, init what you need to use
-
-
-    auto dw = new ads::CDockWidget( "Графика SDL", this);
-    SDLChild * SdlChild = new SDLChild(dw);	// Creating the SDL Window and initializing it.
-
-    connect( dw, SIGNAL( closed() ), SdlChild, SLOT( OnClose() ) );
-    dw->setWidget(SdlChild);
-    dw->setFeature(ads::CDockWidget::DockWidgetDeleteOnClose, true);
-    m_dockManager->addDockWidgetTab(ads::TopDockWidgetArea, dw);
-
-    SdlChild->SDLInit();
 }
 
 void MainWindow::slot_about(){
@@ -496,14 +407,8 @@ void MainWindow::closeEvent(QCloseEvent* event) {
     if (m_dockManager)
         m_settingsManager->saveValue("ADSState", m_dockManager->saveState());
 
-    // Останавливаем синхронно ДО того, как Qt начнёт рушить объекты
-    if (m_graphServer) {
-        // Отключаем сигнал, чтобы не сработал deleteLater из слота в slot_openGraph
-        disconnect(m_graphServer, &GraphServer::sig_stopped, this, nullptr);
-        m_graphServer->stop();   // теперь гарантированно завершает поток
-        delete m_graphServer;
-        m_graphServer = nullptr;
-    }
+
+    m_formManager->closeGraphServer();
 
     m_settingsManager->saveWindowGeometry(this);
     spdlog::info("MainWindow closing");

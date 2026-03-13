@@ -15,9 +15,10 @@ protected:
 private:
     SDL_Window * WindowRef;
     SDL_Renderer * RendererRef;
+public slots:
+    void OnClose();
 private slots:
     void Render();
-    void OnClose();
 private:
     SDL_Window*   m_window   = nullptr;
     SDL_Renderer* m_renderer = nullptr;

@@ -2,7 +2,8 @@
 #include "qastra.h"
 #include "rtablesdatamanager.h"
 #include "rtabwidget.h"
-
+#include <QWebEngineView>
+#include <QWebEngineProfile>
 #include <DockWidget.h>
 #include <DockManager.h>
 #include <spdlog/spdlog.h>
@@ -12,6 +13,8 @@
 #include "utils.h"
 using WrapperExceptionType = std::runtime_error;
 #include "astra/IPlainRastrWrappers.h"
+#include "graphServer.h"
+#include "SDLChild.h"
 
 FormManager::FormManager
     (std::shared_ptr<QAstra> qastra,
@@ -76,7 +79,7 @@ void FormManager::openForm(const CUIForm& form) {
         // Добавляем в список открытых форм
         // Сигналы будут передаваться через onCalculationStarted/Finished
         m_openForms.append(prtw);
-        m_openDockWidgets.append(dw);
+        registerDockWidget(dw);
 
         dw->setWidget(prtw->createDockContent());
 
@@ -85,9 +88,7 @@ void FormManager::openForm(const CUIForm& form) {
         connect(dw, &ads::CDockWidget::closed, prtw, &RtabWidget::slot_close);
         connect(dw, &ads::CDockWidget::closed,
                 this, [this, prtw, dw, formName = form.Name()]() {
-                    // Удаляем из списка открытых форм
                     m_openForms.removeOne(prtw);
-                    m_openDockWidgets.removeOne(dw);
                     emit formClosed(QString::fromStdString(formName));
                 });
 
@@ -96,6 +97,120 @@ void FormManager::openForm(const CUIForm& form) {
 
     emit formOpened(QString::fromStdString(form.Name()));
     emit activeFormChanged(prtw);
+}
+
+void FormManager::openSDLGraph() {
+    if (!SDL_Init(SDL_INIT_VIDEO)) {
+        spdlog::error("SDL_Init failed: {}", SDL_GetError());
+        return;
+    }
+
+    auto* dw       = new ads::CDockWidget(tr("Графика SDL"), m_parentWidget);
+    auto* sdlChild = new SDLChild(dw);
+
+    dw->setWidget(sdlChild);
+    dw->setFeature(ads::CDockWidget::DockWidgetDeleteOnClose, true);
+
+    // Регистрируем в общем списке — теперь участвует в cascade/tile
+    registerDockWidget(dw);
+
+    m_dockManager->addDockWidgetTab(ads::TopDockWidgetArea, dw);
+
+    // SDL инициализируется ПОСЛЕ того, как виджет встроен в иерархию окон,
+    // иначе winId() ещё не назначен нативному окну
+    if (!sdlChild->SDLInit()) {
+        spdlog::error("SDLChild::SDLInit failed");
+    }
+
+    // Завершаем SDL когда доковый виджет закрывается
+    connect(dw, &ads::CDockWidget::closed,
+            sdlChild, &SDLChild::OnClose);
+
+    emit formOpened("Графика SDL");
+}
+
+void FormManager::openWebGraph() {
+    // Пересоздаём сервер только если его нет совсем.
+    // После stop() объект жив (parent=this), но m_thread == nullptr,
+    // поэтому isRunning()==false и start() корректно запустит его снова.
+    if (!m_graphServer) {
+        m_graphServer = new GraphServer(m_qastra->getRastr().get(), m_parentWidget);
+        // Попадаем сюда только если остановили через закрытие дока
+        connect(m_graphServer, &GraphServer::sig_stopped, this, [this]() {
+            spdlog::info("GraphServer stopped");
+            delete m_graphServer;
+            m_graphServer = nullptr;
+        });
+    }
+
+    auto* dw      = new ads::CDockWidget(tr("Графика Web"), m_parentWidget);
+    auto* webView = new QWebEngineView(dw);
+
+    dw->setWidget(webView);
+    dw->setFeature(ads::CDockWidget::DockWidgetDeleteOnClose, true);
+
+    // Регистрируем в общем списке — участвует в cascade/tile
+    registerDockWidget(dw);
+
+    m_dockManager->addDockWidgetTab(ads::TopDockWidgetArea, dw);
+
+    ++m_graphDockCount;
+
+    auto loadPage = [webView]() {
+        webView->load(QUrl("http://127.0.0.1:8081/grf.html"));
+    };
+
+    if (m_graphServer->isRunning()) {
+        loadPage();
+    } else {
+        //гарантируем, что соединение само отключится после первого срабатывания,
+        // сколько бы раз ни открывался dok до готовности сервера.
+        auto* conn = new QMetaObject::Connection();
+        *conn = connect(m_graphServer, &GraphServer::sig_ready,
+                        webView, [loadPage, conn]() {
+                            loadPage();
+                            QObject::disconnect(*conn);
+                            delete conn;
+                        },
+                        Qt::QueuedConnection);
+    }
+    /*
+    // Диагностические подключения
+    connect(webView, &QWebEngineView::loadStarted,
+            []{ qInfo() << "[webView] loadStarted"; });
+    connect(webView, &QWebEngineView::loadProgress,
+            [](int p){ qInfo() << "[webView] loadProgress:" << p; });
+    connect(webView, &QWebEngineView::loadFinished,
+            [](bool ok){ qInfo() << "[webView] loadFinished, ok=" << ok; });
+    connect(webView->page(), &QWebEnginePage::urlChanged,
+            [](const QUrl& url){ qInfo() << "[webView] urlChanged:" << url; });
+    */
+    // Останавливаем сервер при закрытии последнего дока
+    connect(dw, &ads::CDockWidget::closeRequested, this, [this]() {
+        if (--m_graphDockCount <= 0) {
+            m_graphDockCount = 0;
+            if (m_graphServer)
+                m_graphServer->stop();
+        }
+    });
+
+    if (!m_graphServer->isRunning()) {
+        m_graphServer->start();
+    }
+
+    emit formOpened("Графика Web");
+}
+
+void FormManager::closeGraphServer(){
+    // Останавливаем синхронно ДО того, как Qt начнёт рушить объекты
+    if (m_graphServer) {
+        // Отключаем сигнал, чтобы не сработал deleteLater из слота в slot_openGraph
+        disconnect(m_graphServer, &GraphServer::sig_stopped, this, nullptr);
+        m_graphServer->stop();   // теперь гарантированно завершает поток
+        delete m_graphServer;
+        m_graphServer = nullptr;
+    }
+
 }
 
 void FormManager::openFormByIndex(int index) {
@@ -337,6 +452,14 @@ QMap<QString, QMenu*> FormManager::buildMenuStructure(QMenu* rootMenu) {
     }
     
     return menuMap;
+}
+
+void FormManager::registerDockWidget(ads::CDockWidget* dw) {
+    m_openDockWidgets.append(dw);
+    connect(dw, &ads::CDockWidget::closed,
+            this, [this, dw]() {
+                m_openDockWidgets.removeOne(dw);
+            });
 }
 
 void FormManager::cascadeForms() {
