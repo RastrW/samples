@@ -103,6 +103,11 @@ list(APPEND PROJECT_SOURCES
     forms/dlgfindrepl.ui
     pyhlp.h
     pyhlp.cpp
+    pyhlp.h
+    pyhlp.cpp
+    protocolLogWidget.h
+    protocolLogWidget.cpp
+    qmcr_api.h
 )
 
 if(QRASTR_BUILD_WITH_MCR)

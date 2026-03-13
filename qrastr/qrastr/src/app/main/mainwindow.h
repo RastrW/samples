@@ -14,7 +14,7 @@ class QAstra;
 class QTI;
 class QBarsMDP;
 class QMdiArea;
-class McrWnd;
+class ProtocolLogWidget;
 class ProtocolWidget;
 class GraphServer;
 
@@ -109,7 +109,7 @@ private:
     
     // ========== GUI ЭЛЕМЕНТЫ ==========
     ads::CDockManager* m_dockManager = nullptr; // The main container for Advanced Docking System
-    McrWnd* m_globalProtocol = nullptr;                // Глобавльный протокол
+    ProtocolLogWidget* m_globalProtocol = nullptr;                // Глобавльный протокол
     ProtocolWidget* m_mainProtocol = nullptr;     // Главный протокол
     
     // ========== ВСПОМОГАТЕЛЬНЫЕ КОМПОНЕНТЫ ==========

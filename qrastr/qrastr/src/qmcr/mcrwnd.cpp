@@ -14,13 +14,11 @@ QQmlDebuggingEnabler enabler;
 
 #include "mcrwnd.h"
 #include "scihlp.h"
-#include "tst_toolbox.h"
-#include "tst2_dialog.h"
 #include "forms/dlgfindrepl.h"
 //#include "IPlainRastr.h"
 #include "../app/astra/qastra_events_data.h"
 #include "pyhlp.h"
-
+#include "protocolLogWidget.h"
 
 const std::string g_str_tst_rastr_events {
 R"(
@@ -269,80 +267,36 @@ R"(
   </html>
 )"};
 
-McrWnd::McrWnd(QWidget* parent, const _en_role en_role)
+McrWnd::McrWnd(QWidget* parent)
     : QDialog(parent,
               Qt::WindowMinimizeButtonHint |
               Qt::WindowMaximizeButtonHint |
               Qt::WindowCloseButtonHint
-     ),en_role_(en_role){
+     ){
     const int nWidth = 600;
     const int nHeight = 800;
     resize(nWidth, nHeight);
     setWindowIcon( QIcon(QApplication::style()->standardIcon(QStyle::SP_ComputerIcon) ));
     setWindowTitle(tr("Macro Python"));
+
     QSplitter* splitter = new QSplitter(this);
     QVBoxLayout* layout = new QVBoxLayout();
-    QVBoxLayout* container_layout = new QVBoxLayout();
-    if(_en_role::macro_dlg == en_role_){
-        QToolBar* pToolBar = new QToolBar();
-        pToolBar->addAction(
-                    QIcon(QApplication::style()->standardIcon(QStyle::SP_FileIcon)),
-                    tr("&New"),
-                    this,
-                    [this] { McrWnd::onFileNew(); }
-                    )->setShortcut(QKeySequence(Qt::CTRL | Qt::Key_N));
-        pToolBar->addAction(
-                    QIcon(QApplication::style()->standardIcon(QStyle::SP_DirIcon)),
-                    tr("&Open"),
-                    this,
-                    [this] { McrWnd::onFileOpen(); }
-                    )->setShortcut(QKeySequence(Qt::CTRL | Qt::Key_O));
-        pToolBar->addAction(
-                    QIcon(QApplication::style()->standardIcon(QStyle::SP_DialogSaveButton)),
-                    tr("&Save"),
-                    [this] { onFileSave(false); }
-                    )->setShortcut(QKeySequence(Qt::CTRL | Qt::Key_S));
-        pToolBar->addAction(
-                    QIcon(QApplication::style()->standardIcon(QStyle::SP_DriveFDIcon)),
-                    tr("&Save as"),
-                    [this] { onFileSave(true); }
-                    )->setShortcut(QKeySequence(Qt::CTRL | Qt::Key_W));
-        pToolBar->addAction(
-                    QIcon(QApplication::style()->standardIcon(QStyle::SP_MediaPlay)),
-                    tr("Run (F10)"),
-                    [this] { McrWnd::onRun(); }
-                    )->setShortcut(QKeySequence(Qt::Key_F10));
-        pToolBar->addAction(
-                    QIcon(QApplication::style()->standardIcon(QStyle::SP_BrowserReload)),
-                    tr("&Find"),
-                    [this] { McrWnd::onFind(); }
-                    )->setShortcut(QKeySequence(Qt::CTRL+Qt::Key_F));
-        pToolBar->addAction(
-                    QIcon(QApplication::style()->standardIcon(QStyle::SP_CommandLink)),
-                    tr("&Go to line"),
-                    [this] { McrWnd::onGoToLine(); }
-                    )->setShortcut(QKeySequence(Qt::CTRL+Qt::Key_G));
-        pToolBar->addAction(
-                    QIcon(QApplication::style()->standardIcon(QStyle::SP_DialogResetButton)),
-                    tr("&Clear"),
-                    [this] { McrWnd::onProtClear(); }
-                    );
+    m_containerLayout = new QVBoxLayout();
 
-        container_layout->addWidget(pToolBar);
-        shEdit_ = new SciHlp(this, SciHlp::_en_role::editor_python);
-        splitter->addWidget(shEdit_);
-        splitter->setOrientation(Qt::Orientation::Vertical);
-    }
-    shProt_ = new SciHlp(this, SciHlp::_en_role::prot_macro);
-    splitter->addWidget(shProt_);
-    container_layout->addWidget(splitter);
-    setLayout(container_layout);
-    //this->addAction();
+    buildToolBar();
 
-    if(_en_role::macro_dlg == en_role_){
-        connect(shEdit_, &SciHlp::chngFileInfo, this, &McrWnd::onChngEditFileInfo);
+    shEdit_ = new SciHlp(this, SciHlp::_en_role::editor_python);
+    splitter->addWidget(shEdit_);
+    splitter->setOrientation(Qt::Orientation::Vertical);
 
-        shEdit_->setContent(R"(
+    m_logWidget = new ProtocolLogWidget(this);
+    splitter->addWidget(m_logWidget);
+    m_containerLayout->addWidget(splitter);
+    setLayout(m_containerLayout);
+
+    connect(shEdit_, &SciHlp::chngFileInfo, this, &McrWnd::onChngEditFileInfo);
+
+    shEdit_->setContent(R"(
 import os
 #print(os.get_exec_path())
 print(os.getcwd())
@@ -449,13 +403,70 @@ else:
     shEdit_->setContent(g_str_tst_rastr_events);
     //shProt_->setContent(R"()");
 
-  }//if(macro_dlg)
-
     qDebug() << "themeSearchPaths:" << QIcon::themeSearchPaths() << QIcon::themeName();
 }
 
-McrWnd::~McrWnd()
-{
+McrWnd::~McrWnd(){}
+
+void McrWnd::buildToolBar(){
+    auto* tb = new QToolBar(this);
+    tb->setIconSize(QSize(16, 16));
+
+    tb->addAction(
+          QIcon(QApplication::style()->standardIcon(QStyle::SP_FileIcon)),
+          tr("&New"),
+          this, [this] { onFileNew(); }
+          )->setShortcut(QKeySequence(Qt::CTRL | Qt::Key_N));
+
+    tb->addAction(
+          QIcon(QApplication::style()->standardIcon(QStyle::SP_DirIcon)),
+          tr("&Open"),
+          this, [this] { onFileOpen(); }
+          )->setShortcut(QKeySequence(Qt::CTRL | Qt::Key_O));
+
+    tb->addAction(
+          QIcon(QApplication::style()->standardIcon(QStyle::SP_DialogSaveButton)),
+          tr("&Save"),
+          this, [this] { onFileSave(false); }
+          )->setShortcut(QKeySequence(Qt::CTRL | Qt::Key_S));
+
+    tb->addAction(
+          QIcon(QApplication::style()->standardIcon(QStyle::SP_DriveFDIcon)),
+          tr("Save &as"),
+          this, [this] { onFileSave(true); }
+          )->setShortcut(QKeySequence(Qt::CTRL | Qt::Key_W));
+
+    tb->addSeparator();
+
+    tb->addAction(
+          QIcon(QApplication::style()->standardIcon(QStyle::SP_MediaPlay)),
+          tr("Run (F10)"),
+          this, [this] { onRun(); }
+          )->setShortcut(Qt::Key_F10);
+
+    tb->addSeparator();
+
+    tb->addAction(
+          QIcon(QApplication::style()->standardIcon(QStyle::SP_BrowserReload)),
+          tr("&Find"),
+          this, [this] { onFind(); }
+          )->setShortcut(QKeySequence(Qt::CTRL | Qt::Key_F));
+
+    tb->addAction(
+          QIcon(QApplication::style()->standardIcon(QStyle::SP_CommandLink)),
+          tr("&Go to line"),
+          this, [this] { onGoToLine(); }
+          )->setShortcut(QKeySequence(Qt::CTRL | Qt::Key_G));
+
+    tb->addSeparator();
+
+    tb->addAction(
+        QIcon(QApplication::style()->standardIcon(QStyle::SP_DialogResetButton)),
+        tr("&Clear log"),
+        this, [this] { onProtClear(); }
+        );
+
+    m_containerLayout->addWidget(tb);
 }
 
 void McrWnd::showEvent(QShowEvent *event)
@@ -604,7 +615,10 @@ bool McrWnd::onFileSave(bool blSaveAs)
 void McrWnd::onRun()
 {
   qDebug("McrWnd::onRun()");
-  if(nullptr != pPyHlp_){
+    if (!pPyHlp_) {
+        m_logWidget->onRastrPrint("No PyHlp!\n");
+        return;
+    }
     const QByteArray qbaTxt{ shEdit_->getText( shEdit_->textLength() ) };
     const PyHlp::enPythonResult PythonResult{ pPyHlp_->Run( qbaTxt.data() ) };
     if( PyHlp::enPythonResult::Ok != PythonResult){
@@ -630,9 +644,6 @@ void McrWnd::onRun()
           //msgBox.setStandardButtons( QMessageBox::Yes | QMessageBox::Cancel );
         }
     }
-  }else{
-    shProt_->my_appendText("No PyHlp! \n");
-  }
 }
 
 void McrWnd::onGoToLine()
@@ -665,88 +676,18 @@ void McrWnd::Find(SciHlp::_params_find params_find)
 
 void McrWnd::onProtClear()
 {
-    shProt_->setContent("");
-}
-
-void McrWnd::encode(std::string& data)
-{
-    std::string buffer;
-    buffer.reserve(data.size()+30);
-    for(size_t pos = 0; pos != data.size(); ++pos){
-        switch(data[pos]) {
-            case '&':  buffer.append("&amp;");       break;
-            case '\"': buffer.append("&quot;");      break;
-            case '\'': buffer.append("&apos;");      break;
-            case '<':  buffer.append("&lt;");        break;
-            case '>':  buffer.append("&gt;");        break;
-            default:   buffer.append(&data[pos], 1); break;
-        }
-    }
-    data.swap(buffer);
-}
-
-void McrWnd::encode(std::string& data_out, const QString& qstr_in)
-{
-    data_out.reserve(qstr_in.length() + 50);
-    for(size_t pos = 0; pos != qstr_in.length(); ++pos) {
-        if      (QLatin1Char('&')  == qstr_in[static_cast<int>(pos)]){
-            data_out.append("&amp;");
-        }else if(QLatin1Char('\"') == qstr_in[static_cast<int>(pos)]){
-            data_out.append("&quot;");
-        }else if(QLatin1Char('\'') == qstr_in[static_cast<int>(pos)]){
-            data_out.append("&apos;");
-        }else if(QLatin1Char('<')  == qstr_in[static_cast<int>(pos)]){
-            data_out.append("&lt;");
-        }else if(QLatin1Char('>')  == qstr_in[static_cast<int>(pos)]){
-            data_out.append("&gt;");
-        }else{
-            data_out.append("x", 1);
-        }
-    }
-    data_out.append("\n");
+    m_logWidget->clear();
 }
 
 void McrWnd::onQStringAppendProtocol(const QString& qstr)
 {
-    //std::string str{qstr.toStdString()};
-    std::string str{""};
-    for(int i = 0; i < n_stage_max_id_ ; i++){
-        str += "\t";
-    }
-    str += qstr.toStdString();
-    encode(str);
-    str += "\n";
-    shProt_->my_appendText(str);
+    m_logWidget->onQStringAppendProtocol(qstr);
 }
 
-void McrWnd::onRastrLog(const _log_data& log_data)
-{
-    std::string str = "";
-    for(int i = 0; i < log_data.n_stage_id-1 ; i++){
-        str += "\t";
-    }
-    if( LogMessageTypes::OpenStage == log_data.lmt ){
-        str += "<STAGE";
-        str += std::to_string(log_data.n_stage_id);
-        str += ">\t";
-        str += log_data.str_msg;
-        str += "\n";
-        shProt_->my_appendText(str);
-        n_stage_max_id_ = log_data.n_stage_id;
-    }
-    if( LogMessageTypes::CloseStage == log_data.lmt ){
-        str += "</STAGE";
-        str += std::to_string(log_data.n_stage_id);
-        str += ">\n";
-        shProt_->my_appendText(str);
-        assert(n_stage_max_id_ == log_data.n_stage_id);
-        if(n_stage_max_id_ == log_data.n_stage_id){
-            n_stage_max_id_--;
-        }
-    }
+void McrWnd::onRastrLog(const _log_data& log_data){
+    m_logWidget->onRastrLog(log_data);
 }
 
-void McrWnd::onRastrPrint(const std::string& str_msg)
-{
-    shProt_->my_appendText(str_msg);
+void McrWnd::onRastrPrint(const std::string& str_msg){
+    m_logWidget->onRastrPrint(str_msg);
 }

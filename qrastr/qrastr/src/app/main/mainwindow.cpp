@@ -40,6 +40,7 @@
 #include "UIForms.h"
 #include "cacheLog.h"
 #include "graphServer.h"
+#include "protocolLogWidget.h"
 
 MainWindow::MainWindow()
     : QMainWindow(){
@@ -135,14 +136,14 @@ void MainWindow::initialize(
 }
 
 void MainWindow::setupDockWidgets() {
-    // Окно макросов
-    m_globalProtocol = new McrWnd(this, McrWnd::_en_role::global_protocol);
-    
-    auto dockProtocol = new ads::CDockWidget("protocol", this);
+    // Окно макросов  
+    m_globalProtocol = new ProtocolLogWidget(this);
+
+    auto* dockProtocol = new ads::CDockWidget("protocol", this);
     dockProtocol->setWidget(m_globalProtocol);
     dockProtocol->setFeature(ads::CDockWidget::CustomCloseHandling, true);
     m_dockManager->addDockWidgetTab(ads::BottomDockWidgetArea, dockProtocol);
-    
+
     // Главный протокол
     m_mainProtocol = new ProtocolWidget(this);
     //Если необходимо, чтобы в FormProtocol был вывод spdlog, необходимо включить эту настройку
@@ -173,7 +174,7 @@ void MainWindow::setupRastrConnections() {
     connect(m_qastra.get(), &QAstra::onRastrLog,
             m_mainProtocol, &ProtocolWidget::onRastrLog);
     connect(m_qastra.get(), &QAstra::onRastrLog,
-            m_globalProtocol, &McrWnd::onRastrLog);
+            m_globalProtocol, &ProtocolLogWidget::onRastrLog);
 }
 
 void MainWindow::setupConnections() {
@@ -361,7 +362,7 @@ void MainWindow::slot_updateRecentFiles() {
 }
 
 void MainWindow::slot_openMcrDialog(){
-    McrWnd* pMcrWnd = new McrWnd( this, McrWnd::_en_role::macro_dlg );
+    McrWnd* pMcrWnd = new McrWnd( this);
     connect(m_qastra.get(), &QAstra::onRastrPrint, pMcrWnd, &McrWnd::onRastrPrint);
 
     pMcrWnd->setPyHlp(m_pyHelper);
