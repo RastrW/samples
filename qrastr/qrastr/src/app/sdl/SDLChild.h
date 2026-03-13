@@ -1,29 +1,17 @@
-#ifndef _SDL_CHILD_H
-#define _SDL_CHILD_H
-
-#include <qmdisubwindow.h>
-#include <qwidget.h>
-#include <qtimer.h>
-#include <qgridlayout.h>
-#include <QTemporaryFile>
-#include <QDir>
-#include <QStandardPaths> // For a more robust temporary location
-
+#pragma once
+#include <QWidget>
 #include <SDL3/SDL.h>
 #include <SDL3_image/SDL_image.h>
 
-class SDLChild : public QMdiSubWindow {
+class SDLChild : public QWidget {
     Q_OBJECT
 public:
     SDLChild(QWidget * parent);
     ~SDLChild();
 
     SDL_AppResult SDLInit();
-    SDL_AppResult  SDLInit2();
-    void SetWindow(SDL_Window * ref);
-    void SetRenderer(SDL_Renderer * ref);
-    SDL_Window * GetWindow();
-    SDL_Renderer * GetRenderer();
+protected:
+    void resizeEvent(QResizeEvent* event) override;
 private:
     SDL_Window * WindowRef;
     SDL_Renderer * RendererRef;
@@ -31,11 +19,9 @@ private slots:
     void Render();
     void OnClose();
 private:
-    QWidget * MainWindowWidget;
-    QTimer * Time;
-    int position;
-    int dir;
-
+    SDL_Window*   m_window   = nullptr;
+    SDL_Renderer* m_renderer = nullptr;
+    SDL_Texture*  m_texture  = nullptr;
+    QTimer*       m_timer    = nullptr;
 };
 
-#endif

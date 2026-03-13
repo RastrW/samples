@@ -74,7 +74,7 @@ MainWindow::MainWindow()
                      });
 
     // Создаём виджеты протоколов и СРАЗУ добавляем Qt-синки в логгер.
-    setupDockWidgets();
+    setupLogDockWidgets();
     setupLogSinks();
 }
 
@@ -136,7 +136,7 @@ void MainWindow::initialize(
     spdlog::info("MainWindow initialized successfully");
 }
 
-void MainWindow::setupDockWidgets() {
+void MainWindow::setupLogDockWidgets() {
     // Окно макросов  
     m_globalProtocol = new ProtocolLogWidget(this);
 
@@ -365,11 +365,12 @@ void MainWindow::slot_updateRecentFiles() {
 }
 
 void MainWindow::slot_openMcrDialog(){
-    McrWnd* pMcrWnd = new McrWnd( this);
-    connect(m_qastra.get(), &QAstra::onRastrPrint, pMcrWnd, &McrWnd::onRastrPrint);
+    McrWnd* dialog = new McrWnd( this);
+    dialog->setAttribute(Qt::WA_DeleteOnClose);
+    connect(m_qastra.get(), &QAstra::onRastrPrint, dialog, &McrWnd::onRastrPrint);
 
-    pMcrWnd->setPyHlp(m_pyHelper);
-    pMcrWnd->show();
+    dialog->setPyHlp(m_pyHelper);
+    dialog->show();
 }
 
 void MainWindow::openGraphDock() {
