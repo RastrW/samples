@@ -38,11 +38,9 @@ void CalculationController::executeRgm(const QString& parameters) {
     
     if (code == eASTCode::AST_OK) {
         str_msg = "Расчет режима выполнен успешно";
-        spdlog::info("{}", str_msg);
         success = true;
     } else {
         str_msg = "Расчет режима завершился аварийно!";
-        spdlog::error("{} : {}", static_cast<int>(code), str_msg);
         success = false;
     }
     
@@ -59,11 +57,9 @@ void CalculationController::executeKdd(const QString& parameters) {
     
     if (code == eASTCode::AST_OK) {
         str_msg = "Контроль исходных данных выполнен успешно";
-        spdlog::info("{}", str_msg);
         success = true;
     } else {
         str_msg = "Контроль исходных данных завершился аварийно!";
-        spdlog::error("{} : {}", static_cast<int>(code), str_msg);
         success = false;
     }
     
@@ -80,11 +76,9 @@ void CalculationController::executeOPF(const QString& parameters) {
     
     if (code == eASTCode::AST_OK) {
         str_msg = "Оценка состояния выполнена успешно";
-        spdlog::info("{}", str_msg);
         success = true;
     } else {
         str_msg = "Расчет оценки состояния завершился аварийно!";
-        spdlog::error("{} : {}", static_cast<int>(code), str_msg);
         success = false;
     }
     
@@ -109,11 +103,9 @@ void CalculationController::executeSMZUtst(const QString& parameters) {
     
     if (code == eASTCode::AST_OK) {
         str_msg = "Расчет МДП выполнен успешно";
-        spdlog::info("{}", str_msg);
         success = true;
     } else {
         str_msg = "Расчет МДП завершился аварийно!";
-        spdlog::error("{} : {}", static_cast<int>(code), str_msg);
         success = false;
     }
     
@@ -145,11 +137,9 @@ void CalculationController::executeTkz(const KzParameters& params) {
     
     if (code == eASTCode::AST_OK) {
         str_msg = "Расчет ТКЗ выполнен успешно";
-        spdlog::info("{}", str_msg);
         success = true;
     } else {
         str_msg = "Расчет ТКЗ завершился аварийно!";
-        spdlog::error("{} : {}", static_cast<int>(code), str_msg);
         success = false;
     }
     
@@ -176,11 +166,9 @@ void CalculationController::recalcTiDor() {
     if (code == 1) {
         str_msg = fmt::format("Пересчет дорасчетных измерений выполнен за {} мс.",
                               t_timer.seconds());
-        spdlog::info("{}", str_msg);
         success = true;
     } else {
         str_msg = "Пересчет дорасчетных измерений завершился аварийно!";
-        spdlog::error("{} : {}", static_cast<int>(code), str_msg);
         success = false;
     }
     
@@ -203,11 +191,9 @@ void CalculationController::updateTiTables() {
     if (code == 1) {
         str_msg = fmt::format("Обновление данных по ТМ (Привязка->T) выполнено за {} мс.",
                               t_timer.seconds());
-        spdlog::info("{}", str_msg);
         success = true;
     } else {
         str_msg = "Пересчет дорасчетных измерений завершился аварийно!";
-        spdlog::error("{} : {}", static_cast<int>(code), str_msg);
         success = false;
     }
     
@@ -230,7 +216,6 @@ void CalculationController::calcPTI() {
     if (code == 1) {
         str_msg = fmt::format("Расчет ПТИ выполнен за {} мс.",
                               t_calc_pti.seconds());
-        spdlog::info("{}", str_msg);
         
         // Добавление ПТИ в таблицу
         Timer t_add_pti;
@@ -240,16 +225,13 @@ void CalculationController::calcPTI() {
         if (code == 1) {
             str_msg += fmt::format("\nПТИ записаны в ТИ:Каналы за {} мс.",
                                    t_add_pti.seconds());
-            spdlog::info("PTI added to channels");
             success = true;
         } else {
             str_msg = "Ошибка записи ПТИ в ТИ:Каналы!";
-            spdlog::error("{} : {}", static_cast<int>(code), str_msg);
             success = false;
         }
     } else {
         str_msg = "Расчет ПТИ завершился аварийно!";
-        spdlog::error("{} : {}", static_cast<int>(code), str_msg);
         success = false;
     }
     
@@ -272,11 +254,9 @@ void CalculationController::filtrTI() {
     if (code == 1) {
         str_msg = fmt::format("Расчет Фильтра ТИ выполнен за {} мс.",
                               t_filtr_ti.seconds());
-        spdlog::info("{}", str_msg);
         success = true;
     } else {
         str_msg = "Расчет Фильтра ТИ завершился аварийно!";
-        spdlog::error("{} : {}", static_cast<int>(code), str_msg);
         success = false;
     }
     
@@ -308,19 +288,16 @@ void CalculationController::prepareBarsMDP(const QString& sections) {
         
         str_msg = fmt::format("Подготовка для расчета МДП для сечений {} за {} мс.",
                               sections.toStdString(), t_barsmdp.seconds());
-        spdlog::info("{}", str_msg);
     }
     catch (const std::exception& ex) {
         success = false;
         str_msg = fmt::format("Ошибка в ходе подготовки для расчета МДП для сечений {}: {}",
                               sections.toStdString(), ex.what());
-        spdlog::error("{}", str_msg);
     }
     catch (...) {
         success = false;
         str_msg = fmt::format("Неизвестная ошибка в ходе подготовки для расчета МДП для сечений {}",
                               sections.toStdString());
-        spdlog::error("{}", str_msg);
     }
     
     endCalculation(success, QString::fromStdString(str_msg));

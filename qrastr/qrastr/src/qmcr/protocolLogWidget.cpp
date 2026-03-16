@@ -58,10 +58,6 @@ void ProtocolLogWidget::onRastrLog(const _log_data& log_data)
             --m_stageMaxId;
         return;
     }
-
-    str += log_data.str_msg;
-    str += '\n';
-    m_viewer->appendTextCustom(str);
 }
 
 void ProtocolLogWidget::onRastrPrint(const std::string& msg)
