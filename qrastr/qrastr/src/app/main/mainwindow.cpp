@@ -160,7 +160,7 @@ void MainWindow::setupLogSinks() {
     // После этого вызова все spdlog::info/warn/error
     // пойдут в McrWnd и FormProtocol(если отключен игнор)
     auto qtSink = std::make_shared<spdlog::sinks::qt_sink_mt>(
-        m_globalProtocol, "onQStringAppendProtocol");
+        m_globalProtocol, "onAppendText");
     logger->sinks().push_back(qtSink);
 
     auto protocolSink = std::make_shared<spdlog::sinks::qt_sink_mt>(

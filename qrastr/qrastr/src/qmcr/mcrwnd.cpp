@@ -284,7 +284,7 @@ void McrWnd::slot_protClear()
 
 void McrWnd::slot_appendProtocol(const QString& qstr)
 {
-    m_logWidget->onQStringAppendProtocol(qstr);
+    m_logWidget->onAppendText(qstr);
 }
 
 void McrWnd::slot_rastrLog(const _log_data& log_data){

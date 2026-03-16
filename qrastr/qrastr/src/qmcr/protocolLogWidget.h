@@ -12,20 +12,18 @@ class QMCR_API ProtocolLogWidget : public QWidget
 public:
     explicit ProtocolLogWidget(QWidget* parent = nullptr);
     ~ProtocolLogWidget() override = default;
-
     /// Очистить содержимое лога
     void clear();
 
 public slots:
-    void onRastrLog(const _log_data& log_data);
-    void onRastrPrint(const std::string& str_msg);
-    void onQStringAppendProtocol(const QString& qstr);
+    void onRastrLog  (const _log_data&   logData);
+    void onRastrPrint(const std::string& msg);
+    void onAppendText(const QString&     text);
 
 private:
     SciLogViewer* m_viewer { nullptr };
-    long    n_stage_max_id_{ 0 };
+    long          m_stageMaxId { 0 };
 
-    /// HTML-экранирование (перенесено из McrWnd без изменений)
-    static void encodeHtml(std::string& data);
-    static void encodeHtml(std::string& data_out, const QString& qstr_in);
+    /// Возвращает строку из n символов '\t'
+    static std::string makeIndent(int n);
 };
