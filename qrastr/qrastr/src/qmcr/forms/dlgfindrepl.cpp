@@ -37,5 +37,5 @@ void DlgFindRepl::slot_findClicked()
 {
     const QString text = m_leFind->text().trimmed();
     if (!text.isEmpty())
-        emit sig_find(SciHlp::_params_find{text});
+        emit sig_find(SciHlp::FindParams{text});
 }

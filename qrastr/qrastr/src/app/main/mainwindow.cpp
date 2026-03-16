@@ -365,7 +365,7 @@ void MainWindow::slot_updateRecentFiles() {
 void MainWindow::slot_openMcrDialog(){
     McrWnd* dialog = new McrWnd( this);
     dialog->setAttribute(Qt::WA_DeleteOnClose);
-    connect(m_qastra.get(), &QAstra::onRastrPrint, dialog, &McrWnd::onRastrPrint);
+    connect(m_qastra.get(), &QAstra::onRastrPrint, dialog, &McrWnd::slot_rastrPrint);
 
     dialog->setPyHlp(m_pyHelper);
     dialog->show();

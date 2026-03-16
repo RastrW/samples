@@ -320,21 +320,21 @@ bool PyHlp::Initialize()
     return true;
 }
 
-PyHlp::enPythonResult PyHlp::Run(const std::string_view macroText)
+PyHlp::Result PyHlp::run(const std::string_view macroText)
 {
     int nRes = 0;
     if (!Initialize()){
-        return enPythonResult::Error;
+        return Result::Error;
     }
     PyObject* main_module = PyImport_AddModule("__main__"); // return borrowed reference
     if(nullptr == main_module){
         SetErrorMessage();
-        return enPythonResult::Error;
+        return Result::Error;
     }
     PyObject* py_globals = PyModule_GetDict(main_module); // return borrowed reference
     if(nullptr == py_globals){
         SetErrorMessage();
-        return enPythonResult::Error;
+        return Result::Error;
     }
     if(rastrPyObject_){
         nRes = PyMapping_SetItemString(py_globals, "astra", astraModule_);assert(0 == nRes);
@@ -342,7 +342,7 @@ PyHlp::enPythonResult PyHlp::Run(const std::string_view macroText)
         PyUtils::PyObjRaii py_compiled = Py_CompileString( macroText.data(), pch_run_fname_, Py_file_input );
         if(py_compiled == nullptr){
             SetErrorMessage();
-            return enPythonResult::SyntaxError;
+            return Result::SyntaxError;
         }
         PyUtils::PyObjRaii py_local = PyDict_New();
         PyUtils::PyObjRaii py_res = PyEval_EvalCode(py_compiled, py_globals, py_local);
@@ -350,13 +350,13 @@ PyHlp::enPythonResult PyHlp::Run(const std::string_view macroText)
         nRes = PyMapping_DelItemString(py_globals, "rastr"); assert(-1 != nRes);
         if(PyErr_Occurred()){
             SetErrorMessage();
-            return enPythonResult::RuntimeError;
+            return Result::RuntimeError;
         }
     }else{
         if(PyErr_Occurred()){
             SetErrorMessage();
-            return enPythonResult::Error;
+            return Result::Error;
         }
     }
-    return enPythonResult::Ok;
+    return Result::Ok;
 }

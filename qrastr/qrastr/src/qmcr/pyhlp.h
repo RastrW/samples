@@ -11,7 +11,7 @@ struct _object;
 class QMCR_API PyHlp
 {
 public:
-     enum class enPythonResult
+     enum class Result
      {
          Ok = 0,
          SyntaxError,
@@ -25,7 +25,7 @@ public:
      long        getErrorLine() const noexcept;
      long        getErrorOffset() const noexcept;
      bool Initialize();
-     enPythonResult Run(const std::string_view macroText);
+     Result run(const std::string_view macroText);
 private:
      _object* astraModule_ = nullptr;//PyObject
      _object* rastrPyObject_ = nullptr;

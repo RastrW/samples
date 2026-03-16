@@ -27,7 +27,7 @@
 //https://www.scintilla.org/PaneAPI.html
 //interesting scintilla use https://github.com/SolarAquarion/wxglterm/tree/master/src/external_plugins
 //https://github.com/mneuroth/SciTEQt
-SciHlp::SciHlp(QWidget *parent, _en_role role)
+SciHlp::SciHlp(QWidget *parent, Role role)
     : ScintillaEdit(parent)
     , role_(role){
     //By default,
@@ -76,7 +76,7 @@ SciHlp::SciHlp(QWidget *parent, _en_role role)
         mb.exec();
         return;
     }
-    if(SciHlp::_en_role::editor_python == role){
+    if(SciHlp::Role::EditorPython == role){
         const std::string strLanguageName {"python"};
         //const std::string strLanguageName {"xml"};
         const void* plex = ( reinterpret_cast<CreateLexerFn>(pfn) )( strLanguageName.c_str() );
@@ -367,7 +367,7 @@ void SciHlp::setStyleHlp(sptr_t style, sptr_t fore, bool bold, bool italic, sptr
     styleSetEOLFilled ( style, eolfilled );
 }
 
-SciHlp::_ret_vals SciHlp::setContent(const std::string& str_text){
+SciHlp::RetVal SciHlp::setContent(const std::string& str_text){
     bool bl_read_only_prev = false;
     if(canPaste() == false){
         bl_read_only_prev = true;
@@ -378,10 +378,10 @@ SciHlp::_ret_vals SciHlp::setContent(const std::string& str_text){
     setSavePoint();
     if(bl_read_only_prev == true)
         setReadOnly(true);
-    return _ret_vals::ok;
+    return RetVal::Ok;
 }
 
-SciHlp::_ret_vals SciHlp::my_appendText(const std::string_view svTxt){
+SciHlp::RetVal SciHlp::my_appendText(const std::string_view svTxt){
     bool bl_read_only_prev = false;
     if(canPaste() == false){
         bl_read_only_prev = true;
@@ -391,28 +391,28 @@ SciHlp::_ret_vals SciHlp::my_appendText(const std::string_view svTxt){
     appendText(svTxt.length(),svTxt.data());
     if(bl_read_only_prev == true)
         setReadOnly(true);
-    return _ret_vals::ok;
+    return RetVal::Ok;
 }
 
-bool SciHlp::getContentModified() const {
+bool SciHlp::isModified() const {
     return modify();
 }
 
-SciHlp::_ret_vals SciHlp::setFileInfo(const QFileInfo& fiNew ){
+SciHlp::RetVal SciHlp::setFileInfo(const QFileInfo& fiNew ){
     fiFileSource_ = fiNew;
     emit chngFileInfo(fiNew);
-    return _ret_vals::ok;
+    return RetVal::Ok;
 }
 
 const QFileInfo& SciHlp::getFileInfo() const {
     return fiFileSource_;
 }
 
-SciHlp::_ret_vals SciHlp::ContentToFile(){
+SciHlp::RetVal SciHlp::saveToFile(){
     try{
         QFile qFile{ fiFileSource_.absoluteFilePath() };
         if(qFile.open(QIODevice::WriteOnly)==false){
-            return _ret_vals::failure;
+            return RetVal::Failure;
         }
         QTextStream tsFile{&qFile};
         QByteArray baContent { getText(textLength()+1) };
@@ -421,16 +421,16 @@ SciHlp::_ret_vals SciHlp::ContentToFile(){
         qFile.close();
         setSavePoint();
     }catch(...){
-        return _ret_vals::failure;
+        return RetVal::Failure;
     }
-    return _ret_vals::ok;
+    return RetVal::Ok;
 }
 
-SciHlp::_ret_vals SciHlp::ContentFromFile(){
+SciHlp::RetVal SciHlp::loadFromFile(){
     try{
         QFile qFile{ fiFileSource_.absoluteFilePath() };
         if(qFile.open(QIODevice::ReadOnly|QIODevice::Text)==false){
-            return _ret_vals::failure;
+            return RetVal::Failure;
         }
         QString qstrFileContent{ qFile.readAll() };
         std::string str{ qstrFileContent.toStdString() };
@@ -439,12 +439,12 @@ SciHlp::_ret_vals SciHlp::ContentFromFile(){
         qFile.close();
         setSavePoint();
     }catch(...){
-        return _ret_vals::failure;
+        return RetVal::Failure;
     }
-    return _ret_vals::ok;
+    return RetVal::Ok;
 }
 
-SciHlp::_ret_vals SciHlp::Find(_params_find params_find){
+SciHlp::RetVal SciHlp::Find(FindParams params_find){
     //SCFIND_NONE	    Default setting is case-insensitive literal match.
     //SCFIND_MATCHCASE	A match only occurs with text that matches the case of the search string.
     //SCFIND_WHOLEWORD	A match only occurs if the characters before and after are not word characters as defined by SCI_SETWORDCHARS.
@@ -458,13 +458,13 @@ SciHlp::_ret_vals SciHlp::Find(_params_find params_find){
     const sptr_t n_pos_max  { length()} ;
     setTargetStart( n_pos_curr );
     setTargetEnd  ( n_pos_max  );
-    const QByteArray qaFind = params_find.qstrFind_.toUtf8();
+    const QByteArray qaFind = params_find.m_text.toUtf8();
     const sptr_t n_pos_find = searchInTarget( qaFind.length(), qaFind );
     if(-1 != n_pos_find){
         gotoPos    ( targetStart() );
         setSel     ( targetStart(), targetEnd() );
         scrollRange( targetStart(), targetEnd() );
-        return _ret_vals::ok;
+        return RetVal::Ok;
     }
-    return _ret_vals::failure;
+    return RetVal::Failure;
 }

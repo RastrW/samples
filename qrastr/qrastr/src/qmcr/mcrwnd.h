@@ -23,29 +23,32 @@ public:
     void closeEvent(QCloseEvent *event) override;
 
     void setPyHlp(std::shared_ptr<PyHlp> pPyHlp);
-signals:
 public slots:
-    void onRastrLog(const _log_data&);
-    void onRastrPrint(const std::string&);
+    void slot_rastrLog  (const _log_data&   logData);
+    void slot_rastrPrint(const std::string& message);
 private slots:
-    std::pair<bool,bool> checkSaveModified();
-    bool onFileNew();
-    void onFileOpen();
-    bool onFileSave(bool blSaveAs);
-    void onRun();
-    void onGoToLine();
-    void onFind();
-    void onProtClear();
-    void onChngEditFileInfo(const QFileInfo& fiNew);
-    void Find(SciHlp::_params_find params_find);
-    void onQStringAppendProtocol(const QString& qstr);
+    void slot_fileNew ();
+    bool slot_fileSave (bool saveAs);
+    void slot_fileOpen ();
+    void slot_run      ();
+    void slot_goToLine ();
+    void slot_find     ();
+    void slot_protClear();
+
+    void slot_fileInfoChanged(const QFileInfo& fi);
+    void slot_findByParams   (SciHlp::FindParams params);
+    void slot_appendProtocol (const QString& text);
 private:
+    // Результат диалога «сохранить изменения?»
+    enum class SavePromptResult { Saved, Discarded, Cancelled };
+    SavePromptResult promptSaveIfModified();
+
     void buildToolBar();
 
-    SciHlp*        shEdit_{nullptr};
-    ProtocolLogWidget* m_logWidget{ nullptr };
-    DlgFindRepl*   pdlgFindRepl_{ nullptr};
+    SciHlp*             m_editor{nullptr};
+    ProtocolLogWidget*  m_logWidget{ nullptr };
+    DlgFindRepl*        m_dlgFind{ nullptr};
+    QVBoxLayout*        m_mainLayout  {nullptr};
 
-    QVBoxLayout* m_containerLayout;
-    std::shared_ptr<PyHlp> pPyHlp_;
+    std::shared_ptr<PyHlp> m_pyHlp;
 };

@@ -13,14 +13,8 @@ class SciHlp
     : public ScintillaEdit {
     Q_OBJECT
 public:
-    enum class _en_role{
-        editor_python = 0,
-        prot_macro    = 1
-    };
-    enum class _ret_vals{
-        ok      = 1,
-        failure = -1
-    };
+    enum class Role   { EditorPython, ProtocolLog };
+    enum class RetVal { Ok = 1, Failure = -1 };
     //https://www.scintilla.org/ScintillaDoc.html#colour
     static constexpr unsigned long getRGBA( const std::uint8_t r, const std::uint8_t g, const std::uint8_t b, const std::uint8_t a ){
         assert(a == 0x00);//because is not tested!
@@ -45,33 +39,31 @@ public:
         inline static _color white   { getRGBA( 0xff, 0xff, 0xff, 0x00 ) };
         inline static _color yellow  { getRGBA( 0xff, 0xff, 0x00, 0x00 ) };
     };
-    struct _params_find{
-        _params_find(const QString& qstrFind)
-            :qstrFind_{qstrFind}{
-        }
-        const QString& qstrFind_;
+    struct FindParams {
+        explicit FindParams(const QString& text) : m_text(text) {}
+        QString m_text;
     };
-    SciHlp(QWidget *parent, _en_role role);
+    SciHlp(QWidget *parent, Role role);
     virtual ~SciHlp() = default;
     void tstSci();
     const char* MonospaceFont();
     void showEvent(QShowEvent *event) override;
     void setStyleHlp( sptr_t style, sptr_t fore, bool bold=false, bool italic=false, sptr_t back=_colors::white, bool underline=false, bool eolfilled=false );
-    _ret_vals setContent(const std::string& str_text);
-    _ret_vals my_appendText(const std::string_view svTxt);
-    bool getContentModified() const;
-    _ret_vals setFileInfo(const QFileInfo& fiNew);
+    RetVal setContent(const std::string& str_text);
+    RetVal my_appendText(const std::string_view svTxt);
+    bool isModified() const;
+    RetVal setFileInfo(const QFileInfo& fiNew);
     const QFileInfo& getFileInfo()const;
-    _ret_vals ContentToFile();
-    _ret_vals ContentFromFile();
-    _ret_vals Find(_params_find params_find);
+    RetVal saveToFile();
+    RetVal loadFromFile();
+    RetVal Find(FindParams params_find);
 signals:
     void chngFileInfo(const QFileInfo& fiNew);
 private slots:
     void onMarginClicked(Scintilla::Position position, Scintilla::KeyMod modifiers, int margin);
     void onNotify(Scintilla::NotificationData* pnd);
 private:
-    const _en_role role_;
+    const Role role_;
     const sptr_t margin_line_num_ = 0;
     const sptr_t margin_fold_     = 1;
     QFileInfo fiFileSource_;

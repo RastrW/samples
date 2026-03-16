@@ -9,7 +9,7 @@ ProtocolLogWidget::ProtocolLogWidget(QWidget* parent)
     auto* layout = new QVBoxLayout(this);
     layout->setContentsMargins(0, 0, 0, 0);
 
-    shProt_ = new SciHlp(this, SciHlp::_en_role::prot_macro);
+    shProt_ = new SciHlp(this, SciHlp::Role::ProtocolLog);
     layout->addWidget(shProt_);
 }
 

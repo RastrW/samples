@@ -212,7 +212,7 @@ void LinkedFormController::openLinkedMacro(LinkedMacro lm, int contextRow)
     content.insert(0, debugLine);
 
     if (m_pyHlp)
-        m_pyHlp->Run(content.data());
+        m_pyHlp->run(content.data());
     else
         qWarning() << "LinkedFormController: PyHlp не установлен, макрос не выполнен";
 }

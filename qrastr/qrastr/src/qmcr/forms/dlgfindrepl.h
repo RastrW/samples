@@ -16,7 +16,7 @@ public:
     explicit DlgFindRepl(QWidget* parent = nullptr);
 
 signals:
-    void sig_find(SciHlp::_params_find);
+    void sig_find(SciHlp::FindParams);
 
 private slots:
     void slot_findClicked();
