@@ -9,7 +9,7 @@
 #include "qbarsmdp.h"
 #include "mcrwnd.h"
 #include "protocolWidget.h"
-#include "pyhlp.h"
+#include "qmcr/pyhlp.h"
 #include "calcIacceptableDialog.h"
 
 #include <QStatusBar>

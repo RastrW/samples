@@ -1,14 +1,14 @@
 #ifndef PYHLP_H
 #define PYHLP_H
 #pragma once
-//#include <QCoreApplication>
+#include "qmcr_api.h"
 #include <string>
 
 
 class IPlainRastr;
 struct _object;
 
-class PyHlp
+class QMCR_API PyHlp
 {
 public:
      enum class enPythonResult

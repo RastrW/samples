@@ -8,7 +8,7 @@
 #include <DockManager.h>
 #include <spdlog/spdlog.h>
 #include <QFileInfo>
-#include "qmcr/pyhlp.h"
+
 #include <astra/stringutils.h>
 #include "utils.h"
 using WrapperExceptionType = std::runtime_error;

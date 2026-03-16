@@ -7,19 +7,22 @@
 namespace Ui {
 class DlgFindRepl;
 }
-//struct SciHlp::_params_findrepl;
+class QLineEdit;
+
 class DlgFindRepl : public QDialog
 {
     Q_OBJECT
 public:
-    explicit DlgFindRepl(QWidget *parent = nullptr);
-    ~DlgFindRepl();
-signals:
-    void chngFind(SciHlp::_params_find);
-private slots:
-    void on_pbFind_clicked();
-private:
-    Ui::DlgFindRepl *ui;
-};
+    explicit DlgFindRepl(QWidget* parent = nullptr);
 
+signals:
+    void sig_find(SciHlp::_params_find);
+
+private slots:
+    void slot_findClicked();
+
+private:
+    QLineEdit*   m_leFind  {nullptr};
+    QPushButton* m_pbFind  {nullptr};
+};
 #endif // DLGFINDREPL_H

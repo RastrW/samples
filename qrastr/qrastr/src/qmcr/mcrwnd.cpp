@@ -9,8 +9,7 @@
 #include <QInputDialog>
 #include <QDebug>
 #include <QCloseEvent>
-#include <QQmlDebuggingEnabler>
-QQmlDebuggingEnabler enabler;
+
 
 #include "mcrwnd.h"
 #include "scihlp.h"
@@ -661,7 +660,7 @@ void McrWnd::onFind()
     qDebug("McrWnd::onFindRepl()");
     if(pdlgFindRepl_==nullptr){
         pdlgFindRepl_ = new DlgFindRepl(this);
-        connect(pdlgFindRepl_, &DlgFindRepl::chngFind, this, &McrWnd::Find);
+        connect(pdlgFindRepl_, &DlgFindRepl::sig_find, this, &McrWnd::Find);
     }
     pdlgFindRepl_->show();
     pdlgFindRepl_->raise();

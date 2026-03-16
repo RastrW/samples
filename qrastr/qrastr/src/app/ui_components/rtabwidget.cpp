@@ -31,7 +31,6 @@
 #include "groupCorrectionDialog.h"
 #include "exportCSVdialog.h"
 #include "importCSV2dialog.h"
-#include "qmcr/pyhlp.h"
 #include <QToolBar>
 #include "linkedformcontroller.h"
 #include "colPropDialog.h"

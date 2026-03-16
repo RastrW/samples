@@ -13,24 +13,16 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 # from https://github.com/Vatsinator/vatsinator-legacy/blob/develop/CMakeLists.txt
 # set configuration types (msvc/xcode)
 if(CMAKE_CONFIGURATION_TYPES)
-    set(CMAKE_CONFIGURATION_TYPES Debug Release)
-    set(CMAKE_CONFIGURATION_TYPES "${CMAKE_CONFIGURATION_TYPES}" CACHE STRING
-        "Reset the configurations to what we actually need" FORCE
-    )
+    set(CMAKE_CONFIGURATION_TYPES Debug Release CACHE STRING
+        "Reset the configurations to what we actually need" FORCE)
 endif()
 
 set(SCI_DIR "${DEPENDENCIES_LOCATION}")
-
-# Visual Studio exports all symbols by default when building DLL
-set(CMAKE_WINDOWS_EXPORT_ALL_SYMBOLS ON)
-
 # ============================================================================
 # Package Dependencies
 # ============================================================================
 find_package(QT NAMES Qt6 Qt5 REQUIRED COMPONENTS Widgets LinguistTools)
 find_package(Qt${QT_VERSION_MAJOR} REQUIRED COMPONENTS Widgets LinguistTools)
-find_package(Qt${QT_VERSION_MAJOR} REQUIRED COMPONENTS QuickWidgets)
-find_package(Astra REQUIRED)
 
 set(PYTHON_MIN 3.10)
 # Для Windows python 3.12 (в соответствии с astra_py)
@@ -46,53 +38,24 @@ message("Python3_INCLUDE_DIR:       ${Python3_INCLUDE_DIRS}")
 message("Python3_EXECUTABLE:        ${Python3_EXECUTABLE}")
 
 link_directories(${Python3_LIBRARY_DIRS})
-include_directories(${Python3_INCLUDE_DIRS})
-include_directories(${Astra_INCLUDE_DIR})
-
-# ============================================================================
-# Include Directories
-# ============================================================================
-include_directories(
-    ${SCI_DIR}/scintilla/include
-    ${SCI_DIR}/scintilla/src
-    ${SCI_DIR}/scintilla/qt/ScintillaEditBase
-    ${SCI_DIR}/scintilla/qt/ScintillaEdit
-    ${SCI_DIR}/lexilla/include
-    include
-)
-
 # ============================================================================
 # Scintilla/Lexilla
 # ============================================================================
-
 # Базовый путь к precompiled библиотекам
 set(PRECOMPILED_BASE "${SCI_DIR}/compile")
-
 # Путь к Scintilla
 set(SCINTILLA_DIR "${PRECOMPILED_BASE}/ScintillaEdit/${PLATFORM_DIR}/${CONFIG_DIR}")
-set(SCINTILLA_BASE_DIR "${PRECOMPILED_BASE}/ScintillaEditBase/${PLATFORM_DIR}/${CONFIG_DIR}")
-
 # Путь к Lexilla
 set(LEXILLA_DIR "${PRECOMPILED_BASE}/lexilla/${PLATFORM_DIR}/${CONFIG_DIR}")
 
-# Добавляем include директории
-include_directories(
-        ${SCINTILLA_DIR}/include
-        ${SCINTILLA_BASE_DIR}/include
-        ${LEXILLA_DIR}/include
-)
-
-message(STATUS "Scintilla/Lexilla paths:")
 message(STATUS "  SCINTILLA_DIR: ${SCINTILLA_DIR}")
-message(STATUS "  SCINTILLA_BASE_DIR: ${SCINTILLA_BASE_DIR}")
 message(STATUS "  LEXILLA_DIR: ${LEXILLA_DIR}")
-
 # ============================================================================
 # Project Sources
 # ============================================================================
 set(TS_FILES qmcr_ru_RU.ts)
-set(PROJECT_SOURCES)
-list(APPEND PROJECT_SOURCES
+
+set(PROJECT_SOURCES
     scihlp.h
     scihlp.cpp
     mcrwnd.h
@@ -100,9 +63,6 @@ list(APPEND PROJECT_SOURCES
     ${TS_FILES}
     forms/dlgfindrepl.h
     forms/dlgfindrepl.cpp
-    forms/dlgfindrepl.ui
-    pyhlp.h
-    pyhlp.cpp
     pyhlp.h
     pyhlp.cpp
     protocolLogWidget.h
@@ -121,83 +81,80 @@ else()
         mainwindow.h
     )
 endif()
-
 # ============================================================================
 # Target Creation
 # ============================================================================
 if(${QT_VERSION_MAJOR} GREATER_EQUAL 6)
     if(QRASTR_BUILD_WITH_MCR)
-        add_library(qmcr SHARED
-            ${PROJECT_SOURCES}
-            tst_toolbox.h tst_toolbox.cpp tst_toolbox.ui
-            tst2_dialog.h tst2_dialog.cpp tst2_dialog.ui
-            tst.qml
-        )
+        add_library(qmcr SHARED ${PROJECT_SOURCES})
     else()
-        qt_add_executable(qmcr
-            MANUAL_FINALIZATION
-            ${PROJECT_SOURCES}
-            tst_toolbox.h tst_toolbox.cpp tst_toolbox.ui
-            tst2_dialog.h tst2_dialog.cpp tst2_dialog.ui
-            tst.qml
-        )
+        qt_add_executable(qmcr MANUAL_FINALIZATION ${PROJECT_SOURCES})
     endif()
     qt_create_translation(QM_FILES ${CMAKE_SOURCE_DIR} ${TS_FILES})
 else()
     if(QRASTR_BUILD_WITH_MCR)
-        add_library(qmcr SHARED
-            ${PROJECT_SOURCES}
-        )
+        add_library(qmcr SHARED ${PROJECT_SOURCES})
     else()
-        add_executable(qmcr
-            ${PROJECT_SOURCES}
-            tst_toolbox.h tst_toolbox.cpp tst_toolbox.ui
-            tst2_dialog.h tst2_dialog.cpp tst2_dialog.ui
-            tst.qml
-        )
-        qt5_create_translation(QM_FILES ${CMAKE_SOURCE_DIR} ${TS_FILES})
+        add_executable(qmcr ${PROJECT_SOURCES})
     endif()
+    qt5_create_translation(QM_FILES ${CMAKE_SOURCE_DIR} ${TS_FILES})
 endif()
+# ============================================================================
+# Include Directories
+# ============================================================================
+target_include_directories(qmcr PRIVATE
+    ${SCI_DIR}/scintilla/include
+    ${SCI_DIR}/scintilla/src
+    ${SCI_DIR}/lexilla/include
+    ${SCI_DIR}/scintilla/qt/ScintillaEditBase
+    ${SCI_DIR}/scintilla/qt/ScintillaEdit
+    ${Astra_INCLUDE_DIR}
+    ${Python3_INCLUDE_DIRS}
+)
 
 # ============================================================================
 # Link Libraries
 # ============================================================================
-target_link_libraries(qmcr PRIVATE Qt${QT_VERSION_MAJOR}::Widgets)
-target_link_libraries(qmcr PRIVATE Qt${QT_VERSION_MAJOR}::QuickWidgets)
-
-if(NOT MSVC)
-    target_link_libraries(qmcr PRIVATE Python3::Python)
-endif()
+target_link_libraries(qmcr PRIVATE
+    Qt${QT_VERSION_MAJOR}::Widgets
+    Python3::Python           # работает и на MSVC начиная с CMake 3.18+
+)
 # ============================================================================
-# Линковка Scintilla/Lexilla для разных платформ
+# Линковка Scintilla/Lexilla
 # ============================================================================
 if(MSVC)
-    set(SCINTILLA_LIB_NAME "ScintillaEdit5")
-
     find_library(SCINTILLA_EDIT_LIB
-        NAMES ${SCINTILLA_LIB_NAME}
+        NAMES ScintillaEdit5
         PATHS "${SCINTILLA_DIR}/lib"
         NO_DEFAULT_PATH
     )
-
-    if(SCINTILLA_EDIT_LIB)
-        target_link_libraries(qmcr PRIVATE ${SCINTILLA_EDIT_LIB})
-        message(STATUS "Linked Scintilla: ${SCINTILLA_EDIT_LIB}")
-    else()
-        message(FATAL_ERROR "ScintillaEdit library not found")
+    if(NOT SCINTILLA_EDIT_LIB)
+        message(FATAL_ERROR "ScintillaEdit5 library not found in ${SCINTILLA_DIR}/lib")
     endif()
+    target_link_libraries(qmcr PRIVATE ${SCINTILLA_EDIT_LIB})
 
-    # Копируем lexillaв output directory для динамической загрузки через QLibrary::resolve()
-    if(EXISTS "${LEXILLA_DIR}/bin/lexilla5.dll")
+    # Копируем ScintillaEdit5.dll
+    set(_sci_dll "${SCINTILLA_DIR}/lib/ScintillaEdit5.dll")
+    if(EXISTS "${_sci_dll}")
         add_custom_command(TARGET qmcr POST_BUILD
             COMMAND ${CMAKE_COMMAND} -E copy_if_different
-                "${LEXILLA_DIR}/bin/lexilla5.dll"
-                "$<TARGET_FILE_DIR:qmcr>/"
-            COMMENT "Copying lexilla5.dll for dynamic loading"
+                "${_sci_dll}" "$<TARGET_FILE_DIR:qmcr>/"
+            COMMENT "Copying ScintillaEdit5.dll"
         )
-        message(STATUS "Will copy lexilla5.dll from: ${LEXILLA_DIR}/bin/lexilla5.dll")
     else()
-        message(FATAL_ERROR "lexilla5.dll not found at ${LEXILLA_DIR}/bin/")
+        message(FATAL_ERROR "ScintillaEdit5.dll not found at ${_sci_dll}")
+    endif()
+
+    # Копируем lexilla5.dll (динамическая загрузка через QLibrary)
+    set(_lex_dll "${LEXILLA_DIR}/bin/lexilla5.dll")
+    if(EXISTS "${_lex_dll}")
+        add_custom_command(TARGET qmcr POST_BUILD
+            COMMAND ${CMAKE_COMMAND} -E copy_if_different
+                "${_lex_dll}" "$<TARGET_FILE_DIR:qmcr>/"
+            COMMENT "Copying lexilla5.dll"
+        )
+    else()
+        message(FATAL_ERROR "lexilla5.dll not found at ${_lex_dll}")
     endif()
 
 elseif(UNIX)
@@ -206,46 +163,39 @@ elseif(UNIX)
         PATHS "${SCINTILLA_DIR}/lib"
         NO_DEFAULT_PATH
     )
-
-    # Линкуем только Scintilla
-    if(SCINTILLA_EDIT_LIB)
-        target_link_libraries(qmcr PRIVATE ${SCINTILLA_EDIT_LIB})
-        message(STATUS "Linked Scintilla: ${SCINTILLA_EDIT_LIB}")
-    else()
-        message(FATAL_ERROR "ScintillaEdit library not found!")
+    if(NOT SCINTILLA_EDIT_LIB)
+        message(FATAL_ERROR "ScintillaEdit library not found in ${SCINTILLA_DIR}/lib")
     endif()
+    target_link_libraries(qmcr PRIVATE ${SCINTILLA_EDIT_LIB})
 
-    # Копируем lexillaв output directory для динамической загрузки через QLibrary::resolve()
-    if(EXISTS "${LEXILLA_DIR}/lib/liblexilla.so")
+    # Копируем liblexilla.so (динамическая загрузка через QLibrary)
+    set(_lex_so "${LEXILLA_DIR}/lib/liblexilla.so")
+    if(EXISTS "${_lex_so}")
         add_custom_command(TARGET qmcr POST_BUILD
             COMMAND ${CMAKE_COMMAND} -E copy_if_different
-                "${LEXILLA_DIR}/lib/liblexilla.so"
-                "$<TARGET_FILE_DIR:qmcr>/"
-            COMMENT "Copying liblexilla.so for dynamic loading"
+                "${_lex_so}" "$<TARGET_FILE_DIR:qmcr>/"
+            COMMENT "Copying liblexilla.so"
         )
-        message(STATUS "Will copy liblexilla.so from: ${LEXILLA_DIR}/lib/liblexilla.so")
     else()
-        message(FATAL_ERROR "liblexilla.so not found at ${LEXILLA_DIR}/lib/")
+        message(FATAL_ERROR "liblexilla.so not found at ${_lex_so}")
     endif()
 
-    # Добавляем RPATH чтобы приложение могло найти библиотеки
     set_target_properties(qmcr PROPERTIES
         INSTALL_RPATH "$ORIGIN"
-        BUILD_RPATH "$ORIGIN"
+        BUILD_RPATH   "$ORIGIN"
     )
 endif()
 
 # ============================================================================
 # Target Properties
 # ============================================================================
-if(${QT_VERSION} VERSION_LESS 6.1.0)
-    set(BUNDLE_ID_OPTION MACOSX_BUNDLE_GUI_IDENTIFIER com.example.qmcr)
-endif()
-
 if(NOT QRASTR_BUILD_WITH_MCR)
+    if(${QT_VERSION} VERSION_LESS 6.1.0)
+        set(_bundle_id MACOSX_BUNDLE_GUI_IDENTIFIER com.example.qmcr)
+    endif()
     set_target_properties(qmcr PROPERTIES
-        ${BUNDLE_ID_OPTION}
-        MACOSX_BUNDLE_BUNDLE_VERSION ${PROJECT_VERSION}
+        ${_bundle_id}
+        MACOSX_BUNDLE_BUNDLE_VERSION       ${PROJECT_VERSION}
         MACOSX_BUNDLE_SHORT_VERSION_STRING ${PROJECT_VERSION_MAJOR}.${PROJECT_VERSION_MINOR}
         MACOSX_BUNDLE TRUE
         WIN32_EXECUTABLE TRUE
@@ -265,28 +215,6 @@ install(TARGETS qmcr
 # ============================================================================
 # Qt Finalization
 # ============================================================================
-if(QT_VERSION_MAJOR EQUAL 6)
-    if(NOT QRASTR_BUILD_WITH_MCR)
-        qt_finalize_executable(qmcr)
-    endif()
-endif()
-
-# ============================================================================
-# Copy Python DLLs
-# ============================================================================
-if(WIN32)
-    # Копирование ScintillaEdit DLL
-    set(SCINTILLA_DLL_NAME "ScintillaEdit5.dll")
-
-    if(EXISTS "${SCINTILLA_DIR}/lib/${SCINTILLA_DLL_NAME}")
-        add_custom_command(TARGET qmcr POST_BUILD
-            COMMAND ${CMAKE_COMMAND} -E copy_if_different
-                "${SCINTILLA_DIR}/lib/${SCINTILLA_DLL_NAME}"
-                "$<TARGET_FILE_DIR:qmcr>/"
-            COMMENT "Copying ${SCINTILLA_DLL_NAME}"
-        )
-        message(STATUS "Will copy ${SCINTILLA_DLL_NAME} from: ${SCINTILLA_DIR}/bin/")
-    else()
-        message(WARNING "${SCINTILLA_DLL_NAME} not found at ${SCINTILLA_DIR}/bin/")
-    endif()
+if(QT_VERSION_MAJOR EQUAL 6 AND NOT QRASTR_BUILD_WITH_MCR)
+    qt_finalize_executable(qmcr)
 endif()
