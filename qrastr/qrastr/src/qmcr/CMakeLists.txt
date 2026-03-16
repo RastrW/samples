@@ -56,8 +56,12 @@ message(STATUS "  LEXILLA_DIR: ${LEXILLA_DIR}")
 set(TS_FILES qmcr_ru_RU.ts)
 
 set(PROJECT_SOURCES
-    scihlp.h
-    scihlp.cpp
+    sciHlpBase.h
+    sciHlpBase.cpp
+    sciPyEditor.h
+    sciPyEditor.cpp
+    sciLogViewer.h
+    sciLogViewer.cpp
     mcrwnd.h
     mcrwnd.cpp
     ${TS_FILES}

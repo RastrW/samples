@@ -1,5 +1,3 @@
-#ifndef PYHLP_H
-#define PYHLP_H
 #pragma once
 #include "qmcr_api.h"
 #include <string>
@@ -8,6 +6,9 @@
 class IPlainRastr;
 struct _object;
 
+///@class Интерпретатор Python3
+/// Подробности смотрите на:
+/// [сайте проекта](https://docs.python.org/3/extending/extending.html#).
 class QMCR_API PyHlp
 {
 public:
@@ -45,6 +46,4 @@ private:
     long m_errorOffset = -1;
 
     static constexpr const char* k_scriptName = "rastr-py-embedded";
-};//class PyHlp
-
-#endif // PYHLP_H
+};

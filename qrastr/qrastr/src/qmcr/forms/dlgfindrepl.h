@@ -1,9 +1,8 @@
-#ifndef DLGFINDREPL_H
-#define DLGFINDREPL_H
 #pragma once
 
 #include <QDialog>
-#include "../scihlp.h"
+#include "../sciPyEditor.h"
+
 namespace Ui {
 class DlgFindRepl;
 }
@@ -16,7 +15,7 @@ public:
     explicit DlgFindRepl(QWidget* parent = nullptr);
 
 signals:
-    void sig_find(SciHlp::FindParams);
+    void sig_find(SciPyEditor::FindParams);
 
 private slots:
     void slot_findClicked();
@@ -25,4 +24,3 @@ private:
     QLineEdit*   m_leFind  {nullptr};
     QPushButton* m_pbFind  {nullptr};
 };
-#endif // DLGFINDREPL_H

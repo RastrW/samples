@@ -1,9 +1,6 @@
 #include "pyhlp.h"
-
-
 #define Py_LIMITED_API  0x030A0000 //minimal version Python 3.10
 #define PY_SSIZE_T_CLEAN
-//Py_REF_DEBUG
 
 #ifdef _DEBUG
     #undef _DEBUG
@@ -207,66 +204,75 @@ void PyHlp::captureError()
     PyObject *pType {nullptr}, *pValue {nullptr}, *pTraceback {nullptr};
     PyErr_Fetch(&pType, &pValue, &pTraceback);
 
-    if(pValue){
-        PyErr_NormalizeException(&pType, &pValue, &pTraceback);
+    if (!pValue) {
+        Py_XDECREF(pType);
+        Py_XDECREF(pTraceback);
+        return;
+    }
 
+    PyErr_NormalizeException(&pType, &pValue, &pTraceback);
+
+    if(pType == PyExc_SyntaxError){
         m_errorMessage = PyUtils::pyObjToStr(pValue);
 
-        if(pType == PyExc_SyntaxError){
-            // Для SyntaxError номер строки берём напрямую из атрибутов
-            PyUtils::PyObjRaii lineNo(PyObject_GetAttrString(pValue, "lineno"));
-            if (!lineNo.isNull())
-                m_errorLine = PyLong_AsLong(lineNo);
+        // Для SyntaxError номер строки берём напрямую из атрибутов
+        PyUtils::PyObjRaii lineNo(PyObject_GetAttrString(pValue, "lineno"));
+        if (!lineNo.isNull())
+            m_errorLine = PyLong_AsLong(lineNo);
 
-            PyUtils::PyObjRaii offset(PyObject_GetAttrString(pValue, "offset"));
-            if (!offset.isNull())
-                m_errorOffset = PyLong_AsLong(offset);
-        }else{
-            // Для RuntimeError разворачиваем traceback через модуль traceback
-            PyUtils::PyObjRaii tbModule(PyImport_ImportModule("traceback"));
-            if (!tbModule.isNull()) {
-                // format_exception → читаемый текст
-                PyUtils::PyObjRaii fmtFn(PyObject_GetAttrString(tbModule, "format_exception"));
-                if (!fmtFn.isNull() && PyCallable_Check(fmtFn)) {
-                    PyUtils::PyObjRaii formatted(
-                        PyObject_CallFunctionObjArgs(fmtFn,
-                                                     pType, pValue, pTraceback ? pTraceback : Py_None, nullptr));
-                    if (!formatted.isNull()) {
-                        std::string raw = PyUtils::pyObjToStr(formatted);
-                        // Убираем экранированные \n из repr
-                        raw = std::regex_replace(raw, std::regex(R"(\\n)"), "\n");
-                        m_errorMessage = raw;
-                    }
+        PyUtils::PyObjRaii offset(PyObject_GetAttrString(pValue, "offset"));
+        if (!offset.isNull())
+            m_errorOffset = PyLong_AsLong(offset);
+    }else{
+        // Для RuntimeError разворачиваем traceback через модуль traceback
+        PyUtils::PyObjRaii tbModule(PyImport_ImportModule("traceback"));
+        if (!tbModule.isNull()) {
+            // format_exception → читаемый текст
+            PyUtils::PyObjRaii fmtFn(PyObject_GetAttrString(tbModule, "format_exception"));
+            if (!fmtFn.isNull() && PyCallable_Check(fmtFn)) {
+                PyUtils::PyObjRaii formatted(
+                    PyObject_CallFunctionObjArgs(fmtFn,
+                                                 pType, pValue, pTraceback ? pTraceback : Py_None, nullptr));
+                if (!formatted.isNull()) {
+                    std::string raw = PyUtils::pyObjToStr(formatted);
+                    // Убираем экранированные \n из repr
+                    raw = std::regex_replace(raw, std::regex(R"(\\n)"), "\n");
+                    m_errorMessage = std::move(raw);
                 }
-                // extract_tb → ищем номер строки в нашем скрипте
-                PyObject* tbDict    = PyModule_GetDict(tbModule); // borrowed
-                PyObject* extractTb = PyDict_GetItemString(tbDict, "extract_tb"); // borrowed
-                if (extractTb && pTraceback) {
-                    Py_INCREF(pTraceback);
-                    PyUtils::PyObjRaii args(PyTuple_Pack(1, pTraceback));
-                    PyUtils::PyObjRaii frames(PyObject_CallObject(extractTb, args));
-                    if (!frames.isNull()) {
-                        const Py_ssize_t n = PySequence_Size(frames);
-                        for (Py_ssize_t i = 0; i < n; ++i) {
-                            PyUtils::PyObjRaii frame(PySequence_GetItem(frames, i));
-                            PyUtils::PyObjRaii fname(PySequence_GetItem(frame, 0));
-                            PyUtils::PyObjRaii lineno(PySequence_GetItem(frame, 1));
+            }
+            // extract_tb → ищем номер строки в нашем скрипте
+            PyObject* tbDict    = PyModule_GetDict(tbModule); // borrowed
+            PyObject* extractTb = PyDict_GetItemString(tbDict, "extract_tb"); // borrowed
+            if (extractTb && pTraceback) {
+                Py_INCREF(pTraceback);
+                PyUtils::PyObjRaii args(PyTuple_Pack(1, pTraceback));
+                PyUtils::PyObjRaii frames(PyObject_CallObject(extractTb, args));
+                if (!frames.isNull()) {
+                    const Py_ssize_t n = PySequence_Size(frames);
+                    for (Py_ssize_t i = 0; i < n; ++i) {
+                        PyUtils::PyObjRaii frame(PySequence_GetItem(frames, i));
+                        PyUtils::PyObjRaii fname(PySequence_GetItem(frame, 0));
+                        PyUtils::PyObjRaii lineno(PySequence_GetItem(frame, 1));
 
-                            std::string name = PyUtils::pyObjToStr(fname);
-                            // имя приходит в кавычках вида 'rastr-py-embedded'
-                            if (name.size() > 2)
-                                name = name.substr(1, name.size() - 2);
-                            if (name == k_scriptName)
-                                m_errorLine = PyLong_AsLong(lineno);
-                        }
+                        std::string name = PyUtils::pyObjToStr(fname);
+                        // имя приходит в кавычках вида 'rastr-py-embedded'
+                        if (name.size() > 2)
+                            name = name.substr(1, name.size() - 2);
+                        if (name == k_scriptName)
+                            m_errorLine = PyLong_AsLong(lineno);
                     }
                 }
             }
         }
+
+        if (m_errorMessage.empty())
+            m_errorMessage = PyUtils::pyObjToStr(pValue);
     }
-    PyErr_Restore(pType, pValue, pTraceback);
-    PyErr_Print();
-    return;
+
+    //Освобождаем refs, очищаем индикатор, после Fetch ошибка уже снята
+    Py_XDECREF(pType);
+    Py_XDECREF(pValue);
+    Py_XDECREF(pTraceback);
 }
 
 std::string PyHlp::getErrorMessage() const noexcept{
@@ -280,5 +286,3 @@ long PyHlp::getErrorLine() const noexcept{
 long PyHlp::getErrorOffset() const noexcept{
     return m_errorOffset;
 }
-
-

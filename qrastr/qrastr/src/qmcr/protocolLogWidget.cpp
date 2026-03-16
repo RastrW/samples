@@ -1,7 +1,7 @@
 #include "protocolLogWidget.h"
 #include <QVBoxLayout>
 #include <cassert>
-#include "scihlp.h"
+#include "sciLogViewer.h"
 
 ProtocolLogWidget::ProtocolLogWidget(QWidget* parent)
     : QWidget(parent)
@@ -9,13 +9,13 @@ ProtocolLogWidget::ProtocolLogWidget(QWidget* parent)
     auto* layout = new QVBoxLayout(this);
     layout->setContentsMargins(0, 0, 0, 0);
 
-    m_shProt = new SciHlp(this, SciHlp::Role::ProtocolLog);
-    layout->addWidget(m_shProt);
+    m_viewer = new SciLogViewer(this);
+    layout->addWidget(m_viewer);
 }
 
 void ProtocolLogWidget::clear()
 {
-    m_shProt->setContent("");
+    m_viewer->setContent("");
     n_stage_max_id_ = 0;
 }
 
@@ -28,7 +28,7 @@ void ProtocolLogWidget::onQStringAppendProtocol(const QString& qstr)
     str += qstr.toStdString();
     encodeHtml(str);
     str += "\n";
-    m_shProt->appendTextCustom(str);
+    m_viewer->appendTextCustom(str);
 }
 
 void ProtocolLogWidget::onRastrLog(const _log_data& log_data)
@@ -45,7 +45,7 @@ void ProtocolLogWidget::onRastrLog(const _log_data& log_data)
         str += ">\t";
         str += log_data.str_msg;
         str += '\n';
-        m_shProt->appendTextCustom(str);
+        m_viewer->appendTextCustom(str);
         n_stage_max_id_ = log_data.n_stage_id;
         return;
     }
@@ -55,7 +55,7 @@ void ProtocolLogWidget::onRastrLog(const _log_data& log_data)
         str += "</STAGE";
         str += std::to_string(log_data.n_stage_id);
         str += ">\n";
-        m_shProt->appendTextCustom(str);
+        m_viewer->appendTextCustom(str);
         assert(n_stage_max_id_ == log_data.n_stage_id);
         if (n_stage_max_id_ == log_data.n_stage_id)
             --n_stage_max_id_;
@@ -65,12 +65,12 @@ void ProtocolLogWidget::onRastrLog(const _log_data& log_data)
     // Обычное сообщение — выводим как есть (без XML-тегов)
     str += log_data.str_msg;
     str += '\n';
-    m_shProt->appendTextCustom(str);
+    m_viewer->appendTextCustom(str);
 }
 
 void ProtocolLogWidget::onRastrPrint(const std::string& str_msg)
 {
-    m_shProt->appendTextCustom(str_msg);
+    m_viewer->appendTextCustom(str_msg);
 }
 
 void ProtocolLogWidget::encodeHtml(std::string& data)

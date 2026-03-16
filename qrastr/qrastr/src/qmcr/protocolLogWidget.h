@@ -3,7 +3,7 @@
 #include "../app/astra/qastra_events_data.h"
 #include "qmcr_api.h"
 
-class SciHlp;
+class SciLogViewer;
 
 /// @class Виджет отображения лога расчёта.
 class QMCR_API ProtocolLogWidget : public QWidget
@@ -22,7 +22,7 @@ public slots:
     void onQStringAppendProtocol(const QString& qstr);
 
 private:
-    SciHlp* m_shProt{ nullptr };
+    SciLogViewer* m_viewer { nullptr };
     long    n_stage_max_id_{ 0 };
 
     /// HTML-экранирование (перенесено из McrWnd без изменений)

@@ -4,7 +4,7 @@
 #include <QDialog>
 #include <QToolBar>
 #include <QFileInfo>
-#include "scihlp.h"
+#include "sciPyEditor.h"
 #include "qmcr_api.h"
 
 class  DlgFindRepl;
@@ -36,19 +36,20 @@ private slots:
     void slot_protClear();
 
     void slot_fileInfoChanged(const QFileInfo& fi);
-    void slot_findByParams   (SciHlp::FindParams params);
+    void slot_findByParams   (SciPyEditor::FindParams params);
     void slot_appendProtocol (const QString& text);
 private:
     // Результат диалога «сохранить изменения?»
-    enum class SavePromptResult { Saved, Discarded, Cancelled };
+    enum class SavePromptResult { NoChanges, Saved, Discarded, Cancelled };
     SavePromptResult promptSaveIfModified();
 
     void buildToolBar();
 
-    SciHlp*             m_editor{nullptr};
+    SciPyEditor*             m_editor{nullptr};
     ProtocolLogWidget*  m_logWidget{ nullptr };
     DlgFindRepl*        m_dlgFind{ nullptr};
     QVBoxLayout*        m_mainLayout  {nullptr};
 
     std::shared_ptr<PyHlp> m_pyHlp;
+    bool m_firstShow {true};
 };

@@ -10,11 +10,8 @@
 #include <QDebug>
 #include <QCloseEvent>
 
-
 #include "mcrwnd.h"
-#include "scihlp.h"
 #include "forms/dlgfindrepl.h"
-//#include "IPlainRastr.h"
 #include "../app/astra/qastra_events_data.h"
 #include "pyhlp.h"
 #include "protocolLogWidget.h"
@@ -33,7 +30,7 @@ McrWnd::McrWnd(QWidget* parent)
     buildToolBar();
 
     auto* splitter = new QSplitter(Qt::Vertical, this);
-    m_editor = new SciHlp(this, SciHlp::Role::EditorPython);
+    m_editor = new SciPyEditor(this);
     m_logWidget = new ProtocolLogWidget(this);
 
     splitter->addWidget(m_editor);
@@ -42,7 +39,8 @@ McrWnd::McrWnd(QWidget* parent)
     m_mainLayout->addWidget(splitter);
     setLayout(m_mainLayout);
 
-    connect(m_editor, &SciHlp::sig_fileInfoChanged, this, &McrWnd::slot_fileInfoChanged);
+    connect(m_editor, &SciPyEditor::sig_fileInfoChanged,
+            this, &McrWnd::slot_fileInfoChanged);
 }
 
 McrWnd::~McrWnd() = default;
@@ -89,28 +87,31 @@ void McrWnd::buildToolBar()
     m_mainLayout->addWidget(tb);
 }
 
-void McrWnd::showEvent(QShowEvent *event){
+void McrWnd::showEvent(QShowEvent* event)
+{
     QDialog::showEvent(event);
 
-    static bool s_firstShow = true;
-    if (s_firstShow) {
-        s_firstShow = false;
-        const auto btn = QMessageBox::question(
-            this, tr("Macro Python"),
-            tr("Load example script?"),
-            QMessageBox::Yes | QMessageBox::No,
-            QMessageBox::No);
+    if (!m_firstShow)
+        return;
+    m_firstShow = false;
 
-        if (btn == QMessageBox::Yes) {
-            const QString examplePath =
-                QCoreApplication::applicationDirPath() + "/../Data/py_example/rastr_events.py";
-            m_editor->setFileInfo(QFileInfo(examplePath));
-            if (SciHlp::RetVal::Ok != m_editor->loadFromFile()) {
-                QMessageBox::warning(this, tr("Warning"),
-                                     tr("Example file not found:\n%1").arg(examplePath));
-                m_editor->setFileInfo(QFileInfo{});
-            }
-        }
+    const auto btn = QMessageBox::question(
+        this, tr("Macro Python"),
+        tr("Load example script?"),
+        QMessageBox::Yes | QMessageBox::No,
+        QMessageBox::No);
+
+    if (btn != QMessageBox::Yes)
+        return;
+
+    const QString examplePath =
+        QCoreApplication::applicationDirPath() + "/../Data/py_example/rastr_events.py";
+
+    m_editor->setFileInfo(QFileInfo(examplePath));
+    if (SciHlpBase::RetVal::Ok != m_editor->loadFromFile()) {
+        QMessageBox::warning(this, tr("Warning"),
+                             tr("Example file not found:\n%1").arg(examplePath));
+        m_editor->setFileInfo(QFileInfo{});
     }
 }
 
@@ -122,7 +123,7 @@ void McrWnd::setPyHlp(std::shared_ptr<PyHlp> pPyHlp)
 McrWnd::SavePromptResult McrWnd::promptSaveIfModified()
 {
     if (!m_editor->isModified())
-        return SavePromptResult::Discarded; // нечего сохранять
+        return SavePromptResult::NoChanges;
 
     QMessageBox mb(QMessageBox::Question,
                    tr("Macro Python"),
@@ -133,9 +134,11 @@ McrWnd::SavePromptResult McrWnd::promptSaveIfModified()
 
     switch (mb.exec()) {
     case QMessageBox::Yes: {
-        const bool hasPath = m_editor->getFileInfo().absoluteFilePath().length() > 3;
-        const bool saved   = slot_fileSave(!hasPath);
-        return saved ? SavePromptResult::Saved : SavePromptResult::Cancelled;
+        const bool hasPath =
+            m_editor->getFileInfo().absoluteFilePath().length() > 3;
+        return slot_fileSave(!hasPath)
+                   ? SavePromptResult::Saved
+                   : SavePromptResult::Cancelled;
     }
     case QMessageBox::No:
         return SavePromptResult::Discarded;
@@ -148,7 +151,6 @@ void McrWnd::closeEvent(QCloseEvent* event)
 {
     if (m_dlgFind) {
         m_dlgFind->close();
-        m_dlgFind = nullptr;
     }
 
     const auto result = promptSaveIfModified();
@@ -156,7 +158,7 @@ void McrWnd::closeEvent(QCloseEvent* event)
         event->ignore();
         return;
     }
-    // result == Saved или Discarded — закрываем без лишних вопросов
+
     QDialog::closeEvent(event);
 }
 
@@ -181,7 +183,7 @@ void McrWnd::slot_fileOpen()
         return;
 
     m_editor->setFileInfo(QFileInfo{path});
-    if (SciHlp::RetVal::Ok != m_editor->loadFromFile()) {
+    if (SciHlpBase::RetVal::Ok != m_editor->loadFromFile()) {
         m_editor->setFileInfo(QFileInfo{});
         QMessageBox::critical(this, tr("Error"),
                               tr("Failed to load file:\n%1").arg(path));
@@ -194,14 +196,14 @@ bool McrWnd::slot_fileSave(bool saveAs)
         const QString path = QFileDialog::getSaveFileName(this, tr("Save file as"));
         if (path.length() < 3)
             return false;
-        if (SciHlp::RetVal::Ok != m_editor->setFileInfo(QFileInfo(path))) {
+        if (SciHlpBase::RetVal::Ok != m_editor->setFileInfo(QFileInfo(path))) {
             QMessageBox::critical(this, tr("Error"),
                                   tr("Cannot set file path:\n%1").arg(path));
             return false;
         }
     }
 
-    if (SciHlp::RetVal::Ok != m_editor->saveToFile()) {
+    if (SciHlpBase::RetVal::Ok != m_editor->saveToFile()) {
         QMessageBox::critical(this, tr("Error"),
                               tr("Failed to save file:\n%1")
                                   .arg(m_editor->getFileInfo().absoluteFilePath()));
@@ -257,17 +259,19 @@ void McrWnd::slot_find()
 {
     if (!m_dlgFind) {
         m_dlgFind = new DlgFindRepl(this);
+        m_dlgFind->setAttribute(Qt::WA_DeleteOnClose);
         connect(m_dlgFind, &DlgFindRepl::sig_find,
                 this, &McrWnd::slot_findByParams);
     }
+
     m_dlgFind->show();
     m_dlgFind->raise();
     m_dlgFind->activateWindow();
 }
 
-void McrWnd::slot_findByParams(SciHlp::FindParams params_find)
+void McrWnd::slot_findByParams(SciPyEditor::FindParams params_find)
 {
-    if (SciHlp::RetVal::Ok != m_editor->find(params_find)) {
+    if (SciPyEditor::RetVal::Ok != m_editor->find(params_find)) {
         QMessageBox::information(this, tr("Find"),
                                  tr("'%1' not found.").arg(params_find.m_text));
     }
