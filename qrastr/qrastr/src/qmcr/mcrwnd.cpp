@@ -42,7 +42,7 @@ McrWnd::McrWnd(QWidget* parent)
     m_mainLayout->addWidget(splitter);
     setLayout(m_mainLayout);
 
-    connect(m_editor, &SciHlp::chngFileInfo, this, &McrWnd::slot_fileInfoChanged);
+    connect(m_editor, &SciHlp::sig_fileInfoChanged, this, &McrWnd::slot_fileInfoChanged);
 }
 
 McrWnd::~McrWnd() = default;
@@ -267,7 +267,7 @@ void McrWnd::slot_find()
 
 void McrWnd::slot_findByParams(SciHlp::FindParams params_find)
 {
-    if (SciHlp::RetVal::Ok != m_editor->Find(params_find)) {
+    if (SciHlp::RetVal::Ok != m_editor->find(params_find)) {
         QMessageBox::information(this, tr("Find"),
                                  tr("'%1' not found.").arg(params_find.m_text));
     }

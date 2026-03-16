@@ -1,13 +1,8 @@
-#ifndef SCIHLP_H
-#define SCIHLP_H
 #pragma once
 
 #include <QFileInfo>
-//#include "C:\Projects\compile\sci\scintilla\qt\ScintillaEdit\ScintillaEdit.h"
-//#include <ScintillaEdit.h>
 #include "ScintillaEdit.h"
 
-//#if defined(Q_OS_WIN)
 
 class SciHlp
     : public ScintillaEdit {
@@ -16,7 +11,56 @@ public:
     enum class Role   { EditorPython, ProtocolLog };
     enum class RetVal { Ok = 1, Failure = -1 };
     //https://www.scintilla.org/ScintillaDoc.html#colour
-    static constexpr unsigned long getRGBA( const std::uint8_t r, const std::uint8_t g, const std::uint8_t b, const std::uint8_t a ){
+    struct FindParams {
+        explicit FindParams(const QString& text) : m_text(text) {}
+        QString m_text;
+    };
+    SciHlp(QWidget *parent, Role role);
+    ~SciHlp() override = default;
+
+    RetVal setContent(const std::string& str_text);
+    RetVal appendTextCustom(const std::string_view svTxt);
+    bool isModified() const;
+    RetVal setFileInfo(const QFileInfo& fiNew);
+    const QFileInfo& getFileInfo()const;
+    RetVal saveToFile();
+    RetVal loadFromFile();
+    /**
+     * @brief find
+     * - SCFIND_REGEXP	    The search string should be interpreted as
+     * a regular expression. Uses Scintilla's base implementation unless combined with SCFIND_CXX11REGEX.
+     * - SCFIND_POSIX	    Treat regular expression in a more POSIX compatible
+     * manner by interpreting bare ( and ) for tagged sections rather than \( and \).
+     * Has no effect when SCFIND_CXX11REGEX is set.
+     * - SCFIND_CXX11REGEX	This flag may be set to use C++11 <regex> instead of
+     * Scintilla's basic regular expressions. If the regular expression is
+     * invalid then -1 is returned and status is set to SC_STATUS_WARN_REGEX.
+     * The ECMAScript flag is set on the regex object and UTF-8 documents will
+     * exhibit Unicode-compliant behaviour. For MSVC, where wchar_t is 16-bits,
+     * the regular expression ".." will match a single astral-plane character.
+     * There may be other differences between compilers. Must also have SCFIND_REGEXP set.
+    */
+    RetVal find(FindParams params_find);
+
+    const char* monospaceFontName();
+    void showEvent(QShowEvent *event) override;
+signals:
+    void sig_fileInfoChanged(const QFileInfo& fiNew);
+private slots:
+    void slot_marginClicked(Scintilla::Position position,
+                            Scintilla::KeyMod modifiers, int margin);
+    void slot_notify(Scintilla::NotificationData* pnd);
+private:
+    void showAllLexer();
+    void setStyleHlp(sptr_t style, sptr_t fore,
+                     bool bold = false,
+                     bool italic = false,
+                     sptr_t back = _colors::white,
+                     bool underline = false,
+                     bool eolfilled = false);
+
+    static constexpr unsigned long getRGBA(const std::uint8_t r, const std::uint8_t g,
+                                           const std::uint8_t b, const std::uint8_t a ){
         assert(a == 0x00);//because is not tested!
         return ( r + (g << 8) + (b << 16) + (a << 24) );
     }
@@ -39,34 +83,9 @@ public:
         inline static _color white   { getRGBA( 0xff, 0xff, 0xff, 0x00 ) };
         inline static _color yellow  { getRGBA( 0xff, 0xff, 0x00, 0x00 ) };
     };
-    struct FindParams {
-        explicit FindParams(const QString& text) : m_text(text) {}
-        QString m_text;
-    };
-    SciHlp(QWidget *parent, Role role);
-    virtual ~SciHlp() = default;
-    void tstSci();
-    const char* MonospaceFont();
-    void showEvent(QShowEvent *event) override;
-    void setStyleHlp( sptr_t style, sptr_t fore, bool bold=false, bool italic=false, sptr_t back=_colors::white, bool underline=false, bool eolfilled=false );
-    RetVal setContent(const std::string& str_text);
-    RetVal my_appendText(const std::string_view svTxt);
-    bool isModified() const;
-    RetVal setFileInfo(const QFileInfo& fiNew);
-    const QFileInfo& getFileInfo()const;
-    RetVal saveToFile();
-    RetVal loadFromFile();
-    RetVal Find(FindParams params_find);
-signals:
-    void chngFileInfo(const QFileInfo& fiNew);
-private slots:
-    void onMarginClicked(Scintilla::Position position, Scintilla::KeyMod modifiers, int margin);
-    void onNotify(Scintilla::NotificationData* pnd);
-private:
-    const Role role_;
-    const sptr_t margin_line_num_ = 0;
-    const sptr_t margin_fold_     = 1;
-    QFileInfo fiFileSource_;
-};//class SciHlp{
 
-#endif // SCIHLP_H
+    QFileInfo m_fileInfo;
+
+    const sptr_t k_marginLineNum = 0;
+    const sptr_t k_marginFold     = 1;
+};

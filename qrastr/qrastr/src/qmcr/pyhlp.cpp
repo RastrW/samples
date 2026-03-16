@@ -17,346 +17,268 @@
 #include <regex>
 #include <QCoreApplication>
 
-namespace PyUtils
+namespace PyUtils {
+
+class PyObjRaii
 {
-    struct PyObjRaii
-    {
-        PyObjRaii() = delete;
-        PyObjRaii( PyObject* pPyObj )
-        {
-            pPyObj_ = pPyObj;
-        }
+public:
+    PyObjRaii() = delete;
 
-        auto operator=( PyObject*  pPyObj) -> PyObjRaii&
-        {
-            pPyObj_ = pPyObj;
-            return *this;
-        }
+    explicit PyObjRaii(PyObject* obj) noexcept
+        : m_obj(obj) {}
 
-        operator PyObjRaii()
-        {
-            return *this;
-        }
+    // Запрет копирования — иначе два деструктора вызовут Py_XDECREF дважды
+    PyObjRaii(const PyObjRaii&)            = delete;
+    PyObjRaii& operator=(const PyObjRaii&) = delete;
 
-        virtual ~PyObjRaii(){
-            if(pPyObj_ != nullptr){
-                assert( pPyObj_->ob_refcnt > 0);
-                qDebug()<<"pPyObj_->ob_refcnt== "<<pPyObj_->ob_refcnt<<"\n";
-                Py_XDECREF(pPyObj_);
-            }
-        }
+    // Move-семантика
+    PyObjRaii(PyObjRaii&& other) noexcept
+        : m_obj(std::exchange(other.m_obj, nullptr)) {}
 
-        operator PyObject*()
-        {
-            return pPyObj_;
+    PyObjRaii& operator=(PyObjRaii&& other) noexcept {
+        if (this != &other) {
+            Py_XDECREF(m_obj);
+            m_obj = std::exchange(other.m_obj, nullptr);
         }
-
-    private:
-        PyObject* pPyObj_ = nullptr;
-    };
-
-    std::string PyObjToStr(PyObject* pPyObj)
-    {
-        std::string str = "__err__";
-        if(nullptr != pPyObj){
-            PyObjRaii str_exc_value = PyObject_Repr(pPyObj);
-            if(nullptr != str_exc_value){
-                PyObjRaii pyExcValueStr = PyUnicode_AsEncodedString( str_exc_value, "utf-8", "strict" );
-                if(nullptr != pyExcValueStr){
-                    str = PyBytes_AsString( pyExcValueStr );
-                }
-            }
-        }
-        return str;
+        return *this;
     }
+
+    ~PyObjRaii() {
+        if (m_obj) {
+            assert(m_obj->ob_refcnt > 0);
+            Py_XDECREF(m_obj);
+        }
+    }
+
+    // Неявное преобразование для передачи в Python C API
+    operator PyObject*() const noexcept { return m_obj; }
+
+    bool isNull() const noexcept { return m_obj == nullptr; }
+
+private:
+    PyObject* m_obj {nullptr};
+};
+
+// Конвертация PyObject* в std::string через PyObject_Repr + utf-8
+static std::string pyObjToStr(PyObject* obj)
+{
+    if (!obj)
+        return "__null__";
+
+    PyObjRaii repr(PyObject_Repr(obj));
+    if (repr.isNull())
+        return "__repr_failed__";
+
+    PyObjRaii encoded(PyUnicode_AsEncodedString(repr, "utf-8", "strict"));
+    if (encoded.isNull())
+        return "__encode_failed__";
+
+    const char* s = PyBytes_AsString(encoded);
+    return s ? s : "__bytes_failed__";
+}
+
 }
 
 #include <sstream>
 #include <pyerrors.h>
 #include <frameobject.h>
-//https://habr.com/ru/articles/167261/
-//https://github.com/shira-374/rstpad // qt python editor
-void PyHlp::SetErrorMessage()
+PyHlp::PyHlp(const IPlainRastr& ipr)
+    :m_ipr(ipr){
+}
+
+PyHlp::~PyHlp()
 {
-    errorMessage_.clear();
-    nerrorLineno_ = -1;
-    nerrorOffset_ = -1;
-    PyObject *ptype, *pvalue, *ptraceback;
-    PyErr_Fetch( &ptype, &pvalue, &ptraceback );
-    if(pvalue){
-        PyErr_NormalizeException( &ptype, &pvalue, &ptraceback );
-        const char* nameExeption = PyExceptionClass_Name(ptype);
-        if(nameExeption){
-            //errorMessage_ = std::string(nameExeption).append(": ");
-        }
-        const std::string str_pvalue = PyUtils::PyObjToStr(pvalue);
-        errorMessage_ = str_pvalue;
-        if(PyExc_SyntaxError == ptype){
-            PyUtils::PyObjRaii pyFileName = PyObject_GetAttrString(pvalue, "filename");
-            PyUtils::PyObjRaii pyLineNo   = PyObject_GetAttrString(pvalue, "lineno");
-            nerrorLineno_ = PyLong_AsLong(pyLineNo);
-            PyUtils::PyObjRaii pyOffset   = PyObject_GetAttrString(pvalue, "offset");
-            nerrorOffset_ = PyLong_AsLong(pyOffset);
-            std::string str_filename = PyUtils::PyObjToStr(pyFileName);
-            std::string str_lineno   = PyUtils::PyObjToStr(pyLineNo);
-            std::string str_offset   = PyUtils::PyObjToStr(pyOffset);
-        //}else if(PyExc_ModuleNotFoundError == ptype){
-        //    PyUtils::PyObjRaii pyFileName = PyObject_GetAttrString(pvalue, "name");
-        //    PyUtils::PyObjRaii pyPath     = PyObject_GetAttrString(pvalue, "path");
-        //    std::string str_filename      = PyUtils::PyObjToStr(pyFileName);
-        //    std::string str_path     = PyUtils::PyObjToStr(pyPath);
+    if(m_initialized){
+        Py_XDECREF(m_rastrObject);
+        Py_XDECREF(m_astraModule);
+        Py_FinalizeEx();
+    }
+}
+
+bool PyHlp::initialize()
+{
+    if (m_initialized)
+        return true;
+    if (Py_IsInitialized()) {
+        qWarning() << "PyHlp::initialize: Python already initialized externally, cannot proceed";
+        return false;
+    }
+
+    int nRes = 0;
+    Py_InitializeEx(0);
+
+    // Добавляем путь к astra_py в sys.path
+    PyObject* sysPath = PySys_GetObject("path"); // borrowed ref
+    if (!sysPath) {
+        captureError();
+        Py_FinalizeEx();
+        return false;
+    }
+    const QString pluginPath = QCoreApplication::applicationDirPath() + "/../Data/";
+    PyUtils::PyObjRaii pathItem(PyUnicode_FromString(pluginPath.toStdString().c_str()));
+    if (PyList_Append(sysPath, pathItem) != 0) {
+        captureError();
+        Py_FinalizeEx();
+        return false;
+    }
+
+    // Импортируем модуль astra_py
+    m_astraModule = PyImport_ImportModule("astra_py");
+    if (!m_astraModule) {
+        captureError();
+        Py_FinalizeEx();
+        return false;
+    }
+
+    // Создаём объект Rastr(ptr), передавая указатель на IPlainRastr
+    PyUtils::PyObjRaii rastrClass(PyObject_GetAttrString(m_astraModule, "Rastr"));
+    if (rastrClass.isNull() || !PyCallable_Check(rastrClass)) {
+        captureError();
+        Py_FinalizeEx();
+        return false;
+    }
+
+    const uintptr_t ptr    = reinterpret_cast<uintptr_t>(&m_ipr);
+    PyUtils::PyObjRaii pyPtr(PyLong_FromUnsignedLongLong(ptr));
+    PyUtils::PyObjRaii pyArg(PyTuple_Pack(1, static_cast<PyObject*>(pyPtr)));
+    if (pyArg.isNull()) {
+        Py_FinalizeEx();
+        return false;
+    }
+
+    m_rastrObject = PyObject_CallObject(rastrClass, pyArg);
+    if (!m_rastrObject || PyErr_Occurred()) {
+        captureError();
+        Py_XDECREF(m_rastrObject);
+        m_rastrObject = nullptr;
+        Py_FinalizeEx();
+        return false;
+    }
+
+    m_initialized = true;
+    return true;
+}
+
+PyHlp::Result PyHlp::run(const std::string_view macroText)
+{
+    if (!initialize())
+        return Result::Error;
+
+    // borrowed refs — не декрементируем
+    PyObject* mainModule = PyImport_AddModule("__main__");
+    if (!mainModule) { captureError(); return Result::Error; }
+
+    PyObject* globals = PyModule_GetDict(mainModule);
+    if (!globals)     { captureError(); return Result::Error; }
+
+    // Внедряем astra и rastr в глобальное пространство скрипта
+    PyMapping_SetItemString(globals, "astra", m_astraModule);
+    PyMapping_SetItemString(globals, "rastr", m_rastrObject);
+
+    PyUtils::PyObjRaii compiled(
+        Py_CompileString(macroText.data(), k_scriptName, Py_file_input));
+
+    if (compiled.isNull()) {
+        captureError();
+        PyMapping_DelItemString(globals, "astra");
+        PyMapping_DelItemString(globals, "rastr");
+        return Result::SyntaxError;
+    }
+
+    PyUtils::PyObjRaii locals(PyDict_New());
+    PyUtils::PyObjRaii result(PyEval_EvalCode(compiled, globals, locals));
+
+    PyMapping_DelItemString(globals, "astra");
+    PyMapping_DelItemString(globals, "rastr");
+
+    if (PyErr_Occurred()) {
+        captureError();
+        return Result::RuntimeError;
+    }
+    return Result::Ok;
+}
+
+void PyHlp::captureError()
+{
+    m_errorMessage.clear();
+    m_errorLine = -1;
+    m_errorOffset = -1;
+
+    PyObject *pType {nullptr}, *pValue {nullptr}, *pTraceback {nullptr};
+    PyErr_Fetch(&pType, &pValue, &pTraceback);
+
+    if(pValue){
+        PyErr_NormalizeException(&pType, &pValue, &pTraceback);
+
+        m_errorMessage = PyUtils::pyObjToStr(pValue);
+
+        if(pType == PyExc_SyntaxError){
+            // Для SyntaxError номер строки берём напрямую из атрибутов
+            PyUtils::PyObjRaii lineNo(PyObject_GetAttrString(pValue, "lineno"));
+            if (!lineNo.isNull())
+                m_errorLine = PyLong_AsLong(lineNo);
+
+            PyUtils::PyObjRaii offset(PyObject_GetAttrString(pValue, "offset"));
+            if (!offset.isNull())
+                m_errorOffset = PyLong_AsLong(offset);
         }else{
-            PyObject* traceback_module = PyImport_ImportModule("traceback");
-            if(nullptr != traceback_module){
-                PyUtils::PyObjRaii format_exception = PyObject_GetAttrString(traceback_module, "format_exception");
-                if(format_exception && PyCallable_Check(format_exception)) {
-                    PyUtils::PyObjRaii pyth_val = PyObject_CallFunctionObjArgs(format_exception, ptype, pvalue, ptraceback, NULL);
-                    errorMessage_ += "\n";
-                    errorMessage_ += PyUtils::PyObjToStr(pyth_val);
-                    errorMessage_ = std::regex_replace(errorMessage_, std::regex(R"(\\n', ' )"), "\n");
-                }
-                //get from https://github.com/unbit/uwsgi/blob/1eb8615057fb6045e0ce06cd5a617946f50e813b/plugins/python/pyutils.c#L67
-                PyObject *traceback_dict = PyModule_GetDict(traceback_module);
-                PyObject *extract_tb = PyDict_GetItemString(traceback_dict, "extract_tb");
-                if(nullptr != extract_tb){
-                    PyUtils::PyObjRaii args1 = PyTuple_New(1);
-                    if(nullptr != ptraceback){
-                        Py_INCREF(ptraceback); //without it failed on destructor
-                        PyTuple_SetItem(args1, 0, ptraceback);
-                    }else{
-                        PyTuple_SetItem(args1, 0, Py_None); // experimental
+            // Для RuntimeError разворачиваем traceback через модуль traceback
+            PyUtils::PyObjRaii tbModule(PyImport_ImportModule("traceback"));
+            if (!tbModule.isNull()) {
+                // format_exception → читаемый текст
+                PyUtils::PyObjRaii fmtFn(PyObject_GetAttrString(tbModule, "format_exception"));
+                if (!fmtFn.isNull() && PyCallable_Check(fmtFn)) {
+                    PyUtils::PyObjRaii formatted(
+                        PyObject_CallFunctionObjArgs(fmtFn,
+                                                     pType, pValue, pTraceback ? pTraceback : Py_None, nullptr));
+                    if (!formatted.isNull()) {
+                        std::string raw = PyUtils::pyObjToStr(formatted);
+                        // Убираем экранированные \n из repr
+                        raw = std::regex_replace(raw, std::regex(R"(\\n)"), "\n");
+                        m_errorMessage = raw;
                     }
-                    PyUtils::PyObjRaii result = PyObject_CallObject(extract_tb, args1);
-                    if(nullptr != result){
-                        for( Py_ssize_t i = 0 ; i < PySequence_Size(result) ; i++ ){
-                            PyUtils::PyObjRaii t           = PySequence_GetItem(result, i);
-                            PyUtils::PyObjRaii tb_filename = PySequence_GetItem(t, 0);
-                            PyUtils::PyObjRaii tb_lineno   = PySequence_GetItem(t, 1);
-                            PyUtils::PyObjRaii tb_function = PySequence_GetItem(t, 2);
-                            PyUtils::PyObjRaii tb_text     = PySequence_GetItem(t, 3);
-                            std::string str_lineno = PyUtils::PyObjToStr(tb_lineno);
-                            std::string str_filename { PyUtils::PyObjToStr(tb_filename) };
-                            if(str_filename.length() > 2){
-                                str_filename = str_filename.substr( 1, str_filename.length()-2 ); // name returned in braces "fname"
-                                if(0 == str_filename.compare(pch_run_fname_)){
-                                    nerrorLineno_ = PyLong_AsLong(tb_lineno);
-                                }
-                            }
+                }
+                // extract_tb → ищем номер строки в нашем скрипте
+                PyObject* tbDict    = PyModule_GetDict(tbModule); // borrowed
+                PyObject* extractTb = PyDict_GetItemString(tbDict, "extract_tb"); // borrowed
+                if (extractTb && pTraceback) {
+                    Py_INCREF(pTraceback);
+                    PyUtils::PyObjRaii args(PyTuple_Pack(1, pTraceback));
+                    PyUtils::PyObjRaii frames(PyObject_CallObject(extractTb, args));
+                    if (!frames.isNull()) {
+                        const Py_ssize_t n = PySequence_Size(frames);
+                        for (Py_ssize_t i = 0; i < n; ++i) {
+                            PyUtils::PyObjRaii frame(PySequence_GetItem(frames, i));
+                            PyUtils::PyObjRaii fname(PySequence_GetItem(frame, 0));
+                            PyUtils::PyObjRaii lineno(PySequence_GetItem(frame, 1));
+
+                            std::string name = PyUtils::pyObjToStr(fname);
+                            // имя приходит в кавычках вида 'rastr-py-embedded'
+                            if (name.size() > 2)
+                                name = name.substr(1, name.size() - 2);
+                            if (name == k_scriptName)
+                                m_errorLine = PyLong_AsLong(lineno);
                         }
                     }
                 }
             }
         }
     }
-    PyErr_Restore(ptype, pvalue, ptraceback);
+    PyErr_Restore(pType, pValue, pTraceback);
     PyErr_Print();
     return;
-
-    // examples ////////////////////////////
-    PyObject *type, *value, *traceback;
-    PyErr_Fetch(&type, &value, &traceback);
-    if(value){
-        PyErr_NormalizeException(&type, &value, &traceback);
-
-        //0
-        const std::string errorMessage =  PyUtils::PyObjToStr(value);
-
-        //1 //https://stackoverflow.com/questions/16733425/how-to-retrieve-filename-and-lineno-attribute-of-syntaxerror
-        {
-            char *msg;
-            char *file;
-            int line;
-            int offset;
-            char *text;
-
-            int res = PyArg_ParseTuple(value,"s(siis)",&msg,&file,&line,&offset,&text);
-
-            PyObject* file_name = PyObject_GetAttrString(value,"filename");
-            PyObject* file_name_str = PyObject_Str(file_name);
-            PyObject* file_name_unicode = PyUnicode_AsEncodedString(file_name_str,"utf-8", "Error");
-            char *actual_file_name = PyBytes_AsString(file_name_unicode);
-
-            PyObject* line_no = PyObject_GetAttrString(value,"lineno");
-            PyObject* line_no_str = PyObject_Str(line_no);
-            PyObject* line_no_unicode = PyUnicode_AsEncodedString(line_no_str,"utf-8", "Error");
-            char *actual_line_no = PyBytes_AsString(line_no_unicode);
-
-
-            PyObject* lasti_no = PyObject_GetAttrString(value,"offset");
-            PyObject* lasti_no_str = PyObject_Str(lasti_no);
-            PyObject* lasti_no_unicode = PyUnicode_AsEncodedString(lasti_no_str,"utf-8", "Error");
-            char *actual_lasti = PyBytes_AsString(lasti_no_unicode);
-            printf("done");
-        }
-
-        //1.5
-        if (type == PyExc_SyntaxError) {
-            PyObject *pyFileName = PyObject_GetAttrString(value, "filename");
-            PyObject *pyLineNo = PyObject_GetAttrString(value, "lineno");
-            std::string LineNo = PyUtils::PyObjToStr(pyLineNo);
-            if (pyFileName) {
-                std::string fileNameWithFullPath =  PyUtils::PyObjToStr(pyFileName);
-                Py_DECREF(pyFileName);
-            }
-        }
-
-        //2
-        PyObject * traceback_module = PyImport_ImportModule("traceback");
-        if(nullptr != traceback_module){
-            std::stringstream  sstr;
-            PyObject *  format_exception = PyObject_GetAttrString(traceback_module, "format_exception");
-            PyObject *  args = PyTuple_New(3);
-            PyObject*  arg0 = type ? static_cast<PyObject*>(type) : Py_None;
-            Py_IncRef(arg0);
-            PyObject*  arg1 = value ? static_cast<PyObject*>(value) : Py_None;
-            Py_IncRef(arg1);
-            PyObject*  arg2 = traceback ? static_cast<PyObject*>(traceback) : Py_None;
-            Py_IncRef(arg2);
-            PyTuple_SetItem(args, 0, arg0);
-            PyTuple_SetItem(args, 1, arg1);
-            PyTuple_SetItem(args, 2, arg2);
-            PyObject*  lst = PyObject_Call(format_exception, args, NULL);
-            sstr << std::endl << std::endl;
-            for (size_t i = 0; i < PyList_Size(lst); ++i){
-               PyObject* item = PyList_GetItem(lst, i);
-               std::string pretty = PyBytes_AsString(PyUnicode_AsASCIIString(item));
-               sstr <<pretty << "\n";
-            }
-            throw std::runtime_error(sstr.str().c_str());
-        }
-
-        const char* nameExeption = PyExceptionClass_Name(type);
-        if(nameExeption){
-            errorMessage_ = std::string(nameExeption).append(": ");
-        }
-        PyObject* pstr = PyObject_Str(value);
-        if(pstr) {
-            Py_ssize_t size;
-            const char* msgError = PyUnicode_AsUTF8AndSize(pstr, &size);
-            if(msgError != nullptr){
-                errorMessage_.append(msgError, size);
-            }
-            Py_DECREF(pstr);
-        }
-        PyErr_Restore(type, value, traceback);
-    }
-    PyErr_Print();
 }
 
-std::string PyHlp::getErrorMessage() const noexcept
-{
-    return errorMessage_;
+std::string PyHlp::getErrorMessage() const noexcept{
+    return m_errorMessage;
 }
 
-long PyHlp::getErrorLine() const noexcept
-{
-    return nerrorLineno_;
+long PyHlp::getErrorLine() const noexcept{
+    return m_errorLine;
 }
 
-long PyHlp::getErrorOffset() const noexcept
-{
-    return nerrorOffset_;
+long PyHlp::getErrorOffset() const noexcept{
+    return m_errorOffset;
 }
 
-PyHlp::PyHlp(const IPlainRastr& ipr)
-    :IPlainRastr_(ipr)
-{
-}
 
-PyHlp::~PyHlp()
-{
-    if(isInitialized_){
-        Py_XDECREF(rastrPyObject_);
-        Py_XDECREF(astraModule_);
-        Py_FinalizeEx();
-    }
-}
-
-bool PyHlp::Initialize()
-{
-    int nRes = 0;
-    if(!Py_IsInitialized()){
-        Py_InitializeEx(0);
-
-        PyObject* sys_path = PySys_GetObject("path"); assert(nullptr != sys_path);//Borrowed reference!
-        std::string str_path1 = PyUtils::PyObjToStr(sys_path);
-        QString qstr_plugin_path{QCoreApplication::applicationDirPath()};
-        qstr_plugin_path += "/../Data/";    // MaxiMal: там находятся все внешние dll предлагаю там и держать astra_py.cp312-win_amd64.pyd
-        nRes = PyList_Append(sys_path, PyUnicode_FromString(qstr_plugin_path.toStdString().c_str()));
-        assert(0 == nRes);
-
-        PyObject* sys_path2 = PySys_GetObject("path"); assert(nullptr != sys_path);
-        std::string str_path2 = PyUtils::PyObjToStr(sys_path2);
-        //astraModule_ = PyImport_ImportModule("astra_py.cp310-win_amd64.pyd");
-        astraModule_ = PyImport_ImportModule("astra_py");
-        assert(nullptr != astraModule_);
-        if(nullptr == astraModule_){
-            SetErrorMessage();
-            Py_FinalizeEx();
-            return false;
-        }
-        PyUtils::PyObjRaii py_rastr = PyObject_GetAttrString(astraModule_, "Rastr");
-        if (py_rastr && PyCallable_Check(py_rastr)) {
-            const uintptr_t ptr = reinterpret_cast<uintptr_t>(&IPlainRastr_);
-            PyObject* py_ptr = PyLong_FromUnsignedLongLong(ptr);
-            PyUtils::PyObjRaii py_arg = PyTuple_Pack(1, py_ptr);
-            Py_XDECREF(py_ptr);
-            if (!py_arg) {
-                return false;
-            }
-            rastrPyObject_ = PyObject_CallObject(py_rastr, py_arg);
-            if (PyErr_Occurred()){
-                SetErrorMessage();
-                return false;
-            }
-        }else{
-            if(PyErr_Occurred()){
-                SetErrorMessage();
-            }
-            return false;
-        }
-    }
-    isInitialized_ = true;
-    return true;
-}
-
-PyHlp::Result PyHlp::run(const std::string_view macroText)
-{
-    int nRes = 0;
-    if (!Initialize()){
-        return Result::Error;
-    }
-    PyObject* main_module = PyImport_AddModule("__main__"); // return borrowed reference
-    if(nullptr == main_module){
-        SetErrorMessage();
-        return Result::Error;
-    }
-    PyObject* py_globals = PyModule_GetDict(main_module); // return borrowed reference
-    if(nullptr == py_globals){
-        SetErrorMessage();
-        return Result::Error;
-    }
-    if(rastrPyObject_){
-        nRes = PyMapping_SetItemString(py_globals, "astra", astraModule_);assert(0 == nRes);
-        nRes = PyMapping_SetItemString(py_globals, "rastr", rastrPyObject_); assert(0 == nRes);
-        PyUtils::PyObjRaii py_compiled = Py_CompileString( macroText.data(), pch_run_fname_, Py_file_input );
-        if(py_compiled == nullptr){
-            SetErrorMessage();
-            return Result::SyntaxError;
-        }
-        PyUtils::PyObjRaii py_local = PyDict_New();
-        PyUtils::PyObjRaii py_res = PyEval_EvalCode(py_compiled, py_globals, py_local);
-        nRes = PyMapping_DelItemString(py_globals, "astra"); assert(-1 != nRes);
-        nRes = PyMapping_DelItemString(py_globals, "rastr"); assert(-1 != nRes);
-        if(PyErr_Occurred()){
-            SetErrorMessage();
-            return Result::RuntimeError;
-        }
-    }else{
-        if(PyErr_Occurred()){
-            SetErrorMessage();
-            return Result::Error;
-        }
-    }
-    return Result::Ok;
-}

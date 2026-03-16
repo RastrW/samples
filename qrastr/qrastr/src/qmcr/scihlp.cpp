@@ -2,34 +2,16 @@
 #include <QMessageBox>
 #include <QFontDatabase>
 #include <QTextStream>
-#include <iostream>
 #include "SciLexer.h"
 #include "scihlp.h"
 
-/*
-#pragma push_macro("slots")
-#undef slots // because it defined in Qt
-//#include "pyscript.h"
-#define Py_LIMITED_API  0x030A0000 //minimal version Python 3.10
-#define PY_SSIZE_T_CLEAN
-#include <Python.h>
-    //#ifdef _DEBUG
-    //#undef _DEBUG
-    //#include <Python.h>
-    //#define _DEBUG 1
-    //#else
-    //#include <Python.h>
-    //#endif
-#pragma pop_macro("slots")
-*/
 
 //all of wrapped shit can be found in -> ScintillaEdit.cpp <-
 //https://www.scintilla.org/PaneAPI.html
 //interesting scintilla use https://github.com/SolarAquarion/wxglterm/tree/master/src/external_plugins
 //https://github.com/mneuroth/SciTEQt
 SciHlp::SciHlp(QWidget *parent, Role role)
-    : ScintillaEdit(parent)
-    , role_(role){
+    : ScintillaEdit(parent){
     //By default,
     //margin 0 is set to display line numbers, but is given a width of 0, so it is hidden.
     //Margin 1 is set to display non-folding symbols and is given a width of 16 pixels, so it is visible.
@@ -39,12 +21,12 @@ SciHlp::SciHlp(QWidget *parent, Role role)
     //https://stackoverflow.com/questions/78522506/scintilla-will-not-highlight-or-codefold-in-my-c
     //https://www.purebasic.fr/english/viewtopic.php?t=68691
     //https://github.com/jacobslusser/ScintillaNET/issues/307
-    styleSetFont(STYLE_DEFAULT, MonospaceFont());
-    setMarginWidthN(margin_line_num_, 40);
-    setMarginWidthN(margin_fold_,     20);
-    setMarginMaskN(margin_fold_, SC_MASK_FOLDERS);
-    setMarginTypeN(margin_fold_, SC_MARGIN_SYMBOL);
-    setMarginSensitiveN(margin_fold_, true);
+    styleSetFont(STYLE_DEFAULT, monospaceFontName());
+    setMarginWidthN(k_marginLineNum, 40);
+    setMarginWidthN(k_marginFold,     20);
+    setMarginMaskN(k_marginFold, SC_MASK_FOLDERS);
+    setMarginTypeN(k_marginFold, SC_MARGIN_SYMBOL);
+    setMarginSensitiveN(k_marginFold, true);
     markerDefine(SC_MARKNUM_FOLDER,        SC_MARK_BOXPLUS);
     markerDefine(SC_MARKNUM_FOLDEROPEN,    SC_MARK_BOXMINUS);
     markerDefine(SC_MARKNUM_FOLDERSUB,     SC_MARK_VLINE);
@@ -95,8 +77,8 @@ SciHlp::SciHlp(QWidget *parent, Role role)
         setProperty("fold.quotes.python", "1");
         setAutomaticFold(SCI_SETAUTOMATICFOLD);
 
-        connect(this, &ScintillaEdit::marginClicked, this, &SciHlp::onMarginClicked);
-        connect(this, &ScintillaEdit::notify, this, &SciHlp::onNotify);
+        connect(this, &ScintillaEdit::marginClicked, this, &SciHlp::slot_marginClicked);
+        connect(this, &ScintillaEdit::notify, this, &SciHlp::slot_notify);
         setKeyWords(0,R"(
             False None True and as assert break class continue def del elif else
             except finally for from global if import in is lambda nonlocal not
@@ -135,7 +117,6 @@ SciHlp::SciHlp(QWidget *parent, Role role)
         setStyleHlp( SCE_P_FTRIPLEDOUBLE, _colors::green   );       // f""" """
         setStyleHlp( SCE_P_ATTRIBUTE ,    _colors::fuchsia );
     }else{
-        tstSci();// debug: trace all lexers
         //const std::string strLanguageName {"hypertext"};
         const std::string strLanguageName {"xml"};
         const void* plex = ( reinterpret_cast<CreateLexerFn>(pfn) )( strLanguageName.c_str() );
@@ -278,16 +259,16 @@ head
     }
 }
 
-const char* SciHlp::MonospaceFont(){
-    static char fontNameDefault[200] = "";
-    if (!fontNameDefault[0]) {
-        const QFont font = QFontDatabase::systemFont(QFontDatabase::FixedFont);
-        strcpy(fontNameDefault, font.family().toUtf8());
+const char* SciHlp::monospaceFontName(){
+    static std::string s_name;
+    if (s_name.empty()) {
+        const QFont f = QFontDatabase::systemFont(QFontDatabase::FixedFont);
+        s_name = f.family().toStdString();
     }
-    return fontNameDefault;
+    return s_name.c_str();
 }
 
-void SciHlp::tstSci(){
+void SciHlp::showAllLexer(){
 #if _WIN32 //https://www.scintilla.org/LexillaDoc.html
     typedef int ( __stdcall* _pfGetLexerCount)(void);
     const QFunctionPointer pfGetLexerCount = QLibrary::resolve("lexilla5", "GetLexerCount");
@@ -311,16 +292,17 @@ void SciHlp::tstSci(){
 }
 
 void SciHlp::showEvent(QShowEvent *event){
+    ScintillaEdit::showEvent(event);
 }
 
-void SciHlp::onMarginClicked(Scintilla::Position position,
+void SciHlp::slot_marginClicked(Scintilla::Position position,
                              Scintilla::KeyMod modifiers, int margin) {
-    if(margin == 1) {
+    if(margin == k_marginFold) {
         toggleFold(lineFromPosition(position));
     }
 }
 
-void SciHlp::onNotify(Scintilla::NotificationData* pnd){
+void SciHlp::slot_notify(Scintilla::NotificationData* pnd){
     switch (pnd->nmhdr.code) {
         case Scintilla::Notification::CharAdded:   { // I try https://www.scintilla.org/ScintillaUsage.html - "Implementing Auto-Indent" - but it's not work properly and I remake:
             if( (pnd->ch == '\r') || (pnd->ch == '\n') ) {
@@ -358,7 +340,8 @@ void SciHlp::onNotify(Scintilla::NotificationData* pnd){
     }
 }
 
-void SciHlp::setStyleHlp(sptr_t style, sptr_t fore, bool bold, bool italic, sptr_t back, bool underline, bool eolfilled){
+void SciHlp::setStyleHlp(sptr_t style, sptr_t fore, bool bold, bool italic,
+                         sptr_t back, bool underline, bool eolfilled){
     styleSetFore      ( style, fore      );
     styleSetBold      ( style, bold      );
     styleSetItalic    ( style, italic    );
@@ -368,20 +351,15 @@ void SciHlp::setStyleHlp(sptr_t style, sptr_t fore, bool bold, bool italic, sptr
 }
 
 SciHlp::RetVal SciHlp::setContent(const std::string& str_text){
-    bool bl_read_only_prev = false;
-    if(canPaste() == false){
-        bl_read_only_prev = true;
-        setReadOnly(false);
-    }
+    const bool wasReadOnly = !canPaste();
+    if (wasReadOnly) setReadOnly(false);
     setText(str_text.c_str());
-    //emptyUndoBuffer();
     setSavePoint();
-    if(bl_read_only_prev == true)
-        setReadOnly(true);
+    if (wasReadOnly) setReadOnly(true);
     return RetVal::Ok;
 }
 
-SciHlp::RetVal SciHlp::my_appendText(const std::string_view svTxt){
+SciHlp::RetVal SciHlp::appendTextCustom(const std::string_view svTxt){
     bool bl_read_only_prev = false;
     if(canPaste() == false){
         bl_read_only_prev = true;
@@ -399,24 +377,23 @@ bool SciHlp::isModified() const {
 }
 
 SciHlp::RetVal SciHlp::setFileInfo(const QFileInfo& fiNew ){
-    fiFileSource_ = fiNew;
-    emit chngFileInfo(fiNew);
+    m_fileInfo = fiNew;
+    emit sig_fileInfoChanged(fiNew);
     return RetVal::Ok;
 }
 
 const QFileInfo& SciHlp::getFileInfo() const {
-    return fiFileSource_;
+    return m_fileInfo;
 }
 
 SciHlp::RetVal SciHlp::saveToFile(){
     try{
-        QFile qFile{ fiFileSource_.absoluteFilePath() };
+        QFile qFile{ m_fileInfo.absoluteFilePath() };
         if(qFile.open(QIODevice::WriteOnly)==false){
             return RetVal::Failure;
         }
         QTextStream tsFile{&qFile};
-        QByteArray baContent { getText(textLength()+1) };
-        tsFile << QString::fromUtf8(baContent);
+        tsFile << QString::fromUtf8(getText(textLength()+1));
         tsFile.flush();
         qFile.close();
         setSavePoint();
@@ -428,14 +405,13 @@ SciHlp::RetVal SciHlp::saveToFile(){
 
 SciHlp::RetVal SciHlp::loadFromFile(){
     try{
-        QFile qFile{ fiFileSource_.absoluteFilePath() };
+        QFile qFile{ m_fileInfo.absoluteFilePath() };
         if(qFile.open(QIODevice::ReadOnly|QIODevice::Text)==false){
             return RetVal::Failure;
         }
         QString qstrFileContent{ qFile.readAll() };
         std::string str{ qstrFileContent.toStdString() };
-        setText(str.c_str()); // or
-        //setText(qstrFileContent.toLocal8Bit().data()); // https://wiki.qt.io/Technical_FAQ#How_can_I_convert_a_QString_to_char.2A_and_vice_versa.3F // не работает с русскими буквами
+        setText(str.c_str());
         qFile.close();
         setSavePoint();
     }catch(...){
@@ -444,26 +420,19 @@ SciHlp::RetVal SciHlp::loadFromFile(){
     return RetVal::Ok;
 }
 
-SciHlp::RetVal SciHlp::Find(FindParams params_find){
-    //SCFIND_NONE	    Default setting is case-insensitive literal match.
-    //SCFIND_MATCHCASE	A match only occurs with text that matches the case of the search string.
-    //SCFIND_WHOLEWORD	A match only occurs if the characters before and after are not word characters as defined by SCI_SETWORDCHARS.
-    //SCFIND_WORDSTART	A match only occurs if the character before is not a word character as defined by SCI_SETWORDCHARS.
-    //SCFIND_REGEXP	    The search string should be interpreted as a regular expression. Uses Scintilla's base implementation unless combined with SCFIND_CXX11REGEX.
-    //SCFIND_POSIX	    Treat regular expression in a more POSIX compatible manner by interpreting bare ( and ) for tagged sections rather than \( and \). Has no effect when SCFIND_CXX11REGEX is set.
-    //SCFIND_CXX11REGEX	This flag may be set to use C++11 <regex> instead of Scintilla's basic regular expressions. If the regular expression is invalid then -1 is returned and status is set to SC_STATUS_WARN_REGEX. The ECMAScript flag is set on the regex object and UTF-8 documents will exhibit Unicode-compliant behaviour. For MSVC, where wchar_t is 16-bits, the regular expression ".." will match a single astral-plane character. There may be other differences between compilers. Must also have SCFIND_REGEXP set.
-    const sptr_t n_flags {SCFIND_REGEXP};
-    setSearchFlags(n_flags);
-    const sptr_t n_pos_curr { currentPos()} ;
-    const sptr_t n_pos_max  { length()} ;
-    setTargetStart( n_pos_curr );
-    setTargetEnd  ( n_pos_max  );
-    const QByteArray qaFind = params_find.m_text.toUtf8();
-    const sptr_t n_pos_find = searchInTarget( qaFind.length(), qaFind );
-    if(-1 != n_pos_find){
-        gotoPos    ( targetStart() );
-        setSel     ( targetStart(), targetEnd() );
-        scrollRange( targetStart(), targetEnd() );
+SciHlp::RetVal SciHlp::find(FindParams params_find){
+    setSearchFlags(SCFIND_REGEXP);
+    const sptr_t posStart = currentPos();
+    const sptr_t posEnd   = length();
+    setTargetStart(posStart);
+    setTargetEnd(posEnd);
+
+    const QByteArray needle = params_find.m_text.toUtf8();
+    const sptr_t found = searchInTarget(needle.length(), needle.constData());
+    if (found != -1) {
+        gotoPos    (targetStart());
+        setSel     (targetStart(), targetEnd());
+        scrollRange(targetStart(), targetEnd());
         return RetVal::Ok;
     }
     return RetVal::Failure;

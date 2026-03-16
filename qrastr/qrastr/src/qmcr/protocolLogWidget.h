@@ -22,7 +22,7 @@ public slots:
     void onQStringAppendProtocol(const QString& qstr);
 
 private:
-    SciHlp* shProt_{ nullptr };
+    SciHlp* m_shProt{ nullptr };
     long    n_stage_max_id_{ 0 };
 
     /// HTML-экранирование (перенесено из McrWnd без изменений)

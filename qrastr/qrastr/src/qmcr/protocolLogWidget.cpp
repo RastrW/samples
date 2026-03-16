@@ -9,13 +9,13 @@ ProtocolLogWidget::ProtocolLogWidget(QWidget* parent)
     auto* layout = new QVBoxLayout(this);
     layout->setContentsMargins(0, 0, 0, 0);
 
-    shProt_ = new SciHlp(this, SciHlp::Role::ProtocolLog);
-    layout->addWidget(shProt_);
+    m_shProt = new SciHlp(this, SciHlp::Role::ProtocolLog);
+    layout->addWidget(m_shProt);
 }
 
 void ProtocolLogWidget::clear()
 {
-    shProt_->setContent("");
+    m_shProt->setContent("");
     n_stage_max_id_ = 0;
 }
 
@@ -28,7 +28,7 @@ void ProtocolLogWidget::onQStringAppendProtocol(const QString& qstr)
     str += qstr.toStdString();
     encodeHtml(str);
     str += "\n";
-    shProt_->my_appendText(str);
+    m_shProt->appendTextCustom(str);
 }
 
 void ProtocolLogWidget::onRastrLog(const _log_data& log_data)
@@ -45,7 +45,7 @@ void ProtocolLogWidget::onRastrLog(const _log_data& log_data)
         str += ">\t";
         str += log_data.str_msg;
         str += '\n';
-        shProt_->my_appendText(str);
+        m_shProt->appendTextCustom(str);
         n_stage_max_id_ = log_data.n_stage_id;
         return;
     }
@@ -55,7 +55,7 @@ void ProtocolLogWidget::onRastrLog(const _log_data& log_data)
         str += "</STAGE";
         str += std::to_string(log_data.n_stage_id);
         str += ">\n";
-        shProt_->my_appendText(str);
+        m_shProt->appendTextCustom(str);
         assert(n_stage_max_id_ == log_data.n_stage_id);
         if (n_stage_max_id_ == log_data.n_stage_id)
             --n_stage_max_id_;
@@ -65,12 +65,12 @@ void ProtocolLogWidget::onRastrLog(const _log_data& log_data)
     // Обычное сообщение — выводим как есть (без XML-тегов)
     str += log_data.str_msg;
     str += '\n';
-    shProt_->my_appendText(str);
+    m_shProt->appendTextCustom(str);
 }
 
 void ProtocolLogWidget::onRastrPrint(const std::string& str_msg)
 {
-    shProt_->my_appendText(str_msg);
+    m_shProt->appendTextCustom(str_msg);
 }
 
 void ProtocolLogWidget::encodeHtml(std::string& data)
