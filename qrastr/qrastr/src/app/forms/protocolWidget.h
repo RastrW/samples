@@ -12,12 +12,15 @@ class QStringListModel;
 class ProtocolTreeItem;
 class ProtocolTreeModel;
 class QTreeView;
+enum class LogMessageTypes;
+class QVBoxLayout;
+class QPushButton;
+class ProtocolFilterProxyModel;
 
-class ProtocolWidget : public QWidget
-{
+class ProtocolWidget : public QWidget {
     Q_OBJECT
 public:
-    explicit ProtocolWidget(QWidget *parent = nullptr);
+    explicit ProtocolWidget(QWidget* parent = nullptr);
     ~ProtocolWidget() = default;
 
     void setIgnoreAppendProtocol(bool bl_ignore);
@@ -27,16 +30,23 @@ public slots:
 
 private slots:
     void onAppendProtocol(const QString& qstr);
+    void applyFilter(const QSet<LogMessageTypes>& filter);
 
 private:
-    ProtocolTreeModel*
-        m_protocolTreeModel;
-    std::stack< std::shared_ptr<ProtocolTreeItem> >
-        m_sptiSstages;
-    Qtitan::TreeGrid*
-        m_ptg;
-    QTreeView*
-        twProtocol;
-    bool
-        m_ignoreAppendProtocol {false};
+    void setupFilterPanel(QVBoxLayout* layout);
+    void setupTreeView(QVBoxLayout* layout);
+    QPixmap iconByIndex(int idx) const;
+    ProtocolTreeModel*      m_model        = nullptr;
+    ProtocolFilterProxyModel* m_proxy      = nullptr;
+    QTreeView*              m_treeView     = nullptr;
+    std::stack<std::shared_ptr<ProtocolTreeItem>> m_stages;
+
+    // Кнопки фильтрации
+    QPushButton* m_btnAll     = nullptr;
+    QPushButton* m_btnError   = nullptr;
+    QPushButton* m_btnWarning = nullptr;
+    QPushButton* m_btnMessage = nullptr;
+    QPushButton* m_btnInfo    = nullptr;
+
+    bool m_ignoreAppendProtocol = false;
 };

@@ -43,5 +43,18 @@
 		<file>images/grid/redArrowRight.png</file>
 		<file>images/grid/greenArrowLeft.png</file>
 		<file>images/grid/greenArrowRight.png</file>
+		<file>images/new_style/back.png</file>
+		<file>images/new_style/collapse.png</file>
+		<file>images/new_style/expand.png</file>
+		<file>images/new_style/forward.png</file>
+		<file>images/new_style/cancellation.png</file>
+		<file>images/new_style/error.png</file>
+		<file>images/new_style/idea.png</file>
+		<file>images/new_style/save all.png</file>
+		<file>images/new_style/save as.png</file>
+		<file>images/new_style/save.png</file>
+		<file>images/new_style/verified.png</file>
+		<file>images/new_style/information.png</file>
+		<file>images/new_style/read.png</file>
     </qresource>
 </RCC>

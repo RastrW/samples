@@ -212,11 +212,11 @@ void RtabWidget::setupToolbar() {
 
     // Qtitan::Grid имеет встроенную кнопку поиска/фильтрации
     // Операции с данными
-    m_actAddRow = m_toolbar->addAction(QIcon(":/images/Rastr3_grid_addrow_16x16.png"), "Добавить");
-    m_actInsertRow = m_toolbar->addAction(QIcon(":/images/Rastr3_grid_insrow_16x16.png"), "Вставить");
-    m_actDeleteRow = m_toolbar->addAction(QIcon(":/images/Rastr3_grid_delrow_16x16.png"), "Удалить");
-    m_actDuplicateRow = m_toolbar->addAction(QIcon(":/images/Rastr3_grid_duprow_16x161.png"), "Дублировать");
-    m_groupCorrection = m_toolbar->addAction(QIcon(":/images/column_edit.png"), "Групповая коррекция");
+    m_actAddRow = m_toolbar->addAction(QIcon(":/images/Rastr3_grid_addrow_16x16.png"), "");
+    m_actInsertRow = m_toolbar->addAction(QIcon(":/images/Rastr3_grid_insrow_16x16.png"), "");
+    m_actDeleteRow = m_toolbar->addAction(QIcon(":/images/Rastr3_grid_delrow_16x16.png"), "");
+    m_actDuplicateRow = m_toolbar->addAction(QIcon(":/images/Rastr3_grid_duprow_16x161.png"), "");
+    m_groupCorrection = m_toolbar->addAction(QIcon(":/images/column_edit.png"), "");
 
     connect(m_actAddRow,       &QAction::triggered, this, &RtabWidget::slot_addRow);
     connect(m_actInsertRow,    &QAction::triggered, this, &RtabWidget::slot_insertRow);
