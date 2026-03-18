@@ -72,7 +72,7 @@ MainWindow::MainWindow()
                      });
 
     // Создаём виджеты протоколов и СРАЗУ добавляем Qt-синки в логгер.
-    setupLogDockWidgets();
+    createLogWidgets();
     setupLogSinks();
 }
 
@@ -128,24 +128,30 @@ void MainWindow::initialize(
     if (!adsState.isEmpty()) {
         m_dockManager->restoreState(adsState);
     }
+
+    // Создаём виджеты протоколов и СРАЗУ добавляем Qt-синки в логгер.
+    setupLogDockWidgets();
+
     // Вывод кэшированных логов
     m_settingsManager->flushLogCache();
 
     spdlog::info("MainWindow initialized successfully");
 }
 
-void MainWindow::setupLogDockWidgets() {
-    m_globalProtocol = new ProtocolLogWidget(this);
-
-    auto* dockProtocol = new ads::CDockWidget("Общий протокол", this);
-    dockProtocol->setWidget(m_globalProtocol);
-    dockProtocol->setFeature(ads::CDockWidget::CustomCloseHandling, true);
-    m_dockManager->addDockWidgetTab(ads::BottomDockWidgetArea, dockProtocol);
+void MainWindow::createLogWidgets(){
+   m_globalProtocol = new ProtocolLogWidget(this);
 
     // Главный протокол
     m_mainProtocol = new ProtocolWidget(this);
     //Если необходимо, чтобы в FormProtocol был вывод spdlog, необходимо включить эту настройку
     m_mainProtocol->setIgnoreAppendProtocol(true);
+}
+
+void MainWindow::setupLogDockWidgets() {
+    auto* dockProtocol = new ads::CDockWidget("globalProtocol", this);
+    dockProtocol->setWidget(m_globalProtocol);
+    dockProtocol->setFeature(ads::CDockWidget::CustomCloseHandling, true);
+    m_dockManager->addDockWidgetTab(ads::BottomDockWidgetArea, dockProtocol);
 
     auto dockMainProtocol = new ads::CDockWidget("Протокол Astra", this);
     dockMainProtocol->setWidget(m_mainProtocol);

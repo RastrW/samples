@@ -36,7 +36,6 @@ QVariant RModel::headerData(int section, Qt::Orientation orientation, int role) 
 {
     if (role != Qt::DisplayRole) return {};
     if (orientation == Qt::Horizontal){
-        auto c = m_rdata->at(section).getTitle().c_str();
         return m_rdata->at(section).getTitle().c_str();
     }
     return section + 1;

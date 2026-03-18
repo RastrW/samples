@@ -2,6 +2,7 @@
 #include <QWidget>
 #include <SDL3/SDL.h>
 #include <SDL3_image/SDL_image.h>
+#include "IPlainElGraph.h"
 
 class SDLChild : public QWidget {
     Q_OBJECT

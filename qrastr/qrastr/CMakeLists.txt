@@ -275,6 +275,7 @@ list(APPEND PROJECT_INCLUDES ${FMT_INCLUDES})
 list(APPEND PROJECT_INCLUDES
     ${ASTRA_ROOT}/include
     ${ASTRA_ROOT}/include/comck
+    ${EL_GRAPH_CTRL_DIR}/include
 )
 # ============================================================================
 # Source Files
@@ -490,6 +491,42 @@ endif()
 
 message(STATUS "SVGgenerator: ${SVG_DLL_FILE}")
 
+# ============================================================================
+# ELGRAPHCTRL Library
+# ============================================================================
+if(NOT EL_GRAPH_CTRL_DIR)
+    message(FATAL_ERROR "EL_GRAPH_CTRL_DIR must be set in CMakePresets.json")
+endif()
+
+if(WIN32)
+    set(EGC_PLATFORM_DIR "${EL_GRAPH_CTRL_DIR}/win")
+    set(EGC_DLL_FILE     "${EGC_PLATFORM_DIR}/${CONFIG_DIR}/ElGraphCtrl.dll")
+else()
+    set(EGC_PLATFORM_DIR "${EL_GRAPH_CTRL_DIR}/linux")
+    set(EGC_DLL_FILE     "${EGC_PLATFORM_DIR}/${CONFIG_DIR}/libElGraphCtrl.so")
+endif()
+
+# Копируем .dll/.so в папку с исполняемым файлом после сборки
+add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
+    COMMAND ${CMAKE_COMMAND} -E copy_if_different
+        "${EGC_DLL_FILE}"
+        "$<TARGET_FILE_DIR:${PROJECT_NAME}>/"
+    COMMENT "Copying ElGraphCtrl (${CONFIG_DIR})"
+)
+
+if(WIN32 AND CMAKE_BUILD_TYPE MATCHES Debug)
+    set(EGC_PDB_FILE "${EGC_PLATFORM_DIR}/${CONFIG_DIR}/ElGraphCtrl.pdb")
+    if(EXISTS "${EGC_PDB_FILE}")
+        add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
+            COMMAND ${CMAKE_COMMAND} -E copy_if_different
+                "${EGC_PDB_FILE}"
+                "$<TARGET_FILE_DIR:${PROJECT_NAME}>/"
+            COMMENT "Copying ElGraphCtrl PDB"
+        )
+    endif()
+endif()
+
+message(STATUS "ElGraphCtrl: ${EGC_DLL_FILE}")
 # ============================================================================
 # Include Directories
 # ============================================================================
