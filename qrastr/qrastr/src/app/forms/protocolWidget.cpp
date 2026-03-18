@@ -5,14 +5,13 @@
 #include <QGridLayout>
 #include <QTreeView>
 #include <QHeaderView>
+#include <QPushButton>
 #include <initializer_list>
-
 #include "protocolWidget.h"
 #include "protocoltreeitem.h"
 #include "protocoltreemodel.h"
 #include "protocolFilterProxyModel.h"
 #include "qastra_events_data.h"
-#include <QtitanGrid.h>
 
 static const char* kIconPaths[] = {
     ":images/new_style/information.png",  // 0 — about/info
@@ -22,24 +21,6 @@ static const char* kIconPaths[] = {
     ":images/new_style/idea.png",         // 4 — message
 };
 
-static int iconIndexForMessage(LogMessageTypes lmt) {
-    switch (lmt) {
-    case LogMessageTypes::SystemError:
-    case LogMessageTypes::Failed:
-    case LogMessageTypes::Error:   return 2;
-    case LogMessageTypes::Warning: return 3;
-    case LogMessageTypes::Message: return 4;
-    case LogMessageTypes::Info:    return 0;
-    default:                       return -1;
-    }
-}
-
-static int iconIndexForStage(const ProtocolTreeItem* item) {
-    if (item->errors()   > 0) return 2;  // cancellation
-    if (item->warnings() > 0) return 3;  // warning
-    if (item->messages() > 0) return 4;  // idea
-    return 1;                            // verified — всё хорошо
-}
 
 ProtocolWidget::ProtocolWidget(QWidget* parent)
     : QWidget(parent)
@@ -179,9 +160,9 @@ void ProtocolWidget::setupTreeView(QVBoxLayout* layout) {
     m_treeView->header()->setSectionResizeMode(0, QHeaderView::ResizeToContents);
 
     QFont monoFont = QFontDatabase::systemFont(QFontDatabase::FixedFont);
-    //QFontDatabase::FixedFont` возвращает:
-    //- **Windows** — `Consolas` (или `Courier New` на старых системах)
-    //- **Linux** — `DejaVu Sans Mono`, `Liberation Mono`, `Monospace` — в зависимости от дистрибутива
+    ///@note QFontDatabase::FixedFont` возвращает:
+    ///- **Windows** — `Consolas` (или `Courier New` на старых системах)
+    ///- **Linux** — `DejaVu Sans Mono`, `Liberation Mono`, `Monospace` — в зависимости от дистрибутива
     m_treeView->setFont(monoFont);
 
     layout->addWidget(m_treeView);
@@ -240,6 +221,25 @@ void ProtocolWidget::onAppendProtocol(const QString& qstr) {
         m_stages.top().get());
     m_stages.top()->appendChild(sp);
     m_model->layoutChanged();
+}
+
+int ProtocolWidget::iconIndexForMessage(LogMessageTypes lmt) const{
+    switch (lmt) {
+    case LogMessageTypes::SystemError:
+    case LogMessageTypes::Failed:
+    case LogMessageTypes::Error:   return 2;
+    case LogMessageTypes::Warning: return 3;
+    case LogMessageTypes::Message: return 4;
+    case LogMessageTypes::Info:    return 0;
+    default:                       return -1;
+    }
+}
+
+int ProtocolWidget::iconIndexForStage(const ProtocolTreeItem* item) const{
+    if (item->errors()   > 0) return 2;  // cancellation
+    if (item->warnings() > 0) return 3;  // warning
+    if (item->messages() > 0) return 4;  // idea
+    return 1;                            // verified — всё хорошо
 }
 
 QPixmap ProtocolWidget::iconByIndex(int idx) const {

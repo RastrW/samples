@@ -40,8 +40,6 @@ public:
      * There may be other differences between compilers. Must also have SCFIND_REGEXP set.
     */
     RetVal find(const FindParams& params);
-    void   gotoLine(sptr_t zeroBasedLine);
-
 signals:
     void sig_fileInfoChanged(const QFileInfo& fi);
 

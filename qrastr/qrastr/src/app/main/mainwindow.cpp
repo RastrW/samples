@@ -135,10 +135,9 @@ void MainWindow::initialize(
 }
 
 void MainWindow::setupLogDockWidgets() {
-    // Окно макросов  
     m_globalProtocol = new ProtocolLogWidget(this);
 
-    auto* dockProtocol = new ads::CDockWidget("protocol", this);
+    auto* dockProtocol = new ads::CDockWidget("Общий протокол", this);
     dockProtocol->setWidget(m_globalProtocol);
     dockProtocol->setFeature(ads::CDockWidget::CustomCloseHandling, true);
     m_dockManager->addDockWidgetTab(ads::BottomDockWidgetArea, dockProtocol);
@@ -148,7 +147,7 @@ void MainWindow::setupLogDockWidgets() {
     //Если необходимо, чтобы в FormProtocol был вывод spdlog, необходимо включить эту настройку
     m_mainProtocol->setIgnoreAppendProtocol(true);
 
-    auto dockMainProtocol = new ads::CDockWidget("protocolMain", this);
+    auto dockMainProtocol = new ads::CDockWidget("Протокол Astra", this);
     dockMainProtocol->setWidget(m_mainProtocol);
     dockMainProtocol->setFeature(ads::CDockWidget::CustomCloseHandling, true);
     m_dockManager->addDockWidgetTab(ads::BottomDockWidgetArea, dockMainProtocol);

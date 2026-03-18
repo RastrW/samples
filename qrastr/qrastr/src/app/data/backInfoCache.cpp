@@ -88,8 +88,8 @@ void BackInfoCache::rebuild(const RData& rdata, RTablesDataManager* pRTDM)
             if (!iconMap.isEmpty()) {
                 int maxVal = iconMap.lastKey();
                 for (int v = 0; v <= maxVal; ++v) {
-                    QPixmap px = iconMap.contains(v) ? iconByQtitanIndex(iconMap[v]) : QPixmap();
-                    items.append({ "", iconMap.value(v, -1), px });
+                    QPixmap px = iconMap.contains(v) ? iconByIndex(iconMap[v]) : QPixmap();
+                    items.append({ "", px });
                 }
             }
             m_pictureEnums.emplace(idx, std::move(items));
@@ -169,7 +169,7 @@ QMap<int, int> BackInfoCache::parseEnpicNameref(const std::string& nameref)
     return result;
 }
 
-QPixmap BackInfoCache::iconByQtitanIndex(int idx)
+QPixmap BackInfoCache::iconByIndex(int idx)
 {
     static const char* paths[] = {
         ":/images/grid/checkMark.png",
@@ -185,13 +185,13 @@ QPixmap BackInfoCache::iconByQtitanIndex(int idx)
     };
 
     if (idx < 0 || idx >= static_cast<int>(std::size(paths))) {
-        qWarning() << "iconByQtitanIndex: unknown idx=" << idx;
+        qWarning() << "iconByIndex: unknown idx=" << idx;
         return {};
     }
 
     QPixmap px(paths[idx]);
     if (px.isNull())
-        qWarning() << "iconByQtitanIndex: pixmap is NULL for idx=" << idx;
+        qWarning() << "iconByIndex: pixmap is NULL for idx=" << idx;
 
     return px.scaled(16, 16, Qt::KeepAspectRatio, Qt::SmoothTransformation);
 }

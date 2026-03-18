@@ -149,10 +149,6 @@ McrWnd::SavePromptResult McrWnd::promptSaveIfModified()
 
 void McrWnd::closeEvent(QCloseEvent* event)
 {
-    if (m_dlgFind) {
-        m_dlgFind->close();
-    }
-
     const auto result = promptSaveIfModified();
     if (result == SavePromptResult::Cancelled) {
         event->ignore();
@@ -257,16 +253,12 @@ void McrWnd::slot_goToLine()
 
 void McrWnd::slot_find()
 {
-    if (!m_dlgFind) {
-        m_dlgFind = new DlgFindRepl(this);
-        m_dlgFind->setAttribute(Qt::WA_DeleteOnClose);
-        connect(m_dlgFind, &DlgFindRepl::sig_find,
-                this, &McrWnd::slot_findByParams);
-    }
+    auto dlgFind = new DlgFindRepl(this);
+    dlgFind->setAttribute(Qt::WA_DeleteOnClose);
+    connect(dlgFind, &DlgFindRepl::sig_find,
+            this, &McrWnd::slot_findByParams);
 
-    m_dlgFind->show();
-    m_dlgFind->raise();
-    m_dlgFind->activateWindow();
+    dlgFind->show();
 }
 
 void McrWnd::slot_findByParams(SciPyEditor::FindParams params_find)

@@ -47,7 +47,6 @@ private:
 
     SciPyEditor*             m_editor{nullptr};
     ProtocolLogWidget*  m_logWidget{ nullptr };
-    DlgFindRepl*        m_dlgFind{ nullptr};
     QVBoxLayout*        m_mainLayout  {nullptr};
 
     std::shared_ptr<PyHlp> m_pyHlp;

@@ -6,7 +6,6 @@
 namespace Ui{
     class FormProtocol;
 }
-namespace Qtitan{ class TreeGrid;}
 struct _log_data;
 class QStringListModel;
 class ProtocolTreeItem;
@@ -36,6 +35,9 @@ private:
     void setupFilterPanel(QVBoxLayout* layout);
     void setupTreeView(QVBoxLayout* layout);
     QPixmap iconByIndex(int idx) const;
+    int iconIndexForMessage(LogMessageTypes lmt) const;
+    int iconIndexForStage(const ProtocolTreeItem* item) const;
+
     ProtocolTreeModel*      m_model        = nullptr;
     ProtocolFilterProxyModel* m_proxy      = nullptr;
     QTreeView*              m_treeView     = nullptr;

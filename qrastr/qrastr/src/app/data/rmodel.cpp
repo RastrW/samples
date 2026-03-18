@@ -35,7 +35,10 @@ int RModel::columnCount(const QModelIndex&) const { return static_cast<int>(m_rd
 QVariant RModel::headerData(int section, Qt::Orientation orientation, int role) const
 {
     if (role != Qt::DisplayRole) return {};
-    if (orientation == Qt::Horizontal) return m_rdata->at(section).getTitle().c_str();
+    if (orientation == Qt::Horizontal){
+        auto c = m_rdata->at(section).getTitle().c_str();
+        return m_rdata->at(section).getTitle().c_str();
+    }
     return section + 1;
 }
 

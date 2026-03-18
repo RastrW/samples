@@ -105,13 +105,10 @@ void SciPyEditor::slot_notify(Scintilla::NotificationData* pnd){
                     linebuf[pos] = '\0';
                     setSelection(n_curr_pos,n_curr_pos);
                     replaceSel(linebuf);
-                    //sptr_t spTxtLen = textLength();
-                    //QByteArray qbaTxt =  getText(spTxtLen);
-                    //qDebug("\n");
                 }
             }
         }
-    }//case Scintilla::Notification::CharAdded:
+    }
     break;
     }
 }
@@ -181,9 +178,4 @@ SciHlpBase::RetVal SciPyEditor::find(const FindParams& params)
     setSel     (targetStart(), targetEnd());
     scrollRange(targetStart(), targetEnd());
     return RetVal::Ok;
-}
-
-void SciPyEditor::gotoLine(sptr_t zeroBasedLine)
-{
-    ScintillaEdit::gotoLine(zeroBasedLine);
 }

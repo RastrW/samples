@@ -13,7 +13,6 @@ class BackInfoCache
 public:
     struct PictureItem {
         QString label;
-        int     qtitanIconIndex = -1;
         QPixmap image;
     };
 
@@ -28,7 +27,7 @@ public:
 
 private:
     static QMap<int, int> parseEnpicNameref(const std::string& nameref);
-    static QPixmap        iconByQtitanIndex(int idx);
+    static QPixmap        iconByIndex(int idx);
 
     // индекс колонки → список строк: ex. "БАЗА|Ген|Нагр|Ген+"
     std::map<size_t, QStringList>                         m_enum;
