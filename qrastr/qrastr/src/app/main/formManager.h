@@ -15,6 +15,7 @@ class RtabWidget;
 class CUIForm;
 class PyHlp;
 class GraphServer;
+class GraphSDLManager;
 
 namespace ads {
     class CDockManager;
@@ -106,9 +107,12 @@ private:
     QMap<QString, int> m_formNameToIndex;           // Быстрый поиск
 
     // ========== Графика ==========
+    //web
     GraphServer* m_graphServer  = nullptr;
     //счётчик открытых окон, при m_graphDockCount = 0 => остановка сервера
     int          m_graphDockCount = 0;
+    //sdl
+    GraphSDLManager* m_graphSDLManager = nullptr;
     /** @brief
      * Список ВСЕХ открытых форм
      * Используется для передачи сигналов расчётов

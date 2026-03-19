@@ -13,8 +13,8 @@
 #include "utils.h"
 using WrapperExceptionType = std::runtime_error;
 #include "astra/IPlainRastrWrappers.h"
-#include "graphServer.h"
-#include "SDLChild.h"
+#include "web/graphServer.h"
+#include "sdl/GraphSDLManager.h"
 
 FormManager::FormManager
     (std::shared_ptr<QAstra> qastra,
@@ -31,7 +31,9 @@ FormManager::FormManager
     assert(m_dockManager != nullptr);
     assert(m_pPyHlp != nullptr);
 
-   m_rtdm.setQAstra(qastra.get());
+    m_rtdm.setQAstra(qastra.get());
+
+    m_graphSDLManager = new GraphSDLManager(m_dockManager, m_parentWidget, m_qastra->getRastr().get(), this);
 }
 
 void FormManager::setForms(const std::list<CUIForm>& forms) {
@@ -100,32 +102,7 @@ void FormManager::openForm(const CUIForm& form) {
 }
 
 void FormManager::openSDLGraph() {
-    if (!SDL_Init(SDL_INIT_VIDEO)) {
-        spdlog::error("SDL_Init failed: {}", SDL_GetError());
-        return;
-    }
-
-    auto* dw       = new ads::CDockWidget(tr("Графика SDL"), m_parentWidget);
-    auto* sdlChild = new SDLChild(dw);
-
-    dw->setWidget(sdlChild);
-    dw->setFeature(ads::CDockWidget::DockWidgetDeleteOnClose, true);
-
-    // Регистрируем в общем списке — теперь участвует в cascade/tile
-    registerDockWidget(dw);
-
-    m_dockManager->addDockWidgetTab(ads::TopDockWidgetArea, dw);
-
-    // SDL инициализируется ПОСЛЕ того, как виджет встроен в иерархию окон,
-    // иначе winId() ещё не назначен нативному окну
-    if (!sdlChild->SDLInit()) {
-        spdlog::error("SDLChild::SDLInit failed");
-    }
-
-    // Завершаем SDL когда доковый виджет закрывается
-    connect(dw, &ads::CDockWidget::closed,
-            sdlChild, &SDLChild::OnClose);
-
+    m_graphSDLManager->openWindow();
     emit formOpened("Графика SDL");
 }
 

@@ -1,5 +1,6 @@
 #include "elGraphService.h"
 #include <spdlog/spdlog.h>
+#include <QCoreApplication>
 
 #if defined(Q_OS_WIN)
 using InitPlainDLL_t = IPlainElGraph* (__cdecl*)();
@@ -7,8 +8,13 @@ using InitPlainDLL_t = IPlainElGraph* (__cdecl*)();
 ///@todo что делать на linux?
 #endif
 
-ElGraphService::~ElGraphService()
-{
+ElGraphService::ElGraphService(){
+    const QString libDir = QCoreApplication::applicationDirPath() + "/";
+    //Qt сам добавит .dll / .so / .dylib
+    m_lib.setFileName(libDir + "ElGraphCtrl");
+}
+
+ElGraphService::~ElGraphService(){
     shutdown();
 }
 

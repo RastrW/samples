@@ -255,7 +255,7 @@ set(PROJECT_INCLUDES
     ${APP_DIR}/main/
     ${APP_DIR}/mdi/
     ${APP_DIR}/protocol_tree/
-    ${APP_DIR}/sdl/
+    ${APP_DIR}/graphics/
     ${APP_DIR}/ui_components/
     ${APP_DIR}/utilities/
     ${APP_DIR}/astra/astra_headers
@@ -296,8 +296,8 @@ file(GLOB_RECURSE PROJECT_SOURCES
     "${APP_DIR}/formatting/*.h"
     "${APP_DIR}/utilities/*.cpp"
     "${APP_DIR}/utilities/*.h"
-    "${APP_DIR}/sdl/*.cpp"
-    "${APP_DIR}/sdl/*.h"
+    "${APP_DIR}/graphics/*.cpp"
+    "${APP_DIR}/graphics/*.h"
     "${APP_DIR}/astra/*.cpp"
     "${APP_DIR}/astra/*.h"
     "${APP_DIR}/astra/astra_headers/*.h"

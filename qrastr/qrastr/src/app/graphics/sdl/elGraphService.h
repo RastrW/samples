@@ -3,12 +3,11 @@
 #include <QLibrary>
 #include "IPlainElGraph.h"
 
-
 // Инкапсулирует загрузку ElGraphCtrl.dll и владение IPlainElGraph*.
 class ElGraphService
 {
 public:
-    ElGraphService() = default;
+    ElGraphService();
     ElGraphService(const ElGraphService&)            = delete;
     ElGraphService& operator=(const ElGraphService&) = delete;
     ElGraphService(ElGraphService&&)            = delete;
@@ -18,20 +17,14 @@ public:
 
     // Загружает DLL, вызывает InitPlainDLL(), затем CreateChildWindow(parentHwnd).
     // parentHwnd — нативный HWND окна SDL на Windows, nullptr на других платформах.
-    // При любой ошибке логирует через spdlog и возвращает false.
-    // После успешного вызова isLoaded() == true.
     bool init(void* parentHwnd);
-
     // Уничтожает grc и выгружает библиотеку.
     // Безопасно вызывать повторно.
     void shutdown();
-
     // Доступ к интерфейсу библиотеки (nullptr если не загружена)
     IPlainElGraph* graph() const { return m_grc; }
     bool isLoaded()        const { return m_grc != nullptr; }
-
 private:
-    // QLibrary("ElGraphCtrl") — Qt сам добавит .dll / .so / .dylib
-    QLibrary       m_lib{"ElGraphCtrl"};
+    QLibrary       m_lib;
     IPlainElGraph* m_grc = nullptr;
 };
