@@ -527,6 +527,43 @@ if(WIN32 AND CMAKE_BUILD_TYPE MATCHES Debug)
 endif()
 
 message(STATUS "ElGraphCtrl: ${EGC_DLL_FILE}")
+
+# ============================================================================
+# GRCTRLCLIENT Library
+# ============================================================================
+if(NOT GR_CTRL_CLIENT_DIR)
+    message(FATAL_ERROR "GR_CTRL_CLIENT_DIR must be set in CMakePresets.json")
+endif()
+
+if(WIN32)
+    set(GR_CTRL_CLIENT_PLATFORM_DIR "${GR_CTRL_CLIENT_DIR}/win")
+    set(GR_CTRL_CLIENT_DLL_FILE     "${GR_CTRL_CLIENT_PLATFORM_DIR}/${CONFIG_DIR}/GraphClient.dll")
+else()
+    set(GR_CTRL_CLIENT_PLATFORM_DIR "${GR_CTRL_CLIENT_DIR}/linux")
+    set(GR_CTRL_CLIENT_DLL_FILE     "${GR_CTRL_CLIENT_PLATFORM_DIR}/${CONFIG_DIR}/libGraphClient.so")
+endif()
+
+# Копируем .dll/.so в папку с исполняемым файлом после сборки
+add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
+    COMMAND ${CMAKE_COMMAND} -E copy_if_different
+        "${GR_CTRL_CLIENT_DLL_FILE}"
+        "$<TARGET_FILE_DIR:${PROJECT_NAME}>/"
+    COMMENT "Copying GrCtrlClient (${CONFIG_DIR})"
+)
+
+if(WIN32 AND CMAKE_BUILD_TYPE MATCHES Debug)
+    set(GR_CTRL_CLIENT_PDB_FILE "${GR_CTRL_CLIENT_PLATFORM_DIR}/${CONFIG_DIR}/GraphClient.pdb")
+    if(EXISTS "${GR_CTRL_CLIENT_PDB_FILE}")
+        add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
+            COMMAND ${CMAKE_COMMAND} -E copy_if_different
+                "${GR_CTRL_CLIENT_PDB_FILE}"
+                "$<TARGET_FILE_DIR:${PROJECT_NAME}>/"
+            COMMENT "Copying GrCtrlClient PDB"
+        )
+    endif()
+endif()
+
+message(STATUS "GrCtrlClient: ${GR_CTRL_CLIENT_DLL_FILE}")
 # ============================================================================
 # Include Directories
 # ============================================================================

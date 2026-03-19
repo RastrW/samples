@@ -3,28 +3,14 @@
 #include <QLibrary>
 #include "IPlainElGraph.h"
 
-// Вызывательное соглашение InitPlainDLL — __cdecl только на Windows.
-// На других платформах DLL скорее всего недоступна,
-// но код должен компилироваться без ошибок.
-#if defined(Q_OS_WIN)
-using InitPlainDLL_t = IPlainElGraph* (__cdecl*)();
-#else
-using InitPlainDLL_t = IPlainElGraph* (*)();
-#endif
 
 // Инкапсулирует загрузку ElGraphCtrl.dll и владение IPlainElGraph*.
-// Не синглтон — каждый SDLChild владеет своим экземпляром.
-// Время жизни: ровно такое же, как у владеющего SDLChild.
 class ElGraphService
 {
 public:
     ElGraphService() = default;
-
-    // Запрет копирования: QLibrary и IPlainElGraph* — уникальные ресурсы
     ElGraphService(const ElGraphService&)            = delete;
     ElGraphService& operator=(const ElGraphService&) = delete;
-
-    // Перемещение не нужно — объект живёт как поле SDLChild
     ElGraphService(ElGraphService&&)            = delete;
     ElGraphService& operator=(ElGraphService&&) = delete;
 

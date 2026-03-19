@@ -1,6 +1,11 @@
 #include "elGraphService.h"
-
 #include <spdlog/spdlog.h>
+
+#if defined(Q_OS_WIN)
+using InitPlainDLL_t = IPlainElGraph* (__cdecl*)();
+#else
+///@todo что делать на linux?
+#endif
 
 ElGraphService::~ElGraphService()
 {
@@ -38,17 +43,14 @@ bool ElGraphService::init(void* parentHwnd)
     }
 
     // ── 4. Встраиваем в нативное окно ───────────────────────────────────────
-    // CreateChildWindow возвращает IPlainElGraphResult* — его нужно уничтожить
-    // через Destroy() (объект создан внутри DLL, delete недопустим)
+    // CreateChildWindow возвращает IPlainElGraphResult*
     IPlainElGraphResult* res = m_grc->CreateChildWindow(parentHwnd);
     if (res) {
         if (res->Code() != IPlainElGraphRetCode::Ok) {
             spdlog::error("ElGraphService: CreateChildWindow вернул ошибку — {}",
                           res->What() ? res->What() : "(нет сообщения)");
-            // Не фатально на первом этапе:
-            // DLL загружена, grc валиден, окно можно открыть позже
         }
-        res->Destroy();   // обязательно: объект из DLL, не delete!
+        res->Destroy();
     }
 
     spdlog::info("ElGraphService: ElGraphCtrl успешно инициализирован");
@@ -58,7 +60,6 @@ bool ElGraphService::init(void* parentHwnd)
 void ElGraphService::shutdown()
 {
     if (m_grc) {
-        // Destroy(), не delete: объект создан внутри DLL
         m_grc->Destroy();
         m_grc = nullptr;
     }

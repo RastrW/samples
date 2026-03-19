@@ -2,7 +2,9 @@
 #include <QWidget>
 #include <SDL3/SDL.h>
 #include <SDL3_image/SDL_image.h>
-#include "IPlainElGraph.h"
+#include "elGraphService.h"
+
+class ElGraphService;
 
 class SDLChild : public QWidget {
     Q_OBJECT
@@ -23,7 +25,11 @@ private slots:
 private:
     SDL_Window*   m_window   = nullptr;
     SDL_Renderer* m_renderer = nullptr;
-    SDL_Texture*  m_texture  = nullptr;
     QTimer*       m_timer    = nullptr;
+
+    ElGraphService m_elGraph;
+
+    SDL_AppResult SDL_Fail();
+    SDL_AppResult SDL_OK();
 };
 

@@ -4,6 +4,7 @@
 #include <QDir>
 #include <QDebug>
 #include <QResizeEvent>
+#include <spdlog/spdlog.h>
 
 SDLChild::SDLChild(QWidget* parent) : QWidget(parent) {
     setAttribute(Qt::WA_NativeWindow);   // нужен нативный HWND/XID
@@ -16,18 +17,13 @@ SDLChild::SDLChild(QWidget* parent) : QWidget(parent) {
 
 SDLChild::~SDLChild() {
     m_timer->stop();
-    if (m_texture)  SDL_DestroyTexture(m_texture);
-    if (m_renderer) SDL_DestroyRenderer(m_renderer);
-    if (m_window)   SDL_DestroyWindow(m_window);
-    SDL_Quit();
-}
 
-SDL_AppResult SDL_Fail(){
-    SDL_LogError(SDL_LOG_CATEGORY_CUSTOM, "Error %s", SDL_GetError());
-    return SDL_APP_FAILURE;
-}
-SDL_AppResult SDL_OK(){
-    return SDL_APP_SUCCESS;
+    if (m_renderer)
+        SDL_DestroyRenderer(m_renderer);
+    if (m_window)
+        SDL_DestroyWindow(m_window);
+
+    SDL_Quit();
 }
 
 SDL_AppResult SDLChild::SDLInit() {
@@ -35,7 +31,7 @@ SDL_AppResult SDLChild::SDLInit() {
         qWarning() << "SDL_Init:" << SDL_GetError();
         return SDL_Fail();
     }
-
+    // ── 1. Создаём SDL-окно, прикреплённое к нативному виджету ───────────────
     SDL_PropertiesID props = SDL_CreateProperties();
     SDL_SetStringProperty(props,  SDL_PROP_WINDOW_CREATE_TITLE_STRING,    "Графика");
     SDL_SetBooleanProperty(props, SDL_PROP_WINDOW_CREATE_RESIZABLE_BOOLEAN, true);
@@ -59,26 +55,27 @@ SDL_AppResult SDLChild::SDLInit() {
         return SDL_Fail();
     }
 
+    // ── 2. Инициализируем ElGraphCtrl ────────────────────────────────────────
+    // HWND должен быть получен из уже созданного SDL-окна, а не из winId():
+    // SDL могла создать собственное нативное окно поверх виджета.
+    void* nativeHwnd = nullptr;
+#if defined(Q_OS_WIN)
+    nativeHwnd = SDL_GetPointerProperty(
+        SDL_GetWindowProperties(m_window),
+        SDL_PROP_WINDOW_WIN32_HWND_POINTER,
+        nullptr);
+#endif
+
+    // Неудача не прерывает запуск: SDL-окно и рендер работают независимо
+    if (!m_elGraph.init(nativeHwnd)) {
+        spdlog::warn("SDLChild: ElGraphCtrl недоступен, продолжаем без него");
+    }
+    // ── 3. Создаём рендер ────────────────────────────────────────────────────
     m_renderer = SDL_CreateRenderer(m_window, nullptr);
     if (!m_renderer) {
         qWarning() << "SDL_CreateRenderer:" << SDL_GetError();
         return SDL_Fail();
     }
-
-    // Загрузка SVG через временный файл
-    QFile f(":/images/cx195.svg");
-    QString tmp = QDir::tempPath() + "/cx195_copy.svg";
-    QFile::remove(tmp);
-    f.copy(tmp);
-
-    SDL_Surface* surf = IMG_Load(tmp.toStdString().c_str());
-    if (!surf) {
-        qWarning() << "IMG_Load:" << SDL_GetError();
-        return SDL_Fail();
-    }
-    m_texture = SDL_CreateTextureFromSurface(m_renderer, surf);
-    SDL_DestroySurface(surf);
-    if (!m_texture) return SDL_Fail();
 
     m_timer->start(1000 / 60);
 
@@ -86,13 +83,10 @@ SDL_AppResult SDLChild::SDLInit() {
 }
 
 void SDLChild::Render() {
-    if (!m_renderer || !m_texture) return;
+    if (!m_renderer) return;
 
     SDL_SetRenderDrawColor(m_renderer, 50, 50, 50, SDL_ALPHA_OPAQUE);
     SDL_RenderClear(m_renderer);
-
-    // NULL, NULL → растягивать текстуру на весь viewport (масштабирование!)
-    SDL_RenderTexture(m_renderer, m_texture, nullptr, nullptr);
 
     SDL_RenderPresent(m_renderer);
 }
@@ -105,7 +99,16 @@ void SDLChild::resizeEvent(QResizeEvent* event) {
     }
 }
 
-void SDLChild::OnClose()
-{
+void SDLChild::OnClose(){
+
     m_timer->stop();
+}
+
+SDL_AppResult SDLChild::SDL_Fail(){
+    SDL_LogError(SDL_LOG_CATEGORY_CUSTOM, "Error %s", SDL_GetError());
+    return SDL_APP_FAILURE;
+}
+
+SDL_AppResult SDLChild::SDL_OK(){
+    return SDL_APP_SUCCESS;
 }
