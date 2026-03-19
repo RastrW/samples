@@ -1,6 +1,7 @@
 #include "graphControlService.h"
 #include <spdlog/spdlog.h>
 #include <QCoreApplication>
+#include <QFile>
 #include "astra/IPlainRastr.h"
 
 GraphControlService::GraphControlService(IPlainRastr* rastr):
@@ -33,10 +34,14 @@ bool GraphControlService::load()
         return false;
     }
 
-    m_initPlainDll(m_rastr,
-                   "",
-                   "", 0,
-                   nullptr);
+    const QString graphLibsPath =
+        QCoreApplication::applicationDirPath() + "/../Data/graphics/graph2libs.xml";
+    if (!QFile::exists(graphLibsPath)) {
+        qWarning() << "GraphWorker: graph2libs.xml not found";
+        return false;
+    }
+
+    m_initPlainDll(m_rastr, graphLibsPath.toStdString().c_str());
     m_loaded = true;
     spdlog::info("GraphControlService: GraphControlClient загружен");
     return true;
@@ -65,6 +70,25 @@ void GraphControlService::initControl(IPlainElGraph* pcontrol)
         spdlog::warn("GraphControlService::initControl: GCC не загружен");
         return;
     }
+
+    const QString graphLibsPath =
+        QCoreApplication::applicationDirPath() + "/../Data/graphics/graph2items.xml";
+    if (!QFile::exists(graphLibsPath)) {
+        qWarning() << "GraphWorker: graph2items.xml not found";
+        return;
+    }
+
+    auto* dpcResult = pcontrol->GetDrawShapesCollection();
+    if (dpcResult) {
+        auto* dpc = dpcResult->operator->(); // теперь это IPlainElGraphDrawShapesCollection*
+        if (dpc) {
+            auto* res = dpc->LoadShapes(graphLibsPath.toStdString());
+            qWarning() << "graph2items.xml is loaded";
+            if (res) res->Destroy();   // освобождаем результат LoadShapes
+        }
+        dpcResult->Destroy(); // освобождаем сам result object
+    }
+
     m_initControl(pcontrol, nullptr);
     spdlog::debug("GraphControlService::initControl: подписка установлена для {:p}",
                   static_cast<void*>(pcontrol));

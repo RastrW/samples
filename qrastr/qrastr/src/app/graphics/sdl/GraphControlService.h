@@ -7,8 +7,7 @@ class IPlainRastr;
 #if defined(Q_OS_WIN)
 using GCC_InitControl_t  = void (__cdecl*)(IPlainElGraph*, void*);
 using GCC_CloseControl_t = void (__cdecl*)(IPlainElGraph*);
-using GCC_InitPlainDLL_t = void(__cdecl*)(IPlainRastr*, const char*, const char*,
-                                            long, void(*)(int, const char*));
+using GCC_InitPlainDLL_t = void(__cdecl*)(IPlainRastr*, const char*);
 #else
 ///@todo
 #endif

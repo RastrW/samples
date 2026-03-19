@@ -1,0 +1,535 @@
+<?xml version="1.0" encoding="utf-8"?>
+<drawitems>
+
+    <drawitem id="10" name="Breaker" mainviews="1" cutable="1" subviews="2" xsize="4" ysize="8" minscale="0.7" offminscale="0.12">
+		<view mainview="0" subview="0">
+			<SetPen arg0="514"/>
+			<Line arg0="32" arg1="0" arg2="32" arg3="32"/>
+			<Line arg0="32" arg1="96" arg2="32" arg3="128"/>
+			<Rectangle arg0="0" arg1="32" arg2="64" arg3="96" />
+		</view>
+		<view mainview="0" subview="1">
+			<SetPen arg0="258"/>
+			<Line arg0="32" arg1="0" arg2="32" arg3="32"/>
+			<Line arg0="32" arg1="96" arg2="32" arg3="128"/>
+			<Rectangle arg0="0" arg1="32" arg2="64" arg3="96" />			
+		</view>
+		
+		<minscale>
+			<SetPen arg0="2"/>
+			<Line arg0="32" arg1="0" arg2="32" arg3="128"/>
+		</minscale>
+		
+		<connections>
+			<connect id="0" dx="2" dy="0" />
+			<connect id="1" dx="2" dy="8" />
+		</connections>
+    </drawitem>
+
+	<drawitem id="12" name="GenUnit" mainviews="2" subviews="1" xsize="4" ysize="6" minscale="0.5" offminscale="0.12">
+		<view mainview="0" subview="0">
+			<SetPen arg0="514"/>
+			<DrawEllipse arg0="32" arg1="62" arg2="60" arg3="60" arg4="0"/>
+			<Line arg0="32" arg1="0" arg2="32" arg3="32"/>
+			<DrawArc arg0="32" arg1="53" arg2="27" arg3="21" arg4="180" arg5="180"/>
+			<DrawArc arg0="5" arg1="53" arg2="27" arg3="21" arg4="0" arg5="180"/>
+		</view>
+		<view mainview="1" subview="0">
+			<SetPen arg0="258"/>
+			<DrawEllipse arg0="32" arg1="62" arg2="64" arg3="64" arg4="0"/>
+			<Line arg0="48" arg1="0" arg2="48" arg3="48"/>
+			<SetPenClear arg0="2"/>
+			<SetPen arg0="514"/>
+			<DrawArc arg0="32" arg1="53" arg2="27" arg3="21" arg4="180" arg5="180"/>
+			<DrawArc arg0="5" arg1="53" arg2="27" arg3="21" arg4="0" arg5="180"/>
+		</view>		
+		<connections>
+			<connect id="0" dx="2" dy="0" />
+		</connections>	
+	</drawitem>
+	
+	
+	<drawitem id="14" name="SeriesCompensator" mainviews="1" subviews="2" xsize="4" ysize="6" minscale="0.5" offminscale="0.12">
+		<view mainview="0" subview="0">
+			
+			<SetPen arg0="2"/>
+			<Line arg0="32" arg1="0" arg2="32" arg3="32"/>
+			<Line arg0="0" arg1="32" arg2="64" arg3="32"/>
+			<Line arg0="0" arg1="64" arg2="64" arg3="64"/>
+			<Line arg0="32" arg1="64" arg2="32" arg3="96"/>
+		</view>
+		<view mainview="0" subview="1">
+			
+			<SetPen arg0="2"/>
+			<DrawArc arg0="0" arg1="16" arg2="64" arg3="64" arg4="90" arg5="270"/>
+			<Line arg0="32" arg1="0" arg2="32" arg3="48"/>
+			<Line arg0="32" arg1="80" arg2="32" arg3="96"/>
+			<Line arg0="32" arg1="3" arg2="64" arg3="48"/>
+		</view>		
+		<connections>
+			<connect id="0" dx="2" dy="0" />
+			<connect id="1" dx="2" dy="6" />
+		</connections>	
+	</drawitem>	
+	
+
+	
+	
+
+	
+	<!--  xsize,ysize для fuzzyitem - дефотные размеры -->
+	
+	<fuzzyitem id="3" name="BusbarSection" stayalwaysunfixed="1" xmin="2" xmax="1000" ymin="4" ymax="4" xsize="11" ysize="4" offminscale="0.12" cancrossvertical="1" cancrosshorizontal="0">
+		<view>
+			
+			<SetPen arg0="if(scale>2)(if(scale>5)8:4):2"/>		
+			<Line arg0="pix(3)" arg1="32" arg2="x*16-pix(3)" arg3="32"/>
+			<SetPen arg0="2"/>
+		</view>
+		<connections count="x*2-2" equipotentialrule="1">
+			<connect dx="1+pos" dy="if(bitpos)4:0">
+				<Line arg0="16+pos*16" arg1="if(bitpos)40:24" arg2="16+pos*16" arg3="if(bitpos)64:0"/>
+				<StopIf arg0="!(scale>2.5)" />
+				<FillEllipse arg0="pos*16+16" arg1="32" arg2="16" arg3="16" arg4="0"/>
+				<!-- криво работает, заливка косячит, то же самое на прямоугольнике-->
+				
+			</connect>
+		</connections>
+	</fuzzyitem>	
+	
+	<drawitem id="20" name="Junction" connectionalgorithm="2" stayalwaysunfixed="1" mainviews="1" subviews="1" xsize="2" ysize="2" minscale="0.05" offminscale="0.12">	
+		<view mainview="0" subview="0">
+			
+			<SetPen arg0="258"/>
+			<FillEllipse arg0="16" arg1="16" arg2="24" arg3="24" arg4="0"/>	
+		</view>	
+		<connections equipotentialrule="1">
+			<connect id="0" dx="1" dy="0">
+				<Line arg0="16" arg1="16" arg2="16" arg3="0"/>
+			</connect>
+			<connect id="1" dx="2" dy="1">
+				<Line arg0="16" arg1="16" arg2="32" arg3="16"/>
+			</connect>
+			<connect id="2" dx="1" dy="2">
+				<Line arg0="16" arg1="16" arg2="16" arg3="32"/>
+			</connect>
+			<connect id="3" dx="0" dy="1">
+				<Line arg0="16" arg1="16" arg2="0" arg3="16"/>
+			</connect>
+		</connections>
+	</drawitem>	
+	
+	
+	
+	<drawitem id="16" name="StaticVarCompensator" mainviews="1" subviews="1" xsize="6" ysize="6" minscale="0.5" offminscale="0.12">
+		<view mainview="0" subview="0">
+			
+			<SetPen arg0="2"/>
+			<DrawLines4 arg0="3" arg1="93" arg2="93" arg3="93" arg4="48" arg5="3" arg6="3" arg7="93" />			
+			<Line arg0="48" arg1="0" arg2="48" arg3="3"/>
+			<Line arg0="48" arg1="40" arg2="48" arg3="56"/>
+			<Line arg0="30" arg1="56" arg2="64" arg3="56"/>
+			<Line arg0="30" arg1="70" arg2="64" arg3="70"/>
+			<Line arg0="48" arg1="70" arg2="48" arg3="86"/>
+		</view>		
+		<connections>
+			<connect id="0" dx="3" dy="0" />
+		</connections>
+	</drawitem>	
+	
+	
+	<drawitem id="15" name="ShuntCompensator" mainviews="1" subviews="2" xsize="4" ysize="6" minscale="0.5" offminscale="0.12">
+		<view mainview="0" subview="0">
+			<SetPen arg0="514"/>
+			<DrawArc arg0="0" arg1="16" arg2="64" arg3="64" arg4="90" arg5="270"/>
+			<Line arg0="32" arg1="0" arg2="32" arg3="48"/>
+			<Line arg0="32" arg1="80" arg2="32" arg3="94"/>
+			<Line arg0="32" arg1="48" arg2="64" arg3="48"/>
+			<Line arg0="8" arg1="94" arg2="56" arg3="94"/>
+		</view>	
+		<view mainview="0" subview="1">
+			<SetPen arg0="2"/>
+			<Line arg0="32" arg1="0" arg2="32" arg3="32"/>
+			<Line arg0="0" arg1="32" arg2="64" arg3="32"/>
+			<Line arg0="0" arg1="64" arg2="64" arg3="64"/>
+			<Line arg0="32" arg1="64" arg2="32" arg3="96"/>
+			<Line arg0="16" arg1="96" arg2="48" arg3="96"/>
+		</view>
+		<connections>
+			<connect id="0" dx="2" dy="0" />
+		</connections>
+	</drawitem>	
+	
+	
+	<drawitem id="27" name="InductionMotor" mainviews="1" subviews="1" xsize="6" ysize="10" minscale="0.5" offminscale="0.12">
+		<view mainview="0" subview="0">
+			
+			<SetPen arg0="2"/>
+			<DrawEllipse arg0="48" arg1="109" arg2="90" arg3="90" arg4="0"/>
+			<Line arg0="48" arg1="0" arg2="48" arg3="64"/>
+			<DrawEllipse arg0="48" arg1="109" arg2="40" arg3="40" arg4="0"/>
+		</view>
+		<connections>
+			<connect id="0" dx="3" dy="0" />
+		</connections>	
+	</drawitem>	
+	
+	
+	<drawitem id="21" name="SynchronousCompensator" mainviews="1" subviews="1" xsize="6" ysize="10" minscale="0.5" offminscale="0.12">
+		<view mainview="0" subview="0">
+			
+			<SetPen arg0="514"/>
+			<DrawEllipse arg0="48" arg1="109" arg2="90" arg3="90" arg4="0"/>
+			<Line arg0="48" arg1="0" arg2="48" arg3="64"/>
+			<Line arg0="16" arg1="96" arg2="80" arg3="96"/>
+			<Line arg0="16" arg1="128" arg2="80" arg3="128"/>
+		</view>
+		<connections>
+			<connect id="0" dx="3" dy="0" />
+		</connections>	
+	</drawitem>
+	
+	
+
+	
+	<drawitem id="18" name="RemoteGag" connectable="1" mainviews="2" subviews="1" xsize="2" ysize="4" minscale="0.5" offminscale="0.12">
+		<view mainview="0" subview="0">
+			
+			<SetPen arg0="2"/>
+			<Line arg0="16" arg1="0" arg2="16" arg3="32"/>
+		</view>
+		<view mainview="1" subview="0">
+			
+			<SetPen arg0="2"/>
+			<Line arg0="16" arg1="0" arg2="16" arg3="32"/>
+		</view>		
+		<connections>
+			<connect id="0" dx="1" dy="0" />
+		</connections>	
+	</drawitem>
+	
+	
+	<drawitem id="19" name="MiniRemoteGag" connectable="1" mainviews="2" subviews="1" xsize="2" ysize="2" minscale="0.5" offminscale="0.12">
+		<view mainview="0" subview="0">
+			<SetPen arg0="2"/>
+			<Line arg0="16" arg1="0" arg2="16" arg3="16"/>
+		</view>
+		<view mainview="1" subview="0">
+			
+			<SetPen arg0="2"/>
+			<Line arg0="16" arg1="0" arg2="16" arg3="16"/>
+		</view>		
+		<connections>
+			<connect id="0" dx="1" dy="0" />
+		</connections>	
+	</drawitem>	
+	
+	
+	
+
+	<drawitem id="13" name="EnergyConsumer" mainviews="1" subviews="1" xsize="4" ysize="6" minscale="0.5" offminscale="0.12">
+		<view mainview="0" subview="0">
+			
+			<SetPen arg0="2"/>
+			<Line arg0="32" arg1="0" arg2="32" arg3="85"/>
+			<Line arg0="32" arg1="85" arg2="11" arg3="53" />
+			<Line arg0="32" arg1="85" arg2="53" arg3="53" />
+		</view>
+		<minscale>
+			
+			<SetPen arg0="2"/>
+			<Line arg0="16" arg1="0" arg2="16" arg3="85"/>
+		</minscale>		
+		<connections>
+			<connect id="0" dx="2" dy="0" />
+		</connections>	
+	</drawitem>
+	
+	
+	
+	<drawitemcompound name="TwoTrans" id="4" xsize="10" ysize="23" offminscale="0.05">
+		<piece id="1" xpos="0" ypos="0" rotate="0"/>
+		<piece id="1" xpos="0" ypos="10" rotate="2"/>
+	</drawitemcompound>
+
+	
+	<drawitemcompound name="TwoTrans" id="40" xsize="10" ysize="19" offminscale="0.05">
+		<piece id="10" xpos="0" ypos="0" rotate="0"/>
+		<piece id="10" xpos="0" ypos="8" rotate="2"/>
+	</drawitemcompound>	
+	
+	
+	
+	
+	<drawitemcompound name="TwoAutoTrans" connectionalgorithm="1" id="5" xsize="12" ysize="16" offminscale="0.05">
+		<piece id="2" xpos="2" ypos="0" rotate="0"/>
+		<piece id="3" xpos="0" ypos="6" rotate="3"/>
+	</drawitemcompound>	
+	
+	<drawitemcompound name="Trans4" id="8" xsize="22" ysize="22" offminscale="0.05">
+		<piece id="3" xpos="6" ypos="0" rotate="0"/>
+		<piece id="3" xpos="10" ypos="6" rotate="1"/>
+		<piece id="3" xpos="6" ypos="10" rotate="2"/>
+		<piece id="3" xpos="0" ypos="6" rotate="3"/>
+	</drawitemcompound>	
+	
+	
+	<drawitemcompound name="Trans3" id="6" connectionalgorithm="1" xsize="22" ysize="19" offminscale="0.05">
+		<piece id="3" xpos="6" ypos="0" rotate="0"/>
+		<piece id="3" xpos="0" ypos="7" rotate="3"/>
+		<piece id="3" xpos="10" ypos="7" rotate="1"/>
+	</drawitemcompound>	
+
+	<drawitemcompound name="AutoTrans" connectionalgorithm="1" id="7" xsize="10" ysize="26" offminscale="0.05">
+		<piece id="2" xpos="0" ypos="0" rotate="0"/>
+		<piece id="30" xpos="0" ypos="6" rotate="3"/>
+		<piece id="1" xpos="0" ypos="13" rotate="2"/>
+	</drawitemcompound>		
+	
+	
+	<drawitemcompound name="Trans4auto" connectionalgorithm="1" id="26" xsize="22" ysize="22" offminscale="0.05">
+		<piece id="2" xpos="6" ypos="0" rotate="0"/>
+		<piece id="4" xpos="0" ypos="6" rotate="3"/>
+		<piece id="3" xpos="10" ypos="12" rotate="1"/>
+		<piece id="3" xpos="0" ypos="12" rotate="3"/>
+	</drawitemcompound>	
+	
+	
+	
+	
+	
+	
+	
+	<drawitempiece id="1" mainviews="1" subviews="1" xsize="10" ysize="13" minscale="0.7" offminscale="0.05">
+		<view mainview="0" subview="0">
+			<SetPen arg0="514"/>
+			<DrawEllipse arg0="80" arg1="123" arg2="150" arg3="150" arg4="0"/>
+			<Line arg0="80" arg1="0" arg2="80" arg3="48"/>
+		</view>
+		<minscale>
+			<SetPen arg0="2"/>
+			<Line arg0="80" arg1="0" arg2="80" arg3="160"/>
+		</minscale>
+	
+		<connections>
+			<connect id="0" dx="5" dy="0" />
+		</connections>	
+	</drawitempiece>
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	<drawitempiece id="10" mainviews="1" subviews="1" xsize="10" ysize="11" minscale="0.7" offminscale="0.05">
+		<view mainview="0" subview="0">
+			<SetPen arg0="514"/>
+			<DrawEllipse arg0="80" arg1="96" arg2="150" arg3="150" arg4="0"/>
+			<Line arg0="80" arg1="0" arg2="80" arg3="21"/>
+		</view>
+	
+		<minscale>
+			<SetPen arg0="2"/>
+			<Line arg0="80" arg1="0" arg2="80" arg3="128"/>
+		</minscale>		
+
+		<connections>
+			<connect id="0" dx="5" dy="0" />
+		</connections>	
+	</drawitempiece>		
+	
+	
+	
+
+	
+	
+	
+	
+	<drawitempiece id="2" mainviews="3" subviews="1" xsize="10" ysize="11" minscale="0.7" offminscale="0.12">
+		<view mainview="0" subview="0">
+			
+			<SetPen arg0="514"/>
+			<DrawArc arg0="5" arg1="48" arg2="150" arg3="256" arg4="180" arg5="90"/>
+			<Line arg0="80" arg1="0" arg2="80" arg3="48"/>
+		</view>	
+		<view mainview="1" subview="0">
+			
+			<SetPen arg0="514"/>
+			<DrawArc arg0="5" arg1="48" arg2="150" arg3="256" arg4="180" arg5="90"/>
+			<Line arg0="80" arg1="0" arg2="80" arg3="48"/>
+		</view>		
+		<view mainview="2" subview="0">
+			<SetPen arg0="514"/>
+			<DrawArc arg0="5" arg1="48" arg2="150" arg3="256" arg4="180" arg5="90"/>
+			<Line arg0="80" arg1="0" arg2="80" arg3="48"/>
+		</view>
+		<view mainview="3" subview="0">
+			<SetPen arg0="514"/>
+			<DrawArc arg0="5" arg1="48" arg2="150" arg3="256" arg4="180" arg5="90"/>
+			<Line arg0="80" arg1="0" arg2="80" arg3="48"/>
+		</view>
+		<view mainview="4" subview="0">
+			<SetPen arg0="514"/>
+			<DrawArc arg0="5" arg1="48" arg2="150" arg3="256" arg4="180" arg5="90"/>
+			<Line arg0="80" arg1="0" arg2="80" arg3="48"/>
+		</view>
+		<minscale>
+			<Line arg0="80" arg1="0" arg2="80" arg3="160"/>
+		</minscale>		
+		<connections>
+			<connect id="0" dx="5" dy="0" />
+		</connections>	
+	</drawitempiece>	
+
+	
+	<!--только для 4-х обм АТ-->
+	<drawitempiece id="4" mainviews="3" subviews="1" xsize="10" ysize="16" minscale="0.7" offminscale="0.05">
+		<view mainview="0" subview="0">
+			
+			<SetPen arg0="514"/>
+			<DrawEllipse arg0="80" arg1="176" arg2="150" arg3="150" arg4="0"/>
+			<Line arg0="80" arg1="0" arg2="80" arg3="101"/>
+			<DrawLines4 arg0="48" arg1="192" arg2="80" arg3="144" arg4="112" arg5="192" arg6="48" arg7="192" />
+		</view>
+		<view mainview="1" subview="0">
+			<SetPen arg0="514"/>
+			<DrawEllipse arg0="80" arg1="176" arg2="150" arg3="150" arg4="0"/>
+			<Line arg0="80" arg1="0" arg2="80" arg3="101"/>
+			<Line arg0="80" arg1="192" arg2="80" arg3="160" />
+			<Line arg0="80" arg1="192" arg2="48" arg3="224" />
+			<Line arg0="80" arg1="192" arg2="112" arg3="224" />
+		</view>
+		<view mainview="2" subview="0">
+			<SetPen arg0="514"/>
+			<DrawEllipse arg0="80" arg1="176" arg2="150" arg3="150" arg4="0"/>
+			<Line arg0="80" arg1="0" arg2="80" arg3="101"/>
+			<DrawLines3 arg0="80" arg1="160" arg2="80" arg3="128" arg4="92" arg5="114"/>
+			<DrawLines3 arg0="80" arg1="160" arg2="60" arg3="175" arg4="43" arg5="175"/>
+			<DrawLines3 arg0="80" arg1="160" arg2="100" arg3="175" arg4="100" arg5="192"/>
+		</view>
+		<view mainview="3" subview="0">
+			<SetPen arg0="514"/>
+			<DrawEllipse arg0="80" arg1="176" arg2="150" arg3="150" arg4="0"/>
+			<Line arg0="80" arg1="0" arg2="80" arg3="101"/>
+			<Line arg0="80" arg1="192" arg2="80" arg3="160" />
+			<Line arg0="80" arg1="192" arg2="48" arg3="224" />
+			<Line arg0="80" arg1="192" arg2="112" arg3="224" />
+			<Line arg0="80" arg1="192" arg2="48" arg3="192" />
+		</view>	
+		<view mainview="4" subview="0">
+			<SetPen arg0="514"/>
+			<DrawEllipse arg0="80" arg1="176" arg2="150" arg3="150" arg4="0"/>
+			<Line arg0="80" arg1="0" arg2="80" arg3="101"/>
+			<DrawLines3 arg0="80" arg1="160" arg2="80" arg3="128" arg4="92" arg5="114"/>
+			<DrawLines3 arg0="80" arg1="160" arg2="60" arg3="175" arg4="43" arg5="175"/>
+			<DrawLines3 arg0="80" arg1="160" arg2="100" arg3="175" arg4="100" arg5="192"/>
+			<Line arg0="80" arg1="160" arg2="48" arg3="160" />
+		</view>
+		<minscale>
+			<SetPen arg0="2"/>
+			<Line arg0="80" arg1="0" arg2="80" arg3="160"/>
+		</minscale>		
+
+		<connections>
+			<connect id="0" dx="5" dy="0" />
+		</connections>	
+	</drawitempiece>
+	
+	
+	<drawitempiece id="3" mainviews="3" subviews="1" xsize="10" ysize="12" minscale="0.7" offminscale="0.05">
+		<view mainview="0" subview="0">
+			
+			<SetPen arg0="514"/>
+			<DrawEllipse arg0="80" arg1="112" arg2="150" arg3="150" arg4="0"/>
+			<Line arg0="80" arg1="0" arg2="80" arg3="37"/>
+			<DrawLines4 arg0="48" arg1="128" arg2="80" arg3="80" arg4="112" arg5="128" arg6="48" arg7="128" />
+		</view>
+		<view mainview="1" subview="0">
+			
+			<SetPen arg0="514"/>
+			<DrawEllipse arg0="80" arg1="112" arg2="150" arg3="150" arg4="0"/>
+			<Line arg0="80" arg1="0" arg2="80" arg3="37"/>
+			<Line arg0="80" arg1="112" arg2="80" arg3="80" />
+			<Line arg0="80" arg1="112" arg2="48" arg3="144" />
+			<Line arg0="80" arg1="112" arg2="112" arg3="144" />
+		</view>
+		<view mainview="2" subview="0">
+			<SetPen arg0="514"/>
+			<DrawEllipse arg0="80" arg1="112" arg2="150" arg3="150" arg4="0"/>
+			<Line arg0="80" arg1="0" arg2="80" arg3="37"/>
+			<DrawLines3 arg0="80" arg1="112" arg2="80" arg3="80" arg4="92" arg5="66"/>
+			<DrawLines3 arg0="80" arg1="112" arg2="60" arg3="127" arg4="43" arg5="127"/>
+			<DrawLines3 arg0="80" arg1="112" arg2="100" arg3="127" arg4="100" arg5="144"/>
+		</view>
+		<view mainview="3" subview="0">
+			<SetPen arg0="514"/>
+			<DrawEllipse arg0="80" arg1="112" arg2="150" arg3="150" arg4="0"/>
+			<Line arg0="80" arg1="0" arg2="80" arg3="37"/>
+			<Line arg0="80" arg1="112" arg2="80" arg3="80" />
+			<Line arg0="80" arg1="112" arg2="48" arg3="144" />
+			<Line arg0="80" arg1="112" arg2="112" arg3="144" />
+			<Line arg0="80" arg1="112" arg2="48" arg3="112" />			
+		</view>		
+		<view mainview="4" subview="0">
+			<SetPen arg0="514"/>
+			<DrawEllipse arg0="80" arg1="112" arg2="150" arg3="150" arg4="0"/>
+			<Line arg0="80" arg1="0" arg2="80" arg3="37"/>
+			<DrawLines3 arg0="80" arg1="112" arg2="80" arg3="80" arg4="92" arg5="66"/>
+			<DrawLines3 arg0="80" arg1="112" arg2="60" arg3="127" arg4="43" arg5="127"/>
+			<DrawLines3 arg0="80" arg1="112" arg2="100" arg3="127" arg4="100" arg5="144"/>
+			<Line arg0="80" arg1="112" arg2="48" arg3="112" />			
+		</view>		
+		<minscale>
+			<SetPen arg0="2"/>
+			<Line arg0="80" arg1="0" arg2="80" arg3="128"/>
+		</minscale>		
+
+		<connections>
+			<connect id="0" dx="5" dy="0" />
+		</connections>	
+	</drawitempiece>	
+	
+	
+	
+	<drawitempiece id="30" mainviews="1" subviews="1" xsize="10" ysize="10" minscale="0.7" offminscale="0.05">
+		<view mainview="0" subview="0">
+			<SetPen arg0="514"/>
+			<DrawEllipse arg0="80" arg1="80" arg2="150" arg3="150" arg4="0"/>
+			<Line arg0="80" arg1="0" arg2="80" arg3="5"/>
+			<DrawLines4 arg0="48" arg1="96" arg2="80" arg3="48" arg4="112" arg5="96" arg6="48" arg7="96" />
+		</view>
+		<view mainview="1" subview="0">
+			<SetPen arg0="514"/>
+			<DrawEllipse arg0="80" arg1="80" arg2="150" arg3="150" arg4="0"/>
+			<Line arg0="80" arg1="0" arg2="80" arg3="5"/>
+			<Line arg0="80" arg1="80" arg2="80" arg3="48" />
+			<Line arg0="80" arg1="80" arg2="48" arg3="112" />
+			<Line arg0="80" arg1="80" arg2="112" arg3="112" />
+		</view>
+		<minscale>
+			<SetPen arg0="2"/>
+			<Line arg0="80" arg1="0" arg2="80" arg3="96"/>
+		</minscale>		
+
+		<connections>
+			<connect id="0" dx="5" dy="0" />
+		</connections>	
+	</drawitempiece>		
+
+	
+	
+	<globalshape name="subst" id="1" xsize="4" ysize="4" mainviews="1" subviews="1" offminscale="0.6">
+		<view mainview="0" subview="0">
+			<SetPen arg0="514"/>
+			<FillEllipse arg0="32" arg1="32" arg2="64" arg3="64" arg4="0"/>
+		</view>	
+		<minscale>
+			<Rectangle arg0="0" arg1="0" arg2="64" arg3="64" />
+		</minscale>
+	</globalshape>	
+
+
+</drawitems>
