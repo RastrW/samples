@@ -61,8 +61,7 @@ bool SDLChild::SDLInit()
     }
 
     // ── 2. Инициализируем ElGraphService ─────────────────────────────────────
-    // HWND берём из SDL-окна — SDL мог создать
-    // промежуточное нативное окно поверх виджета.
+    //Создаём нативный HWND, чтобы встроить в него SDL
     void* nativeHandle = getSDLNativeHandle();
 
     if (!m_elGraph.init(nativeHandle)) {
@@ -70,6 +69,7 @@ bool SDLChild::SDLInit()
     }
 
     // ── 3. Создаём рендер ────────────────────────────────────────────────────
+    SDL_SetHint(SDL_HINT_RENDER_DRIVER, "software");
     m_renderer = SDL_CreateRenderer(m_window, nullptr);
     if (!m_renderer) {
         spdlog::error("SDLChild::SDLInit: SDL_CreateRenderer — {}", SDL_GetError());
@@ -89,14 +89,13 @@ void SDLChild::OnClose()
 
 void SDLChild::Render()
 {
-    if (!m_renderer) return;
+    SDL_PumpEvents();
 
+    if (!m_renderer) return;
     SDL_SetRenderDrawColor(m_renderer, 50, 50, 50, SDL_ALPHA_OPAQUE);
     SDL_RenderClear(m_renderer);
-
-    // ── Место для отрисовки данных ElGraph ────────────────────────────────────
-    // ElGraph рисует в своём дочернем окне (CreateChildWindow),
-    // SDL_RenderPresent обновляет фон вокруг него.
+    //Если нужно рисовать что-то своё средствами
+    //SDL вокруг или поверх ElGraph — это место для таких вызовов.
 
     SDL_RenderPresent(m_renderer);
 }
@@ -108,6 +107,7 @@ void SDLChild::resizeEvent(QResizeEvent* event)
     if (m_window) {
         SDL_SetWindowSize(m_window, event->size().width(), event->size().height());
     }
+    ///@todo возожно, ElGraph должен быть уведомлен о смене размера
 }
 
 void* SDLChild::getSDLNativeHandle() const

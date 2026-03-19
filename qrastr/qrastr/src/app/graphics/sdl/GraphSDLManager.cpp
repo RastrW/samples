@@ -41,7 +41,7 @@ void GraphSDLManager::openWindow()
     // ── 2. Создаём dock-виджет и SDLChild ────────────────────────────────────
     auto* dw       = new ads::CDockWidget(tr("Графика SDL"), m_parentWidget);
     auto* sdlChild = new SDLChild(dw);
-    sdlChild->setVisible(false);
+    dw->hide();
 
     dw->setWidget(sdlChild);
     dw->setFeature(ads::CDockWidget::DockWidgetDeleteOnClose, true);
@@ -60,7 +60,7 @@ void GraphSDLManager::openWindow()
         m_gcc->initControl(sdlChild->elGraph().graph());
     }
 
-    sdlChild->setVisible(true);
+    dw->show();
     // ── 6. При закрытии dock-виджета: CloseControl → OnClose → счётчик ───────
     connect(dw, &ads::CDockWidget::closed,
             this, &GraphSDLManager::slot_dockClosed);
