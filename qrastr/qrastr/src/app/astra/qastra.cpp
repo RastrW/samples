@@ -124,10 +124,12 @@ IPlainRastrRetCode QAstra::OnUICommand(const IRastrEventBase& Event, IPlainRastr
            , static_cast<const IRastrEventHint&>(Event).DBLocation().Index()
        );
    }else if(Event.Type() == EventTypes::Command){
-       str = fmt::format("{} {} {}"
+
+       str = fmt::format("{} {} {} {}"
            , static_cast<const IRastrEventCommand&>(Event).Arg1() // stringutils::acp_encode
            , static_cast<const IRastrEventCommand&>(Event).Arg2()
            , static_cast<const IRastrEventCommand&>(Event).Arg3()
+        , static_cast<int>(static_cast<const IRastrEventCommand&>(Event).Hint())
        );
    }else if(Event.Type() == EventTypes::Log){
        const auto& w = static_cast<const IRastrEventLog&>(Event);
@@ -137,7 +139,10 @@ IPlainRastrRetCode QAstra::OnUICommand(const IRastrEventBase& Event, IPlainRastr
        str = fmt::format( "EventTypes::Print" );
    }
    spdlog::info( "OnUICommand ({}): {}", static_cast<std::underlying_type<EventTypes>::type>( Event.Type()), str );
-   Result->String("Done");
+   //Result->String("Done");
+   std::string d = "Done";
+   Result->String(d.c_str());
+    //Result->Long(0);
    return IPlainRastrRetCode::Ok;
 }
 

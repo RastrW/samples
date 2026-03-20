@@ -3,6 +3,7 @@
 #include "IPlainElGraph.h"
 
 class IPlainRastr;
+
 // Сигнатуры экспортов GrCtrlClient.dll
 #if defined(Q_OS_WIN)
 using GCC_InitControl_t  = void (__cdecl*)(IPlainElGraph*, void*);

@@ -15,16 +15,19 @@ public:
 
     ~ElGraphService();
 
-    // Загружает DLL, вызывает InitPlainDLL(), затем CreateChildWindow(parentHwnd).
-    // parentHwnd — нативный HWND окна SDL на Windows, nullptr на других платформах.
+    /// Загружает DLL и вызывает CreateChildWindow(parentHwnd).
     bool init(void* parentHwnd);
     // Уничтожает grc и выгружает библиотеку.
     // Безопасно вызывать повторно.
     void shutdown();
+    /// Подгоняет дочернее окно ElGraph под размер parentHwnd.
+    /// Безопасно вызывать до init() — просто ничего не делает.
+    void fitToParent(void* parentHwnd) const;
     // Доступ к интерфейсу библиотеки (nullptr если не загружена)
     IPlainElGraph* graph() const { return m_grc; }
     bool isLoaded()        const { return m_grc != nullptr; }
 private:
+
     QLibrary       m_lib;
     IPlainElGraph* m_grc = nullptr;
 };

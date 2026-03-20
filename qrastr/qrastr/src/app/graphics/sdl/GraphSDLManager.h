@@ -12,6 +12,21 @@ namespace ads { class CDockManager; class CDockWidget; }
  *  - SDL_Init / SDL_Quit (один раз, счётчик открытых окон)
  *  - Загрузка GraphControlClient (живёт = менеджер)
  *  - Создание/удаление SDLChild-вкладок через CDockManager
+    Объявление функций в библиотеках:
+    GraphClient:
+    extern "C" SBtype void InitPlainDLL(IPlainRastr* pPLain, const char* libpath)
+    extern "C" SBtype void InitControl(long** pControl, IPlainRastr* pIsolatedPLain);
+    extern "C" SBtype void CloseControl(long** pControl);
+
+    ElGraph:
+    extern "C" SBtype IPlainElGraph *InitPlainDLL()
+
+    ,где SBtype:
+    #ifdef _WIN32
+        #define SBtype __declspec(dllexport)
+    #else
+        #define SBtype __attribute__((visibility("default")))
+    #endif
 */
 class GraphSDLManager : public IGraphManager
 {

@@ -2,6 +2,7 @@
 #include <spdlog/spdlog.h>
 #include <QCoreApplication>
 #include <QFile>
+#include <QApplication>
 #include "astra/IPlainRastr.h"
 
 GraphControlService::GraphControlService(IPlainRastr* rastr):
@@ -60,9 +61,9 @@ void GraphControlService::unload()
     m_loaded = false;
 }
 
-void GraphControlService::initControl(IPlainElGraph* pcontrol)
+void GraphControlService::initControl(IPlainElGraph* graph)
 {
-    if (!pcontrol) {
+    if (!graph) {
         spdlog::warn("GraphControlService::initControl: pcontrol == nullptr, пропускаем");
         return;
     }
@@ -78,7 +79,7 @@ void GraphControlService::initControl(IPlainElGraph* pcontrol)
         return;
     }
 
-    auto* dpcResult = pcontrol->GetDrawShapesCollection();
+    auto* dpcResult = graph->GetDrawShapesCollection();
     if (dpcResult) {
         auto* dpc = dpcResult->operator->(); // теперь это IPlainElGraphDrawShapesCollection*
         if (dpc) {
@@ -89,19 +90,15 @@ void GraphControlService::initControl(IPlainElGraph* pcontrol)
         dpcResult->Destroy(); // освобождаем сам result object
     }
 
-    m_initControl(pcontrol, nullptr);
-    spdlog::debug("GraphControlService::initControl: подписка установлена для {:p}",
-                  static_cast<void*>(pcontrol));
+    m_initControl(graph, m_rastr);
 }
 
-void GraphControlService::closeControl(IPlainElGraph* pcontrol)
+void GraphControlService::closeControl(IPlainElGraph* graph)
 {
-    if (!pcontrol) return;
+    if (!graph) return;
     if (!m_closeControl) {
         spdlog::warn("GraphControlService::closeControl: GCC не загружен");
         return;
     }
-    m_closeControl(pcontrol);
-    spdlog::debug("GraphControlService::closeControl: подписка снята для {:p}",
-                  static_cast<void*>(pcontrol));
+    m_closeControl(graph);
 }

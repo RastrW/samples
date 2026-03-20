@@ -3,7 +3,7 @@
 
 #include <DockManager.h>
 #include <DockWidget.h>
-
+#include <QApplication>
 #include <spdlog/spdlog.h>
 #include <QWidget>
 
@@ -48,6 +48,10 @@ void GraphSDLManager::openWindow()
     dw->setFeature(ads::CDockWidget::DockWidgetDeleteOnClose, true);
     // ── 3. Встраиваем в dock ─────────────────────────────────────────────────
     m_dockManager->addDockWidgetTab(ads::TopDockWidgetArea, dw);
+    dw->show();  // ← сначала показываем
+
+    // ← SDLInit ПОСЛЕ show(), чтобы HWND был видимым когда ElGraph его получит
+    QApplication::processEvents();  // дать Qt обработать show()
     // ── 4. SDL-окно инициализируется ПОСЛЕ встраивания виджета в иерархию,
     //       иначе winId() ещё не назначен нативному окну ─────────────────────
     if (!sdlChild->SDLInit()) {
@@ -56,6 +60,7 @@ void GraphSDLManager::openWindow()
     } else {
         // ── 5. InitControl — после успешного CreateChildWindow ────────────────
         //       Устанавливает подписку GraphControlClient на хинты ElGraph.
+        spdlog::info("GraphControlService initControl");
         m_gcc->initControl(sdlChild->elGraph().graph());
     }
 
@@ -86,7 +91,7 @@ void GraphSDLManager::slot_dockClosed()
         m_gcc->closeControl(sdlChild->elGraph().graph());
 
         // 2. Останавливаем рендер-таймер, даём SDLChild корректно завершиться
-        sdlChild->OnClose();
+        sdlChild->onClose();
     }
 
     m_windowCount--;
