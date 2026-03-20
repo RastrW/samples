@@ -101,12 +101,12 @@ void FormManager::openForm(const CUIForm& form) {
     emit activeFormChanged(prtw);
 }
 
-void FormManager::openSDLGraph() {
+void FormManager::slot_openSDLGraph() {
     m_graphSDLManager->openWindow();
     emit formOpened("Графика SDL");
 }
 
-void FormManager::openWebGraph() {
+void FormManager::slot_openWebGraph() {
     // Пересоздаём сервер только если его нет совсем.
     // После stop() объект жив (parent=this), но m_thread == nullptr,
     // поэтому isRunning()==false и start() корректно запустит его снова.
@@ -131,7 +131,7 @@ void FormManager::openWebGraph() {
 
     m_dockManager->addDockWidgetTab(ads::TopDockWidgetArea, dw);
 
-    ++m_graphDockCount;
+    ++m_graphDockWebCount;
 
     auto loadPage = [webView]() {
         webView->load(QUrl("http://127.0.0.1:8081/grf.html"));
@@ -164,8 +164,8 @@ void FormManager::openWebGraph() {
     */
     // Останавливаем сервер при закрытии последнего дока
     connect(dw, &ads::CDockWidget::closeRequested, this, [this]() {
-        if (--m_graphDockCount <= 0) {
-            m_graphDockCount = 0;
+        if (--m_graphDockWebCount <= 0) {
+            m_graphDockWebCount = 0;
             if (m_graphServer)
                 m_graphServer->stop();
         }
@@ -178,7 +178,7 @@ void FormManager::openWebGraph() {
     emit formOpened("Графика Web");
 }
 
-void FormManager::closeGraphServer(){
+void FormManager::closeGraphWebServer(){
     // Останавливаем синхронно ДО того, как Qt начнёт рушить объекты
     if (m_graphServer) {
         // Отключаем сигнал, чтобы не сработал deleteLater из слота в slot_openGraph
@@ -211,7 +211,7 @@ void FormManager::openFormByName(const QString& formName) {
     openFormByIndex(index);
 }
 
-void FormManager::onCalculationStarted() {
+void FormManager::slot_calculationStarted() {
     // Передаём сигнал ВСЕМ открытым формам
     for (RtabWidget* widget : m_openForms) {
         if (widget) {
@@ -220,7 +220,7 @@ void FormManager::onCalculationStarted() {
     }
 }
 
-void FormManager::onCalculationFinished() {
+void FormManager::slot_calculationFinished() {
     // Передаём сигнал ВСЕМ открытым формам
     for (RtabWidget* widget : m_openForms) {
         if (widget) {
@@ -298,17 +298,17 @@ void FormManager::buildFormsMenu
     
     // Подключаем обработчик
     connect(parentMenu, &QMenu::triggered,
-            this, &FormManager::onFormMenuTriggered,
+            this, &FormManager::slot_formMenuTriggered,
             Qt::UniqueConnection);
     
     if (calcParametersMenu) {
         connect(calcParametersMenu, &QMenu::triggered,
-                this, &FormManager::onFormMenuTriggered,
+                this, &FormManager::slot_formMenuTriggered,
                 Qt::UniqueConnection);
     }
 }
 
-void FormManager::onFormMenuTriggered(QAction* p_actn) {
+void FormManager::slot_formMenuTriggered(QAction* p_actn) {
     const int n_indx = p_actn->data().toInt();
     
     auto it = m_forms.begin();
@@ -379,7 +379,7 @@ void FormManager::generateDynamicForms(QMenu* menu) {
     }
 }
 
-void FormManager::onFormClosed() {
+void FormManager::slot_formClosed() {
     // Обработка закрытия формы
     // (уже обрабатывается в лямбде при создании DockWidget)
 }
@@ -439,7 +439,7 @@ void FormManager::registerDockWidget(ads::CDockWidget* dw) {
             });
 }
 
-void FormManager::cascadeForms() {
+void FormManager::slot_cascadeForms() {
     if (m_openDockWidgets.isEmpty()) return;
 
     // Берём геометрию области dock manager как опорную
@@ -472,7 +472,7 @@ void FormManager::cascadeForms() {
     }
 }
 
-void FormManager::tileForms() {
+void FormManager::slot_tileForms() {
     if (m_openDockWidgets.isEmpty()) return;
 
     QRect available = m_dockManager->rect();

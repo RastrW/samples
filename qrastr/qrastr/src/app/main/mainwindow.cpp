@@ -119,7 +119,7 @@ void MainWindow::initialize(
     slot_updateRecentFiles();
     // Построение меню форм
     m_formManager->buildFormsMenu(
-        m_uiBuilder->openMenu(),
+        m_uiBuilder->tablesMenu(),
         m_uiBuilder->calcParametersMenu());
     m_formManager->buildPropertiesMenu(m_uiBuilder->propertiesMenu());
 
@@ -188,7 +188,7 @@ void MainWindow::setupConnections() {
     connect(m_uiBuilder->actionByName("new"), &QAction::triggered,
             m_fileManager.get(), &FileManager::newFile);
     
-    connect(m_uiBuilder->actionByName("open"), &QAction::triggered,
+    connect(m_uiBuilder->actionByName("load"), &QAction::triggered,
             m_fileManager.get(), &FileManager::openFiles);
     
     connect(m_uiBuilder->actionByName("save"), &QAction::triggered,
@@ -316,19 +316,19 @@ void MainWindow::setupConnections() {
     // ========== FORMMANAGER ==========
     // Передача сигналов расчётов формам
     connect(this, &MainWindow::sig_calcBegin,
-            m_formManager.get(), &FormManager::onCalculationStarted);
+            m_formManager.get(), &FormManager::slot_calculationStarted);
     
     connect(this, &MainWindow::sig_calcEnd,
-            m_formManager.get(), &FormManager::onCalculationFinished);
+            m_formManager.get(), &FormManager::slot_calculationFinished);
     
     connect(m_formManager.get(), &FormManager::formOpened,
             this, [](const QString& name) {
                 spdlog::info("Form opened: {}", name.toStdString());
             });
     connect(m_uiBuilder->actionByName("cascade"), &QAction::triggered,
-            m_formManager.get(), &FormManager::cascadeForms);
+            m_formManager.get(), &FormManager::slot_cascadeForms);
     connect(m_uiBuilder->actionByName("tile"), &QAction::triggered,
-            m_formManager.get(), &FormManager::tileForms);
+            m_formManager.get(), &FormManager::slot_tileForms);
     // ========== SETTINGSMANAGER ==========
     connect(m_uiBuilder->actionByName("settings"), &QAction::triggered,
             m_settingsManager.get(), [this]() {
@@ -337,9 +337,9 @@ void MainWindow::setupConnections() {
 
     // ========== Окна ==========
     connect(m_uiBuilder->actionByName("graphWeb"), &QAction::triggered,
-            m_formManager.get(), &FormManager::openWebGraph);
+            m_formManager.get(), &FormManager::slot_openWebGraph);
     connect(m_uiBuilder->actionByName("graphSDL"), &QAction::triggered,
-            m_formManager.get(), &FormManager::openSDLGraph);
+            m_formManager.get(), &FormManager::slot_openSDLGraph);
     connect(m_uiBuilder->actionByName("macro"), &QAction::triggered,
             this, &MainWindow::slot_openMcrDialog);
     // Закрыть активный dock widget
@@ -414,7 +414,7 @@ void MainWindow::closeEvent(QCloseEvent* event) {
         m_settingsManager->saveValue("ADSState", m_dockManager->saveState());
 
 
-    m_formManager->closeGraphServer();
+    m_formManager->closeGraphWebServer();
 
     m_settingsManager->saveWindowGeometry(this);
     spdlog::info("MainWindow closing");

@@ -41,5 +41,4 @@ private:
     UpdateAllContent_t     m_fnUpdateAll    = nullptr;
     RemoveGraphNode_t      m_fnRemoveNode   = nullptr;
     MoveOrAddGraphNode_t   m_fnMoveOrAdd    = nullptr;
-    std::string            m_htmlDirectory;
 };

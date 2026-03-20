@@ -68,7 +68,7 @@ public:
      */
     void generateDynamicForms(QMenu* menu);
     RtabWidget* activeForm() const { return m_activeForm; }
-    void closeGraphServer();
+    void closeGraphWebServer();
 signals:
     void formOpened(const QString& formName);
     void formClosed(const QString& formName);
@@ -76,25 +76,25 @@ signals:
     
 public slots:
     ///@brief Автоматическое размещение форм
-    void cascadeForms();
-    void tileForms();
+    void slot_cascadeForms();
+    void slot_tileForms();
 
     /// @brief Обработка клика по меню форм
-    void onFormMenuTriggered(QAction* action);
-    void onFormClosed();  
+    void slot_formMenuTriggered(QAction* action);
+    void slot_formClosed();
     /**
      * @brief Начало расчёта - передаём сигнал всем открытым формам
      * @note Вызывает on_calc_begin() у всех RtabWidget
      */
-    void onCalculationStarted();
+    void slot_calculationStarted();
     /**
      * @brief Конец расчёта - передаём сигнал всем открытым формам
      * @note Вызывает on_calc_end() у всех RtabWidget
      */
-    void onCalculationFinished();
+    void slot_calculationFinished();
     // ========== Графика ==========
-    void openSDLGraph();
-    void openWebGraph();
+    void slot_openSDLGraph();
+    void slot_openWebGraph();
 private:
     // ========== Зависимости ==========
     std::shared_ptr<QAstra> m_qastra;
@@ -109,8 +109,8 @@ private:
     // ========== Графика ==========
     //web
     GraphServer* m_graphServer  = nullptr;
-    //счётчик открытых окон, при m_graphDockCount = 0 => остановка сервера
-    int          m_graphDockCount = 0;
+    //счётчик открытых окон, если 0 => остановка сервера
+    int          m_graphDockWebCount = 0;
     //sdl
     GraphSDLManager* m_graphSDLManager = nullptr;
     /** @brief

@@ -42,11 +42,11 @@ void UIBuilder::createFileActions() {
               ":/images/document_new.png",
               "Ctrl+N",
               tr("Create a new file"));
-    addAction("open",
+    addAction("load",
               tr("&Загрузить"),
               ":/images/folder_out.png",
               "Ctrl+O",
-              tr("Open an existing file"));
+              tr("Load an existing file"));
     addAction("save",
               tr("&Сохранить"),
               ":/images/disk_blue.png",
@@ -237,7 +237,7 @@ void UIBuilder::buildMenuBar() {
     // МЕНЮ "ФАЙЛЫ"
     m_menus["file"] = menuBar->addMenu(tr("&Файлы"));
     m_menus["file"]->addAction(m_actions["new"]);
-    m_menus["file"]->addAction(m_actions["open"]);
+    m_menus["file"]->addAction(m_actions["load"]);
     m_menus["file"]->addAction(m_actions["save"]);
     m_menus["file"]->addAction(m_actions["saveAs"]);
     m_menus["file"]->addAction(m_actions["saveAll"]);
@@ -302,9 +302,9 @@ void UIBuilder::buildMenuBar() {
     m_menus["calcTI"]->addAction(m_actions["recalcDor"]);
     m_menus["calcTI"]->addAction(m_actions["updateTables"]);
 
-    // МЕНЮ "ОТКРЫТЬ" (для статических форм)
+    // МЕНЮ "ТАБЛИЦЫ" (для статических форм)
     // Заполняется через FormManager::buildFormsMenu()
-    m_menus["open"] = menuBar->addMenu(tr("&Открыть"));
+    m_menus["tables"] = menuBar->addMenu(tr("&Таблицы"));
 
     menuBar->addSeparator();
 
@@ -358,7 +358,7 @@ void UIBuilder::buildToolBars() {
     // ПАНЕЛЬ "ФАЙЛ"
     m_toolBars["file"] = m_mainWindow->addToolBar(tr("Файл"));
     m_toolBars["file"]->addAction(m_actions["new"]);
-    m_toolBars["file"]->addAction(m_actions["open"]);
+    m_toolBars["file"]->addAction(m_actions["load"]);
     m_toolBars["file"]->addAction(m_actions["save"]);
 
     // ПАНЕЛЬ "РАСЧЁТЫ"

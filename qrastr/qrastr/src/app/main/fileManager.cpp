@@ -71,27 +71,35 @@ int FileManager::openFiles() {
             for (const Params::_v_template_exts::value_type& template_ext : v_template_ext) {
                 if (rfile.endsWith(QString::fromStdString(template_ext.second))) {
                     bl_find_template = true;
-                    
-                    const std::string str_path_to_shablon = 
-                        Params::get_instance()->getDirSHABLON().absolutePath().toStdString() 
-                        + "//" + template_ext.first + template_ext.second;
-                    
-                    IPlainRastrRetCode res = m_qastra->Load(
-                        eLoadCode::RG_REPL,
-                        rfile.toStdString(),
-                        str_path_to_shablon
-                    );
-                    
-                    if (res == IPlainRastrRetCode::Ok) {
-                        setCurrentFile(rfile, QString::fromStdString(str_path_to_shablon));
+                    try {
+                        const fs::path path_shablon =
+                            fs::path(Params::get_instance()->getDirSHABLON().absolutePath().toStdString())
+                            / (template_ext.first + template_ext.second);
+                        const std::string str_path_to_shablon = path_shablon.string();
 
-                        spdlog::info("File loaded {}", rfile.toStdString());
-                        successCount++;
-                    } else {
-                        spdlog::info("Error File load result = {}", static_cast<int>(res));
-                        emit fileLoadError(QString("Failed to load: %1").arg(rfile));
+                        IPlainRastrRetCode res = m_qastra->Load(
+                            eLoadCode::RG_REPL,
+                            rfile.toStdString(),
+                            str_path_to_shablon
+                        );
+
+                        if (res == IPlainRastrRetCode::Ok) {
+                            setCurrentFile(rfile, QString::fromStdString(str_path_to_shablon));
+
+                            spdlog::info("File loaded {}", rfile.toStdString());
+                            successCount++;
+                        } else {
+                            spdlog::info("Error File load result = {}", static_cast<int>(res));
+                            emit fileLoadError(QString("Failed to load: %1").arg(rfile));
+                        }
+                    } catch (const std::exception& ex) {
+                       spdlog::error("Exception loading startup file {}: {}",
+                                          rfile.toStdString(), ex.what());
+                        QMessageBox mb( QMessageBox::Icon::Critical, QObject::tr("Error"),
+                                       QString("error: wheh read file : %1").arg(rfile)
+                                       );
+                        mb.exec();
                     }
-                    
                     break;
                 }
             }

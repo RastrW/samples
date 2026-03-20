@@ -28,7 +28,7 @@ public:
 
     // Прямой доступ к часто используемым меню
     QMenu* fileMenu() const { return m_menus.value("file"); }
-    QMenu* openMenu() const { return m_menus.value("open"); }
+    QMenu* tablesMenu() const { return m_menus.value("tables"); }
     QMenu* calcMenu() const { return m_menus.value("calc"); }
     QMenu* calcParametersMenu() const { return m_menus.value("calcParameters"); }
     QMenu* propertiesMenu() const { return m_menus.value("properties"); }
