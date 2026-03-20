@@ -15,7 +15,7 @@ class RtabWidget;
 class CUIForm;
 class PyHlp;
 class GraphServer;
-class GraphSDLManager;
+class IGraphManager;
 
 namespace ads {
     class CDockManager;
@@ -62,11 +62,6 @@ public:
      */
     void buildPropertiesMenu(QMenu* propertiesMenu);
     
-    /**
-     * @brief Генерировать динамические формы из таблиц
-     * @note Вызывается при каждом открытии меню свойств
-     */
-    void generateDynamicForms(QMenu* menu);
     RtabWidget* activeForm() const { return m_activeForm; }
     void closeGraphWebServer();
 signals:
@@ -106,13 +101,9 @@ private:
     std::list<CUIForm> m_forms;                     // Статические формы
     QMap<QString, int> m_formNameToIndex;           // Быстрый поиск
 
-    // ========== Графика ==========
-    //web
-    GraphServer* m_graphServer  = nullptr;
-    //счётчик открытых окон, если 0 => остановка сервера
-    int          m_graphDockWebCount = 0;
     //sdl
-    GraphSDLManager* m_graphSDLManager = nullptr;
+    IGraphManager* m_graphSDLManager = nullptr;
+    IGraphManager* m_graphWebManager = nullptr;
     /** @brief
      * Список ВСЕХ открытых форм
      * Используется для передачи сигналов расчётов
@@ -127,4 +118,9 @@ private:
     void registerDockWidget(ads::CDockWidget* dw);
     /// @brief Построить иерархию меню из MenuPath форм
     QMap<QString, QMenu*> buildMenuStructure(QMenu* rootMenu);
+    /**
+     * @brief Генерировать динамические формы из таблиц
+     * @note Вызывается при каждом открытии меню свойств
+     */
+    void generateDynamicForms(QMenu* menu);
 };

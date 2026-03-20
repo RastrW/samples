@@ -13,7 +13,7 @@
 #include "utils.h"
 using WrapperExceptionType = std::runtime_error;
 #include "astra/IPlainRastrWrappers.h"
-#include "web/graphServer.h"
+#include "web/graphWebManager.h"
 #include "sdl/GraphSDLManager.h"
 
 FormManager::FormManager
@@ -33,7 +33,15 @@ FormManager::FormManager
 
     m_rtdm.setQAstra(qastra.get());
 
-    m_graphSDLManager = new GraphSDLManager(m_dockManager, m_parentWidget, m_qastra->getRastr().get(), this);
+    m_graphSDLManager = new GraphSDLManager(m_dockManager, m_parentWidget,
+                                            m_qastra->getRastr().get(), this);
+    m_graphWebManager = new GraphWebManager(m_dockManager, m_parentWidget,
+                                            m_qastra->getRastr().get(), this);
+
+    for (IGraphManager* mgr : {m_graphSDLManager, m_graphWebManager}) {
+        connect(mgr, &IGraphManager::windowOpened,
+                this, &FormManager::registerDockWidget);
+    }
 }
 
 void FormManager::setForms(const std::list<CUIForm>& forms) {
@@ -106,88 +114,13 @@ void FormManager::slot_openSDLGraph() {
     emit formOpened("Графика SDL");
 }
 
-void FormManager::slot_openWebGraph() {
-    // Пересоздаём сервер только если его нет совсем.
-    // После stop() объект жив (parent=this), но m_thread == nullptr,
-    // поэтому isRunning()==false и start() корректно запустит его снова.
-    if (!m_graphServer) {
-        m_graphServer = new GraphServer(m_qastra->getRastr().get(), m_parentWidget);
-        // Попадаем сюда только если остановили через закрытие дока
-        connect(m_graphServer, &GraphServer::sig_stopped, this, [this]() {
-            spdlog::info("GraphServer stopped");
-            delete m_graphServer;
-            m_graphServer = nullptr;
-        });
-    }
-
-    auto* dw      = new ads::CDockWidget(tr("Графика Web"), m_parentWidget);
-    auto* webView = new QWebEngineView(dw);
-
-    dw->setWidget(webView);
-    dw->setFeature(ads::CDockWidget::DockWidgetDeleteOnClose, true);
-
-    // Регистрируем в общем списке — участвует в cascade/tile
-    registerDockWidget(dw);
-
-    m_dockManager->addDockWidgetTab(ads::TopDockWidgetArea, dw);
-
-    ++m_graphDockWebCount;
-
-    auto loadPage = [webView]() {
-        webView->load(QUrl("http://127.0.0.1:8081/grf.html"));
-    };
-
-    if (m_graphServer->isRunning()) {
-        loadPage();
-    } else {
-        //гарантируем, что соединение само отключится после первого срабатывания,
-        // сколько бы раз ни открывался dok до готовности сервера.
-        auto* conn = new QMetaObject::Connection();
-        *conn = connect(m_graphServer, &GraphServer::sig_ready,
-                        webView, [loadPage, conn]() {
-                            loadPage();
-                            QObject::disconnect(*conn);
-                            delete conn;
-                        },
-                        Qt::QueuedConnection);
-    }
-    /*
-    // Диагностические подключения
-    connect(webView, &QWebEngineView::loadStarted,
-            []{ qInfo() << "[webView] loadStarted"; });
-    connect(webView, &QWebEngineView::loadProgress,
-            [](int p){ qInfo() << "[webView] loadProgress:" << p; });
-    connect(webView, &QWebEngineView::loadFinished,
-            [](bool ok){ qInfo() << "[webView] loadFinished, ok=" << ok; });
-    connect(webView->page(), &QWebEnginePage::urlChanged,
-            [](const QUrl& url){ qInfo() << "[webView] urlChanged:" << url; });
-    */
-    // Останавливаем сервер при закрытии последнего дока
-    connect(dw, &ads::CDockWidget::closeRequested, this, [this]() {
-        if (--m_graphDockWebCount <= 0) {
-            m_graphDockWebCount = 0;
-            if (m_graphServer)
-                m_graphServer->stop();
-        }
-    });
-
-    if (!m_graphServer->isRunning()) {
-        m_graphServer->start();
-    }
-
+void FormManager::slot_openWebGraph() {  
+    m_graphWebManager->openWindow();
     emit formOpened("Графика Web");
 }
 
 void FormManager::closeGraphWebServer(){
-    // Останавливаем синхронно ДО того, как Qt начнёт рушить объекты
-    if (m_graphServer) {
-        // Отключаем сигнал, чтобы не сработал deleteLater из слота в slot_openGraph
-        disconnect(m_graphServer, &GraphServer::sig_stopped, this, nullptr);
-        m_graphServer->stop();   // теперь гарантированно завершает поток
-        delete m_graphServer;
-        m_graphServer = nullptr;
-    }
-
+    m_graphWebManager->closeAll();
 }
 
 void FormManager::openFormByIndex(int index) {
