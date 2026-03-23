@@ -1,11 +1,13 @@
-#include "GraphSDLManager.h"
-#include "SDLChild.h"
+#include "graphSDLManager.h"
+#include "sdlHostWidget.h"
 
 #include <DockManager.h>
 #include <DockWidget.h>
 #include <QApplication>
 #include <spdlog/spdlog.h>
 #include <QWidget>
+#include <QDebug>
+#include <filesystem>
 
 GraphSDLManager::GraphSDLManager(ads::CDockManager* dockManager,
                                  QWidget*           parentWidget,
@@ -40,11 +42,11 @@ void GraphSDLManager::openWindow()
 {
     // ── 1. SDL_Init — только при первом открытии окна ────────────────────────
     if (!ensureSDLInited()) return;
-    // ── 2. Создаём dock-виджет и SDLChild ────────────────────────────────────
+    // ── 2. Создаём dock-виджет и SDLHostWidget ────────────────────────────────────
     auto* dw       = new ads::CDockWidget(tr("Графика SDL"), m_parentWidget);
-    auto* sdlChild = new SDLChild(dw);
+    auto* sdlHostWidget = new SDLHostWidget(dw);
     dw->hide();
-    dw->setWidget(sdlChild);
+    dw->setWidget(sdlHostWidget);
     dw->setFeature(ads::CDockWidget::DockWidgetDeleteOnClose, true);
     // ── 3. Встраиваем в dock ─────────────────────────────────────────────────
     m_dockManager->addDockWidgetTab(ads::TopDockWidgetArea, dw);
@@ -54,27 +56,29 @@ void GraphSDLManager::openWindow()
     QApplication::processEvents();  // дать Qt обработать show()
     // ── 4. SDL-окно инициализируется ПОСЛЕ встраивания виджета в иерархию,
     //       иначе winId() ещё не назначен нативному окну ─────────────────────
-    if (!sdlChild->SDLInit()) {
+    if (!sdlHostWidget->SDLInit()) {
         // Не возвращаемся — dock уже создан, пусть хотя бы закроется штатно.
-        spdlog::error("GraphSDLManager: SDLChild::SDLInit завершился с ошибкой");
+        spdlog::error("GraphSDLManager: SDLHostWidget::SDLHostWidget завершился с ошибкой");
     } else {
         // ── 5. InitControl — после успешного CreateChildWindow ────────────────
         //       Устанавливает подписку GraphControlClient на хинты ElGraph.
         spdlog::info("GraphControlService initControl");
-        m_gcc->initControl(sdlChild->elGraph().graph());
+        m_gcc->initControl(sdlHostWidget->elGraph().graph());
     }
 
     dw->show();
-    // Сохраняем указатель на sdlChild внутри dock-виджета через свойство,
+    // Сохраняем указатель на sdlHostWidget внутри dock-виджета через свойство,
     // чтобы в слоте onDockClosed можно было его получить без lambda-захвата.
     // Используем динамическое свойство Qt.
-    dw->setProperty("sdlChild", QVariant::fromValue(static_cast<QObject*>(sdlChild)));
+    dw->setProperty("sdlHostWidget", QVariant::fromValue(static_cast<QObject*>(sdlHostWidget)));
     // ── 6. При закрытии dock-виджета: CloseControl → OnClose → счётчик ───────
     connect(dw, &ads::CDockWidget::closed,
             this, &GraphSDLManager::slot_dockClosed);
 
     m_windowCount++;
     spdlog::info("GraphSDLManager: открыто окно #{}", m_windowCount);
+
+    qInfo() << std::filesystem::current_path().string().c_str();
     emit windowOpened(dw);
 }
 
@@ -83,15 +87,15 @@ void GraphSDLManager::slot_dockClosed()
     auto* dw = qobject_cast<ads::CDockWidget*>(sender());
     if (!dw) return;
 
-    auto* sdlChildObj = dw->property("sdlChild").value<QObject*>();
-    auto* sdlChild    = qobject_cast<SDLChild*>(sdlChildObj);
+    auto* sdlHostWidgetObj = dw->property("sdlHostWidget").value<QObject*>();
+    auto* sdlHostWidget    = qobject_cast<SDLHostWidget*>(sdlHostWidgetObj);
 
-    if (sdlChild) {
+    if (sdlHostWidget) {
         // 1. CloseControl — отписываем GraphControlClient от хинтов ElGraph
-        m_gcc->closeControl(sdlChild->elGraph().graph());
+        m_gcc->closeControl(sdlHostWidget->elGraph().graph());
 
-        // 2. Останавливаем рендер-таймер, даём SDLChild корректно завершиться
-        sdlChild->onClose();
+        // 2. Останавливаем рендер-таймер, даём SDLHostWidget корректно завершиться
+        sdlHostWidget->onClose();
     }
 
     m_windowCount--;

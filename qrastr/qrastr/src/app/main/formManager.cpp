@@ -14,7 +14,7 @@
 using WrapperExceptionType = std::runtime_error;
 #include "astra/IPlainRastrWrappers.h"
 #include "web/graphWebManager.h"
-#include "sdl/GraphSDLManager.h"
+#include "sdl/graphSDLManager.h"
 
 FormManager::FormManager
     (std::shared_ptr<QAstra> qastra,

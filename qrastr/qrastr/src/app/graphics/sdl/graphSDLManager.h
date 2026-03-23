@@ -1,6 +1,6 @@
 #pragma once
 #include <QObject>
-#include "GraphControlService.h"
+#include "graphControlService.h"
 #include "iGraphManager.h"
 
 namespace ads { class CDockManager; class CDockWidget; }
@@ -11,7 +11,7 @@ namespace ads { class CDockManager; class CDockWidget; }
  * Ответственности:
  *  - SDL_Init / SDL_Quit (один раз, счётчик открытых окон)
  *  - Загрузка GraphControlClient (живёт = менеджер)
- *  - Создание/удаление SDLChild-вкладок через CDockManager
+ *  - Создание/удаление SDLHostWidget-вкладок через CDockManager
     Объявление функций в библиотеках:
     GraphClient:
     extern "C" SBtype void InitPlainDLL(IPlainRastr* pPLain, const char* libpath)

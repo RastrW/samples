@@ -46,6 +46,9 @@ bool ElGraphService::init(void* parentHwnd)
     }
 
     // ── 4. Встраиваем в нативное окно ───────────────────────────────────────
+    // Логируем HWND в hex для сравнения с тем, что передаёт SelfDrawingChild.
+    spdlog::info("ElGraphService::init: parentHwnd = 0x{:016X}",
+                 reinterpret_cast<uintptr_t>(parentHwnd));
     // Сообщаем ElGraph его родительский HWND.
     // Реальный дочерний HWND будет создан позже — после InitControl.
     auto* res = m_grc->CreateChildWindow(parentHwnd);
@@ -59,34 +62,6 @@ bool ElGraphService::init(void* parentHwnd)
     spdlog::info("ElGraphService: ElGraphCtrl успешно инициализирован");
     return true;
 }
-
-void ElGraphService::fitToParent(void* parentHwnd) const
-{
-#if defined(Q_OS_WIN)
-    HWND child;
-
-    if (!m_grc){
-        child = nullptr;
-    }
-    auto* res = m_grc->GetNativeHandle();
-    if (!res) {
-        child = nullptr;
-    }
-    HWND hwnd = reinterpret_cast<HWND>(static_cast<long long>(*res));
-    res->Destroy();{
-        child = hwnd;
-    }
-
-    HWND parent = reinterpret_cast<HWND>(parentHwnd);
-    if (!child || !parent) return;
-
-    RECT rc{};
-    ::GetClientRect(parent, &rc);
-    ::MoveWindow(child, 0, 0, rc.right, rc.bottom, TRUE);
-    ::ShowWindow(child, SW_SHOW);
-#endif
-}
-
 
 void ElGraphService::shutdown()
 {

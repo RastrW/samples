@@ -91,6 +91,7 @@ void GraphControlService::initControl(IPlainElGraph* graph)
     }
 
     m_initControl(graph, m_rastr);
+    //m_initControl(graph, nullptr);
 }
 
 void GraphControlService::closeControl(IPlainElGraph* graph)
