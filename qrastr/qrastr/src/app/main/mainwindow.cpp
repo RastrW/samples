@@ -37,7 +37,6 @@
 #include "uiBuilder.h"
 #include "params.h"
 #include "UIForms.h"
-#include "cacheLog.h"
 
 #include "protocolLogWidget.h"
 
@@ -131,9 +130,6 @@ void MainWindow::initialize(
 
     // Создаём виджеты протоколов и СРАЗУ добавляем Qt-синки в логгер.
     setupLogDockWidgets();
-
-    // Вывод кэшированных логов
-    m_settingsManager->flushLogCache();
 
     spdlog::info("MainWindow initialized successfully");
 }
@@ -423,6 +419,8 @@ void MainWindow::closeEvent(QCloseEvent* event) {
     if (m_dockManager)
         m_dockManager->deleteLater();
 
+    // сброс буфера файла до закрытия окна
+    spdlog::default_logger()->flush();
     QMainWindow::closeEvent(event);
 }
 

@@ -1,18 +1,14 @@
 #include "settingsManager.h"
 #include "qastra.h"
 #include "settingsDialog.h"
-#include "cacheLog.h"
 #include <QMainWindow>
 #include <QStyle>
 #include <QStyleFactory>
+#include <QApplication>
 #include <spdlog/spdlog.h>
 
 SettingsManager::SettingsManager(QObject* parent)
-    : QObject(parent)
-    , m_logCache(std::make_unique<qrastr::CacheLogVector>())
-{
-
-}
+    : QObject(parent){}
 
 bool SettingsManager::loadWindowGeometry(QMainWindow* window) {
     if (!window) {
@@ -44,11 +40,11 @@ bool SettingsManager::loadWindowGeometry(QMainWindow* window) {
     }
     catch (const std::exception& ex) {
         // Кэшируем ошибку (логгер может быть не инициализирован)
-        m_logCache->add(spdlog::level::err, "Exception: {}", ex.what());
+        spdlog::error("Exception: {}", ex.what());
         return false;
     }
     catch (...) {
-        m_logCache->add(spdlog::level::err, "Unknown exception.");
+        spdlog::error("Unknown exception.");
         return false;
     }
     
@@ -77,10 +73,6 @@ bool SettingsManager::saveWindowGeometry(QMainWindow* window) {
     qInfo() << "StyleName:" << styleName;
 
     return true;
-}
-
-void SettingsManager::flushLogCache() {
-    m_logCache->flush();
 }
 
 void SettingsManager::showFormSettings(std::shared_ptr<QAstra> qastra) {

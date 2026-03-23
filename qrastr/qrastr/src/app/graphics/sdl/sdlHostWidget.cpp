@@ -89,10 +89,9 @@ bool SDLHostWidget::SDLInit()
     // ── 2. ТЕСТ: создаём SelfDrawingChild внутри SDL-окна ───────────────────
     // parentHandle — нативный HWND (Win) / XID (Linux) Qt-виджета.
     // SelfDrawingChild создаётся дочерним к этому же HWND, что и SDL-окно,
-    // поэтому WS_CLIPCHILDREN выше не даёт SDL его затирать.
     // Дочернее окно позиционируется по центру виджета (четверть размера).
     // УДАЛИТЬ этот блок когда ElGraphService заработает.
-    bool testWindow = true;
+    bool testWindow = false;
     if (testWindow) {
         if (!m_testChild.create(sdlHwnd,
                             width()  / 4, height() / 4,
@@ -102,9 +101,6 @@ bool SDLHostWidget::SDLInit()
     }
 
     // ── 3. Инициализируем ElGraphService ─────────────────────────────────────
-    // ТЕСТ: пока m_testChild активен, ElGraphService не инициализируем,
-    //       чтобы два дочерних окна не конфликтовали за одно пространство.
-    //       Когда тест пройдёт — убрать условие и оставить только m_elGraph.init().
     if (!testWindow) {
         if (!m_elGraph.init(sdlHwnd)) {
             spdlog::warn("SDLHostWidget::SDLInit: ElGraphCtrl недоступен");

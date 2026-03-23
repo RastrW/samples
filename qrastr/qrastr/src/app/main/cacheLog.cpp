@@ -34,3 +34,24 @@ void CacheLogVector::flush() {
 	}
 	clear();
 }
+
+void CacheLogVector::flushToSinks(
+    std::initializer_list<std::shared_ptr<spdlog::sinks::sink>> target_sinks)
+{
+    auto logger_name = spdlog::default_logger()->name(); // "qrastr"
+    for (const auto& entry : *this) {
+        spdlog::details::log_msg msg(
+            spdlog::source_loc{},
+            logger_name,
+            entry.lev,
+            entry.str_log
+            );
+        for (auto& sink : target_sinks) {
+            if (sink->should_log(entry.lev)) {
+                sink->log(msg);
+                sink->flush();
+            }
+        }
+    }
+    // НЕ очищаем *this — кэш нужен для последующего воспроизведения в Qt
+}

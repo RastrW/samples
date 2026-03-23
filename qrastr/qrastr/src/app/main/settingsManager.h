@@ -4,10 +4,6 @@
 #include <QSettings>
 #include <memory>
 
-namespace qrastr {
-    class CacheLogVector;
-}
-
 class QAstra;
 class QMainWindow;
 
@@ -26,9 +22,6 @@ public:
     /// @brief Сохранить геометрию окна
     bool saveWindowGeometry(QMainWindow* window);
     void saveValue(const QString& key, const QByteArray& value);
-    // ========== Кэширование логов ==========
-    /// @brief Вывести кэшированные логи
-    void flushLogCache();
     // ========== Настройки форм ==========
     /// @brief Показать диалог настроек форм
     void showFormSettings(std::shared_ptr<QAstra> qastra); 
@@ -36,6 +29,4 @@ public:
 private:
     QSettings
         m_settings;
-    std::unique_ptr<qrastr::CacheLogVector>
-        m_logCache;
 };

@@ -32,6 +32,7 @@ namespace qrastr {
             emplace_back(lev, fmt::format(format, std::forward<Args>(args)...));
         }
 		
-		void flush();
+        void flush();
+        void flushToSinks(std::initializer_list<std::shared_ptr<spdlog::sinks::sink>> sinks);
 	};
 }
