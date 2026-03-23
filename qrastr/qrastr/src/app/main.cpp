@@ -41,9 +41,13 @@ int main(int argc, char *argv[]){
         }
     }
 */
-   // SDL_Init(SDL_INIT_VIDEO); // Basics of SDL, init what you need to use
 
     MainWindow w;
+    // Qt-синк уже создан в конструкторе MainWindow.
+    // Воспроизводим ранние сообщения в Qt-виджет ПРЯМО СЕЙЧАС,
+    // пока start() ещё не добавил новых записей.
+    app.flushLogCache(w.getProtocolLogSink());
+
     if (!app.start()) {
         return 200;
     }
@@ -54,8 +58,6 @@ int main(int argc, char *argv[]){
         app.getQBarsMDPPtr(),
         app.getForms()
         );
-
-    app.flushLogCache();
 
     w.show();
     return app.exec();

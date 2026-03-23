@@ -427,6 +427,8 @@ bool App::start(){
     return true;
 }
 
-void App::flushLogCache() {
-    m_v_cache_log.flush();
+
+void App::flushLogCache(std::shared_ptr<spdlog::sinks::sink> qt_sink) {
+    m_v_cache_log.flushToSinks({qt_sink}); // только Qt, без дублей
+    m_v_cache_log.clear();
 }

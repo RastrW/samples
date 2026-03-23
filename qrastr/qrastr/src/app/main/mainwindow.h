@@ -3,7 +3,7 @@
 #include <QMainWindow>
 #include <memory>
 #include <list>
-
+#include <spdlog/sinks/qt_sinks.h>
 
 class FileManager;
 class CalculationController;
@@ -44,7 +44,10 @@ public:
         std::shared_ptr<QTI> qti,
         std::shared_ptr<QBarsMDP> qbarsmdp,
         const std::list<CUIForm>& forms);
-    
+
+    std::shared_ptr<spdlog::sinks::sink> getProtocolLogSink() const {
+        return m_qtLogSink;
+    }
 signals:
     // Файл загружен
     void sig_fileLoaded();
@@ -108,6 +111,7 @@ private:
     // ========== ВСПОМОГАТЕЛЬНЫЕ КОМПОНЕНТЫ ==========
     std::shared_ptr<PyHlp> m_pyHelper;          // Python helper (для выполнения макросов)
 
+    std::shared_ptr<spdlog::sinks::sink> m_qtLogSink; // сохраняем в setupLogSinks
     // ========== ИНИЦИАЛИЗАЦИЯ ==========
     void createLogWidgets();
     void setupLogDockWidgets();

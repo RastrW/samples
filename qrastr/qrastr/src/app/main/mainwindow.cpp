@@ -164,6 +164,7 @@ void MainWindow::setupLogSinks() {
     auto qtSink = std::make_shared<spdlog::sinks::qt_sink_mt>(
         m_globalProtocol, "onAppendText");
     logger->sinks().push_back(qtSink);
+    m_qtLogSink = qtSink; // сохраняем
 
     auto protocolSink = std::make_shared<spdlog::sinks::qt_sink_mt>(
         m_mainProtocol, "onAppendProtocol");
