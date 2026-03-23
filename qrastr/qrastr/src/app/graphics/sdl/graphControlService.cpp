@@ -90,8 +90,8 @@ void GraphControlService::initControl(IPlainElGraph* graph)
         dpcResult->Destroy(); // освобождаем сам result object
     }
 
-    m_initControl(graph, m_rastr);
-    //m_initControl(graph, nullptr);
+    //m_initControl(graph, m_rastr);
+    m_initControl(graph, nullptr);
 }
 
 void GraphControlService::closeControl(IPlainElGraph* graph)

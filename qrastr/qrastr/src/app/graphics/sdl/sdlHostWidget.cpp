@@ -3,7 +3,6 @@
 #include <QFile>
 #include <QDir>
 #include <QDebug>
-#include <QApplication>
 #include <QResizeEvent>
 #include <spdlog/spdlog.h>
 
@@ -73,19 +72,31 @@ bool SDLHostWidget::SDLInit()
         return false;
     }
 
+// ── 2. Получаем HWND самого SDL-окна — он станет родителем для ElGraph ───
+#if defined(Q_OS_WIN)
+    void* sdlHwnd = SDL_GetPointerProperty(
+        SDL_GetWindowProperties(m_window),
+        SDL_PROP_WINDOW_WIN32_HWND_POINTER,
+        nullptr);
+    spdlog::info("SDLHostWidget::SDLInit: SDL HWND    = 0x{:016X}",
+                 reinterpret_cast<uintptr_t>(sdlHwnd));
+    spdlog::info("SDLHostWidget::SDLInit: Qt  winId() = 0x{:016X}",
+                 static_cast<quintptr>(winId()));
+// Два значения могут совпасть — это нормально: SDL при встраивании в
+// существующий HWND не создаёт новый, а оборачивает переданный winId().
+// В таком случае иерархия фактически плоская и оба подхода эквивалентны.
+#endif
     // ── 2. ТЕСТ: создаём SelfDrawingChild внутри SDL-окна ───────────────────
     // parentHandle — нативный HWND (Win) / XID (Linux) Qt-виджета.
     // SelfDrawingChild создаётся дочерним к этому же HWND, что и SDL-окно,
     // поэтому WS_CLIPCHILDREN выше не даёт SDL его затирать.
     // Дочернее окно позиционируется по центру виджета (четверть размера).
     // УДАЛИТЬ этот блок когда ElGraphService заработает.
-    bool testWindow = false;
+    bool testWindow = true;
     if (testWindow) {
-        void* parentHandle = reinterpret_cast<void*>(winId());
-        if (!m_testChild.create(parentHandle,
+        if (!m_testChild.create(sdlHwnd,
                             width()  / 4, height() / 4,
-                            width()  / 2, height() / 2))
-        {
+                            width()  / 2, height() / 2)){
             spdlog::warn("SDLHostWidget::SDLInit: SelfDrawingChild::create завершился с ошибкой");
         }
     }
@@ -95,10 +106,7 @@ bool SDLHostWidget::SDLInit()
     //       чтобы два дочерних окна не конфликтовали за одно пространство.
     //       Когда тест пройдёт — убрать условие и оставить только m_elGraph.init().
     if (!testWindow) {
-        void* hwnd = reinterpret_cast<void*>(winId());
-        spdlog::info("SDLHostWidget::SDLInit: winId для ElGraph = 0x{:x}",
-                     reinterpret_cast<uintptr_t>(hwnd));
-        if (!m_elGraph.init(hwnd)) {
+        if (!m_elGraph.init(sdlHwnd)) {
             spdlog::warn("SDLHostWidget::SDLInit: ElGraphCtrl недоступен");
         }
     }
@@ -168,5 +176,4 @@ void SDLHostWidget::resizeEvent(QResizeEvent* event)
     // ТЕСТ: при ресайзе держим SelfDrawingChild по центру виджета
     m_testChild.resize(event->size().width()  / 4, event->size().height() / 4,
                    event->size().width()  / 2, event->size().height() / 2);
-
 }
