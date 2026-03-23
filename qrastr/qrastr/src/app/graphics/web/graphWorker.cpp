@@ -6,20 +6,21 @@
 #include <QDebug>
 #include "astra/IPlainRastr.h"
 #include "graphServer.h"
+#include <spdlog/spdlog.h>
 
 GraphWorker::GraphWorker(IPlainRastr* rastr, QLibrary* lib)
         : m_rastr(rastr), m_lib(lib) {}
 
 GraphWorker::~GraphWorker(){
-    qInfo() << "GraphWorker was deleted";
+    spdlog::info("GraphWorker was deleted");
 }
 
 void GraphWorker::stopFromOutside() {
     if (m_fnInit) {
-        qInfo() << ">> Calling m_fnInit(nullptr) directly";
+        spdlog::info("Calling m_fnInit(nullptr) directly");
         m_fnInit(nullptr, "", "", 0, nullptr);
         m_fnInit = nullptr;
-        qInfo() << ">> m_fnInit(nullptr) returned";
+        spdlog::info("m_fnInit(nullptr) returned");
     }
 }
 
@@ -27,7 +28,7 @@ void GraphWorker::slot_process() {
     // --- Проверка HTML-ресурсов ---
     auto res = m_rastr->WorkingFolder();
     if (!res || res->Code() != IPlainRastrRetCode::Ok) {
-        qWarning() << "Не удалось определить рабочую папку.";
+        spdlog::warn("Не удалось определить рабочую папку.");
         if (res) res->Destroy();
         return;
     }
@@ -42,44 +43,44 @@ void GraphWorker::slot_process() {
             missing << f;
 
     if (!missing.isEmpty()) {
-        qWarning() << QString("В папке «%1» не найдены файлы:\n%2")
-                                  .arg(htmlDir, missing.join('\n'));
+        spdlog::warn("В папке «{}» не найдены файлы:\n {}",
+                                  htmlDir.toStdString(), missing.join('\n').toStdString());
         return;
     }
 
     const QString graphLibsPath =
         QCoreApplication::applicationDirPath() + "/../Data/graphics/graph2libs.xml";
     if (!QFile::exists(graphLibsPath)) {
-        qWarning() << "GraphWorker: graph2libs.xml not found";
+        spdlog::warn("GraphWorker: graph2libs.xml not found");
         emit sig_finished();
         return;
     }
 
 	if (!m_lib->load()) {
-		qCritical() << "GraphWorker: failed to load library:" << m_lib->errorString();
+        spdlog::critical("GraphWorker: failed to load library: {}", m_lib->errorString().toStdString());
         emit sig_finished();
 		return;
 	}
-	qInfo() << "GraphWorker: library loaded:" << m_lib->fileName();
+    spdlog::info("GraphWorker: library loaded: {}", m_lib->fileName().toStdString());
 
 	loadSymbols();
 	if (!m_fnInit || !m_fnPutTextLayer || !m_fnUpdateAll) {
-		qWarning() << "GraphWorker: required symbols not found";
+        spdlog::warn("GraphWorker: required symbols not found");
         emit sig_finished();
 		return;
 	}
 
-    qInfo() << ">> slot_process: calling m_fnInit (will block?)";
+    spdlog::info("slot_process: calling m_fnInit (will block?)");
 
 	m_fnInit(m_rastr,
 			 graphLibsPath.toStdString().c_str(),
 			 "127.0.0.1", 8081,
              GraphServer::staticCallback);   // подключение к либе
 
-    qInfo() << ">> slot_process: m_fnInit RETURNED <--";
-	qInfo() << "GraphWorker: HTTP server ready";
+    spdlog::info("slot_process: m_fnInit RETURNED <--");
+    spdlog::info("GraphWorker: HTTP server ready");
     emit sig_ready();
-    qInfo() << ">> slot_process: sig_ready emitted, exiting slot";
+    spdlog::info("slot_process: sig_ready emitted, exiting slot");
 	// Дальше работает событийный цикл потока:
 	// все handleCallback() придут как queued-сигналы
 }
@@ -91,7 +92,9 @@ void GraphWorker::slot_handleCallback(int iMSG, const QString& params) {
 void GraphWorker::loadSymbols() {
 	auto resolve = [&](const char* name) -> QFunctionPointer {
 		auto fn = m_lib->resolve(name);
-		if (!fn) qWarning() << "GraphWorker: symbol not found:" << name;
+        if (!fn) {
+            spdlog::warn( "GraphWorker: symbol not found:", name);
+        };
 		return fn;
 	};
 	m_fnInit         = reinterpret_cast<InitPlainDLL_t>      (resolve("InitPlainDLL"));

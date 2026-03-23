@@ -154,6 +154,97 @@ bool App::readSettings(){
     return true;
 }
 
+bool App::start(){
+    try{
+        auto* const p_params = Params::get_instance();
+        QDir::setCurrent(p_params->getDirData().absolutePath());
+
+        if (!loadPlugins()){
+            return false;
+        }
+
+        if(nullptr!=m_sp_qastra){
+            const QDir dir = p_params->getDirSHABLON();
+#if(QT_VERSION > QT_VERSION_CHECK(5, 16, 0))
+            const std::filesystem::path path_templates = p_params->getDirSHABLON().filesystemCanonicalPath();
+#else
+            std::filesystem::path path_templates = p_params->getDirSHABLON().canonicalPath().toStdString();
+#endif
+            const Params::_v_templates v_templates{ p_params->getStartLoadTemplates() };
+            for(const Params::_v_templates::value_type& templ_to_load : v_templates){
+                std::filesystem::path path_template = path_templates;
+                path_template /= templ_to_load;
+                IPlainRastrRetCode res =
+                    m_sp_qastra->Load( eLoadCode::RG_REPL, "", path_template.string() );
+                if(res != IPlainRastrRetCode::Ok){
+                    spdlog::error("Failed to load template: {}", templ_to_load);
+                    QMessageBox mb( QMessageBox::Icon::Critical, QObject::tr("Error"),
+                                   QString("error: wheh read file : %1").arg(templ_to_load.c_str())
+                                   );
+                    mb.exec();
+                }else {
+                    spdlog::info("Template loaded: {}", templ_to_load);
+                }
+            }
+            for (const auto& file_template : p_params->getStartLoadFileTemplates()) {
+                fs::path path_file = file_template.first;
+
+                // Проверяем существование до загрузки
+                if (!fs::exists(path_file)) {
+                    Params::_v_file_templates empty;
+                    p_params->setStartLoadFileTemplates(empty);
+                    spdlog::warn("Startup file not found: {}", path_file.string());
+                    QMessageBox mb(QMessageBox::Icon::Warning,
+                                   QObject::tr("Файл не найден"),
+                                   QString("Файл не найден:\n%1\n\nБудет открыт пустой проект.")
+                                       .arg(QString::fromStdString(path_file.string())));
+                    mb.exec();
+                    continue; // Не падаем — просто пропускаем
+                }
+                try {
+                    fs::path path_template = path_templates / file_template.second;
+                    IPlainRastrRetCode res = m_sp_qastra->Load(
+                        eLoadCode::RG_REPL,
+                        file_template.first,
+                        path_template.string()
+                        );
+                    if (res != IPlainRastrRetCode::Ok) {
+                        Params::_v_file_templates empty;
+                        p_params->setStartLoadFileTemplates(empty);
+                        spdlog::error("Failed to load file template: {}", file_template.first);
+                    }
+                } catch (const std::exception& ex) {
+                    Params::_v_file_templates empty;
+                    p_params->setStartLoadFileTemplates(empty);
+                    spdlog::error("Exception loading startup file {}: {}",
+                                  file_template.first, ex.what());
+                    QMessageBox mb( QMessageBox::Icon::Critical, QObject::tr("Error"),
+                                   QString("error: wheh read file : %1").arg(file_template.first.c_str())
+                                   );
+                    mb.exec();
+                }
+            }
+        }
+        spdlog::info("ReadForms: starting");
+        if(!readForms()){
+            spdlog::error("Can't read forms");
+            QMessageBox mb(QMessageBox::Icon::Critical, QObject::tr("Error"),
+                           QObject::tr("Can't read forms"));
+            mb.exec();
+        }else {
+            spdlog::info("ReadForms: OK");
+        }
+        spdlog::info("ReadForms: starting");
+    }catch(const std::exception& ex){
+        exclog(ex);
+        return false;
+    }catch(...){
+        exclog();
+        return false;
+    }
+    return true;
+}
+
 bool App::loadPlugins(){
     QDir pluginsDir{QDir{QCoreApplication::applicationDirPath()}};
     pluginsDir.cd("plugins");
@@ -210,9 +301,8 @@ bool App::loadPlugins(){
                     const std::shared_ptr<IPlainRastr> rastr =
                         iRastr->getIPlainRastrPtr(); // Destroyable rastr{ iRastr };
                     if(nullptr==rastr){
-                        spdlog::error("rastr==null" );
                         assert(!"may be u haven't license!");
-                        qInfo( "Plugin Rastr no load (rastr==null)! may be u haven't license!" );
+                        spdlog::critical("Plugin Rastr no load (rastr==null)! may be u haven't license!" );
                         return false;
                     }
 
@@ -335,98 +425,6 @@ std::list<CUIForm>& App::getForms() const {
     assert(nullptr!=upCUIFormsCollection_);
     return upCUIFormsCollection_->Forms();
 }
-
-bool App::start(){
-    try{
-        auto* const p_params = Params::get_instance();
-        QDir::setCurrent(p_params->getDirData().absolutePath());
-
-        if (!loadPlugins()){
-            return false;
-        }
-
-        if(nullptr!=m_sp_qastra){
-            const QDir dir = p_params->getDirSHABLON();
-#if(QT_VERSION > QT_VERSION_CHECK(5, 16, 0))
-            const std::filesystem::path path_templates = p_params->getDirSHABLON().filesystemCanonicalPath();
-#else
-            std::filesystem::path path_templates = p_params->getDirSHABLON().canonicalPath().toStdString();
-#endif
-            const Params::_v_templates v_templates{ p_params->getStartLoadTemplates() };
-            for(const Params::_v_templates::value_type& templ_to_load : v_templates){
-                std::filesystem::path path_template = path_templates;
-                path_template /= templ_to_load;
-                IPlainRastrRetCode res =
-                    m_sp_qastra->Load( eLoadCode::RG_REPL, "", path_template.string() );
-                if(res != IPlainRastrRetCode::Ok){
-                    spdlog::error("Failed to load template: {}", templ_to_load);
-                    QMessageBox mb( QMessageBox::Icon::Critical, QObject::tr("Error"),
-                                   QString("error: wheh read file : %1").arg(templ_to_load.c_str())
-                                   );
-                    mb.exec();
-                }else {
-                    spdlog::info("Template loaded: {}", templ_to_load);
-                }
-            }
-            for (const auto& file_template : p_params->getStartLoadFileTemplates()) {
-                fs::path path_file = file_template.first;
-
-                // Проверяем существование до загрузки
-                if (!fs::exists(path_file)) {
-                    Params::_v_file_templates empty;
-                    p_params->setStartLoadFileTemplates(empty);
-                    spdlog::warn("Startup file not found: {}", path_file.string());
-                    QMessageBox mb(QMessageBox::Icon::Warning,
-                                   QObject::tr("Файл не найден"),
-                                   QString("Файл не найден:\n%1\n\nБудет открыт пустой проект.")
-                                       .arg(QString::fromStdString(path_file.string())));
-                    mb.exec();
-                    continue; // Не падаем — просто пропускаем
-                }
-                try {
-                    fs::path path_template = path_templates / file_template.second;
-                    IPlainRastrRetCode res = m_sp_qastra->Load(
-                        eLoadCode::RG_REPL,
-                        file_template.first,
-                        path_template.string()
-                        );
-                    if (res != IPlainRastrRetCode::Ok) {
-                        Params::_v_file_templates empty;
-                        p_params->setStartLoadFileTemplates(empty);
-                        spdlog::error("Failed to load file template: {}", file_template.first);
-                    }
-                } catch (const std::exception& ex) {
-                    Params::_v_file_templates empty;
-                    p_params->setStartLoadFileTemplates(empty);
-                    spdlog::error("Exception loading startup file {}: {}",
-                                      file_template.first, ex.what());
-                    QMessageBox mb( QMessageBox::Icon::Critical, QObject::tr("Error"),
-                                   QString("error: wheh read file : %1").arg(file_template.first.c_str())
-                                   );
-                    mb.exec();
-                }
-            }
-        }
-        spdlog::info("ReadForms: starting");
-        if(!readForms()){
-            spdlog::error("Can't read forms");
-            QMessageBox mb(QMessageBox::Icon::Critical, QObject::tr("Error"),
-                           QObject::tr("Can't read forms"));
-            mb.exec();
-        }else {
-            spdlog::info("ReadForms: OK");
-        }
-        spdlog::info("ReadForms: starting");
-    }catch(const std::exception& ex){
-        exclog(ex);
-        return false;
-    }catch(...){
-        exclog();
-        return false;
-    }
-    return true;
-}
-
 
 void App::flushLogCache(std::shared_ptr<spdlog::sinks::sink> qt_sink) {
     m_v_cache_log.flushToSinks({qt_sink}); // только Qt, без дублей

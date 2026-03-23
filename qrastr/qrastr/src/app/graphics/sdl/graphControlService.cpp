@@ -38,7 +38,7 @@ bool GraphControlService::load()
     const QString graphLibsPath =
         QCoreApplication::applicationDirPath() + "/../Data/graphics/graph2libs.xml";
     if (!QFile::exists(graphLibsPath)) {
-        qWarning() << "GraphWorker: graph2libs.xml not found";
+        spdlog::warn("GraphWorker: graph2libs.xml not found");
         return false;
     }
 
@@ -75,7 +75,7 @@ void GraphControlService::initControl(IPlainElGraph* graph)
     const QString graphLibsPath =
         QCoreApplication::applicationDirPath() + "/../Data/graphics/graph2items.xml";
     if (!QFile::exists(graphLibsPath)) {
-        qWarning() << "GraphWorker: graph2items.xml not found";
+        spdlog::warn("GraphWorker: graph2items.xml not found");
         return;
     }
 
@@ -84,7 +84,7 @@ void GraphControlService::initControl(IPlainElGraph* graph)
         auto* dpc = dpcResult->operator->(); // теперь это IPlainElGraphDrawShapesCollection*
         if (dpc) {
             auto* res = dpc->LoadShapes(graphLibsPath.toStdString());
-            qWarning() << "graph2items.xml is loaded";
+            spdlog::warn("graph2items.xml is loaded");
             if (res) res->Destroy();   // освобождаем результат LoadShapes
         }
         dpcResult->Destroy(); // освобождаем сам result object

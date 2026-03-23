@@ -3,6 +3,7 @@
 #include "rdata.h"
 #include "QDataBlocks.h"
 #include "utils.h"
+#include <spdlog/spdlog.h>
 
 void BackInfoCache::clear()
 {
@@ -185,13 +186,13 @@ QPixmap BackInfoCache::iconByIndex(int idx)
     };
 
     if (idx < 0 || idx >= static_cast<int>(std::size(paths))) {
-        qWarning() << "iconByIndex: unknown idx=" << idx;
+        spdlog::warn("iconByIndex: unknown idx= {}", idx);
         return {};
     }
 
     QPixmap px(paths[idx]);
     if (px.isNull())
-        qWarning() << "iconByIndex: pixmap is NULL for idx=" << idx;
+        spdlog::warn("iconByIndex: pixmap is NULL for idx= {}", idx);
 
     return px.scaled(16, 16, Qt::KeepAspectRatio, Qt::SmoothTransformation);
 }

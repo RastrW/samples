@@ -139,7 +139,7 @@ bool Params::writeJsonFile(const fs::path& path_2_json)const {
         j_file[pch_json_start_] = j_start;
         j_file[pch_json_max_recent_files_]  = m_maxRecentFiles;
 
-        qInfo() << "write JSON file: [" << QString::fromStdString(path_2_json.string()) << "]\n";
+        spdlog::info("write JSON file: [{}]", path_2_json.string());
         std::ofstream ofs(path_2_json);
         if(ofs.is_open()){
             ofs << j_file.dump(1, ' ');

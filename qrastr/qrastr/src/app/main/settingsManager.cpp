@@ -16,11 +16,11 @@ bool SettingsManager::loadWindowGeometry(QMainWindow* window) {
     }
 
     // Временная диагностика
-    qInfo() << "Settings file:" << m_settings.fileName();
-    qInfo() << "All keys:" << m_settings.allKeys();
+    spdlog::info("Settings file: {}", m_settings.fileName().toStdString());
+    spdlog::info("All keys: {}", m_settings.allKeys().join(", ").toStdString());
 
     QString savedStyle = m_settings.value("appStyle").toString();
-    qInfo() << "SavedStyle:" << savedStyle;
+    spdlog::info("SavedStyle: {}", savedStyle.toStdString());
     if (savedStyle.isEmpty()){
         savedStyle = "windows11";
     }
@@ -29,7 +29,7 @@ bool SettingsManager::loadWindowGeometry(QMainWindow* window) {
     try {
         m_settings.beginGroup("MainWindow");
         const auto geometry = m_settings.value("geometry", QByteArray()).toByteArray();
-        
+
         if (geometry.isEmpty()) {
             window->setGeometry(200, 200, 800, 800);
         } else {
@@ -47,7 +47,7 @@ bool SettingsManager::loadWindowGeometry(QMainWindow* window) {
         spdlog::error("Unknown exception.");
         return false;
     }
-    
+
     return true;
 }
 
@@ -70,7 +70,7 @@ bool SettingsManager::saveWindowGeometry(QMainWindow* window) {
     const QString styleName = QApplication::style()->objectName();
     m_settings.setValue("appStyle", styleName.isEmpty() ? "Fusion" : styleName);
     m_settings.setValue("mainWindowState", window->saveState());
-    qInfo() << "StyleName:" << styleName;
+    spdlog::info("StyleName: {}", styleName.toStdString());
 
     return true;
 }

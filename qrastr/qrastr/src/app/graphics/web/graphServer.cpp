@@ -4,6 +4,7 @@
 #include <QCoreApplication>
 #include "graphWorker.h"
 #include "astra/IPlainRastr.h"
+#include <spdlog/spdlog.h>
 
 GraphServer* GraphServer::s_instance = nullptr;
 
@@ -17,7 +18,7 @@ GraphServer::GraphServer(IPlainRastr* rastr, QObject* parent)
 
 GraphServer::~GraphServer() {
     stop();
-    qInfo() << "GraphServer was deleted";
+    spdlog::info("GraphServer was deleted");
 }
 
 bool GraphServer::start() {
@@ -37,7 +38,7 @@ bool GraphServer::start() {
     // Поток завершился → чистим ресурсы и сигналим наружу
     connect(m_thread, &QThread::finished, this, [this]() {
         s_instance = nullptr;
-        qInfo() << "[sig_stopped] delivered in thread:" << QThread::currentThreadId();
+        spdlog::info("[sig_stopped] delivered in thread: {}", QThread::currentThreadId());
         // Чистим синхронно в stop(), здесь только сигнал
         emit sig_stopped();
     });
@@ -45,7 +46,7 @@ bool GraphServer::start() {
     // Готовность сервера → пробрасываем сигнал наружу
     connect(m_worker, &GraphWorker::sig_ready, this, [this]() {
         s_instance = this;
-        qInfo() << "[sig_ready] delivered in thread:" << QThread::currentThreadId();
+        spdlog::info( "[sig_ready] delivered in thread: {}", QThread::currentThreadId());
         emit sig_ready();
     });
 
@@ -62,14 +63,14 @@ void GraphServer::stop() {
 
     // Шаг 2: даём внутренним потокам DLL время завершиться
     // Т.к. мы не знаем, когда закончится, ждём.
-    qInfo() << ">> Waiting for DLL internal threads to stop...";
+    spdlog::info("Waiting for DLL internal threads to stop...");
     QThread::msleep(300);
-    qInfo() << ">> Done waiting";
+    spdlog::info("Done waiting");
 
     // Шаг 3: останавливаем наш QThread
     m_thread->quit();
     if (!m_thread->wait(3000)) {
-        qWarning() << "GraphServer: QThread did not stop — terminating";
+        spdlog::warn("GraphServer: QThread did not stop — terminating");
         m_thread->terminate();
         m_thread->wait(1000);
     }
@@ -77,7 +78,7 @@ void GraphServer::stop() {
     // Шаг 4: теперь безопасно выгружать
     if (m_lib.isLoaded()) {
         m_lib.unload();
-        qInfo() << "GraphServer: library unloaded";
+        spdlog::info("GraphServer: library unloaded");
     }
     if (m_worker) {
         delete m_worker;

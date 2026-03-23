@@ -112,7 +112,6 @@ void GraphSDLManager::openWindow()
     m_windowCount++;
     spdlog::info("GraphSDLManager: открыто окно #{}", m_windowCount);
 
-    qInfo() << std::filesystem::current_path().string().c_str();
     emit windowOpened(dw);
 }
 

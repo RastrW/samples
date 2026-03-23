@@ -9,6 +9,7 @@
 #include <QLocale>
 #include <QStandardPaths>
 #include <QPalette>
+#include <spdlog/spdlog.h>
 
 QString Settings::userSettingsFile;
 QSettings* Settings::settings;
@@ -72,8 +73,8 @@ void Settings::setSettingsObject()
 
             // Code to verify that the user does not have access to the requested settings file
             if(settings->status() == QSettings::AccessError) {
-                qWarning() << qPrintable("The given settings file can NOT access. Please check the permission for the file.");
-                qWarning() << qPrintable("So, the -S/--settings option is ignored.");
+                spdlog::warn("The given settings file can NOT access. Please check the permission for the file.");
+                spdlog::warn("So, the -S/--settings option is ignored.");
 
                 // Since you do not have permission to the file, delete the existing assignment and assign the standard
                 delete settings;
@@ -81,8 +82,8 @@ void Settings::setSettingsObject()
                                          QCoreApplication::organizationName());
             }
         } else {
-            qWarning() << qPrintable("The given settings file is not a normal settings file. Please check again.");
-            qWarning() << qPrintable("So, the -S/--settings option is ignored.");
+            spdlog::warn("The given settings file is not a normal settings file. Please check again.");
+            spdlog::warn("So, the -S/--settings option is ignored.");
             settings = new QSettings(QCoreApplication::organizationName(),
                                      QCoreApplication::organizationName());
         }

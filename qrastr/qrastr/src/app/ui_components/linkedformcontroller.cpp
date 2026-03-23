@@ -214,12 +214,12 @@ void LinkedFormController::openLinkedMacro(LinkedMacro lm, int contextRow)
     if (m_pyHlp)
         m_pyHlp->run(content.data());
     else
-        qWarning() << "LinkedFormController: PyHlp не установлен, макрос не выполнен";
+        spdlog::warn("LinkedFormController: PyHlp не установлен, макрос не выполнен");
 }
 
 void LinkedFormController::onParentRowChanged(int newRow)
 {
-    qDebug() << "LinkedFormController::onParentRowChanged: row =" << newRow;
+    spdlog::debug("LinkedFormController::onParentRowChanged: row = {}", newRow);
 
     m_lf.row = newRow;
 

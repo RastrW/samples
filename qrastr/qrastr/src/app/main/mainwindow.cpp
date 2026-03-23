@@ -157,7 +157,7 @@ void MainWindow::setupLogDockWidgets() {
 
 void MainWindow::setupLogSinks() {
     auto logger = spdlog::default_logger();
-    qInfo() << "sinks before:" << logger->sinks().size(); // должно быть 1 (stdout)
+    spdlog::info("sinks before: {}", logger->sinks().size()); // должно быть 1 (stdout)
 
     // После этого вызова все spdlog::info/warn/error
     // пойдут в McrWnd и FormProtocol(если отключен игнор)

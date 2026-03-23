@@ -265,7 +265,7 @@ bool RtabWidget::eventFilter(QObject* obj, QEvent* event)
 
 void RtabWidget::closeEvent(QCloseEvent *event)
 {
-    qInfo() << "RtabWidget::closeEvent [" << m_UIForm.Name().c_str() << "]";
+    spdlog::info("RtabWidget::closeEvent [{}]", m_UIForm.Name().c_str() );
 
     // Сначала — отключить все входящие сигналы к модели
     disconnect(m_pRTDM, nullptr, m_model.get(), nullptr);
@@ -402,8 +402,8 @@ void RtabWidget::applyColumnEditor(int colIndex)
             column_qt->editorRepository());
         repo->setComboBoxEditable(false);
 
-        qInfo() << "applyColumnEditor ENPIC col=" << colIndex
-                 << "picItems=" << info.picItems.size();
+        spdlog::info("applyColumnEditor ENPIC col= {}, picItems= ", colIndex,
+                        info.picItems.size());
         break;
     }
     case RModel::ColumnEditorInfo::Type::None:
@@ -643,6 +643,6 @@ void RtabWidget::slot_itemPressed( CellClickEventArgs* _args)
 {
     int row = _args->cell().rowIndex();
     int col = _args->cell().columnIndex();
-    qInfo()<<"Pressed:" <<row<< ","<<col;
+    spdlog::info("Pressed: {}, {}", row, col);
 }
 
