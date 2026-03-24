@@ -14,11 +14,10 @@ LogManager::LogManager(ads::CDockManager* dockManager,
     , m_parentWidget(parent)
 {}
 
-void LogManager::setupLogSinks() {
+void LogManager::setupLogSinks()
+{
     auto logger = spdlog::default_logger();
-    spdlog::info("sinks before: {}", logger->sinks().size());
-    // После этого вызова все spdlog::info/warn/error
-    // пойдут в McrWnd и FormProtocol(если отключен игнор)
+
     auto qtSink = std::make_shared<spdlog::sinks::qt_sink_mt>(
         m_globalProtocol, "onAppendText");
     logger->sinks().push_back(qtSink);
@@ -27,6 +26,7 @@ void LogManager::setupLogSinks() {
     auto protocolSink = std::make_shared<spdlog::sinks::qt_sink_mt>(
         m_mainProtocol, "onAppendProtocol");
     logger->sinks().push_back(protocolSink);
+    m_protocolSink = protocolSink;
 }
 
 void LogManager::setupRastrConnections(std::shared_ptr<QAstra> qastra) {
@@ -73,4 +73,22 @@ void LogManager::openProtocol() {
     if (m_dockMain->isClosed()) {
         m_dockMain->toggleView(true);
     }
+}
+
+void LogManager::teardownLogSinks()
+{
+    auto logger = spdlog::default_logger();
+    auto& sinks = logger->sinks();
+
+    // Удаляем оба Qt-синка за один проход
+    sinks.erase(
+        std::remove_if(sinks.begin(), sinks.end(),
+                       [this](const std::shared_ptr<spdlog::sinks::sink>& s) {
+                           return s == m_qtLogSink || s == m_protocolSink;
+                       }),
+        sinks.end()
+        );
+
+    m_qtLogSink.reset();
+    m_protocolSink.reset();
 }

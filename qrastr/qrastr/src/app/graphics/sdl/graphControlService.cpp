@@ -12,7 +12,22 @@ GraphControlService::GraphControlService(IPlainRastr* rastr):
 }
 
 GraphControlService::~GraphControlService() {
+    m_initControl  = nullptr;
+    m_closeControl = nullptr;
+    m_initPlainDll = nullptr;
+    m_loaded       = false;
+
+    spdlog::info("before unload");
+    ///@todo если не включить выгрузку библиотеки, то процесс завершения навсегда зависнет.
+    /// если включить выгрузку, то аварийно завершится.
+    /// Скорее всего связано с тем, что не были завершена внутренние потоки в dll
+    /// Примечание: зависание происходит только тогда
     unload();
+
+    spdlog::info("after unload");
+
+    spdlog::info("GraphControlService has been deleted");
+
 }
 
 bool GraphControlService::load()

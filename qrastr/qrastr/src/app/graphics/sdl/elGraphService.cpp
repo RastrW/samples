@@ -66,7 +66,7 @@ bool ElGraphService::init(void* parentHwnd)
 void ElGraphService::shutdown()
 {
     if (m_grc) {
-        m_grc->Destroy();
+        //m_grc->Destroy();
         m_grc = nullptr;
     }
     if (m_lib.isLoaded()) {

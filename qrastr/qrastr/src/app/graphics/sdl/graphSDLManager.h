@@ -53,4 +53,5 @@ private:
     bool ensureSDLInited();
     /// Остановить SDL (вызывается когда счётчик падает до 0).
     void shutdownSDLIfIdle();
+    bool m_windowWithSDL {false};
 };

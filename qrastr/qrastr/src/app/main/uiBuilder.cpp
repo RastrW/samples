@@ -177,7 +177,7 @@ void UIBuilder::createWindowActions() {
               tr("Закрыть активное окно"));
 
     // Закрыть все окна
-    addAction("Закрыть всё",
+    addAction("closeAll",
               tr("&Close All"),
               "",
               "",

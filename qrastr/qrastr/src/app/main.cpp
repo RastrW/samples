@@ -59,6 +59,10 @@ int main(int argc, char *argv[]){
         app.getForms()
         );
 
+    QObject::connect(&app, &QApplication::aboutToQuit, []{
+        qInfo() << "ABOUT TO QUIT";
+    });
+
     w.show();
     return app.exec();
 }

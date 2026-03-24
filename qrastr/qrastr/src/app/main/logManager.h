@@ -35,6 +35,9 @@ public:
     }
     void setupLogSinks();
     void setupRastrConnections(std::shared_ptr<QAstra> qastra);
+    /// Удалить Qt-синки из spdlog ДО разрушения виджетов протоколов.
+    /// Необходимо вызывать до ~FormManager (в MainWindow::closeEvent).
+    void teardownLogSinks();
 signals:
     /// Испускается при создании каждого dock-виджета —
     /// FormManager подключит его к registerDockWidget
@@ -50,6 +53,6 @@ private:
     ads::CDockWidget*   m_dockGlobal     = nullptr;
     ads::CDockWidget*   m_dockMain       = nullptr;
     // сохраняем в setupLogSinks
-    std::shared_ptr<spdlog::sinks::sink> m_qtLogSink;
-
+    std::shared_ptr<spdlog::sinks::sink> m_qtLogSink;      // → m_globalProtocol
+    std::shared_ptr<spdlog::sinks::sink> m_protocolSink;   // → m_mainProtocol
 };

@@ -113,7 +113,7 @@ void MainWindow::initialize(
     m_uiBuilder->buildAll();
     // ========== НАСТРОЙКА КОМПОНЕНТОВ ==========
     m_logManager->setupRastrConnections(m_qastra);
-    setupConnections();
+
     slot_updateRecentFiles();
     // Построение меню форм
     m_formManager->buildFormsMenu(
@@ -128,6 +128,7 @@ void MainWindow::initialize(
         this);
     m_workspaceManager->applyStartupWorkspace();
 
+    setupConnections();
     // Создаём виджеты протоколов и СРАЗУ добавляем Qt-синки в логгер.
     m_logManager->setupDockWidgets();
 
@@ -327,7 +328,6 @@ MainWindow::getProtocolLogSink() const {
     return m_logManager->getProtocolLogSink();
 }
 
-
 void MainWindow::slot_updateRecentFiles() {
     QStringList files = m_fileManager->getRecentFiles();
     m_uiBuilder->updateRecentFileActions(files);
@@ -373,18 +373,29 @@ void MainWindow::showMDPPrepareDialog() {
     }
 }
 
-void MainWindow::closeEvent(QCloseEvent* event) {
-    m_formManager->closeGraphWebServer();
-
-    m_appSettingsManager->saveWindowGeometry(this);
+void MainWindow::closeEvent(QCloseEvent* event)
+{
     spdlog::info("MainWindow closing");
+    m_formManager->closeGraphWebServer();
+    spdlog::info("The graphics web server is closed");
+    m_appSettingsManager->saveWindowGeometry(this);
+    spdlog::info("The geometry is saved");
 
-    // dockManager удаляем ПОСЛЕ того как DLL уже выгружена
-    if (m_dockManager)
-        m_dockManager->deleteLater();
+    // Отключаем Qt-синки ДО разрушения FormManager/GraphSDLManager,
+    // чтобы spdlog::warn из деструкторов не обращался к уже мёртвым виджетам.
+    if (m_logManager){
+        m_logManager->teardownLogSinks();
+         spdlog::info("syncs are disabled");
+    }
 
-    // сброс буфера файла до закрытия окна
+    // Сбрасываем FormManager явно — все деструкторы пройдут
+    // без Qt-синков в логгере.
+    m_formManager.reset();
+    spdlog::info("formManager has been reset");
+
     spdlog::default_logger()->flush();
+    spdlog::info("logs have been uploaded");
+
     QMainWindow::closeEvent(event);
 }
 
