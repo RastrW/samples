@@ -197,6 +197,12 @@ void UIBuilder::createWindowActions() {
               "",
               tr("Расположить окна каскадом"));
 
+    addAction("protocol",
+              tr("&Протокол"),
+              "",
+              "Ctrl+L",
+              tr("Открыть окно протокола"));
+
     // Следующее окно
     addAction("next",
               tr("&Следующее"),
@@ -315,6 +321,8 @@ void UIBuilder::buildMenuBar() {
     m_menus["window"]->addSeparator();
     m_menus["window"]->addAction(m_actions["tile"]);
     m_menus["window"]->addAction(m_actions["cascade"]);
+    m_menus["window"]->addSeparator();
+    m_menus["window"]->addAction(m_actions["protocol"]);
     m_menus["window"]->addSeparator();
     m_menus["window"]->addAction(m_actions["next"]);
     m_menus["window"]->addAction(m_actions["previous"]);

@@ -1,0 +1,55 @@
+#pragma once
+#include <QObject>
+#include <spdlog/spdlog.h>
+
+namespace ads { class CDockManager; class CDockWidget; }
+class ProtocolLogWidget;
+class ProtocolWidget;
+class QAstra;
+
+/**
+ * @class LogManager
+ * @brief Управляет виджетами логирования (dock-виджеты протоколов).
+ *        По аналогии с IGraphManager — создаёт, хранит и регистрирует доки.
+ */
+class LogManager : public QObject {
+    Q_OBJECT
+public:
+    explicit LogManager(ads::CDockManager* dockManager,
+                        QWidget* parent = nullptr);
+
+    /// Создать виджеты (вызывается в конструкторе MainWindow ДО setupLogSinks)
+    void createWidgets();
+
+    /// Добавить dock-виджеты в CDockManager (вызывается после restoreState ADS)
+    void setupDockWidgets();
+
+    /// Показать / открыть протокол (для пункта меню)
+    void openProtocol();
+
+    ProtocolLogWidget* globalProtocol() const { return m_globalProtocol; }
+    ProtocolWidget*    mainProtocol()   const { return m_mainProtocol; }
+
+    std::shared_ptr<spdlog::sinks::sink> getProtocolLogSink() const {
+        return m_qtLogSink;
+    }
+    void setupLogSinks();
+    void setupRastrConnections(std::shared_ptr<QAstra> qastra);
+signals:
+    /// Испускается при создании каждого dock-виджета —
+    /// FormManager подключит его к registerDockWidget
+    void dockWidgetCreated(ads::CDockWidget* dw);
+
+private:
+    ads::CDockManager*  m_dockManager    = nullptr;
+    QWidget*            m_parentWidget   = nullptr;
+
+    ProtocolLogWidget*  m_globalProtocol = nullptr;
+    ProtocolWidget*     m_mainProtocol   = nullptr;
+
+    ads::CDockWidget*   m_dockGlobal     = nullptr;
+    ads::CDockWidget*   m_dockMain       = nullptr;
+    // сохраняем в setupLogSinks
+    std::shared_ptr<spdlog::sinks::sink> m_qtLogSink;
+
+};

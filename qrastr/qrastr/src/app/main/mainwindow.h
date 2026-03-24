@@ -16,7 +16,7 @@ class QBarsMDP;
 class QMdiArea;
 class ProtocolLogWidget;
 class ProtocolWidget;
-
+class LogManager;
 
 class PyHlp;
 class CUIForm;
@@ -45,9 +45,7 @@ public:
         std::shared_ptr<QBarsMDP> qbarsmdp,
         const std::list<CUIForm>& forms);
 
-    std::shared_ptr<spdlog::sinks::sink> getProtocolLogSink() const {
-        return m_qtLogSink;
-    }
+    std::shared_ptr<spdlog::sinks::sink> getProtocolLogSink() const;
 signals:
     // Файл загружен
     void sig_fileLoaded();
@@ -97,6 +95,7 @@ private:
         m_appSettingsManager;
     std::unique_ptr<UIBuilder>
         m_uiBuilder;
+    LogManager* m_logManager = nullptr;
 
     // ========== ПЛАГИНЫ ==========
     std::shared_ptr<QAstra> m_qastra;
@@ -104,18 +103,12 @@ private:
     std::shared_ptr<QBarsMDP> m_qbarsmdp;
     
     // ========== GUI ЭЛЕМЕНТЫ ==========
-    ads::CDockManager* m_dockManager = nullptr; // The main container for Advanced Docking System
-    ProtocolLogWidget* m_globalProtocol = nullptr;                // Глобавльный протокол
-    ProtocolWidget* m_mainProtocol = nullptr;     // Главный протокол
-    
+    ads::CDockManager* m_dockManager = nullptr;   // The main container for Advanced Docking System
+
     // ========== ВСПОМОГАТЕЛЬНЫЕ КОМПОНЕНТЫ ==========
     std::shared_ptr<PyHlp> m_pyHelper;          // Python helper (для выполнения макросов)
 
     std::shared_ptr<spdlog::sinks::sink> m_qtLogSink; // сохраняем в setupLogSinks
     // ========== ИНИЦИАЛИЗАЦИЯ ==========
-    void createLogWidgets();
-    void setupLogDockWidgets();
-    void setupLogSinks();
-    void setupRastrConnections();
     void setupConnections();
 };

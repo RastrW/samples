@@ -71,8 +71,9 @@ MainWindow::MainWindow()
                      });
 
     // Создаём виджеты протоколов и СРАЗУ добавляем Qt-синки в логгер.
-    createLogWidgets();
-    setupLogSinks();
+    m_logManager = new LogManager(m_dockManager, this);
+    m_logManager->createWidgets();
+    m_logManager->setupLogSinks();
 }
 
 MainWindow::~MainWindow() = default;
@@ -108,12 +109,12 @@ void MainWindow::initialize(
         m_qastra, m_qti, m_qbarsmdp, this);
     m_pyHelper    = std::make_shared<PyHlp>(*m_qastra->getRastr().get());
     m_formManager = std::make_unique<FormManager>(
-        m_qastra, m_dockManager, m_pyHelper, this);
+        m_qastra, m_dockManager, m_pyHelper, m_logManager, this);
     m_formManager->setForms(forms);
     m_uiBuilder = std::make_unique<UIBuilder>(this);
     m_uiBuilder->buildAll();
     // ========== НАСТРОЙКА КОМПОНЕНТОВ ==========
-    setupRastrConnections();
+    m_logManager->setupRastrConnections(m_qastra);
     setupConnections();
     slot_updateRecentFiles();
     // Построение меню форм
@@ -129,54 +130,14 @@ void MainWindow::initialize(
     }
 
     // Создаём виджеты протоколов и СРАЗУ добавляем Qt-синки в логгер.
-    setupLogDockWidgets();
+    m_logManager->setupDockWidgets();
 
     spdlog::info("MainWindow initialized successfully");
 }
 
-void MainWindow::createLogWidgets(){
-   m_globalProtocol = new ProtocolLogWidget(this);
-
-    // Главный протокол
-    m_mainProtocol = new ProtocolWidget(this);
-    //Если необходимо, чтобы в FormProtocol был вывод spdlog, необходимо включить эту настройку
-    m_mainProtocol->setIgnoreAppendProtocol(true);
-}
-
-void MainWindow::setupLogDockWidgets() {
-    auto* dockProtocol = new ads::CDockWidget("globalProtocol", this);
-    dockProtocol->setWidget(m_globalProtocol);
-    dockProtocol->setFeature(ads::CDockWidget::CustomCloseHandling, true);
-    m_dockManager->addDockWidgetTab(ads::BottomDockWidgetArea, dockProtocol);
-
-    auto dockMainProtocol = new ads::CDockWidget("Протокол Astra", this);
-    dockMainProtocol->setWidget(m_mainProtocol);
-    dockMainProtocol->setFeature(ads::CDockWidget::CustomCloseHandling, true);
-    m_dockManager->addDockWidgetTab(ads::BottomDockWidgetArea, dockMainProtocol);
-}
-
-void MainWindow::setupLogSinks() {
-    auto logger = spdlog::default_logger();
-    spdlog::info("sinks before: {}", logger->sinks().size()); // должно быть 1 (stdout)
-
-    // После этого вызова все spdlog::info/warn/error
-    // пойдут в McrWnd и FormProtocol(если отключен игнор)
-    auto qtSink = std::make_shared<spdlog::sinks::qt_sink_mt>(
-        m_globalProtocol, "onAppendText");
-    logger->sinks().push_back(qtSink);
-    m_qtLogSink = qtSink; // сохраняем
-
-    auto protocolSink = std::make_shared<spdlog::sinks::qt_sink_mt>(
-        m_mainProtocol, "onAppendProtocol");
-    logger->sinks().push_back(protocolSink);
-}
-
-void MainWindow::setupRastrConnections() {
-    // Второй поток данных — структурированные _log_data от Rastr
-    connect(m_qastra.get(), &QAstra::onRastrLog,
-            m_mainProtocol, &ProtocolWidget::onRastrLog);
-    connect(m_qastra.get(), &QAstra::onRastrLog,
-            m_globalProtocol, &ProtocolLogWidget::onRastrLog);
+std::shared_ptr<spdlog::sinks::sink>
+MainWindow::getProtocolLogSink() const {
+    return m_logManager->getProtocolLogSink();
 }
 
 void MainWindow::setupConnections() {
@@ -339,6 +300,8 @@ void MainWindow::setupConnections() {
             m_formManager.get(), &FormManager::slot_openSDLGraph);
     connect(m_uiBuilder->actionByName("macro"), &QAction::triggered,
             this, &MainWindow::slot_openMcrDialog);
+    connect(m_uiBuilder->actionByName("protocol"), &QAction::triggered,
+            m_formManager.get(), &FormManager::slot_openProtocol);
     // Закрыть активный dock widget
     connect(m_uiBuilder->actionByName("close"), &QAction::triggered,
             this, [this]() {

@@ -9,6 +9,7 @@
 #include <list>
 #include <memory>
 #include <rtablesdatamanager.h>
+#include "logManager.h"
 
 class QAstra;
 class RtabWidget;
@@ -37,6 +38,7 @@ public:
         std::shared_ptr<QAstra> qastra,
         ads::CDockManager* dockManager,
         std::shared_ptr<PyHlp> pPyHlp,
+        LogManager* logManager,
         QWidget* parent = nullptr
     );
     ~FormManager() = default;
@@ -64,6 +66,12 @@ public:
     
     RtabWidget* activeForm() const { return m_activeForm; }
     void closeGraphWebServer();
+    // ========== Логирование ==========
+    LogManager* logManager() const { return m_logManager; }
+    /// Инициализировать виджеты лога (до ADS restoreState)
+    void createLogWidgets();
+    /// Добавить dock-виджеты лога (после ADS restoreState)
+    void setupLogDockWidgets();
 signals:
     void formOpened(const QString& formName);
     void formClosed(const QString& formName);
@@ -87,6 +95,7 @@ public slots:
      * @note Вызывает on_calc_end() у всех RtabWidget
      */
     void slot_calculationFinished();
+    void slot_openProtocol();
     // ========== Графика ==========
     void slot_openSDLGraph();
     void slot_openWebGraph();
@@ -104,6 +113,8 @@ private:
     //sdl
     IGraphManager* m_graphSDLManager = nullptr;
     IGraphManager* m_graphWebManager = nullptr;
+
+    LogManager* m_logManager = nullptr;
     /** @brief
      * Список ВСЕХ открытых форм
      * Используется для передачи сигналов расчётов

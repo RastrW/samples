@@ -20,12 +20,14 @@ FormManager::FormManager
     (std::shared_ptr<QAstra> qastra,
      ads::CDockManager* dockManager,
      std::shared_ptr<PyHlp> pPyHlp,
+     LogManager* logManager,
      QWidget* parent)
     : QObject(parent)
     , m_qastra(qastra)
     , m_dockManager(dockManager)
     , m_pPyHlp(pPyHlp)
     , m_parentWidget(parent)
+    , m_logManager(logManager)
 {
     assert(m_qastra != nullptr);
     assert(m_dockManager != nullptr);
@@ -42,6 +44,9 @@ FormManager::FormManager
         connect(mgr, &IGraphManager::windowOpened,
                 this, &FormManager::registerDockWidget);
     }
+
+    connect(m_logManager, &LogManager::dockWidgetCreated,
+            this, &FormManager::registerDockWidget);
 }
 
 void FormManager::setForms(const std::list<CUIForm>& forms) {
@@ -121,6 +126,18 @@ void FormManager::slot_openWebGraph() {
 
 void FormManager::closeGraphWebServer(){
     m_graphWebManager->closeAll();
+}
+
+void FormManager::createLogWidgets() {
+    m_logManager->createWidgets();
+}
+
+void FormManager::setupLogDockWidgets() {
+    m_logManager->setupDockWidgets();
+}
+
+void FormManager::slot_openProtocol() {
+    m_logManager->openProtocol();
 }
 
 void FormManager::openFormByIndex(int index) {
@@ -366,10 +383,16 @@ QMap<QString, QMenu*> FormManager::buildMenuStructure(QMenu* rootMenu) {
 
 void FormManager::registerDockWidget(ads::CDockWidget* dw) {
     m_openDockWidgets.append(dw);
-    connect(dw, &ads::CDockWidget::closed,
-            this, [this, dw]() {
-                m_openDockWidgets.removeOne(dw);
-            });
+
+    // Удаляем из списка только если виджет реально уничтожается при закрытии.
+    // Лог-виджеты имеют CustomCloseHandling (только скрываются) —
+    // они остаются в списке навсегда и всегда участвуют в cascade/tile.
+    if (dw->features().testFlag(ads::CDockWidget::DockWidgetDeleteOnClose)) {
+        connect(dw, &ads::CDockWidget::closed,
+                this, [this, dw]() {
+                    m_openDockWidgets.removeOne(dw);
+                });
+    }
 }
 
 void FormManager::slot_cascadeForms() {
