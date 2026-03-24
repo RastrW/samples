@@ -1,8 +1,8 @@
 #include "fileManager.h"
 #include "qastra.h"
 #include "params.h"
-#include "fileNewDialog.h"
-#include "saveAllDialog.h"
+#include "files/fileNewDialog.h"
+#include "files/saveAllDialog.h"
 
 #include <QFileDialog>
 #include <QSettings>

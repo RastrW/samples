@@ -1,16 +1,15 @@
-#include "settingsManager.h"
-#include "qastra.h"
-#include "settingsDialog.h"
+#include "appSettingsManager.h"
+#include "settings/settingsDialog.h"
 #include <QMainWindow>
 #include <QStyle>
 #include <QStyleFactory>
 #include <QApplication>
 #include <spdlog/spdlog.h>
 
-SettingsManager::SettingsManager(QObject* parent)
+AppSettingsManager::AppSettingsManager(QObject* parent)
     : QObject(parent){}
 
-bool SettingsManager::loadWindowGeometry(QMainWindow* window) {
+bool AppSettingsManager::loadWindowGeometry(QMainWindow* window) {
     if (!window) {
         return false;
     }
@@ -51,15 +50,15 @@ bool SettingsManager::loadWindowGeometry(QMainWindow* window) {
     return true;
 }
 
-void SettingsManager::saveValue(const QString& key, const QByteArray& value) {
+void AppSettingsManager::saveValue(const QString& key, const QByteArray& value) {
     m_settings.setValue(key, value);
 }
 
-QByteArray SettingsManager::getSettings(const QString& name){
+QByteArray AppSettingsManager::getSettings(const QString& name){
     return m_settings.value(name).toByteArray();
 }
 
-bool SettingsManager::saveWindowGeometry(QMainWindow* window) {
+bool AppSettingsManager::saveWindowGeometry(QMainWindow* window) {
     if (!window) return false;
 
     m_settings.beginGroup("MainWindow");
@@ -75,7 +74,7 @@ bool SettingsManager::saveWindowGeometry(QMainWindow* window) {
     return true;
 }
 
-void SettingsManager::showFormSettings(std::shared_ptr<QAstra> qastra) {
+void AppSettingsManager::showFormSettings(std::shared_ptr<QAstra> qastra) {
     SettingsDialog* pformSettings = new SettingsDialog();
     pformSettings->init(qastra);
     pformSettings->setAttribute(Qt::WA_DeleteOnClose);

@@ -1,8 +1,6 @@
 #pragma once
 #include "settingsStackedItemWidget.h"
 
-#include "params.h"
-
 class QTableWidgetItem;
 class QTableWidget;
 
@@ -29,7 +27,7 @@ private:
 
 private:
     QTableWidget* pTableWidget_;  ///< Таблица с чекбоксами форм
-    Params::_v_forms
+    std::vector<std::string>
                 m_pendingForms;  // Временное хранилище
     bool m_hasChanges {false};
     /// Индексы колонок в таблице

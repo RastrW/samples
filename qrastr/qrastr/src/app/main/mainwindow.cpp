@@ -33,7 +33,7 @@
 #include "calculationController.h"
 #include "fileManager.h"
 #include "formManager.h"
-#include "settingsManager.h"
+#include "appSettingsManager.h"
 #include "uiBuilder.h"
 #include "params.h"
 #include "UIForms.h"
@@ -89,10 +89,10 @@ void MainWindow::initialize(
 
     // ========== СОЗДАНИЕ КОМПОНЕНТОВ ==========
     // SettingsManager нужен первым для загрузки настроек
-    m_settingsManager = std::make_unique<SettingsManager>(this);
-    m_settingsManager->loadWindowGeometry(this);
+    m_appSettingsManager = std::make_unique<AppSettingsManager>(this);
+    m_appSettingsManager->loadWindowGeometry(this);
     // Restore the state of toolbars and dock widgets (menus are part of the overall layout)
-    restoreState(m_settingsManager->getSettings("mainWindowState"));
+    restoreState(m_appSettingsManager->getSettings("mainWindowState"));
 
     m_fileManager = std::make_unique<FileManager>(m_qastra, this);
 
@@ -123,7 +123,7 @@ void MainWindow::initialize(
     m_formManager->buildPropertiesMenu(m_uiBuilder->propertiesMenu());
 
     // Восстанавливаем состояние ADS после того, как все доки созданы
-    const QByteArray adsState = m_settingsManager->getSettings("ADSState");
+    const QByteArray adsState = m_appSettingsManager->getSettings("ADSState");
     if (!adsState.isEmpty()) {
         m_dockManager->restoreState(adsState);
     }
@@ -328,8 +328,8 @@ void MainWindow::setupConnections() {
             m_formManager.get(), &FormManager::slot_tileForms);
     // ========== SETTINGSMANAGER ==========
     connect(m_uiBuilder->actionByName("settings"), &QAction::triggered,
-            m_settingsManager.get(), [this]() {
-                m_settingsManager->showFormSettings(m_qastra);
+            m_appSettingsManager.get(), [this]() {
+                m_appSettingsManager->showFormSettings(m_qastra);
             });
 
     // ========== Окна ==========
@@ -408,12 +408,12 @@ void MainWindow::showMDPPrepareDialog() {
 void MainWindow::closeEvent(QCloseEvent* event) {
     // Сохраняем состояние ADS пока dock manager ещё жив
     if (m_dockManager)
-        m_settingsManager->saveValue("ADSState", m_dockManager->saveState());
+        m_appSettingsManager->saveValue("ADSState", m_dockManager->saveState());
 
 
     m_formManager->closeGraphWebServer();
 
-    m_settingsManager->saveWindowGeometry(this);
+    m_appSettingsManager->saveWindowGeometry(this);
     spdlog::info("MainWindow closing");
 
     // dockManager удаляем ПОСЛЕ того как DLL уже выгружена

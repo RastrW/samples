@@ -8,12 +8,12 @@ class QAstra;
 class QMainWindow;
 
 /// @class Менеджер настроек приложения
-class SettingsManager : public QObject {
+class AppSettingsManager : public QObject {
     Q_OBJECT
     
 public:
-    explicit SettingsManager(QObject* parent = nullptr);
-    ~SettingsManager() = default;
+    explicit AppSettingsManager(QObject* parent = nullptr);
+    ~AppSettingsManager() = default;
     
     // ========== Настройки окна ==========
     /// @brief Загрузить геометрию окна

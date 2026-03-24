@@ -1,8 +1,6 @@
 #pragma once
 #include "settingsStackedItemWidget.h"
 
-#include "params.h"
-
 class QTableWidgetItem;
 class QTableWidget;
 
@@ -33,7 +31,7 @@ private:
 
 private:
     QTableWidget* pTableWidget_;  ///< Таблица с чекбоксами шаблонов
-    Params::_v_templates
+    std::vector<std::string>
         m_pendingTemplates;  // Временное хранилище
     bool m_hasChanges {false};
 

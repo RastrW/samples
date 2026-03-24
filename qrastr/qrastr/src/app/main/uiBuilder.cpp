@@ -149,12 +149,12 @@ void UIBuilder::createBarsMDPActions() {
 
 void UIBuilder::createGraphActions() {
     addAction("graphWeb",
-              tr("&graphWeb"),
+              tr("&Графика Web"),
               "",
               "F10",
               tr("Графика Web"));
     addAction("graphSDL",
-              tr("&graphSDL"),
+              tr("&Графика SDL"),
               "",
               "",
               tr("Графика SDL"));
@@ -162,54 +162,54 @@ void UIBuilder::createGraphActions() {
 
 void UIBuilder::createMacroActions() {
     addAction("macro",
-              tr("&macro"),
+              tr("&Макросы"),
               "",
               "F11",
-              tr("Run macro"));
+              tr("Открыть макросы"));
 }
 
 void UIBuilder::createWindowActions() {
     // Закрыть активное окно
     addAction("close",
-              tr("&Close"),
+              tr("&Закрыть"),
               "",
               "Ctrl+F4",
-              tr("Close the active window"));
+              tr("Закрыть активное окно"));
 
     // Закрыть все окна
-    addAction("closeAll",
-              tr("Close &All"),
+    addAction("Закрыть всё",
+              tr("&Close All"),
               "",
               "",
-              tr("Close all the windows"));
+              tr("Закрыть все окна"));
 
     // Расположить окна плиткой
     addAction("tile",
-              tr("&Tile"),
+              tr("&Плитка"),
               "",
               "",
-              tr("Tile the windows"));
+              tr("Расположить окна плиткой"));
 
     // Расположить окна каскадом
     addAction("cascade",
-              tr("&Cascade"),
+              tr("&Каскад"),
               "",
               "",
-              tr("Cascade the windows"));
+              tr("Расположить окна каскадом"));
 
     // Следующее окно
     addAction("next",
-              tr("Ne&xt"),
+              tr("&Следующее"),
               "",
               "Ctrl+F6",
-              tr("Move the focus to the next window"));
+              tr("Перейти к следующему окну"));
 
     // Предыдущее окно (Ctrl+Shift+F6)
     addAction("previous",
-              tr("Pre&vious"),
+              tr("&Предыдущее"),
               "",
               "Ctrl+Shift+F6",
-              tr("Move the focus to the previous window"));
+              tr("Перейти к предыдущему окну"));
 }
 
 void UIBuilder::createHelpActions() {

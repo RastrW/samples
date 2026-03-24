@@ -8,7 +8,7 @@
 class FileManager;
 class CalculationController;
 class FormManager;
-class SettingsManager;
+class AppSettingsManager;
 class UIBuilder;
 class QAstra;
 class QTI;
@@ -93,8 +93,8 @@ private:
         m_calcController;
     std::unique_ptr<FormManager>
         m_formManager;
-    std::unique_ptr<SettingsManager>
-        m_settingsManager;
+    std::unique_ptr<AppSettingsManager>
+        m_appSettingsManager;
     std::unique_ptr<UIBuilder>
         m_uiBuilder;
 

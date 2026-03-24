@@ -27,13 +27,13 @@
 #include <QTableView>
 #include <QMessageBox>
 
-#include "selectionDialog.h"
-#include "groupCorrectionDialog.h"
-#include "exportCSVdialog.h"
-#include "importCSV2dialog.h"
+#include "tables/selectionDialog.h"
+#include "tables/groupCorrectionDialog.h"
+#include "tables/exportCSVdialog.h"
+#include "tables/importCSV2dialog.h"
 #include <QToolBar>
 #include "linkedformcontroller.h"
-#include "colPropDialog.h"
+#include "tables/colPropDialog.h"
 #include "contextMenuBuilder.h"
 #include "customFilterCondition.h"
 #include "condFormatController.h"
