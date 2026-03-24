@@ -27,7 +27,6 @@ public:
     * @param parent           — родительский виджет.
     */
     explicit SaveWorkspaceDialog(const QStringList &workspaces,
-                                 bool               loadOnStartup,
                                  QWidget           *parent = nullptr);
 
     /// Название новой рабочей области, введённой пользователем.
@@ -36,11 +35,12 @@ public:
 
     /// Состояние флага «Загрузка при старте» на момент закрытия диалога.
     [[nodiscard]] bool loadOnStartup() const;
-
+    /// Имена областей, помеченных к удалению пользователем
+    [[nodiscard]] QStringList deletedWorkspaceNames() const;
 private slots:
     void onAddClicked();
     void onOkClicked();
-
+    void onDeleteClicked();
 private:
     void setupAddWidget();
 
@@ -53,4 +53,7 @@ private:
     QPushButton *m_addButton         = nullptr;
 
     QString     m_newWorkspaceName;
+
+    QPushButton* m_deleteButton    = nullptr;
+    QStringList  m_deletedNames;
 };

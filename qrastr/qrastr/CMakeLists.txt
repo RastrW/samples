@@ -455,115 +455,54 @@ add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
 )
 
 # ============================================================================
-# SVGgenerator Library
+# Копируем SVGgenerator, ElGraphCtrl, GraphClient
 # ============================================================================
-if(NOT SVG_DIR)
-    message(FATAL_ERROR "SVG_DIR must be set in CMakePresets.json")
-endif()
-
 if(WIN32)
     set(SVG_PLATFORM_DIR "${SVG_DIR}/win")
     set(SVG_DLL_FILE     "${SVG_PLATFORM_DIR}/${CONFIG_DIR}/SVGgenerator.dll")
-else()
-    set(SVG_PLATFORM_DIR "${SVG_DIR}/linux")
-    set(SVG_DLL_FILE     "${SVG_PLATFORM_DIR}/${CONFIG_DIR}/libSVGgenerator.so")
-endif()
-
-# Копируем .dll/.so в папку с исполняемым файлом после сборки
-add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
-    COMMAND ${CMAKE_COMMAND} -E copy_if_different
-        "${SVG_DLL_FILE}"
-        "$<TARGET_FILE_DIR:${PROJECT_NAME}>/"
-    COMMENT "Copying SVGgenerator (${CONFIG_DIR})"
-)
-
-if(WIN32 AND CMAKE_BUILD_TYPE MATCHES Debug)
-    set(SVG_PDB_FILE "${SVG_PLATFORM_DIR}/${CONFIG_DIR}/SVGgenerator.pdb")
-    if(EXISTS "${SVG_PDB_FILE}")
-        add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
-            COMMAND ${CMAKE_COMMAND} -E copy_if_different
-                "${SVG_PDB_FILE}"
-                "$<TARGET_FILE_DIR:${PROJECT_NAME}>/"
-            COMMENT "Copying SVGgenerator PDB"
-        )
-    endif()
-endif()
-
-message(STATUS "SVGgenerator: ${SVG_DLL_FILE}")
-
-# ============================================================================
-# ELGRAPHCTRL Library
-# ============================================================================
-if(NOT EL_GRAPH_CTRL_DIR)
-    message(FATAL_ERROR "EL_GRAPH_CTRL_DIR must be set in CMakePresets.json")
-endif()
-
-if(WIN32)
     set(EGC_PLATFORM_DIR "${EL_GRAPH_CTRL_DIR}/win")
     set(EGC_DLL_FILE     "${EGC_PLATFORM_DIR}/${CONFIG_DIR}/ElGraphCtrl.dll")
-else()
-    set(EGC_PLATFORM_DIR "${EL_GRAPH_CTRL_DIR}/linux")
-    set(EGC_DLL_FILE     "${EGC_PLATFORM_DIR}/${CONFIG_DIR}/libElGraphCtrl.so")
-endif()
-
-# Копируем .dll/.so в папку с исполняемым файлом после сборки
-add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
-    COMMAND ${CMAKE_COMMAND} -E copy_if_different
-        "${EGC_DLL_FILE}"
-        "$<TARGET_FILE_DIR:${PROJECT_NAME}>/"
-    COMMENT "Copying ElGraphCtrl (${CONFIG_DIR})"
-)
-
-if(WIN32 AND CMAKE_BUILD_TYPE MATCHES Debug)
-    set(EGC_PDB_FILE "${EGC_PLATFORM_DIR}/${CONFIG_DIR}/ElGraphCtrl.pdb")
-    if(EXISTS "${EGC_PDB_FILE}")
-        add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
-            COMMAND ${CMAKE_COMMAND} -E copy_if_different
-                "${EGC_PDB_FILE}"
-                "$<TARGET_FILE_DIR:${PROJECT_NAME}>/"
-            COMMENT "Copying ElGraphCtrl PDB"
-        )
-    endif()
-endif()
-
-message(STATUS "ElGraphCtrl: ${EGC_DLL_FILE}")
-
-# ============================================================================
-# GRCTRLCLIENT Library
-# ============================================================================
-if(NOT GR_CTRL_CLIENT_DIR)
-    message(FATAL_ERROR "GR_CTRL_CLIENT_DIR must be set in CMakePresets.json")
-endif()
-
-if(WIN32)
     set(GR_CTRL_CLIENT_PLATFORM_DIR "${GR_CTRL_CLIENT_DIR}/win")
     set(GR_CTRL_CLIENT_DLL_FILE     "${GR_CTRL_CLIENT_PLATFORM_DIR}/${CONFIG_DIR}/GraphClient.dll")
 else()
+    set(SVG_PLATFORM_DIR "${SVG_DIR}/linux")
+    set(SVG_DLL_FILE     "${SVG_PLATFORM_DIR}/${CONFIG_DIR}/libSVGgenerator.so")
+    set(EGC_PLATFORM_DIR "${EL_GRAPH_CTRL_DIR}/linux")
+    set(EGC_DLL_FILE     "${EGC_PLATFORM_DIR}/${CONFIG_DIR}/libElGraphCtrl.so")
     set(GR_CTRL_CLIENT_PLATFORM_DIR "${GR_CTRL_CLIENT_DIR}/linux")
     set(GR_CTRL_CLIENT_DLL_FILE     "${GR_CTRL_CLIENT_PLATFORM_DIR}/${CONFIG_DIR}/libGraphClient.so")
 endif()
 
-# Копируем .dll/.so в папку с исполняемым файлом после сборки
-add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
-    COMMAND ${CMAKE_COMMAND} -E copy_if_different
-        "${GR_CTRL_CLIENT_DLL_FILE}"
-        "$<TARGET_FILE_DIR:${PROJECT_NAME}>/"
-    COMMENT "Copying GrCtrlClient (${CONFIG_DIR})"
-)
+function(copy_runtime_file target src comment)
+    add_custom_command(TARGET ${target} POST_BUILD
+        COMMAND ${CMAKE_COMMAND} -E copy_if_different
+            "${src}"
+            "$<TARGET_FILE_DIR:${target}>/"
+        COMMENT "${comment}"
+        VERBATIM
+    )
+endfunction()
+
+function(copy_runtime_file_if_exists target src comment)
+    if(EXISTS "${src}")
+        copy_runtime_file(${target} "${src}" "${comment}")
+    endif()
+endfunction()
+
+copy_runtime_file(${PROJECT_NAME} "${SVG_DLL_FILE}" "Copying SVGgenerator (${CONFIG_DIR})")
+copy_runtime_file(${PROJECT_NAME} "${EGC_DLL_FILE}" "Copying ElGraphCtrl (${CONFIG_DIR})")
+copy_runtime_file(${PROJECT_NAME} "${GR_CTRL_CLIENT_DLL_FILE}" "Copying GrCtrlClient (${CONFIG_DIR})")
 
 if(WIN32 AND CMAKE_BUILD_TYPE MATCHES Debug)
+    set(SVG_PDB_FILE "${SVG_PLATFORM_DIR}/${CONFIG_DIR}/SVGgenerator.pdb")
+    set(EGC_PDB_FILE "${EGC_PLATFORM_DIR}/${CONFIG_DIR}/ElGraphCtrl.pdb")
     set(GR_CTRL_CLIENT_PDB_FILE "${GR_CTRL_CLIENT_PLATFORM_DIR}/${CONFIG_DIR}/GraphClient.pdb")
-    if(EXISTS "${GR_CTRL_CLIENT_PDB_FILE}")
-        add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
-            COMMAND ${CMAKE_COMMAND} -E copy_if_different
-                "${GR_CTRL_CLIENT_PDB_FILE}"
-                "$<TARGET_FILE_DIR:${PROJECT_NAME}>/"
-            COMMENT "Copying GrCtrlClient PDB"
-        )
-    endif()
+
+    copy_runtime_file_if_exists(${PROJECT_NAME} "${SVG_PDB_FILE}" "Copying SVGgenerator PDB")
+    copy_runtime_file_if_exists(${PROJECT_NAME} "${EGC_PDB_FILE}" "Copying ElGraphCtrl PDB")
+    copy_runtime_file_if_exists(${PROJECT_NAME} "${GR_CTRL_CLIENT_PDB_FILE}" "Copying GrCtrlClient PDB")
 endif()
 
-message(STATUS "GrCtrlClient: ${GR_CTRL_CLIENT_DLL_FILE}")
 # ============================================================================
 # Include Directories
 # ============================================================================

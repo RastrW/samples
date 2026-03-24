@@ -4,35 +4,31 @@
 #include <QMessageBox>
 
 SaveWorkspaceDialog::SaveWorkspaceDialog(const QStringList &workspaces,
-                                         bool               loadOnStartup,
                                          QWidget           *parent)
     : WorkspaceDialogBase(workspaces, parent)
     , m_loadOnStartupCheck(new QCheckBox(tr("Загрузка при старте"), this))
+    , m_deleteButton(new QPushButton(tr("Удалить"), this))
 {
     setWindowTitle(tr("Сохранить рабочую область"));
 
-    // --- Флаг «Загрузка при старте» — над списком ---
-    m_loadOnStartupCheck->setChecked(loadOnStartup);
+    m_loadOnStartupCheck->setChecked(false);
     insertWidgetAboveList(m_loadOnStartupCheck);
 
-    // --- Строка добавления — под списком ---
     setupAddWidget();
     insertWidgetBelowList(m_addRow);
+    insertWidgetBelowList(m_deleteButton);
 
-    // Завершаем компоновку (список + buttonBox встают на свои места)
     finalizeLayout();
 
-    // Переопределяем обработчик Ok, чтобы проверить ввод перед закрытием
-    // Отключаем стандартную связку accept и подключаем свой слот
     disconnect(m_buttonBox, &QDialogButtonBox::accepted,
                this,        &QDialog::accept);
-    connect(m_buttonBox, &QDialogButtonBox::accepted,
-            this,        &SaveWorkspaceDialog::onOkClicked);
+    connect(m_buttonBox,  &QDialogButtonBox::accepted,
+            this,         &SaveWorkspaceDialog::onOkClicked);
+    connect(m_deleteButton, &QPushButton::clicked,
+            this,           &SaveWorkspaceDialog::onDeleteClicked);
 
-    resize(400, 350);
+    resize(400, 380);
 }
-
-// ─── Публичный интерфейс ─────────────────────────────────────────────────────
 
 QString SaveWorkspaceDialog::newWorkspaceName() const
 {
@@ -44,7 +40,9 @@ bool SaveWorkspaceDialog::loadOnStartup() const
     return m_loadOnStartupCheck->isChecked();
 }
 
-// ─── Приватные слоты ─────────────────────────────────────────────────────────
+QStringList SaveWorkspaceDialog::deletedWorkspaceNames() const {
+    return m_deletedNames;
+}
 
 void SaveWorkspaceDialog::onAddClicked()
 {
@@ -85,7 +83,14 @@ void SaveWorkspaceDialog::onOkClicked()
     accept();
 }
 
-// ─── Вспомогательные методы ──────────────────────────────────────────────────
+void SaveWorkspaceDialog::onDeleteClicked() {
+    QListWidgetItem* item = m_listWidget->currentItem();
+    if (!item) return;
+
+    const QString name = item->text();
+    m_deletedNames.append(name);
+    delete item; // удаляем из списка в диалоге
+}
 
 void SaveWorkspaceDialog::setupAddWidget()
 {

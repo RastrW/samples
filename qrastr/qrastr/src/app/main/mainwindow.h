@@ -17,6 +17,7 @@ class QMdiArea;
 class ProtocolLogWidget;
 class ProtocolWidget;
 class LogManager;
+class WorkspaceManager;
 
 class PyHlp;
 class CUIForm;
@@ -96,7 +97,8 @@ private:
     std::unique_ptr<UIBuilder>
         m_uiBuilder;
     LogManager* m_logManager = nullptr;
-
+    std::unique_ptr<WorkspaceManager>
+        m_workspaceManager;
     // ========== ПЛАГИНЫ ==========
     std::shared_ptr<QAstra> m_qastra;
     std::shared_ptr<QTI> m_qti;

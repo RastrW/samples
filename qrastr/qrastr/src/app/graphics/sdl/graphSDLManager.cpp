@@ -45,7 +45,7 @@ void GraphSDLManager::openWindow()
     // ── 2. Создаём dock-виджет и SDLHostWidget ────────────────────────────────────
     auto* dw       = new ads::CDockWidget(tr("Графика SDL"), m_parentWidget);
 
-    bool testWindow = false;
+    bool testWindow = true;
     if (testWindow) {
         auto* sdlHostWidget = new HostWidget(dw);
 

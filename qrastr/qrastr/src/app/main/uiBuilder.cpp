@@ -203,6 +203,18 @@ void UIBuilder::createWindowActions() {
               "Ctrl+L",
               tr("Открыть окно протокола"));
 
+    // Рабочая область
+    addAction("saveWorkSpace",
+              tr("&Сохранить область"),
+              "",
+              "",
+              tr("Сохранить рабочую область"));
+
+    addAction("loadWorkSpace",
+              tr("&Загрузить область"),
+              "",
+              "",
+              tr("Загрузить рабочую область"));
     // Следующее окно
     addAction("next",
               tr("&Следующее"),
@@ -323,6 +335,9 @@ void UIBuilder::buildMenuBar() {
     m_menus["window"]->addAction(m_actions["cascade"]);
     m_menus["window"]->addSeparator();
     m_menus["window"]->addAction(m_actions["protocol"]);
+    m_menus["window"]->addSeparator();
+    m_menus["window"]->addAction(m_actions["saveWorkSpace"]);
+    m_menus["window"]->addAction(m_actions["loadWorkSpace"]);
     m_menus["window"]->addSeparator();
     m_menus["window"]->addAction(m_actions["next"]);
     m_menus["window"]->addAction(m_actions["previous"]);

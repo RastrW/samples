@@ -72,6 +72,15 @@ public:
     void createLogWidgets();
     /// Добавить dock-виджеты лога (после ADS restoreState)
     void setupLogDockWidgets();
+
+    /// Имена всех видимых dock-виджетов (для сохранения в рабочей области)
+    QStringList openWidgetNames() const;
+
+    /// Открыть виджет по имени (диспетчер: формы / протокол / графика)
+    void openWidgetByName(const QString& name);
+
+    /// Закрыть все виджеты включая протокол
+    void closeAllWidgets();
 signals:
     void formOpened(const QString& formName);
     void formClosed(const QString& formName);

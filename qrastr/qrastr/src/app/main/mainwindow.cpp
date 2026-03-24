@@ -8,7 +8,6 @@
 #include "qti.h"
 #include "qbarsmdp.h"
 #include "mcrwnd.h"
-#include "protocolWidget.h"
 #include "qmcr/pyhlp.h"
 #include "calcIacceptableDialog.h"
 
@@ -37,8 +36,7 @@
 #include "uiBuilder.h"
 #include "params.h"
 #include "UIForms.h"
-
-#include "protocolLogWidget.h"
+#include "workspaceManager.h"
 
 MainWindow::MainWindow()
     : QMainWindow(){
@@ -123,11 +121,12 @@ void MainWindow::initialize(
         m_uiBuilder->calcParametersMenu());
     m_formManager->buildPropertiesMenu(m_uiBuilder->propertiesMenu());
 
-    // Восстанавливаем состояние ADS после того, как все доки созданы
-    const QByteArray adsState = m_appSettingsManager->getSettings("ADSState");
-    if (!adsState.isEmpty()) {
-        m_dockManager->restoreState(adsState);
-    }
+    m_workspaceManager = std::make_unique<WorkspaceManager>(
+        m_appSettingsManager->settings(),
+        m_dockManager,
+        m_formManager.get(),
+        this);
+    m_workspaceManager->applyStartupWorkspace();
 
     // Создаём виджеты протоколов и СРАЗУ добавляем Qt-синки в логгер.
     m_logManager->setupDockWidgets();
@@ -135,26 +134,21 @@ void MainWindow::initialize(
     spdlog::info("MainWindow initialized successfully");
 }
 
-std::shared_ptr<spdlog::sinks::sink>
-MainWindow::getProtocolLogSink() const {
-    return m_logManager->getProtocolLogSink();
-}
-
 void MainWindow::setupConnections() {
     // ========== FILEMANAGER ==========
     // Файловые действия
     connect(m_uiBuilder->actionByName("new"), &QAction::triggered,
             m_fileManager.get(), &FileManager::newFile);
-    
+
     connect(m_uiBuilder->actionByName("load"), &QAction::triggered,
             m_fileManager.get(), &FileManager::openFiles);
-    
+
     connect(m_uiBuilder->actionByName("save"), &QAction::triggered,
             m_fileManager.get(), &FileManager::save);
-    
+
     connect(m_uiBuilder->actionByName("saveAs"), &QAction::triggered,
             m_fileManager.get(), &FileManager::saveAs);
-    
+
     connect(m_uiBuilder->actionByName("saveAll"), &QAction::triggered,
             m_fileManager.get(), &FileManager::saveAll);
 
@@ -182,7 +176,7 @@ void MainWindow::setupConnections() {
                 spdlog::error("File load error: {}", error.toStdString());
             });
     connect(m_fileManager.get(), &FileManager::recentFilesChanged,
-            this, &MainWindow::slot_updateRecentFiles); 
+            this, &MainWindow::slot_updateRecentFiles);
     connect(m_uiBuilder->actionByName("exit"), &QAction::triggered,
             qApp, &QApplication::closeAllWindows);
 
@@ -192,22 +186,22 @@ void MainWindow::setupConnections() {
             m_calcController.get(), [this]() {
                 m_calcController->executeKdd();
             });
-    
+
     connect(m_uiBuilder->actionByName("rgm"), &QAction::triggered,
             m_calcController.get(), [this]() {
                 m_calcController->executeRgm();
             });
-    
+
     connect(m_uiBuilder->actionByName("opf"), &QAction::triggered,
             m_calcController.get(), [this]() {
                 m_calcController->executeOPF("s");
             });
-    
+
     connect(m_uiBuilder->actionByName("smzu"), &QAction::triggered,
             m_calcController.get(), [this]() {
                 m_calcController->executeSMZUtst("33");
             });
-    
+
     connect(m_uiBuilder->actionByName("kz"), &QAction::triggered,
             m_calcController.get(), [this]() {
                 KzParameters params;
@@ -225,7 +219,7 @@ void MainWindow::setupConnections() {
     // Диалоговые расчёты
     connect(m_uiBuilder->actionByName("idop"), &QAction::triggered,
             m_calcController.get(), &CalculationController::showIdopDialog);
-    
+
     connect(m_calcController.get(), &CalculationController::showDialogRequested,
             this, [this](const QString& dialogType, const QString& params) {
                 if (dialogType == "idop") {
@@ -234,51 +228,51 @@ void MainWindow::setupConnections() {
                     showMDPPrepareDialog();
                 }
             });
-    
+
     // ТИ расчёты
     connect(m_uiBuilder->actionByName("recalcDor"), &QAction::triggered,
             m_calcController.get(), &CalculationController::recalcTiDor);
-    
+
     connect(m_uiBuilder->actionByName("updateTables"), &QAction::triggered,
             m_calcController.get(), &CalculationController::updateTiTables);
-    
+
     connect(m_uiBuilder->actionByName("calcPTI"), &QAction::triggered,
             m_calcController.get(), &CalculationController::calcPTI);
-    
+
     connect(m_uiBuilder->actionByName("filtrTI"), &QAction::triggered,
             m_calcController.get(), &CalculationController::filtrTI);
-    
+
     // МДП подготовка
     connect(m_uiBuilder->actionByName("prepareMDP"), &QAction::triggered,
             m_calcController.get(), [this]() {
                 m_calcController->prepareBarsMDP("");
             });
-    
+
     // События расчётов
     connect(m_calcController.get(), &CalculationController::calculationStarted,
             this, [this](const QString& type) {
                 emit sig_calcBegin();
                 spdlog::info("Calculation started: {}", type.toStdString());
             });
-    
+
     connect(m_calcController.get(), &CalculationController::calculationFinished,
             this, [this](const QString& type, bool success) {
                 emit sig_calcEnd();
                 spdlog::info("Calculation finished: {} (success: {})",
-                    type.toStdString(), success);
+                             type.toStdString(), success);
             });
-    
+
     connect(m_calcController.get(), &CalculationController::statusMessage,
             statusBar(), &QStatusBar::showMessage);
-    
+
     // ========== FORMMANAGER ==========
     // Передача сигналов расчётов формам
     connect(this, &MainWindow::sig_calcBegin,
             m_formManager.get(), &FormManager::slot_calculationStarted);
-    
+
     connect(this, &MainWindow::sig_calcEnd,
             m_formManager.get(), &FormManager::slot_calculationFinished);
-    
+
     connect(m_formManager.get(), &FormManager::formOpened,
             this, [](const QString& name) {
                 spdlog::info("Form opened: {}", name.toStdString());
@@ -321,7 +315,18 @@ void MainWindow::setupConnections() {
             });
     connect(m_uiBuilder->actionByName("about"), &QAction::triggered,
             this, &MainWindow::slot_about);
+    // ========== WORKSPACEMANAGER ==========
+    connect(m_uiBuilder->actionByName("saveWorkSpace"), &QAction::triggered,
+            m_workspaceManager.get(), &WorkspaceManager::slot_showSaveDialog);
+    connect(m_uiBuilder->actionByName("loadWorkSpace"), &QAction::triggered,
+            m_workspaceManager.get(), &WorkspaceManager::slot_showLoadDialog);
 }
+
+std::shared_ptr<spdlog::sinks::sink>
+MainWindow::getProtocolLogSink() const {
+    return m_logManager->getProtocolLogSink();
+}
+
 
 void MainWindow::slot_updateRecentFiles() {
     QStringList files = m_fileManager->getRecentFiles();
@@ -369,11 +374,6 @@ void MainWindow::showMDPPrepareDialog() {
 }
 
 void MainWindow::closeEvent(QCloseEvent* event) {
-    // Сохраняем состояние ADS пока dock manager ещё жив
-    if (m_dockManager)
-        m_appSettingsManager->saveValue("ADSState", m_dockManager->saveState());
-
-
     m_formManager->closeGraphWebServer();
 
     m_appSettingsManager->saveWindowGeometry(this);
