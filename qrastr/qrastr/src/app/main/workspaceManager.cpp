@@ -42,7 +42,7 @@ void WorkspaceManager::applyStartupWorkspace() {
 }
 
 void WorkspaceManager::slot_showSaveDialog() {
-    SaveWorkspaceDialog dlg(names(), m_mainWindow);
+    SaveWorkspaceDialog dlg(names(), startupWorkspace(), m_mainWindow);
     if (dlg.exec() != QDialog::Accepted)
         return;
 
@@ -52,7 +52,7 @@ void WorkspaceManager::slot_showSaveDialog() {
 
     // 2. Флаг «при старте» — независимо от того, добавляется ли новая область
     const QString startupName = dlg.startupWorkspaceName();
-    m_settings->setValue(kStartup, startupName); // пусто = сброс
+    m_settings->setValue(kStartup, startupName);
     m_settings->sync();
 
     // 3. Новая область — только если имя введено
@@ -70,7 +70,7 @@ void WorkspaceManager::slot_showSaveDialog() {
 }
 
 void WorkspaceManager::slot_showLoadDialog() {
-    LoadWorkspaceDialog dlg(names(), m_mainWindow);
+    LoadWorkspaceDialog dlg(names(), startupWorkspace(), m_mainWindow);
     if (dlg.exec() != QDialog::Accepted)
         return;
 

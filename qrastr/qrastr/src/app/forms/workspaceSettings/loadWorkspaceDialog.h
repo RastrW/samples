@@ -4,7 +4,10 @@
 
 /**
  * @brief Диалог "Загрузить рабочую область".
- * Позволяет пользователю выбрать одну рабочую область из сохраненного списка
+ *
+ * Отображает список сохранённых рабочих областей.
+ * Вторая колонка показывает, какая область будет загружена при старте,
+ * но доступна только для чтения — изменить её через этот диалог нельзя.
  */
 class LoadWorkspaceDialog : public WorkspaceDialogBase
 {
@@ -12,21 +15,24 @@ class LoadWorkspaceDialog : public WorkspaceDialogBase
 
 public:
     /**
-    * Входные параметры:
-    * @param workspaces — список сохранённых названий рабочих областей.
-    * @param parent     — родительский виджет.
-    */
+     * @param workspaces   — список сохранённых рабочих областей.
+     * @param startupName  — имя области, загружаемой при старте (может быть пустым).
+     * @param parent       — родительский виджет.
+     */
     explicit LoadWorkspaceDialog(const QStringList &workspaces,
+                                 const QString     &startupName,
                                  QWidget           *parent = nullptr);
 
-    /// Название рабочей области, выбранной пользователем.
-    /// Возвращает пустую строку, если ни одна строка не была выделена.
+    /// Имя выбранной пользователем области; пусто, если выбор не сделан.
     [[nodiscard]] QString selectedWorkspace() const;
 
 signals:
-    /// Испускается при нажатии Ok с именем выбранной рабочей области.
     void workspaceSelected(const QString &name);
 
 private slots:
     void onOkClicked();
+
+private:
+    void setupColumns(const QString &startupName);
 };
+

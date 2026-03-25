@@ -1,12 +1,12 @@
 #pragma once
 
 #include "workspacedialogbase.h"
-#include <QCheckBox>
-#include <QHBoxLayout>
-#include <QLineEdit>
-#include <QPushButton>
-#include <QWidget>
 
+
+class QTreeWidget;
+class QButtonGroup;
+class QLineEdit;
+class QRadioButton;
 /**
  * @brief Диалог "Сохранить рабочую область".
  *
@@ -20,42 +20,38 @@ class SaveWorkspaceDialog : public WorkspaceDialogBase
     Q_OBJECT
 
 public:
-    /**
-    * Входные параметры:
-    * @param workspaces       — текущий список названий рабочих областей.
-    * @param loadOnStartup    — текущее значение флага «Загрузка при старте».
-    * @param parent           — родительский виджет.
-    */
     explicit SaveWorkspaceDialog(const QStringList &workspaces,
+                                 const QString     &startupName,
                                  QWidget           *parent = nullptr);
 
-    /// Название новой рабочей области, введённой пользователем.
-    /// Возвращает пустую строку, если ввод не был выполнен.
-    [[nodiscard]] QString newWorkspaceName() const;
-
-    /// Состояние флага «Загрузка при старте» на момент закрытия диалога.
-    [[nodiscard]] bool loadOnStartup() const;
-    /// Имена областей, помеченных к удалению пользователем
+    [[nodiscard]] QString     newWorkspaceName()      const;
+    [[nodiscard]] QString     startupWorkspaceName()  const;
     [[nodiscard]] QStringList deletedWorkspaceNames() const;
 
-    [[nodiscard]] QString startupWorkspaceName() const;
 private slots:
-    void onAddClicked();
-    void onOkClicked();
+    void onAddOkClicked();
+    void onAddCancelClicked();
+    void onAddButtonClicked();
     void onDeleteClicked();
+    void onOkClicked();
+
 private:
-    void setupAddWidget();
+    void setupAddRow();
+    void updateStartupControls();   ///< снять/включить кнопки если список пуст
+    void setupTree(const QString &startupName);
 
-    // --- Виджеты ---
-    QCheckBox  *m_loadOnStartupCheck = nullptr;
+    QButtonGroup *m_radioGroup    = nullptr;  ///< группа радиокнопок в колонке 2
+    QRadioButton *m_noStartupRadio = nullptr;  ///< «не загружать при старте»
 
-    // Строка «Добавить»
-    QWidget    *m_addRow             = nullptr; ///< контейнер поля ввода + кнопки
-    QLineEdit  *m_nameEdit           = nullptr;
-    QPushButton *m_addButton         = nullptr;
+    // Строка добавления
+    QWidget      *m_addRow        = nullptr;
+    QLineEdit    *m_nameEdit      = nullptr;
+    QPushButton  *m_addButton     = nullptr;  ///< «Добавить» — раскрывает строку
+    QPushButton  *m_addOkBtn      = nullptr;
+    QPushButton  *m_addCancelBtn  = nullptr;
 
-    QString     m_newWorkspaceName;
+    QPushButton  *m_deleteButton  = nullptr;
 
-    QPushButton* m_deleteButton    = nullptr;
-    QStringList  m_deletedNames;
+    QString       m_newWorkspaceName;
+    QStringList   m_deletedNames;
 };

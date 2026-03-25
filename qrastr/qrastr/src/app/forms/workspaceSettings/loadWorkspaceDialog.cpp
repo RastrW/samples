@@ -1,38 +1,58 @@
 #include "loadworkspacedialog.h"
 
 #include <QMessageBox>
+#include <QTreeWidget>
+#include <QHeaderView>
 
 LoadWorkspaceDialog::LoadWorkspaceDialog(const QStringList &workspaces,
+                                         const QString     &startupName,
                                          QWidget           *parent)
     : WorkspaceDialogBase(workspaces, parent)
 {
     setWindowTitle(tr("Загрузить рабочую область"));
 
-    // Дополнительных виджетов нет — сразу завершаем компоновку
+    setupColumns(startupName);  // расширяем дерево до двух колонок
     finalizeLayout();
 
-    // Переопределяем обработчик Ok для проверки выбора и отправки сигнала
     disconnect(m_buttonBox, &QDialogButtonBox::accepted,
                this,        &QDialog::accept);
     connect(m_buttonBox, &QDialogButtonBox::accepted,
             this,        &LoadWorkspaceDialog::onOkClicked);
 
     // Двойной клик — быстрое подтверждение
-    connect(m_listWidget, &QListWidget::itemDoubleClicked,
-            this,         [this](QListWidgetItem *) { onOkClicked(); });
+    connect(m_tree, &QTreeWidget::itemDoubleClicked,
+            this,   [this](QTreeWidgetItem *) { onOkClicked(); });
 
-    resize(400, 300);
+    resize(420, 300);
 }
 
-// ─── Публичный интерфейс ─────────────────────────────────────────────────────
+void LoadWorkspaceDialog::setupColumns(const QString &startupName)
+{
+    // Добавляем вторую колонку
+    m_tree->setColumnCount(2);
+    m_tree->setHeaderLabels({tr("Рабочая область"), tr("При старте")});
+    m_tree->header()->setSectionResizeMode(0, QHeaderView::Stretch);
+    m_tree->header()->setSectionResizeMode(1, QHeaderView::Fixed);
+    m_tree->header()->resizeSection(1, 90);
+
+    for (int i = 0; i < m_tree->topLevelItemCount(); ++i) {
+        QTreeWidgetItem *item = m_tree->topLevelItem(i);
+
+        if (item->text(0) == startupName) {
+            item->setText(1, tr("✓"));
+            item->setTextAlignment(1, Qt::AlignCenter);
+        }
+
+        // Запрещаем редактирование обеих колонок
+        item->setFlags(item->flags() & ~Qt::ItemIsEditable);
+    }
+}
 
 QString LoadWorkspaceDialog::selectedWorkspace() const
 {
-    const QListWidgetItem *item = m_listWidget->currentItem();
-    return item ? item->text() : QString{};
+    const QTreeWidgetItem *item = m_tree->currentItem();
+    return item ? item->text(0) : QString{};
 }
-
-// ─── Приватные слоты ─────────────────────────────────────────────────────────
 
 void LoadWorkspaceDialog::onOkClicked()
 {

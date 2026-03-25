@@ -1,10 +1,9 @@
 #pragma once
-
 #include <QDialog>
-#include <QDialogButtonBox>
-#include <QListWidget>
-#include <QVBoxLayout>
-#include <QStringList>
+
+class QTreeWidget;
+class QDialogButtonBox;
+class QVBoxLayout;
 
 /// @brief Базовый класс для диалогов работы с рабочими областями.
 class WorkspaceDialogBase : public QDialog
@@ -13,24 +12,18 @@ class WorkspaceDialogBase : public QDialog
 
 public:
     explicit WorkspaceDialogBase(const QStringList &workspaces,
-                                 QWidget *parent = nullptr);
+                                 QWidget           *parent = nullptr);
 
 protected:
-    /// Вставить виджет над списком (до вызова setupUi).
     void insertWidgetAboveList(QWidget *widget);
-
-    /// Вставить виджет под списком (до вызова setupUi).
     void insertWidgetBelowList(QWidget *widget);
-
-    /// Завершить построение компоновки. Вызывается из конструктора
-    /// производного класса после добавления всех дополнительных виджетов.
     void finalizeLayout();
-    ///список рабочих областей
-    QListWidget        *m_listWidget  = nullptr;
-    QDialogButtonBox   *m_buttonBox   = nullptr;
+
+    QTreeWidget      *m_tree       = nullptr;
+    QDialogButtonBox *m_buttonBox  = nullptr;
 
 private:
-    QVBoxLayout        *m_mainLayout  = nullptr;
-    QList<QWidget *>    m_aboveWidgets;
-    QList<QWidget *>    m_belowWidgets;
+    QVBoxLayout      *m_mainLayout = nullptr;
+    QList<QWidget *>  m_aboveWidgets;
+    QList<QWidget *>  m_belowWidgets;
 };

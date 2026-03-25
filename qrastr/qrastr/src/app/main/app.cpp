@@ -64,7 +64,6 @@ bool App::init(){
         spdlog::set_default_logger(logg);
         logg->set_pattern("[%H:%M:%S.%e] [%^%l%$] %v");
 
-
 #ifdef _DEBUG
         ///@todo не удается решить проблему с кодировкой вывода spdlog в коносоль
         auto qt_sink = std::make_shared<QtSink>();
