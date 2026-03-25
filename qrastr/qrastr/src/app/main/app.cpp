@@ -18,6 +18,17 @@ using WrapperExceptionType = std::runtime_error;
 #include "qbarsmdp.h"
 #include "astra_headers/UIForms.h"
 
+class QtSink : public spdlog::sinks::base_sink<std::mutex>
+{
+protected:
+    void sink_it_(const spdlog::details::log_msg &msg) override
+    {
+        QString s = QString::fromUtf8(msg.payload.data(), static_cast<int>(msg.payload.size()));
+        qInfo() << s;
+    }
+    void flush_() override {}
+};
+
 App::App(int &argc, char **argv)
     :QApplication(argc, argv){
     upCUIFormsCollection_ = std::make_unique<CUIFormsCollection>();
@@ -53,9 +64,15 @@ bool App::init(){
         spdlog::set_default_logger(logg);
         logg->set_pattern("[%H:%M:%S.%e] [%^%l%$] %v");
 
-        auto console_sink = std::make_shared<spdlog::sinks::stdout_color_sink_mt>();
-        logg->sinks().push_back(console_sink);
 
+#ifdef _DEBUG
+        ///@todo не удается решить проблему с кодировкой вывода spdlog в коносоль
+        auto qt_sink = std::make_shared<QtSink>();
+        logg->sinks().push_back(qt_sink);
+#else
+        auto console_sink = std::make_shared<spdlog::sinks::wincolor_stdout_sink_mt>();
+        logg->sinks().push_back(console_sink);
+#endif
         bool res = readSettings();
 
         const bool bl_res = QDir::setCurrent(Params::get_instance()->getDirData().path());
@@ -73,7 +90,11 @@ bool App::init(){
         m_v_cache_log.add(spdlog::level::info, "ReadSetting: {}", res);
         m_v_cache_log.add(spdlog::level::info, "Log: {}", path_log.generic_u8string());
         // Флашим ТОЛЬКО в file+console синки, НЕ очищаем кэш:
+#ifdef _DEBUG
+        m_v_cache_log.flushToSinks({qt_sink, file_sink});
+#else
         m_v_cache_log.flushToSinks({console_sink, file_sink});
+#endif
         //m_v_cache_log` нужен **только** для сообщений, которые появляются **до** инициализации синков
     }catch(const std::exception& ex){
         exclog(ex);

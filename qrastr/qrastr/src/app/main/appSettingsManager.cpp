@@ -9,7 +9,7 @@
 AppSettingsManager::AppSettingsManager(QObject* parent)
     : QObject(parent){}
 
-bool AppSettingsManager::loadWindowGeometry(QMainWindow* window) {
+bool AppSettingsManager::loadAppearanceSettings(QMainWindow* window) {
     if (!window) {
         return false;
     }
@@ -50,15 +50,7 @@ bool AppSettingsManager::loadWindowGeometry(QMainWindow* window) {
     return true;
 }
 
-void AppSettingsManager::saveValue(const QString& key, const QByteArray& value) {
-    m_settings.setValue(key, value);
-}
-
-QByteArray AppSettingsManager::getSettings(const QString& name){
-    return m_settings.value(name).toByteArray();
-}
-
-bool AppSettingsManager::saveWindowGeometry(QMainWindow* window) {
+bool AppSettingsManager::saveAppearanceSettings(QMainWindow* window) {
     if (!window) return false;
 
     m_settings.beginGroup("MainWindow");
@@ -72,6 +64,14 @@ bool AppSettingsManager::saveWindowGeometry(QMainWindow* window) {
     spdlog::info("StyleName: {}", styleName.toStdString());
 
     return true;
+}
+
+void AppSettingsManager::saveValue(const QString& key, const QByteArray& value) {
+    m_settings.setValue(key, value);
+}
+
+QByteArray AppSettingsManager::getSettings(const QString& name){
+    return m_settings.value(name).toByteArray();
 }
 
 void AppSettingsManager::showFormSettings(std::shared_ptr<QAstra> qastra) {

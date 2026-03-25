@@ -45,7 +45,8 @@ void LogManager::createWidgets() {
 
 void LogManager::setupDockWidgets() {
     // --- Глобальный протокол ---
-    m_dockGlobal = new ads::CDockWidget("globalProtocol", m_parentWidget);
+    m_dockGlobal = new ads::CDockWidget("Полный протокол", m_parentWidget);
+    m_dockGlobal->setObjectName("globalProtocol");
     m_dockGlobal->setWidget(m_globalProtocol);
     m_dockGlobal->setFeature(ads::CDockWidget::CustomCloseHandling, true);
     // Скрываем dock, но не удаляем виджет внутри
@@ -55,6 +56,7 @@ void LogManager::setupDockWidgets() {
     emit dockWidgetCreated(m_dockGlobal);
     // --- Протокол Astra ---
     m_dockMain = new ads::CDockWidget("Протокол Astra", m_parentWidget);
+    m_dockMain->setObjectName("mainProtocol");
     m_dockMain->setWidget(m_mainProtocol);
     m_dockMain->setFeature(ads::CDockWidget::CustomCloseHandling, true);
     connect(m_dockMain, &ads::CDockWidget::closeRequested,

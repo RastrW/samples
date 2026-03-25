@@ -30,6 +30,18 @@ SaveWorkspaceDialog::SaveWorkspaceDialog(const QStringList &workspaces,
     resize(400, 380);
 }
 
+QString SaveWorkspaceDialog::startupWorkspaceName() const {
+    if (!m_loadOnStartupCheck->isChecked())
+        return {};
+    // Если вводится новая — она и есть startup
+    const QString newName = m_nameEdit->text().trimmed();
+    if (!newName.isEmpty())
+        return newName;
+    // Иначе — выделенная в списке
+    const QListWidgetItem* item = m_listWidget->currentItem();
+    return item ? item->text() : QString{};
+}
+
 QString SaveWorkspaceDialog::newWorkspaceName() const
 {
     return m_newWorkspaceName;

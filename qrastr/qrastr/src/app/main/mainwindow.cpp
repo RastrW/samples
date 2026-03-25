@@ -89,7 +89,7 @@ void MainWindow::initialize(
     // ========== СОЗДАНИЕ КОМПОНЕНТОВ ==========
     // SettingsManager нужен первым для загрузки настроек
     m_appSettingsManager = std::make_unique<AppSettingsManager>(this);
-    m_appSettingsManager->loadWindowGeometry(this);
+    m_appSettingsManager->loadAppearanceSettings(this);
     // Restore the state of toolbars and dock widgets (menus are part of the overall layout)
     restoreState(m_appSettingsManager->getSettings("mainWindowState"));
 
@@ -126,11 +126,12 @@ void MainWindow::initialize(
         m_dockManager,
         m_formManager.get(),
         this);
-    m_workspaceManager->applyStartupWorkspace();
 
     setupConnections();
     // Создаём виджеты протоколов и СРАЗУ добавляем Qt-синки в логгер.
     m_logManager->setupDockWidgets();
+
+    m_workspaceManager->applyStartupWorkspace();
 
     spdlog::info("MainWindow initialized successfully");
 }
@@ -378,7 +379,7 @@ void MainWindow::closeEvent(QCloseEvent* event)
     spdlog::info("MainWindow closing");
     m_formManager->closeGraphWebServer();
     spdlog::info("The graphics web server is closed");
-    m_appSettingsManager->saveWindowGeometry(this);
+    m_appSettingsManager->saveAppearanceSettings(this);
     spdlog::info("The geometry is saved");
 
     // Отключаем Qt-синки ДО разрушения FormManager/GraphSDLManager,

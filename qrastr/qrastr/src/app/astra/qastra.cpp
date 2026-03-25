@@ -59,27 +59,27 @@ spdlog::level::level_enum QAstra::getSpdLevel(const LogMessageTypes lmt){
 }
 
 IPlainRastrRetCode QAstra::OnEvent(const IRastrEventLog& Event) noexcept  {
-   spdlog::log( getSpdLevel(Event.Status()),
-    "OnEvent.Log Status: {:3}  StageId: {:2} EventMsg: {:40} Table: {:10}  Column: {:5} Index: {:5} UIForm: {:10}"
-       , static_cast<std::underlying_type<LogMessageTypes>::type>(Event.Status())
-       , Event.StageId()
-       , Event.Message()
-       , Event.DBLocation().Table()
-       , Event.DBLocation().Column()
-       , Event.DBLocation().Index()
-       , Event.UIForm()
-   );
-   _log_data log_data;
-   log_data.lmt        = Event.Status();
-   log_data.n_stage_id = Event.StageId();
-   log_data.str_msg    = Event.Message();
-   log_data.str_table  = Event.DBLocation().Table();
-   log_data.str_col    = Event.DBLocation().Column();
-   log_data.n_indx     = Event.DBLocation().Index();
-   log_data.str_uiform = Event.UIForm();
+    spdlog::log( getSpdLevel(Event.Status()),
+                "OnEvent.Log Status: {:3}  StageId: {:2} EventMsg: {:40} Table: {:10}  Column: {:5} Index: {:5} UIForm: {:10}"
+                , static_cast<std::underlying_type<LogMessageTypes>::type>(Event.Status())
+                , Event.StageId()
+                , Event.Message()
+                , Event.DBLocation().Table()
+                , Event.DBLocation().Column()
+                , Event.DBLocation().Index()
+                , Event.UIForm()
+                );
+    _log_data log_data;
+    log_data.lmt        = Event.Status();
+    log_data.n_stage_id = Event.StageId();
+    log_data.str_msg    = Event.Message();
+    log_data.str_table  = Event.DBLocation().Table();
+    log_data.str_col    = Event.DBLocation().Column();
+    log_data.n_indx     = Event.DBLocation().Index();
+    log_data.str_uiform = Event.UIForm();
 
-   emit onRastrLog(log_data);
-   return IPlainRastrRetCode::Ok;
+    emit onRastrLog(log_data);
+    return IPlainRastrRetCode::Ok;
 }
 
 IPlainRastrRetCode QAstra::OnEvent(const IRastrEventHint& Event) noexcept  {

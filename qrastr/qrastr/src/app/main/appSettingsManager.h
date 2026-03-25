@@ -15,12 +15,8 @@ public:
     explicit AppSettingsManager(QObject* parent = nullptr);
     ~AppSettingsManager() = default;
     
-    // ========== Настройки окна ==========
-    /// @brief Загрузить геометрию окна
-    /// it cache log messages to vector, because it called befor logger intialization
-    bool loadWindowGeometry(QMainWindow* window);
-    /// @brief Сохранить геометрию окна
-    bool saveWindowGeometry(QMainWindow* window);
+    bool loadAppearanceSettings(QMainWindow* window);
+    bool saveAppearanceSettings(QMainWindow* window);
     void saveValue(const QString& key, const QByteArray& value);
     // ========== Настройки форм ==========
     /// @brief Показать диалог настроек форм

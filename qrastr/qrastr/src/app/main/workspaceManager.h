@@ -54,7 +54,7 @@ public slots:
     void slot_showLoadDialog();
 
 private:
-    void save(const WorkspaceEntry& entry, bool loadOnStartup);
+    void save(const WorkspaceEntry& entry);
     void remove(const QString& name);
     std::optional<WorkspaceEntry> load(const QString& name) const;
     void apply(const WorkspaceEntry& entry);

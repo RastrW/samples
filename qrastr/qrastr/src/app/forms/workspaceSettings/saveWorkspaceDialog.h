@@ -37,6 +37,8 @@ public:
     [[nodiscard]] bool loadOnStartup() const;
     /// Имена областей, помеченных к удалению пользователем
     [[nodiscard]] QStringList deletedWorkspaceNames() const;
+
+    [[nodiscard]] QString startupWorkspaceName() const;
 private slots:
     void onAddClicked();
     void onOkClicked();

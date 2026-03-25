@@ -46,11 +46,16 @@ void WorkspaceManager::slot_showSaveDialog() {
     if (dlg.exec() != QDialog::Accepted)
         return;
 
-    // Сначала применяем удаления
+    // 1. Удаления
     for (const QString& name : dlg.deletedWorkspaceNames())
         remove(name);
 
-    // Затем добавление новой области
+    // 2. Флаг «при старте» — независимо от того, добавляется ли новая область
+    const QString startupName = dlg.startupWorkspaceName();
+    m_settings->setValue(kStartup, startupName); // пусто = сброс
+    m_settings->sync();
+
+    // 3. Новая область — только если имя введено
     const QString newName = dlg.newWorkspaceName();
     if (newName.isEmpty())
         return;
@@ -60,10 +65,8 @@ void WorkspaceManager::slot_showSaveDialog() {
     entry.adsState  = m_dockManager->saveState();
     entry.geometry  = m_mainWindow->saveGeometry();
     entry.openForms = m_formManager->openWidgetNames();
-    save(entry, dlg.loadOnStartup());
-
-    spdlog::info("Workspace '{}' saved (startup={})",
-                 newName.toStdString(), dlg.loadOnStartup());
+    save(entry);
+    m_settings->sync();
 }
 
 void WorkspaceManager::slot_showLoadDialog() {
@@ -82,24 +85,17 @@ void WorkspaceManager::slot_showLoadDialog() {
     apply(*entry);
 }
 
-void WorkspaceManager::save(const WorkspaceEntry& entry, bool loadOnStartup) {
+void WorkspaceManager::save(const WorkspaceEntry& entry) {
     // Обновляем список имён
     QStringList list = names();
     if (!list.contains(entry.name))
         list.append(entry.name);
     m_settings->setValue(kNames, list);
-
     // Сохраняем данные области
     const QString prefix = QString("%1/%2/").arg(kGroup, entry.name);
     m_settings->setValue(prefix + "adsState",  entry.adsState);
     m_settings->setValue(prefix + "geometry",  entry.geometry);
     m_settings->setValue(prefix + "openForms", entry.openForms);
-
-    // Флаг «Загрузка при старте» — только одна область
-    if (loadOnStartup)
-        m_settings->setValue(kStartup, entry.name);
-    else if (startupWorkspace() == entry.name)
-        m_settings->setValue(kStartup, QString{});
 }
 
 void WorkspaceManager::remove(const QString& name) {

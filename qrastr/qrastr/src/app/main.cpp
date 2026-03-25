@@ -2,11 +2,12 @@
 #include <QTranslator>
 #include <QDebug>
 #include <QWebEngineSettings>
+#include <QTextCodec>
 #include "mainwindow.h"
 #include "app.h"
 
 int main(int argc, char *argv[]){
-    system("chcp 65001");
+
     // отключить sandbox ДО создания QApplication
     qputenv("QTWEBENGINE_DISABLE_SANDBOX", "1");
 
@@ -16,6 +17,13 @@ int main(int argc, char *argv[]){
 #endif
 
     App app(argc, argv);
+
+    //QTextCodec::setCodecForLocale(QTextCodec::codecForName("Windows-1251"));
+    //QTextCodec::setCodecForLocale(QTextCodec::codecForName("CP866"));
+    QTextCodec::setCodecForLocale(QTextCodec::codecForName("UTF-8"));
+    //SetConsoleOutputCP(1251);
+    SetConsoleOutputCP(CP_UTF8);
+    SetConsoleCP(CP_UTF8);
     //Compile test
     //pqxx::connection cx{"postgresql://accounting@localhost/company"};
     //pqxx::work tx{cx};
@@ -41,6 +49,8 @@ int main(int argc, char *argv[]){
         }
     }
 */
+
+
 
     MainWindow w;
     // Qt-синк уже создан в конструкторе MainWindow.

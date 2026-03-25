@@ -52,11 +52,12 @@ FormManager::FormManager
 void FormManager::setForms(const std::list<CUIForm>& forms) {
     m_forms = forms;
     m_rtdm.setForms(&m_forms);
-    
-    // Создаём индекс для быстрого поиска
+
     int index = 0;
     for (const auto& form : forms) {
-        QString formName = QString::fromStdString(form.Name());
+        // Используем UTF-8
+        QString formName = QString::fromStdString(
+            stringutils::MkToUtf8(form.Name()));
         m_formNameToIndex[formName] = index++;
     }
 }
@@ -77,6 +78,7 @@ void FormManager::openForm(const CUIForm& form) {
     // Докирование
     auto dw = new ads::CDockWidget(QString::fromStdString(form.Name()),
                                     m_parentWidget);
+    dw->setObjectName(QString::fromStdString(form.Name()));
     dw->setFeature(ads::CDockWidget::DockWidgetDeleteOnClose, true);
 
     // Создание виджета формы
@@ -145,10 +147,12 @@ void FormManager::openFormByIndex(int index) {
         spdlog::error("Invalid form index: {}", index);
         return;
     }
-    
+
     auto it = m_forms.begin();
     std::advance(it, index);
-    openForm(*it);
+    CUIForm form = *it; // копия
+    form.SetName(stringutils::MkToUtf8(form.Name()));
+    openForm(form);
 }
 
 void FormManager::openFormByName(const QString& formName) {
@@ -463,23 +467,33 @@ void FormManager::generateDynamicForms(QMenu* menu) {
 
 QStringList FormManager::openWidgetNames() const {
     QStringList result;
-    // openedDockWidgets() возвращает только видимые/открытые виджеты
     for (const auto* dw : m_dockManager->openedDockWidgets()) {
-        if (dw) result.append(dw->objectName());
+        if (dw && dw->isVisible() && !dw->objectName().isEmpty())
+            result.append(dw->objectName());
     }
     return result;
 }
 
 void FormManager::openWidgetByName(const QString& name) {
-    if (name == "Протокол") {
-        slot_openProtocol();
-    } else if (name == "Графика SDL") {
-        slot_openSDLGraph();
-    } else if (name == "Графика Web") {
-        slot_openWebGraph();
-    } else {
-        openFormByName(name);
+    // Лог-виджеты: уже существуют в ADS, просто показываем
+    if (name == "Полный протокол" || name == "Протокол Astra") {
+        // Ищем по objectName среди всех dock-виджетов ADS
+        const auto allDocks = m_dockManager->dockWidgetsMap();
+        auto it = allDocks.find(name);
+        if (it != allDocks.end()) {
+            it.value()->toggleView(true);
+        } else {
+            // setupDockWidgets ещё не был вызван — безопасно пропускаем,
+            // restoreState расставит их позже
+            spdlog::warn("Log dock '{}' not in ADS yet, skipping", name.toStdString());
+        }
+        return;
     }
+    // Графика
+    if (name == "Графика SDL") { slot_openSDLGraph(); return; }
+    if (name == "Графика Web") { slot_openWebGraph(); return; }
+    // Таблицы
+    openFormByName(name);
 }
 
 void FormManager::closeAllWidgets() {
