@@ -156,7 +156,7 @@ void FormManager::openFormByIndex(int index) {
 }
 
 void FormManager::openFormByName(const QString& formName) {
-    if (!m_formNameToIndex.contains(formName)) {
+    if (m_formNameToIndex.find(formName) != m_formNameToIndex.end()) {
         spdlog::error("Form not found: {}", formName.toStdString());
         return;
     }
@@ -287,8 +287,8 @@ void FormManager::slot_tileForms() {
     }
 }
 
-QMap<QString, QMenu*> FormManager::buildMenuStructure(QMenu* rootMenu) {
-    QMap<QString, QMenu*> menuMap;
+std::map<QString, QMenu*> FormManager::buildMenuStructure(QMenu* rootMenu) {
+    std::map<QString, QMenu*> menuMap;
 
     for (const auto& form : m_forms) {
         std::string menuPath = stringutils::MkToUtf8(form.MenuPath());
@@ -307,8 +307,8 @@ QMap<QString, QMenu*> FormManager::buildMenuStructure(QMenu* rootMenu) {
             menuName = "Остальное";
         }
 
-        if (!menuMap.contains(menuName)) {
-            menuMap[menuName] = rootMenu->addMenu(menuName);
+        if (menuMap.find(menuName) == menuMap.end()) {
+            menuMap.emplace(menuName, rootMenu->addMenu(menuName));
         }
     }
 
@@ -318,7 +318,7 @@ QMap<QString, QMenu*> FormManager::buildMenuStructure(QMenu* rootMenu) {
 void FormManager::buildFormsMenu
     (QMenu* parentMenu, QMenu* calcParametersMenu) {
 
-    QMap<QString, QMenu*> map_menu;
+    std::map<QString, QMenu*> map_menu;
     // Первый проход - создание подменю
     for (const auto& j_form : m_forms) {
         std::string str_MenuPath = stringutils::MkToUtf8(j_form.MenuPath());
@@ -336,11 +336,10 @@ void FormManager::buildFormsMenu
 
         QString qstr_MenuPath = QString::fromStdString(vmenu[j_form.AddToMenuIndex()]);
 
-        if (!map_menu.contains(qstr_MenuPath)) {
-            map_menu.insert(
+        if (map_menu.find(qstr_MenuPath) == map_menu.end()) {
+            map_menu.emplace(
                 qstr_MenuPath,
-                parentMenu->addMenu(qstr_MenuPath.isEmpty() ? "Остальное" : qstr_MenuPath)
-                );
+                parentMenu->addMenu(qstr_MenuPath.isEmpty() ? "Остальное" : qstr_MenuPath));
         }
     }
 
@@ -364,7 +363,7 @@ void FormManager::buildFormsMenu
         }
 
         QMenu* cur_menu = parentMenu;
-        if (map_menu.contains(qstr_MenuPath)) {
+        if (map_menu.find(qstr_MenuPath) != map_menu.end()){
             cur_menu = map_menu[qstr_MenuPath];
         }
 

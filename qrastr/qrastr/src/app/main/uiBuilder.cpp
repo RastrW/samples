@@ -355,7 +355,11 @@ void UIBuilder::buildMenuBar() {
 
     for (const QString& style : QStyleFactory::keys()) {
         QString actionName = "style_" + style;
-        QAction* action = m_actions.value(actionName);
+        QAction* action;
+        auto it = m_actions.find(actionName);
+        if (it != m_actions.end()) {
+            action = it->second;
+        }
         if (action) {
             styleGroup->addAction(action);
             m_menus["style"]->addAction(action);
@@ -437,15 +441,18 @@ QAction* UIBuilder::addAction(
 }
 
 QAction* UIBuilder::actionByName(const QString& name) const {
-    return m_actions.value(name, nullptr);
+    auto it = m_actions.find(name);
+    return (it != m_actions.end()) ? it->second : nullptr;
 }
 
 QMenu* UIBuilder::menuByName(const QString& name) const {
-    return m_menus.value(name, nullptr);
+    auto it = m_menus.find(name);
+    return (it != m_menus.end()) ? it->second : nullptr;
 }
 
 QToolBar* UIBuilder::toolBarByName(const QString& name) const {
-    return m_toolBars.value(name, nullptr);
+    auto it = m_toolBars.find(name);
+    return (it != m_toolBars.end()) ? it->second : nullptr;
 }
 
 void UIBuilder::updateRecentFileActions(const QStringList& recentFiles) {

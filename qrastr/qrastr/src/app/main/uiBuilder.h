@@ -3,7 +3,6 @@
 #include <QObject>
 #include <QMainWindow>
 #include <QString>
-#include <QMap>
 
 class QAction;
 class QMenu;
@@ -26,14 +25,6 @@ public:
     QMenu* menuByName(const QString& name) const;
     QToolBar* toolBarByName(const QString& name) const;
 
-    // Прямой доступ к часто используемым меню
-    QMenu* fileMenu() const { return m_menus.value("file"); }
-    QMenu* tablesMenu() const { return m_menus.value("tables"); }
-    QMenu* calcMenu() const { return m_menus.value("calc"); }
-    QMenu* calcParametersMenu() const { return m_menus.value("calcParameters"); }
-    QMenu* propertiesMenu() const { return m_menus.value("properties"); }
-    QMenu* recentFilesMenu() const { return m_menus.value("recentFiles"); }
-
     // ========== Обновление недавних файлов ==========
     /**
      * @brief Обновить действия недавних файлов
@@ -54,9 +45,9 @@ private:
     QMainWindow* m_mainWindow;
 
     // Хранилища UI элементов
-    QMap<QString, QAction*> m_actions;
-    QMap<QString, QMenu*> m_menus;
-    QMap<QString, QToolBar*> m_toolBars;
+    std::map<QString, QAction*> m_actions;
+    std::map<QString, QMenu*> m_menus;
+    std::map<QString, QToolBar*> m_toolBars;
 
     // Методы создания
     void createFileActions();

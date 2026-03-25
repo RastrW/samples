@@ -4,7 +4,6 @@
 #include <QString>
 #include <QMenu>
 #include <QAction>
-#include <QMap>
 #include <QList>
 #include <list>
 #include <memory>
@@ -117,7 +116,7 @@ private:
     RTablesDataManager m_rtdm;                  // Менеджер данных таблиц
     // ========== Состояние ==========
     std::list<CUIForm> m_forms;                     // Статические формы
-    QMap<QString, int> m_formNameToIndex;           // Быстрый поиск
+    std::map<QString, int> m_formNameToIndex;           // Быстрый поиск
 
     //sdl
     IGraphManager* m_graphSDLManager = nullptr;
@@ -137,7 +136,7 @@ private:
     /// @brief Общий метод регистрации dock-виджета в m_openDockWidgets
     void registerDockWidget(ads::CDockWidget* dw);
     /// @brief Построить иерархию меню из MenuPath форм
-    QMap<QString, QMenu*> buildMenuStructure(QMenu* rootMenu);
+    std::map<QString, QMenu*> buildMenuStructure(QMenu* rootMenu);
     /**
      * @brief Генерировать динамические формы из таблиц
      * @note Вызывается при каждом открытии меню свойств

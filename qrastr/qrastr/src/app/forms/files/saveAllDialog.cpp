@@ -9,7 +9,7 @@
 #include <QCheckBox>
 #include "qastra.h"
 
-SaveAllDialog::SaveAllDialog(QAstra* pqastra, QMap<QString,QString> _mFilesLoad, QWidget *parent)
+SaveAllDialog::SaveAllDialog(QAstra* pqastra, std::map<QString,QString> _mFilesLoad, QWidget *parent)
     : CheckboxListDialog(static_cast<int>(_cols::save), parent),
     m_pqastra(pqastra),
     m_FilesLoad(_mFilesLoad)
@@ -57,8 +57,8 @@ void SaveAllDialog::showEvent(QShowEvent* event)
     int n_row_num = 0;
 
     for (auto it = m_FilesLoad.begin(); it != m_FilesLoad.end(); ++it) {
-        const QString& _shabl = it.key();
-        const QString& _file  = it.value();
+        const QString& _shabl = it->first;
+        const QString& _file  = it->second;
 
         m_dirShabl = QFileInfo(_shabl).path();
         m_twList->insertRow(n_row_num);

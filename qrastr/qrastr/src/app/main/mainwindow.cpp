@@ -117,9 +117,9 @@ void MainWindow::initialize(
     slot_updateRecentFiles();
     // Построение меню форм
     m_formManager->buildFormsMenu(
-        m_uiBuilder->tablesMenu(),
-        m_uiBuilder->calcParametersMenu());
-    m_formManager->buildPropertiesMenu(m_uiBuilder->propertiesMenu());
+        m_uiBuilder->menuByName("tables"),
+        m_uiBuilder->menuByName("calcParameters"));
+    m_formManager->buildPropertiesMenu(m_uiBuilder->menuByName("properties"));
 
     m_workspaceManager = std::make_unique<WorkspaceManager>(
         m_appSettingsManager->settings(),

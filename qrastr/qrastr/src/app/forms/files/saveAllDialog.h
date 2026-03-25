@@ -1,7 +1,6 @@
 #pragma once
 #include "checkboxListDialog.h"
 #include <QDir>
-#include <QMap>
 
 class QAstra;
 class QTableWidget;
@@ -12,7 +11,7 @@ class SaveAllDialog : public CheckboxListDialog
 {
     Q_OBJECT
 public:
-    explicit SaveAllDialog(QAstra* pqastra, QMap<QString,QString> _mFilesLoad,
+    explicit SaveAllDialog(QAstra* pqastra, std::map<QString,QString> _mFilesLoad,
                          QWidget *parent = nullptr);
 
     void showEvent(QShowEvent* event) override;
@@ -22,7 +21,7 @@ private slots:
 private:
     QAstra*               m_pqastra;
     QDir                  m_dirShabl;
-    QMap<QString,QString> m_FilesLoad;
+    std::map<QString,QString> m_FilesLoad;
 
     enum class _cols : int { save, templ, file, path };
 };

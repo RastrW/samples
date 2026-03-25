@@ -209,7 +209,7 @@ bool FileManager::saveAs() {
 }
 
 bool FileManager::saveAll() {
-    if (m_loadedFiles.isEmpty()) {
+    if (m_loadedFiles.empty()) {
         spdlog::warn("No files loaded to save");
         return false;
     }

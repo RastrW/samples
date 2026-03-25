@@ -4,7 +4,6 @@
 #include <QString>
 #include <QStringList>
 #include <QWidget>
-#include <QMap>
 #include <memory>
 
 class QAstra;
@@ -61,7 +60,7 @@ public:
      * @brief Получить карту ВСЕХ загруженных файлов
      * @return map<template, file>
      */
-    const QMap<QString, QString>& loadedFiles() const { return m_loadedFiles; }
+    const std::map<QString, QString>& loadedFiles() const { return m_loadedFiles; }
     /// @brief Установить текущий файл И добавить в карту загруженных
     void setCurrentFile(const QString& fileName, const QString& templatePath = "");
     
@@ -107,7 +106,7 @@ private:
     // ========== Состояние файлов ==========
     QString m_currentFile;
     QString m_currentDir;
-    QMap<QString, QString> m_loadedFiles;
+    std::map<QString, QString> m_loadedFiles;
     // ========== Константы ==========
     static constexpr const char* m_recentFilesKey = "recentFileList";
     
