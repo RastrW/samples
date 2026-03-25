@@ -24,7 +24,7 @@ bool ProtocolFilterProxyModel::filterAcceptsRow(
 
     //Получаем int, затем приводим к enum
     const auto lmt = static_cast<LogMessageTypes>(
-        sourceModel()->data(idx, ProtocolTreeModel::MessageTypeRole).toInt());
+        sourceModel()->data(idx,  static_cast<int>(ProtocolTreeModel::CustomRoles::MessageTypeRole)).toInt());
     // Стадии (OpenStage) показываем, только если у них есть нужные дети
     if (lmt == LogMessageTypes::OpenStage)
         return rowHasMatchingDescendant(idx);
@@ -40,7 +40,7 @@ bool ProtocolFilterProxyModel::rowHasMatchingDescendant(
         const QModelIndex child = sourceModel()->index(r, 0, parent);
 
         const auto lmt = static_cast<LogMessageTypes>(
-            sourceModel()->data(child, ProtocolTreeModel::MessageTypeRole).toInt());
+            sourceModel()->data(child, static_cast<int>(ProtocolTreeModel::CustomRoles::MessageTypeRole)).toInt());
 
         if (lmt == LogMessageTypes::OpenStage) {
             if (rowHasMatchingDescendant(child)) return true;

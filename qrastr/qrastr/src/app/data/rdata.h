@@ -38,7 +38,7 @@ public:
 
     std::vector<std::string> vCols_;   ///< вектор имён колонок в порядке следования.
     std::shared_ptr<QDataBlock> pnparray_;
-    std::map<std::string, int> mCols_; ///< map<имя_колонки, индекс> для быстрого поиска колонки по имени.
+    std::unordered_map<std::string, int> mCols_; ///< unordered_map<имя_колонки, индекс> для быстрого поиска колонки по имени.
 private:
     std::string m_str_cols = "";       ///< vCols_ в виде строки имен столбцов ex: "ny,pn,qn,vras"
     QAstra* m_qastra;

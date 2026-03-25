@@ -26,5 +26,5 @@ private:
     RModel*                                m_model;
     Qtitan::GridTableView*                 m_view;
     QWidget*                               m_parentWidget;
-    std::map<int, std::vector<CondFormat>> m_formats;
+    std::unordered_map<int, std::vector<CondFormat>> m_formats;
 };

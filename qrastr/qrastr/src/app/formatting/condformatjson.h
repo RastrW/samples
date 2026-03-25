@@ -12,7 +12,9 @@ class CondFormatJson
 {
 public:
     //CondFormatJson();
-    CondFormatJson(std::string _Table ,  std::vector<std::string>& _vcols, std::map<int, std::vector<CondFormat>>& _mcf)
+    CondFormatJson(std::string _Table ,
+                   std::vector<std::string>& _vcols,
+                   std::unordered_map<int, std::vector<CondFormat>>& _mcf)
     {
         path_2_json = std::filesystem::current_path() / j_fname_;
         m_Tname = _Table;
@@ -27,7 +29,7 @@ public:
     nlohmann::json to_json(std::string _tname = "");
 
     // Getter
-    std::map<int, std::vector<CondFormat>> get_mcf()
+    std::unordered_map<int, std::vector<CondFormat>> get_mcf()
     {
         return m_MapcondFormatVector;
     }
@@ -36,7 +38,7 @@ private:
     std::filesystem::path path_2_json;
     std::string m_Tname;
     std::vector<std::string> m_cols;
-    std::map<int, std::vector<CondFormat>> m_MapcondFormatVector;
+    std::unordered_map<int, std::vector<CondFormat>> m_MapcondFormatVector;
 
 public:
     static constexpr const char j_fname_[] = "highlightsettings.json";

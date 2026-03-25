@@ -26,7 +26,7 @@ public:
     const QList<PictureItem>*                     pictureEnum(size_t pluginIdx) const;
 
 private:
-    static QMap<int, int> parseEnpicNameref(const std::string& nameref);
+    static std::map<int, int> parseEnpicNameref(const std::string& nameref);
     static QPixmap        iconByIndex(int idx);
 
     // индекс колонки → список строк: ex. "БАЗА|Ген|Нагр|Ген+"

@@ -24,17 +24,30 @@ template <typename T> auto asKeyValueRange(T &iterable) { return KeyValueRange<T
 template <typename T> auto asKeyValueRange(const T &iterable) { return KeyValueRange<const T &>(iterable); }
 template <typename T> auto asKeyValueRange(T &&iterable) noexcept { return KeyValueRange<T>(std::move(iterable)); }
 
+// ---- detection: есть ли find() ----
+template<typename, typename = void>
+struct has_find : std::false_type {};
 
-template<typename C, typename E>
-bool contains(const C& container, E element)
+template<typename C>
+struct has_find<C, std::void_t<
+                       decltype(std::declval<C>().find(std::declval<typename C::key_type>()))
+                       >> : std::true_type {};
+
+
+// ---- для map/set/unordered_map ----
+template<typename C>
+std::enable_if_t<has_find<C>::value, bool>
+contains(const C& container, const typename C::key_type& key)
 {
-    return std::find(container.begin(), container.end(), element) != container.end();
+    return container.find(key) != container.end();
 }
 
-template<typename T1, typename T2, typename E>
-bool contains(const std::map<T1, T2>& container, E element)
+// ---- для vector/list и прочего ----
+template<typename C, typename E>
+std::enable_if_t<!has_find<C>::value, bool>
+contains(const C& container, const E& element)
 {
-    return container.find(element) != container.end();
+    return std::find(container.begin(), container.end(), element) != container.end();
 }
 
 template<typename C, typename E>

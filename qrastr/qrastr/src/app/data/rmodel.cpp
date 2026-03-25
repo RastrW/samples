@@ -146,11 +146,11 @@ bool RModel::setData(const QModelIndex& index, const QVariant& value, int role)
     FieldVariantData vd;
 
     switch (iter_col->getEnData()) {
-    case RCol::DATA_BOOL:
+    case RCol::_en_data::DATA_BOOL:
         vd = value.toBool();
         break;
 
-    case RCol::DATA_INT: {
+    case RCol::_en_data::DATA_INT: {
         long val  = 0;
         const size_t idx = static_cast<size_t>(col);
 
@@ -174,11 +174,11 @@ bool RModel::setData(const QModelIndex& index, const QVariant& value, int role)
         break;
     }
 
-    case RCol::DATA_STR:
+    case RCol::_en_data::DATA_STR:
         vd = value.toString().toStdString();
         break;
 
-    case RCol::DATA_DBL:
+    case RCol::_en_data::DATA_DBL:
         vd = value.toDouble();
         break;
 
@@ -299,7 +299,7 @@ void RModel::setCondFormats(bool isRowIdFormat, size_t column,
     m_condFmt.set(isRowIdFormat, column, condFormats);
 }
 
-QVariant RModel::getMatchingCondFormat(const std::map<size_t, std::vector<CondFormat>>& formats,
+QVariant RModel::getMatchingCondFormat(const std::unordered_map<size_t, std::vector<CondFormat>>& formats,
                                        size_t row, size_t column,
                                        const QString& value, int role) const
 {

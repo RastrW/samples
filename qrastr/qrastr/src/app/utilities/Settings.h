@@ -11,7 +11,7 @@ class Settings
     friend class PreferencesDialog;
 
 public:
-    enum AppStyle {
+    enum class AppStyle {
         FollowDesktopStyle,
         DarkStyle,
         LightStyle

@@ -122,6 +122,6 @@ private:
     QAction* m_groupCorrection;
 
     std::string m_selection {""}; // Текущая выборка
-    std::map<QString,bool>
+    std::unordered_map<QString,bool>
         m_columnsVisible;
 };

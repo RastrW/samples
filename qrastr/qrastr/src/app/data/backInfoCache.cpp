@@ -84,15 +84,23 @@ void BackInfoCache::rebuild(const RData& rdata, RTablesDataManager* pRTDM)
 
         // ── ENPIC ────────────────────────────────────────────────────────────
         if (propTT == enComPropTT::COM_PR_ENPIC) {
-            QMap<int, int> iconMap = parseEnpicNameref(nameRef);
+            std::map<int, int> iconMap = parseEnpicNameref(nameRef);
             QList<PictureItem> items;
-            if (!iconMap.isEmpty()) {
-                int maxVal = iconMap.lastKey();
+
+            if (!iconMap.empty()) {
+                int maxVal = iconMap.rbegin()->first;
+
+                auto it = iconMap.begin();
                 for (int v = 0; v <= maxVal; ++v) {
-                    QPixmap px = iconMap.contains(v) ? iconByIndex(iconMap[v]) : QPixmap();
-                    items.append({ "", px });
+                    if (it != iconMap.end() && it->first == v) {
+                        items.append({ "", iconByIndex(it->second) });
+                        ++it;
+                    } else {
+                        items.append({ "", QPixmap() });
+                    }
                 }
             }
+
             m_pictureEnums.emplace(idx, std::move(items));
         }
     }
@@ -122,9 +130,9 @@ const QList<BackInfoCache::PictureItem>* BackInfoCache::pictureEnum(size_t plugi
     return it != m_pictureEnums.end() ? &it->second : nullptr;
 }
 
-QMap<int, int> BackInfoCache::parseEnpicNameref(const std::string& nameref)
+std::map<int, int> BackInfoCache::parseEnpicNameref(const std::string& nameref)
 {
-    QMap<int, int> result;
+    std::map<int, int> result;
     QString s = QString::fromStdString(nameref).trimmed();
     // Если нет групп (нет ';') — просто плоский список иконок
     // "2,0,1,4,5" -> value=0 -> иконка 2, value=1 -> иконка 0, ...

@@ -245,7 +245,7 @@ QVariant Settings::getDefaultValue(const std::string& group, const std::string& 
 
     // General/appStyle
     if(group == "General" && name == "appStyle")
-        return static_cast<int>(FollowDesktopStyle);
+        return static_cast<int>(AppStyle::FollowDesktopStyle);
 
     // General/toolbarStyle
     if(group == "General" && name == "toolbarStyle")
@@ -322,7 +322,7 @@ QVariant Settings::getDefaultValue(const std::string& group, const std::string& 
         if(name == "filter_delay")
             return 200;
         if(ends_with(name, "colour"))
-            return getDefaultColorValue(group, name, FollowDesktopStyle);
+            return getDefaultColorValue(group, name, AppStyle::FollowDesktopStyle);
     }
 
     // syntaxhighlighter?
@@ -342,7 +342,7 @@ QVariant Settings::getDefaultValue(const std::string& group, const std::string& 
 
         // Colour?
         if(ends_with(name, "colour"))
-            return getDefaultColorValue(group, name, FollowDesktopStyle);
+            return getDefaultColorValue(group, name, AppStyle::FollowDesktopStyle);
     }
 
     // editor/font?
@@ -480,7 +480,7 @@ QColor Settings::getDefaultColorValue(const std::string& group, const std::strin
         // The switch on style can be removed if the following issue is fixed:
         // https://github.com/ColinDuquesnoy/QDarkStyleSheet/issues/171
         switch (style) {
-        case FollowDesktopStyle :
+        case AppStyle::FollowDesktopStyle :
             if(name == "null_fg_colour")
                 return QColor(Qt::lightGray).name();
             if(name == "null_bg_colour")
@@ -498,7 +498,7 @@ QColor Settings::getDefaultColorValue(const std::string& group, const std::strin
             if(name == "bin_bg_colour")
                 return QPalette().color(QPalette::Active, QPalette::Base).name();
             break;
-        case DarkStyle :
+        case AppStyle::DarkStyle :
             if(name == "null_fg_colour")
                 return QColor(0x78, 0x78, 0x78);
             if(name == "null_bg_colour")
@@ -516,7 +516,7 @@ QColor Settings::getDefaultColorValue(const std::string& group, const std::strin
             if(name == "bin_bg_colour")
                 return QColor(0x19, 0x23, 0x2D);
             break;
-        case LightStyle :
+        case AppStyle::LightStyle :
             if(name == "null_fg_colour" || name == "bin_fg_colour")
                 return QColor(0xA5, 0xA9, 0xAC);
             if(name == "null_bg_colour" || name == "bin_bg_colour")
@@ -543,15 +543,15 @@ QColor Settings::getDefaultColorValue(const std::string& group, const std::strin
             QColor foregroundColour;
 
             switch (style) {
-            case FollowDesktopStyle :
+            case AppStyle::FollowDesktopStyle :
                 backgroundColour = QPalette().color(QPalette::Active, QPalette::Base);
                 foregroundColour = QPalette().color(QPalette::Active, QPalette::Text);
                 break;
-            case DarkStyle :
+            case AppStyle::DarkStyle :
                 foregroundColour = QColor(0xF0, 0xF0, 0xF0);
                 backgroundColour = QColor(0x19, 0x23, 0x2D);
                 break;
-            case LightStyle :
+            case AppStyle::LightStyle :
                 foregroundColour = QColor(0x00, 0x00, 0x00);
                 backgroundColour = QColor(0xFA, 0xFA, 0xFA);
                 break;

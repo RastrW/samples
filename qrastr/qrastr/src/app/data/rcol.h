@@ -12,7 +12,7 @@ class QAstra;
 class RCol
 {
 public:
-    enum _en_data {
+    enum class _en_data {
         DATA_ERR  = -1,
         DATA_BOOL =  0,
         DATA_INT  =  1,
@@ -92,7 +92,7 @@ private:
     std::string m_cached_cache;		///< Кэш
     // ── Семантика типа ────────────────────────────────────────────────────
     enComPropTT m_com_prop_tt = enComPropTT::COM_PR_INT; ///< семантический тип колонки (ENUM, REAL, INT, …)
-    _en_data    m_en_data     = DATA_ERR; 				///<C++-тип данных (int/double/bool/string)
+    _en_data    m_en_data     = _en_data::DATA_ERR; 				///<C++-тип данных (int/double/bool/string)
 
     // ── Состояние UI ──────────────────────────────────────────────────────
     bool m_directcode = false; ///< режим ввода: true = число, false = строка из справочника

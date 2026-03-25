@@ -9,7 +9,7 @@ class ProtocolTreeItem;
 class ProtocolTreeModel : public QAbstractItemModel {
     Q_OBJECT
 public:
-    enum CustomRoles {
+    enum class CustomRoles {
         MessageTypeRole = Qt::UserRole + 1
     };
 

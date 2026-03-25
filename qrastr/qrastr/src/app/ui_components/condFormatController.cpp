@@ -22,7 +22,7 @@ void CondFormatController::loadFromJson()
         m_formats.emplace(rcol.getIndex(), std::vector<CondFormat>());
 
     // Читаем JSON
-    std::map<int, std::vector<CondFormat>> loaded;
+    std::unordered_map<int, std::vector<CondFormat>> loaded;
     CondFormatJson cfj(rdata->t_name_, rdata->vCols_, loaded);
     cfj.from_json();
 

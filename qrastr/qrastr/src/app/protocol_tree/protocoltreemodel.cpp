@@ -35,7 +35,7 @@ QVariant ProtocolTreeModel::data(const QModelIndex& index, int role) const
         // Иконка только в колонке 0
         return (index.column() == 0) ? item->data(0) : QVariant{};
 
-    case MessageTypeRole:
+    case static_cast<int>(CustomRoles::MessageTypeRole):
         // Возвращаем int
         return static_cast<int>(item->messageType());
 

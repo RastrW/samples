@@ -47,7 +47,7 @@ void RCol::setMeta(QAstra* pqastra){
 
     switch (m_com_prop_tt) {
     case enComPropTT::COM_PR_BOOL:
-        m_en_data = DATA_BOOL; break;
+        m_en_data = _en_data::DATA_BOOL; break;
     case enComPropTT::COM_PR_INT:
     case enComPropTT::COM_PR_ENUM:
     case enComPropTT::COM_PR_ENPIC:
@@ -55,13 +55,13 @@ void RCol::setMeta(QAstra* pqastra){
     case enComPropTT::COM_PR_SUPERENUM:
     case enComPropTT::COM_PR_TIME:
     case enComPropTT::COM_PR_HEX:
-        m_en_data = DATA_INT; break;
+        m_en_data = _en_data::DATA_INT; break;
     case enComPropTT::COM_PR_REAL:
-        m_en_data = DATA_DBL; break;
+        m_en_data = _en_data::DATA_DBL; break;
     case enComPropTT::COM_PR_STRING:
-        m_en_data = DATA_STR; break;
+        m_en_data = _en_data::DATA_STR; break;
     default:
-        m_en_data = DATA_ERR; break;
+        m_en_data = _en_data::DATA_ERR; break;
     }
 }
 

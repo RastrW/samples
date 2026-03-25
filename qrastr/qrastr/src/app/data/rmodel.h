@@ -99,7 +99,7 @@ private:
     // ── Условное форматирование (приватная логика) ────────────────────────────
     // Нужен доступ к up_rdata для подстановки значений → остаётся в RModel.
 
-    QVariant getMatchingCondFormat(const std::map<size_t, std::vector<CondFormat>>& formats,
+    QVariant getMatchingCondFormat(const std::unordered_map<size_t, std::vector<CondFormat>>& formats,
                                    size_t row, size_t col,
                                    const QString& value, int role) const;
 
