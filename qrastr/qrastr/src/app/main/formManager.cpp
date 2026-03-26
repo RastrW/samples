@@ -49,6 +49,10 @@ FormManager::FormManager
             this, &FormManager::registerDockWidget);
 }
 
+const QSet<QString>& FormManager::protocolDockNames() {
+    return m_protocolNames;
+}
+
 void FormManager::setForms(const std::list<CUIForm>& forms) {
     m_forms = forms;
     m_rtdm.setForms(&m_forms);
@@ -63,57 +67,66 @@ void FormManager::setForms(const std::list<CUIForm>& forms) {
 }
 
 void FormManager::openForm(const CUIForm& form) {
-    // Проверка существования таблицы
-    IRastrTablesPtr tablesx{ m_qastra->getRastr()->Tables() };
-    IRastrPayload res{ tablesx->FindIndex(form.TableName()) };
-    int t_ind = res.Value();
-    
-    if (t_ind < 0) {
-        spdlog::info("Таблица [{}] - [{}] не существует!", form.Name(), form.TableName());
-        return;
+    try {
+        // Проверка существования таблицы
+        IRastrTablesPtr tablesx{ m_qastra->getRastr()->Tables() };
+        IRastrPayload res{ tablesx->FindIndex(form.TableName()) };
+        int t_ind = res.Value();
+
+        if (t_ind < 0) {
+            spdlog::info("Таблица [{}] - [{}] не существует!",
+                         form.Name(), form.TableName());
+            return;
+        }
+
+        spdlog::info("Прочитана таблица [{}] - [{}]",
+                     form.Name(), form.TableName());
+
+        // Докирование
+        auto dw = new ads::CDockWidget(QString::fromStdString(form.Name()),
+                                       m_parentWidget);
+        dw->setObjectName(QString::fromStdString(form.Name()));
+        dw->setFeature(ads::CDockWidget::DockWidgetDeleteOnClose, true);
+
+        // Создание виджета формы
+        RtabWidget* prtw = new RtabWidget(
+            m_qastra.get(),
+            form,
+            &m_rtdm,
+            m_dockManager,
+            dw);
+
+        if (prtw != nullptr) {
+            prtw->setPyHlp(m_pPyHlp);
+            // Выравнивание данных по шаблону, выравнивание текста по левому краю
+            prtw->slot_widthByTemplate();
+            // Добавляем в список открытых форм
+            // Сигналы будут передаваться через onCalculationStarted/Finished
+            m_openForms.append(prtw);
+            registerDockWidget(dw);
+
+            dw->setWidget(prtw->createDockContent());
+            m_dockManager->addDockWidgetTab(ads::TopDockWidgetArea, dw);
+            // Обработка закрытия
+            connect(dw, &ads::CDockWidget::closed,
+                    prtw, &RtabWidget::slot_close);
+            connect(dw, &ads::CDockWidget::closed,
+                    this, [this, prtw, formName = form.Name()]() {
+                        m_openForms.removeOne(prtw);
+                        emit formClosed(QString::fromStdString(formName));
+                    });
+
+            m_activeForm = prtw;
+        }
+
+        emit formOpened(QString::fromStdString(form.Name()));
+        emit activeFormChanged(prtw);
+
+    } catch (const std::exception& ex) {
+        spdlog::error("openForm('{}') threw: {}", form.Name(), ex.what());
+    } catch (...) {
+        spdlog::error("openForm('{}') threw unknown exception", form.Name());
     }
-    
-    spdlog::info("Прочитана таблица [{}] - [{}]", form.Name(), form.TableName());
-
-    // Докирование
-    auto dw = new ads::CDockWidget(QString::fromStdString(form.Name()),
-                                    m_parentWidget);
-    dw->setObjectName(QString::fromStdString(form.Name()));
-    dw->setFeature(ads::CDockWidget::DockWidgetDeleteOnClose, true);
-
-    // Создание виджета формы
-    RtabWidget* prtw = new RtabWidget(
-        m_qastra.get(),
-        form,
-        &m_rtdm,
-        m_dockManager,
-        dw);
-
-    if (prtw != nullptr){
-        prtw->setPyHlp(m_pPyHlp);
-        // Выравнивание данных по шаблону, выравнивание текста по левому краю
-        prtw->slot_widthByTemplate();
-        // Добавляем в список открытых форм
-        // Сигналы будут передаваться через onCalculationStarted/Finished
-        m_openForms.append(prtw);
-        registerDockWidget(dw);
-
-        dw->setWidget(prtw->createDockContent());
-
-        m_dockManager->addDockWidgetTab(ads::TopDockWidgetArea, dw);
-        // Обработка закрытия
-        connect(dw, &ads::CDockWidget::closed, prtw, &RtabWidget::slot_close);
-        connect(dw, &ads::CDockWidget::closed,
-                this, [this, prtw, dw, formName = form.Name()]() {
-                    m_openForms.removeOne(prtw);
-                    emit formClosed(QString::fromStdString(formName));
-                });
-
-        m_activeForm = prtw;
-    }
-
-    emit formOpened(QString::fromStdString(form.Name()));
-    emit activeFormChanged(prtw);
 }
 
 void FormManager::slot_openSDLGraph() {
@@ -142,6 +155,14 @@ void FormManager::slot_openProtocol() {
     m_logManager->openProtocol();
 }
 
+const QSet<QString>& protocolDockNames() {
+    static const QSet<QString> kSet = {
+        QStringLiteral("Полный протокол"),
+        QStringLiteral("Протокол Astra")
+    };
+    return kSet;
+}
+
 void FormManager::openFormByIndex(int index) {
     if (index < 0 || index >= static_cast<int>(m_forms.size())) {
         spdlog::error("Invalid form index: {}", index);
@@ -156,7 +177,7 @@ void FormManager::openFormByIndex(int index) {
 }
 
 void FormManager::openFormByName(const QString& formName) {
-    if (m_formNameToIndex.find(formName) != m_formNameToIndex.end()) {
+    if (m_formNameToIndex.find(formName) == m_formNameToIndex.end()) {
         spdlog::error("Form not found: {}", formName.toStdString());
         return;
     }
@@ -181,31 +202,6 @@ void FormManager::slot_calculationFinished() {
             widget->on_calc_end();
         }
     }
-}
-
-
-void FormManager::slot_formClosed() {
-    // Обработка закрытия формы
-    // (уже обрабатывается в лямбде при создании DockWidget)
-}
-
-CUIForm* FormManager::findFormByName(const QString& name) {
-    for (auto& form : m_forms) {
-        if (QString::fromStdString(form.Name()) == name) {
-            return &form;
-        }
-    }
-    return nullptr;
-}
-
-CUIForm* FormManager::findFormByIndex(int index) {
-    if (index < 0 || index >= static_cast<int>(m_forms.size())) {
-        return nullptr;
-    }
-    
-    auto it = m_forms.begin();
-    std::advance(it, index);
-    return &(*it);
 }
 
 void FormManager::registerDockWidget(ads::CDockWidget* dw) {
@@ -287,110 +283,74 @@ void FormManager::slot_tileForms() {
     }
 }
 
-std::map<QString, QMenu*> FormManager::buildMenuStructure(QMenu* rootMenu) {
-    std::map<QString, QMenu*> menuMap;
+void FormManager::buildFormsMenu(QMenu* parentMenu, QMenu* calcParametersMenu)
+{
+    if (!parentMenu) {
+        return;
+    }
+
+    // Кэш меню: ключ = категория ("" → "Остальное")
+    std::unordered_map<QString, QMenu*> menuMap;
+
+    int index = 0;
 
     for (const auto& form : m_forms) {
-        std::string menuPath = stringutils::MkToUtf8(form.MenuPath());
-        if (menuPath.empty()) {
-            continue;
+
+        // --- Подготовка данных ---
+        const std::string nameUtf8 = stringutils::MkToUtf8(form.Name());
+        const std::string pathUtf8 = stringutils::MkToUtf8(form.MenuPath());
+
+        const QString qName = QString::fromStdString(nameUtf8);
+
+        QString menuKey; // "" = Остальное
+
+        if (!pathUtf8.empty()) {
+            auto parts = split(pathUtf8, '\\');
+
+            if (form.AddToMenuIndex() < parts.size()) {
+                menuKey = QString::fromStdString(parts[form.AddToMenuIndex()]);
+            }
+            // иначе остаётся "", т.е. "Остальное"
         }
 
-        QStringList pathParts = QString::fromStdString(menuPath).split('\\');
+        // --- Получаем или создаём меню ---
+        QMenu* targetMenu = nullptr;
 
-        if (form.AddToMenuIndex() >= pathParts.size()) {
-            continue;
-        }
-
-        QString menuName = pathParts[form.AddToMenuIndex()];
-        if (menuName.isEmpty()) {
-            menuName = "Остальное";
-        }
-
-        if (menuMap.find(menuName) == menuMap.end()) {
-            menuMap.emplace(menuName, rootMenu->addMenu(menuName));
-        }
-    }
-
-    return menuMap;
-}
-
-void FormManager::buildFormsMenu
-    (QMenu* parentMenu, QMenu* calcParametersMenu) {
-
-    std::map<QString, QMenu*> map_menu;
-    // Первый проход - создание подменю
-    for (const auto& j_form : m_forms) {
-        std::string str_MenuPath = stringutils::MkToUtf8(j_form.MenuPath());
-        auto vmenu = split(str_MenuPath, '\\');
-
-        std::string str_Name = stringutils::MkToUtf8(j_form.Name());
-
-        if (str_MenuPath.empty()) {
-            continue;
-        }
-
-        if (j_form.AddToMenuIndex() >= vmenu.size()) {
-            continue;
-        }
-
-        QString qstr_MenuPath = QString::fromStdString(vmenu[j_form.AddToMenuIndex()]);
-
-        if (map_menu.find(qstr_MenuPath) == map_menu.end()) {
-            map_menu.emplace(
-                qstr_MenuPath,
-                parentMenu->addMenu(qstr_MenuPath.isEmpty() ? "Остальное" : qstr_MenuPath));
-        }
-    }
-
-    // Второй проход - добавление действий
-    int i = 0;
-    for (const auto& j_form : m_forms) {
-        std::string str_Name = stringutils::MkToUtf8(j_form.Name());
-        std::string str_MenuPath = stringutils::MkToUtf8(j_form.MenuPath());
-        auto vmenu = split(str_MenuPath, '\\');
-
-        if (!str_MenuPath.empty() && j_form.AddToMenuIndex() >= vmenu.size()) {
-            i++;
-            continue;
-        }
-
-        QString qstr_MenuPath;
-        if (str_MenuPath.empty()) {
-            qstr_MenuPath = "";
+        auto it = menuMap.find(menuKey);
+        if (it == menuMap.end()) {
+            targetMenu = parentMenu->addMenu(
+                menuKey.isEmpty() ? QStringLiteral("Остальное") : menuKey
+                );
+            menuMap.emplace(menuKey, targetMenu);
         } else {
-            qstr_MenuPath = QString::fromStdString(vmenu[j_form.AddToMenuIndex()]);
+            targetMenu = it->second;
         }
 
-        QMenu* cur_menu = parentMenu;
-        if (map_menu.find(qstr_MenuPath) != map_menu.end()){
-            cur_menu = map_menu[qstr_MenuPath];
+        // --- Спец-логика: параметры расчёта ---
+        if (calcParametersMenu && form.AddToMenuIndex() == 2) {
+            targetMenu = calcParametersMenu;
         }
 
-        // Параметры расчётов
-        if (calcParametersMenu && j_form.AddToMenuIndex() == 2) {
-            cur_menu = calcParametersMenu;
+        // --- Добавление action ---
+        if (!qName.isEmpty() && qName[0] != '_') {
+            QAction* action = targetMenu->addAction(qName);
+            action->setData(index);
         }
 
-        // Добавляем действие (если имя не начинается с '_')
-        if (!str_Name.empty() && str_Name.at(0) != '_') {
-            QAction* p_actn = cur_menu->addAction(QString::fromStdString(str_Name));
-            p_actn->setData(i);
-        }
-
-        i++;
+        ++index;
     }
 
-    // Подключаем обработчик
-    connect(parentMenu, &QMenu::triggered,
-            this, &FormManager::slot_formMenuTriggered,
-            Qt::UniqueConnection);
+    // --- Подключение сигналов ---
+    auto connectMenu = [this](QMenu* menu) {
+        if (!menu) return;
 
-    if (calcParametersMenu) {
-        connect(calcParametersMenu, &QMenu::triggered,
+        connect(menu, &QMenu::triggered,
                 this, &FormManager::slot_formMenuTriggered,
                 Qt::UniqueConnection);
-    }
+    };
+
+    connectMenu(parentMenu);
+    connectMenu(calcParametersMenu);
 }
 
 void FormManager::slot_formMenuTriggered(QAction* p_actn) {
@@ -466,42 +426,61 @@ void FormManager::generateDynamicForms(QMenu* menu) {
 
 QStringList FormManager::openWidgetNames() const {
     QStringList result;
-    for (const auto* dw : m_dockManager->openedDockWidgets()) {
-        if (dw && dw->isVisible() && !dw->objectName().isEmpty())
+    const auto& allDocks = m_dockManager->dockWidgetsMap();
+    for (auto it = allDocks.cbegin(); it != allDocks.cend(); ++it) {
+        const ads::CDockWidget* dw = it.value();
+        if (dw && !dw->isClosed() && !dw->objectName().isEmpty())
             result.append(dw->objectName());
     }
     return result;
 }
 
 void FormManager::openWidgetByName(const QString& name) {
-    // Лог-виджеты: уже существуют в ADS, просто показываем
-    if (name == "Полный протокол" || name == "Протокол Astra") {
-        // Ищем по objectName среди всех dock-виджетов ADS
-        const auto allDocks = m_dockManager->dockWidgetsMap();
-        auto it = allDocks.find(name);
-        if (it != allDocks.end()) {
-            it.value()->toggleView(true);
-        } else {
-            // setupDockWidgets ещё не был вызван — безопасно пропускаем,
-            // restoreState расставит их позже
-            spdlog::warn("Log dock '{}' not in ADS yet, skipping", name.toStdString());
+    try {
+        // ── Протоколы: только показать (не создавать заново) ──────────────
+        if (protocolDockNames().contains(name)) {
+            const auto allDocks = m_dockManager->dockWidgetsMap();
+            auto it = allDocks.find(name);
+            if (it != allDocks.end()) {
+                it.value()->toggleView(true);
+            } else {
+                // setupDockWidgets ещё не был вызван — безопасно пропускаем,
+                // restoreState расставит их позже
+                spdlog::warn("Log dock '{}' not in ADS yet, skipping",
+                             name.toStdString());
+            }
+            return;
         }
-        return;
+
+        // ── Графика ───────────────────────────────────────────────────────
+        if (name == QStringLiteral("Графика SDL")) { slot_openSDLGraph(); return; }
+        if (name == QStringLiteral("Графика Web")) { slot_openWebGraph(); return; }
+
+        // ── Таблицы ───────────────────────────────────────────────────────
+        openFormByName(name);
+
+    } catch (const std::exception& ex) {
+        spdlog::error("openWidgetByName('{}') threw: {}",
+                      name.toStdString(), ex.what());
+    } catch (...) {
+        spdlog::error("openWidgetByName('{}') threw unknown exception",
+                      name.toStdString());
     }
-    // Графика
-    if (name == "Графика SDL") { slot_openSDLGraph(); return; }
-    if (name == "Графика Web") { slot_openWebGraph(); return; }
-    // Таблицы
-    openFormByName(name);
 }
 
 void FormManager::closeAllWidgets() {
-    // Копия списка, т.к. сигнал closed модифицирует m_openDockWidgets
-    const auto openWidgets = m_dockManager->openedDockWidgets();
-    for (auto* dw : openWidgets) {
-        if (dw) dw->closeDockWidget();
+    const QSet<QString>& protocols = protocolDockNames();
+
+    // Итерируем по копии карты: closeDockWidget() модифицирует состояние ADS
+    const auto allDocks = m_dockManager->dockWidgetsMap();
+    for (auto it = allDocks.cbegin(); it != allDocks.cend(); ++it) {
+        ads::CDockWidget* dw = it.value();
+        if (!dw) continue;
+        if (protocols.contains(dw->objectName())) continue; // протокол — skip
+        if (!dw->isClosed())
+            dw->closeDockWidget();
     }
-    // Явная очистка на случай асинхронного удаления
+
     m_openForms.clear();
     m_openDockWidgets.clear();
 }

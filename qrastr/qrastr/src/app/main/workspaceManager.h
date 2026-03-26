@@ -13,8 +13,8 @@ class FormManager;
 struct WorkspaceEntry {
     QString     name;
     QByteArray  adsState;   ///< m_dockManager->saveState()
-    QByteArray  geometry;   ///< mainWindow->saveGeometry()
     QStringList openForms;  ///< objectName() каждого открытого DockWidget
+    ///< (включая неактивные вкладки в группах)
 };
 
 /**
@@ -23,8 +23,13 @@ struct WorkspaceEntry {
  * Отвечает за:
  *  - хранение областей в QSettings (секция "Workspaces/")
  *  - показ SaveWorkspaceDialog / LoadWorkspaceDialog
- *  - применение области (закрыть всё → открыть виджеты → restoreState)
+ *  - применение области:
+ *      закрыть лишние → открыть недостающие →
+ *      скрыть/показать протоколы → restoreState ADS
  *  - автозагрузку startup-области при старте
+ *
+ * Протоколы ("Полный протокол", "Протокол Astra") никогда не закрываются —
+ * только скрываются / показываются через toggleView().
  */
 class WorkspaceManager : public QObject {
     Q_OBJECT
@@ -54,17 +59,34 @@ public slots:
     void slot_showLoadDialog();
 
 private:
+    // ── Имена протокольных доков (никогда не закрываются) ─────────────────
+    static const QSet<QString>& protocolNames();
+
+    // ── Работа с хранилищем ───────────────────────────────────────────────
     void save(const WorkspaceEntry& entry);
     void remove(const QString& name);
     std::optional<WorkspaceEntry> load(const QString& name) const;
+
+    /**
+     * @brief Применение области
+     *
+     * Алгоритм:
+     *  1. Разбить нужные виджеты на обычные и протоколы.
+     *  2. Собрать текущие открытые НЕпротокольные доки.
+     *  3. Закрыть лишние (те, что открыты, но не нужны).
+     *  4. Открыть недостающие (те, что нужны, но ещё не открыты).
+     *  5. Протоколы: toggleView — никогда closeDockWidget.
+     *  6. ADS восстанавливает расположение через restoreState.
+     */
     void apply(const WorkspaceEntry& entry);
 
+    // ── Зависимости ───────────────────────────────────────────────────────
     QSettings*          m_settings;
     ads::CDockManager*  m_dockManager;
     FormManager*        m_formManager;
     QMainWindow*        m_mainWindow;
 
-    // Ключи QSettings
+    // ── Ключи QSettings ───────────────────────────────────────────────────
     static constexpr const char* kNames   = "Workspaces/names";
     static constexpr const char* kStartup = "Workspaces/startup";
     static constexpr const char* kGroup   = "Workspaces";

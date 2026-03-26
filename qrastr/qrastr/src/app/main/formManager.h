@@ -72,14 +72,28 @@ public:
     /// Добавить dock-виджеты лога (после ADS restoreState)
     void setupLogDockWidgets();
 
-    /// Имена всех видимых dock-виджетов (для сохранения в рабочей области)
+    /// @brief Имена всех незакрытых dock-виджетов для сохранения в рабочей области.
     QStringList openWidgetNames() const;
 
-    /// Открыть виджет по имени (диспетчер: формы / протокол / графика)
+    /**
+        * @brief Открыть виджет по objectName.
+        *
+        * Диспетчер: протоколы → графика → таблицы.
+        * Все ветки обёрнуты в try-catch, чтобы ошибка создания одного виджета
+        * не прерывала восстановление остальных.
+    */
     void openWidgetByName(const QString& name);
 
-    /// Закрыть все виджеты включая протокол
+    /**
+     * @brief Закрыть все виджеты, кроме протоколов.
+     *
+     * Протоколы ("Полный протокол", "Протокол Astra") никогда не закрываются —
+     * они продолжают собирать события логов даже когда невидимы.
+     * WorkspaceManager управляет их видимостью через toggleView().
+    */
     void closeAllWidgets();
+
+    const QSet<QString>& protocolDockNames();
 signals:
     void formOpened(const QString& formName);
     void formClosed(const QString& formName);
@@ -92,7 +106,6 @@ public slots:
 
     /// @brief Обработка клика по меню форм
     void slot_formMenuTriggered(QAction* action);
-    void slot_formClosed();
     /**
      * @brief Начало расчёта - передаём сигнал всем открытым формам
      * @note Вызывает on_calc_begin() у всех RtabWidget
@@ -123,6 +136,11 @@ private:
     IGraphManager* m_graphWebManager = nullptr;
 
     LogManager* m_logManager = nullptr;
+
+    const QSet<QString> m_protocolNames = {
+        QStringLiteral("Полный протокол"),
+        QStringLiteral("Протокол Astra")
+    };
     /** @brief
      * Список ВСЕХ открытых форм
      * Используется для передачи сигналов расчётов
@@ -130,13 +148,8 @@ private:
     QList<RtabWidget*> m_openForms;
     QList<ads::CDockWidget*>  m_openDockWidgets;
     RtabWidget* m_activeForm = nullptr;
-    // ========== Вспомогательные методы ==========
-    CUIForm* findFormByName(const QString& name);
-    CUIForm* findFormByIndex(int index);
     /// @brief Общий метод регистрации dock-виджета в m_openDockWidgets
     void registerDockWidget(ads::CDockWidget* dw);
-    /// @brief Построить иерархию меню из MenuPath форм
-    std::map<QString, QMenu*> buildMenuStructure(QMenu* rootMenu);
     /**
      * @brief Генерировать динамические формы из таблиц
      * @note Вызывается при каждом открытии меню свойств

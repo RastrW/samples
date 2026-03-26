@@ -18,7 +18,8 @@ WorkspaceManager::WorkspaceManager(
     , m_settings(settings)
     , m_dockManager(dockManager)
     , m_formManager(formManager)
-    , m_mainWindow(mainWindow){}
+    , m_mainWindow(mainWindow)
+{}
 
 QStringList WorkspaceManager::names() const {
     return m_settings->value(kNames).toStringList();
@@ -50,12 +51,12 @@ void WorkspaceManager::slot_showSaveDialog() {
     for (const QString& name : dlg.deletedWorkspaceNames())
         remove(name);
 
-    // 2. Флаг «при старте» — независимо от того, добавляется ли новая область
+    // 2. Флаг «при старте»
     const QString startupName = dlg.startupWorkspaceName();
     m_settings->setValue(kStartup, startupName);
     m_settings->sync();
 
-    // 3. Новая область — только если имя введено
+    // 3. Новая область (имя может быть пустым — пользователь не добавлял)
     const QString newName = dlg.newWorkspaceName();
     if (newName.isEmpty())
         return;
@@ -63,8 +64,7 @@ void WorkspaceManager::slot_showSaveDialog() {
     WorkspaceEntry entry;
     entry.name      = newName;
     entry.adsState  = m_dockManager->saveState();
-    entry.geometry  = m_mainWindow->saveGeometry();
-    entry.openForms = m_formManager->openWidgetNames();
+    entry.openForms = m_formManager->openWidgetNames(); // все доки, включая неактивные вкладки
     save(entry);
     m_settings->sync();
 }
@@ -94,18 +94,16 @@ void WorkspaceManager::save(const WorkspaceEntry& entry) {
     // Сохраняем данные области
     const QString prefix = QString("%1/%2/").arg(kGroup, entry.name);
     m_settings->setValue(prefix + "adsState",  entry.adsState);
-    m_settings->setValue(prefix + "geometry",  entry.geometry);
     m_settings->setValue(prefix + "openForms", entry.openForms);
+    // геометрию главного окна сохраняем не здесь
 }
 
 void WorkspaceManager::remove(const QString& name) {
     QStringList list = names();
     list.removeAll(name);
     m_settings->setValue(kNames, list);
-
     // Удаляем все ключи секции этой области
     m_settings->remove(QString("%1/%2").arg(kGroup, name));
-
     // Сбрасываем флаг старта, если удаляли startup-область
     if (startupWorkspace() == name)
         m_settings->setValue(kStartup, QString{});
@@ -121,7 +119,6 @@ std::optional<WorkspaceEntry> WorkspaceManager::load(const QString& name) const 
     WorkspaceEntry entry;
     entry.name      = name;
     entry.adsState  = m_settings->value(prefix + "adsState").toByteArray();
-    entry.geometry  = m_settings->value(prefix + "geometry").toByteArray();
     entry.openForms = m_settings->value(prefix + "openForms").toStringList();
     return entry;
 }
@@ -129,19 +126,54 @@ std::optional<WorkspaceEntry> WorkspaceManager::load(const QString& name) const 
 void WorkspaceManager::apply(const WorkspaceEntry& entry) {
     spdlog::info("Applying workspace '{}'", entry.name.toStdString());
 
-    // 1. Закрыть все виджеты включая протокол
-    m_formManager->closeAllWidgets();
+    // ── 1. Разбить нужные виджеты ─────────────────────────────────────────
+    QSet<QString> neededRegular;
+    QSet<QString> neededProtocol;
+    for (const QString& name : entry.openForms) {
+        if (m_formManager->protocolDockNames().contains(name))
+            neededProtocol.insert(name);
+        else
+            neededRegular.insert(name);
+    }
 
-    // 2. Восстановить геометрию главного окна
-    if (!entry.geometry.isEmpty())
-        m_mainWindow->restoreGeometry(entry.geometry);
+    // Снимок всех доков, зарегистрированных в ADS
+    const QMap<QString, ads::CDockWidget*> allDocks = m_dockManager->dockWidgetsMap();
 
-    // 3. Создать виджеты по сохранённым именам
-    //    (ADS узнает их при restoreState и разместит по сохранённой геометрии)
-    for (const QString& widgetName : entry.openForms)
-        m_formManager->openWidgetByName(widgetName);
+    // ── 2. Текущие открытые НЕпротокольные доки ───────────────────────────
+    QSet<QString> currentOpen;
+    for (auto it = allDocks.cbegin(); it != allDocks.cend(); ++it) {
+        const ads::CDockWidget* dw = it.value();
+        if (dw && !dw->isClosed() && !m_formManager->protocolDockNames().contains(dw->objectName()))
+            currentOpen.insert(dw->objectName());
+    }
 
-    // 4. Восстановить расположение в ADS
+    // ── 3. Закрыть лишние ─────────────────────────────────────────────────
+    for (auto it = allDocks.cbegin(); it != allDocks.cend(); ++it) {
+        ads::CDockWidget* dw = it.value();
+        if (!dw) continue;
+        const QString name = dw->objectName();
+        if (m_formManager->protocolDockNames().contains(name))      continue; // протокол — не трогаем
+        if (dw->isClosed())                continue; // уже закрыт
+        if (neededRegular.contains(name))  continue; // нужен — оставляем
+
+        dw->closeDockWidget();
+    }
+
+    // ── 4. Открыть недостающие ────────────────────────────────────────────
+    for (const QString& name : std::as_const(neededRegular)) {
+        if (!currentOpen.contains(name)) {
+            m_formManager->openWidgetByName(name);
+        }
+    }
+
+    // ── 5. Протоколы: только скрыть / показать ────────────────────────────
+    for (auto it = allDocks.cbegin(); it != allDocks.cend(); ++it) {
+        ads::CDockWidget* dw = it.value();
+        if (!dw || !m_formManager->protocolDockNames().contains(dw->objectName())) continue;
+        dw->toggleView(neededProtocol.contains(dw->objectName()));
+    }
+
+    // ── 6. ADS восстанавливает расположение ───────────────────────────────
     if (!entry.adsState.isEmpty())
         m_dockManager->restoreState(entry.adsState);
 }
