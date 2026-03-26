@@ -6,12 +6,12 @@
 class SciLogViewer;
 
 /// @class Виджет отображения лога расчёта.
-class QMCR_API ProtocolLogWidget : public QWidget
+class QMCR_API GlobalProtocolWidget : public QWidget
 {
     Q_OBJECT
 public:
-    explicit ProtocolLogWidget(QWidget* parent = nullptr);
-    ~ProtocolLogWidget() override = default;
+    explicit GlobalProtocolWidget(QWidget* parent = nullptr);
+    ~GlobalProtocolWidget() override = default;
     /// Очистить содержимое лога
     void clear();
 

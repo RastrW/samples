@@ -3,8 +3,8 @@
 #include <spdlog/spdlog.h>
 
 namespace ads { class CDockManager; class CDockWidget; }
-class ProtocolLogWidget;
-class ProtocolWidget;
+class MainProtocolWidget;
+class GlobalProtocolWidget;
 class QAstra;
 
 /**
@@ -27,8 +27,8 @@ public:
     /// Показать / открыть протокол (для пункта меню)
     void openProtocol();
 
-    ProtocolLogWidget* globalProtocol() const { return m_globalProtocol; }
-    ProtocolWidget*    mainProtocol()   const { return m_mainProtocol; }
+    GlobalProtocolWidget* globalProtocol() const { return m_globalProtocol; }
+    MainProtocolWidget*    mainProtocol()   const { return m_mainProtocol; }
 
     std::shared_ptr<spdlog::sinks::sink> getProtocolLogSink() const {
         return m_qtLogSink;
@@ -47,8 +47,8 @@ private:
     ads::CDockManager*  m_dockManager    = nullptr;
     QWidget*            m_parentWidget   = nullptr;
 
-    ProtocolLogWidget*  m_globalProtocol = nullptr;
-    ProtocolWidget*     m_mainProtocol   = nullptr;
+    GlobalProtocolWidget* m_globalProtocol = nullptr;
+    MainProtocolWidget* m_mainProtocol   = nullptr;
 
     ads::CDockWidget*   m_dockGlobal     = nullptr;
     ads::CDockWidget*   m_dockMain       = nullptr;

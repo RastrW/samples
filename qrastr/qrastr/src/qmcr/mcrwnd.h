@@ -10,7 +10,7 @@
 class  DlgFindRepl;
 class  PyHlp;
 struct _log_data;
-class ProtocolLogWidget;
+class GlobalProtocolWidget;
 class QVBoxLayout;
 
 class QMCR_API McrWnd : public QDialog{
@@ -45,8 +45,8 @@ private:
 
     void buildToolBar();
 
-    SciPyEditor*             m_editor{nullptr};
-    ProtocolLogWidget*  m_logWidget{ nullptr };
+    SciPyEditor*        m_editor{nullptr};
+    GlobalProtocolWidget*      m_glodLogWidget{ nullptr };
     QVBoxLayout*        m_mainLayout  {nullptr};
 
     std::shared_ptr<PyHlp> m_pyHlp;

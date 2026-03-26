@@ -469,14 +469,12 @@ void FormManager::openWidgetByName(const QString& name) {
 }
 
 void FormManager::closeAllWidgets() {
-    const QSet<QString>& protocols = protocolDockNames();
-
     // Итерируем по копии карты: closeDockWidget() модифицирует состояние ADS
     const auto allDocks = m_dockManager->dockWidgetsMap();
     for (auto it = allDocks.cbegin(); it != allDocks.cend(); ++it) {
         ads::CDockWidget* dw = it.value();
         if (!dw) continue;
-        if (protocols.contains(dw->objectName())) continue; // протокол — skip
+        if (protocolDockNames().contains(dw->objectName())) continue; // протокол — skip
         if (!dw->isClosed())
             dw->closeDockWidget();
     }

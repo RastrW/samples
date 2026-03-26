@@ -14,7 +14,7 @@
 #include "forms/dlgfindrepl.h"
 #include "../app/astra/qastra_events_data.h"
 #include "pyhlp.h"
-#include "protocolLogWidget.h"
+#include "globalProtocolWidget.h"
 
 McrWnd::McrWnd(QWidget* parent)
     : QDialog(parent,
@@ -31,10 +31,10 @@ McrWnd::McrWnd(QWidget* parent)
 
     auto* splitter = new QSplitter(Qt::Vertical, this);
     m_editor = new SciPyEditor(this);
-    m_logWidget = new ProtocolLogWidget(this);
+    m_glodLogWidget = new GlobalProtocolWidget(this);
 
     splitter->addWidget(m_editor);
-    splitter->addWidget(m_logWidget);
+    splitter->addWidget(m_glodLogWidget);
 
     m_mainLayout->addWidget(splitter);
     setLayout(m_mainLayout);
@@ -211,7 +211,7 @@ bool McrWnd::slot_fileSave(bool saveAs)
 void McrWnd::slot_run()
 {
     if (!m_pyHlp) {
-        m_logWidget->onRastrPrint("No PyHlp!\n");
+        m_glodLogWidget->onRastrPrint("No PyHlp!\n");
         return;
     }
 
@@ -271,20 +271,20 @@ void McrWnd::slot_findByParams(SciPyEditor::FindParams params_find)
 
 void McrWnd::slot_protClear()
 {
-    m_logWidget->clear();
+    m_glodLogWidget->clear();
 }
 
 void McrWnd::slot_appendProtocol(const QString& qstr)
 {
-    m_logWidget->onAppendText(qstr);
+    m_glodLogWidget->onAppendText(qstr);
 }
 
 void McrWnd::slot_rastrLog(const _log_data& log_data){
-    m_logWidget->onRastrLog(log_data);
+    m_glodLogWidget->onRastrLog(log_data);
 }
 
 void McrWnd::slot_rastrPrint(const std::string& str_msg){
-    m_logWidget->onRastrPrint(str_msg);
+    m_glodLogWidget->onRastrPrint(str_msg);
 }
 
 void McrWnd::slot_fileInfoChanged( const QFileInfo& fiNew)

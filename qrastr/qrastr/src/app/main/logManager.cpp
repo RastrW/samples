@@ -1,6 +1,6 @@
 #include "logManager.h"
-#include "protocollogwidget.h"
-#include "protocolwidget.h"
+#include "globalProtocolWidget.h"
+#include "mainProtocolWidget.h"
 #include <DockManager.h>
 #include <DockWidget.h>
 #include "qastra.h"
@@ -32,14 +32,14 @@ void LogManager::setupLogSinks()
 void LogManager::setupRastrConnections(std::shared_ptr<QAstra> qastra) {
     // Второй поток данных — структурированные _log_data от Rastr
     connect(qastra.get(), &QAstra::onRastrLog,
-            m_mainProtocol,   &ProtocolWidget::onRastrLog);
+            m_mainProtocol,   &MainProtocolWidget::onRastrLog);
     connect(qastra.get(), &QAstra::onRastrLog,
-            m_globalProtocol, &ProtocolLogWidget::onRastrLog);
+            m_globalProtocol, &GlobalProtocolWidget::onRastrLog);
 }
 
 void LogManager::createWidgets() {
-    m_globalProtocol = new ProtocolLogWidget(m_parentWidget);
-    m_mainProtocol = new ProtocolWidget(m_parentWidget);
+    m_globalProtocol = new GlobalProtocolWidget(m_parentWidget);
+    m_mainProtocol = new MainProtocolWidget(m_parentWidget);
     m_mainProtocol->setIgnoreAppendProtocol(true);
 }
 

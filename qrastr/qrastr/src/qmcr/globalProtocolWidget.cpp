@@ -1,9 +1,9 @@
-#include "protocolLogWidget.h"
+#include "globalProtocolWidget.h"
 #include <QVBoxLayout>
 #include <cassert>
 #include "sciLogViewer.h"
 
-ProtocolLogWidget::ProtocolLogWidget(QWidget* parent)
+GlobalProtocolWidget::GlobalProtocolWidget(QWidget* parent)
     : QWidget(parent)
 {
     auto* layout = new QVBoxLayout(this);
@@ -12,18 +12,18 @@ ProtocolLogWidget::ProtocolLogWidget(QWidget* parent)
     layout->addWidget(m_viewer);
 }
 
-void ProtocolLogWidget::clear()
+void GlobalProtocolWidget::clear()
 {
     m_viewer->setContent({});
     m_stageMaxId = 0;
 }
 
-std::string ProtocolLogWidget::makeIndent(int n)
+std::string GlobalProtocolWidget::makeIndent(int n)
 {
     return std::string(static_cast<size_t>(std::max(0, n)), '\t');
 }
 
-void ProtocolLogWidget::onAppendText(const QString& text)
+void GlobalProtocolWidget::onAppendText(const QString& text)
 {
     std::string line = makeIndent(static_cast<int>(m_stageMaxId));
     line += text.toStdString();   // UTF-8 через toStdString()
@@ -32,7 +32,7 @@ void ProtocolLogWidget::onAppendText(const QString& text)
     m_viewer->appendTextCustom(line);
 }
 
-void ProtocolLogWidget::onRastrLog(const _log_data& log_data)
+void GlobalProtocolWidget::onRastrLog(const _log_data& log_data)
 {
     std::string str;
     str.reserve(128);
@@ -60,7 +60,7 @@ void ProtocolLogWidget::onRastrLog(const _log_data& log_data)
     }
 }
 
-void ProtocolLogWidget::onRastrPrint(const std::string& msg)
+void GlobalProtocolWidget::onRastrPrint(const std::string& msg)
 {
     m_viewer->appendTextCustom(msg);
 }

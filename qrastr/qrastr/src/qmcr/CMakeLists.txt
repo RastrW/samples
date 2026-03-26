@@ -69,8 +69,8 @@ set(PROJECT_SOURCES
     forms/dlgfindrepl.cpp
     pyhlp.h
     pyhlp.cpp
-    protocolLogWidget.h
-    protocolLogWidget.cpp
+    globalProtocolWidget.h
+    globalProtocolWidget.cpp
     qmcr_api.h
 )
 

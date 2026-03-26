@@ -16,11 +16,11 @@ class QVBoxLayout;
 class QPushButton;
 class ProtocolFilterProxyModel;
 
-class ProtocolWidget : public QWidget {
+class MainProtocolWidget : public QWidget {
     Q_OBJECT
 public:
-    explicit ProtocolWidget(QWidget* parent = nullptr);
-    ~ProtocolWidget() = default;
+    explicit MainProtocolWidget(QWidget* parent = nullptr);
+    ~MainProtocolWidget() = default;
 
     void setIgnoreAppendProtocol(bool bl_ignore);
 

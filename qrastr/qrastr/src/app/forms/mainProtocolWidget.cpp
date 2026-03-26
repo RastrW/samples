@@ -7,7 +7,7 @@
 #include <QHeaderView>
 #include <QPushButton>
 #include <initializer_list>
-#include "protocolWidget.h"
+#include "mainProtocolWidget.h"
 #include "protocoltreeitem.h"
 #include "protocoltreemodel.h"
 #include "protocolFilterProxyModel.h"
@@ -22,7 +22,7 @@ static const char* kIconPaths[] = {
 };
 
 
-ProtocolWidget::ProtocolWidget(QWidget* parent)
+MainProtocolWidget::MainProtocolWidget(QWidget* parent)
     : QWidget(parent)
 {
     auto* mainLayout = new QVBoxLayout(this);
@@ -33,7 +33,7 @@ ProtocolWidget::ProtocolWidget(QWidget* parent)
     setupTreeView(mainLayout);
 }
 
-void ProtocolWidget::setupFilterPanel(QVBoxLayout* layout) {
+void MainProtocolWidget::setupFilterPanel(QVBoxLayout* layout) {
     auto* panel  = new QWidget(this);
     auto* hbox   = new QHBoxLayout(panel);
     hbox->setContentsMargins(0, 0, 0, 0);
@@ -124,7 +124,7 @@ void ProtocolWidget::setupFilterPanel(QVBoxLayout* layout) {
     layout->addWidget(panel);
 }
 
-void ProtocolWidget::setupTreeView(QVBoxLayout* layout) {
+void MainProtocolWidget::setupTreeView(QVBoxLayout* layout) {
     m_model = new ProtocolTreeModel(this);
     m_proxy = new ProtocolFilterProxyModel(this);
     m_proxy->setSourceModel(m_model);
@@ -168,13 +168,13 @@ void ProtocolWidget::setupTreeView(QVBoxLayout* layout) {
     layout->addWidget(m_treeView);
 }
 
-void ProtocolWidget::applyFilter(const QSet<LogMessageTypes>& filter) {
+void MainProtocolWidget::applyFilter(const QSet<LogMessageTypes>& filter) {
     m_proxy->setActiveFilter(filter);
     // После фильтрации раскрываем всё, чтобы пользователь видел результаты
     m_treeView->expandAll();
 }
 
-void ProtocolWidget::onRastrLog(const _log_data& log_data) {
+void MainProtocolWidget::onRastrLog(const _log_data& log_data) {
     m_model->layoutAboutToBeChanged();
 
     if (log_data.lmt == LogMessageTypes::OpenStage) {
@@ -209,11 +209,11 @@ void ProtocolWidget::onRastrLog(const _log_data& log_data) {
     m_treeView->expand(m_proxy->mapFromSource(srcParent));
 }
 
-void ProtocolWidget::setIgnoreAppendProtocol(bool bl_ignore) {
+void MainProtocolWidget::setIgnoreAppendProtocol(bool bl_ignore) {
     m_ignoreAppendProtocol = bl_ignore;
 }
 
-void ProtocolWidget::onAppendProtocol(const QString& qstr) {
+void MainProtocolWidget::onAppendProtocol(const QString& qstr) {
     if (m_ignoreAppendProtocol) return;
     auto sp = std::make_shared<ProtocolTreeItem>(
         QVariantList{ iconByIndex(iconIndexForMessage(LogMessageTypes::Info)), qstr },
@@ -223,7 +223,7 @@ void ProtocolWidget::onAppendProtocol(const QString& qstr) {
     m_model->layoutChanged();
 }
 
-int ProtocolWidget::iconIndexForMessage(LogMessageTypes lmt) const{
+int MainProtocolWidget::iconIndexForMessage(LogMessageTypes lmt) const{
     switch (lmt) {
     case LogMessageTypes::SystemError:
     case LogMessageTypes::Failed:
@@ -235,14 +235,14 @@ int ProtocolWidget::iconIndexForMessage(LogMessageTypes lmt) const{
     }
 }
 
-int ProtocolWidget::iconIndexForStage(const ProtocolTreeItem* item) const{
+int MainProtocolWidget::iconIndexForStage(const ProtocolTreeItem* item) const{
     if (item->errors()   > 0) return 2;  // cancellation
     if (item->warnings() > 0) return 3;  // warning
     if (item->messages() > 0) return 4;  // idea
     return 1;                            // verified — всё хорошо
 }
 
-QPixmap ProtocolWidget::iconByIndex(int idx) const {
+QPixmap MainProtocolWidget::iconByIndex(int idx) const {
     if (idx < 0 || idx > 4) return {};
     return QPixmap(kIconPaths[idx])
         .scaled(16, 16, Qt::KeepAspectRatio, Qt::SmoothTransformation);

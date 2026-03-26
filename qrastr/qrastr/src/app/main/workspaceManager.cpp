@@ -105,16 +105,16 @@ void WorkspaceManager::remove(const QString& name) {
     // Удаляем все ключи секции этой области
     m_settings->remove(QString("%1/%2").arg(kGroup, name));
     // Сбрасываем флаг старта, если удаляли startup-область
-    if (startupWorkspace() == name)
+    if (startupWorkspace() == name){
         m_settings->setValue(kStartup, QString{});
-
+    }
     spdlog::info("Workspace '{}' removed", name.toStdString());
 }
 
 std::optional<WorkspaceEntry> WorkspaceManager::load(const QString& name) const {
-    if (!names().contains(name))
+    if (!names().contains(name)){
         return std::nullopt;
-
+    }
     const QString prefix = QString("%1/%2/").arg(kGroup, name);
     WorkspaceEntry entry;
     entry.name      = name;
@@ -152,9 +152,15 @@ void WorkspaceManager::apply(const WorkspaceEntry& entry) {
         ads::CDockWidget* dw = it.value();
         if (!dw) continue;
         const QString name = dw->objectName();
-        if (m_formManager->protocolDockNames().contains(name))      continue; // протокол — не трогаем
-        if (dw->isClosed())                continue; // уже закрыт
-        if (neededRegular.contains(name))  continue; // нужен — оставляем
+        if (m_formManager->protocolDockNames().contains(name)){
+            continue; // протокол — не трогаем
+        }
+        if (dw->isClosed()){
+            continue; // уже закрыт
+        }
+        if (neededRegular.contains(name)){
+            continue; // нужен — оставляем
+        }
 
         dw->closeDockWidget();
     }
@@ -169,11 +175,14 @@ void WorkspaceManager::apply(const WorkspaceEntry& entry) {
     // ── 5. Протоколы: только скрыть / показать ────────────────────────────
     for (auto it = allDocks.cbegin(); it != allDocks.cend(); ++it) {
         ads::CDockWidget* dw = it.value();
-        if (!dw || !m_formManager->protocolDockNames().contains(dw->objectName())) continue;
+        if (!dw || !m_formManager->protocolDockNames().contains(dw->objectName())){
+            continue;
+        }
         dw->toggleView(neededProtocol.contains(dw->objectName()));
     }
 
     // ── 6. ADS восстанавливает расположение ───────────────────────────────
-    if (!entry.adsState.isEmpty())
+    if (!entry.adsState.isEmpty()){
         m_dockManager->restoreState(entry.adsState);
+    }
 }
