@@ -58,12 +58,6 @@ MainWindow::MainWindow()
     QObject::connect(m_dockManager, &ads::CDockManager::focusedDockWidgetChanged,
                      [](ads::CDockWidget* old, ads::CDockWidget* now) {
                          if (now) {
-                            static int Count = 0;
-                            qDebug() << Count++
-                                     << " CDockManager::focusedDockWidgetChanged old: "
-                                     << (old ? old->objectName() : "-")
-                                     << " now: " << now->objectName()
-                                     << " visible: " << now->isVisible();
                              now->widget()->setFocus();
                          }
                      });

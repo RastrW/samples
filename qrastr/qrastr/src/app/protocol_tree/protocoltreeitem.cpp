@@ -14,24 +14,15 @@ ProtocolTreeItem::messageType() const {
 }
 
 void ProtocolTreeItem::appendChild(_vsptis::value_type& child) {
-    // Аккумулируем статистику дочернего узла
     switch (child->lmt_) {
     case LogMessageTypes::SystemError:
     case LogMessageTypes::Failed:
-    case LogMessageTypes::Error:
-        m_errors++;   break;
-    case LogMessageTypes::Warning:
-        m_warnings++; break;
-    case LogMessageTypes::Message:
-        m_messages++; break;
+    case LogMessageTypes::Error:   m_errors++;   break;
+    case LogMessageTypes::Warning: m_warnings++; break;
+    case LogMessageTypes::Message: m_messages++; break;
     default: break;
     }
-    // Если это стадия — берём её накопленную статистику
-    if (child->lmt_ == LogMessageTypes::OpenStage) {
-        m_errors   += child->m_errors;
-        m_warnings += child->m_warnings;
-        m_messages += child->m_messages;
-    }
+
     vsptis_.emplace_back(child);
 }
 
@@ -67,4 +58,10 @@ int ProtocolTreeItem::row() const{ ///@todo REFACTOR THIS!
         return std::distance(pti_parent_->vsptis_.cbegin(), it);
     Q_ASSERT(false); // should not happen
     return -1;
+}
+
+void ProtocolTreeItem::propagateStageStats(const ProtocolTreeItem* child) {
+    m_errors   += child->m_errors;
+    m_warnings += child->m_warnings;
+    m_messages += child->m_messages;
 }

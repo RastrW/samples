@@ -30,6 +30,7 @@ public slots:
 private slots:
     void onAppendProtocol(const QString& qstr);
     void applyFilter(const QSet<LogMessageTypes>& filter);
+    void onContextMenu(const QPoint& pos);
 
 private:
     void setupFilterPanel(QVBoxLayout* layout);

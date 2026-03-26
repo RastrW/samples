@@ -70,8 +70,11 @@ void GraphControlService::unload()
     m_initPlainDll = nullptr;
 
     if (m_lib.isLoaded()) {
-        m_lib.unload();
-        spdlog::info("GraphControlService: GraphControlClient выгружен");
+        if (m_lib.unload()){
+            spdlog::info("GraphControlService: GraphControlClient выгружен");
+        }else{
+            spdlog::error("GraphControlService: Возникла проблема с выгрузкой библиотеки GraphControlClient");
+        }
     }
     m_loaded = false;
 }

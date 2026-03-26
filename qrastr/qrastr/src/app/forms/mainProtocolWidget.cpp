@@ -6,6 +6,9 @@
 #include <QTreeView>
 #include <QHeaderView>
 #include <QPushButton>
+#include <QMenu>
+#include <QApplication>
+#include <QClipboard>
 #include <initializer_list>
 #include "mainProtocolWidget.h"
 #include "protocoltreeitem.h"
@@ -165,6 +168,10 @@ void MainProtocolWidget::setupTreeView(QVBoxLayout* layout) {
     ///- **Linux** — `DejaVu Sans Mono`, `Liberation Mono`, `Monospace` — в зависимости от дистрибутива
     m_treeView->setFont(monoFont);
 
+    m_treeView->setContextMenuPolicy(Qt::CustomContextMenu);
+    connect(m_treeView, &QTreeView::customContextMenuRequested,
+            this, &MainProtocolWidget::onContextMenu);
+
     layout->addWidget(m_treeView);
 }
 
@@ -190,6 +197,9 @@ void MainProtocolWidget::onRastrLog(const _log_data& log_data) {
             auto closingStage = m_stages.top();
             m_stages.pop();
             closingStage->setIconData(iconByIndex(iconIndexForStage(closingStage.get())));
+
+            //Пробрасываем накопленную статистику в родительскую стадию
+            m_stages.top()->propagateStageStats(closingStage.get());
         }
     } else {
         auto sp = std::make_shared<ProtocolTreeItem>(
@@ -197,6 +207,9 @@ void MainProtocolWidget::onRastrLog(const _log_data& log_data) {
                          QString::fromStdString(log_data.str_msg) },
             log_data.lmt,
             m_stages.top().get());
+        sp->setContextInfo(
+            QString::fromStdString(log_data.str_table),
+            log_data.n_indx);
         m_stages.top()->appendChild(sp);
     }
 
@@ -246,4 +259,43 @@ QPixmap MainProtocolWidget::iconByIndex(int idx) const {
     if (idx < 0 || idx > 4) return {};
     return QPixmap(kIconPaths[idx])
         .scaled(16, 16, Qt::KeepAspectRatio, Qt::SmoothTransformation);
+}
+
+void MainProtocolWidget::onContextMenu(const QPoint& pos)
+{
+    const QModelIndex proxyIdx = m_treeView->indexAt(pos);
+    if (!proxyIdx.isValid()) return;
+
+    const QModelIndex srcIdx = m_proxy->mapToSource(proxyIdx);
+    auto* item = static_cast<ProtocolTreeItem*>(srcIdx.internalPointer());
+
+    QMenu menu(this);
+
+    if (!item->table().isEmpty()) {
+        // Сообщение с привязкой к таблице
+        menu.addAction(tr("Связанные формы"), this, [this, item]() {
+            // TODO: открыть таблицу item->table() на строке item->index()
+        });
+    } else {
+        menu.addAction(tr("Копировать"), this, [this, item]() {
+            QApplication::clipboard()->setText(item->data(1).toString());
+        });
+
+        const bool hasChildren = item->childCount() > 0;
+        if (hasChildren) {
+            menu.addAction(tr("Раскрыть"), this, [this, proxyIdx]() {
+                m_treeView->setExpanded(proxyIdx, true);
+            });
+        }
+
+        menu.addSeparator();
+        menu.addAction(tr("Очистить"), this, [this]() {
+            // TODO: очистка протокола
+        });
+        menu.addAction(tr("Настройка протокола"), this, [this]() {
+            // TODO: открыть диалог настроек
+        });
+    }
+
+    menu.exec(m_treeView->viewport()->mapToGlobal(pos));
 }
