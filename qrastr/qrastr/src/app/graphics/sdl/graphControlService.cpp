@@ -12,9 +12,8 @@ GraphControlService::GraphControlService(IPlainRastr* rastr):
 }
 
 GraphControlService::~GraphControlService() {
-    m_initControl  = nullptr;
-    m_closeControl = nullptr;
-    m_initPlainDll = nullptr;
+    m_initPlainDll(nullptr, "");
+
     m_loaded       = false;
 
     spdlog::info("before unload");
@@ -27,7 +26,6 @@ GraphControlService::~GraphControlService() {
     spdlog::info("after unload");
 
     spdlog::info("GraphControlService has been deleted");
-
 }
 
 bool GraphControlService::load()
@@ -65,6 +63,7 @@ bool GraphControlService::load()
 
 void GraphControlService::unload()
 {
+
     m_initControl  = nullptr;
     m_closeControl = nullptr;
     m_initPlainDll = nullptr;

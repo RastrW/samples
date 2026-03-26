@@ -36,6 +36,8 @@ public:
         m_table = table;
         m_index = index;
     }
+
+    void clearChildren();
 private:
     _vsptis vsptis_;
     QVariantList qvl_data_;

@@ -38,6 +38,12 @@ private:
     QPixmap iconByIndex(int idx) const;
     int iconIndexForMessage(LogMessageTypes lmt) const;
     int iconIndexForStage(const ProtocolTreeItem* item) const;
+    // --- вспомогательные методы ---
+    void    clearProtocol();
+    void    openSettingsDialog();
+    QString collectVisibleText() const;
+    QString collectItemText(const QModelIndex& proxyIdx,
+                            int depth = 0) const;
 
     ProtocolTreeModel*      m_model        = nullptr;
     ProtocolFilterProxyModel* m_proxy      = nullptr;
@@ -52,4 +58,10 @@ private:
     QPushButton* m_btnInfo    = nullptr;
 
     bool m_ignoreAppendProtocol = false;
+    // --- настройки ---
+    bool m_collapseCleanStages = true;
+    bool m_copyAsXml           = false;
+
+    static constexpr auto kKeyCollapse = "protocol/collapseCleanStages";
+    static constexpr auto kKeyXml      = "protocol/copyAsXml";
 };

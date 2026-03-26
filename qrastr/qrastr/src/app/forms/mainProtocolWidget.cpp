@@ -9,12 +9,14 @@
 #include <QMenu>
 #include <QApplication>
 #include <QClipboard>
+#include <QSettings>
 #include <initializer_list>
 #include "mainProtocolWidget.h"
 #include "protocoltreeitem.h"
 #include "protocoltreemodel.h"
 #include "protocolFilterProxyModel.h"
 #include "qastra_events_data.h"
+#include "protocolSettingsDialog.h"
 
 static const char* kIconPaths[] = {
     ":images/new_style/information.png",  // 0 — about/info
@@ -28,6 +30,11 @@ static const char* kIconPaths[] = {
 MainProtocolWidget::MainProtocolWidget(QWidget* parent)
     : QWidget(parent)
 {
+    // Загружаем сохранённые настройки
+    QSettings s;
+    m_collapseCleanStages = s.value(kKeyCollapse, true).toBool();
+    m_copyAsXml           = s.value(kKeyXml,      false).toBool();
+
     auto* mainLayout = new QVBoxLayout(this);
     mainLayout->setContentsMargins(4, 4, 4, 4);
     mainLayout->setSpacing(4);
@@ -196,10 +203,20 @@ void MainProtocolWidget::onRastrLog(const _log_data& log_data) {
         if (m_stages.size() > 1) {
             auto closingStage = m_stages.top();
             m_stages.pop();
-            closingStage->setIconData(iconByIndex(iconIndexForStage(closingStage.get())));
 
-            //Пробрасываем накопленную статистику в родительскую стадию
+            // Пробрасываем статистику в родителя (исправление из прошлого ответа)
             m_stages.top()->propagateStageStats(closingStage.get());
+
+            const int iconIdx = iconIndexForStage(closingStage.get());
+            closingStage->setIconData(iconByIndex(iconIdx));
+
+            // Сворачиваем стадию без ошибок/предупреждений, если настройка включена
+            if (m_collapseCleanStages && iconIdx == 1 /* verified */) {
+                const QModelIndex srcIdx =
+                    m_model->index(closingStage->row(), 0,
+                                   m_model->index(closingStage->parentItem()->row(), 0));
+                m_treeView->collapse(m_proxy->mapFromSource(srcIdx));
+            }
         }
     } else {
         auto sp = std::make_shared<ProtocolTreeItem>(
@@ -264,38 +281,81 @@ QPixmap MainProtocolWidget::iconByIndex(int idx) const {
 void MainProtocolWidget::onContextMenu(const QPoint& pos)
 {
     const QModelIndex proxyIdx = m_treeView->indexAt(pos);
-    if (!proxyIdx.isValid()) return;
-
-    const QModelIndex srcIdx = m_proxy->mapToSource(proxyIdx);
-    auto* item = static_cast<ProtocolTreeItem*>(srcIdx.internalPointer());
-
     QMenu menu(this);
 
-    if (!item->table().isEmpty()) {
-        // Сообщение с привязкой к таблице
-        menu.addAction(tr("Связанные формы"), this, [this, item]() {
-            // TODO: открыть таблицу item->table() на строке item->index()
-        });
-    } else {
-        menu.addAction(tr("Копировать"), this, [this, item]() {
-            QApplication::clipboard()->setText(item->data(1).toString());
-        });
+    if (proxyIdx.isValid()) {
+        const QModelIndex srcIdx = m_proxy->mapToSource(proxyIdx);
+        auto* item = static_cast<ProtocolTreeItem*>(srcIdx.internalPointer());
 
-        const bool hasChildren = item->childCount() > 0;
-        if (hasChildren) {
-            menu.addAction(tr("Раскрыть"), this, [this, proxyIdx]() {
-                m_treeView->setExpanded(proxyIdx, true);
+        if (!item->table().isEmpty()) {
+            menu.addAction(tr("Открыть"), this, [this, item]() {
+                // TODO: открыть таблицу item->table() на строке item->index()
             });
+            menu.addAction(tr("Связанные формы"), this, [this, item]() {
+                // TODO: показать список связанных форм
+            });
+            menu.addSeparator();
         }
-
-        menu.addSeparator();
-        menu.addAction(tr("Очистить"), this, [this]() {
-            // TODO: очистка протокола
-        });
-        menu.addAction(tr("Настройка протокола"), this, [this]() {
-            // TODO: открыть диалог настроек
-        });
     }
 
+    // Пункты, общие для любой строки (и для клика в пустое место)
+    menu.addAction(tr("Копировать"), this, [this]() {
+        const QString text = collectVisibleText();
+        QApplication::clipboard()->setText(text);
+    });
+
+    menu.addAction(tr("Раскрыть всё"),  m_treeView, &QTreeView::expandAll);
+    menu.addAction(tr("Свернуть всё"),  m_treeView, &QTreeView::collapseAll);
+    menu.addSeparator();
+    menu.addAction(tr("Очистить"),      this, &MainProtocolWidget::clearProtocol);
+    menu.addAction(tr("Настройка протоколов…"), this,
+                   &MainProtocolWidget::openSettingsDialog);
+
     menu.exec(m_treeView->viewport()->mapToGlobal(pos));
+}
+
+void MainProtocolWidget::openSettingsDialog()
+{
+    ProtocolSettingsDialog dlg(this);
+    if (dlg.exec() == QDialog::Accepted) {
+        m_collapseCleanStages = dlg.collapseCleanStages();
+        m_copyAsXml           = dlg.copyAsXml();
+    }
+}
+
+void MainProtocolWidget::clearProtocol()
+{
+    m_model->layoutAboutToBeChanged();
+
+    // Сбрасываем стек стадий до корня
+    while (m_stages.size() > 1) m_stages.pop();
+
+    // Очищаем корневой элемент
+    m_model->getRootItem()->clearChildren();
+
+    m_model->layoutChanged();
+}
+
+QString MainProtocolWidget::collectVisibleText() const
+{
+    return collectItemText(QModelIndex{});
+}
+
+QString MainProtocolWidget::collectItemText(
+    const QModelIndex& parent, int depth) const
+{
+    QString result;
+    const int rows = m_proxy->rowCount(parent);
+
+    for (int r = 0; r < rows; ++r) {
+        const QModelIndex idx = m_proxy->index(r, 1, parent); // колонка 1 = текст
+        const QString text    = m_proxy->data(idx, Qt::DisplayRole).toString();
+
+        result += QString(depth * 2, ' ') + text + '\n';
+
+        // Рекурсия в дочерние (не важно, раскрыта ли ветка — копируем всё видимое)
+        if (m_proxy->hasChildren(m_proxy->index(r, 0, parent)))
+            result += collectItemText(m_proxy->index(r, 0, parent), depth + 1);
+    }
+    return result;
 }

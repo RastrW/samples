@@ -25,6 +25,8 @@ bool AppSettingsManager::loadAppearanceSettings(QMainWindow* window) {
     }
     QApplication::setStyle(QStyleFactory::create(savedStyle));
 
+    qInfo() << "INI File Path:" << m_settings.fileName();
+
     try {
         m_settings.beginGroup("MainWindow");
         const auto geometry = m_settings.value("geometry", QByteArray()).toByteArray();

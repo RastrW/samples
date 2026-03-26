@@ -65,3 +65,8 @@ void ProtocolTreeItem::propagateStageStats(const ProtocolTreeItem* child) {
     m_warnings += child->m_warnings;
     m_messages += child->m_messages;
 }
+
+void ProtocolTreeItem::clearChildren() {
+    vsptis_.clear();
+    m_errors = m_warnings = m_messages = 0;
+}

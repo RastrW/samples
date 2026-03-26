@@ -19,6 +19,7 @@ using GCC_InitPlainDLL_t = void(__cdecl*)(IPlainRastr*, const char*);
  * Время жизни = времени жизни программы.
  * На каждое открытое окно вызывает InitControl(pcontrol),
  * перед закрытием — CloseControl(pcontrol).
+ *
  */
 class GraphControlService
 {
