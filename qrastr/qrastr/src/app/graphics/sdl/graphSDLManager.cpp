@@ -15,8 +15,8 @@ GraphSDLManager::GraphSDLManager(ads::CDockManager* dockManager,
     : IGraphManager(dockManager, parentWidget, parent)
     , m_rastr(rastr){
     m_gcc = std::make_unique<GraphControlService>(rastr);
-    //if (!m_gcc->load())
-    //   spdlog::warn("GraphSDLManager: GraphControlClient недоступен");
+    if (!m_gcc->load())
+       spdlog::warn("GraphSDLManager: GraphControlClient недоступен");
 }
 
 GraphSDLManager::~GraphSDLManager()
@@ -124,6 +124,7 @@ void GraphSDLManager::slot_dockClosed()
         auto* sdlHostWidget    = qobject_cast<SDLHostWidget*>(sdlHostWidgetObj);
 
         if (sdlHostWidget) {
+
             // 1. CloseControl — отписываем GraphControlClient от хинтов ElGraph
             m_gcc->closeControl(sdlHostWidget->elGraph().graph());
 
@@ -135,6 +136,7 @@ void GraphSDLManager::slot_dockClosed()
         auto* hostWidget    = qobject_cast<HostWidget*>(hostWidgetObj);
 
         if (hostWidget) {
+            hostWidget->elGraph().destroyWindow();
             // 1. CloseControl — отписываем GraphControlClient от хинтов ElGraph
             m_gcc->closeControl(hostWidget->elGraph().graph());
 

@@ -73,3 +73,7 @@ void ElGraphService::shutdown()
         m_lib.unload();
     }
 }
+
+void ElGraphService::destroyWindow(){
+    m_grc->DestroyWindow();
+}

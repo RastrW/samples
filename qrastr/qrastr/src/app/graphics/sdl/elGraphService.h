@@ -23,6 +23,7 @@ public:
     // Доступ к интерфейсу библиотеки (nullptr если не загружена)
     IPlainElGraph* graph() const { return m_grc; }
     bool isLoaded()        const { return m_grc != nullptr; }
+    void destroyWindow();
 private:
 
     QLibrary       m_lib;
