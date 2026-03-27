@@ -22,9 +22,12 @@ bool RModel::populateDataFromRastr()
         m_rdata = std::make_unique<RData>(m_qastra, *m_UIform);
         m_rdata->populate_qastra(m_qastra, m_rtdm);
         m_cache.rebuild(*m_rdata, m_rtdm);
+        //структура могла смениться
+        m_bgCache.clear();
     } catch (...) {
         qCritical() << "ERROR! populateDataFromRastr:"
                     << (m_rdata ? m_rdata->t_name_.c_str() : "<null>");
+        return false;
     }
     return true;
 }
@@ -65,14 +68,22 @@ QVariant RModel::data(const QModelIndex& index, int role) const
 
     // ── BackgroundRole (Фон ячейки) ──────────────────────────────────────────
     if (role == Qt::BackgroundRole) {
-        ///@todo временная заливка ячейки (1,2) красным — удалить перед релизом
-        if (row == 1 && col == 2) return QBrush(Qt::red);
+        // Быстрый выход: форматы не заданы
+        if (m_condFmt.condFormats().empty()) return {};
+
+        // Проверяем кеш
+        if (const QVariant* cached = m_bgCache.get(row, col)){
+            // QVariant() → нет формата, тоже ок
+            return *cached;
+        }
 
         const QString val = QString::fromStdString(
             std::visit(ToString(), m_rdata->pnparray_->Get(row, col)));
-        QVariant fmt = getMatchingCondFormat(m_condFmt.condFormats(), row, col, val, role);
-        if (fmt.isValid()) return fmt;
-        return {};
+        QVariant fmt = getMatchingCondFormat(
+            m_condFmt.condFormats(), row, col, val, role);
+
+        m_bgCache.put(row, col, fmt);
+        return fmt;
     }
 
     // ── DisplayRole / EditRole (Текст для отображения/Значение для редактора)─
@@ -252,9 +263,11 @@ bool RModel::removeColumns(int column, int count, const QModelIndex& parent)
     return true;
 }
 
-void RModel::slot_DataChanged(std::string tName, int rowFrom, int colFrom, int rowTo, int colTo)
-{
+void RModel::slot_DataChanged(std::string tName, int rowFrom, int colFrom,
+                              int rowTo, int colTo){
     if (getRdata()->t_name_ != tName) return;
+    // инвалидируем затронутые строки
+    m_bgCache.invalidateRows(rowFrom, rowTo);
     emit dataChanged(index(rowFrom, colFrom), index(rowTo, colTo));
 }
 
@@ -266,6 +279,8 @@ void RModel::slot_BeginResetModel(std::string tName)
 void RModel::slot_EndResetModel(std::string tName)
 {
     if (getRdata()->t_name_ != tName) return;
+    // структура пересоздаётся полностью
+    m_bgCache.clear();
     ///@note при сборсе обязательно целиком пересоздавать data
     /// populateDataFromRastr() вызывается МЕЖДУ beginResetModel и endResetModel.
     /// В этот момент View не обращается к модели — безопасно полностью
@@ -294,9 +309,12 @@ void RModel::slot_EndRemoveRows(std::string tName)
     if (getRdata()->t_name_ == tName) endRemoveRows();
 }
 
-void RModel::addCondFormat(bool isRowIdFormat, size_t column, const CondFormat& condFormat)
+void RModel::addCondFormat(bool isRowIdFormat, size_t column,
+                           const CondFormat& condFormat)
 {
     m_condFmt.add(isRowIdFormat, column, condFormat);
+    // правила изменились — кеш недействителен
+    m_bgCache.clear();
     emit layoutChanged();
 }
 
@@ -304,6 +322,7 @@ void RModel::setCondFormats(bool isRowIdFormat, size_t column,
                             const std::vector<CondFormat>& condFormats)
 {
     m_condFmt.set(isRowIdFormat, column, condFormats);
+    m_bgCache.clear();
 }
 
 QVariant RModel::getMatchingCondFormat(const std::unordered_map<size_t, std::vector<CondFormat>>& formats,

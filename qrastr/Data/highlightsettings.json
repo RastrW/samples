@@ -1,0 +1,43 @@
+{
+ "condformat": {
+  "node": {
+   "na": [
+    [
+     {
+      "bgColor": "#390055",
+      "fgColor": "#ffffff",
+      "filter": "= 0"
+     }
+    ]
+   ],
+   "qg": [
+    [
+     {
+      "bgColor": "#430064",
+      "fgColor": "#ffffff",
+      "filter": "<qmin"
+     },
+     {
+      "bgColor": "#ff007f",
+      "fgColor": "#ffffff",
+      "filter": ">qmax"
+     }
+    ]
+   ],
+   "vras": [
+    [
+     {
+      "bgColor": "#430064",
+      "fgColor": "#ffffff",
+      "filter": "<umin"
+     },
+     {
+      "bgColor": "#ff007f",
+      "fgColor": "#ffffff",
+      "filter": ">umax"
+     }
+    ]
+   ]
+  }
+ }
+}

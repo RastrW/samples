@@ -112,5 +112,30 @@ private:
 
     BackInfoCache    m_cache;      // справочники ENUM / NAMEREF / SUPERENUM / ENPIC
     CondFormatStorage m_condFmt;   // условные форматы
+
+    // ── Кеш фона (condFormat) ────────────────────────────────────────────────
+    // Заполняется в data(BackgroundRole), инвалидируется в slot_DataChanged.
+    // QVariant() (invalid) = «формат не нашёлся» — тоже кешируется,
+    // чтобы не запускать STRING_BOOL повторно.
+    struct BgCache {
+        // row → col → результат (valid или invalid QVariant)
+        std::unordered_map<int, std::unordered_map<int, QVariant>> data;
+
+        void invalidateRows(int from, int to) {
+            for (int r = from; r <= to; ++r) data.erase(r);
+        }
+        void clear() { data.clear(); }
+
+        const QVariant* get(int row, int col) const {
+            auto it = data.find(row);
+            if (it == data.end()) return nullptr;
+            auto jt = it->second.find(col);
+            return (jt != it->second.end()) ? &jt->second : nullptr;
+        }
+        void put(int row, int col, QVariant v) {
+            data[row][col] = std::move(v);
+        }
+    };
+    mutable BgCache m_bgCache;
 };
 

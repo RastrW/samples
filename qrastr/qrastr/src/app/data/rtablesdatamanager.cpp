@@ -281,7 +281,6 @@ void RTablesDataManager::handleChangeColumn(const std::string& tname,
 void RTablesDataManager::handleChangeRow(const std::string& tname, long row)
 {
     // Изменились все колонки одной строки.
-
     QDataBlock* pqdb = findCachedBlock(tname);
     if (!pqdb) return;
 
