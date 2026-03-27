@@ -71,7 +71,7 @@ public :
     }
     double res(std::string _str) {
         bool bfindop = false;
-        std::cout << "expr::" << _str << std::endl;
+        //std::cout << "expr::" << _str << std::endl;
         for (auto& op : operators)
         {
             auto operands = split2(_str, op.first);
@@ -88,7 +88,7 @@ public :
         }
         if (!bfindop)
         {
-            std::cout << "val: " << _str << std::endl;
+            //std::cout << "val: " << _str << std::endl;
             return _str.empty()?0.0: std::stod(trim(_str).c_str());
         }
         return 0.0;

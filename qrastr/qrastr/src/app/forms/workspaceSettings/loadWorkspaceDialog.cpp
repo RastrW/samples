@@ -1,13 +1,14 @@
-#include "loadworkspacedialog.h"
+#include "loadWorkspaceDialog.h"
 
 #include <QMessageBox>
 #include <QTreeWidget>
+#include <QDialogButtonBox>
 #include <QHeaderView>
 
 LoadWorkspaceDialog::LoadWorkspaceDialog(const QStringList &workspaces,
                                          const QString     &startupName,
                                          QWidget           *parent)
-    : WorkspaceDialogBase(workspaces, parent)
+    : WorkSpaceDialogBase(workspaces, parent)
 {
     setWindowTitle(tr("Загрузить рабочую область"));
 

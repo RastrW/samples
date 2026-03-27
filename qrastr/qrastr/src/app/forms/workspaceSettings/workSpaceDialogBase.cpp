@@ -1,10 +1,10 @@
-#include "workspacedialogbase.h"
+#include "workSpaceDialogBase.h"
 #include <QDialogButtonBox>
 #include <QTreeWidget>
 #include <QVBoxLayout>
 #include <QStringList>
 
-WorkspaceDialogBase::WorkspaceDialogBase(const QStringList &workspaces,
+WorkSpaceDialogBase::WorkSpaceDialogBase(const QStringList &workspaces,
                                          QWidget           *parent)
     : QDialog(parent)
     , m_tree(new QTreeWidget(this))
@@ -27,17 +27,17 @@ WorkspaceDialogBase::WorkspaceDialogBase(const QStringList &workspaces,
     connect(m_buttonBox, &QDialogButtonBox::rejected, this, &QDialog::reject);
 }
 
-void WorkspaceDialogBase::insertWidgetAboveList(QWidget *widget)
+void WorkSpaceDialogBase::insertWidgetAboveList(QWidget *widget)
 {
     m_aboveWidgets.append(widget);
 }
 
-void WorkspaceDialogBase::insertWidgetBelowList(QWidget *widget)
+void WorkSpaceDialogBase::insertWidgetBelowList(QWidget *widget)
 {
     m_belowWidgets.append(widget);
 }
 
-void WorkspaceDialogBase::finalizeLayout()
+void WorkSpaceDialogBase::finalizeLayout()
 {
     for (auto* w : m_aboveWidgets){
         m_mainLayout->addWidget(w);

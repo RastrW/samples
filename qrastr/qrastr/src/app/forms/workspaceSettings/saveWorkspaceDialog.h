@@ -1,7 +1,6 @@
 #pragma once
 
-#include "workspacedialogbase.h"
-
+#include "workSpaceDialogBase.h"
 
 class QTreeWidget;
 class QButtonGroup;
@@ -15,7 +14,7 @@ class QRadioButton;
  *  - добавлять новую рабочую область (кнопка «Добавить» раскрывает поле ввода);
  *  - устанавливать флаг «Загрузка при старте»;
  */
-class SaveWorkspaceDialog : public WorkspaceDialogBase
+class SaveWorkspaceDialog : public WorkSpaceDialogBase
 {
     Q_OBJECT
 

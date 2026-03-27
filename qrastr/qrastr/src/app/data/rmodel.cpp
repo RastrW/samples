@@ -106,7 +106,7 @@ QVariant RModel::data(const QModelIndex& index, int role) const
         }
         // Для числовых колонок без справочника — форматируем отображение
         // иначе редактор открывается с сырым double вроде 78.99999022339689
-        if (item.typeId() == QMetaType::Double) {
+        if (item.type() == QVariant::Double) {
             const auto info = getColumnEditorInfo(col);
             if (info.editorType == ColumnEditorInfo::Type::Numeric)
                 return QString::number(item.toDouble(), 'f', info.decimals);

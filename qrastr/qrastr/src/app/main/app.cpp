@@ -1,8 +1,11 @@
+#include "app.h"
+
+#include <memory>
 #include <QString>
 #include <QSettings>
 #include <QMessageBox>
 #include <QPluginLoader>
-#include "app.h"
+
 #include "common_qrastr.h"
 #include <spdlog/sinks/stdout_color_sinks.h>
 #include <spdlog/sinks/rotating_file_sink.h>
@@ -69,7 +72,7 @@ bool App::init(){
         auto qt_sink = std::make_shared<QtSink>();
         logg->sinks().push_back(qt_sink);
 #else
-        auto console_sink = std::make_shared<spdlog::sinks::wincolor_stdout_sink_mt>();
+        auto console_sink = std::make_shared<spdlog::sinks::ansicolor_stdout_sink_mt>();
         logg->sinks().push_back(console_sink);
 #endif
         bool res = readSettings();

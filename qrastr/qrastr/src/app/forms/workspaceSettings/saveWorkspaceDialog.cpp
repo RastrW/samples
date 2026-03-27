@@ -1,4 +1,4 @@
-#include "saveworkspacedialog.h"
+#include "saveWorkspaceDialog.h"
 
 #include <QLabel>
 #include <QMessageBox>
@@ -12,11 +12,12 @@
 #include <QHeaderView>
 #include <QRadioButton>
 #include <QAbstractButton>
+#include <QDialogButtonBox>
 
 SaveWorkspaceDialog::SaveWorkspaceDialog(const QStringList &workspaces,
                                          const QString     &startupName,
                                          QWidget           *parent)
-    : WorkspaceDialogBase(workspaces, parent)
+    : WorkSpaceDialogBase(workspaces, parent)
     , m_radioGroup(new QButtonGroup(this))
     , m_deleteButton(new QPushButton(tr("Удалить"), this))
 {

@@ -6,7 +6,7 @@
 #   - AstraLinux 1.8 (gcc)
 #
 # Все платформы  используют библиотеки из thirdparty
-# ============================================================================
+# ===============================================a=============================
 
 cmake_minimum_required(VERSION 3.23)
 message(STATUS "CMake version: ${CMAKE_VERSION}")
@@ -218,7 +218,6 @@ add_subdirectory(
     "${QMCR_SOURCE_DIR}"
 )
 message(STATUS "qmcr subproject added")
-
 # ============================================================================
 # Third-Party Libraries
 # ----------------------------------------------------------------------------
@@ -489,9 +488,12 @@ function(copy_runtime_file_if_exists target src comment)
     endif()
 endfunction()
 
+# Временное решение ввиду отсутствия .so сборок
+if(WIN32)
 copy_runtime_file(${PROJECT_NAME} "${SVG_DLL_FILE}" "Copying SVGgenerator (${CONFIG_DIR})")
 copy_runtime_file(${PROJECT_NAME} "${EGC_DLL_FILE}" "Copying ElGraphCtrl (${CONFIG_DIR})")
 copy_runtime_file(${PROJECT_NAME} "${GR_CTRL_CLIENT_DLL_FILE}" "Copying GrCtrlClient (${CONFIG_DIR})")
+endif()
 
 if(WIN32 AND CMAKE_BUILD_TYPE MATCHES Debug)
     set(SVG_PDB_FILE "${SVG_PLATFORM_DIR}/${CONFIG_DIR}/SVGgenerator.pdb")

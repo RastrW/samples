@@ -6,12 +6,12 @@ class QDialogButtonBox;
 class QVBoxLayout;
 
 /// @brief Базовый класс для диалогов работы с рабочими областями.
-class WorkspaceDialogBase : public QDialog
+class WorkSpaceDialogBase : public QDialog
 {
     Q_OBJECT
 
 public:
-    explicit WorkspaceDialogBase(const QStringList &workspaces,
+    explicit WorkSpaceDialogBase(const QStringList &workspaces,
                                  QWidget           *parent = nullptr);
 
 protected:

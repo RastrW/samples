@@ -5,7 +5,7 @@
 #if defined(Q_OS_WIN)
 using InitPlainDLL_t = IPlainElGraph* (__cdecl*)();
 #else
-///@todo что делать на linux?
+using InitPlainDLL_t = IPlainElGraph* (*)();
 #endif
 
 ElGraphService::ElGraphService(){

@@ -5,6 +5,7 @@
 #include <QMenu>
 #include <QAction>
 #include <QList>
+#include <QSet>
 #include <list>
 #include <memory>
 #include <rtablesdatamanager.h>

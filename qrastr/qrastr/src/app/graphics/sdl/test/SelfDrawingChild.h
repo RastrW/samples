@@ -1,5 +1,5 @@
 #pragma once
-
+#if defined(Q_OS_WIN)
 // Скрываем платформенные типы за void*
 // чтобы не тащить windows.h / Xlib.h в заголовок
 class SelfDrawingChild
@@ -23,3 +23,4 @@ private:
                                   unsigned long long wp, long long lp);
     static bool registerClass();
 };
+#endif

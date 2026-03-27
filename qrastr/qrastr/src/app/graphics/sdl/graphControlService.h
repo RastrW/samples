@@ -10,7 +10,9 @@ using GCC_InitControl_t  = void (__cdecl*)(IPlainElGraph*, void*);
 using GCC_CloseControl_t = void (__cdecl*)(IPlainElGraph*);
 using GCC_InitPlainDLL_t = void(__cdecl*)(IPlainRastr*, const char*);
 #else
-///@todo
+using GCC_InitControl_t  = void (*)(IPlainElGraph*, void*);
+using GCC_CloseControl_t = void (*)(IPlainElGraph*);
+using GCC_InitPlainDLL_t = void (*)(IPlainRastr*, const char*);
 #endif
 
 /**

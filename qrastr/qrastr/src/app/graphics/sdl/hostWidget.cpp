@@ -36,10 +36,12 @@ bool HostWidget::init()
 
     bool testWindow = false;
     if (testWindow) {
+#if defined(Q_OS_WIN)
         if (!m_testChild.create(parentHandle, 0, 0, width(), height())) {
             spdlog::error("HostWidget::init: SelfDrawingChild::create завершился с ошибкой");
             return false;
         }
+#endif
     }
     if (!testWindow) {
         if (!m_elGraph.init(parentHandle)) {
@@ -53,12 +55,16 @@ bool HostWidget::init()
 
 void HostWidget::onClose()
 {
+#if defined(Q_OS_WIN)
     m_testChild.destroy();
+#endif
     m_elGraph.shutdown();
 }
 
 void HostWidget::resizeEvent(QResizeEvent* event)
 {
     QWidget::resizeEvent(event);
+#if defined(Q_OS_WIN)
     m_testChild.resize(0, 0, event->size().width(), event->size().height());
+#endif
 }

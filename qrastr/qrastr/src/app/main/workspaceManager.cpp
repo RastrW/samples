@@ -1,5 +1,5 @@
 #include "workspaceManager.h"
-#include "FormManager.h"
+#include "formManager.h"
 #include "workspaceSettings/saveWorkspaceDialog.h"
 #include "workspaceSettings/loadWorkspaceDialog.h"
 

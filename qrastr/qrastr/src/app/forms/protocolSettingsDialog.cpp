@@ -1,4 +1,4 @@
-#include "protocolsettingsdialog.h"
+#include "protocolSettingsDialog.h"
 #include <QVBoxLayout>
 
 ProtocolSettingsDialog::ProtocolSettingsDialog(QWidget* parent)

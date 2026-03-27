@@ -2,6 +2,11 @@
 #include <astra/IPlainRastr.h>
 #include "protocoltreemodel.h"
 
+inline uint qHash(LogMessageTypes key, uint seed = 0) noexcept
+{
+    return ::qHash(static_cast<int>(key), seed);
+}
+
 ProtocolFilterProxyModel::ProtocolFilterProxyModel
     (QObject* parent)
 	: QSortFilterProxyModel(parent)

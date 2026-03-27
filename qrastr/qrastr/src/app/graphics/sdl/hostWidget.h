@@ -30,5 +30,7 @@ protected:
 
 private:
     ElGraphService   m_elGraph;
+    #if defined(Q_OS_WIN)
     SelfDrawingChild m_testChild;
+    #endif
 };

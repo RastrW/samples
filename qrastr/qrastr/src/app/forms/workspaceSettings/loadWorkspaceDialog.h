@@ -1,6 +1,6 @@
 #pragma once
 
-#include "workspacedialogbase.h"
+#include "workSpaceDialogBase.h"
 
 /**
  * @brief Диалог "Загрузить рабочую область".
@@ -9,7 +9,7 @@
  * Вторая колонка показывает, какая область будет загружена при старте,
  * но доступна только для чтения — изменить её через этот диалог нельзя.
  */
-class LoadWorkspaceDialog : public WorkspaceDialogBase
+class LoadWorkspaceDialog : public WorkSpaceDialogBase
 {
     Q_OBJECT
 

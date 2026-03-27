@@ -41,7 +41,9 @@ private:
     QTimer*       m_timer    = nullptr;
 
     ElGraphService m_elGraph;
+#if defined(Q_OS_WIN)
     // ТЕСТ: временное нативное окно вместо m_elGraph.
     // Рисует прямоугольник, меняющий цвет каждые 500 мс (GDI/Xlib).
     SelfDrawingChild m_testChild;
+#endif
 };

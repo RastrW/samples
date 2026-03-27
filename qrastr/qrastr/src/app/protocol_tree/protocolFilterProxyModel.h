@@ -3,6 +3,7 @@
 #include <QAbstractItemModel>
 #include <QModelIndex>
 #include <QVariant>
+#include <QSet>
 #include <QSortFilterProxyModel>
 
 class ProtocolTreeItem;

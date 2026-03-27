@@ -18,10 +18,6 @@ int main(int argc, char *argv[]){
 
     App app(argc, argv);
 
-    QTextCodec::setCodecForLocale(QTextCodec::codecForName("UTF-8"));
-    SetConsoleOutputCP(CP_UTF8);
-    SetConsoleCP(CP_UTF8);
-
     //Compile test
     //pqxx::connection cx{"postgresql://accounting@localhost/company"};
     //pqxx::work tx{cx};
