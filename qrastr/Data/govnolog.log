@@ -4,3 +4,29 @@
 		<-ShutdownPlainDLL
 		->GCC::DLL_PROCESS_DETACH
 		<-GCC::DLL_PROCESS_DETACH
+		GCC::DLL_PROCESS_ATTACH
+		->ShutdownPlainDLL
+		~_GlobalData
+		<-ShutdownPlainDLL
+		->GCC::DLL_PROCESS_DETACH
+		<-GCC::DLL_PROCESS_DETACH
+		GCC::DLL_PROCESS_ATTACH
+		GCC::DLL_PROCESS_ATTACH
+		GCC::DLL_PROCESS_ATTACH
+		->ShutdownPlainDLL
+		~_GlobalData
+		<-ShutdownPlainDLL
+		->GCC::DLL_PROCESS_DETACH
+		<-GCC::DLL_PROCESS_DETACH
+		GCC::DLL_PROCESS_ATTACH
+		->ShutdownPlainDLL
+		~_GlobalData
+		<-ShutdownPlainDLL
+		->GCC::DLL_PROCESS_DETACH
+		<-GCC::DLL_PROCESS_DETACH
+		GCC::DLL_PROCESS_ATTACH
+		->ShutdownPlainDLL
+		~_GlobalData
+		<-ShutdownPlainDLL
+		->GCC::DLL_PROCESS_DETACH
+		<-GCC::DLL_PROCESS_DETACH

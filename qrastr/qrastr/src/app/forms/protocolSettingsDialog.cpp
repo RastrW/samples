@@ -7,15 +7,15 @@ ProtocolSettingsDialog::ProtocolSettingsDialog(QWidget* parent)
     setWindowTitle(tr("Свойства протокола"));
     setModal(true);
 
-    m_chkCollapse = new QCheckBox(tr("Сворачивать стадии без ошибок"), this);
-    m_chkXml      = new QCheckBox(tr("Копировать буфер в XML"),        this);
+    m_cbCollapse = new QCheckBox(tr("Сворачивать стадии без ошибок"), this);
+    m_cbXml      = new QCheckBox(tr("Копировать буфер в XML"),        this);
 
     m_buttons = new QDialogButtonBox(
         QDialogButtonBox::Ok | QDialogButtonBox::Cancel, this);
 
     auto* lay = new QVBoxLayout(this);
-    lay->addWidget(m_chkCollapse);
-    lay->addWidget(m_chkXml);
+    lay->addWidget(m_cbCollapse);
+    lay->addWidget(m_cbXml);
     lay->addStretch();
     lay->addWidget(m_buttons);
 
@@ -29,20 +29,20 @@ ProtocolSettingsDialog::ProtocolSettingsDialog(QWidget* parent)
 }
 
 bool ProtocolSettingsDialog::collapseCleanStages() const {
-    return m_chkCollapse->isChecked();
+    return m_cbCollapse->isChecked();
 }
 bool ProtocolSettingsDialog::copyAsXml() const {
-    return m_chkXml->isChecked();
+    return m_cbXml->isChecked();
 }
 
 void ProtocolSettingsDialog::load() {
     QSettings s;
-    m_chkCollapse->setChecked(s.value(kKeyCollapse, true).toBool());
-    m_chkXml     ->setChecked(s.value(kKeyXml,      false).toBool());
+    m_cbCollapse->setChecked(s.value(kKeyCollapse, true).toBool());
+    m_cbXml     ->setChecked(s.value(kKeyXml,      false).toBool());
 }
 
 void ProtocolSettingsDialog::save() {
     QSettings s;
-    s.setValue(kKeyCollapse, m_chkCollapse->isChecked());
-    s.setValue(kKeyXml,      m_chkXml->isChecked());
+    s.setValue(kKeyCollapse, m_cbCollapse->isChecked());
+    s.setValue(kKeyXml,      m_cbXml->isChecked());
 }

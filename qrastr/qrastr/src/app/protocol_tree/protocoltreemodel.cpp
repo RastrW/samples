@@ -49,7 +49,8 @@ Qt::ItemFlags ProtocolTreeModel::flags(const QModelIndex &index) const{
         ? QAbstractItemModel::flags(index) : Qt::ItemFlags(Qt::NoItemFlags);
 }
 
-QVariant ProtocolTreeModel::headerData(int section, Qt::Orientation orientation, int role) const{
+QVariant ProtocolTreeModel::headerData
+    (int section, Qt::Orientation orientation, int role) const{
     return orientation == Qt::Horizontal && role == Qt::DisplayRole
         ? rootItem->data(section) : QVariant{};
 }
@@ -81,4 +82,11 @@ int ProtocolTreeModel::rowCount(const QModelIndex &parent) const{
         ? static_cast<const ProtocolTreeItem*>(parent.internalPointer())
         : rootItem.get();
     return parentItem->childCount();
+}
+
+void ProtocolTreeModel::clear()
+{
+    beginResetModel();
+    rootItem->clearChildren();
+    endResetModel();
 }

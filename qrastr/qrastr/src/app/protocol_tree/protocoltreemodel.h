@@ -26,6 +26,7 @@ public:
     QModelIndex   parent(const QModelIndex& index) const override;
     int           rowCount(const QModelIndex& parent = {}) const override;
     int           columnCount(const QModelIndex& parent = {}) const override;
+    void clear();
 
     ProtocolTreeItem*                 getRootItem()   const { return rootItem.get(); }
     std::shared_ptr<ProtocolTreeItem> getRootItemSp() const { return rootItem; }

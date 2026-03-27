@@ -46,7 +46,7 @@ ProtocolTreeItem* ProtocolTreeItem::parentItem(){
     return pti_parent_;
 }
 
-int ProtocolTreeItem::row() const{ ///@todo REFACTOR THIS!
+int ProtocolTreeItem::row() const{
     if (pti_parent_ == nullptr)
         return 0;
     const auto it = std::find_if(pti_parent_->vsptis_.cbegin(), pti_parent_->vsptis_.cend(),

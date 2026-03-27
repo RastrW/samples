@@ -26,7 +26,6 @@ static const char* kIconPaths[] = {
     ":images/new_style/idea.png",         // 4 — message
 };
 
-
 MainProtocolWidget::MainProtocolWidget(QWidget* parent)
     : QWidget(parent)
 {
@@ -68,10 +67,10 @@ void MainProtocolWidget::setupFilterPanel(QVBoxLayout* layout) {
         return btn;
     };
 
-    m_btnAll     = makeBtn(tr("Все"),          "#555555");
-    m_btnError   = makeBtn(tr(""),       "#c0392b",
+    m_btnAll     = makeBtn(tr("Все"), "#555555");
+    m_btnError   = makeBtn(tr(""),    "#c0392b",
                             iconByIndex(iconIndexForMessage(LogMessageTypes::Error)));
-    m_btnWarning = makeBtn(tr(""),     "#e67e22",
+    m_btnWarning = makeBtn(tr(""),    "#e67e22",
                             iconByIndex(iconIndexForMessage(LogMessageTypes::Warning)));
     m_btnMessage = makeBtn(tr(""),    "#2980b9",
                             iconByIndex(iconIndexForMessage(LogMessageTypes::Message)));
@@ -325,15 +324,11 @@ void MainProtocolWidget::openSettingsDialog()
 
 void MainProtocolWidget::clearProtocol()
 {
-    m_model->layoutAboutToBeChanged();
-
     // Сбрасываем стек стадий до корня
-    while (m_stages.size() > 1) m_stages.pop();
+    while (m_stages.size() > 1)
+        m_stages.pop();
 
-    // Очищаем корневой элемент
-    m_model->getRootItem()->clearChildren();
-
-    m_model->layoutChanged();
+    m_model->clear();
 }
 
 QString MainProtocolWidget::collectVisibleText() const
