@@ -18,7 +18,7 @@ private:
 
     QCheckBox*        m_cbCollapse = nullptr;
     QCheckBox*        m_cbXml      = nullptr;
-    QDialogButtonBox* m_buttons     = nullptr;
+    QDialogButtonBox* m_buttons    = nullptr;
 
     static constexpr auto kKeyCollapse = "protocol/collapseCleanStages";
     static constexpr auto kKeyXml      = "protocol/copyAsXml";

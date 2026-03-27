@@ -371,17 +371,20 @@ void RtabWidget::applyColumnEditor(int colIndex)
             column_qt->editorRepository())
             ->setAppearance(GridCheckBox::StyledAppearance);
         break;
-
     case RModel::ColumnEditorInfo::Type::Numeric: {
-        column_qt->setEditorType(GridEditor::Numeric);
-        auto* repo = static_cast<GridNumericEditorRepository*>(
+        column_qt->setEditorType(GridEditor::String);
+        // При использовании GridEditor::Numeric не удаётся убрать кнопки виджета,
+        //поэтому валидатор добавляется вручную
+        auto* repo = static_cast<GridStringEditorRepository*>(
             column_qt->editorRepository());
-        repo->setMinimum(info.minVal);
-        repo->setMaximum(info.maxVal);
-        repo->setDecimals(info.decimals);
+
+        // QDoubleValidator::decimals ограничивает знаки при вводе
+        auto* val = new QDoubleValidator(info.minVal, info.maxVal,
+                                         info.decimals, repo);
+        val->setNotation(QDoubleValidator::StandardNotation);
+        repo->setValidator(val);
         break;
     }
-
     case RModel::ColumnEditorInfo::Type::ComboBox:
         column_qt->setEditorType(GridEditor::ComboBox);
         if (!info.comboItems.isEmpty()) {
@@ -461,6 +464,10 @@ void RtabWidget::slot_addRow()
     m_view->beginUpdate();
     m_model->addRow();
     m_view->endUpdate();
+    // Переводим фокус на последнюю строку
+    int newRow = m_model->rowCount() - 1;
+    if (newRow >= 0)
+        m_view->setFocusedRowIndex(newRow);
 }
 
 void RtabWidget::slot_insertRow()

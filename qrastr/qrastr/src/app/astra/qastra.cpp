@@ -112,7 +112,8 @@ IPlainRastrRetCode QAstra::OnEvent(const IRastrEventBase& Event) noexcept {
    return IPlainRastrRetCode::Ok;
 }
 
-IPlainRastrRetCode QAstra::OnUICommand(const IRastrEventBase& Event, IPlainRastrVariant* Result) noexcept  {
+IPlainRastrRetCode QAstra::OnUICommand(const IRastrEventBase& Event,
+                                       IPlainRastrVariant* Result) noexcept  {
    EventTypes et = Event.Type();
    std::string str;
     if(Event.Type() == EventTypes::Hint){
@@ -139,10 +140,7 @@ IPlainRastrRetCode QAstra::OnUICommand(const IRastrEventBase& Event, IPlainRastr
        str = fmt::format( "EventTypes::Print" );
    }
    spdlog::info( "OnUICommand ({}): {}", static_cast<std::underlying_type<EventTypes>::type>( Event.Type()), str );
-   //Result->String("Done");
-   std::string d = "Done";
-   Result->String(d.c_str());
-    //Result->Long(0);
+   Result->String("Done");
    return IPlainRastrRetCode::Ok;
 }
 
