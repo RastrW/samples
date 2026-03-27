@@ -3,6 +3,7 @@
 #include <QFontDatabase>
 #include <QTextStream>
 #include "sciHlpBase.h"
+#include <spdlog/spdlog.h>
 
 SciHlpBase::SciHlpBase(QWidget* parent)
     : ScintillaEdit(parent){
@@ -124,9 +125,9 @@ void SciHlpBase::showAllLexer(){
     for( int nLexsNum = 0 ; nLexsNum < nNumLexs ; nLexsNum++ ){
         const char*  pchLexName = ( reinterpret_cast<_pfLexerNameFromID>(pfLexerNameFromID) )( nLexsNum );
         if(pchLexName)
-            qDebug()<<"pchLexName=["<<nLexsNum<<"]= "<<pchLexName;
+            spdlog::debug("pchLexName = [{}]= {}", nLexsNum, pchLexName);
         else
-            qDebug()<<"pchLexName=["<<nLexsNum<<"]= MY_NULL!!";
+            spdlog::debug("pchLexName=[{}]= MY_NULL!!", nLexsNum);
     }
 #endif
 }

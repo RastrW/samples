@@ -10,9 +10,9 @@
     #include <Python.h>
 #endif
 
-#include <QDebug>
 #include <regex>
 #include <QCoreApplication>
+#include <spdlog/spdlog.h>
 
 namespace PyUtils {
 
@@ -97,7 +97,7 @@ bool PyHlp::initialize()
     if (m_initialized)
         return true;
     if (Py_IsInitialized()) {
-        qWarning() << "PyHlp::initialize: Python already initialized externally, cannot proceed";
+        spdlog::warn("PyHlp::initialize: Python already initialized externally, cannot proceed");
         return false;
     }
 

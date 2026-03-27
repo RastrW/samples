@@ -23,9 +23,9 @@ RData::RData(QAstra* _pqastra, const CUIForm& _form):
 
     IRastrPayload ColumnsCount{ columns->Count() };
     long n_reserve = ColumnsCount.Value()+5;
-    qDebug() << "ColumnsCount : " << ColumnsCount.Value();
+    spdlog::debug("ColumnsCount : {}", ColumnsCount.Value());
     reserve( n_reserve);                // Без reserve RCol данные обнуляются видимио при reallocation  If a reallocation happens, all contained elements are modified.
-    qDebug() << "reserve : " << n_reserve <<" ok";
+    spdlog::debug("reserve : {} ok", n_reserve);
 
     m_str_cols = "";
     // Берем все колонки таблицы
@@ -62,8 +62,8 @@ RData::RData(QAstra* _pqastra, const CUIForm& _form):
 
     if(m_str_cols.length()>0)
         m_str_cols.pop_back();
-    qDebug() << "Open Table : " << t_name_.c_str();
-    qDebug() << "Fields : " << m_str_cols.c_str();
+    spdlog::debug("Open Table : {}", t_name_.c_str());
+    spdlog::debug("Fields : {}", m_str_cols.c_str());
 }
 
 QAstra* RData::getAstra() const { return m_qastra; }

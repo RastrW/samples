@@ -1,12 +1,11 @@
 #pragma once
 
 #include "iostream"
-#include <QDebug>
 
 using WrapperExceptionType = std::runtime_error;
 #include <astra/IPlainRastrWrappers.h>
 //#include "IPlainRastrWrappers.h"
-
+#include <spdlog/spdlog.h>
 
 // и вот тут мы наследуемся от базовых классов датаблоков, чтобы решать свои задачи
 
@@ -185,7 +184,7 @@ public:
                 }
                str_row_vals.append(std::visit(ToString(),Data()[row * ColumnsCount() + column]));
             }
-            qDebug() <<str_row_vals.c_str();
+            spdlog::debug(str_row_vals.c_str());
         }
     }
 

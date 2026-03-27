@@ -2,7 +2,6 @@
 #include <QTimer>
 #include <QFile>
 #include <QDir>
-#include <QDebug>
 #include <QResizeEvent>
 #include <spdlog/spdlog.h>
 

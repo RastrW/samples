@@ -7,7 +7,6 @@
 #include <QMessageBox>
 #include <QFileDialog>
 #include <QInputDialog>
-#include <QDebug>
 #include <QCloseEvent>
 
 #include "mcrwnd.h"
@@ -15,6 +14,7 @@
 #include "../app/astra/qastra_events_data.h"
 #include "pyhlp.h"
 #include "globalProtocolWidget.h"
+#include <spdlog/spdlog.h>
 
 McrWnd::McrWnd(QWidget* parent)
     : QDialog(parent,
@@ -41,6 +41,8 @@ McrWnd::McrWnd(QWidget* parent)
 
     connect(m_editor, &SciPyEditor::sig_fileInfoChanged,
             this, &McrWnd::slot_fileInfoChanged);
+
+    spdlog::info("McrWnd loaded");
 }
 
 McrWnd::~McrWnd() = default;

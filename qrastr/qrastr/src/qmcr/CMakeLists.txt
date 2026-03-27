@@ -114,6 +114,7 @@ target_include_directories(qmcr PRIVATE
     ${SCI_DIR}/scintilla/qt/ScintillaEdit
     ${Astra_INCLUDE_DIR}
     ${Python3_INCLUDE_DIRS}
+     ${THIRDPARTY_DIR}/spdlog/include
 )
 
 # ============================================================================

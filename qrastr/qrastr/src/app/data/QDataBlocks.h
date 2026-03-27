@@ -672,12 +672,11 @@ public :
     void QDump(long LimitRows = (std::numeric_limits<long>::max)() , long LimitCols = (std::numeric_limits<long>::max)())
     {
         // Нам в дампере пригодится возможность показывать тип
-        //qDebug() << "DataBlock dense [" << MapFieldVariantType<T>::VerbalType() << "] " << this->RowsCount() << "x" << this->ColumnsCount() << std::endl;
-        qDebug() << "DataBlock dense [" << "] " << this->RowsCount() << "x" << this->ColumnsCount();
+        spdlog::debug("DataBlock dense [{}] x ", this->RowsCount(), this->ColumnsCount());
         if (this->Indexes_.size())
-            qDebug() << "#;";
-        qDebug()<<"LimitRows = "<<LimitRows;
-        qDebug()<<"LimitCols = "<<LimitCols;
+            spdlog::debug("#;");
+        spdlog::debug("LimitRows = {}", LimitRows);
+        spdlog::debug("LimitCols = {}", LimitCols);
 
         // А также то, что мы собрали имена полей
         std::string str_columns_all = stringutils::join(this->Columns_,';');        // все столбцы
@@ -688,7 +687,7 @@ public :
             str_columns.append(";");
         }
 
-        qDebug() << str_columns.c_str();
+        spdlog::debug(str_columns.c_str());
 
         // Функции преобразования в строки я использую готовые
         for (IndexT row = 0; row < this->RowsCount() && row < LimitRows; row++)
@@ -698,11 +697,11 @@ public :
             {
                 if (column) str_row_vals.append(";");
                 else if (row < static_cast<IndexT>(this->Indexes_.size()))
-                    qDebug() << "row_index: "<< std::to_string(this->Indexes_[row]);
+                    spdlog::debug("row_index: {}", std::to_string(this->Indexes_[row]));
 
                 str_row_vals.append(std::visit(ToString(),this->Data()[row * this->ColumnsCount() + column]));
             }
-            qDebug().noquote() << str_row_vals.c_str();
+            spdlog::debug(str_row_vals.c_str());
         }
     }
 

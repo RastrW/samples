@@ -25,9 +25,9 @@ bool RModel::populateDataFromRastr()
         //структура могла смениться
         m_bgCache.clear();
     } catch (...) {
-        qCritical() << "ERROR! populateDataFromRastr:"
-                    << (m_rdata ? m_rdata->t_name_.c_str() : "<null>");
-        return false;
+       spdlog::critical("ERROR! populateDataFromRastr: {}",
+                    (m_rdata ? m_rdata->t_name_.c_str() : "<null>"));
+            return false;
     }
     return true;
 }

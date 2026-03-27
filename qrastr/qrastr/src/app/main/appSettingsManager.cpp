@@ -24,8 +24,7 @@ bool AppSettingsManager::loadAppearanceSettings(QMainWindow* window) {
         savedStyle = "windows11";
     }
     QApplication::setStyle(QStyleFactory::create(savedStyle));
-
-    qInfo() << "INI File Path:" << m_settings.fileName();
+    spdlog::info( "INI File Path: {}", m_settings.fileName().toStdString());
 
     try {
         m_settings.beginGroup("MainWindow");

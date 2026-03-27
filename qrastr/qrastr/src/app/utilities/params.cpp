@@ -145,7 +145,8 @@ bool Params::writeJsonFile(const fs::path& path_2_json)const {
             ofs << j_file.dump(1, ' ');
             ofs.close();
         }else{
-            qCritical() <<"Can't open file for write: [{}]", QString::fromStdString(path_2_json.string());
+            spdlog::critical("Can't open file for write: [{}]",
+                             path_2_json.string());
             return false;
         }
     }catch(const std::exception& ex){

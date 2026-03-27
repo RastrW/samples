@@ -1,6 +1,5 @@
 #include "graphServer.h"
 #include <QThread>
-#include <QDebug>
 #include <QCoreApplication>
 #include "graphWorker.h"
 #include "astra/IPlainRastr.h"

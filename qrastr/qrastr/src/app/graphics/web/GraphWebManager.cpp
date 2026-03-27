@@ -56,17 +56,17 @@ void GraphWebManager::openWindow()
                         Qt::QueuedConnection);
     }
 
-    /*
+
     // Диагностические подключения
     connect(webView, &QWebEngineView::loadStarted,
-            []{ qInfo() << "[webView] loadStarted"; });
+            []{ spdlog::info("[webView] loadStarted"); });
     connect(webView, &QWebEngineView::loadProgress,
-            [](int p){ qInfo() << "[webView] loadProgress:" << p; });
+            [](int p){ spdlog::info("[webView] loadProgress: {}", p); });
     connect(webView, &QWebEngineView::loadFinished,
-            [](bool ok){ qInfo() << "[webView] loadFinished, ok=" << ok; });
+            [](bool ok){ spdlog::info("[webView] loadFinished, ok= {}", ok); });
     connect(webView->page(), &QWebEnginePage::urlChanged,
-            [](const QUrl& url){ qInfo() << "[webView] urlChanged:" << url; });
-    */
+            [](const QUrl& url){spdlog::info("[webView] urlChanged: {}", url.toString().toStdString());});
+
     // Останавливаем сервер при закрытии последнего дока
     connect(dw, &ads::CDockWidget::closeRequested, this, [this]() {
         if (--m_windowCount <= 0) {

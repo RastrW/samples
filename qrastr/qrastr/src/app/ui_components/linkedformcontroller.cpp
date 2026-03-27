@@ -15,7 +15,6 @@
 #include <QtitanGrid.h>
 
 #include <QDir>
-#include <QDebug>
 
 #include <filesystem>
 #include <fstream>
@@ -182,7 +181,7 @@ void LinkedFormController::openLinkedForm(LinkedForm lf)
 
 void LinkedFormController::openLinkedMacro(LinkedMacro lm, int contextRow)
 {
-    qDebug() << "LinkedFormController: run macro" << lm.macrofile.c_str();
+    spdlog::debug("LinkedFormController: run macro {}", lm.macrofile.c_str());
 
     // Макросы лежат в <рабочая директория>/contextmacro/  с расширением .py
     fs::path macroPath = QDir::currentPath().toStdString();
@@ -192,7 +191,7 @@ void LinkedFormController::openLinkedMacro(LinkedMacro lm, int contextRow)
 
     if (!fs::exists(macroPath))
     {
-        qDebug() << "context macro not found:" << macroPath.c_str();
+        spdlog::debug("context macro not found: {}", macroPath.string());
         return;
     }
 
