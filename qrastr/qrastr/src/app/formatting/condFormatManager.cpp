@@ -54,19 +54,27 @@ CondFormatManager::~CondFormatManager(){}
 
 void CondFormatManager::setupWidgets()
 {
-    resize(750, 400);
-    setWindowTitle(tr("Conditional Format Manager"));
+    resize(750, 700);
+    setWindowTitle(tr("Условное форматирование"));
 
     auto* rootLayout = new QVBoxLayout(this);
 
     // ── Описание ─────────────────────────────────────────────────────────────
     m_labelTitle = new QLabel(
-        tr("This dialog allows creating and editing conditional formats. "
-           "Each cell style will be selected by the first accomplished condition "
-           "for that cell data. Conditional formats can be moved up and down, "
-           "where those at higher rows take precedence over those at lower. "
-           "Syntax for conditions is the same as for filters and an empty "
-           "condition applies to all values."),
+        tr("Условное форматирование применяет стиль ячейки по первому совпавшему правилу сверху вниз.\n"
+           "\n"
+           "Синтаксис условия:\n"
+           "  >5         — значение больше 5\n"
+           "  <>0        — не равно нулю\n"
+           "  10~50      — в диапазоне от 10 до 50 (включительно)\n"
+           "  /авар/     — значение в строке соответствует регулярному выражению «авар»\n"
+           "  (пусто)    — применяется ко всем значениям (правило по умолчанию)\n"
+           "\n"
+           "В условии можно ссылаться на другие колонки той же строки по их имени:\n"
+           "  >i_max       — значение больше, чем значение колонки i_max в этой строке\n"
+           "\n"
+           "Правила применяются сверху вниз: побеждает первое, чьё условие выполнилось.\n"
+           "Поместите более специфичные условия выше общих — иначе общее правило сработает раньше."),
         this);
     m_labelTitle->setWordWrap(true);
     rootLayout->addWidget(m_labelTitle);
@@ -88,10 +96,10 @@ void CondFormatManager::setupWidgets()
         return btn;
     };
 
-    m_buttonAdd    = makeButton(":/icons/field_add",    tr("&Add"),       tr("Add new conditional format"));
-    m_buttonRemove = makeButton(":/icons/field_delete", tr("&Remove"),    tr("Remove selected conditional format"));
-    m_buttonUp     = makeButton(":/icons/up",           tr("Move &up"),   tr("Move selected conditional format up"));
-    m_buttonDown   = makeButton(":/icons/down",         tr("Move &down"), tr("Move selected conditional format down"));
+    m_buttonAdd    = makeButton(":/icons/field_add",    tr("&Добавить"), tr("Добавить новое условие форматирования"));
+    m_buttonRemove = makeButton(":/icons/field_delete", tr("&Удалить"),  tr("Удалить выбранное условие"));
+    m_buttonUp     = makeButton(":/icons/up",           tr("&Выше"),     tr("Повысить приоритет: переместить условие на строку вверх"));
+    m_buttonDown   = makeButton(":/icons/down",         tr("&Ниже"),     tr("Понизить приоритет: переместить условие на строку вниз"));
 
     toolLayout->addWidget(m_buttonAdd);
     toolLayout->addWidget(m_buttonRemove);
@@ -105,21 +113,21 @@ void CondFormatManager::setupWidgets()
 
     // Заголовок: колонки с иконками (Bold/Italic/Underline) и текстовые.
     auto* header = new QTreeWidgetItem;
-    header->setText(ColumnForeground, tr("Foreground"));
-    header->setToolTip(ColumnForeground, tr("Text color"));
-    header->setText(ColumnBackground, tr("Background"));
-    header->setToolTip(ColumnBackground, tr("Background color"));
-    header->setText(ColumnFont,       tr("Font"));
-    header->setText(ColumnSize,       tr("Size"));
+    header->setText(ColumnForeground, tr("Цвет текста"));
+    header->setToolTip(ColumnForeground, tr("Нажмите, чтобы выбрать цвет текста"));
+    header->setText(ColumnBackground, tr("Фон"));
+    header->setToolTip(ColumnBackground, tr("Нажмите, чтобы выбрать цвет фона"));
+    header->setText(ColumnFont, tr("Шрифт"));
+    header->setText(ColumnSize, tr("Размер"));
     // Колонки Bold/Italic/Underline — только иконки, текст пустой
-    header->setIcon(ColumnBold,      QIcon(":/icons/text_bold"));
-    header->setToolTip(ColumnBold,   tr("Bold"));
-    header->setIcon(ColumnItalic,    QIcon(":/icons/text_italic"));
-    header->setToolTip(ColumnItalic, tr("Italic"));
-    header->setIcon(ColumnUnderline, QIcon(":/icons/text_underline"));
-    header->setToolTip(ColumnUnderline, tr("Underline"));
-    header->setText(ColumnAlignment, tr("Alignment"));
-    header->setText(ColumnFilter,    tr("Condition"));
+    header->setIcon(ColumnBold,         QIcon(":/icons/text_bold"));
+    header->setToolTip(ColumnBold,      tr("Жирный"));
+    header->setIcon(ColumnItalic,       QIcon(":/icons/text_italic"));
+    header->setToolTip(ColumnItalic,    tr("Курсив"));
+    header->setIcon(ColumnUnderline,    QIcon(":/icons/text_underline"));
+    header->setToolTip(ColumnUnderline, tr("Подчёркивание"));
+    header->setText(ColumnAlignment, tr("Выравнивание"));
+    header->setText(ColumnFilter,    tr("Условие"));
     m_table->setHeaderItem(header);
 
     // Настройки внешнего вида
@@ -187,8 +195,8 @@ void CondFormatManager::addItem(const CondFormat& aCondFormat)
     item->setBackground(ColumnForeground, aCondFormat.foregroundColor());
     item->setForeground(ColumnBackground, aCondFormat.backgroundColor());
     item->setBackground(ColumnBackground, aCondFormat.backgroundColor());
-    item->setToolTip(ColumnForeground, tr("Click to select color"));
-    item->setToolTip(ColumnBackground, tr("Click to select color"));
+    item->setToolTip(ColumnForeground, tr("Нажмите, чтобы выбрать цвет текста"));
+    item->setToolTip(ColumnBackground, tr("Нажмите, чтобы выбрать цвет фона"));
 
     auto* fontCombo = new QFontComboBox(m_table);
     fontCombo->setCurrentFont(aCondFormat.font());
@@ -344,7 +352,7 @@ void CondFormatManager::buttonBoxClicked(QAbstractButton* button)
         const auto answer = QMessageBox::warning(
             this,
             QApplication::applicationName(),
-            tr("Are you sure you want to clear all the conditional formats of this field?"),
+            tr("Удалить все условия форматирования для этой колонки?"),
             QMessageBox::Reset | QMessageBox::Cancel,
             QMessageBox::Cancel);
         if (answer == QMessageBox::Reset)
