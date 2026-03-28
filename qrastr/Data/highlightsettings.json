@@ -40,6 +40,13 @@
    ]
   },
   "vetv": {
+   "i_msi": [
+    {
+     "bgColor": "#ff0000",
+     "fgColor": "#ffffff",
+     "filter": "> 0.8*i_max"
+    }
+   ],
    "pl_ip": [
     {
      "bgColor": "#004586",

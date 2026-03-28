@@ -1,5 +1,4 @@
 #include "condFormatManager.h"
-#include "ui_CondFormatManager.h"
 #include "condFormat.h"
 #include "Settings.h"
 #include "filterlineedit.h"
@@ -13,6 +12,12 @@
 #include <QSpinBox>
 #include <QComboBox>
 #include <QStyledItemDelegate>
+#include <QVBoxLayout>
+#include <QToolButton>
+#include <QTreeWidget>
+#include <QApplication>
+#include <QHeaderView>
+#include <QLabel>
 
 // Styled Item Delegate for non-editable columns (all except Condition)
 class DefaultDelegate: public QStyledItemDelegate {
@@ -37,181 +42,266 @@ public:
 
 CondFormatManager::CondFormatManager(const std::vector<CondFormat>& condFormats, const QString& encoding, QWidget *parent) :
     QDialog(parent),
-    ui(new Ui::CondFormatManager),
-    m_condFormats(condFormats),
     m_encoding(encoding)
 {
-    ui->setupUi(this);
+    setupWidgets();
 
-    for(const CondFormat& aCondFormat : condFormats)
-        addItem(aCondFormat);
-
-    // Make condition editable as a filter line editor.
-    ui->tableCondFormats->setEditTriggers(QAbstractItemView::AllEditTriggers);
-    ui->tableCondFormats->setItemDelegateForColumn(ColumnFilter, new FilterEditDelegate(this));
-
-    // Make columns not text-editable, except for the condition.
-    for(int col = ColumnForeground; col < ColumnFilter; ++col) {
-        ui->tableCondFormats->setItemDelegateForColumn(col, new DefaultDelegate(this));
-        ui->tableCondFormats->resizeColumnToContents(col);
-    }
-
-    connect(ui->buttonAdd, &QToolButton::clicked, this, &CondFormatManager::addNewItem);
-    connect(ui->buttonRemove, &QToolButton::clicked, this, &CondFormatManager::removeItem);
-
-    connect(ui->buttonDown, &QToolButton::clicked, this, &CondFormatManager::downItem);
-    connect(ui->buttonUp, &QToolButton::clicked, this, &CondFormatManager::upItem);
-
-    connect(ui->tableCondFormats, &QTreeWidget::itemClicked, this, &CondFormatManager::itemClicked);
+    for (const CondFormat& cf : condFormats)
+        addItem(cf);
 }
 
-CondFormatManager::~CondFormatManager()
+CondFormatManager::~CondFormatManager(){}
+
+void CondFormatManager::setupWidgets()
 {
-    delete ui;
+    resize(750, 400);
+    setWindowTitle(tr("Conditional Format Manager"));
+
+    auto* rootLayout = new QVBoxLayout(this);
+
+    // ── Описание ─────────────────────────────────────────────────────────────
+    m_labelTitle = new QLabel(
+        tr("This dialog allows creating and editing conditional formats. "
+           "Each cell style will be selected by the first accomplished condition "
+           "for that cell data. Conditional formats can be moved up and down, "
+           "where those at higher rows take precedence over those at lower. "
+           "Syntax for conditions is the same as for filters and an empty "
+           "condition applies to all values."),
+        this);
+    m_labelTitle->setWordWrap(true);
+    rootLayout->addWidget(m_labelTitle);
+
+    // ── Панель кнопок управления строками ────────────────────────────────────
+    auto* toolLayout = new QHBoxLayout;
+
+    // Создать QToolButton с иконкой, текстом и подсказкой.
+    auto makeButton = [this](const QString& iconPath,
+                             const QString& text,
+                             const QString& tooltip) -> QToolButton*
+    {
+        auto* btn = new QToolButton(this);
+        btn->setIcon(QIcon(iconPath));
+        btn->setText(text);
+        btn->setToolTip(tooltip);
+        btn->setToolButtonStyle(Qt::ToolButtonTextBesideIcon);
+        btn->setAutoRaise(true);
+        return btn;
+    };
+
+    m_buttonAdd    = makeButton(":/icons/field_add",    tr("&Add"),       tr("Add new conditional format"));
+    m_buttonRemove = makeButton(":/icons/field_delete", tr("&Remove"),    tr("Remove selected conditional format"));
+    m_buttonUp     = makeButton(":/icons/up",           tr("Move &up"),   tr("Move selected conditional format up"));
+    m_buttonDown   = makeButton(":/icons/down",         tr("Move &down"), tr("Move selected conditional format down"));
+
+    toolLayout->addWidget(m_buttonAdd);
+    toolLayout->addWidget(m_buttonRemove);
+    toolLayout->addWidget(m_buttonUp);
+    toolLayout->addWidget(m_buttonDown);
+    toolLayout->addStretch();
+    rootLayout->addLayout(toolLayout);
+
+    // ── Таблица условий ──────────────────────────────────────────────────────
+    m_table = new QTreeWidget(this);
+
+    // Заголовок: колонки с иконками (Bold/Italic/Underline) и текстовые.
+    auto* header = new QTreeWidgetItem;
+    header->setText(ColumnForeground, tr("Foreground"));
+    header->setToolTip(ColumnForeground, tr("Text color"));
+    header->setText(ColumnBackground, tr("Background"));
+    header->setToolTip(ColumnBackground, tr("Background color"));
+    header->setText(ColumnFont,       tr("Font"));
+    header->setText(ColumnSize,       tr("Size"));
+    // Колонки Bold/Italic/Underline — только иконки, текст пустой
+    header->setIcon(ColumnBold,      QIcon(":/icons/text_bold"));
+    header->setToolTip(ColumnBold,   tr("Bold"));
+    header->setIcon(ColumnItalic,    QIcon(":/icons/text_italic"));
+    header->setToolTip(ColumnItalic, tr("Italic"));
+    header->setIcon(ColumnUnderline, QIcon(":/icons/text_underline"));
+    header->setToolTip(ColumnUnderline, tr("Underline"));
+    header->setText(ColumnAlignment, tr("Alignment"));
+    header->setText(ColumnFilter,    tr("Condition"));
+    m_table->setHeaderItem(header);
+
+    // Настройки внешнего вида
+    m_table->setSizeAdjustPolicy(QAbstractScrollArea::AdjustToContents);
+    m_table->setEditTriggers(QAbstractItemView::AllEditTriggers);
+    m_table->setTabKeyNavigation(true);
+    m_table->setSelectionBehavior(QAbstractItemView::SelectItems);
+    m_table->setIndentation(0);
+    m_table->setRootIsDecorated(false);
+    m_table->setUniformRowHeights(true);
+    m_table->setItemsExpandable(false);
+    m_table->setExpandsOnDoubleClick(false);
+    m_table->header()->setMinimumSectionSize(25);
+
+    // Делегаты: колонка Filter — FilterLineEdit, остальные — не редактируемые
+    m_table->setItemDelegateForColumn(ColumnFilter, new FilterEditDelegate(this));
+    for (int col = ColumnForeground; col < ColumnFilter; ++col) {
+        m_table->setItemDelegateForColumn(col, new DefaultDelegate(this));
+        m_table->resizeColumnToContents(col);
+    }
+
+    rootLayout->addWidget(m_table);
+
+    // ── Кнопки Ok/Cancel/Help/Reset ──────────────────────────────────────────
+    m_buttonBox = new QDialogButtonBox(
+        QDialogButtonBox::Ok | QDialogButtonBox::Cancel |
+            QDialogButtonBox::Help | QDialogButtonBox::Reset,
+        Qt::Horizontal, this);
+    rootLayout->addWidget(m_buttonBox);
+
+    // ── Соединения ───────────────────────────────────────────────────────────
+    connect(m_buttonAdd,    &QToolButton::clicked, this, &CondFormatManager::addNewItem);
+    connect(m_buttonRemove, &QToolButton::clicked, this, &CondFormatManager::removeItem);
+    connect(m_buttonUp,     &QToolButton::clicked, this, &CondFormatManager::upItem);
+    connect(m_buttonDown,   &QToolButton::clicked, this, &CondFormatManager::downItem);
+    connect(m_table, &QTreeWidget::itemClicked, this, &CondFormatManager::itemClicked);
+    connect(m_buttonBox, &QDialogButtonBox::clicked, this, &CondFormatManager::buttonBoxClicked);
 }
 
 void CondFormatManager::addNewItem()
 {
-    // Clear focus from the current widget, so if there is some input, it is saved now.
-    QWidget* currentWidget = ui->tableCondFormats->itemWidget(ui->tableCondFormats->currentItem(), ColumnFilter);
-    if (currentWidget != nullptr)
-        currentWidget->clearFocus();
+    // Сохранить текущий ввод в FilterLineEdit перед добавлением новой строки
+    QWidget* current = m_table->itemWidget(m_table->currentItem(), ColumnFilter);
+    if (current) current->clearFocus();
 
     QFont font = QFont(Settings::getValue("databrowser", "font").toString());
     font.setPointSize(Settings::getValue("databrowser", "fontsize").toInt());
 
-    CondFormat newCondFormat("", QColor(Settings::getValue("databrowser", "reg_fg_colour").toString()),
-                             m_condFormatPalette.nextSerialColor(Palette::appHasDarkTheme()),
-                             font,
-                             CondFormat::AlignLeft,
-                             m_encoding);
-    addItem(newCondFormat);
+    addItem(CondFormat(
+        "",
+        QColor(Settings::getValue("databrowser", "reg_fg_colour").toString()),
+        m_condFormatPalette.nextSerialColor(Palette::appHasDarkTheme()),
+        font,
+        CondFormat::AlignLeft,
+        m_encoding));
 }
 
 void CondFormatManager::addItem(const CondFormat& aCondFormat)
 {
-    int i = ui->tableCondFormats->topLevelItemCount();
-    QTreeWidgetItem *newItem = new QTreeWidgetItem(ui->tableCondFormats);
-    newItem->setFlags(Qt::ItemIsEnabled | Qt::ItemIsEditable);
+    const int i = m_table->topLevelItemCount();
+    auto* item = new QTreeWidgetItem(m_table);
+    item->setFlags(Qt::ItemIsEnabled | Qt::ItemIsEditable);
 
-    newItem->setForeground(ColumnForeground, aCondFormat.foregroundColor());
-    newItem->setBackground(ColumnForeground, aCondFormat.foregroundColor());
-    newItem->setForeground(ColumnBackground, aCondFormat.backgroundColor());
-    newItem->setBackground(ColumnBackground, aCondFormat.backgroundColor());
-    newItem->setToolTip(ColumnBackground, tr("Click to select color"));
-    newItem->setToolTip(ColumnForeground, tr("Click to select color"));
+    item->setForeground(ColumnForeground, aCondFormat.foregroundColor());
+    item->setBackground(ColumnForeground, aCondFormat.foregroundColor());
+    item->setForeground(ColumnBackground, aCondFormat.backgroundColor());
+    item->setBackground(ColumnBackground, aCondFormat.backgroundColor());
+    item->setToolTip(ColumnForeground, tr("Click to select color"));
+    item->setToolTip(ColumnBackground, tr("Click to select color"));
 
-    QFontComboBox* fontCombo = new QFontComboBox(ui->tableCondFormats);
+    auto* fontCombo = new QFontComboBox(m_table);
     fontCombo->setCurrentFont(aCondFormat.font());
-    // Avoid that the font combo box gets too wide and work around a possible Qt bug where the box overlaps the next column.
-    fontCombo->setMaximumWidth(150);
-    ui->tableCondFormats->setItemWidget(newItem, ColumnFont, fontCombo);
+    fontCombo->setMaximumWidth(150);   // предотвращает перекрытие соседних колонок
+    m_table->setItemWidget(item, ColumnFont, fontCombo);
 
-    QSpinBox* sizeBox = new QSpinBox(ui->tableCondFormats);
+    auto* sizeBox = new QSpinBox(m_table);
     sizeBox->setMinimum(1);
     sizeBox->setValue(aCondFormat.font().pointSize());
-    ui->tableCondFormats->setItemWidget(newItem, ColumnSize, sizeBox);
+    m_table->setItemWidget(item, ColumnSize, sizeBox);
 
-    newItem->setCheckState(ColumnBold, aCondFormat.isBold() ? Qt::Checked : Qt::Unchecked);
-    newItem->setCheckState(ColumnItalic, aCondFormat.isItalic() ? Qt::Checked : Qt::Unchecked);
-    newItem->setCheckState(ColumnUnderline, aCondFormat.isUnderline() ? Qt::Checked : Qt::Unchecked);
+    item->setCheckState(ColumnBold,      aCondFormat.isBold()      ? Qt::Checked : Qt::Unchecked);
+    item->setCheckState(ColumnItalic,    aCondFormat.isItalic()    ? Qt::Checked : Qt::Unchecked);
+    item->setCheckState(ColumnUnderline, aCondFormat.isUnderline() ? Qt::Checked : Qt::Unchecked);
 
-    QComboBox* alignCombo = new QComboBox(ui->tableCondFormats);
+    auto* alignCombo = new QComboBox(m_table);
     alignCombo->addItems(CondFormat::alignmentTexts());
     alignCombo->setCurrentIndex(aCondFormat.alignment());
-    ui->tableCondFormats->setItemWidget(newItem, ColumnAlignment, alignCombo);
+    m_table->setItemWidget(item, ColumnAlignment, alignCombo);
 
-    newItem->setText(ColumnFilter, aCondFormat.filter());
-    ui->tableCondFormats->insertTopLevelItem(i, newItem);
+    item->setText(ColumnFilter, aCondFormat.filter());
+    m_table->insertTopLevelItem(i, item);
 
-    for(int col = ColumnForeground; col < ColumnFilter; ++col) {
-        ui->tableCondFormats->resizeColumnToContents(col);
-    }
+    for (int col = ColumnForeground; col < ColumnFilter; ++col)
+        m_table->resizeColumnToContents(col);
 }
 
 void CondFormatManager::removeItem()
 {
-    QTreeWidgetItem* item = ui->tableCondFormats->takeTopLevelItem(ui->tableCondFormats->currentIndex().row());
-    delete item;
+    delete m_table->takeTopLevelItem(m_table->currentIndex().row());
 }
 
 void CondFormatManager::moveItem(int offset)
 {
-    if (!ui->tableCondFormats->currentIndex().isValid())
-        return;
+    if (!m_table->currentIndex().isValid()) return;
 
-    int selectedRow = ui->tableCondFormats->currentIndex().row();
-    int newRow = selectedRow + offset;
-    if(newRow < 0 || newRow >= ui->tableCondFormats->topLevelItemCount())
-        return;
+    const int selectedRow = m_table->currentIndex().row();
+    const int newRow      = selectedRow + offset;
+    if (newRow < 0 || newRow >= m_table->topLevelItemCount()) return;
 
-    QTreeWidgetItem* item = ui->tableCondFormats->topLevelItem(selectedRow);
+    QTreeWidgetItem* item = m_table->topLevelItem(selectedRow);
 
-    // Rescue widgets, since they will be deleted, and add them later.
-    QFontComboBox* fontCombo = qobject_cast<QFontComboBox*>(ui->tableCondFormats->itemWidget(item, ColumnFont));
-    QFontComboBox* fontCombo2 = new QFontComboBox(ui->tableCondFormats);
-    fontCombo2->setCurrentFont(fontCombo->currentFont());
+    // Qt удаляет дочерние виджеты при takeTopLevelItem,
+    // поэтому перед извлечением создаём копии виджетов.
+    auto rescueFont = [&]() {
+        auto* src = qobject_cast<QFontComboBox*>(m_table->itemWidget(item, ColumnFont));
+        auto* dst = new QFontComboBox(m_table);
+        dst->setCurrentFont(src->currentFont());
+        dst->setMaximumWidth(150);
+        return dst;
+    };
+    auto rescueSize = [&]() {
+        auto* src = qobject_cast<QSpinBox*>(m_table->itemWidget(item, ColumnSize));
+        auto* dst = new QSpinBox(m_table);
+        dst->setMinimum(src->minimum());
+        dst->setValue(src->value());
+        return dst;
+    };
+    auto rescueAlign = [&]() {
+        auto* src = qobject_cast<QComboBox*>(m_table->itemWidget(item, ColumnAlignment));
+        auto* dst = new QComboBox(m_table);
+        dst->addItems(CondFormat::alignmentTexts());
+        dst->setCurrentIndex(src->currentIndex());
+        return dst;
+    };
 
-    QSpinBox* sizeBox = qobject_cast<QSpinBox*>(ui->tableCondFormats->itemWidget(item, ColumnSize));
-    QSpinBox* sizeBox2 = new QSpinBox(ui->tableCondFormats);
-    sizeBox2->setValue(sizeBox->value());
-    sizeBox2->setMinimum(sizeBox->minimum());
+    QFontComboBox* newFont  = rescueFont();
+    QSpinBox*      newSize  = rescueSize();
+    QComboBox*     newAlign = rescueAlign();
 
-    QComboBox* alignCombo = qobject_cast<QComboBox*>(ui->tableCondFormats->itemWidget(item, ColumnAlignment));
-    QComboBox* alignCombo2 = new QComboBox(ui->tableCondFormats);
-    alignCombo2->addItems(CondFormat::alignmentTexts());
-    alignCombo2->setCurrentIndex(alignCombo->currentIndex());
+    item = m_table->takeTopLevelItem(selectedRow);
+    m_table->insertTopLevelItem(newRow, item);
 
-    item = ui->tableCondFormats->takeTopLevelItem(selectedRow);
-    ui->tableCondFormats->insertTopLevelItem(newRow, item);
+    m_table->setItemWidget(item, ColumnFont,      newFont);
+    m_table->setItemWidget(item, ColumnSize,      newSize);
+    m_table->setItemWidget(item, ColumnAlignment, newAlign);
 
-    // Restore widgets and state
-    ui->tableCondFormats->setItemWidget(item, ColumnFont, fontCombo2);
-    ui->tableCondFormats->setItemWidget(item, ColumnSize, sizeBox2);
-    ui->tableCondFormats->setItemWidget(item, ColumnAlignment, alignCombo2);
-    ui->tableCondFormats->setCurrentIndex(ui->tableCondFormats->currentIndex().sibling(newRow,
-                                                                                       ui->tableCondFormats->currentIndex().column()));
-    // This is added so the widgets are readjusted. Otherwise they can be misplaced when moving an item to the top.
-    ui->tableCondFormats->adjustSize();
+    m_table->setCurrentIndex(
+        m_table->currentIndex().sibling(newRow, m_table->currentIndex().column()));
+    m_table->adjustSize();
 }
 
-void CondFormatManager::upItem()
-{
-    moveItem(-1);
-}
-
-void CondFormatManager::downItem()
-{
-    moveItem(+1);
-}
+void CondFormatManager::upItem()   { moveItem(-1); }
+void CondFormatManager::downItem() { moveItem(+1); }
 
 std::vector<CondFormat> CondFormatManager::getCondFormats() const
 {
     std::vector<CondFormat> result;
+    result.reserve(m_table->topLevelItemCount());
 
-    for (int i = 0; i < ui->tableCondFormats->topLevelItemCount(); ++i)
-    {
-        QTreeWidgetItem* item = ui->tableCondFormats->topLevelItem(i);
+    for (int i = 0; i < m_table->topLevelItemCount(); ++i) {
+        QTreeWidgetItem* item = m_table->topLevelItem(i);
 
-        QFontComboBox* fontCombo = qobject_cast<QFontComboBox*>(ui->tableCondFormats->itemWidget(item, ColumnFont));
-        QSpinBox* sizeBox = qobject_cast<QSpinBox*>(ui->tableCondFormats->itemWidget(item, ColumnSize));
+        auto* fontCombo  = qobject_cast<QFontComboBox*>(m_table->itemWidget(item, ColumnFont));
+        auto* sizeBox    = qobject_cast<QSpinBox*>     (m_table->itemWidget(item, ColumnSize));
+        auto* alignCombo = qobject_cast<QComboBox*>    (m_table->itemWidget(item, ColumnAlignment));
+
         QFont font = fontCombo->currentFont();
         font.setPointSize(sizeBox->value());
-        font.setBold(item->checkState(ColumnBold) == Qt::Checked);
-        font.setItalic(item->checkState(ColumnItalic) == Qt::Checked);
+        font.setBold     (item->checkState(ColumnBold)      == Qt::Checked);
+        font.setItalic   (item->checkState(ColumnItalic)    == Qt::Checked);
         font.setUnderline(item->checkState(ColumnUnderline) == Qt::Checked);
-        QComboBox* alignCombo = qobject_cast<QComboBox*>(ui->tableCondFormats->itemWidget(item, ColumnAlignment));
 
-        result.emplace_back(item->text(ColumnFilter),
-                            item->background(ColumnForeground).color(),
-                            item->background(ColumnBackground).color(),
-                            font,
-                            static_cast<CondFormat::Alignment>(alignCombo->currentIndex()),
-                            m_encoding);
+        result.emplace_back(
+            item->text(ColumnFilter),
+            item->background(ColumnForeground).color(),
+            item->background(ColumnBackground).color(),
+            font,
+            static_cast<CondFormat::Alignment>(alignCombo->currentIndex()),
+            m_encoding);
     }
     return result;
 }
-
 
 void CondFormatManager::itemClicked(QTreeWidgetItem* item, int column)
 {
@@ -219,7 +309,7 @@ void CondFormatManager::itemClicked(QTreeWidgetItem* item, int column)
     case ColumnForeground:
     case ColumnBackground: {
         QColor color = QColorDialog::getColor(item->background(column).color(), this);
-        if(color.isValid()) {
+        if (color.isValid()) {
             item->setForeground(column, color);
             item->setBackground(column, color);
         }
@@ -228,29 +318,36 @@ void CondFormatManager::itemClicked(QTreeWidgetItem* item, int column)
     case ColumnBold:
     case ColumnItalic:
     case ColumnUnderline:
-        item->setCheckState(column, item->checkState(column) != Qt::Checked ? Qt::Checked : Qt::Unchecked);
+        // Переключаем чекбокс вручную — QTreeWidget не делает это автоматически
+        // при клике вне области чекбокса.
+        item->setCheckState(column,
+                            item->checkState(column) == Qt::Checked ? Qt::Unchecked : Qt::Checked);
         break;
     default:
-        // Nothing to do
         break;
     }
 }
 
 void CondFormatManager::buttonBoxClicked(QAbstractButton* button)
 {
-    if (button == ui->buttonBox->button(QDialogButtonBox::Cancel))
-        reject();
-    else if (button == ui->buttonBox->button(QDialogButtonBox::Ok))
+    const auto role = m_buttonBox->buttonRole(button);
+
+    if (role == QDialogButtonBox::AcceptRole) {
         accept();
-    else if (button == ui->buttonBox->button(QDialogButtonBox::Help))
-        QDesktopServices::openUrl(QUrl("https://github.com/sqlitebrowser/sqlitebrowser/wiki/Conditional-Formats"));
-    else if (button == ui->buttonBox->button(QDialogButtonBox::Reset)) {
-        if (QMessageBox::warning(this,
-                                 QApplication::applicationName(),
-                                 tr("Are you sure you want to clear all the conditional formats of this field?"),
-                                 QMessageBox::Reset | QMessageBox::Cancel,
-                                 QMessageBox::Cancel) == QMessageBox::Reset)
-            if(ui->tableCondFormats->model()->hasChildren())
-                ui->tableCondFormats->model()->removeRows(0, ui->tableCondFormats->model()->rowCount());
+    } else if (role == QDialogButtonBox::RejectRole) {
+        reject();
+    } else if (role == QDialogButtonBox::HelpRole) {
+        QDesktopServices::openUrl(
+            QUrl("https://github.com/sqlitebrowser/sqlitebrowser/wiki/Conditional-Formats"));
+    } else if (role == QDialogButtonBox::ResetRole) {
+        // сравнение через buttonRole() — не зависит от конкретного указателя
+        const auto answer = QMessageBox::warning(
+            this,
+            QApplication::applicationName(),
+            tr("Are you sure you want to clear all the conditional formats of this field?"),
+            QMessageBox::Reset | QMessageBox::Cancel,
+            QMessageBox::Cancel);
+        if (answer == QMessageBox::Reset)
+            m_table->clear();   // заменяет removeRows(0, rowCount()) — чище
     }
 }
