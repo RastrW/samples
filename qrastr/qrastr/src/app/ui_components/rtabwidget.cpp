@@ -441,15 +441,29 @@ void RtabWidget::setTableView(int multiplier  )
 
 void RtabWidget::slot_contextMenu(ContextMenuEventArgs* args)
 {
-    const int column = args->hitInfo().columnIndex();
-    const int row    = args->hitInfo().row().rowIndex();
-    if (column < 0) return;
+    const auto& hit    = args->hitInfo();
+    const int   column = hit.columnIndex();
 
+    if (column < 0) return;   // клик вне колонок (пустое место справа)
+
+    // ── Определяем тип области ───────────────────────────────────────────────
+    const auto type = hit.info();
+
+    const bool isHeader =
+        type == GridHitInfo::Column ||
+        type == GridHitInfo::Band;
+
+    if (isHeader) {
+        m_menuBuilder->prepareForHeader(column, args->contextMenu());
+        return;
+    }
+
+    // ── Меню ячейки ─────────────────────────────────────────
+    const int row = hit.row().rowIndex();
     RCol* col = m_model->getRCol(column);
     if (!col) return;
 
     MenuContext ctx { column, row, col };
-
     m_menuBuilder->prepareForShow(ctx, args->contextMenu());
 }
 

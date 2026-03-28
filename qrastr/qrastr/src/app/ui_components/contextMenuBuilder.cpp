@@ -163,3 +163,10 @@ std::tuple<int, double> ContextMenuBuilder::calcSumSelected() const
     }
     return {count, total};
 }
+
+void ContextMenuBuilder::prepareForHeader(int column, QMenu* menu)
+{
+    menu->clear();   // убираем встроенные пункты QTitan
+
+    // Заглушка — действия добавите позже
+}

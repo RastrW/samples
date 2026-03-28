@@ -25,8 +25,10 @@ public:
 
     /// Строит персистентный QMenu и все статичные QAction.
     void initMenu(QWidget* menuParent);
-    /// обновляет динамические пункты.
+    /// @brief обновляет динамические пункты.
     void prepareForShow(const MenuContext& ctx, QMenu* qtitanMenu);
+    /// @brief Меню заголовка колонки.
+    void prepareForHeader(int column, QMenu* menu);
 signals:
     // Сигналы для операций со строками
     void sig_addRow();
