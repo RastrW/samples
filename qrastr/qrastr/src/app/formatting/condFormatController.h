@@ -6,6 +6,11 @@ class RModel;
 namespace Qtitan { class GridTableView; }
 class CondFormat;
 
+///@class оркестрирует всё:
+/// load  → читает JSON → пишет в RModel
+/// edit  → читает из RModel → диалог → пишет в RModel → JSON
+/// save  → читает из RModel → пишет JSON
+/// RModel — единственный владелец форматов во время работы программы.
 class CondFormatController : public QObject
 {
     Q_OBJECT
@@ -21,10 +26,9 @@ public:
     void editCondFormats(std::size_t column); 
 
 private:
-    void onFormatsChanged(); ///< Сохраняет в JSON
+    void saveToJson(); ///< Сериализует текущее состояние RModel → JSON
 
-    RModel*                                m_model;
-    Qtitan::GridTableView*                 m_view;
-    QWidget*                               m_parentWidget;
-    std::unordered_map<int, std::vector<CondFormat>> m_formats;
+    RModel*                m_model;
+    Qtitan::GridTableView* m_view;
+    QWidget*               m_parentWidget;
 };

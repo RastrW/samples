@@ -38,6 +38,20 @@
      }
     ]
    ]
+  },
+  "vetv": {
+   "pl_ip": [
+    {
+     "bgColor": "#004586",
+     "fgColor": "#ffffff",
+     "filter": "<0"
+    },
+    {
+     "bgColor": "#ff420e",
+     "fgColor": "#ffffff",
+     "filter": ">0"
+    }
+   ]
   }
  }
 }

@@ -1,8 +1,4 @@
 #include "condFormat.h"
-//#include "Settings.h"
-//#include "Data.h"
-//#include "sqlitedb.h"
-
 #include <QAbstractTableModel>
 
 CondFormat::Alignment CondFormat::fromCombinedAlignment(Qt::Alignment align)

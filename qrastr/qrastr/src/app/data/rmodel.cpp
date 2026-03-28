@@ -68,9 +68,8 @@ QVariant RModel::data(const QModelIndex& index, int role) const
 
     // ── BackgroundRole (Фон ячейки) ──────────────────────────────────────────
     if (role == Qt::BackgroundRole) {
-        // Быстрый выход: форматы не заданы
-        if (m_condFmt.condFormats().empty()) return {};
-
+        // форматы не заданы
+        if (m_condFmt.formats().empty()) return {};
         // Проверяем кеш
         if (const QVariant* cached = m_bgCache.get(row, col)){
             // QVariant() → нет формата, тоже ок
@@ -79,8 +78,8 @@ QVariant RModel::data(const QModelIndex& index, int role) const
 
         const QString val = QString::fromStdString(
             std::visit(ToString(), m_rdata->pnparray_->Get(row, col)));
-        QVariant fmt = getMatchingCondFormat(
-            m_condFmt.condFormats(), row, col, val, role);
+
+        QVariant fmt = getMatchingCondFormat(row, col, val, role);
 
         m_bgCache.put(row, col, fmt);
         return fmt;
@@ -309,38 +308,41 @@ void RModel::slot_EndRemoveRows(std::string tName)
     if (getRdata()->t_name_ == tName) endRemoveRows();
 }
 
-void RModel::addCondFormat(bool isRowIdFormat, size_t column,
-                           const CondFormat& condFormat)
+void RModel::addCondFormat(size_t column, const CondFormat& condFormat)
 {
-    m_condFmt.add(isRowIdFormat, column, condFormat);
-    // правила изменились — кеш недействителен
+    m_condFmt.add(column, condFormat);
     m_bgCache.clear();
     emit layoutChanged();
 }
 
-void RModel::setCondFormats(bool isRowIdFormat, size_t column,
-                            const std::vector<CondFormat>& condFormats)
+void RModel::setCondFormats(size_t column, const std::vector<CondFormat>& condFormats)
 {
-    m_condFmt.set(isRowIdFormat, column, condFormats);
+    m_condFmt.set(column, condFormats);
     m_bgCache.clear();
+    // layoutChanged вызывается из контроллера после
+    // полной замены всех правил, не инкрементально.
 }
 
-QVariant RModel::getMatchingCondFormat(const std::unordered_map<size_t, std::vector<CondFormat>>& formats,
-                                       size_t row, size_t column,
+const std::vector<CondFormat>& RModel::getCondFormats(int column) const
+{
+    // Если для колонки нет правил, возвращаем ссылку на статический пустой вектор.
+    // Это безопаснее, чем бросать исключение или возвращать указатель.
+    static const std::vector<CondFormat> empty;
+    const auto* vec = m_condFmt.column(static_cast<size_t>(column));
+    return vec ? *vec : empty;
+}
+
+QVariant RModel::getMatchingCondFormat(size_t row, size_t column,
                                        const QString& value, int role) const
 {
-    auto it = formats.find(column);
-    if (it == formats.end()) return {};
+    const auto* vec = m_condFmt.column(column);
+    if (!vec || vec->empty()) return {};
 
     bool isNumber;
     value.toDouble(&isNumber);
     if (!isNumber) return {};
-    // For each conditional format for this column,
-    // if the condition matches the current data, return the associated format.
-    for (const CondFormat& fmt : it->second) {
-        // Empty filter means: apply format to any row.
-        // Query the DB for the condition, waiting in case there is a loading in progress.
-        /// Похоже тут стоит попробовать написать парсер string to bool
+
+    for (const CondFormat& fmt : *vec) {
         STRING_BOOL sb(value.toStdString() + " " + fmt.sqlCondition());
         for (const std::string& op : sb.Check()) {
             if (contains(m_rdata->mCols_, op)) {

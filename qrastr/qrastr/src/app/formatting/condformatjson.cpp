@@ -1,126 +1,100 @@
 #include "condformatjson.h"
+#include <fstream>
 
-void CondFormatJson::save_json(nlohmann::json j)
+static int findColIndex(const std::vector<std::string>& cols, const std::string& name)
 {
-    std::string jstr = j.dump();
-    std::ofstream ofs(path_2_json);
-    if (ofs.is_open())
-    {
-        std::string  str_file = j.dump(1, ' ');
-        ofs << str_file;
-        ofs.close();
-    }
+    auto it = std::find(cols.begin(), cols.end(), name);
+    return (it != cols.end()) ? static_cast<int>(it - cols.begin()) : -1;
 }
-void CondFormatJson::save_json()
-{
-    if (std::filesystem::exists(path_2_json))
-    {
-        append_json();
-    }
-    else
-    {
-        nlohmann::json js = to_json();
-        save_json(js);
-    }
 
-}
-nlohmann::json CondFormatJson::to_json(std::string _tname)
+nlohmann::json CondFormatJson::tableToJson(
+    const std::vector<std::string>& cols,
+    const std::unordered_map<int, std::vector<CondFormat>>& formats)
 {
     nlohmann::json j;
-    nlohmann::json j_Tables;
-    nlohmann::json j_Table;
+    for (auto& [key, val] : formats) {
+        if (val.empty()) continue;
+        if (key < 0 || static_cast<size_t>(key) >= cols.size()) continue;
 
-    for (auto &[key, val] : m_MapcondFormatVector)
-    {
-        if (val.empty())
-            continue;
-        nlohmann::json j_col_condformats;
-        std::string col_name = m_cols.at(key);
-        for (auto& cf : val)
-        {
-            nlohmann::json j_col_condformat;
-            j_col_condformat[j_cf_filter_] = cf.filter().toStdString();
-            j_col_condformat[j_cf_bgcolor_] = cf.backgroundColor().name().toStdString();
-            j_col_condformat[j_cf_fgcolor_] = cf.foregroundColor().name().toStdString();
-            j_col_condformats.emplace_back(j_col_condformat);
+        nlohmann::json colFormats = nlohmann::json::array();
+        for (const auto& cf : val) {
+            colFormats.push_back({
+                { kFilter,  cf.filter().toStdString() },
+                { kBgColor, cf.backgroundColor().name().toStdString() },
+                { kFgColor, cf.foregroundColor().name().toStdString() }
+            });
         }
-        j_Table[col_name].emplace_back(j_col_condformats);
+        j[cols.at(key)] = colFormats;
     }
-    //j_Tables[m_Tname].emplace_back(j_Table);
-    j_Tables[m_Tname] = j_Table;
-    if (!_tname.empty())
-        return j_Table;
-
-    //j[j_condformat_start_].emplace_back(j_Tables);
-    j[j_condformat_start_] = j_Tables;
-
     return j;
 }
-void CondFormatJson::append_json()
+
+void CondFormatJson::save(
+    const std::string& tableName,
+    const std::vector<std::string>& cols,
+    const std::unordered_map<int, std::vector<CondFormat>>& formats)
 {
-    std::ifstream ifs(path_2_json);
-    nlohmann::json jf = nlohmann::json::parse(ifs);
-    nlohmann::json j_Tables = jf[j_condformat_start_];
+    auto path = jsonPath();
 
-    std::cout << j_Tables.type_name() << std::endl;
-    std::cout << j_Tables << std::endl;
-    //for (auto it = j_Tables.begin(); it != j_Tables.end(); ++it)
-    //	std::cout << it.key() << " : " << it.value() << std::endl;
-
-    nlohmann::json j_Table = to_json(m_Tname);
-    //j_Tables.push_back(j_Table);
-    j_Tables[m_Tname] = j_Table;
-    jf[j_condformat_start_] = j_Tables;
-
-    save_json(jf);
-}
-void CondFormatJson::from_json()
-{
-    if (!std::filesystem::exists( path_2_json))
-        return;
-
-    m_MapcondFormatVector.clear();
-    std::ifstream ifs(path_2_json);
-    const nlohmann::json jf = nlohmann::json::parse(ifs);
-    const nlohmann::json j_Tables = jf[j_condformat_start_];
-    bool bexist = j_Tables.contains(m_Tname);
-    if (!j_Tables.contains(m_Tname))
-        return;
-
-    const nlohmann::json j_Table = j_Tables[m_Tname];
-
-    for (auto it = j_Table.begin(); it != j_Table.end(); ++it)
-    {
-        //std::cout << it.key() << " : " << it.value() << std::endl;
-        int index = find_index(m_cols, it.key());
-        std::vector<CondFormat> vcf;
-        m_MapcondFormatVector.insert(make_pair(index, vcf));
-        const nlohmann::json j_Table_col = j_Table[it.key()];
-        for (const nlohmann::json& j_col_condformats : j_Table_col)
-        {
-            for (const nlohmann::json& j_col_condformat : j_col_condformats)
-            {
-                std::string str_filter = j_col_condformat[j_cf_filter_];
-                std::string str_bgc = j_col_condformat[j_cf_bgcolor_];
-                std::string str_fgc = j_col_condformat[j_cf_fgcolor_];
-#if(defined(_MSC_VER))
-                vcf.emplace_back(   QString(str_filter.c_str()),
-                                    QColor::fromString(str_fgc.c_str()),
-                                    QColor::fromString(str_bgc.c_str()),
-                                    QFont(),
-                                    CondFormat::Alignment::AlignLeft,
-                                    "UTF-8");
-#else
-                vcf.emplace_back(   QString(str_filter.c_str()),
-                                    QColor(str_fgc.c_str()), // nix: in qt5 no QColor::fromString()
-                                    QColor(str_bgc.c_str()), // nix: in qt5 no QColor::fromString()
-                                    QFont(),
-                                    CondFormat::Alignment::AlignLeft,
-                                    "UTF-8");
-#endif
-            }
-            m_MapcondFormatVector.at(index) = vcf;
-        }
+    // Загружаем существующий файл (если есть), чтобы не затереть другие таблицы.
+    nlohmann::json root;
+    if (std::filesystem::exists(path)) {
+        std::ifstream ifs(path);
+        root = nlohmann::json::parse(ifs, nullptr, /*exceptions=*/false);
+        if (root.is_discarded()) root = nlohmann::json::object();
     }
+
+    // Перезаписываем только секцию нашей таблицы.
+    root[kRoot][tableName] = tableToJson(cols, formats);
+
+    std::ofstream ofs(path);
+    if (ofs.is_open())
+        ofs << root.dump(1, ' ');
 }
 
+std::unordered_map<int, std::vector<CondFormat>>
+CondFormatJson::load(const std::string& tableName,
+                     const std::vector<std::string>& cols)
+{
+    std::unordered_map<int, std::vector<CondFormat>> result;
+
+    auto path = jsonPath();
+    if (!std::filesystem::exists(path)) return result;
+
+    std::ifstream ifs(path);
+    const auto root = nlohmann::json::parse(ifs, nullptr, /*exceptions=*/false);
+    if (root.is_discarded()) return result;
+
+    if (!root.contains(kRoot) || !root[kRoot].contains(tableName))
+        return result;
+
+    const auto& jTable = root[kRoot][tableName];
+    for (auto it = jTable.begin(); it != jTable.end(); ++it) {
+        int idx = findColIndex(cols, it.key());
+        if (idx < 0) continue; // колонка переименована или удалена — пропускаем
+
+        std::vector<CondFormat> vcf;
+        for (const auto& jcf : it.value()) {
+            std::string filter = jcf.value(kFilter, "");
+            std::string bgc    = jcf.value(kBgColor, "#ffffff");
+            std::string fgc    = jcf.value(kFgColor, "#000000");
+
+#ifdef _MSC_VER
+            vcf.emplace_back(
+                QString::fromStdString(filter),
+                QColor::fromString(fgc.c_str()),
+                QColor::fromString(bgc.c_str()),
+                QFont(), CondFormat::AlignLeft, "UTF-8");
+#else
+            vcf.emplace_back(
+                QString::fromStdString(filter),
+                QColor(fgc.c_str()),
+                QColor(bgc.c_str()),
+                QFont(), CondFormat::AlignLeft, "UTF-8");
+#endif
+        }
+        if (!vcf.empty())
+            result[idx] = std::move(vcf);
+    }
+    return result;
+}

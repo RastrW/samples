@@ -1,4 +1,4 @@
-#include "CondFormatManager.h"
+#include "condFormatManager.h"
 #include "ui_CondFormatManager.h"
 #include "condFormat.h"
 #include "Settings.h"

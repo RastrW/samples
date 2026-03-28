@@ -1,16 +1,14 @@
-#ifndef CONDFORMAT_H
-#define CONDFORMAT_H
 #pragma once
 
 #include <QString>
 #include <QColor>
 #include <QFont>
 #include <QModelIndex>
-#include <regex>
 
 class QAbstractTableModel;
 
-// Conditional formatting for given format to table cells based on a specified condition.
+///@class чистый data-класс: хранит одно правило форматирования
+///  (фильтр, цвета, шрифт, выравнивание) и умеет строить SQL-условие из строки-фильтра.
 class CondFormat
 {
 public:
@@ -80,5 +78,3 @@ public:
     void setAlignment(Alignment value) { m_align = value; }
     Qt::AlignmentFlag alignmentFlag() const;
 };
-
-#endif // CONDFORMAT_H

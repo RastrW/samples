@@ -22,3 +22,15 @@ window=0xc80cac
   SDL_EVENT_WINDOW_PIXEL_SIZE_CHANGED processing: data1=1920 data2=219
 CSubstWnd::~CSubstWnd
 		->_GlobalData::DestroyControl
+		GCC::DLL_PROCESS_ATTACH
+		->ShutdownPlainDLL
+		~_GlobalData
+		->GCC::DLL_PROCESS_DETACH
+		GCC::DLL_PROCESS_ATTACH
+		->ShutdownPlainDLL
+		~_GlobalData
+		->GCC::DLL_PROCESS_DETACH
+		GCC::DLL_PROCESS_ATTACH
+		->ShutdownPlainDLL
+		~_GlobalData
+		->GCC::DLL_PROCESS_DETACH

@@ -15,6 +15,8 @@ class CondFormat;
 class QTreeWidgetItem;
 class QAbstractButton;
 
+///@class QDialog, получает vector<CondFormat>, позволяет пользователю редактировать,
+/// возвращает результат через getCondFormats(). Ничего не знает о модели или файлах.
 class CondFormatManager : public QDialog
 {
     Q_OBJECT

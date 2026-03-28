@@ -1,5 +1,5 @@
 #pragma once
-#if defined(Q_OS_WIN)
+#if defined(_WIN32)
 // Скрываем платформенные типы за void*
 // чтобы не тащить windows.h / Xlib.h в заголовок
 class SelfDrawingChild

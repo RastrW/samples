@@ -85,8 +85,10 @@ public:
     bool removeColumns(int col,  int count, const QModelIndex& parent = {}) override;
 
     // ── Условное форматирование ──────────────────────────────────────────────
-    void addCondFormat (bool isRowIdFormat, size_t column, const CondFormat& condFormat);
-    void setCondFormats(bool isRowIdFormat, size_t column, const std::vector<CondFormat>& condFormats);
+    void addCondFormat (size_t column, const CondFormat& condFormat);
+    void setCondFormats(size_t column, const std::vector<CondFormat>& condFormats);
+    // Читать текущие правила колонки для CondFormatController
+    const std::vector<CondFormat>& getCondFormats(int column) const;
 
     // ── Утилиты ──────────────────────────────────────────────────────────────
     ColumnEditorInfo            getColumnEditorInfo(int colIndex) const;
@@ -96,11 +98,8 @@ public:
     RData* getRdata();
 
 private:
-    // ── Условное форматирование (приватная логика) ────────────────────────────
-    // Нужен доступ к up_rdata для подстановки значений → остаётся в RModel.
-
-    QVariant getMatchingCondFormat(const std::unordered_map<size_t, std::vector<CondFormat>>& formats,
-                                   size_t row, size_t col,
+    // ── Условное форматирование ────────────────────────────
+    QVariant getMatchingCondFormat(size_t row, size_t col,
                                    const QString& value, int role) const;
 
     // ── Данные ───────────────────────────────────────────────────────────────

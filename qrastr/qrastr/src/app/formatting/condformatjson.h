@@ -1,51 +1,42 @@
-#ifndef CONDFORMATJSON_H
-#define CONDFORMATJSON_H
 #pragma once
 
 #include "condFormat.h"
-#include <fstream>
 #include <filesystem>
 #include <utils.h>
 #include "astra_headers/json.hpp"
 
+///@class Сохранение и загрузка условий в json
 class CondFormatJson
 {
 public:
-    //CondFormatJson();
-    CondFormatJson(std::string _Table ,
-                   std::vector<std::string>& _vcols,
-                   std::unordered_map<int, std::vector<CondFormat>>& _mcf)
-    {
-        path_2_json = std::filesystem::current_path() / j_fname_;
-        m_Tname = _Table;
-        m_cols = _vcols;
-        m_MapcondFormatVector = _mcf;
-    };
+    // Загрузить форматы из файла для таблицы tableName.
+    // cols — упорядоченный список имён колонок (индекс == позиция в таблице).
+    // Возвращает карту col_index → [CondFormat]; пустую, если файл не найден.
+    static std::unordered_map<int, std::vector<CondFormat>>
+    load(const std::string& tableName,
+         const std::vector<std::string>& cols);
 
-    void save_json();
-    void save_json(nlohmann::json j);
-    void append_json();
-    void from_json();
-    nlohmann::json to_json(std::string _tname = "");
-
-    // Getter
-    std::unordered_map<int, std::vector<CondFormat>> get_mcf()
-    {
-        return m_MapcondFormatVector;
-    }
+    // Сохранить форматы для таблицы tableName в общий JSON-файл.
+    // Если файл уже существует — обновляет только секцию этой таблицы,
+    // остальные таблицы в файле не трогает.
+    static void save(const std::string& tableName,
+                     const std::vector<std::string>& cols,
+                     const std::unordered_map<int, std::vector<CondFormat>>& formats);
 
 private:
-    std::filesystem::path path_2_json;
-    std::string m_Tname;
-    std::vector<std::string> m_cols;
-    std::unordered_map<int, std::vector<CondFormat>> m_MapcondFormatVector;
+    // Путь к файлу — константа, не нужно передавать через конструктор.
+    static std::filesystem::path jsonPath()
+    {
+        return std::filesystem::current_path() / "highlightsettings.json";
+    }
 
-public:
-    static constexpr const char j_fname_[] = "highlightsettings.json";
-    static constexpr const char j_condformat_start_[] = "condformat";
-    static constexpr const char j_cf_filter_[] = "filter";
-    static constexpr const char j_cf_bgcolor_[] = "bgColor";
-    static constexpr const char j_cf_fgcolor_[] = "fgColor";
+    // Сериализовать форматы одной таблицы в JSON-объект.
+    static nlohmann::json tableToJson(
+        const std::vector<std::string>& cols,
+        const std::unordered_map<int, std::vector<CondFormat>>& formats);
+
+    static constexpr const char kRoot[]    = "condformat";
+    static constexpr const char kFilter[]  = "filter";
+    static constexpr const char kBgColor[] = "bgColor";
+    static constexpr const char kFgColor[] = "fgColor";
 };
-
-#endif // CONDFORMATJSON_H
