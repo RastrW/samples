@@ -56,5 +56,12 @@
 		<file>images/new_style/verified.png</file>
 		<file>images/new_style/information.png</file>
 		<file>images/new_style/read.png</file>
+		<file>images/new_style/python.png</file>
+		<file>images/new_style/playback.png</file>
+		<file>images/new_style/search.png</file>
+		<file>images/new_style/recognition of printed text.png</file>
+		<file>images/new_style/broomstick.png</file>
+		<file>images/new_style/open.png</file>
+		<file>images/new_style/file.png</file>
     </qresource>
 </RCC>

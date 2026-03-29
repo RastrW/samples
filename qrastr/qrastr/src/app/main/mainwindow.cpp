@@ -329,12 +329,24 @@ void MainWindow::slot_updateRecentFiles() {
 }
 
 void MainWindow::slot_openMcrDialog(){
-    McrWnd* dialog = new McrWnd( this);
-    dialog->setAttribute(Qt::WA_DeleteOnClose);
-    connect(m_qastra.get(), &QAstra::onRastrPrint, dialog, &McrWnd::slot_rastrPrint);
+    if (m_mcrWnd) {           // окно уже открыто
+        m_mcrWnd->raise();
+        m_mcrWnd->activateWindow();
+        return;
+    }
 
-    dialog->setPyHlp(m_pyHelper);
-    dialog->show();
+    m_mcrWnd = new McrWnd(this);
+    m_mcrWnd->setAttribute(Qt::WA_DeleteOnClose);
+
+    // Обнуляем указатель, когда окно уничтожается
+    connect(m_mcrWnd, &QObject::destroyed,
+            this, [this]{ m_mcrWnd = nullptr; });
+
+    connect(m_qastra.get(), &QAstra::onRastrPrint,
+            m_mcrWnd, &McrWnd::slot_rastrPrint);
+
+    m_mcrWnd->setPyHlp(m_pyHelper);
+    m_mcrWnd->show();
 }
 
 void MainWindow::slot_about(){

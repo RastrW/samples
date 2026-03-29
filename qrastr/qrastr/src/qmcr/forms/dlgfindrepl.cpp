@@ -7,15 +7,15 @@
 DlgFindRepl::DlgFindRepl(QWidget* parent)
     : QDialog(parent)
 {
-    setWindowTitle(tr("Find"));
+    setWindowTitle(tr("Найти"));
     // Убираем кнопку «?» в заголовке
     setWindowFlags(windowFlags() & ~Qt::WindowContextHelpButtonHint);
 
     m_leFind = new QLineEdit(this);
-    m_leFind->setPlaceholderText(tr("Search..."));
+    m_leFind->setPlaceholderText(tr("Поиск..."));
     m_leFind->setMinimumWidth(200);
 
-    m_pbFind = new QPushButton(tr("Find"), this);
+    m_pbFind = new QPushButton(tr("Найти"), this);
     m_pbFind->setDefault(true);
 
     auto* layout = new QHBoxLayout(this);

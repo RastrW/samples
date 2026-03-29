@@ -8,90 +8,152 @@
 #include <QFileDialog>
 #include <QInputDialog>
 #include <QCloseEvent>
+#include <QMenuBar>
+#include <QStatusBar>
+#include <QLabel>
+#include "forms/dlgfindrepl.h"
 
 #include "mcrwnd.h"
-#include "forms/dlgfindrepl.h"
+
 #include "../app/astra/qastra_events_data.h"
 #include "pyhlp.h"
 #include "globalProtocolWidget.h"
 #include <spdlog/spdlog.h>
 
 McrWnd::McrWnd(QWidget* parent)
-    : QDialog(parent,
-              Qt::WindowMinimizeButtonHint |
-              Qt::WindowMaximizeButtonHint |
-              Qt::WindowCloseButtonHint){
+    : QMainWindow(parent)
+{
     resize(600, 800);
-    setWindowIcon( QIcon(QApplication::style()->standardIcon(QStyle::SP_ComputerIcon) ));
-    setWindowTitle(tr("Macro Python"));
+    setWindowIcon(QIcon(":/images/new_style/python.png"));
+    setWindowTitle(tr("Macro Editor — Python"));
 
-    m_mainLayout = new QVBoxLayout(this);
+    auto* central  = new QWidget(this);
+    auto* layout   = new QVBoxLayout(central);
+    layout->setContentsMargins(0, 0, 0, 0);
 
-    buildToolBar();
-
-    auto* splitter = new QSplitter(Qt::Vertical, this);
-    m_editor = new SciPyEditor(this);
-    m_glodLogWidget = new GlobalProtocolWidget(this);
+    auto* splitter = new QSplitter(Qt::Vertical, central);
+    m_editor        = new SciPyEditor(central);
+    m_glodLogWidget = new GlobalProtocolWidget(central);
 
     splitter->addWidget(m_editor);
     splitter->addWidget(m_glodLogWidget);
+    layout->addWidget(splitter);
+    setCentralWidget(central);
 
-    m_mainLayout->addWidget(splitter);
-    setLayout(m_mainLayout);
+    buildMenuAndToolBar();
+    buildStatusBar();
 
     connect(m_editor, &SciPyEditor::sig_fileInfoChanged,
             this, &McrWnd::slot_fileInfoChanged);
+
+    //Scintilla сигнализирует об изменении позиции через updateUi
+    connect(m_editor, &ScintillaEdit::updateUi,
+            this, [this](Scintilla::Update){ slot_updateStatusBar(); });
 
     spdlog::info("McrWnd loaded");
 }
 
 McrWnd::~McrWnd() = default;
 
-void McrWnd::buildToolBar()
+void McrWnd::buildMenuAndToolBar()
 {
-    auto* tb = new QToolBar(this);
-    tb->setIconSize(QSize(16, 16));
-
-    auto addBtn = [&](QStyle::StandardPixmap icon, const QString& text,
-                      auto slot, QKeySequence shortcut = {})
+    // Фабрика: создаёт QAction, присваивает иконку, текст, шорткат, слот
+    auto mkAct = [&](const QString& icon, const QString& text,
+                     auto slot, QKeySequence sc = {}) -> QAction*
     {
-        auto* act = tb->addAction(
-            QIcon(QApplication::style()->standardIcon(icon)), text,
-            this, slot);
-        if (!shortcut.isEmpty())
-            act->setShortcut(shortcut);
+        auto* a = new QAction(QIcon(icon), text, this);
+        if (!sc.isEmpty())
+            a->setShortcut(sc);
+        connect(a, &QAction::triggered, this, slot);
+        return a;
     };
 
-    addBtn(QStyle::SP_FileIcon,          tr("&New"),      &McrWnd::slot_fileNew,
-           QKeySequence(Qt::CTRL | Qt::Key_N));
-    addBtn(QStyle::SP_DirIcon,           tr("&Open"),     &McrWnd::slot_fileOpen,
-           QKeySequence(Qt::CTRL | Qt::Key_O));
-    addBtn(QStyle::SP_DialogSaveButton,  tr("&Save"),
-           [this]{ slot_fileSave(false); },
-           QKeySequence(Qt::CTRL | Qt::Key_S));
-    addBtn(QStyle::SP_DriveFDIcon,       tr("Save &as"),
-           [this]{ slot_fileSave(true);  },
-           QKeySequence(Qt::CTRL | Qt::ALT | Qt::Key_S));
+    // ── Actions ──────────────────────────────────────────────────────────────
+    auto* actNew    = mkAct(":/images/new_style/file.png",       tr("&Новый"),
+                         &McrWnd::slot_fileNew,    QKeySequence::New);
+    auto* actOpen   = mkAct(":/images/new_style/open.png",      tr("&Открыть"),
+                          &McrWnd::slot_fileOpen,   QKeySequence::Open);
+    auto* actSave   = mkAct(":/images/new_style/save.png",      tr("&Сохранить"),
+                          &McrWnd::slot_fileSave,   QKeySequence::Save);
+    auto* actSaveAs = mkAct(":/images/new_style/save as.png",   tr("Сохранить как"),
+                            &McrWnd::slot_fileSaveAs, QKeySequence::SaveAs);
+    auto* actRun    = mkAct(":/images/new_style/playback.png",        tr("&Пуск"),
+                         &McrWnd::slot_run,         Qt::Key_F10);
+    auto* actFind   = mkAct(":/images/new_style/search.png",       tr("&Найти…"),
+                          &McrWnd::slot_find,        QKeySequence::Find);
+    auto* actGoto   = mkAct(":/images/new_style/recognition of printed text.png",  tr("&Перейти к линии…"),
+                          &McrWnd::slot_goToLine,
+                          QKeySequence(Qt::CTRL | Qt::Key_G));
+    auto* actClear  = mkAct(":/images/new_style/broomstick.png",  tr("Очистить лог"),
+                           &McrWnd::slot_protClear);
 
+    // ── Меню ─────────────────────────────────────────────────────────────────
+    QMenu* fileMenu = menuBar()->addMenu(tr("&Файл"));
+    fileMenu->addAction(actNew);
+    fileMenu->addAction(actOpen);
+    fileMenu->addSeparator();
+    fileMenu->addAction(actSave);
+    fileMenu->addAction(actSaveAs);
+
+    QMenu* runMenu = menuBar()->addMenu(tr("&Пуск"));
+    runMenu->addAction(actRun);
+
+    QMenu* editMenu = menuBar()->addMenu(tr("&Правка"));
+    editMenu->addAction(actFind);
+    editMenu->addAction(actGoto);
+    editMenu->addSeparator();
+    editMenu->addAction(actClear);
+
+    // ── Тулбар ───────────────────────────────────────────────────────────────
+    QToolBar* tb = addToolBar(tr("Main"));
+    tb->setObjectName("McrWndMainToolBar"); // нужно для saveState/restoreState
+    tb->setIconSize(QSize(16, 16));
+
+    tb->addAction(actNew);
+    tb->addAction(actOpen);
+    tb->addAction(actSave);
+    tb->addAction(actSaveAs);
     tb->addSeparator();
-    addBtn(QStyle::SP_MediaPlay,         tr("Run (F10)"), &McrWnd::slot_run,
-           Qt::Key_F10);
-
+    tb->addAction(actRun);
     tb->addSeparator();
-    addBtn(QStyle::SP_BrowserReload,     tr("&Find"),     &McrWnd::slot_find,
-           QKeySequence(Qt::CTRL | Qt::Key_F));
-    addBtn(QStyle::SP_CommandLink,       tr("&Go to line"), &McrWnd::slot_goToLine,
-           QKeySequence(Qt::CTRL | Qt::Key_G));
-
+    tb->addAction(actFind);
+    tb->addAction(actGoto);
     tb->addSeparator();
-    addBtn(QStyle::SP_DialogResetButton, tr("&Clear log"), &McrWnd::slot_protClear);
+    tb->addAction(actClear);
+}
 
-    m_mainLayout->addWidget(tb);
+void McrWnd::buildStatusBar()
+{
+    m_sbFile     = new QLabel(tr("Без названия"), this);
+    m_sbPos      = new QLabel(tr("Ln 1, Col 1"), this);
+    m_sbModified = new QLabel(this);
+
+    // Фиксированные минимальные ширины, чтобы статусбар не прыгал
+    m_sbPos->setMinimumWidth(110);
+    m_sbPos->setAlignment(Qt::AlignRight | Qt::AlignVCenter);
+    m_sbModified->setMinimumWidth(16);
+    m_sbModified->setAlignment(Qt::AlignCenter);
+    m_sbModified->setToolTip(tr("Несохраненные изменения"));
+
+    statusBar()->addWidget(m_sbFile, 1);         // растягивается
+    statusBar()->addPermanentWidget(m_sbPos);
+    statusBar()->addPermanentWidget(m_sbModified);
+}
+
+void McrWnd::slot_updateStatusBar()
+{
+    const sptr_t pos  = m_editor->currentPos();
+    const sptr_t line = m_editor->lineFromPosition(pos);
+    const sptr_t col  = m_editor->column(pos);
+
+    m_sbPos->setText(tr("Ln %1, Col %2").arg(line + 1).arg(col + 1));
+    m_sbModified->setText(m_editor->isModified() ? QStringLiteral("*") : QString{});
 }
 
 void McrWnd::showEvent(QShowEvent* event)
 {
-    QDialog::showEvent(event);
+    //базовый класс изменился
+    QMainWindow::showEvent(event);
 
     if (!m_firstShow)
         return;
@@ -99,7 +161,7 @@ void McrWnd::showEvent(QShowEvent* event)
 
     const auto btn = QMessageBox::question(
         this, tr("Macro Python"),
-        tr("Load example script?"),
+        tr("Загрузить пример скрипта?"),
         QMessageBox::Yes | QMessageBox::No,
         QMessageBox::No);
 
@@ -111,8 +173,8 @@ void McrWnd::showEvent(QShowEvent* event)
 
     m_editor->setFileInfo(QFileInfo(examplePath));
     if (SciHlpBase::RetVal::Ok != m_editor->loadFromFile()) {
-        QMessageBox::warning(this, tr("Warning"),
-                             tr("Example file not found:\n%1").arg(examplePath));
+        QMessageBox::warning(this, tr("Предупреждение"),
+                             tr("Пример файла не найден:\n%1").arg(examplePath));
         m_editor->setFileInfo(QFileInfo{});
     }
 }
@@ -128,19 +190,18 @@ McrWnd::SavePromptResult McrWnd::promptSaveIfModified()
         return SavePromptResult::NoChanges;
 
     QMessageBox mb(QMessageBox::Question,
-                   tr("Macro Python"),
-                   tr("The macro has unsaved changes. Save?"),
+                   tr("Macro Editor — Python"),
+                   tr("В макросе есть несохраненные изменения. Сохранить?"),
                    QMessageBox::Yes | QMessageBox::No | QMessageBox::Cancel,
                    this);
     mb.setDefaultButton(QMessageBox::Yes);
 
     switch (mb.exec()) {
     case QMessageBox::Yes: {
-        const bool hasPath =
-            m_editor->getFileInfo().absoluteFilePath().length() > 3;
-        return slot_fileSave(!hasPath)
-                   ? SavePromptResult::Saved
-                   : SavePromptResult::Cancelled;
+        const bool ok = m_editor->getFileInfo().absoluteFilePath().isEmpty()
+        ? slot_fileSaveAs()
+        : slot_fileSave();
+        return ok ? SavePromptResult::Saved : SavePromptResult::Cancelled;
     }
     case QMessageBox::No:
         return SavePromptResult::Discarded;
@@ -157,7 +218,7 @@ void McrWnd::closeEvent(QCloseEvent* event)
         return;
     }
 
-    QDialog::closeEvent(event);
+    QMainWindow::closeEvent(event);
 }
 
 void McrWnd::slot_fileNew()
@@ -172,66 +233,68 @@ void McrWnd::slot_fileNew()
 
 void McrWnd::slot_fileOpen()
 {
-    const auto result = promptSaveIfModified();
-    if (result == SavePromptResult::Cancelled)
+    if (promptSaveIfModified() == SavePromptResult::Cancelled)
         return;
 
     const QString path = QFileDialog::getOpenFileName(this, tr("Open file"));
-    if (path.length() < 3)
+    if (path.isEmpty())
         return;
 
     m_editor->setFileInfo(QFileInfo{path});
     if (SciHlpBase::RetVal::Ok != m_editor->loadFromFile()) {
         m_editor->setFileInfo(QFileInfo{});
-        QMessageBox::critical(this, tr("Error"),
-                              tr("Failed to load file:\n%1").arg(path));
+        QMessageBox::critical(this, tr("Ошибка"),
+                              tr("Не удалось загрузить файл:\n%1").arg(path));
     }
 }
 
-bool McrWnd::slot_fileSave(bool saveAs)
+bool McrWnd::slot_fileSave()
 {
-    if (saveAs) {
-        const QString path = QFileDialog::getSaveFileName(this, tr("Save file as"));
-        if (path.length() < 3)
-            return false;
-        if (SciHlpBase::RetVal::Ok != m_editor->setFileInfo(QFileInfo(path))) {
-            QMessageBox::critical(this, tr("Error"),
-                                  tr("Cannot set file path:\n%1").arg(path));
-            return false;
-        }
-    }
+    // Нет пути — делегируем в «Сохранить как»
+    if (m_editor->getFileInfo().absoluteFilePath().isEmpty())
+        return slot_fileSaveAs();
 
     if (SciHlpBase::RetVal::Ok != m_editor->saveToFile()) {
-        QMessageBox::critical(this, tr("Error"),
-                              tr("Failed to save file:\n%1")
+        QMessageBox::critical(this, tr("Ошибка"),
+                              tr("Не удалось сохранить файл:\n%1")
                                   .arg(m_editor->getFileInfo().absoluteFilePath()));
         return false;
     }
+    // снять флаг «*»
+    slot_updateStatusBar();
     return true;
+}
+
+bool McrWnd::slot_fileSaveAs()
+{
+    const QString path = QFileDialog::getSaveFileName(this, tr("Сохраните файл как"));
+    if (path.isEmpty())
+        return false;
+
+    if (SciHlpBase::RetVal::Ok != m_editor->setFileInfo(QFileInfo(path))) {
+        QMessageBox::critical(this, tr("Ошибка"),
+                              tr("Не удается задать путь к файлу:\n%1").arg(path));
+        return false;
+    }
+    return slot_fileSave();
 }
 
 void McrWnd::slot_run()
 {
-    if (!m_pyHlp) {
-        m_glodLogWidget->onRastrPrint("No PyHlp!\n");
-        return;
-    }
+    if (!m_pyHlp) { m_glodLogWidget->onRastrPrint("No PyHlp!\n"); return; }
 
     const QByteArray src = m_editor->getText(m_editor->textLength());
     const PyHlp::Result res = m_pyHlp->run(src.constData());
-
-    if (res == PyHlp::Result::Ok)
-        return;
+    if (res == PyHlp::Result::Ok) return;
 
     const QString errMsg = m_pyHlp->getErrorMessage().empty()
-                               ? tr("Unknown error")
+                               ? tr("Неизвестная ошибка")
                                : QString::fromStdString(m_pyHlp->getErrorMessage());
-
     const long errLine = m_pyHlp->getErrorLine();
 
     QMessageBox mb(QMessageBox::Critical, tr("Python error"), errMsg, {}, this);
     if (errLine > -1) {
-        mb.setInformativeText(tr("Go to line %1?").arg(errLine));
+        mb.setInformativeText(tr("Перейти к строке %1?").arg(errLine));
         mb.setStandardButtons(QMessageBox::Yes | QMessageBox::Cancel);
         if (mb.exec() == QMessageBox::Yes)
             m_editor->gotoLine(errLine - 1);
@@ -246,8 +309,8 @@ void McrWnd::slot_goToLine()
     const sptr_t total = m_editor->lineCount();
     bool ok = false;
     const int line = QInputDialog::getInt(
-        this, tr("Go to line"),
-        tr("Line number (1..%1):").arg(total),
+        this, tr("Перейти к строке"),
+        tr("Номер строки (1..%1):").arg(total),
         1, 1, static_cast<int>(total), 1, &ok);
     if (ok)
         m_editor->gotoLine(line - 1);
@@ -255,20 +318,26 @@ void McrWnd::slot_goToLine()
 
 void McrWnd::slot_find()
 {
-    auto dlgFind = new DlgFindRepl(this);
-    dlgFind->setAttribute(Qt::WA_DeleteOnClose);
-    connect(dlgFind, &DlgFindRepl::sig_find,
-            this, &McrWnd::slot_findByParams);
+    // окно поиска уже создано и живо
+    if (m_findDlg) {
+        m_findDlg->raise();
+        m_findDlg->activateWindow();
+        return;
+    }
 
-    dlgFind->show();
+    m_findDlg = new DlgFindRepl(this);
+    // QPointer обнулится сам
+    m_findDlg->setAttribute(Qt::WA_DeleteOnClose);
+    connect(m_findDlg, &DlgFindRepl::sig_find,
+            this,      &McrWnd::slot_findByParams);
+    m_findDlg->show();
 }
 
-void McrWnd::slot_findByParams(SciPyEditor::FindParams params_find)
+void McrWnd::slot_findByParams(SciPyEditor::FindParams params)
 {
-    if (SciPyEditor::RetVal::Ok != m_editor->find(params_find)) {
-        QMessageBox::information(this, tr("Find"),
-                                 tr("'%1' not found.").arg(params_find.m_text));
-    }
+    if (SciPyEditor::RetVal::Ok != m_editor->find(params))
+        QMessageBox::information(this, tr("Найти"),
+                                 tr("'%1' не найдена.").arg(params.m_text));
 }
 
 void McrWnd::slot_protClear()
@@ -289,9 +358,16 @@ void McrWnd::slot_rastrPrint(const std::string& str_msg){
     m_glodLogWidget->onRastrPrint(str_msg);
 }
 
-void McrWnd::slot_fileInfoChanged( const QFileInfo& fiNew)
+void McrWnd::slot_fileInfoChanged(const QFileInfo& fi)
 {
-    setWindowTitle(fiNew.absoluteFilePath().isEmpty()
-                   ? tr("Macro Python")
-                   : fiNew.absoluteFilePath());
+    const bool hasFile = !fi.absoluteFilePath().isEmpty();
+
+    setWindowTitle(hasFile
+                       ? tr("%1 — Macro Editor").arg(fi.fileName())
+                       : tr("Macro Editor — Python"));
+
+    m_sbFile->setText(hasFile ? fi.absoluteFilePath() : tr("Без названия"));
+    m_sbFile->setToolTip(m_sbFile->text());
+
+    slot_updateStatusBar();
 }

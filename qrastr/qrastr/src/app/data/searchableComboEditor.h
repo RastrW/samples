@@ -1,0 +1,2 @@
+// searchableComboEditor.h
+#pragma once

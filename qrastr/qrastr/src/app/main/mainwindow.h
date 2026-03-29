@@ -22,6 +22,7 @@ class WorkspaceManager;
 class PyHlp;
 class CUIForm;
 class QAction;
+class McrWnd;
 
 namespace ads {
     class CDockManager;
@@ -109,8 +110,9 @@ private:
 
     // ========== ВСПОМОГАТЕЛЬНЫЕ КОМПОНЕНТЫ ==========
     std::shared_ptr<PyHlp> m_pyHelper;          // Python helper (для выполнения макросов)
-
     std::shared_ptr<spdlog::sinks::sink> m_qtLogSink; // сохраняем в setupLogSinks
+    //Указатель на окно макросов, которое можно открыть только однократно
+    McrWnd* m_mcrWnd {nullptr};
     // ========== ИНИЦИАЛИЗАЦИЯ ==========
     void setupConnections();
 };

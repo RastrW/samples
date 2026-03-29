@@ -163,7 +163,7 @@ void UIBuilder::createGraphActions() {
 void UIBuilder::createMacroActions() {
     addAction("macro",
               tr("&Макросы"),
-              "",
+              ":/images/new_style/python.png",
               "F11",
               tr("Открыть макросы"));
 }
@@ -287,17 +287,14 @@ void UIBuilder::buildMenuBar() {
     m_menus["macro"] = menuBar->addMenu(tr("&Макро"));
     // Используем стандартную иконку Qt для Play
     QAction* macroAction = m_actions["macro"];
-    macroAction->setIcon(QApplication::style()->standardIcon(QStyle::SP_MediaPlay));
     m_menus["macro"]->addAction(macroAction);
 
     // МЕНЮ "ГРАФИКА"
     m_menus["graph"] = menuBar->addMenu(tr("&Графика"));
     // Используем стандартную иконку Qt для Network
     QAction* graphWebAction = m_actions["graphWeb"];
-    graphWebAction->setIcon(QApplication::style()->standardIcon(QStyle::SP_DriveNetIcon));
     m_menus["graph"]->addAction(graphWebAction);
     QAction* graphSDLAction = m_actions["graphSDL"];
-    graphSDLAction->setIcon(QApplication::style()->standardIcon(QStyle::SP_DriveNetIcon));
     m_menus["graph"]->addAction(graphSDLAction);
 
     // МЕНЮ "РАСЧЁТЫ"

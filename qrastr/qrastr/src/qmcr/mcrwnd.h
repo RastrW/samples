@@ -1,19 +1,23 @@
 #pragma once
 
 #include <QWidget>
-#include <QDialog>
+#include <QMainWindow>
 #include <QToolBar>
 #include <QFileInfo>
+#include <QPointer>
 #include "sciPyEditor.h"
 #include "qmcr_api.h"
+
 
 class  DlgFindRepl;
 class  PyHlp;
 struct _log_data;
 class GlobalProtocolWidget;
 class QVBoxLayout;
+class GlobalProtocolWidget;
+class QLabel;
 
-class QMCR_API McrWnd : public QDialog{
+class QMCR_API McrWnd : public QMainWindow{
     Q_OBJECT
 public:
     explicit McrWnd(QWidget *parent);
@@ -24,11 +28,13 @@ public:
 
     void setPyHlp(std::shared_ptr<PyHlp> pPyHlp);
 public slots:
+    ///@todo нужен ли этот слот, он не используется?
     void slot_rastrLog  (const _log_data&   logData);
     void slot_rastrPrint(const std::string& message);
 private slots:
     void slot_fileNew ();
-    bool slot_fileSave (bool saveAs);
+    bool slot_fileSave ();
+    bool slot_fileSaveAs();
     void slot_fileOpen ();
     void slot_run      ();
     void slot_goToLine ();
@@ -37,18 +43,30 @@ private slots:
 
     void slot_fileInfoChanged(const QFileInfo& fi);
     void slot_findByParams   (SciPyEditor::FindParams params);
+    ///@todo нужен ли этот слот, он не используется?
     void slot_appendProtocol (const QString& text);
+
+    void slot_updateStatusBar();
 private:
     // Результат диалога «сохранить изменения?»
     enum class SavePromptResult { NoChanges, Saved, Discarded, Cancelled };
     SavePromptResult promptSaveIfModified();
 
-    void buildToolBar();
-
     SciPyEditor*        m_editor{nullptr};
     GlobalProtocolWidget*      m_glodLogWidget{ nullptr };
-    QVBoxLayout*        m_mainLayout  {nullptr};
+    //QVBoxLayout*        m_mainLayout  {nullptr};
+
+    QPointer<DlgFindRepl>
+        m_findDlg;    //хранится между вызовами
+
+    // [2] виджеты статусбара
+    QLabel* m_sbFile    {nullptr};
+    QLabel* m_sbPos     {nullptr};
+    QLabel* m_sbModified{nullptr};
 
     std::shared_ptr<PyHlp> m_pyHlp;
     bool m_firstShow {true};
+
+    void buildMenuAndToolBar();
+    void buildStatusBar();
 };
