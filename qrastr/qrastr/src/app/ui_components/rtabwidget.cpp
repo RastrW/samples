@@ -70,7 +70,7 @@ RtabWidget::RtabWidget(QAstra* pqastra,CUIForm UIForm, RTablesDataManager* pRTDM
     // Sets the value that indicates whether the filter panel can automatically hide or not.
     m_view->options().setFilterAutoHide(true);
     // Sets the painting the doted frame around the cell with focus to the enabled. By default frame is enabled.
-    m_view->options().setFocusFrameEnabled(true);
+    //m_view->options().setFocusFrameEnabled(true);
     // Sets the visibility status of the grid grouping panel to groupsHeader.
     m_view->options().setGroupsHeader(false);
     // ScrollByPixel значительно быстрее ScrollByItem при большом числе строк:
@@ -93,8 +93,8 @@ RtabWidget::RtabWidget(QAstra* pqastra,CUIForm UIForm, RTablesDataManager* pRTDM
 
     // ── Блокируем встроенные в Qtitan события ──────────────────────────────────
     m_grid->installEventFilter(this);
-    //if (m_grid->viewport())
-    //    m_grid->viewport()->installEventFilter(this);
+    ///@note создание модели обязатель до меню!
+    createModel();
 
     //  Горячие клавиши
     setupShortcuts();
@@ -106,8 +106,6 @@ RtabWidget::RtabWidget(QAstra* pqastra,CUIForm UIForm, RTablesDataManager* pRTDM
     m_menuBuilder->initMenu(this);
 
     setupConnections();
-
-    createModel();
 }
 
 RtabWidget::~RtabWidget() {}
@@ -201,8 +199,8 @@ void RtabWidget::applyLinkedFormFromController(const LinkedForm& lf)
 
 void RtabWidget::setupToolbar() {
     m_toolbar = new QToolBar(this);
-    m_toolbar->setToolButtonStyle(Qt::ToolButtonTextBesideIcon);
     m_toolbar->setIconSize(QSize(16, 16));
+    m_toolbar->setToolButtonStyle(Qt::ToolButtonIconOnly);
 
     // Qtitan::Grid имеет встроенную кнопку поиска/фильтрации
     // Операции с данными
