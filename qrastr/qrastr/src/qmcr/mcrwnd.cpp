@@ -69,7 +69,7 @@ void McrWnd::buildMenuAndToolBar()
     };
 
     // ── Actions ──────────────────────────────────────────────────────────────
-    auto* actNew    = mkAct(":/images/new_style/file.png",       tr("&Новый"),
+    auto* actNew    = mkAct(":/images/new_style/document.png",       tr("&Новый"),
                          &McrWnd::slot_fileNew,    QKeySequence::New);
     auto* actOpen   = mkAct(":/images/new_style/open.png",      tr("&Открыть"),
                           &McrWnd::slot_fileOpen,   QKeySequence::Open);

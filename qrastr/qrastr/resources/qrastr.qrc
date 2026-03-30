@@ -63,5 +63,19 @@
 		<file>images/new_style/broomstick.png</file>
 		<file>images/new_style/open.png</file>
 		<file>images/new_style/file.png</file>
+		<file>images/new_style/delete.png</file>
+		<file>images/new_style/add.png</file>
+		<file>images/new_style/mental map.png</file>
+		<file>images/new_style/animation model.png</file>
+		<file>images/new_style/bold.png</file>
+		<file>images/new_style/italic.png</file>
+		<file>images/new_style/underline.png</file>
+		<file>images/new_style/thick up arrow.png</file>
+		<file>images/new_style/thick down arrow.png</file>
+		<file>images/new_style/add file.png</file>
+		<file>images/new_style/open document.png</file>
+		<file>images/new_style/document.png</file>
+		<file>images/new_style/settings.png</file>
+		<file>images/new_style/exit.png</file>
     </qresource>
 </RCC>

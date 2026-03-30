@@ -96,10 +96,10 @@ void CondFormatManager::setupWidgets()
         return btn;
     };
 
-    m_buttonAdd    = makeButton(":/icons/field_add",    tr("&Добавить"), tr("Добавить новое условие форматирования"));
-    m_buttonRemove = makeButton(":/icons/field_delete", tr("&Удалить"),  tr("Удалить выбранное условие"));
-    m_buttonUp     = makeButton(":/icons/up",           tr("&Выше"),     tr("Повысить приоритет: переместить условие на строку вверх"));
-    m_buttonDown   = makeButton(":/icons/down",         tr("&Ниже"),     tr("Понизить приоритет: переместить условие на строку вниз"));
+    m_buttonAdd    = makeButton(":/images/new_style/add.png",    tr("&Добавить"), tr("Добавить новое условие форматирования"));
+    m_buttonRemove = makeButton(":/images/new_style/delete.png", tr("&Удалить"),  tr("Удалить выбранное условие"));
+    m_buttonUp     = makeButton(":/images/new_style/thick up arrow.png",           tr("&Выше"),     tr("Повысить приоритет: переместить условие на строку вверх"));
+    m_buttonDown   = makeButton(":/images/new_style/thick down arrow.png",         tr("&Ниже"),     tr("Понизить приоритет: переместить условие на строку вниз"));
 
     toolLayout->addWidget(m_buttonAdd);
     toolLayout->addWidget(m_buttonRemove);
@@ -120,11 +120,11 @@ void CondFormatManager::setupWidgets()
     header->setText(ColumnFont, tr("Шрифт"));
     header->setText(ColumnSize, tr("Размер"));
     // Колонки Bold/Italic/Underline — только иконки, текст пустой
-    header->setIcon(ColumnBold,         QIcon(":/icons/text_bold"));
+    header->setIcon(ColumnBold,         QIcon(":/images/new_style/bold.png"));
     header->setToolTip(ColumnBold,      tr("Жирный"));
-    header->setIcon(ColumnItalic,       QIcon(":/icons/text_italic"));
+    header->setIcon(ColumnItalic,       QIcon(":/images/new_style/italic.png"));
     header->setToolTip(ColumnItalic,    tr("Курсив"));
-    header->setIcon(ColumnUnderline,    QIcon(":/icons/text_underline"));
+    header->setIcon(ColumnUnderline,    QIcon(":/images/new_style/underline.png"));
     header->setToolTip(ColumnUnderline, tr("Подчёркивание"));
     header->setText(ColumnAlignment, tr("Выравнивание"));
     header->setText(ColumnFilter,    tr("Условие"));

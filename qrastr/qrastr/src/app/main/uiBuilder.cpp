@@ -39,37 +39,37 @@ void UIBuilder::buildAll() {
 void UIBuilder::createFileActions() {
     addAction("new",
               tr("&Новый"),
-              ":/images/document_new.png",
+              ":/images/new_style/document.png",
               "Ctrl+N",
               tr("Create a new file"));
     addAction("load",
               tr("&Загрузить"),
-              ":/images/folder_out.png",
+              ":/images/new_style/open document.png",
               "Ctrl+O",
               tr("Load an existing file"));
     addAction("save",
               tr("&Сохранить"),
-              ":/images/disk_blue.png",
+              ":/images/new_style/save.png",
               "Ctrl+S",
               tr("Save the document to disk"));
     addAction("saveAs",
               tr("&Сохранить как"),
-              "",
+              ":/images/new_style/save as.png",
               "",
               tr("Save the document under a new name"));
     addAction("saveAll",
               tr("&Сохранить все"),
-              ":/images/Save_all.png",
+              ":/images/new_style/save all.png",
               "",
               tr("Save all the document"));
     addAction("settings",
               tr("&Параметры"),
-              "",
+              ":/images/new_style/settings.png",
               "",
               tr("Open settings form."));
     addAction("exit",
               tr("E&xit"),
-              "",
+              ":/images/new_style/exit.png",
               "Ctrl+Q",
               tr("Exit the application"));
 
@@ -150,12 +150,12 @@ void UIBuilder::createBarsMDPActions() {
 void UIBuilder::createGraphActions() {
     addAction("graphWeb",
               tr("&Графика Web"),
-              "",
+              ":/images/new_style/mental map.png",
               "F10",
               tr("Графика Web"));
     addAction("graphSDL",
               tr("&Графика SDL"),
-              "",
+              ":/images/new_style/animation model.png",
               "",
               tr("Графика SDL"));
 }
