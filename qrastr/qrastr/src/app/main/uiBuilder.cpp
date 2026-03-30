@@ -424,6 +424,7 @@ QAction* UIBuilder::addAction(
     // Установка горячей клавиши
     if (!shortcut.isEmpty()) {
         action->setShortcut(QKeySequence(shortcut));
+        action->setShortcutContext(Qt::ApplicationShortcut);
     }
 
     // Установка подсказки в статусной строке

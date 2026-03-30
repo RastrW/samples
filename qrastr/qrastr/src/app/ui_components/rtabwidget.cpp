@@ -42,6 +42,7 @@
 #include "qastra.h"
 #include "rdata.h"
 #include "QDataBlocks.h"
+#include "searchableComboRepository.h"
 
 RtabWidget::RtabWidget(QAstra* pqastra,CUIForm UIForm, RTablesDataManager* pRTDM,
                        ads::CDockManager* pDockManager, QWidget *parent)
@@ -253,9 +254,9 @@ bool RtabWidget::eventFilter(QObject* obj, QEvent* event)
                         || (m_grid && m_grid->isAncestorOf(qobject_cast<QWidget*>(obj)));
         if (fromGrid) {
             auto* ke = static_cast<QKeyEvent*>(event);
-            if (ke->key() == Qt::Key_Delete ||
-                ke->key() == Qt::Key_F5) {
-                // Поглощаем событие
+            if (ke->key() == Qt::Key_Delete) {
+                // Delete блокируем: QTitan удаляет содержимое ячейки,
+                // у нас удаление строки — Ctrl+D
                 return true;
             }
         }
@@ -386,13 +387,19 @@ void RtabWidget::applyColumnEditor(int colIndex)
         break;
     }
     case RModel::ColumnEditorInfo::Type::ComboBox:
-        column_qt->setEditorType(GridEditor::ComboBox);
-        if (!info.comboItems.isEmpty()) {
-            column_qt->editorRepository()->setDefaultValue(
-                info.comboItems.at(0), Qt::EditRole);
-            column_qt->editorRepository()->setDefaultValue(
-                info.comboItems,
-                static_cast<Qt::ItemDataRole>(Qtitan::ComboBoxRole));
+        if (info.comboItems.size() > 10) {
+            // Кастомный редактор с поиском
+            auto* repo = new SearchableComboRepository(info.comboItems, m_grid);
+            column_qt->setEditorRepository(repo);
+        } else {
+            column_qt->setEditorType(GridEditor::ComboBox);
+            if (!info.comboItems.isEmpty()) {
+                column_qt->editorRepository()->setDefaultValue(
+                    info.comboItems.at(0), Qt::EditRole);
+                column_qt->editorRepository()->setDefaultValue(
+                    info.comboItems,
+                    static_cast<Qt::ItemDataRole>(Qtitan::ComboBoxRole));
+            }
         }
         break;
     case RModel::ColumnEditorInfo::Type::ComboBoxPicture:
