@@ -75,5 +75,5 @@ void ElGraphService::shutdown()
 }
 
 void ElGraphService::destroyWindow(){
-    m_grc->DestroyWindow();
+    //m_grc->DestroyWindow();
 }
