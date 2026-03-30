@@ -193,3 +193,7 @@ CSubstWnd::~CSubstWnd
 		->ShutdownPlainDLL
 		~_GlobalData
 		->GCC::DLL_PROCESS_DETACH
+		GCC::DLL_PROCESS_ATTACH
+		->ShutdownPlainDLL
+		~_GlobalData
+		->GCC::DLL_PROCESS_DETACH

@@ -299,18 +299,21 @@ void RTablesDataManager::handleChangeData(const std::string& tname,
                                           long row)
 {
     QDataBlock* pqdb = findCachedBlock(tname);
-    if (!pqdb){ return;}
+    if (!pqdb) return;
 
-    const long colIdx = getColIndex(tname, cname);
-    if (colIdx < 0 || colIdx >= static_cast<long>(pqdb->ColumnsCount())){return;}
-    if (row  < 0 || row  >= static_cast<long>(pqdb->RowsCount())){return;}
+    if (row < 0 || row >= static_cast<long>(pqdb->RowsCount()))
+        return;
 
-    ///@note устанавливаем значение только для конкретной ячейки, т.к.
-    /// Ранее была установка DataBlock("", VDB) с пустым списком колонок, он падает сразу после AddRow.
-    pqdb->Set(row, colIdx, m_pqastra->GetVal(tname, cname, row));
+    // Читаем свежие данные из плагина
+    QDataBlock rowBlock;
+    getDataBlock(tname, rowBlock);  // TODO: ideally — перегрузка "только одна строка"
 
-    ///@note добавлен вызов сигнала, уведомляющий об изменении по аналогии
-    emit sig_dataChanged(tname, row, colIdx, row, colIdx);
+    const long ncols = static_cast<long>(pqdb->ColumnsCount());
+
+    for (long col = 0; col < ncols; ++col)
+        pqdb->Set(row, col, rowBlock.Get(row, col));
+
+    emit sig_dataChanged(tname, row, 0, row, ncols - 1);
 }
 
 void RTablesDataManager::handleAddRow(const std::string& tname, long row)
