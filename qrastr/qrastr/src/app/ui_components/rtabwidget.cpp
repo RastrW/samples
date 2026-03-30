@@ -66,7 +66,6 @@ RtabWidget::RtabWidget(QAstra* pqastra,CUIForm UIForm, RTablesDataManager* pRTDM
     m_view->options().setGridLineWidth(1);
     m_view->tableOptions().setColumnAutoWidth(true);
     //user can select several cells at time. Hold shift key to select multiple cells.
-    m_view->options().setSelectionPolicy(GridViewOptions::MultiCellSelection);
     m_view->options().setColumnHidingOnGroupingEnabled(false);
     // Sets the value that indicates whether the filter panel can automatically hide or not.
     m_view->options().setFilterAutoHide(true);
@@ -79,24 +78,26 @@ RtabWidget::RtabWidget(QAstra* pqastra,CUIForm UIForm, RTablesDataManager* pRTDM
     m_view->options().setScrollRowStyle(Qtitan::ScrollItemStyle::ScrollByPixel);
     // Enables or disables wait cursor if grid is busy for lengthy operations with data like sorting or grouping.
     m_view->options().setShowWaitCursor(true);
+    m_view->options().setSelectionPolicy(GridViewOptions::MultiCellSelection);
     m_view->options().setRubberBandSelection(true);        // Выделение "резинкой"
     m_view->tableOptions().setColumnsHeader(true);
     m_view->tableOptions().setRowsQuickSelection(true);
     ///@todo Вынести в опцию контекстного меню (example MultiSelection)
     m_view->tableOptions().setRowFrozenButtonVisible(true);
     m_view->tableOptions().setFrozenPlaceQuickSelection(true);
+
+    m_view->options().setDragEnabled(true);
+    //m_view->options().setFocusFollowsMouse(true);
     //отключить встроенное меню Qtitan
     //m_view->options().setMainMenuDisabled(true);
 
     // ── Блокируем встроенные в Qtitan события ──────────────────────────────────
     m_grid->installEventFilter(this);
-    if (m_grid->viewport())
-        m_grid->viewport()->installEventFilter(this);
+    //if (m_grid->viewport())
+    //    m_grid->viewport()->installEventFilter(this);
 
     //  Горячие клавиши
     setupShortcuts();
-
-    createModel();
 
     m_menuBuilder = std::make_unique<ContextMenuBuilder>(
         m_view,
@@ -106,17 +107,10 @@ RtabWidget::RtabWidget(QAstra* pqastra,CUIForm UIForm, RTablesDataManager* pRTDM
 
     setupConnections();
 
-    resize(800,500);
-    setWindowFlags(Qt::WindowMinimizeButtonHint | Qt::WindowMinMaxButtonsHint
-                   | Qt::WindowCloseButtonHint);
-    setWindowModality(Qt::ApplicationModal);
-
-    //qApp->installEventFilter(this);
+    createModel();
 }
 
-RtabWidget::~RtabWidget() {
-    //qApp->removeEventFilter(this);
-}
+RtabWidget::~RtabWidget() {}
 
 QWidget* RtabWidget::createDockContent(bool addToolbar) {
     QWidget* wrapper = new QWidget(this);
@@ -184,7 +178,6 @@ void RtabWidget::setupConnections(){
     //QTitan
     //Connect Grid's context menu handler.
     connect(m_view, &GridTableView::contextMenu, this, &RtabWidget::slot_contextMenu);
-    connect(m_view, &GridTableView::cellClicked, this, &RtabWidget::slot_itemPressed);
 }
 
 void RtabWidget::setPyHlp(std::shared_ptr<PyHlp> pPyHlp){
@@ -666,11 +659,3 @@ void RtabWidget::slot_setFiltrForSelection(std::string selection)
     m_view->filter()->setActive(true);
     m_view->showFilterPanel();
 }
-
-void RtabWidget::slot_itemPressed( CellClickEventArgs* _args)
-{
-    int row = _args->cell().rowIndex();
-    int col = _args->cell().columnIndex();
-    spdlog::info("Pressed: {}, {}", row, col);
-}
-

@@ -21,7 +21,6 @@ signals:
     void editingCancelled();
 
 protected:
-    //void keyPressEvent(QKeyEvent* e) override;
     bool eventFilter(QObject* obj, QEvent* e) override;
 
 private:

@@ -50,8 +50,6 @@ public slots:
     void slot_close();
     void slot_contextMenu(ContextMenuEventArgs* args);
 
-    //нажатие на яячейку таблицы
-    void slot_itemPressed(CellClickEventArgs* _index);
     void slot_focusRowChanged( int _row_old,int _row_new);
 
     void slot_addRow();
@@ -83,9 +81,6 @@ private slots:
     void applyAllColumnEditors ();
     void applyColumnEditor(int colIndex);
 private:
-    void setTableView(int multiplier = 10 );
-    /// Блокирует горячие клавиши заданные по умолчанию в Qtitan
-    bool eventFilter(QObject* obj, QEvent* event) override;
     /** @brief
      * a) создаёт RModel, вызывает setForm/populateDataFromRastr;
      * b) подключает сигналы RTDM к слотам RModel (обновления данных);
@@ -93,6 +88,10 @@ private:
      * d) восстанавливает условное форматирование из JSON.
     */
     void createModel();
+
+    void setTableView(int multiplier = 10 );
+    /// Блокирует горячие клавиши заданные по умолчанию в Qtitan
+    bool eventFilter(QObject* obj, QEvent* event) override;
 
     void setupToolbar();
     void setupShortcuts();

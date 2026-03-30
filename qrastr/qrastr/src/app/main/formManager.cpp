@@ -97,6 +97,8 @@ void FormManager::openForm(const CUIForm& form) {
             dw);
 
         if (prtw != nullptr) {
+            dw->setWidget(prtw->createDockContent());
+            m_dockManager->addDockWidgetTab(ads::TopDockWidgetArea, dw);
             prtw->setPyHlp(m_pPyHlp);
             // Выравнивание данных по шаблону, выравнивание текста по левому краю
             prtw->slot_widthByTemplate();
@@ -104,9 +106,6 @@ void FormManager::openForm(const CUIForm& form) {
             // Сигналы будут передаваться через onCalculationStarted/Finished
             m_openForms.append(prtw);
             registerDockWidget(dw);
-
-            dw->setWidget(prtw->createDockContent());
-            m_dockManager->addDockWidgetTab(ads::TopDockWidgetArea, dw);
             // Обработка закрытия
             connect(dw, &ads::CDockWidget::closed,
                     prtw, &RtabWidget::slot_close);
