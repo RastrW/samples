@@ -21,32 +21,39 @@
 #include <spdlog/spdlog.h>
 
 McrWnd::McrWnd(QWidget* parent)
-    : QMainWindow(parent)
+    : QWidget(parent)   // ← QMainWindow → QWidget
 {
     resize(600, 800);
     setWindowIcon(QIcon(":/images/new_style/python.png"));
-    setWindowTitle(tr("Macro Editor — Python"));
 
-    auto* central  = new QWidget(this);
-    auto* layout   = new QVBoxLayout(central);
-    layout->setContentsMargins(0, 0, 0, 0);
+    // ── Главный вертикальный layout: menubar / toolbar / content / statusbar ──
+    auto* root = new QVBoxLayout(this);
+    root->setContentsMargins(0, 0, 0, 0);
+    root->setSpacing(0);
 
-    auto* splitter = new QSplitter(Qt::Vertical, central);
-    m_editor        = new SciPyEditor(central);
-    m_glodLogWidget = new GlobalProtocolWidget(central);
+    m_menuBar = new QMenuBar(this);
+    root->addWidget(m_menuBar);
 
+    m_toolBar = new QToolBar(this);
+    m_toolBar->setObjectName("McrWndMainToolBar");
+    m_toolBar->setIconSize(QSize(16, 16));
+    root->addWidget(m_toolBar);
+
+    auto* splitter  = new QSplitter(Qt::Vertical, this);
+    m_editor        = new SciPyEditor(this);
+    m_glodLogWidget = new GlobalProtocolWidget(this);
     splitter->addWidget(m_editor);
     splitter->addWidget(m_glodLogWidget);
-    layout->addWidget(splitter);
-    setCentralWidget(central);
+    root->addWidget(splitter, /*stretch=*/1);
+
+    m_statusBar = new QStatusBar(this);
+    root->addWidget(m_statusBar);
 
     buildMenuAndToolBar();
     buildStatusBar();
 
     connect(m_editor, &SciPyEditor::sig_fileInfoChanged,
             this, &McrWnd::slot_fileInfoChanged);
-
-    //Scintilla сигнализирует об изменении позиции через updateUi
     connect(m_editor, &ScintillaEdit::updateUi,
             this, [this](Scintilla::Update){ slot_updateStatusBar(); });
 
@@ -62,72 +69,66 @@ void McrWnd::buildMenuAndToolBar()
                      auto slot, QKeySequence sc = {}) -> QAction*
     {
         auto* a = new QAction(QIcon(icon), text, this);
-        if (!sc.isEmpty())
-            a->setShortcut(sc);
+        if (!sc.isEmpty()) a->setShortcut(sc);
         connect(a, &QAction::triggered, this, slot);
         return a;
     };
 
     // ── Actions ──────────────────────────────────────────────────────────────
-    auto* actNew    = mkAct(":/images/new_style/document.png",       tr("&Новый"),
-                         &McrWnd::slot_fileNew,    QKeySequence::New);
-    auto* actOpen   = mkAct(":/images/new_style/open.png",      tr("&Открыть"),
-                          &McrWnd::slot_fileOpen,   QKeySequence::Open);
-    auto* actSave   = mkAct(":/images/new_style/save.png",      tr("&Сохранить"),
-                          &McrWnd::slot_fileSave,   QKeySequence::Save);
-    auto* actSaveAs = mkAct(":/images/new_style/save as.png",   tr("Сохранить как"),
-                            &McrWnd::slot_fileSaveAs, QKeySequence::SaveAs);
-    auto* actRun    = mkAct(":/images/new_style/playback.png",        tr("&Пуск"),
-                         &McrWnd::slot_run,         Qt::Key_F10);
-    auto* actFind   = mkAct(":/images/new_style/search.png",       tr("&Найти…"),
-                          &McrWnd::slot_find,        QKeySequence::Find);
-    auto* actGoto   = mkAct(":/images/new_style/recognition of printed text.png",  tr("&Перейти к линии…"),
-                          &McrWnd::slot_goToLine,
+    auto* actNew    = mkAct(":/images/new_style/document.png",
+                         tr("&Новый"),          &McrWnd::slot_fileNew,    QKeySequence::New);
+    auto* actOpen   = mkAct(":/images/new_style/open.png",
+                          tr("&Открыть"),        &McrWnd::slot_fileOpen,   QKeySequence::Open);
+    auto* actSave   = mkAct(":/images/new_style/save.png",
+                          tr("&Сохранить"),      &McrWnd::slot_fileSave,   QKeySequence::Save);
+    auto* actSaveAs = mkAct(":/images/new_style/save as.png",
+                            tr("Сохранить как"),   &McrWnd::slot_fileSaveAs, QKeySequence::SaveAs);
+    auto* actRun    = mkAct(":/images/new_style/playback.png",
+                         tr("&Пуск"),           &McrWnd::slot_run,        Qt::Key_F10);
+    auto* actFind   = mkAct(":/images/new_style/search.png",
+                          tr("&Найти…"),         &McrWnd::slot_find,       QKeySequence::Find);
+    auto* actGoto   = mkAct(":/images/new_style/recognition of printed text.png",
+                          tr("&Перейти к строке…"), &McrWnd::slot_goToLine,
                           QKeySequence(Qt::CTRL | Qt::Key_G));
-    auto* actClear  = mkAct(":/images/new_style/broomstick.png",  tr("Очистить лог"),
-                           &McrWnd::slot_protClear);
+    auto* actClear  = mkAct(":/images/new_style/broomstick.png",
+                           tr("Очистить лог"),    &McrWnd::slot_protClear);
 
-    // ── Меню ─────────────────────────────────────────────────────────────────
-    QMenu* fileMenu = menuBar()->addMenu(tr("&Файл"));
+    // ── Меню — через m_menuBar вместо menuBar() ───────────────────────────────
+    QMenu* fileMenu = m_menuBar->addMenu(tr("&Файл"));
     fileMenu->addAction(actNew);
     fileMenu->addAction(actOpen);
     fileMenu->addSeparator();
     fileMenu->addAction(actSave);
     fileMenu->addAction(actSaveAs);
 
-    QMenu* runMenu = menuBar()->addMenu(tr("&Пуск"));
+    QMenu* runMenu = m_menuBar->addMenu(tr("&Пуск"));
     runMenu->addAction(actRun);
 
-    QMenu* editMenu = menuBar()->addMenu(tr("&Правка"));
+    QMenu* editMenu = m_menuBar->addMenu(tr("&Правка"));
     editMenu->addAction(actFind);
     editMenu->addAction(actGoto);
     editMenu->addSeparator();
     editMenu->addAction(actClear);
 
-    // ── Тулбар ───────────────────────────────────────────────────────────────
-    QToolBar* tb = addToolBar(tr("Main"));
-    tb->setObjectName("McrWndMainToolBar"); // нужно для saveState/restoreState
-    tb->setIconSize(QSize(16, 16));
-
-    tb->addAction(actNew);
-    tb->addAction(actOpen);
-    tb->addAction(actSave);
-    tb->addAction(actSaveAs);
-    tb->addSeparator();
-    tb->addAction(actRun);
-    tb->addSeparator();
-    tb->addAction(actFind);
-    tb->addAction(actGoto);
-    tb->addSeparator();
-    tb->addAction(actClear);
+    // ── Тулбар — через m_toolBar вместо addToolBar() ─────────────────────────
+    m_toolBar->addAction(actNew);
+    m_toolBar->addAction(actOpen);
+    m_toolBar->addAction(actSave);
+    m_toolBar->addAction(actSaveAs);
+    m_toolBar->addSeparator();
+    m_toolBar->addAction(actRun);
+    m_toolBar->addSeparator();
+    m_toolBar->addAction(actFind);
+    m_toolBar->addAction(actGoto);
+    m_toolBar->addSeparator();
+    m_toolBar->addAction(actClear);
 }
 
 void McrWnd::buildStatusBar()
 {
     m_sbFile     = new QLabel(tr("Без названия"), this);
-    m_sbPos      = new QLabel(tr("Ln 1, Col 1"), this);
+    m_sbPos      = new QLabel(tr("Ln 1, Col 1"),  this);
     m_sbModified = new QLabel(this);
-
     // Фиксированные минимальные ширины, чтобы статусбар не прыгал
     m_sbPos->setMinimumWidth(110);
     m_sbPos->setAlignment(Qt::AlignRight | Qt::AlignVCenter);
@@ -135,9 +136,10 @@ void McrWnd::buildStatusBar()
     m_sbModified->setAlignment(Qt::AlignCenter);
     m_sbModified->setToolTip(tr("Несохраненные изменения"));
 
-    statusBar()->addWidget(m_sbFile, 1);         // растягивается
-    statusBar()->addPermanentWidget(m_sbPos);
-    statusBar()->addPermanentWidget(m_sbModified);
+    // m_statusBar вместо statusBar()
+    m_statusBar->addWidget(m_sbFile, 1);
+    m_statusBar->addPermanentWidget(m_sbPos);
+    m_statusBar->addPermanentWidget(m_sbModified);
 }
 
 void McrWnd::slot_updateStatusBar()
@@ -152,11 +154,9 @@ void McrWnd::slot_updateStatusBar()
 
 void McrWnd::showEvent(QShowEvent* event)
 {
-    //базовый класс изменился
-    QMainWindow::showEvent(event);
+    QWidget::showEvent(event);
 
-    if (!m_firstShow)
-        return;
+    if (!m_firstShow) return;
     m_firstShow = false;
 
     const auto btn = QMessageBox::question(
@@ -165,8 +165,7 @@ void McrWnd::showEvent(QShowEvent* event)
         QMessageBox::Yes | QMessageBox::No,
         QMessageBox::No);
 
-    if (btn != QMessageBox::Yes)
-        return;
+    if (btn != QMessageBox::Yes) return;
 
     const QString examplePath =
         QCoreApplication::applicationDirPath() + "/../Data/py_example/rastr_events.py";
@@ -182,6 +181,11 @@ void McrWnd::showEvent(QShowEvent* event)
 void McrWnd::setPyHlp(std::shared_ptr<PyHlp> pPyHlp)
 {
   m_pyHlp = pPyHlp;
+}
+
+bool McrWnd::promptAndAllowClose()
+{
+    return promptSaveIfModified() != SavePromptResult::Cancelled;
 }
 
 McrWnd::SavePromptResult McrWnd::promptSaveIfModified()
@@ -212,13 +216,14 @@ McrWnd::SavePromptResult McrWnd::promptSaveIfModified()
 
 void McrWnd::closeEvent(QCloseEvent* event)
 {
+    // Срабатывает если виджет закрывают напрямую (не через dock).
+    // В dock-режиме закрытие перехватывается MacroDockManager через closeRequested.
     const auto result = promptSaveIfModified();
     if (result == SavePromptResult::Cancelled) {
         event->ignore();
         return;
     }
-
-    QMainWindow::closeEvent(event);
+    QWidget::closeEvent(event);
 }
 
 void McrWnd::slot_fileNew()
@@ -362,9 +367,10 @@ void McrWnd::slot_fileInfoChanged(const QFileInfo& fi)
 {
     const bool hasFile = !fi.absoluteFilePath().isEmpty();
 
-    setWindowTitle(hasFile
-                       ? tr("%1 — Macro Editor").arg(fi.fileName())
-                       : tr("Macro Editor — Python"));
+    // Сам виджет заголовка не показывает — сигнал подхватит MacroDockManager
+    emit titleChanged(hasFile
+                          ? tr("%1 — Macro Editor").arg(fi.fileName())
+                          : tr("Macro Editor — Python"));
 
     m_sbFile->setText(hasFile ? fi.absoluteFilePath() : tr("Без названия"));
     m_sbFile->setToolTip(m_sbFile->text());
