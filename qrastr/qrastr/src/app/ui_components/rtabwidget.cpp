@@ -442,21 +442,20 @@ void RtabWidget::slot_contextMenu(ContextMenuEventArgs* args)
     const auto& hit    = args->hitInfo();
     const int   column = hit.columnIndex();
 
-    if (column < 0) return;   // клик вне колонок (пустое место справа)
-
-    // ── Определяем тип области ───────────────────────────────────────────────
+    if (column < 0) return; // клик вне колонок (пустое место справа)
+    // ── Определяем тип области
     const auto type = hit.info();
-
     const bool isHeader =
         type == GridHitInfo::Column ||
         type == GridHitInfo::Band;
 
+    // ── Меню заголовка
     if (isHeader) {
-        m_menuBuilder->prepareForHeader(column, args->contextMenu());
+        RCol* col = m_model->getRCol(column);   // может быть nullptr — prepareForHeader это учитывает
+        m_menuBuilder->prepareForHeader(column, col, args->contextMenu());
         return;
     }
-
-    // ── Меню ячейки ─────────────────────────────────────────
+    // ── Меню ячейки
     const int row = hit.row().rowIndex();
     RCol* col = m_model->getRCol(column);
     if (!col) return;
@@ -579,17 +578,21 @@ void RtabWidget::slot_openColProp(int col)
     propDialog->exec();
 }
 
-void RtabWidget::slot_openSelection()
+void RtabWidget::slot_openSelection(int col)
 {
-    // Передаём имя колонки, по которой открыто меню
-    int col = m_view->selection()->cell().columnIndex();
     RCol* prcol = m_model->getRCol(col);
     std::string colName = prcol ? prcol->getColName() : "";
 
-    SelectionDialog* selectionDialog = new SelectionDialog(m_selection,colName, this);
+    auto* selectionDialog = new SelectionDialog(m_selection, colName, this);
+    selectionDialog->setAttribute(Qt::WA_DeleteOnClose);
+
     connect(selectionDialog, &SelectionDialog::sig_selectionAccepted,
             this, &RtabWidget::slot_setFiltrForSelection);
-    selectionDialog->setAttribute(Qt::WA_DeleteOnClose);
+
+    // Закрываем диалог сразу после того, как пользователь принял выборку
+    connect(selectionDialog, &SelectionDialog::sig_selectionAccepted,
+            selectionDialog, &QDialog::close);
+
     selectionDialog->show();
 }
 

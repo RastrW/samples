@@ -64,7 +64,7 @@ public slots:
 
     //  Формы инструментов
     void slot_openColProp(int col);
-    void slot_openSelection();
+    void slot_openSelection(int col);
 
     void slot_openExportCSVForm();
     void slot_openImportCSVForm();

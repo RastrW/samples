@@ -306,7 +306,7 @@ void RTablesDataManager::handleChangeData(const std::string& tname,
 
     // Читаем свежие данные из плагина
     QDataBlock rowBlock;
-    getDataBlock(tname, rowBlock);  // TODO: ideally — перегрузка "только одна строка"
+    getDataBlock(tname, rowBlock);
 
     const long ncols = static_cast<long>(pqdb->ColumnsCount());
 
