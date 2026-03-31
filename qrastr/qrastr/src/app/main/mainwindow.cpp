@@ -7,8 +7,7 @@
 #include "qastra.h"
 #include "qti.h"
 #include "qbarsmdp.h"
-#include "mcrwnd.h"
-#include "qmcr/pyhlp.h"
+
 #include "calcIacceptableDialog.h"
 
 #include <QStatusBar>
@@ -19,7 +18,7 @@
 #include <QInputDialog>
 #include <QApplication>
 #include <QMdiSubWindow>
-
+#include <QMimeData>
 #include <QTimer>
 
 #if (QT_VERSION >= QT_VERSION_CHECK(6, 0, 0))
@@ -99,9 +98,8 @@ void MainWindow::initialize(
 
     m_calcController = std::make_unique<CalculationController>(
         m_qastra, m_qti, m_qbarsmdp, this);
-    m_pyHelper    = std::make_shared<PyHlp>(*m_qastra->getRastr().get());
     m_formManager = std::make_unique<FormManager>(
-        m_qastra, m_dockManager, m_pyHelper, m_logManager, this);
+        m_qastra, m_dockManager, m_logManager, this);
     m_formManager->setForms(forms);
     m_uiBuilder = std::make_unique<UIBuilder>(this);
     m_uiBuilder->buildAll();
@@ -289,7 +287,7 @@ void MainWindow::setupConnections() {
     connect(m_uiBuilder->actionByName("graphSDL"), &QAction::triggered,
             m_formManager.get(), &FormManager::slot_openSDLGraph);
     connect(m_uiBuilder->actionByName("macro"), &QAction::triggered,
-            this, &MainWindow::slot_openMcrDialog);
+            m_formManager.get(), &FormManager::openMacroWindow);
     connect(m_uiBuilder->actionByName("protocol"), &QAction::triggered,
             m_formManager.get(), &FormManager::slot_openProtocol);
     // Закрыть активный dock widget
@@ -326,27 +324,6 @@ MainWindow::getProtocolLogSink() const {
 void MainWindow::slot_updateRecentFiles() {
     QStringList files = m_fileManager->getRecentFiles();
     m_uiBuilder->updateRecentFileActions(files);
-}
-
-void MainWindow::slot_openMcrDialog(){
-    if (m_mcrWnd) {           // окно уже открыто
-        m_mcrWnd->raise();
-        m_mcrWnd->activateWindow();
-        return;
-    }
-
-    m_mcrWnd = new McrWnd(this);
-    m_mcrWnd->setAttribute(Qt::WA_DeleteOnClose);
-
-    // Обнуляем указатель, когда окно уничтожается
-    connect(m_mcrWnd, &QObject::destroyed,
-            this, [this]{ m_mcrWnd = nullptr; });
-
-    connect(m_qastra.get(), &QAstra::onRastrPrint,
-            m_mcrWnd, &McrWnd::slot_rastrPrint);
-
-    m_mcrWnd->setPyHlp(m_pyHelper);
-    m_mcrWnd->show();
 }
 
 void MainWindow::slot_about(){

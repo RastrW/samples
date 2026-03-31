@@ -155,7 +155,7 @@ void McrWnd::slot_updateStatusBar()
 void McrWnd::showEvent(QShowEvent* event)
 {
     QWidget::showEvent(event);
-
+    /*
     if (!m_firstShow) return;
     m_firstShow = false;
 
@@ -176,6 +176,7 @@ void McrWnd::showEvent(QShowEvent* event)
                              tr("Пример файла не найден:\n%1").arg(examplePath));
         m_editor->setFileInfo(QFileInfo{});
     }
+    */
 }
 
 void McrWnd::setPyHlp(std::shared_ptr<PyHlp> pPyHlp)
@@ -223,6 +224,7 @@ void McrWnd::closeEvent(QCloseEvent* event)
         event->ignore();
         return;
     }
+
     QWidget::closeEvent(event);
 }
 

@@ -15,23 +15,24 @@ using WrapperExceptionType = std::runtime_error;
 #include "astra/IPlainRastrWrappers.h"
 #include "web/graphWebManager.h"
 #include "sdl/graphSDLManager.h"
+#include "macroDockManager.h"
+#include "qmcr/pyhlp.h"
 
 FormManager::FormManager
     (std::shared_ptr<QAstra> qastra,
      ads::CDockManager* dockManager,
-     std::shared_ptr<PyHlp> pPyHlp,
      LogManager* logManager,
      QWidget* parent)
     : QObject(parent)
     , m_qastra(qastra)
     , m_dockManager(dockManager)
-    , m_pPyHlp(pPyHlp)
     , m_parentWidget(parent)
     , m_logManager(logManager)
 {
     assert(m_qastra != nullptr);
     assert(m_dockManager != nullptr);
-    assert(m_pPyHlp != nullptr);
+
+    m_pPyHlp    = std::make_shared<PyHlp>(*qastra->getRastr().get());
 
     m_rtdm.setQAstra(qastra.get());
 
@@ -39,6 +40,8 @@ FormManager::FormManager
                                             m_qastra->getRastr().get(), this);
     m_graphWebManager = new GraphWebManager(m_dockManager, m_parentWidget,
                                             m_qastra->getRastr().get(), this);
+    m_macroDockManager = new MacroDockManager(
+        m_dockManager, m_pPyHlp, m_qastra, m_parentWidget);
 
     for (IGraphManager* mgr : {m_graphSDLManager, m_graphWebManager}) {
         connect(mgr, &IGraphManager::windowOpened,
@@ -47,6 +50,8 @@ FormManager::FormManager
 
     connect(m_logManager, &LogManager::dockWidgetCreated,
             this, &FormManager::registerDockWidget);
+    connect(m_macroDockManager, &MacroDockManager::windowOpened,
+            this,               &FormManager::registerDockWidget);
 }
 
 const QSet<QString>& FormManager::protocolDockNames() {
@@ -126,6 +131,12 @@ void FormManager::openForm(const CUIForm& form) {
     } catch (...) {
         spdlog::error("openForm('{}') threw unknown exception", form.Name());
     }
+}
+
+void FormManager::openMacroWindow()
+{
+    m_macroDockManager->openWindow();
+    emit formOpened("Окно макросов");
 }
 
 void FormManager::slot_openSDLGraph() {
@@ -448,6 +459,11 @@ void FormManager::openWidgetByName(const QString& name) {
                 spdlog::warn("Log dock '{}' not in ADS yet, skipping",
                              name.toStdString());
             }
+            return;
+        }
+        // ── Макросы ───────────────────────────────────────────────────────
+        if (name == QLatin1String(MacroDockManager::kDockObjectName)) {
+            m_macroDockManager->openWindow();
             return;
         }
 

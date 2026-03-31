@@ -17,6 +17,7 @@ class CUIForm;
 class PyHlp;
 class GraphServer;
 class IGraphManager;
+class MacroDockManager;
 
 namespace ads {
     class CDockManager;
@@ -37,7 +38,6 @@ public:
     explicit FormManager(
         std::shared_ptr<QAstra> qastra,
         ads::CDockManager* dockManager,
-        std::shared_ptr<PyHlp> pPyHlp,
         LogManager* logManager,
         QWidget* parent = nullptr
     );
@@ -54,7 +54,8 @@ public:
     
     void openFormByName(const QString& formName);
     void openFormByIndex(int index);
-
+    ///@brief Открыть форму
+    void openMacroWindow();
     // ========== Построение меню ==========
     /// @brief Построить меню "Открыть" из статических форм
     void buildFormsMenu(QMenu* parentMenu, QMenu* calcParametersMenu = nullptr);
@@ -126,8 +127,8 @@ private:
     std::shared_ptr<QAstra> m_qastra;
     ads::CDockManager* m_dockManager;
     QWidget* m_parentWidget;
-    std::shared_ptr<PyHlp> m_pPyHlp;
-    RTablesDataManager m_rtdm;                  // Менеджер данных таблиц
+    std::shared_ptr<PyHlp> m_pPyHlp;            // Python helper (для выполнения макросов)
+    RTablesDataManager m_rtdm;                  // Менеджер данных таблиц        
     // ========== Состояние ==========
     std::list<CUIForm> m_forms;                     // Статические формы
     std::map<QString, int> m_formNameToIndex;           // Быстрый поиск
@@ -135,8 +136,8 @@ private:
     //sdl
     IGraphManager* m_graphSDLManager = nullptr;
     IGraphManager* m_graphWebManager = nullptr;
-
     LogManager* m_logManager = nullptr;
+    MacroDockManager* m_macroDockManager = nullptr;
 
     const QSet<QString> m_protocolNames = {
         QStringLiteral("Полный протокол"),
