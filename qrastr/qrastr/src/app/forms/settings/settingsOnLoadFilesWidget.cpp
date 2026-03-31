@@ -45,12 +45,15 @@ void SettingsOnLoadFilesWidget::setupUI() {
     m_tableWidget->setSelectionMode(QAbstractItemView::SingleSelection);
     m_tableWidget->setSelectionBehavior(QAbstractItemView::SelectRows);
     m_tableWidget->horizontalHeader()->setStretchLastSection(true);
-    m_tableWidget->horizontalHeader()->setSectionResizeMode(0, QHeaderView::Stretch);
+    m_tableWidget->horizontalHeader()->setSectionResizeMode(0, QHeaderView::Interactive);
     m_tableWidget->horizontalHeader()->setSectionResizeMode(1, QHeaderView::ResizeToContents);
     m_tableWidget->verticalHeader()->setVisible(false);
 
     connect(m_tableWidget, &QTableWidget::itemDoubleClicked,
             this, &SettingsOnLoadFilesWidget::onTableItemDoubleClicked);
+
+    connect(m_tableWidget, &QTableWidget::itemChanged,
+            this, &SettingsOnLoadFilesWidget::onTableItemChanged);
 
     mainLayout->addWidget(m_tableWidget);
 
@@ -79,14 +82,15 @@ void SettingsOnLoadFilesWidget::populateFiles() {
 
 void SettingsOnLoadFilesWidget::refreshTableDisplay() {
     // Отрисовка таблицы без перезагрузки данных
+    m_tableWidget->blockSignals(true);
     m_tableWidget->setRowCount(m_selectedFiles.size());
-
     for (size_t i = 0; i < m_selectedFiles.size(); ++i) {
         const auto& pair = m_selectedFiles[i];
 
         QTableWidgetItem* pItemFile = new QTableWidgetItem(
             QString::fromStdString(pair.first));
-        pItemFile->setFlags(Qt::ItemIsSelectable | Qt::ItemIsEnabled);
+        pItemFile->setFlags(Qt::ItemIsSelectable | Qt::ItemIsEnabled |
+                            Qt::ItemIsEditable);
         m_tableWidget->setItem(i, COLUMN_FILE, pItemFile);
 
         QTableWidgetItem* pItemTemplate = new QTableWidgetItem(
@@ -95,8 +99,8 @@ void SettingsOnLoadFilesWidget::refreshTableDisplay() {
                                 Qt::ItemIsEditable);
         m_tableWidget->setItem(i, COLUMN_TEMPLATE, pItemTemplate);
     }
-
     m_tableWidget->resizeColumnsToContents();
+    m_tableWidget->blockSignals(false);
 }
 
 void SettingsOnLoadFilesWidget::onAddFilesClicked() {
@@ -199,6 +203,15 @@ void SettingsOnLoadFilesWidget::onTableItemDoubleClicked(QTableWidgetItem* item)
         }
     }
 }
+
+void SettingsOnLoadFilesWidget::onTableItemChanged(QTableWidgetItem* item)
+{
+    int row = item->row();
+    m_selectedFiles[row].first =  m_tableWidget->item(row,0)->data(Qt::DisplayRole).toString().toStdString();
+
+    emit settingsChanged();
+}
+
 
 void SettingsOnLoadFilesWidget::applyChanges() {
     Params::get_instance()->setStartLoadFileTemplates(m_selectedFiles);

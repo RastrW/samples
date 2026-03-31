@@ -72,7 +72,8 @@ bool App::init(){
         auto qt_sink = std::make_shared<QtSink>();
         logg->sinks().push_back(qt_sink);
 #else
-        auto console_sink = std::make_shared<spdlog::sinks::ansicolor_stdout_sink_mt>();
+        //auto console_sink = std::make_shared<spdlog::sinks::ansicolor_stdout_sink_mt>();
+        auto console_sink = std::make_shared<spdlog::sinks::wincolor_stdout_sink_mt>();
         logg->sinks().push_back(console_sink);
 #endif
         bool res = readSettings();
@@ -214,12 +215,15 @@ bool App::start(){
 
                 // Проверяем существование до загрузки
                 if (!fs::exists(path_file)) {
-                    Params::_v_file_templates empty;
-                    p_params->setStartLoadFileTemplates(empty);
+                    //MaxiMal: Нет, я считаю не нужно сбрасывать пользовательскую набивку
+                    //          Нет файла - информируем пользователя и идем дальше.
+                    //Params::_v_file_templates empty;
+                    //p_params->setStartLoadFileTemplates(empty);
                     spdlog::warn("Startup file not found: {}", path_file.string());
                     QMessageBox mb(QMessageBox::Icon::Warning,
                                    QObject::tr("Файл не найден"),
-                                   QString("Файл не найден:\n%1\n\nБудет открыт пустой проект.")
+                                   //QString("Файл не найден:\n%1\n\nБудет открыт пустой проект.")
+                                   QString("Файл не найден:\n%1\n\n")
                                        .arg(QString::fromStdString(path_file.string())));
                     mb.exec();
                     continue; // Не падаем — просто пропускаем

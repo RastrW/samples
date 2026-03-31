@@ -20,6 +20,8 @@ private slots:
     void onRemoveFileClicked();
     /// Обработчик двойного клика на строку таблицы (редактирование шаблона)
     void onTableItemDoubleClicked(QTableWidgetItem* item);
+    /// Обработчик изменения значения в ячейке
+    void onTableItemChanged(QTableWidgetItem* item);
 private:
     void setupUI();
     void populateFiles();       // Только при инициализации
