@@ -17,6 +17,9 @@ LogManager::LogManager(ads::CDockManager* dockManager,
 void LogManager::setupLogSinks()
 {
     auto logger = spdlog::default_logger();
+#ifdef _DEBUG
+    logger->set_level(spdlog::level::debug);
+#endif
 
     auto qtSink = std::make_shared<spdlog::sinks::qt_sink_mt>(
         m_globalProtocol, "onAppendText");

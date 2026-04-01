@@ -181,17 +181,30 @@ void LinkedFormController::openLinkedForm(LinkedForm lf)
 
 void LinkedFormController::openLinkedMacro(LinkedMacro lm, int contextRow)
 {
-    spdlog::debug("LinkedFormController: run macro {}", lm.macrofile.c_str());
+    spdlog::info("LinkedFormController: run macro {}", lm.macrofile.c_str());
 
     // Макросы лежат в <рабочая директория>/contextmacro/  с расширением .py
     fs::path macroPath = QDir::currentPath().toStdString();
+
     macroPath /= "contextmacro";
     macroPath /= lm.macrofile;
     macroPath.replace_extension(".py");
-
     if (!fs::exists(macroPath))
     {
-        spdlog::debug("context macro not found: {}", macroPath.string());
+        spdlog::warn("context macro not found: {}", macroPath.string());
+        return;
+    }
+
+    // Чтобы макросы работали в Data должен лежать astra_py. модуль
+    fs::path astra_py_Path = QDir::currentPath().toStdString();
+#ifdef _WIN32
+    astra_py_Path /= "astra_py.cp312-win_amd64.pyd";
+#else
+    astra_py_Path /= "astra_py.cpython-311-x86_64-linux-gnu.so";
+#endif
+    if (!fs::exists(astra_py_Path))
+    {
+        spdlog::warn("astra_py. module not found: {}", astra_py_Path.string());
         return;
     }
 
@@ -211,9 +224,25 @@ void LinkedFormController::openLinkedMacro(LinkedMacro lm, int contextRow)
     content.insert(0, debugLine);
 
     if (m_pyHlp)
-        m_pyHlp->run(content.data());
+    {
+        PyHlp::Result py_res = m_pyHlp->run(content.data());
+        switch(py_res)
+        {
+            case PyHlp::Result::Error:
+                spdlog::warn("LinkedFormController:  m_pyHlp->run() return Error!");
+                break;
+            case PyHlp::Result::RuntimeError:
+                spdlog::warn("LinkedFormController:  m_pyHlp->run() return RuntimeError!");
+                break;
+            case PyHlp::Result::SyntaxError:
+                spdlog::warn("LinkedFormController:  m_pyHlp->run() return SyntaxError!");
+                break;
+            default:
+                break;
+        }
+    }
     else
-        spdlog::warn("LinkedFormController: PyHlp не установлен, макрос не выполнен");
+        spdlog::warn("LinkedFormController: PyHlp не установлен, макрос не выполнен!");
 }
 
 void LinkedFormController::onParentRowChanged(int newRow)
