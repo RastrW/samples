@@ -1,20 +1,20 @@
 #include "settingsOnLoadFormsWidget.h"
-#include "params.h"
+#include "rastrParameters.h"
 #include <QTableWidget>
 #include <QVBoxLayout>
 #include <QHeaderView>
 #include <spdlog/spdlog.h>
-#include "params.h"
+#include "rastrParameters.h"
 
 SettingsOnLoadFormsWidget::SettingsOnLoadFormsWidget(QWidget* parent)
     : CheckableTableWidget(parent)
 {
-    const auto& allForms     = Params::get_instance()->getFormsExists();
-    const auto& checkedForms = Params::get_instance()->getStartLoadForms();
+    const auto& allForms     = RastrParameters::get_instance()->getFormsExists();
+    const auto& checkedForms = RastrParameters::get_instance()->getStartLoadForms();
 
     populate(allForms, checkedForms);
 }
 
 void SettingsOnLoadFormsWidget::applyChanges() {
-    Params::get_instance()->setStartLoadForms(checkedItems());
+    RastrParameters::get_instance()->setStartLoadForms(checkedItems());
 }

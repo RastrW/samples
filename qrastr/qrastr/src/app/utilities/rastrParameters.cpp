@@ -1,14 +1,14 @@
-#include "params.h"
+#include "rastrParameters.h"
 #include <fstream>
 #include <QSettings>
 #include "common_qrastr.h"
 #include <astra_headers/json.hpp>
 #include "astra_headers/UIForms.h"
 
-Params::Params(){
+RastrParameters::RastrParameters(){
 }
 
-bool Params::readJsonFile(const fs::path& path_2_json){
+bool RastrParameters::readJsonFile(const fs::path& path_2_json){
     // Значения по умолчанию
     static const _v_forms default_forms = {
         "poisk.fm",
@@ -99,7 +99,7 @@ bool Params::readJsonFile(const fs::path& path_2_json){
     return true;
 }
 
-bool Params::writeJsonFile(const fs::path& path_2_json)const {
+bool RastrParameters::writeJsonFile(const fs::path& path_2_json)const {
     ///@note Здесь уже нельзя использовать spdlog
     try{
         nlohmann::json j_start;
@@ -152,13 +152,13 @@ bool Params::writeJsonFile(const fs::path& path_2_json)const {
     return true;
 }
 
-bool Params::templ_sort_func(const std::pair<std::string,std::string>& p1,
+bool RastrParameters::templ_sort_func(const std::pair<std::string,std::string>& p1,
                              const std::pair<std::string,std::string>& p2)
 {
     return (p1.first.length() < p2.first.length());
 }
 
-bool Params::readTemplates(){
+bool RastrParameters::readTemplates(){
     try{
         const fs::path& path_dir_templates
             {getDirSHABLON().absolutePath().toStdString()};
@@ -181,7 +181,7 @@ bool Params::readTemplates(){
     return true;
 }
 
-bool Params::readForms(){
+bool RastrParameters::readForms(){
     try {
         upCUIFormsCollection_ = std::make_unique<CUIFormsCollection>();
 
@@ -212,7 +212,7 @@ bool Params::readForms(){
     return true;
 }
 
-bool Params::readFormsExists(){
+bool RastrParameters::readFormsExists(){
     try{
         m_forms_exists_.clear();
         for(const auto& entry : fs::directory_iterator(path_forms)){

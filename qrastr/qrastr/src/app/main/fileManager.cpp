@@ -1,6 +1,6 @@
 #include "fileManager.h"
 #include "qastra.h"
-#include "params.h"
+#include "rastrParameters.h"
 #include "files/fileNewDialog.h"
 #include "files/saveAllDialog.h"
 
@@ -18,6 +18,14 @@ FileManager::FileManager(std::shared_ptr<QAstra> qastra, QWidget* parent)
     , m_parentWidget(parent)
 {
     assert(m_qastra != nullptr);
+
+    const auto& startFiles = RastrParameters::get_instance()->getStartLoadFileTemplates();
+    for (const auto& [file, tmpl] : startFiles) {
+        // Добавляем в карту БЕЗ добавления в "последние"
+        registerStartupFile(QString::fromStdString(file),
+                            QString::fromStdString(tmpl));
+    }
+
 }
 
 bool FileManager::newFile() {
@@ -29,7 +37,7 @@ bool FileManager::newFile() {
         CursorGuard guard;
         for (const QString& templateName : selectedTemplates) {
             const std::string path =
-                Params::get_instance()->getDirSHABLON().absolutePath().toStdString()
+                RastrParameters::get_instance()->getDirSHABLON().absolutePath().toStdString()
                 + "//" + templateName.toStdString();
             m_qastra->Load(eLoadCode::RG_REPL, "", path);
         }
@@ -51,7 +59,7 @@ int FileManager::openFiles() {
     int successCount = 0;
     const QString noTemplate = "No template (*)";
     // Получаем список шаблонов из Params
-    const auto& templateExts = Params::get_instance()->getTemplateExts();
+    const auto& templateExts = RastrParameters::get_instance()->getTemplateExts();
     //Загружаем каждый выбранный файл
     for (const QString& file : selectedFiles) {
         spdlog::info("Try load file: {}", file.toStdString());
@@ -78,7 +86,7 @@ int FileManager::openFiles() {
             templateFound = true;
             try {
                 const fs::path shablon =
-                    fs::path(Params::get_instance()->getDirSHABLON()
+                    fs::path(RastrParameters::get_instance()->getDirSHABLON()
                                  .absolutePath().toStdString())
                     / (name + ext);
 
@@ -166,7 +174,7 @@ bool FileManager::saveAs() {
     std::string str_path_to_shablon;
     if (!templatePath.isEmpty()) {
         str_path_to_shablon = 
-            Params::get_instance()->getDirSHABLON().absolutePath().toStdString() 
+            RastrParameters::get_instance()->getDirSHABLON().absolutePath().toStdString()
             + "/" + templatePath.toStdString();
     }
     
@@ -321,8 +329,8 @@ QString FileManager::buildFileFilter() const {
     
     // Known types (все расширения вместе)
     qstr_filter += "Known types(";
-    const Params::_v_template_exts v_template_ext = Params::get_instance()->getTemplateExts();
-    for (const Params::_v_template_exts::value_type& template_ext : v_template_ext) {
+    const RastrParameters::_v_template_exts v_template_ext = RastrParameters::get_instance()->getTemplateExts();
+    for (const RastrParameters::_v_template_exts::value_type& template_ext : v_template_ext) {
         qstr_filter += QString("*%1 ").arg(QString::fromStdString(template_ext.second));
     }
     qstr_filter += ");;";
@@ -340,9 +348,10 @@ QString FileManager::buildFileFilter() const {
 }
 
 QString FileManager::findTemplateByExtension(const QString& filePath) const {
-    const Params::_v_template_exts v_template_ext = Params::get_instance()->getTemplateExts();
+    const RastrParameters::_v_template_exts v_template_ext =
+        RastrParameters::get_instance()->getTemplateExts();
     
-    for (const Params::_v_template_exts::value_type& template_ext : v_template_ext) {
+    for (const RastrParameters::_v_template_exts::value_type& template_ext : v_template_ext) {
         if (filePath.endsWith(QString::fromStdString(template_ext.second))) {
             return QString::fromStdString(template_ext.first + template_ext.second);
         }

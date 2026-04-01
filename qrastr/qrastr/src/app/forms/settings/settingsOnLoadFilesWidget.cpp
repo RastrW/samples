@@ -1,5 +1,5 @@
 #include "settingsOnLoadFilesWidget.h"
-#include "params.h"
+#include "rastrParameters.h"
 #include <QFileDialog>
 #include <QVBoxLayout>
 #include <QPushButton>
@@ -69,7 +69,7 @@ void SettingsOnLoadFilesWidget::populateFiles() {
     }
 
     // Загрузить данные из Params только один раз
-    const auto& v_files = Params::get_instance()->getStartLoadFileTemplates();
+    const auto& v_files = RastrParameters::get_instance()->getStartLoadFileTemplates();
     m_selectedFiles.clear();
     m_selectedFiles.insert(m_selectedFiles.end(), v_files.begin(), v_files.end());
 
@@ -108,7 +108,7 @@ void SettingsOnLoadFilesWidget::onAddFilesClicked() {
         return;
     }
 
-    const auto& v_template_exts = Params::get_instance()->getTemplateExts();
+    const auto& v_template_exts = RastrParameters::get_instance()->getTemplateExts();
 
     // Добавить выбранные файлы
     for (const auto& filePath : selectedFiles) {
@@ -174,7 +174,7 @@ void SettingsOnLoadFilesWidget::onTableItemDoubleClicked(QTableWidgetItem* item)
 
             QComboBox* pComboBox = new QComboBox(this);
 
-            const auto& v_template_exts = Params::get_instance()->getTemplateExts();
+            const auto& v_template_exts = RastrParameters::get_instance()->getTemplateExts();
             pComboBox->addItem("");
 
             for (const auto& template_ext : v_template_exts) {
@@ -201,6 +201,6 @@ void SettingsOnLoadFilesWidget::onTableItemDoubleClicked(QTableWidgetItem* item)
 }
 
 void SettingsOnLoadFilesWidget::applyChanges() {
-    Params::get_instance()->setStartLoadFileTemplates(m_selectedFiles);
+    RastrParameters::get_instance()->setStartLoadFileTemplates(m_selectedFiles);
 }
 

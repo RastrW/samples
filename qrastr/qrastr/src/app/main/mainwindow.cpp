@@ -33,7 +33,7 @@
 #include "formManager.h"
 #include "appSettingsManager.h"
 #include "uiBuilder.h"
-#include "params.h"
+#include "rastrParameters.h"
 #include "UIForms.h"
 #include "workspaceManager.h"
 
@@ -85,13 +85,6 @@ void MainWindow::initialize(
 
     m_fileManager = std::make_unique<FileManager>(m_qastra, this);
 
-    const auto& startFiles = Params::get_instance()->getStartLoadFileTemplates();
-    for (const auto& [file, tmpl] : startFiles) {
-        // Добавляем в карту БЕЗ добавления в "последние"
-        m_fileManager->registerStartupFile(
-            QString::fromStdString(file),
-            QString::fromStdString(tmpl));
-    }
 
     m_calcController = std::make_unique<CalculationController>(
         m_qastra, m_qti, m_qbarsmdp, this);

@@ -1,5 +1,5 @@
 #include "fileNewDialog.h"
-#include "params.h"
+#include "rastrParameters.h"
 #include <QTableWidget>
 #include <QHeaderView>
 #include <QDialogButtonBox>
@@ -21,7 +21,7 @@ FileNewDialog::FileNewDialog(QWidget *parent)
     m_twList->horizontalHeader()->setStretchLastSection(true);
     m_twList->verticalHeader()->setVisible(false);
 
-    const Params::_v_template_exts v_template_ext{ Params::get_instance()->getTemplateExts() };
+    const RastrParameters::_v_template_exts v_template_ext{ RastrParameters::get_instance()->getTemplateExts() };
     int n_row_num = 0;
     for (const auto& template_ext : v_template_ext) {
         m_twList->insertRow(n_row_num);

@@ -10,7 +10,7 @@
 #include <spdlog/sinks/stdout_color_sinks.h>
 #include <spdlog/sinks/rotating_file_sink.h>
 #include <spdlog/sinks/qt_sinks.h>
-#include "params.h"
+#include "rastrParameters.h"
 using WrapperExceptionType = std::runtime_error;
 #include <astra/IPlainRastrWrappers.h>
 #include "plugins/rastr/plugin_interfaces.h"
@@ -41,7 +41,7 @@ App::App(int &argc, char **argv)
 App::~App() {
     //останавливаем фоновые потоки и гарантирует финальный сброс:
     spdlog::shutdown();
-    Params::destruct();
+    RastrParameters::destruct();
 }
 
 bool App::event( QEvent *event ){
@@ -78,10 +78,10 @@ bool App::init(){
 #endif
         bool res = readSettings();
 
-        const bool bl_res = QDir::setCurrent(Params::get_instance()->getDirData().path());
+        const bool bl_res = QDir::setCurrent(RastrParameters::get_instance()->getDirData().path());
             assert(bl_res==true);
 
-        fs::path path_log{ Params::get_instance()->getDirData().absolutePath().toStdString() };
+        fs::path path_log{ RastrParameters::get_instance()->getDirData().absolutePath().toStdString() };
         path_log /= L"qrastr_log.txt";
 
         auto file_sink = std::make_shared<spdlog::sinks::rotating_file_sink_mt>
@@ -111,23 +111,19 @@ bool App::init(){
 
 bool App::readSettings(){
     try{
-        Params::construct();
-        QSettings settings(Params::pch_org_qrastr_);
-        QPoint pos = settings.value("pos", QPoint(200, 200)).toPoint();
-        QSize size = settings.value("size", QSize(600, 800)).toSize();
-
+        RastrParameters::construct();
         QString qstr_curr_path = QDir::currentPath();
         std::string str_path_2_conf = "undef";
 #if(defined(COMPILE_WIN))
         str_path_2_conf = qstr_curr_path.toStdString()+ "/../"+
-                          Params::pch_dir_data_ +"/"+ Params::pch_fname_appsettings;
+                          RastrParameters::pch_dir_data_ +"/"+ RastrParameters::pch_fname_appsettings;
 #else
         //str_path_2_conf = R"(/home/ustas/projects/git_web/samples/qrastr/qrastr/appsettings.json)";
         str_path_2_conf = qstr_curr_path.toStdString()+ "/../"+Params::pch_dir_data_ +"/"+ Params::pch_fname_appsettings;
         // QMessageBox mb( QMessageBox::Icon::Critical, QObject::tr("Error"), QString("In lin not implemented!") );  mb.exec();
 #endif
         QFileInfo fi_appsettings(str_path_2_conf.c_str());
-        auto* const p_params = Params::get_instance();
+        auto* const p_params = RastrParameters::get_instance();
         if(p_params!=nullptr){
             p_params->setDirData(fi_appsettings.dir());
             const bool bl_res = QDir::setCurrent(p_params->getDirData().path());
@@ -180,7 +176,7 @@ bool App::readSettings(){
 
 bool App::start() {
     try {
-        auto* params = Params::get_instance();
+        auto* params = RastrParameters::get_instance();
         QDir::setCurrent(params->getDirData().absolutePath());
 
         emit sig_progressChanged(35, tr("Загрузка плагинов..."));
@@ -199,7 +195,7 @@ bool App::start() {
 
         spdlog::info("ReadForms: starting");
         emit sig_progressChanged(80, tr("Чтение форм..."));
-        if (!readForms()) {
+        if (!deserializeForms()) {
             spdlog::error("Can't read forms");
             QMessageBox::critical(nullptr, tr("Ошибка"), tr("Can't read forms"));
             return false;
@@ -255,7 +251,6 @@ bool App::loadPlugins(){
         }
 
         QObject *plugin = loader.instance();
-
         if(plugin){
            spdlog::info("Load dynamic plugin {}/{} : {}",
                               pluginsDir.absolutePath().toStdString(), fileName.toStdString(),
@@ -357,14 +352,14 @@ bool App::loadPlugins(){
     return true;
 }
 
-bool App::readForms(){
+bool App::deserializeForms(){
     try{
         std::filesystem::path path_forms ("form");
         std::filesystem::path path_form_load;
 
         //on Windows, you MUST use 8bit ANSI (and it must match the user's locale) or UTF-16 !! Unicode!
         //!!! https://stackoverflow.com/questions/30829364/open-utf8-encoded-filename-in-c-windows  !!!
-        for(const Params::_v_forms::value_type &form : Params::get_instance()->getStartLoadForms()){
+        for(const RastrParameters::_v_forms::value_type &form : RastrParameters::get_instance()->getStartLoadForms()){
             std::filesystem::path path_file_form = stringutils::utf8_decode(form);
             path_form_load =  path_forms / path_file_form;
 

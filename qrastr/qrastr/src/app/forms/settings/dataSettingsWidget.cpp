@@ -10,7 +10,7 @@
 #include <QLineEdit>
 #include <QSettings>
 #include <spdlog/spdlog.h>
-#include "params.h"
+#include "rastrParameters.h"
 
 DataSettingsWidget::DataSettingsWidget(QWidget *parent)
     : SettingsStackedItemWidget(parent) {

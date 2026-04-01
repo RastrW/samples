@@ -7,15 +7,15 @@ namespace fs = std::filesystem;
 
 class CUIFormsCollection;
 
-class Params
-    : public SingletonDclp<Params>{
+class RastrParameters
+    : public SingletonDclp<RastrParameters>{
 public:
     using _v_file_templates = std::vector<std::pair< std::string, std::string > >;
     using _v_forms = std::vector<std::string>;
     using _v_templates = std::vector<std::string>;
     using _v_template_exts = std::vector<std::pair< std::string, std::string > >;
-    Params();
-    virtual ~Params() = default;
+    RastrParameters();
+    virtual ~RastrParameters() = default;
 
     ///<Чтение/запись файла appsettings.json
     bool readJsonFile (const fs::path& path_2_json);
@@ -107,7 +107,6 @@ private:
                                 const std::pair<std::string,std::string> &p2);
 
 public:
-    static constexpr const char pch_org_qrastr_[]=                "QRastr";
     static constexpr const char pch_dir_data_[]=                  "Data";
     static constexpr const char pch_fname_appsettings[]=          "appsettings.json";
     static constexpr const char pch_json_start_[]=                "start";
@@ -116,5 +115,4 @@ public:
     static constexpr const char pch_json_start_load_template_[]=  "template";
     static constexpr const char pch_json_start_forms_[]=          "forms";
     static constexpr const char pch_json_start_templates_[]=      "templates";
-    static constexpr const char pch_json_max_recent_files_[] = "maxRecentFiles";
 };

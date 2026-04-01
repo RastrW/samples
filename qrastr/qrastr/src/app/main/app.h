@@ -46,7 +46,7 @@ private:
     // Загрузка компонентов
     bool loadPlugins(); // Динамическая загрузка .dll/.so плагинов
     // form files are deployed in form catalog near qrastr.exe
-    bool readForms(); // Чтение описаний форм (.fm файлы)
+    bool deserializeForms(); // Чтение описаний форм (.fm файлы)
 
     // Кэш логов до инициализации
     qrastr::CacheLogVector m_v_cache_log;

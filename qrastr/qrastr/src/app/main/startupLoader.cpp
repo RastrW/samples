@@ -1,6 +1,6 @@
 #include "startupLoader.h"
 
-#include "params.h"
+#include "rastrParameters.h"
 #include <spdlog/spdlog.h>
 #include <QMessageBox>
 #include <filesystem>
@@ -18,7 +18,7 @@ StartupLoader::StartupLoader(std::shared_ptr<QAstra> qastra,
 }
 
 bool StartupLoader::load() {
-    auto* params = Params::get_instance();
+    auto* params = RastrParameters::get_instance();
 
 #if (QT_VERSION > QT_VERSION_CHECK(5, 16, 0))
     const fs::path templatesDir = params->getDirSHABLON().filesystemCanonicalPath();
@@ -34,7 +34,7 @@ bool StartupLoader::load() {
 }
 
 bool StartupLoader::loadTemplates(const fs::path& templatesDir) {
-    const auto& templates = Params::get_instance()->getStartLoadTemplates();
+    const auto& templates = RastrParameters::get_instance()->getStartLoadTemplates();
 
     for (const auto& templateName : templates) {
         const fs::path fullPath = templatesDir / templateName;
@@ -57,7 +57,7 @@ bool StartupLoader::loadTemplates(const fs::path& templatesDir) {
 }
 
 bool StartupLoader::loadFiles(const fs::path& templatesDir) {
-    const auto& fileList = Params::get_instance()->getStartLoadFileTemplates();
+    const auto& fileList = RastrParameters::get_instance()->getStartLoadFileTemplates();
 
     for (const auto& [filePath, templateName] : fileList) {
 		// Проверяем существование до загрузки

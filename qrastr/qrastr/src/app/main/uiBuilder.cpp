@@ -10,7 +10,7 @@
 #include <QStatusBar>
 #include <QActionGroup>
 #include <QSettings>
-#include "params.h"
+#include "rastrParameters.h"
 
 UIBuilder::UIBuilder(QMainWindow* mainWindow)
     : QObject(mainWindow)

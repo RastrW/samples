@@ -78,9 +78,6 @@ public:
      * @param fileAndTemplate строка вида "file <template>"
      */
     void openRecentFile(const QString& fileAndTemplate);
-
-    void registerStartupFile(const QString& fileName,
-                             const QString& templatePath);
 signals:
     /// @brief Файл успешно открыт
     void fileOpened(const QString& filePath);
@@ -130,4 +127,7 @@ private:
     QString findTemplateByExtension(const QString& filePath) const;
     /// @brief Показать диалог выбора шаблонов для нового файла
     bool showNewFileDialog(QStringList& selectedTemplates);
+
+    void registerStartupFile(const QString& fileName,
+                             const QString& templatePath);
 };
