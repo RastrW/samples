@@ -87,32 +87,37 @@ QVariant RModel::data(const QModelIndex& index, int role) const
 
     // ── DisplayRole / EditRole (Текст для отображения/Значение для редактора)─
     if (role == Qt::DisplayRole || role == Qt::EditRole) {
-        QVariant item = std::visit(ToQVariant(), m_rdata->pnparray_->Get(row, col));
+        if (rcol.getComPropTT() != enComPropTT::COM_PR_TIME){
+            QVariant item = std::visit(ToQVariant(), m_rdata->pnparray_->Get(row, col));
 
-        if (!rcol.isDirectCode()) {
-            // Для ENPIC используем pluginIdx, для остальных — col
-            if (const auto* pics = m_cache.pictureEnum(pluginIdx)) {
-                int v = item.toInt();
-                if (v >= 0 && v < pics->size()) return (*pics)[v].label;
-            }
-            if (const auto* enums = m_cache.enumItems(col))
-                return enums->at(item.toInt());
+            if (!rcol.isDirectCode()) {
+                // Для ENPIC используем pluginIdx, для остальных — col
+                if (const auto* pics = m_cache.pictureEnum(pluginIdx)) {
+                    int v = item.toInt();
+                    if (v >= 0 && v < pics->size()) return (*pics)[v].label;
+                }
+                if (const auto* enums = m_cache.enumItems(col))
+                    return enums->at(item.toInt());
 
-            if (const auto* superenum = m_cache.superenumMap(col)) {
-                auto it = superenum->find(static_cast<size_t>(item.toInt()));
-                if (it != superenum->end()) return QString::fromStdString(it->second);
+                if (const auto* superenum = m_cache.superenumMap(col)) {
+                    auto it = superenum->find(static_cast<size_t>(item.toInt()));
+                    if (it != superenum->end()) return QString::fromStdString(it->second);
+                }
             }
+            // Для числовых колонок без справочника — форматируем отображение
+            // иначе редактор открывается с сырым double вроде 78.99999022339689
+            if (item.type() == QVariant::Double) {
+                const auto info = getColumnEditorInfo(col);
+                if (info.editorType == ColumnEditorInfo::Type::Numeric)
+                    return QString::number(item.toDouble(), 'f', info.decimals);
+            }
+            return item;
+        }else{
+            long secs = std::visit(ToLong(), m_rdata->pnparray_->Get(row, col));
+            QDateTime epoch(QDate(1899, 12, 30), QTime(0, 0, 0)); // эпоха плагина
+            return epoch.addSecs(secs);  // QVariant с QDateTime — QTitan сам форматирует
         }
-        // Для числовых колонок без справочника — форматируем отображение
-        // иначе редактор открывается с сырым double вроде 78.99999022339689
-        if (item.type() == QVariant::Double) {
-            const auto info = getColumnEditorInfo(col);
-            if (info.editorType == ColumnEditorInfo::Type::Numeric)
-                return QString::number(item.toDouble(), 'f', info.decimals);
-        }
-        return item;
     }
-
     // ── DecorationRole (Иконка слева от текста)───────────────────────────────
     if (role == Qt::DecorationRole) {
         if (const auto* pics = m_cache.pictureEnum(pluginIdx)) {
@@ -383,7 +388,10 @@ RModel::ColumnEditorInfo RModel::getColumnEditorInfo(int colIndex) const
         info.editorType = ColumnEditorInfo::Type::Numeric;
         info.decimals   = std::atoi(col->getPrec().c_str());
         break;
-
+    case enComPropTT::COM_PR_TIME:
+        info.editorType = ColumnEditorInfo::Type::DateTime;
+        info.decimals   = std::atoi(col->getPrec().c_str());
+        break;
     case enComPropTT::COM_PR_ENUM:
         if (!col->isDirectCode()) {
             if (const auto* enums = m_cache.enumItems(idx)) {

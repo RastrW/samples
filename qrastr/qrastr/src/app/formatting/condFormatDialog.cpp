@@ -1,4 +1,4 @@
-#include "condFormatManager.h"
+#include "condFormatDialog.h"
 #include "condFormat.h"
 #include "Settings.h"
 #include "filterlineedit.h"
@@ -40,7 +40,7 @@ public:
     }
 };
 
-CondFormatManager::CondFormatManager(const std::vector<CondFormat>& condFormats, const QString& encoding, QWidget *parent) :
+CondFormatDialog::CondFormatDialog(const std::vector<CondFormat>& condFormats, const QString& encoding, QWidget *parent) :
     QDialog(parent),
     m_encoding(encoding)
 {
@@ -50,9 +50,9 @@ CondFormatManager::CondFormatManager(const std::vector<CondFormat>& condFormats,
         addItem(cf);
 }
 
-CondFormatManager::~CondFormatManager(){}
+CondFormatDialog::~CondFormatDialog(){}
 
-void CondFormatManager::setupWidgets()
+void CondFormatDialog::setupWidgets()
 {
     resize(750, 700);
     setWindowTitle(tr("Условное форматирование"));
@@ -159,15 +159,15 @@ void CondFormatManager::setupWidgets()
     rootLayout->addWidget(m_buttonBox);
 
     // ── Соединения ───────────────────────────────────────────────────────────
-    connect(m_buttonAdd,    &QToolButton::clicked, this, &CondFormatManager::addNewItem);
-    connect(m_buttonRemove, &QToolButton::clicked, this, &CondFormatManager::removeItem);
-    connect(m_buttonUp,     &QToolButton::clicked, this, &CondFormatManager::upItem);
-    connect(m_buttonDown,   &QToolButton::clicked, this, &CondFormatManager::downItem);
-    connect(m_table, &QTreeWidget::itemClicked, this, &CondFormatManager::itemClicked);
-    connect(m_buttonBox, &QDialogButtonBox::clicked, this, &CondFormatManager::buttonBoxClicked);
+    connect(m_buttonAdd,    &QToolButton::clicked, this, &CondFormatDialog::addNewItem);
+    connect(m_buttonRemove, &QToolButton::clicked, this, &CondFormatDialog::removeItem);
+    connect(m_buttonUp,     &QToolButton::clicked, this, &CondFormatDialog::upItem);
+    connect(m_buttonDown,   &QToolButton::clicked, this, &CondFormatDialog::downItem);
+    connect(m_table, &QTreeWidget::itemClicked, this, &CondFormatDialog::itemClicked);
+    connect(m_buttonBox, &QDialogButtonBox::clicked, this, &CondFormatDialog::buttonBoxClicked);
 }
 
-void CondFormatManager::addNewItem()
+void CondFormatDialog::addNewItem()
 {
     // Сохранить текущий ввод в FilterLineEdit перед добавлением новой строки
     QWidget* current = m_table->itemWidget(m_table->currentItem(), ColumnFilter);
@@ -185,7 +185,7 @@ void CondFormatManager::addNewItem()
         m_encoding));
 }
 
-void CondFormatManager::addItem(const CondFormat& aCondFormat)
+void CondFormatDialog::addItem(const CondFormat& aCondFormat)
 {
     const int i = m_table->topLevelItemCount();
     auto* item = new QTreeWidgetItem(m_table);
@@ -224,12 +224,12 @@ void CondFormatManager::addItem(const CondFormat& aCondFormat)
         m_table->resizeColumnToContents(col);
 }
 
-void CondFormatManager::removeItem()
+void CondFormatDialog::removeItem()
 {
     delete m_table->takeTopLevelItem(m_table->currentIndex().row());
 }
 
-void CondFormatManager::moveItem(int offset)
+void CondFormatDialog::moveItem(int offset)
 {
     if (!m_table->currentIndex().isValid()) return;
 
@@ -279,10 +279,10 @@ void CondFormatManager::moveItem(int offset)
     m_table->adjustSize();
 }
 
-void CondFormatManager::upItem()   { moveItem(-1); }
-void CondFormatManager::downItem() { moveItem(+1); }
+void CondFormatDialog::upItem()   { moveItem(-1); }
+void CondFormatDialog::downItem() { moveItem(+1); }
 
-std::vector<CondFormat> CondFormatManager::getCondFormats() const
+std::vector<CondFormat> CondFormatDialog::getCondFormats() const
 {
     std::vector<CondFormat> result;
     result.reserve(m_table->topLevelItemCount());
@@ -311,7 +311,7 @@ std::vector<CondFormat> CondFormatManager::getCondFormats() const
     return result;
 }
 
-void CondFormatManager::itemClicked(QTreeWidgetItem* item, int column)
+void CondFormatDialog::itemClicked(QTreeWidgetItem* item, int column)
 {
     switch (column) {
     case ColumnForeground:
@@ -336,7 +336,7 @@ void CondFormatManager::itemClicked(QTreeWidgetItem* item, int column)
     }
 }
 
-void CondFormatManager::buttonBoxClicked(QAbstractButton* button)
+void CondFormatDialog::buttonBoxClicked(QAbstractButton* button)
 {
     const auto role = m_buttonBox->buttonRole(button);
 

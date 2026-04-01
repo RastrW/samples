@@ -284,8 +284,11 @@ void RTablesDataManager::handleChangeRow(const std::string& tname, long row)
     QDataBlock* pqdb = findCachedBlock(tname);
     if (!pqdb) return;
 
+    // Формируем строку из всех колонок таблицы
+    const std::string cols = getTCols(tname);
+
     QDataBlock rowBlock;
-    getDataBlock(tname, rowBlock);                     // все колонки, все строки
+    getDataBlock(tname, cols, rowBlock);   // все колонки, но только одна строка
     // Копируем только нужную строку
     const long ncols = static_cast<long>(pqdb->ColumnsCount());
     for (long i = 0; i < ncols; ++i)

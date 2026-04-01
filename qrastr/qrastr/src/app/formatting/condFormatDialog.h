@@ -19,13 +19,13 @@ class QDialogButtonBox;
 
 ///@class QDialog, получает vector<CondFormat>, позволяет пользователю редактировать,
 /// возвращает результат через getCondFormats(). Ничего не знает о модели или файлах.
-class CondFormatManager : public QDialog
+class CondFormatDialog : public QDialog
 {
     Q_OBJECT
 
 public:
-    explicit CondFormatManager(const std::vector<CondFormat>& condFormats, const QString& encoding, QWidget *parent = nullptr);
-    ~CondFormatManager() override;
+    explicit CondFormatDialog(const std::vector<CondFormat>& condFormats, const QString& encoding, QWidget *parent = nullptr);
+    ~CondFormatDialog() override;
 
     std::vector<CondFormat> getCondFormats() const;
 

@@ -129,7 +129,7 @@ RtabWidget::RtabWidget(QAstra* pqastra,CUIForm UIForm, RTablesDataManager* pRTDM
 
     setupConnections();
 
-    dumpShortcuts(m_grid, "before clear");
+    //dumpShortcuts(m_grid, "before clear");
     // Снимаем F5/Delete со встроенных action-ов QTitan
     auto& acts = m_view->actions();
 
@@ -145,7 +145,7 @@ RtabWidget::RtabWidget(QAstra* pqastra,CUIForm UIForm, RTablesDataManager* pRTDM
         }
     }
 
-    dumpShortcuts(m_grid, "after clear");
+    //dumpShortcuts(m_grid, "after clear");
 }
 
 
@@ -416,6 +416,13 @@ void RtabWidget::applyColumnEditor(int colIndex)
                                          info.decimals, repo);
         val->setNotation(QDoubleValidator::StandardNotation);
         repo->setValidator(val);
+        break;
+    }
+    case RModel::ColumnEditorInfo::Type::DateTime:{
+        column_qt->setEditorType(GridEditor::Time);
+        auto* repo = static_cast<Qtitan::GridDateTimeEditorRepository*>(
+            column_qt->editorRepository());
+        repo->setDisplayFormat("dd.MM.yyyy HH:mm");
         break;
     }
     case RModel::ColumnEditorInfo::Type::ComboBox:
