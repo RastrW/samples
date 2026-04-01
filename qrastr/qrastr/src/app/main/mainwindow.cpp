@@ -360,8 +360,12 @@ void MainWindow::showMDPPrepareDialog() {
 void MainWindow::closeEvent(QCloseEvent* event)
 {
     spdlog::info("MainWindow closing");
+    // Закрыть все виджеты пока менеджеры живы
+    m_formManager->prepareForClose();
+    spdlog::info("All dock widgets closed");
     m_formManager->closeGraphWebServer();
     spdlog::info("The graphics web server is closed");
+
     m_appSettingsManager->saveAppearanceSettings(this);
     spdlog::info("The geometry is saved");
 

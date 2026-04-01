@@ -64,6 +64,32 @@ FormManager::FormManager(
             this,         &FormManager::registerDockWidget);
 }
 
+void FormManager::prepareForClose()
+{
+    // 1. Закрываем все dock-виджеты, кроме протоколов
+    //    (они с CustomCloseHandling — просто скрываем)
+    const auto allDocks = m_dockManager->dockWidgetsMap();
+    for (auto it = allDocks.cbegin(); it != allDocks.cend(); ++it) {
+        ads::CDockWidget* dw = it.value();
+        if (!dw || dw->isClosed()) continue;
+
+        if (m_protocolNames.contains(dw->objectName()))
+            dw->toggleView(false);   // скрыть, не удалять
+        else
+            dw->closeDockWidget();   // удалить (DockWidgetDeleteOnClose)
+    }
+
+    // 2. Уничтожаем оставшиеся floating-контейнеры напрямую.
+    //    После шага 1 их быть не должно, но на случай
+    //    если какой-то виджет проигнорировал closeDockWidget.
+    const auto floating = m_dockManager->floatingWidgets();
+    for (ads::CFloatingDockContainer* fc : floating) {
+        if (fc) fc->deleteLater();
+    }
+
+    m_openDockWidgets.clear();
+}
+
 // Делегаты — таблицы
 void FormManager::setForms(const std::list<CUIForm>& forms){
     m_tableDockManager->setForms(forms);
