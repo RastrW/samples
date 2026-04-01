@@ -321,8 +321,8 @@ void McrWnd::slot_run()
     }
 }
 
-void McrWnd::slot_goToLine()
-{
+void McrWnd::slot_goToLine(){
+
     const sptr_t total = m_editor->lineCount();
     bool ok = false;
     const int line = QInputDialog::getInt(
@@ -333,8 +333,8 @@ void McrWnd::slot_goToLine()
         m_editor->gotoLine(line - 1);
 }
 
-void McrWnd::slot_find()
-{
+void McrWnd::slot_find(){
+
     // окно поиска уже создано и живо
     if (m_findDlg) {
         m_findDlg->raise();
@@ -350,8 +350,8 @@ void McrWnd::slot_find()
     m_findDlg->show();
 }
 
-void McrWnd::slot_findByParams(SciPyEditor::FindParams params)
-{
+void McrWnd::slot_findByParams(SciPyEditor::FindParams params){
+
     if (SciPyEditor::RetVal::Ok != m_editor->find(params))
         QMessageBox::information(this, tr("Найти"),
                                  tr("'%1' не найдена.").arg(params.m_text));

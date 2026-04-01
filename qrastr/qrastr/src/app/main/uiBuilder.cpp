@@ -75,7 +75,9 @@ void UIBuilder::createFileActions() {
 
     // НЕДАВНИЕ ФАЙЛЫ
     // Создаём массив действий для недавних файлов
-    for (int i = 0; i < Params::get_instance()->getMaxRecentFiles(); ++i) {
+    QSettings s;
+    int maxAllowed = s.value("maxRecentFiles", 10).toInt();
+    for (int i = 0; i < maxAllowed; ++i) {
         QString actionName = QString("recentFile%1").arg(i);
         QAction* recentAction = new QAction(m_mainWindow);
         recentAction->setVisible(false);
@@ -273,7 +275,9 @@ void UIBuilder::buildMenuBar() {
 
     // Подменю "Последние" (недавние файлы)
     m_menus["recentFiles"] = m_menus["file"]->addMenu(tr("&Последние"));
-    for (int i = 0; i < Params::get_instance()->getMaxRecentFiles(); ++i) {
+    QSettings s;
+    int maxAllowed = s.value("maxRecentFiles", 10).toInt();
+    for (int i = 0; i < maxAllowed; ++i) {
         QString actionName = QString("recentFile%1").arg(i);
         m_menus["recentFiles"]->addAction(m_actions[actionName]);
     }
@@ -381,12 +385,14 @@ void UIBuilder::buildMenuBar() {
 void UIBuilder::buildToolBars() {
     // ПАНЕЛЬ "ФАЙЛ"
     m_toolBars["file"] = m_mainWindow->addToolBar(tr("Файл"));
+    m_toolBars["file"]->setObjectName("fileToolBar");
     m_toolBars["file"]->addAction(m_actions["new"]);
     m_toolBars["file"]->addAction(m_actions["load"]);
     m_toolBars["file"]->addAction(m_actions["save"]);
 
     // ПАНЕЛЬ "РАСЧЁТЫ"
     m_toolBars["calc"] = m_mainWindow->addToolBar(tr("Расчеты"));
+    m_toolBars["calc"]->setObjectName("calcToolBar");
     m_toolBars["calc"]->addAction(m_actions["rgm"]);
     m_toolBars["calc"]->addAction(m_actions["smzu"]);
     m_toolBars["calc"]->addAction(m_actions["prepareMDP"]);
@@ -395,6 +401,7 @@ void UIBuilder::buildToolBars() {
 
     // ПАНЕЛЬ "ТЕЛЕИЗМЕРЕНИЯ"
     m_toolBars["ti"] = m_mainWindow->addToolBar(tr("Телеизмерения"));
+    m_toolBars["ti"]->setObjectName("tiToolBar");
     m_toolBars["ti"]->addAction(m_actions["calcPTI"]);
     m_toolBars["ti"]->addAction(m_actions["filtrTI"]);
     m_toolBars["ti"]->addAction(m_actions["opf"]);
@@ -454,10 +461,11 @@ QToolBar* UIBuilder::toolBarByName(const QString& name) const {
 }
 
 void UIBuilder::updateRecentFileActions(const QStringList& recentFiles) {
-    int numRecentFiles = qMin(recentFiles.size(),
-                              Params::get_instance()->getMaxRecentFiles());
+    QSettings s;
+    int maxAllowed = s.value("maxRecentFiles", 10).toInt();
+    int numVisible = qMin(recentFiles.size(), maxAllowed);
 
-    for (int i = 0; i < numRecentFiles; ++i) {
+    for (int i = 0; i < numVisible; ++i) {
         QString actionName = QString("recentFile%1").arg(i);
         QAction* action = m_actions[actionName];
 
@@ -493,12 +501,32 @@ void UIBuilder::updateRecentFileActions(const QStringList& recentFiles) {
         }
     }
 
-    // Скрываем неиспользуемые действия
-    for (int j = numRecentFiles; j < Params::get_instance()->getMaxRecentFiles(); ++j) {
-        QString actionName = QString("recentFile%1").arg(j);
-        QAction* action = m_actions[actionName];
-        if (action) {
-            action->setVisible(false);
-        }
+    // Скрываем все action-ы начиная с numVisible, сколько бы их ни было
+    int existing = 0;
+    while (m_actions.count(QString("recentFile%1").arg(existing)))
+        ++existing;
+
+    for (int j = numVisible; j < existing; ++j) {
+        if (auto* a = m_actions[QString("recentFile%1").arg(j)])
+            a->setVisible(false);
     }
+}
+
+std::pair<int,int> UIBuilder::ensureRecentFileCapacity(int count) {
+    // Считаем, сколько уже есть
+    int existing = 0;
+    while (m_actions.count(QString("recentFile%1").arg(existing)))
+        ++existing;
+
+    if (count <= existing)
+        return {existing, existing};   // ничего не нужно
+
+    for (int i = existing; i < count; ++i) {
+        QString name = QString("recentFile%1").arg(i);
+        auto* act = new QAction(m_mainWindow);
+        act->setVisible(false);
+        m_actions[name] = act;
+        m_menus["recentFiles"]->addAction(act);   // добавляем в меню
+    }
+    return {existing, count};
 }

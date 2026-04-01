@@ -24,16 +24,21 @@ bool AppSettingsManager::loadAppearanceSettings(QMainWindow* window) {
         savedStyle = "windows11";
     }
     QApplication::setStyle(QStyleFactory::create(savedStyle));
-    spdlog::info( "INI File Path: {}", m_settings.fileName().toStdString());
 
     try {
         m_settings.beginGroup("MainWindow");
+
         const auto geometry = m_settings.value("geometry", QByteArray()).toByteArray();
+        const auto state = m_settings.value("mainWindowState").toByteArray();
 
         if (geometry.isEmpty()) {
             window->setGeometry(200, 200, 800, 800);
         } else {
             window->restoreGeometry(geometry);
+        }
+
+        if (!state.isEmpty()) {
+            window->restoreState(state);
         }
 
         m_settings.endGroup();

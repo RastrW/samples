@@ -52,7 +52,7 @@ public:
     MacroDockManager* macroDockManager() const { return m_macroDockManager; }
     LogManager*       logManager()       const { return m_logManager; }
 
-    // ── Таблицы (проброс в TableDockManager) ──────────────────────────────────
+    // ── Таблицы (проброс в TableDockManager) ─────────────────────────────────
 
     void setForms(const std::list<CUIForm>& forms);
 
@@ -62,16 +62,16 @@ public:
 
     RtabWidget* activeForm() const;
 
-    // ── Графика ───────────────────────────────────────────────────────────────
+    // ── Графика ──────────────────────────────────────────────────────────────
     void closeGraphWebServer();
 
-    // ── Логирование ───────────────────────────────────────────────────────────
+    // ── Логирование ──────────────────────────────────────────────────────────
     /// Инициализировать виджеты лога (до ADS restoreState).
     void createLogWidgets();
     /// Добавить dock-виджеты лога (после ADS restoreState).
     void setupLogDockWidgets();
 
-    // ── Рабочая область ───────────────────────────────────────────────────────
+    // ── Рабочая область ──────────────────────────────────────────────────────
     /// Имена всех незакрытых dock-виджетов для сохранения.
     QStringList openWidgetNames() const;
     /**
@@ -84,7 +84,7 @@ public:
      */
     void closeAllWidgets();
     const QSet<QString>& protocolDockNames() const;
-    // ── Макросы ───────────────────────────────────────────────────────────────
+    // ── Макросы ──────────────────────────────────────────────────────────────
 
     void openMacroWindow();
     /**

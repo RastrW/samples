@@ -31,6 +31,9 @@ public:
      * @param recentFiles список строк вида "file <template>"
      */
     void updateRecentFileActions(const QStringList& recentFiles);
+    // Гарантирует, что в m_actions и в меню есть не менее `count` слотов
+    // для недавних файлов. Возвращает диапазон [prevMax, newMax).
+    std::pair<int,int> ensureRecentFileCapacity(int count);
 private:
     /// @brief Построить только меню
     void buildMenuBar();

@@ -230,8 +230,10 @@ void FileManager::addToRecentFiles(const QString& filePath,
     files.removeAll(_fileshabl);
     files.prepend(_fileshabl);
 
-    auto* const p_params = Params::get_instance();
-    while (files.size() > p_params->getMaxRecentFiles()) {
+    QSettings s;
+    int maxRecentFiles = s.value("maxRecentFiles", 10).toInt();
+
+    while (files.size() > maxRecentFiles) {
         files.removeLast();
     }
     

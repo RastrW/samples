@@ -82,9 +82,6 @@ void MainWindow::initialize(
     // ========== СОЗДАНИЕ КОМПОНЕНТОВ ==========
     // SettingsManager нужен первым для загрузки настроек
     m_appSettingsManager = std::make_unique<AppSettingsManager>(this);
-    m_appSettingsManager->loadAppearanceSettings(this);
-    // Restore the state of toolbars and dock widgets (menus are part of the overall layout)
-    restoreState(m_appSettingsManager->getSettings("mainWindowState"));
 
     m_fileManager = std::make_unique<FileManager>(m_qastra, this);
 
@@ -123,6 +120,7 @@ void MainWindow::initialize(
     // Создаём виджеты протоколов и СРАЗУ добавляем Qt-синки в логгер.
     m_logManager->setupDockWidgets();
 
+    m_appSettingsManager->loadAppearanceSettings(this);
     m_workspaceManager->applyStartupWorkspace();
 
     spdlog::info("MainWindow initialized successfully");
@@ -146,7 +144,10 @@ void MainWindow::setupConnections() {
     connect(m_uiBuilder->actionByName("saveAll"), &QAction::triggered,
             m_fileManager.get(), &FileManager::saveAll);
 
-    for (int i = 0; i < Params::get_instance()->getMaxRecentFiles(); ++i) {
+    QSettings s;
+    int maxAllowed = s.value("maxRecentFiles", 10).toInt();
+
+    for (int i = 0; i < maxAllowed; ++i) {
         QString name = QString("recentFile%1").arg(i);
         QAction* act = m_uiBuilder->actionByName(name);
         if (act) {
@@ -323,6 +324,24 @@ MainWindow::getProtocolLogSink() const {
 
 void MainWindow::slot_updateRecentFiles() {
     QStringList files = m_fileManager->getRecentFiles();
+    QSettings s;
+    int maxAllowed = s.value("maxRecentFiles", 10).toInt();
+
+    // Добавляем action-ы в меню, если их стало нужно больше
+    auto [prevMax, newMax] = m_uiBuilder->ensureRecentFileCapacity(
+        qMin(files.size(), maxAllowed));
+
+    // Подключаем только свежесозданные action-ы
+    for (int i = prevMax; i < newMax; ++i) {
+        QString name = QString("recentFile%1").arg(i);
+        QAction* act = m_uiBuilder->actionByName(name);
+        if (act) {
+            connect(act, &QAction::triggered, this, [this, act]() {
+                m_fileManager->openRecentFile(act->data().toString());
+            });
+        }
+    }
+
     m_uiBuilder->updateRecentFileActions(files);
 }
 

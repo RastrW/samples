@@ -1,5 +1,6 @@
 #include "params.h"
 #include <fstream>
+#include <QSettings>
 #include "common_qrastr.h"
 #include <astra_headers/json.hpp>
 #include "astra_headers/UIForms.h"
@@ -88,13 +89,6 @@ bool Params::readJsonFile(const fs::path& path_2_json){
                 m_start_load_file_templates_.emplace_back(str_file, str_template);
             }
         }
-        if (jf.contains(pch_json_max_recent_files_) &&
-            jf[pch_json_max_recent_files_].is_number_integer()) {
-            int val = jf[pch_json_max_recent_files_].get<int>();
-            if (val > 0 && val <= 100) {   // разумные границы
-                m_maxRecentFiles = val;
-            }
-        }
     }catch(const std::exception& ex){
         exclog(ex);
         return false;
@@ -137,7 +131,6 @@ bool Params::writeJsonFile(const fs::path& path_2_json)const {
 
         nlohmann::json j_file;
         j_file[pch_json_start_] = j_start;
-        j_file[pch_json_max_recent_files_]  = m_maxRecentFiles;
 
         spdlog::info("write JSON file: [{}]", path_2_json.string());
         std::ofstream ofs(path_2_json);

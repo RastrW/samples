@@ -1,5 +1,3 @@
-#ifndef PARAMS_H
-#define PARAMS_H
 #pragma once
 
 #include <QDir>
@@ -85,13 +83,6 @@ public:
     const _v_template_exts& getTemplateExts(){
         return m_template_exts_;
     }
-
-    int getMaxRecentFiles(){
-        return m_maxRecentFiles;
-    }
-    void setMaxRecentFiles(int max){
-        m_maxRecentFiles = max;
-    }
 private:
     QDir                  dir_Data_;
     QDir                  dir_SHABLON_;
@@ -115,7 +106,6 @@ private:
     static bool templ_sort_func(const std::pair<std::string,std::string> &p1,
                                 const std::pair<std::string,std::string> &p2);
 
-    int m_maxRecentFiles {10};
 public:
     static constexpr const char pch_org_qrastr_[]=                "QRastr";
     static constexpr const char pch_dir_data_[]=                  "Data";
@@ -128,5 +118,3 @@ public:
     static constexpr const char pch_json_start_templates_[]=      "templates";
     static constexpr const char pch_json_max_recent_files_[] = "maxRecentFiles";
 };
-
-#endif // PARAMS_H
