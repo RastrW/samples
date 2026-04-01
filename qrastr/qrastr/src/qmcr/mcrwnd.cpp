@@ -11,6 +11,7 @@
 #include <QMenuBar>
 #include <QStatusBar>
 #include <QLabel>
+#include <QTimer>
 #include "forms/dlgfindrepl.h"
 
 #include "mcrwnd.h"
@@ -155,28 +156,37 @@ void McrWnd::slot_updateStatusBar()
 void McrWnd::showEvent(QShowEvent* event)
 {
     QWidget::showEvent(event);
-    /*
+
     if (!m_firstShow) return;
     m_firstShow = false;
 
-    const auto btn = QMessageBox::question(
-        this, tr("Macro Python"),
-        tr("Загрузить пример скрипта?"),
-        QMessageBox::Yes | QMessageBox::No,
-        QMessageBox::No);
+    // Откладываем до следующей итерации event loop:
+    // showEvent вызывается внутри цепочки QWidget::show(),
+    // синхронный диалог здесь ломает иерархию виджетов,
+    // если макросы загружаются на старте программы.
+    QTimer::singleShot(0, this, [this]() {
+        // Виджет мог быть уже скрыт/уничтожен к моменту срабатывания таймера
+        if (!isVisible()) return;
 
-    if (btn != QMessageBox::Yes) return;
+        const auto btn = QMessageBox::question(
+            this, tr("Macro Python"),
+            tr("Загрузить пример скрипта?"),
+            QMessageBox::Yes | QMessageBox::No,
+            QMessageBox::No);
 
-    const QString examplePath =
-        QCoreApplication::applicationDirPath() + "/../Data/py_example/rastr_events.py";
+        if (btn != QMessageBox::Yes) return;
 
-    m_editor->setFileInfo(QFileInfo(examplePath));
-    if (SciHlpBase::RetVal::Ok != m_editor->loadFromFile()) {
-        QMessageBox::warning(this, tr("Предупреждение"),
-                             tr("Пример файла не найден:\n%1").arg(examplePath));
-        m_editor->setFileInfo(QFileInfo{});
-    }
-    */
+        const QString examplePath =
+            QCoreApplication::applicationDirPath()
+            + "/../Data/py_example/rastr_events.py";
+
+        m_editor->setFileInfo(QFileInfo(examplePath));
+        if (SciHlpBase::RetVal::Ok != m_editor->loadFromFile()) {
+            QMessageBox::warning(this, tr("Предупреждение"),
+                                 tr("Пример файла не найден:\n%1").arg(examplePath));
+            m_editor->setFileInfo(QFileInfo{});
+        }
+    });
 }
 
 void McrWnd::setPyHlp(std::shared_ptr<PyHlp> pPyHlp)
