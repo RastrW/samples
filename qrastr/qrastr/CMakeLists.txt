@@ -47,6 +47,7 @@ add_compile_definitions(FMT_HEADER_ONLY)
 add_compile_definitions(
     $<$<CONFIG:Debug>:q4_INLINE=0>  # Отключает inline функции в Debug
     $<$<CONFIG:Debug>:YYDEBUG>      # Включает отладочный вывод для yacc/bison парсеров
+    $<$<CONFIG:Debug>:_DEBUG>       # Чтобы на win/lin был одинаковый #define _DEBUG
 )
 
 if(MSVC)

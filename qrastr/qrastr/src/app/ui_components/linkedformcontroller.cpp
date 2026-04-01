@@ -119,7 +119,7 @@ void LinkedFormController::applyLinkedForm(LinkedForm lf)
     // Передаём строку выборки в плагин
     IRastrTablesPtr tablesx{ m_qastra->getRastr()->Tables() };
     IRastrTablePtr  table{ tablesx->Item(m_model->getRdata()->t_name_) };
-    table->SetSelection(selection);
+    IRastrResultVerify(table->SetSelection(selection));
 
     // Получаем индексы строк, прошедших выборку
     DataBlock<FieldVariantData> variantBlock;

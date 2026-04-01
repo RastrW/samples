@@ -116,8 +116,8 @@ bool App::readSettings(){
     try{
         Params::construct();
         QSettings settings(Params::pch_org_qrastr_);
-        QPoint pos = settings.value("pos", QPoint(200, 200)).toPoint();
-        QSize size = settings.value("size", QSize(600, 800)).toSize();
+        //QPoint pos = settings.value("pos", QPoint(200, 200)).toPoint();
+        //QSize size = settings.value("size", QSize(600, 800)).toSize();
 
         QString qstr_curr_path = QDir::currentPath();
         std::string str_path_2_conf = "undef";
@@ -398,7 +398,7 @@ bool App::loadPlugins(){
                     }
 
                     BarsMDP->Set_Rastr(m_sp_qastra->getRastr().get());
-                    auto ret =BarsMDP->Hello();
+                    //auto ret =BarsMDP->Hello();
                     m_sp_qbarsmdp = std::make_shared<QBarsMDP>();
                     m_sp_qbarsmdp->setBarsMDP(BarsMDP);
 

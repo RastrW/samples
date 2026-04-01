@@ -642,7 +642,7 @@ void RtabWidget::slot_setFiltrForSelection(std::string selection)
 
     IRastrTablesPtr tablesx{ m_pqastra->getRastr()->Tables() };
     IRastrTablePtr  table{ tablesx->Item(m_model->getRdata()->t_name_) };
-    table->SetSelection(selection);
+    IRastrResultVerify(table->SetSelection(selection));
 
     DataBlock<FieldVariantData> variantBlock;
     const IRastrPayload keys = table->Key();
@@ -664,6 +664,6 @@ void RtabWidget::slot_itemPressed( CellClickEventArgs* _args)
 {
     int row = _args->cell().rowIndex();
     int col = _args->cell().columnIndex();
-    spdlog::info("Pressed: {}, {}", row, col);
+    spdlog::debug("Pressed: {}, {}", row, col);
 }
 
