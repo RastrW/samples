@@ -44,6 +44,28 @@
 #include "QDataBlocks.h"
 #include "searchableComboRepository.h"
 
+void dumpShortcuts(QWidget* root, const QString& tag)
+{
+    qDebug() << "=== Dump shortcuts:" << tag << "===";
+
+    auto dump = [](QWidget* w) {
+        for (QAction* act : w->actions()) {
+            if (!act->shortcut().isEmpty()) {
+                qDebug() << "Widget:" << w
+                         << "Action:" << act->text()
+                         << "Shortcut:" << act->shortcut().toString();
+            }
+        }
+    };
+
+    dump(root);
+
+    for (QObject* child : root->children()) {
+        if (auto* w = qobject_cast<QWidget*>(child))
+            dump(w);
+    }
+}
+
 RtabWidget::RtabWidget(QAstra* pqastra,CUIForm UIForm, RTablesDataManager* pRTDM,
                        ads::CDockManager* pDockManager, QWidget *parent)
     : QWidget(parent),
@@ -106,7 +128,26 @@ RtabWidget::RtabWidget(QAstra* pqastra,CUIForm UIForm, RTablesDataManager* pRTDM
     m_menuBuilder->initMenu(this);
 
     setupConnections();
+
+    dumpShortcuts(m_grid, "before clear");
+    // Снимаем F5/Delete со встроенных action-ов QTitan
+    auto& acts = m_view->actions();
+
+    // удалить shortcut у DeleteRowAction
+    if (acts.contains(Qtitan::GridViewBase::DeleteRowAction)) {
+        acts[Qtitan::GridViewBase::DeleteRowAction]->setShortcut(QKeySequence());
+    }
+
+    // если F5 где-то используется (например Find/Refresh)
+    for (auto it = acts.begin(); it != acts.end(); ++it) {
+        if (it.value()->shortcut() == QKeySequence(Qt::Key_F5)) {
+            it.value()->setShortcut(QKeySequence());
+        }
+    }
+
+    dumpShortcuts(m_grid, "after clear");
 }
+
 
 RtabWidget::~RtabWidget() {}
 
