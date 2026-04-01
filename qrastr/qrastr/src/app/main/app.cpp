@@ -183,10 +183,12 @@ bool App::start() {
         auto* params = Params::get_instance();
         QDir::setCurrent(params->getDirData().absolutePath());
 
+        emit sig_progressChanged(35, tr("Загрузка плагинов..."));
         if (!loadPlugins())
             return false;
 
         // Загрузка стартовых шаблонов и файлов.
+        emit sig_progressChanged(65, tr("Загрузка шаблонов..."));
         StartupLoader loader(m_sp_qastra);
         connect(&loader, &StartupLoader::loadWarning, [](const QString& msg) {
             spdlog::warn("{}", msg.toStdString());
@@ -196,13 +198,12 @@ bool App::start() {
             return false;
 
         spdlog::info("ReadForms: starting");
+        emit sig_progressChanged(80, tr("Чтение форм..."));
         if (!readForms()) {
             spdlog::error("Can't read forms");
             QMessageBox::critical(nullptr, tr("Ошибка"), tr("Can't read forms"));
             return false;
         }
-        spdlog::info("ReadForms: OK");
-
     } catch (const std::exception& ex) {
         exclog(ex);
         return false;

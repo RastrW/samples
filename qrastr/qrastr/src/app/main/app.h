@@ -32,6 +32,8 @@ public:
     std::shared_ptr<QBarsMDP> getQBarsMDPPtr(){ return m_sp_qbarsmdp;}
     // Сбросить накопленные за время init() сообщения в логгер
     void flushLogCache(std::shared_ptr<spdlog::sinks::sink> qt_sink);
+signals:
+    void sig_progressChanged(int percent, const QString& message);
 private:
     // Переопределённые методы Qt
     ///@brief Обработка событий Qt

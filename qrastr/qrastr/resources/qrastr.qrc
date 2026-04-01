@@ -77,5 +77,6 @@
 		<file>images/new_style/document.png</file>
 		<file>images/new_style/settings.png</file>
 		<file>images/new_style/exit.png</file>
+		<file>images/new_style/abstract.png</file>
     </qresource>
 </RCC>
