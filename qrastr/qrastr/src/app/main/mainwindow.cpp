@@ -96,7 +96,6 @@ void MainWindow::initialize(
     // ========== НАСТРОЙКА КОМПОНЕНТОВ ==========
     m_logManager->setupRastrConnections(m_qastra);
 
-    slot_updateRecentFiles();
     // Построение меню форм
     m_formManager->buildFormsMenu(
         m_uiBuilder->menuByName("tables"),
@@ -137,18 +136,42 @@ void MainWindow::setupConnections() {
     connect(m_uiBuilder->actionByName("saveAll"), &QAction::triggered,
             m_fileManager.get(), &FileManager::saveAll);
 
-    QSettings s;
-    int maxAllowed = s.value("maxRecentFiles", 10).toInt();
+    connect(m_uiBuilder->menuByName("recentFiles"), &QMenu::aboutToShow,
+            this, [this]() {
+                QMenu* menu = m_uiBuilder->menuByName("recentFiles");
+                menu->clear();
 
-    for (int i = 0; i < maxAllowed; ++i) {
-        QString name = QString("recentFile%1").arg(i);
-        QAction* act = m_uiBuilder->actionByName(name);
-        if (act) {
-            connect(act, &QAction::triggered, this, [this, act]() {
-                m_fileManager->openRecentFile(act->data().toString());
-            });
-        }
-    }
+                QSettings s;
+                int maxAllowed = s.value("maxRecentFiles", 10).toInt();
+                const QList<RecentFileEntry> entries = m_fileManager->getRecentFiles();
+                int numVisible = qMin(entries.size(), maxAllowed);
+
+                if (numVisible == 0) {
+                    QAction* empty = menu->addAction(tr("(нет файлов)"));
+                    empty->setEnabled(false);
+                    return;
+                }
+
+                for (int i = 0; i < numVisible; ++i) {
+                    const RecentFileEntry& entry = entries[i];
+
+                    QString label = entry.tmpl.isEmpty()
+                                        ? tr("&%1 %2").arg(i + 1).arg(entry.file)
+                                        : tr("&%1 %2 <%3>").arg(i + 1)
+                                              .arg(entry.file)
+                                              .arg(QFileInfo(entry.tmpl).fileName());
+
+                    QAction* act = menu->addAction(label);
+
+                    // Захватываем значение, не указатель на act — act будет
+                    // пересоздан при следующем открытии меню
+                    connect(act, &QAction::triggered,
+                            this, [this, entry]() {
+                                m_fileManager->openRecentFile(entry.file, entry.tmpl);
+                            });
+                }
+    });
+
     // События файлов
     connect(m_fileManager.get(), &FileManager::currentFileChanged,
             this, [this](const QString& file) {
@@ -163,8 +186,6 @@ void MainWindow::setupConnections() {
             this, [](const QString& error) {
                 spdlog::error("File load error: {}", error.toStdString());
             });
-    connect(m_fileManager.get(), &FileManager::recentFilesChanged,
-            this, &MainWindow::slot_updateRecentFiles);
     connect(m_uiBuilder->actionByName("exit"), &QAction::triggered,
             qApp, &QApplication::closeAllWindows);
 
@@ -313,29 +334,6 @@ void MainWindow::setupConnections() {
 std::shared_ptr<spdlog::sinks::sink>
 MainWindow::getProtocolLogSink() const {
     return m_logManager->getProtocolLogSink();
-}
-
-void MainWindow::slot_updateRecentFiles() {
-    QStringList files = m_fileManager->getRecentFiles();
-    QSettings s;
-    int maxAllowed = s.value("maxRecentFiles", 10).toInt();
-
-    // Добавляем action-ы в меню, если их стало нужно больше
-    auto [prevMax, newMax] = m_uiBuilder->ensureRecentFileCapacity(
-        qMin(files.size(), maxAllowed));
-
-    // Подключаем только свежесозданные action-ы
-    for (int i = prevMax; i < newMax; ++i) {
-        QString name = QString("recentFile%1").arg(i);
-        QAction* act = m_uiBuilder->actionByName(name);
-        if (act) {
-            connect(act, &QAction::triggered, this, [this, act]() {
-                m_fileManager->openRecentFile(act->data().toString());
-            });
-        }
-    }
-
-    m_uiBuilder->updateRecentFileActions(files);
 }
 
 void MainWindow::slot_about(){

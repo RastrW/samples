@@ -72,8 +72,6 @@ protected:
 private slots:
     // Активировать подокно
     void slot_subWindowActivated();
-    // Обновить список недавних файлов
-    void slot_updateRecentFiles();
     // Обновить меню
     void slot_updateMenu();
     

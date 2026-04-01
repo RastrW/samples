@@ -227,32 +227,62 @@ void FileManager::setCurrentFile(const QString& fileName,
 
 void FileManager::addToRecentFiles(const QString& filePath,
                                    const QString& templatePath) {
-    QSettings settings;
-    
-    QString _fileshabl = filePath;
-    if (!templatePath.isEmpty()) {
-        _fileshabl.append(" <").append(templatePath).append(">");
-    }
-    
-    QStringList files = settings.value(m_recentFilesKey).toStringList();
-    files.removeAll(_fileshabl);
-    files.prepend(_fileshabl);
-
     QSettings s;
-    int maxRecentFiles = s.value("maxRecentFiles", 10).toInt();
+    int maxRecent = s.value("maxRecentFiles", kDefaultMaxRecent).toInt();
 
-    while (files.size() > maxRecentFiles) {
-        files.removeLast();
-    }
-    
-    settings.setValue(m_recentFilesKey, files);
-    
-    emit recentFilesChanged();
+    auto entries = loadRecentFiles();
+
+    // Убираем дубликат по пути файла
+    entries.erase(std::remove_if(entries.begin(), entries.end(),
+                                 [&](const RecentFileEntry& e) { return e.file == filePath; }),
+                  entries.end());
+
+    entries.prepend({filePath, templatePath});
+
+    while (entries.size() > maxRecent)
+        entries.removeLast();
+
+    saveRecentFiles(entries);
 }
 
-QStringList FileManager::getRecentFiles() const {
-    QSettings settings;
-    return settings.value(m_recentFilesKey).toStringList();
+void FileManager::saveRecentFiles(const QList<RecentFileEntry>& entries) {
+    QSettings s;
+    s.remove(kRecentFilesKey);
+    s.beginWriteArray(kRecentFilesKey);
+    for (int i = 0; i < entries.size(); ++i) {
+        s.setArrayIndex(i);
+        s.setValue("file", entries[i].file);
+        s.setValue("tmpl", entries[i].tmpl);
+    }
+    s.endArray();
+}
+
+QList<RecentFileEntry> FileManager::loadRecentFiles() const {
+    QSettings s;
+    int n = s.beginReadArray(kRecentFilesKey);
+    QList<RecentFileEntry> result;
+    result.reserve(n);
+    for (int i = 0; i < n; ++i) {
+        s.setArrayIndex(i);
+        result.append({
+            s.value("file").toString(),
+            s.value("tmpl").toString()
+        });
+    }
+    s.endArray();
+    return result;
+}
+
+QList<RecentFileEntry> FileManager::getRecentFiles() const {
+    return loadRecentFiles();
+}
+
+void FileManager::openRecentFile(const QString& filePath,
+                                 const QString& templatePath) {
+    m_qastra->Load(eLoadCode::RG_REPL,
+                   filePath.toStdString(),
+                   templatePath.toStdString());
+    setCurrentFile(filePath, templatePath);
 }
 
 void FileManager::registerStartupFile(const QString& fileName,
@@ -263,21 +293,6 @@ void FileManager::registerStartupFile(const QString& fileName,
         m_currentFile = fileName;
         m_currentDir  = QFileInfo(fileName).absolutePath();
     }
-}
-
-void FileManager::openRecentFile(const QString& fileAndTemplate) {
-    QStringList qslist = fileAndTemplate.split("<");
-    
-    std::string file = qslist[0].trimmed().toStdString();
-    std::string shabl = "";
-    
-    if (qslist.size() > 1) {
-        shabl = qslist[1].toStdString();
-        shabl.erase(shabl.end() - 1);  // Удаляем '>'
-    }
-    
-    m_qastra->Load(eLoadCode::RG_REPL, file, shabl);
-    setCurrentFile(qslist[0], QString::fromStdString(shabl));
 }
 
 bool FileManager::showOpenDialog(QStringList& selectedFiles, QString& selectedFilter)

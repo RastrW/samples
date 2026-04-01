@@ -8,6 +8,7 @@ class QAction;
 class QMenu;
 class QToolBar;
 class QStatusBar;
+struct RecentFileEntry;
 
 /// @class Построитель UI элементов
 class UIBuilder : public QObject {
@@ -24,16 +25,6 @@ public:
     QAction* actionByName(const QString& name) const;
     QMenu* menuByName(const QString& name) const;
     QToolBar* toolBarByName(const QString& name) const;
-
-    // ========== Обновление недавних файлов ==========
-    /**
-     * @brief Обновить действия недавних файлов
-     * @param recentFiles список строк вида "file <template>"
-     */
-    void updateRecentFileActions(const QStringList& recentFiles);
-    // Гарантирует, что в m_actions и в меню есть не менее `count` слотов
-    // для недавних файлов. Возвращает диапазон [prevMax, newMax).
-    std::pair<int,int> ensureRecentFileCapacity(int count);
 private:
     /// @brief Построить только меню
     void buildMenuBar();
