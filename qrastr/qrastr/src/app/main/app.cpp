@@ -72,8 +72,11 @@ bool App::init(){
         auto qt_sink = std::make_shared<QtSink>();
         logg->sinks().push_back(qt_sink);
 #else
-        //auto console_sink = std::make_shared<spdlog::sinks::ansicolor_stdout_sink_mt>();
+#ifdef _WIN32
         auto console_sink = std::make_shared<spdlog::sinks::wincolor_stdout_sink_mt>();
+#else
+        auto console_sink = std::make_shared<spdlog::sinks::ansicolor_stdout_sink_mt>();
+#endif
         logg->sinks().push_back(console_sink);
 #endif
         bool res = readSettings();

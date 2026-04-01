@@ -4,6 +4,7 @@
 #include "filterlineedit.h"
 
 #include <QColorDialog>
+#include <QDialogButtonBox>
 #include <QDesktopServices>
 #include <QUrl>
 #include <QPushButton>

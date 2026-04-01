@@ -1,6 +1,7 @@
 #pragma once
 
 #include <QDialog>
+#include <QToolButton>
 #include <vector>
 
 #include "Palette.h"
