@@ -418,11 +418,14 @@ void RtabWidget::applyColumnEditor(int colIndex)
         repo->setValidator(val);
         break;
     }
-    case RModel::ColumnEditorInfo::Type::DateTime:{
+    case RModel::ColumnEditorInfo::Type::DateTime: {
         column_qt->setEditorType(GridEditor::DateTime);
         auto* repo = static_cast<Qtitan::GridDateTimeEditorRepository*>(
             column_qt->editorRepository());
         repo->setDisplayFormat("dd.MM.yyyy HH:mm");
+        // Отключаем popup-календарь — без него QDateTimeEdit показывает
+        // спиннер для каждого поля (день, месяц, год, час, минута)
+        repo->setCalendarPopup(false);
         break;
     }
     case RModel::ColumnEditorInfo::Type::Color:{
@@ -519,6 +522,21 @@ void RtabWidget::slot_contextMenu(ContextMenuEventArgs* args)
     MenuContext ctx { column, row, col };
     m_menuBuilder->prepareForShow(ctx, args->contextMenu());
 }
+
+/*
+void RtabWidget::slot_focusRowChanged(int row_old, int row_new)
+{
+    ///@todo соединение только для дочернего виджета LinkedFormController
+    if (row_new < 0) return;
+
+    Qtitan::GridRow gridRow = m_view->getRow(row_new);
+    if (!gridRow.isValid()) return;
+
+    // modelIndex() → QModelIndex, .row() → физический индекс в модели
+    const int modelRow = gridRow.modelIndex().row();
+    m_linkedFormCtrl->onParentRowChanged(modelRow);
+}
+*/
 
 void RtabWidget::slot_focusRowChanged(int /*row_old*/, int row_new)
 {

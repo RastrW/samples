@@ -68,44 +68,50 @@ QVariant RModel::data(const QModelIndex& index, int role) const
 
     // ── BackgroundRole (Фон ячейки) ──────────────────────────────────────────
     if (role == Qt::BackgroundRole) {
-        if (rcol.getComPropTT() != enComPropTT::COM_PR_TIME) {
-            // форматы не заданы
-            if (m_condFmt.formats().empty()) return {};
-            // Проверяем кеш
-            if (const QVariant* cached = m_bgCache.get(row, col)){
-                // QVariant() → нет формата, тоже ок
-                return *cached;
-            }
-            const QString val = QString::fromStdString(
-                std::visit(ToString(), m_rdata->pnparray_->Get(row, col)));
-            QVariant fmt = getMatchingCondFormat(row, col, val, role);
-            m_bgCache.put(row, col, fmt);
-            return fmt;
-        }else{
+        // COLOR-ячейки: фон = сам цвет, условные форматы не нужны
+        if (rcol.getComPropTT() == enComPropTT::COM_PR_COLOR) {
             long packed = std::visit(ToLong(), m_rdata->pnparray_->Get(row, col));
-            return QColor::fromRgb(static_cast<QRgb>(packed)); // QVariant с QColor
+            return QColor(packed & 0xFF, (packed >> 8) & 0xFF, (packed >> 16) & 0xFF);
         }
+        // Для всех остальных — условный формат
+        if (m_condFmt.formats().empty())
+            return {}; // форматы не заданы
+        if (const QVariant* cached = m_bgCache.get(row, col))
+            return *cached;// QVariant() → нет формата, тоже ок
+        const QString val = QString::fromStdString(
+            std::visit(ToString(), m_rdata->pnparray_->Get(row, col)));
+        QVariant fmt = getMatchingCondFormat(row, col, val, role);
+        m_bgCache.put(row, col, fmt);
+        return fmt;
     }
-
     // ── DisplayRole / EditRole (Текст для отображения/Значение для редактора)─
     if (role == Qt::DisplayRole || role == Qt::EditRole) {
 
         // TIME: секунды от эпохи плагина → QDateTime
         if (rcol.getComPropTT() == enComPropTT::COM_PR_TIME) {
-            long secsLong = std::visit(ToLong(), m_rdata->pnparray_->Get(row, col));
-            std::string secsStr = std::visit(ToString(), m_rdata->pnparray_->Get(row, col));
-            static const QDateTime epoch(QDate(1899, 12, 30), QTime(0, 0, 0));
-            return epoch.addSecs(secsLong); // QVariant с QDateTime — QTitan сам форматирует
+            std::string raw = std::visit(ToString(), m_rdata->pnparray_->Get(row, col));
+            double rawD = std::visit(ToDouble(), m_rdata->pnparray_->Get(row, col));
+
+            QString qstr = QString::fromStdString(raw);
+            // Отрезаем суффикс "--7199", если он есть
+            int dashPos = qstr.indexOf("--");
+            if (dashPos >= 0) qstr = qstr.left(dashPos);
+            QDateTime dt = QDateTime::fromString(qstr.trimmed(), "dd.MM.yyyy HH:mm:ss");
+            return dt; // QTitan GridEditor::DateTime ждёт именно QDateTime
         }
 
         // COLOR: упакованный RGB long → QColor
         if (rcol.getComPropTT() == enComPropTT::COM_PR_COLOR) {
-            //HTML строка со значением
             long packed = std::visit(ToLong(), m_rdata->pnparray_->Get(row, col));
-            std::string packedStr = std::visit(ToString(), m_rdata->pnparray_->Get(row, col));
-            return QColor::fromRgb(static_cast<QRgb>(packed)); // QVariant с QColor
+            // COLORREF хранит каналы в порядке **BGR** (`0x00BBGGRR`), а `QColor::fromRgb` ожидает **RGB**. К
+            QColor color(packed & 0xFF, (packed >> 8) & 0xFF, (packed >> 16) & 0xFF);
+            if (role == Qt::DecorationRole) {
+                QPixmap px(16, 16);
+                px.fill(color);
+                return px;
+            }
+            return color; // для EditRole — QTitan Color-editor ждёт QColor
         }
-
         // Все остальные типы
         QVariant item = std::visit(ToQVariant(), m_rdata->pnparray_->Get(row, col));
 
@@ -187,12 +193,19 @@ bool RModel::setData(const QModelIndex& index, const QVariant& value, int role)
     FieldVariantData vd;
     // TIME: QDateTime → секунды от эпохи плагина
     if (iter_col->getComPropTT() == enComPropTT::COM_PR_TIME) {
-        static const QDateTime epoch(QDate(1899, 12, 30), QTime(0, 0, 0));
-        vd = static_cast<long>(epoch.secsTo(value.toDateTime()));
+        QDateTime dt = value.toDateTime();
+        if (!dt.isValid()) return false;
+        // Плагин хранит строку — возвращаем в том же формате
+        vd = dt.toString("dd.MM.yyyy HH:mm:ss--7199").toStdString();
     }
     // COLOR: QColor → упакованный RGB
     else if (iter_col->getComPropTT() == enComPropTT::COM_PR_COLOR) {
-        vd = static_cast<long>(value.value<QColor>().rgb());
+        QColor c = value.value<QColor>();
+        // Собираем обратно в COLORREF (BGR)
+        long colorref = static_cast<long>(c.red())
+                        | (static_cast<long>(c.green()) << 8)
+                        | (static_cast<long>(c.blue())  << 16);
+        vd = colorref;
     }
     else {
         switch (iter_col->getEnData()) {
