@@ -419,10 +419,18 @@ void RtabWidget::applyColumnEditor(int colIndex)
         break;
     }
     case RModel::ColumnEditorInfo::Type::DateTime:{
-        column_qt->setEditorType(GridEditor::Time);
+        column_qt->setEditorType(GridEditor::DateTime);
         auto* repo = static_cast<Qtitan::GridDateTimeEditorRepository*>(
             column_qt->editorRepository());
         repo->setDisplayFormat("dd.MM.yyyy HH:mm");
+        break;
+    }
+    case RModel::ColumnEditorInfo::Type::Color:{
+        column_qt->setEditorType(GridEditor::Color);
+        // GridColorEditorRepository позволяет ограничить палитру,
+        // по умолчанию показывает стандартный color picker
+        auto* repo = static_cast<Qtitan::GridColorEditorRepository*>(
+            column_qt->editorRepository());
         break;
     }
     case RModel::ColumnEditorInfo::Type::ComboBox:
@@ -452,7 +460,7 @@ void RtabWidget::applyColumnEditor(int colIndex)
         repo->setComboBoxEditable(false);
 
         spdlog::info("applyColumnEditor ENPIC col= {}, picItems= ", colIndex,
-                        info.picItems.size());
+                     info.picItems.size());
         break;
     }
     case RModel::ColumnEditorInfo::Type::None:
