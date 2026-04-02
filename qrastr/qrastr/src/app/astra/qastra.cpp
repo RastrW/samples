@@ -114,7 +114,7 @@ IPlainRastrRetCode QAstra::OnEvent(const IRastrEventBase& Event) noexcept {
 
 IPlainRastrRetCode QAstra::OnUICommand(const IRastrEventBase& Event,
                                        IPlainRastrVariant* Result) noexcept  {
-   EventTypes et = Event.Type();
+   //EventTypes et = Event.Type();
    std::string str;
     if(Event.Type() == EventTypes::Hint){
        str = fmt::format("[{}][{}] {} {} {} "

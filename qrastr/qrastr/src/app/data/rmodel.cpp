@@ -249,8 +249,18 @@ bool RModel::removeRows(int row, int count, const QModelIndex&)
 {
     IRastrTablesPtr tablesx{ m_qastra->getRastr()->Tables() };
     IRastrTablePtr  table  { tablesx->Item(getRdata()->t_name_) };
-    for (int i = 0; i < count; ++i)
-        IRastrResultVerify{ table->DeleteRow(row) };
+    size_t t_sz = IRastrPayload(table->Size()).Value();
+
+    beginRemoveRows({},row,(count>1)?count-1:row);
+    if (count == t_sz){
+        IRastrResultVerify{ table->SetSize(0) };
+    }
+    else{
+        for (int i = 0; i < count; ++i)
+            IRastrResultVerify{ table->DeleteRow(row) };
+    }
+    endRemoveRows();
+
     return true;
 }
 

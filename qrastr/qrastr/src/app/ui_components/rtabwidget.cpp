@@ -506,9 +506,12 @@ void RtabWidget::slot_duplicateRow()
 void RtabWidget::slot_deleteRow()
 {
     int row = m_view->selection()->cell().rowIndex();
+    QModelIndexList selections_rows = m_view->selection()->selectedRowIndexes();
 
     m_view->beginUpdate();
-    m_model->removeRows(row,1);
+    //Примем допущение что selection() один и не имеет разрывов
+    //m_model->removeRows(row,1);
+    m_model->removeRows(row,selections_rows.count());
     m_view->endUpdate();
     m_view->setFocusedRowIndex(row);
 }
