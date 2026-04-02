@@ -89,17 +89,13 @@ QVariant RModel::data(const QModelIndex& index, int role) const
 
         // TIME: секунды от эпохи плагина → QDateTime
         if (rcol.getComPropTT() == enComPropTT::COM_PR_TIME) {
-            std::string raw = std::visit(ToString(), m_rdata->pnparray_->Get(row, col));
-            double rawD = std::visit(ToDouble(), m_rdata->pnparray_->Get(row, col));
-
-            QString qstr = QString::fromStdString(raw);
+            QString qstr = QString::fromStdString(std::visit(ToString(), m_rdata->pnparray_->Get(row, col)));
             // Отрезаем суффикс "--7199", если он есть
             int dashPos = qstr.indexOf("--");
             if (dashPos >= 0) qstr = qstr.left(dashPos);
             QDateTime dt = QDateTime::fromString(qstr.trimmed(), "dd.MM.yyyy HH:mm:ss");
             return dt; // QTitan GridEditor::DateTime ждёт именно QDateTime
         }
-
         // COLOR: упакованный RGB long → QColor
         if (rcol.getComPropTT() == enComPropTT::COM_PR_COLOR) {
             long packed = std::visit(ToLong(), m_rdata->pnparray_->Get(row, col));
@@ -195,7 +191,7 @@ bool RModel::setData(const QModelIndex& index, const QVariant& value, int role)
     if (iter_col->getComPropTT() == enComPropTT::COM_PR_TIME) {
         QDateTime dt = value.toDateTime();
         if (!dt.isValid()) return false;
-        // Плагин хранит строку — возвращаем в том же формате
+        // Пишем в том же формате, что плагин ожидает на входе
         vd = dt.toString("dd.MM.yyyy HH:mm:ss--7199").toStdString();
     }
     // COLOR: QColor → упакованный RGB

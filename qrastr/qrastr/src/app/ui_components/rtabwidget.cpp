@@ -278,6 +278,10 @@ void RtabWidget::setupShortcuts(){
     }
 }
 
+void RtabWidget::notifyParentRowChanged(int modelRow) {
+    m_linkedFormCtrl->onParentRowChanged(modelRow);
+}
+
 bool RtabWidget::eventFilter(QObject* obj, QEvent* event)
 {
     if (event->type() == QEvent::KeyPress) {
@@ -522,26 +526,30 @@ void RtabWidget::slot_contextMenu(ContextMenuEventArgs* args)
     MenuContext ctx { column, row, col };
     m_menuBuilder->prepareForShow(ctx, args->contextMenu());
 }
-
 /*
 void RtabWidget::slot_focusRowChanged(int row_old, int row_new)
 {
     ///@todo соединение только для дочернего виджета LinkedFormController
-    if (row_new < 0) return;
-
-    Qtitan::GridRow gridRow = m_view->getRow(row_new);
-    if (!gridRow.isValid()) return;
-
-    // modelIndex() → QModelIndex, .row() → физический индекс в модели
-    const int modelRow = gridRow.modelIndex().row();
-    m_linkedFormCtrl->onParentRowChanged(modelRow);
+    m_linkedFormCtrl->onParentRowChanged(row_new);
 }
 */
 
-void RtabWidget::slot_focusRowChanged(int /*row_old*/, int row_new)
+
+void RtabWidget::slot_focusRowChanged(int row_old, int row_new)
 {
-    ///@todo соединение только для дочернего виджета LinkedFormController
-    m_linkedFormCtrl->onParentRowChanged(row_new);
+    // getRow(row_new) возвращает невалидный GridRow, т.к. row_new —
+    // контроллерный индекс, не совпадающий с аргументом getRow.
+    // focusedRow() идёт через m_persistentFocusRow, который уже
+    // обновлён ДО эмиссии сигнала — это единственный надёжный способ.
+    GridRow row = m_view->focusedRow();
+    if (!row.isValid()) return;
+
+    // modelIndex().row() — физический индекс в QAbstractTableModel (== pnparray_),
+    // правильный и при сортировке, и без неё
+    const int modelRow = row.modelIndex().row();
+    if (modelRow < 0) return;
+
+    m_linkedFormCtrl->onParentRowChanged(modelRow);
 }
 
 void RtabWidget::slot_addRow()

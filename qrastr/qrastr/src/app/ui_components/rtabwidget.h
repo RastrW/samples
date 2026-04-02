@@ -45,6 +45,8 @@ public:
     void setPyHlp(std::shared_ptr<PyHlp> pPyHlp);
     void on_calc_begin();
     void on_calc_end();
+
+        void notifyParentRowChanged(int modelRow);
 public slots:
 
     void slot_close();
