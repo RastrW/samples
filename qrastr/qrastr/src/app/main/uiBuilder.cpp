@@ -10,7 +10,7 @@
 #include <QStatusBar>
 #include <QActionGroup>
 #include <QSettings>
-#include "fileManager.h"
+#include "settingsKeys.h"
 
 UIBuilder::UIBuilder(QMainWindow* mainWindow)
     : QObject(mainWindow)
@@ -360,7 +360,7 @@ void UIBuilder::buildMenuBar() {
                 QApplication::setStyle(QStyleFactory::create(styleName));
                 // Сохраняем немедленно:
                 QSettings settings;
-                settings.setValue("appStyle", styleName);
+                settings.setValue(SK::MainWindow::appStyle, styleName);
             });
 }
 

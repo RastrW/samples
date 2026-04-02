@@ -7,13 +7,15 @@
 class QAstra;
 class QMainWindow;
 
-/// @class Менеджер настроек приложения
+/// @class Менеджер настроек
+/// Геометрия окна, стиль, рабочие области
+/// Управление окном Параметров, через которое изменяется appsettings.json и QSettings
 class AppSettingsManager : public QObject {
     Q_OBJECT
     
 public:
     explicit AppSettingsManager(QObject* parent = nullptr);
-    ~AppSettingsManager() = default;
+    ~AppSettingsManager();
     
     bool loadAppearanceSettings(QMainWindow* window);
     bool saveAppearanceSettings(QMainWindow* window);

@@ -46,7 +46,7 @@ public:
     void on_calc_begin();
     void on_calc_end();
 
-        void notifyParentRowChanged(int modelRow);
+    void notifyParentRowChanged(int modelRow);
 public slots:
 
     void slot_close();

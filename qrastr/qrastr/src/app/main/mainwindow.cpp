@@ -20,7 +20,7 @@
 #include <QMdiSubWindow>
 #include <QMimeData>
 #include <QTimer>
-
+#include <QFileInfo>
 #if (QT_VERSION >= QT_VERSION_CHECK(6, 0, 0))
 #include <QtSvgWidgets/QSvgWidget>
 #include <QSvgRenderer>
@@ -33,7 +33,7 @@
 #include "formManager.h"
 #include "appSettingsManager.h"
 #include "uiBuilder.h"
-#include "rastrParameters.h"
+#include "settingsKeys.h"
 #include "UIForms.h"
 #include "workspaceManager.h"
 
@@ -142,7 +142,8 @@ void MainWindow::setupConnections() {
                 menu->clear();
 
                 QSettings s;
-                int maxAllowed = s.value("maxRecentFiles", 10).toInt();
+                int maxAllowed = s.value(SK::Files::maxRecentFiles,
+                                         SK::Files::defMaxRecent).toInt();
                 const QList<RecentFileEntry> entries = m_fileManager->getRecentFiles();
                 int numVisible = qMin(entries.size(), maxAllowed);
 

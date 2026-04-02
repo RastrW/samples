@@ -11,6 +11,7 @@
 #include <QApplication>
 #include <spdlog/spdlog.h>
 #include "cursor_guard.h"
+#include "settingsKeys.h"
 
 FileManager::FileManager(std::shared_ptr<QAstra> qastra, QWidget* parent)
     : QObject(parent)
@@ -228,7 +229,8 @@ void FileManager::setCurrentFile(const QString& fileName,
 void FileManager::addToRecentFiles(const QString& filePath,
                                    const QString& templatePath) {
     QSettings s;
-    int maxRecent = s.value("maxRecentFiles", kDefaultMaxRecent).toInt();
+    int maxRecent = s.value(SK::Files::maxRecentFiles,
+                            SK::Files::defMaxRecent).toInt();
 
     auto entries = loadRecentFiles();
 
@@ -247,8 +249,8 @@ void FileManager::addToRecentFiles(const QString& filePath,
 
 void FileManager::saveRecentFiles(const QList<RecentFileEntry>& entries) {
     QSettings s;
-    s.remove(kRecentFilesKey);
-    s.beginWriteArray(kRecentFilesKey);
+    s.remove(SK::Files::recentFiles);
+    s.beginWriteArray(SK::Files::recentFiles);
     for (int i = 0; i < entries.size(); ++i) {
         s.setArrayIndex(i);
         s.setValue("file", entries[i].file);
@@ -259,7 +261,7 @@ void FileManager::saveRecentFiles(const QList<RecentFileEntry>& entries) {
 
 QList<RecentFileEntry> FileManager::loadRecentFiles() const {
     QSettings s;
-    int n = s.beginReadArray(kRecentFilesKey);
+    int n = s.beginReadArray(SK::Files::recentFiles);
     QList<RecentFileEntry> result;
     result.reserve(n);
     for (int i = 0; i < n; ++i) {

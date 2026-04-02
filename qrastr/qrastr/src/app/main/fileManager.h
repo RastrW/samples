@@ -104,9 +104,6 @@ private:
     QString m_currentFile;
     QString m_currentDir;
     std::map<QString, QString> m_loadedFiles;
-    // ========== Константы ==========
-    static constexpr const char* kRecentFilesKey = "recentFiles";
-    static constexpr int kDefaultMaxRecent = 10;
     // ========== Вспомогательные методы ==========
     /**
      * @brief Показать диалог открытия файлов

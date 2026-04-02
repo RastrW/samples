@@ -1,6 +1,5 @@
 #include "rastrParameters.h"
 #include <fstream>
-#include <QSettings>
 #include "common_qrastr.h"
 #include <astra_headers/json.hpp>
 #include "astra_headers/UIForms.h"

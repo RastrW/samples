@@ -1,6 +1,5 @@
 #include "condFormatDialog.h"
 #include "condFormat.h"
-#include "Settings.h"
 #include "filterlineedit.h"
 
 #include <QColorDialog>
@@ -18,6 +17,8 @@
 #include <QApplication>
 #include <QHeaderView>
 #include <QLabel>
+#include <QSettings>
+#include "settingsKeys.h"
 
 // Styled Item Delegate for non-editable columns (all except Condition)
 class DefaultDelegate: public QStyledItemDelegate {
@@ -173,12 +174,16 @@ void CondFormatDialog::addNewItem()
     QWidget* current = m_table->itemWidget(m_table->currentItem(), ColumnFilter);
     if (current) current->clearFocus();
 
-    QFont font = QFont(Settings::getValue("databrowser", "font").toString());
-    font.setPointSize(Settings::getValue("databrowser", "fontsize").toInt());
+    QSettings s;
+    QFont font = QFont(s.value(SK::CondFormat::font).toString());
+    font.setPointSize(
+        s.value(SK::CondFormat::fontSize,
+                SK::CondFormat::defFontSize).toInt()
+        );
 
     addItem(CondFormat(
         "",
-        QColor(Settings::getValue("databrowser", "reg_fg_colour").toString()),
+        QColor (s.value(SK::CondFormat::regFgColour).toString()),
         m_condFormatPalette.nextSerialColor(Palette::appHasDarkTheme()),
         font,
         CondFormat::AlignLeft,

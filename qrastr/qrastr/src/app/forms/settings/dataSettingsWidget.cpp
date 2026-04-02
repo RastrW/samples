@@ -10,7 +10,7 @@
 #include <QLineEdit>
 #include <QSettings>
 #include <spdlog/spdlog.h>
-#include "rastrParameters.h"
+#include "settingsKeys.h"
 
 DataSettingsWidget::DataSettingsWidget(QWidget *parent)
     : SettingsStackedItemWidget(parent) {
@@ -32,7 +32,8 @@ void DataSettingsWidget::setupUI() {
     QHBoxLayout* hLayoutNumItems = new QHBoxLayout();
     QLabel* labelNumItems = new QLabel(tr("Количество элементов в меню 'Последние':"), this);
     QSettings s;
-    int maxAllowed = s.value("maxRecentFiles", 10).toInt();
+    int maxAllowed = s.value(SK::Files::maxRecentFiles,
+                             SK::Files::defMaxRecent).toInt();
 
     pSpinBoxNumItems_ = new QSpinBox(this);
     pSpinBoxNumItems_->setMinimum(1);
@@ -147,7 +148,8 @@ void DataSettingsWidget::onSelectXmlProtocolPath() {
 void DataSettingsWidget::applyChanges() {
     if (m_hasChanges) {
         QSettings s;
-        s.setValue("maxRecentFiles", m_maxRecent);
+        s.setValue(SK::Files::maxRecentFiles,
+                   SK::Files::defMaxRecent);
         m_hasChanges = false;
     }
 }

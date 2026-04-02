@@ -2,7 +2,6 @@
 
 #include <memory>
 #include <QString>
-#include <QSettings>
 #include <QMessageBox>
 #include <QPluginLoader>
 #include <QPluginLoader>
