@@ -7,6 +7,7 @@
 #include <QSettings>
 #include <DockManager.h>
 #include <spdlog/spdlog.h>
+#include "settingsKeys.h"
 
 WorkspaceManager::WorkspaceManager(
     QSettings*          settings,
@@ -22,11 +23,11 @@ WorkspaceManager::WorkspaceManager(
 {}
 
 QStringList WorkspaceManager::names() const {
-    return m_settings->value(kNames).toStringList();
+    return m_settings->value(SK::Workspaces::names).toStringList();
 }
 
 QString WorkspaceManager::startupWorkspace() const {
-    return m_settings->value(kStartup).toString();
+    return m_settings->value(SK::Workspaces::startup).toString();
 }
 
 void WorkspaceManager::applyStartupWorkspace() {
@@ -53,7 +54,7 @@ void WorkspaceManager::slot_showSaveDialog() {
 
     // 2. Флаг «при старте»
     const QString startupName = dlg.startupWorkspaceName();
-    m_settings->setValue(kStartup, startupName);
+    m_settings->setValue(SK::Workspaces::startup, startupName);
     m_settings->sync();
 
     // 3. Новая область (имя может быть пустым — пользователь не добавлял)
@@ -90,9 +91,9 @@ void WorkspaceManager::save(const WorkspaceEntry& entry) {
     QStringList list = names();
     if (!list.contains(entry.name))
         list.append(entry.name);
-    m_settings->setValue(kNames, list);
+    m_settings->setValue(SK::Workspaces::names, list);
     // Сохраняем данные области
-    const QString prefix = QString("%1/%2/").arg(kGroup, entry.name);
+    const QString prefix = QString("%1/%2/").arg(SK::Workspaces::group, entry.name);
     m_settings->setValue(prefix + "adsState",  entry.adsState);
     m_settings->setValue(prefix + "openForms", entry.openForms);
     // геометрию главного окна сохраняем не здесь
@@ -101,12 +102,12 @@ void WorkspaceManager::save(const WorkspaceEntry& entry) {
 void WorkspaceManager::remove(const QString& name) {
     QStringList list = names();
     list.removeAll(name);
-    m_settings->setValue(kNames, list);
+    m_settings->setValue(SK::Workspaces::names, list);
     // Удаляем все ключи секции этой области
-    m_settings->remove(QString("%1/%2").arg(kGroup, name));
+    m_settings->remove(QString("%1/%2").arg(SK::Workspaces::group, name));
     // Сбрасываем флаг старта, если удаляли startup-область
     if (startupWorkspace() == name){
-        m_settings->setValue(kStartup, QString{});
+        m_settings->setValue(SK::Workspaces::startup, QString{});
     }
     spdlog::info("Workspace '{}' removed", name.toStdString());
 }
@@ -115,7 +116,7 @@ std::optional<WorkspaceEntry> WorkspaceManager::load(const QString& name) const 
     if (!names().contains(name)){
         return std::nullopt;
     }
-    const QString prefix = QString("%1/%2/").arg(kGroup, name);
+    const QString prefix = QString("%1/%2/").arg(SK::Workspaces::group, name);
     WorkspaceEntry entry;
     entry.name      = name;
     entry.adsState  = m_settings->value(prefix + "adsState").toByteArray();

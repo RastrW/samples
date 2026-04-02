@@ -381,21 +381,45 @@ QVariant RModel::getMatchingCondFormat(size_t row, size_t column,
     const auto* vec = m_condFmt.column(column);
     if (!vec || vec->empty()) return {};
 
-    bool isNumber;
-    value.toDouble(&isNumber);
-    if (!isNumber) return {};
-
     for (const CondFormat& fmt : *vec) {
-        STRING_BOOL sb(value.toStdString() + " " + fmt.sqlCondition());
-        for (const std::string& op : sb.Check()) {
-            if (contains(m_rdata->mCols_, op)) {
-                int cind = m_rdata->mCols_.at(op);
-                double v = std::visit(ToDouble(), m_rdata->pnparray_->Get(row, cind));
-                sb.replace(op, std::to_string(v));
+        // Пустой фильтр = правило по умолчанию, всегда срабатывает
+        if (fmt.filter().isEmpty()) {
+            switch (role) {
+            case Qt::ForegroundRole:    return fmt.foregroundColor();
+            case Qt::BackgroundRole:    return fmt.backgroundColor();
+            case Qt::FontRole:          return fmt.font();
+            case Qt::TextAlignmentRole: return static_cast<int>(fmt.alignmentFlag() | Qt::AlignVCenter);
             }
         }
 
-        if (fmt.filter().isEmpty() || sb.res()) {
+        STRING_BOOL sb(value.toStdString() + " " + fmt.sqlCondition());
+
+        // Подставляем значения колонок той же строки
+        bool allResolved = true;
+        for (const std::string& colName : sb.Check()) {
+            auto it = m_rdata->mCols_.find(colName);
+            if (it != m_rdata->mCols_.end()) {
+                double v = std::visit(ToDouble(), m_rdata->pnparray_->Get(row, it->second));
+                sb.replace(colName, std::to_string(v));
+            } else {
+                // Имя не найдено — условие не может быть вычислено
+                spdlog::warn("getMatchingCondFormat: unknown column '{}' in condition '{}'",
+                             colName, fmt.filter().toStdString());
+                allResolved = false;
+                break;
+            }
+        }
+        if (!allResolved) continue;
+
+        bool matches = false;
+        try {
+            matches = (sb.res() != 0.0);
+        } catch (const std::exception& e) {
+            spdlog::error("getMatchingCondFormat: eval error: {}", e.what());
+            continue;
+        }
+
+        if (matches) {
             switch (role) {
             case Qt::ForegroundRole:    return fmt.foregroundColor();
             case Qt::BackgroundRole:    return fmt.backgroundColor();
@@ -406,6 +430,7 @@ QVariant RModel::getMatchingCondFormat(size_t row, size_t column,
     }
     return {};
 }
+
 
 RModel::ColumnEditorInfo RModel::getColumnEditorInfo(int colIndex) const
 {

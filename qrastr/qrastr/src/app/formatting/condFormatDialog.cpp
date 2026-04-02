@@ -174,17 +174,13 @@ void CondFormatDialog::addNewItem()
     QWidget* current = m_table->itemWidget(m_table->currentItem(), ColumnFilter);
     if (current) current->clearFocus();
 
-    QSettings s;
-    QFont font = QFont(s.value(SK::CondFormat::font).toString());
-    font.setPointSize(
-        s.value(SK::CondFormat::fontSize,
-                SK::CondFormat::defFontSize).toInt()
-        );
+    QFont font = QApplication::font();
+    font.setPointSize(SK::CondFormat::defFontSize);
 
     addItem(CondFormat(
         "",
-        QColor (s.value(SK::CondFormat::regFgColour).toString()),
-        m_condFormatPalette.nextSerialColor(Palette::appHasDarkTheme()),
+        QColor(Qt::black),                                          // цвет текста
+        m_condFormatPalette.nextSerialColor(Palette::appHasDarkTheme()), // фон из палитры
         font,
         CondFormat::AlignLeft,
         m_encoding));

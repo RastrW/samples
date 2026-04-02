@@ -149,7 +149,7 @@ void DataSettingsWidget::applyChanges() {
     if (m_hasChanges) {
         QSettings s;
         s.setValue(SK::Files::maxRecentFiles,
-                   SK::Files::defMaxRecent);
+                   m_maxRecent);
         m_hasChanges = false;
     }
 }

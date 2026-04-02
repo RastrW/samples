@@ -60,7 +60,7 @@ bool AppSettingsManager::loadAppearanceSettings(QMainWindow* window) {
 bool AppSettingsManager::saveAppearanceSettings(QMainWindow* window) {
     if (!window) return false;
 
-    m_settings.setValue(SK::MainWindow::groupName,
+    m_settings.setValue(SK::MainWindow::geometry,
                         window->saveGeometry());
     m_settings.setValue(SK::MainWindow::state,
                         window->saveState());
