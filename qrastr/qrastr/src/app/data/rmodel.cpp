@@ -255,12 +255,13 @@ bool RModel::duplicateRow(int row, const QModelIndex&)
 {
     IRastrTablesPtr tablesx{ m_qastra->getRastr()->Tables() };
     IRastrTablePtr  table  { tablesx->Item(getRdata()->t_name_) };
-    IRastrResultVerify{ table->DuplicateRow(row) };
-    //Дублируем данные в клиенте (иначе дублированная строка будет пустой)
+    IRastrResultVerify{ table->DuplicateRow(row)};
+    // После DuplicateRow плагин сгенерирует InsertRow-хинт →
+    // handleInsertRow вставит пустую строку в pnparray_.
+    // DuplicateRow в QDenseDataBlock копирует данные из исходной строки в новую
     m_rdata->pnparray_->DuplicateRow(row);
     return true;
 }
-
 bool RModel::insertRows(int row, int count, const QModelIndex&)
 {
     IRastrTablesPtr tablesx{ m_qastra->getRastr()->Tables() };
