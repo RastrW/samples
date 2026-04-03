@@ -1,5 +1,7 @@
 #pragma once
 #include <QObject>
+#include <filesystem>
+#include <iostream>
 #include "qastra.h"
 
 /**

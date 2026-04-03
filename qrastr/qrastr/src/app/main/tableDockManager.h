@@ -1,6 +1,6 @@
 #pragma once
 #include <QObject>
-#include "RTablesDataManager.h"
+#include "rtablesdatamanager.h"
 
 namespace ads { class CDockManager; class CDockWidget; }
 

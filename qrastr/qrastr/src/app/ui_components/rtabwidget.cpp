@@ -518,16 +518,18 @@ void RtabWidget::slot_contextMenu(ContextMenuEventArgs* args)
     }
     // ── Меню ячейки
     const int row = hit.row().rowIndex();
+    const int row_model = hit.row().modelIndex().row();
     RCol* col = m_model->getRCol(column);
     if (!col) return;
 
-    MenuContext ctx { column, row, col };
+    MenuContext ctx { column, row_model, col };
     m_menuBuilder->prepareForShow(ctx, args->contextMenu());
 }
 /*
 void RtabWidget::slot_focusRowChanged(int row_old, int row_new)
 {
     ///@todo соединение только для дочернего виджета LinkedFormController
+    const int row_new2 = m_view->getRow(row_new).modelIndex().row();      // not work why?
     m_linkedFormCtrl->onParentRowChanged(row_new);
 }
 */
