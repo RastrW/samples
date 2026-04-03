@@ -122,7 +122,7 @@ bool App::readSettings(){
                           RastrParameters::pch_dir_data_ +"/"+ RastrParameters::pch_fname_appsettings;
 #else
         //str_path_2_conf = R"(/home/ustas/projects/git_web/samples/qrastr/qrastr/appsettings.json)";
-        str_path_2_conf = qstr_curr_path.toStdString()+ "/../"+Params::pch_dir_data_ +"/"+ Params::pch_fname_appsettings;
+        str_path_2_conf = qstr_curr_path.toStdString()+ "/../"+RastrParameters::pch_dir_data_ +"/"+ RastrParameters::pch_fname_appsettings;
         // QMessageBox mb( QMessageBox::Icon::Critical, QObject::tr("Error"), QString("In lin not implemented!") );  mb.exec();
 #endif
         QFileInfo fi_appsettings(str_path_2_conf.c_str());
