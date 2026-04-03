@@ -10,7 +10,7 @@
 #include <QStatusBar>
 #include <QActionGroup>
 #include <QSettings>
-#include "params.h"
+#include "settingsKeys.h"
 
 UIBuilder::UIBuilder(QMainWindow* mainWindow)
     : QObject(mainWindow)
@@ -72,15 +72,6 @@ void UIBuilder::createFileActions() {
               ":/images/new_style/exit.png",
               "Ctrl+Q",
               tr("Exit the application"));
-
-    // НЕДАВНИЕ ФАЙЛЫ
-    // Создаём массив действий для недавних файлов
-    for (int i = 0; i < Params::get_instance()->getMaxRecentFiles(); ++i) {
-        QString actionName = QString("recentFile%1").arg(i);
-        QAction* recentAction = new QAction(m_mainWindow);
-        recentAction->setVisible(false);
-        m_actions[actionName] = recentAction;
-    }
 }
 
 void UIBuilder::createCalcActions() {
@@ -273,11 +264,6 @@ void UIBuilder::buildMenuBar() {
 
     // Подменю "Последние" (недавние файлы)
     m_menus["recentFiles"] = m_menus["file"]->addMenu(tr("&Последние"));
-    for (int i = 0; i < Params::get_instance()->getMaxRecentFiles(); ++i) {
-        QString actionName = QString("recentFile%1").arg(i);
-        m_menus["recentFiles"]->addAction(m_actions[actionName]);
-    }
-
     m_menus["file"]->addSeparator();
     m_menus["file"]->addAction(m_actions["exit"]);
 
@@ -374,19 +360,21 @@ void UIBuilder::buildMenuBar() {
                 QApplication::setStyle(QStyleFactory::create(styleName));
                 // Сохраняем немедленно:
                 QSettings settings;
-                settings.setValue("appStyle", styleName);
+                settings.setValue(SK::MainWindow::appStyle, styleName);
             });
 }
 
 void UIBuilder::buildToolBars() {
     // ПАНЕЛЬ "ФАЙЛ"
     m_toolBars["file"] = m_mainWindow->addToolBar(tr("Файл"));
+    m_toolBars["file"]->setObjectName("fileToolBar");
     m_toolBars["file"]->addAction(m_actions["new"]);
     m_toolBars["file"]->addAction(m_actions["load"]);
     m_toolBars["file"]->addAction(m_actions["save"]);
 
     // ПАНЕЛЬ "РАСЧЁТЫ"
     m_toolBars["calc"] = m_mainWindow->addToolBar(tr("Расчеты"));
+    m_toolBars["calc"]->setObjectName("calcToolBar");
     m_toolBars["calc"]->addAction(m_actions["rgm"]);
     m_toolBars["calc"]->addAction(m_actions["smzu"]);
     m_toolBars["calc"]->addAction(m_actions["prepareMDP"]);
@@ -395,6 +383,7 @@ void UIBuilder::buildToolBars() {
 
     // ПАНЕЛЬ "ТЕЛЕИЗМЕРЕНИЯ"
     m_toolBars["ti"] = m_mainWindow->addToolBar(tr("Телеизмерения"));
+    m_toolBars["ti"]->setObjectName("tiToolBar");
     m_toolBars["ti"]->addAction(m_actions["calcPTI"]);
     m_toolBars["ti"]->addAction(m_actions["filtrTI"]);
     m_toolBars["ti"]->addAction(m_actions["opf"]);
@@ -424,6 +413,7 @@ QAction* UIBuilder::addAction(
     // Установка горячей клавиши
     if (!shortcut.isEmpty()) {
         action->setShortcut(QKeySequence(shortcut));
+        action->setShortcutContext(Qt::ApplicationShortcut);
     }
 
     // Установка подсказки в статусной строке
@@ -450,54 +440,4 @@ QMenu* UIBuilder::menuByName(const QString& name) const {
 QToolBar* UIBuilder::toolBarByName(const QString& name) const {
     auto it = m_toolBars.find(name);
     return (it != m_toolBars.end()) ? it->second : nullptr;
-}
-
-void UIBuilder::updateRecentFileActions(const QStringList& recentFiles) {
-    int numRecentFiles = qMin(recentFiles.size(),
-                              Params::get_instance()->getMaxRecentFiles());
-
-    for (int i = 0; i < numRecentFiles; ++i) {
-        QString actionName = QString("recentFile%1").arg(i);
-        QAction* action = m_actions[actionName];
-
-        if (action) {
-            // Разбор строки "file <template>"
-            QStringList qslist = recentFiles[i].split(" ");
-            QString file = qslist[0];
-            QString shabl;
-
-            if (qslist.size() > 1) {
-                shabl = qslist[1];
-                if (!shabl.isEmpty()) {
-                    shabl.remove(0, 1);  // Удаляем '<'
-                    shabl.chop(1);       // Удаляем '>'
-
-                    // Извлекаем имя файла из полного пути шаблона
-                    QFileInfo fileInfo(shabl);
-                    shabl = fileInfo.fileName();
-                }
-            }
-
-            // Формируем текст действия
-            QString text;
-            if (shabl.isEmpty()) {
-                text = tr("&%1 %2").arg(i + 1).arg(file);
-            } else {
-                text = tr("&%1 %2 %3").arg(i + 1).arg(file).arg("<" + shabl + ">");
-            }
-
-            action->setText(text);
-            action->setData(recentFiles[i]);
-            action->setVisible(true);
-        }
-    }
-
-    // Скрываем неиспользуемые действия
-    for (int j = numRecentFiles; j < Params::get_instance()->getMaxRecentFiles(); ++j) {
-        QString actionName = QString("recentFile%1").arg(j);
-        QAction* action = m_actions[actionName];
-        if (action) {
-            action->setVisible(false);
-        }
-    }
 }

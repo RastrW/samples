@@ -1,5 +1,7 @@
 #include "protocolSettingsDialog.h"
 #include <QVBoxLayout>
+#include <QSettings>
+#include "settingsKeys.h"
 
 ProtocolSettingsDialog::ProtocolSettingsDialog(QWidget* parent)
     : QDialog(parent)
@@ -37,12 +39,14 @@ bool ProtocolSettingsDialog::copyAsXml() const {
 
 void ProtocolSettingsDialog::load() {
     QSettings s;
-    m_cbCollapse->setChecked(s.value(kKeyCollapse, true).toBool());
-    m_cbXml     ->setChecked(s.value(kKeyXml,      false).toBool());
+    m_cbCollapse->setChecked(s.value(SK::Protocol::collapseCleanStages,
+                                     SK::Protocol::defCollapseCleanStages).toBool());
+    m_cbXml     ->setChecked(s.value(SK::Protocol::copyAsXml,
+                                     SK::Protocol::defCopyAsXml).toBool());
 }
 
 void ProtocolSettingsDialog::save() {
     QSettings s;
-    s.setValue(kKeyCollapse, m_cbCollapse->isChecked());
-    s.setValue(kKeyXml,      m_cbXml->isChecked());
+    s.setValue(SK::Protocol::collapseCleanStages, m_cbCollapse->isChecked());
+    s.setValue(SK::Protocol::copyAsXml,      m_cbXml->isChecked());
 }

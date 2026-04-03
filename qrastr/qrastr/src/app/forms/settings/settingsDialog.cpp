@@ -10,7 +10,7 @@
 
 #include <filesystem>
 #include "qastra.h"
-#include "params.h"
+#include "rastrParameters.h"
 #include "dataSettingsWidget.h"
 #include "settingsOnLoadFilesWidget.h"
 #include "settingsOnLoadTemplatesWidget.h"
@@ -67,7 +67,7 @@ SettingsDialog::~SettingsDialog(){
 bool SettingsDialog::init(const std::shared_ptr<QAstra>& sp_qastra) {
     m_qAstra = sp_qastra;
 
-    if (!Params::get_instance()->readTemplates()) {
+    if (!RastrParameters::get_instance()->readTemplates()) {
         spdlog::error("Не удалось прочитать шаблоны");
         return false;
     }
@@ -198,7 +198,7 @@ void SettingsDialog::onBtnApplyClick() {
         }
     }
 
-    Params* p_params = Params::get_instance();
+    RastrParameters* p_params = RastrParameters::get_instance();
     const std::filesystem::path path_appsettings = p_params->getFileAppsettings();
 
     if (std::filesystem::exists(path_appsettings)) {

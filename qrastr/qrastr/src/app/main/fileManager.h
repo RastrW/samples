@@ -10,6 +10,11 @@ class QAstra;
 enum class eLoadCode;
 enum class IPlainRastrRetCode;
 
+struct RecentFileEntry {
+    QString file;
+    QString tmpl;  // может быть пустым
+};
+
 /// @class Менеджер файловых операций
 class FileManager : public QObject {
     Q_OBJECT
@@ -66,21 +71,15 @@ public:
     
     // ========== Недавние файлы ==========
     /// @brief Добавить файл в список недавних
-    void addToRecentFiles(const QString& filePath, const QString& templatePath = "");
-    /**
-     * @brief Получить список недавних файлов
-     * @return список строк вида "file <template>"
-     */
-    QStringList getRecentFiles() const;
-    
-    /**
-     * @brief Открыть файл из списка недавних
-     * @param fileAndTemplate строка вида "file <template>"
-     */
-    void openRecentFile(const QString& fileAndTemplate);
-
-    void registerStartupFile(const QString& fileName,
-                             const QString& templatePath);
+    void addToRecentFiles(const QString& filePath,
+                          const QString& templatePath);
+    void saveRecentFiles(const QList<RecentFileEntry>& entries);
+    QList<RecentFileEntry> loadRecentFiles() const;
+    /// @brief Получить список недавних файлов
+    QList<RecentFileEntry> getRecentFiles() const;
+    /// @brief Открыть файл из списка недавних
+    void openRecentFile(const QString& filePath,
+                        const QString& templatePath);
 signals:
     /// @brief Файл успешно открыт
     void fileOpened(const QString& filePath);
@@ -94,8 +93,6 @@ signals:
     void fileSaved(const QString& filePath);
     /// @brief Ошибка при загрузке файла
     void fileLoadError(const QString& error);
-    /// @brief Список недавних файлов изменился
-    void recentFilesChanged();
     /// @brief Текущий файл изменился
     void currentFileChanged(const QString& filePath);   
 private:
@@ -107,9 +104,6 @@ private:
     QString m_currentFile;
     QString m_currentDir;
     std::map<QString, QString> m_loadedFiles;
-    // ========== Константы ==========
-    static constexpr const char* m_recentFilesKey = "recentFileList";
-    
     // ========== Вспомогательные методы ==========
     /**
      * @brief Показать диалог открытия файлов
@@ -130,4 +124,7 @@ private:
     QString findTemplateByExtension(const QString& filePath) const;
     /// @brief Показать диалог выбора шаблонов для нового файла
     bool showNewFileDialog(QStringList& selectedTemplates);
+
+    void registerStartupFile(const QString& fileName,
+                             const QString& templatePath);
 };

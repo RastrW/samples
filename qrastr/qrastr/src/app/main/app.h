@@ -32,6 +32,8 @@ public:
     std::shared_ptr<QBarsMDP> getQBarsMDPPtr(){ return m_sp_qbarsmdp;}
     // Сбросить накопленные за время init() сообщения в логгер
     void flushLogCache(std::shared_ptr<spdlog::sinks::sink> qt_sink);
+signals:
+    void sig_progressChanged(int percent, const QString& message);
 private:
     // Переопределённые методы Qt
     ///@brief Обработка событий Qt
@@ -44,7 +46,7 @@ private:
     // Загрузка компонентов
     bool loadPlugins(); // Динамическая загрузка .dll/.so плагинов
     // form files are deployed in form catalog near qrastr.exe
-    bool readForms(); // Чтение описаний форм (.fm файлы)
+    bool deserializeForms(); // Чтение описаний форм (.fm файлы)
 
     // Кэш логов до инициализации
     qrastr::CacheLogVector m_v_cache_log;

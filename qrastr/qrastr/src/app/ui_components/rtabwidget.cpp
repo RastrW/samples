@@ -42,6 +42,29 @@
 #include "qastra.h"
 #include "rdata.h"
 #include "QDataBlocks.h"
+#include "searchableComboRepository.h"
+
+void dumpShortcuts(QWidget* root, const QString& tag)
+{
+    qDebug() << "=== Dump shortcuts:" << tag << "===";
+
+    auto dump = [](QWidget* w) {
+        for (QAction* act : w->actions()) {
+            if (!act->shortcut().isEmpty()) {
+                qDebug() << "Widget:" << w
+                         << "Action:" << act->text()
+                         << "Shortcut:" << act->shortcut().toString();
+            }
+        }
+    };
+
+    dump(root);
+
+    for (QObject* child : root->children()) {
+        if (auto* w = qobject_cast<QWidget*>(child))
+            dump(w);
+    }
+}
 
 RtabWidget::RtabWidget(QAstra* pqastra,CUIForm UIForm, RTablesDataManager* pRTDM,
                        ads::CDockManager* pDockManager, QWidget *parent)
@@ -65,12 +88,16 @@ RtabWidget::RtabWidget(QAstra* pqastra,CUIForm UIForm, RTablesDataManager* pRTDM
     m_view->options().setGridLineWidth(1);
     m_view->tableOptions().setColumnAutoWidth(true);
     //user can select several cells at time. Hold shift key to select multiple cells.
-    m_view->options().setSelectionPolicy(GridViewOptions::MultiCellSelection);
     m_view->options().setColumnHidingOnGroupingEnabled(false);
+    // Выделение: MultiRowSelection + rubber-band через indicator-колонку
+    m_view->options().setSelectionPolicy(Qtitan::GridViewOptions::MultiCellSelection);
+    m_view->options().setRubberBandSelection(true);
+    // Drag отключаем — он конкурирует с rubber-band
+    m_view->options().setDragEnabled(false);
     // Sets the value that indicates whether the filter panel can automatically hide or not.
     m_view->options().setFilterAutoHide(true);
     // Sets the painting the doted frame around the cell with focus to the enabled. By default frame is enabled.
-    m_view->options().setFocusFrameEnabled(true);
+    //m_view->options().setFocusFrameEnabled(true);
     // Sets the visibility status of the grid grouping panel to groupsHeader.
     m_view->options().setGroupsHeader(false);
     // ScrollByPixel значительно быстрее ScrollByItem при большом числе строк:
@@ -78,24 +105,19 @@ RtabWidget::RtabWidget(QAstra* pqastra,CUIForm UIForm, RTablesDataManager* pRTDM
     m_view->options().setScrollRowStyle(Qtitan::ScrollItemStyle::ScrollByPixel);
     // Enables or disables wait cursor if grid is busy for lengthy operations with data like sorting or grouping.
     m_view->options().setShowWaitCursor(true);
-    m_view->options().setRubberBandSelection(true);        // Выделение "резинкой"
     m_view->tableOptions().setColumnsHeader(true);
     m_view->tableOptions().setRowsQuickSelection(true);
-    ///@todo Вынести в опцию контекстного меню (example MultiSelection)
     m_view->tableOptions().setRowFrozenButtonVisible(true);
     m_view->tableOptions().setFrozenPlaceQuickSelection(true);
+
     //отключить встроенное меню Qtitan
     //m_view->options().setMainMenuDisabled(true);
 
-    // ── Блокируем встроенные в Qtitan события ──────────────────────────────────
-    m_grid->installEventFilter(this);
-    if (m_grid->viewport())
-        m_grid->viewport()->installEventFilter(this);
+    ///@note создание модели обязатель до меню!
+    createModel();
 
     //  Горячие клавиши
     setupShortcuts();
-
-    createModel();
 
     m_menuBuilder = std::make_unique<ContextMenuBuilder>(
         m_view,
@@ -105,17 +127,27 @@ RtabWidget::RtabWidget(QAstra* pqastra,CUIForm UIForm, RTablesDataManager* pRTDM
 
     setupConnections();
 
-    resize(800,500);
-    setWindowFlags(Qt::WindowMinimizeButtonHint | Qt::WindowMinMaxButtonsHint
-                   | Qt::WindowCloseButtonHint);
-    setWindowModality(Qt::ApplicationModal);
+    dumpShortcuts(m_grid, "before clear");
+    // Снимаем F5/Delete со встроенных action-ов QTitan
+    auto& acts = m_view->actions();
 
-    //qApp->installEventFilter(this);
+    // удалить shortcut у DeleteRowAction
+    if (acts.contains(Qtitan::GridViewBase::DeleteRowAction)) {
+        acts[Qtitan::GridViewBase::DeleteRowAction]->setShortcut(QKeySequence());
+    }
+
+    // если F5 где-то используется (например Find/Refresh)
+    for (auto it = acts.begin(); it != acts.end(); ++it) {
+        if (it.value()->shortcut() == QKeySequence(Qt::Key_F5)) {
+            it.value()->setShortcut(QKeySequence());
+        }
+    }
+
+    dumpShortcuts(m_grid, "after clear");
 }
 
-RtabWidget::~RtabWidget() {
-    //qApp->removeEventFilter(this);
-}
+
+RtabWidget::~RtabWidget() {}
 
 QWidget* RtabWidget::createDockContent(bool addToolbar) {
     QWidget* wrapper = new QWidget(this);
@@ -183,7 +215,6 @@ void RtabWidget::setupConnections(){
     //QTitan
     //Connect Grid's context menu handler.
     connect(m_view, &GridTableView::contextMenu, this, &RtabWidget::slot_contextMenu);
-    connect(m_view, &GridTableView::cellClicked, this, &RtabWidget::slot_itemPressed);
 }
 
 void RtabWidget::setPyHlp(std::shared_ptr<PyHlp> pPyHlp){
@@ -207,8 +238,8 @@ void RtabWidget::applyLinkedFormFromController(const LinkedForm& lf)
 
 void RtabWidget::setupToolbar() {
     m_toolbar = new QToolBar(this);
-    m_toolbar->setToolButtonStyle(Qt::ToolButtonTextBesideIcon);
     m_toolbar->setIconSize(QSize(16, 16));
+    m_toolbar->setToolButtonStyle(Qt::ToolButtonIconOnly);
 
     // Qtitan::Grid имеет встроенную кнопку поиска/фильтрации
     // Операции с данными
@@ -245,6 +276,10 @@ void RtabWidget::setupShortcuts(){
     }
 }
 
+void RtabWidget::notifyParentRowChanged(int modelRow) {
+    m_linkedFormCtrl->onParentRowChanged(modelRow);
+}
+
 bool RtabWidget::eventFilter(QObject* obj, QEvent* event)
 {
     if (event->type() == QEvent::KeyPress) {
@@ -253,9 +288,9 @@ bool RtabWidget::eventFilter(QObject* obj, QEvent* event)
                         || (m_grid && m_grid->isAncestorOf(qobject_cast<QWidget*>(obj)));
         if (fromGrid) {
             auto* ke = static_cast<QKeyEvent*>(event);
-            if (ke->key() == Qt::Key_Delete ||
-                ke->key() == Qt::Key_F5) {
-                // Поглощаем событие
+            if (ke->key() == Qt::Key_Delete) {
+                // Delete блокируем: QTitan удаляет содержимое ячейки,
+                // у нас удаление строки — Ctrl+D
                 return true;
             }
         }
@@ -385,14 +420,38 @@ void RtabWidget::applyColumnEditor(int colIndex)
         repo->setValidator(val);
         break;
     }
+    case RModel::ColumnEditorInfo::Type::DateTime: {
+        column_qt->setEditorType(GridEditor::DateTime);
+        auto* repo = static_cast<Qtitan::GridDateTimeEditorRepository*>(
+            column_qt->editorRepository());
+        repo->setDisplayFormat("dd.MM.yyyy HH:mm");
+        // Отключаем popup-календарь — без него QDateTimeEdit показывает
+        // спиннер для каждого поля (день, месяц, год, час, минута)
+        repo->setCalendarPopup(false);
+        break;
+    }
+    case RModel::ColumnEditorInfo::Type::Color:{
+        column_qt->setEditorType(GridEditor::Color);
+        // GridColorEditorRepository позволяет ограничить палитру,
+        // по умолчанию показывает стандартный color picker
+        auto* repo = static_cast<Qtitan::GridColorEditorRepository*>(
+            column_qt->editorRepository());
+        break;
+    }
     case RModel::ColumnEditorInfo::Type::ComboBox:
-        column_qt->setEditorType(GridEditor::ComboBox);
-        if (!info.comboItems.isEmpty()) {
-            column_qt->editorRepository()->setDefaultValue(
-                info.comboItems.at(0), Qt::EditRole);
-            column_qt->editorRepository()->setDefaultValue(
-                info.comboItems,
-                static_cast<Qt::ItemDataRole>(Qtitan::ComboBoxRole));
+        if (info.comboItems.size() > 10) {
+            // Кастомный редактор с поиском
+            auto* repo = new SearchableComboRepository(info.comboItems, m_grid);
+            column_qt->setEditorRepository(repo);
+        } else {
+            column_qt->setEditorType(GridEditor::ComboBox);
+            if (!info.comboItems.isEmpty()) {
+                column_qt->editorRepository()->setDefaultValue(
+                    info.comboItems.at(0), Qt::EditRole);
+                column_qt->editorRepository()->setDefaultValue(
+                    info.comboItems,
+                    static_cast<Qt::ItemDataRole>(Qtitan::ComboBoxRole));
+            }
         }
         break;
     case RModel::ColumnEditorInfo::Type::ComboBoxPicture:
@@ -406,7 +465,7 @@ void RtabWidget::applyColumnEditor(int colIndex)
         repo->setComboBoxEditable(false);
 
         spdlog::info("applyColumnEditor ENPIC col= {}, picItems= ", colIndex,
-                        info.picItems.size());
+                     info.picItems.size());
         break;
     }
     case RModel::ColumnEditorInfo::Type::None:
@@ -444,21 +503,20 @@ void RtabWidget::slot_contextMenu(ContextMenuEventArgs* args)
     const auto& hit    = args->hitInfo();
     const int   column = hit.columnIndex();
 
-    if (column < 0) return;   // клик вне колонок (пустое место справа)
-
-    // ── Определяем тип области ───────────────────────────────────────────────
+    if (column < 0) return; // клик вне колонок (пустое место справа)
+    // ── Определяем тип области
     const auto type = hit.info();
-
     const bool isHeader =
         type == GridHitInfo::Column ||
         type == GridHitInfo::Band;
 
+    // ── Меню заголовка
     if (isHeader) {
-        m_menuBuilder->prepareForHeader(column, args->contextMenu());
+        RCol* col = m_model->getRCol(column);   // может быть nullptr — prepareForHeader это учитывает
+        m_menuBuilder->prepareForHeader(column, col, args->contextMenu());
         return;
     }
-
-    // ── Меню ячейки ─────────────────────────────────────────
+    // ── Меню ячейки
     const int row = hit.row().rowIndex();
     const int row_model = hit.row().modelIndex().row();
     RCol* col = m_model->getRCol(column);
@@ -467,12 +525,31 @@ void RtabWidget::slot_contextMenu(ContextMenuEventArgs* args)
     MenuContext ctx { column, row_model, col };
     m_menuBuilder->prepareForShow(ctx, args->contextMenu());
 }
-
-void RtabWidget::slot_focusRowChanged(int /*row_old*/, int row_new)
+/*
+void RtabWidget::slot_focusRowChanged(int row_old, int row_new)
 {
     ///@todo соединение только для дочернего виджета LinkedFormController
     const int row_new2 = m_view->getRow(row_new).modelIndex().row();      // not work why?
     m_linkedFormCtrl->onParentRowChanged(row_new);
+}
+*/
+
+
+void RtabWidget::slot_focusRowChanged(int row_old, int row_new)
+{
+    // getRow(row_new) возвращает невалидный GridRow, т.к. row_new —
+    // контроллерный индекс, не совпадающий с аргументом getRow.
+    // focusedRow() идёт через m_persistentFocusRow, который уже
+    // обновлён ДО эмиссии сигнала — это единственный надёжный способ.
+    GridRow row = m_view->focusedRow();
+    if (!row.isValid()) return;
+
+    // modelIndex().row() — физический индекс в QAbstractTableModel (== pnparray_),
+    // правильный и при сортировке, и без неё
+    const int modelRow = row.modelIndex().row();
+    if (modelRow < 0) return;
+
+    m_linkedFormCtrl->onParentRowChanged(modelRow);
 }
 
 void RtabWidget::slot_addRow()
@@ -586,17 +663,21 @@ void RtabWidget::slot_openColProp(int col)
     propDialog->exec();
 }
 
-void RtabWidget::slot_openSelection()
+void RtabWidget::slot_openSelection(int col)
 {
-    // Передаём имя колонки, по которой открыто меню
-    int col = m_view->selection()->cell().columnIndex();
     RCol* prcol = m_model->getRCol(col);
     std::string colName = prcol ? prcol->getColName() : "";
 
-    SelectionDialog* selectionDialog = new SelectionDialog(m_selection,colName, this);
+    auto* selectionDialog = new SelectionDialog(m_selection, colName, this);
+    selectionDialog->setAttribute(Qt::WA_DeleteOnClose);
+
     connect(selectionDialog, &SelectionDialog::sig_selectionAccepted,
             this, &RtabWidget::slot_setFiltrForSelection);
-    selectionDialog->setAttribute(Qt::WA_DeleteOnClose);
+
+    // Закрываем диалог сразу после того, как пользователь принял выборку
+    connect(selectionDialog, &SelectionDialog::sig_selectionAccepted,
+            selectionDialog, &QDialog::close);
+
     selectionDialog->show();
 }
 
@@ -664,11 +745,3 @@ void RtabWidget::slot_setFiltrForSelection(std::string selection)
     m_view->filter()->setActive(true);
     m_view->showFilterPanel();
 }
-
-void RtabWidget::slot_itemPressed( CellClickEventArgs* _args)
-{
-    int row = _args->cell().rowIndex();
-    int col = _args->cell().columnIndex();
-    spdlog::debug("Pressed: {}, {}", row, col);
-}
-

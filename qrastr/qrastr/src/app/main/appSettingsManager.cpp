@@ -5,9 +5,14 @@
 #include <QStyleFactory>
 #include <QApplication>
 #include <spdlog/spdlog.h>
+#include "settingsKeys.h"
 
 AppSettingsManager::AppSettingsManager(QObject* parent)
     : QObject(parent){}
+
+AppSettingsManager::~AppSettingsManager() {
+    m_settings.sync();
+}
 
 bool AppSettingsManager::loadAppearanceSettings(QMainWindow* window) {
     if (!window) {
@@ -18,17 +23,16 @@ bool AppSettingsManager::loadAppearanceSettings(QMainWindow* window) {
     spdlog::info("Settings file: {}", m_settings.fileName().toStdString());
     spdlog::info("All keys: {}", m_settings.allKeys().join(", ").toStdString());
 
-    QString savedStyle = m_settings.value("appStyle").toString();
+    QString savedStyle = m_settings.value(SK::MainWindow::appStyle).toString();
     spdlog::info("SavedStyle: {}", savedStyle.toStdString());
     if (savedStyle.isEmpty()){
         savedStyle = "windows11";
     }
     QApplication::setStyle(QStyleFactory::create(savedStyle));
-    spdlog::info( "INI File Path: {}", m_settings.fileName().toStdString());
 
     try {
-        m_settings.beginGroup("MainWindow");
-        const auto geometry = m_settings.value("geometry", QByteArray()).toByteArray();
+        const auto geometry = m_settings.value(SK::MainWindow::geometry, QByteArray()).toByteArray();
+        const auto state = m_settings.value(SK::MainWindow::state).toByteArray();
 
         if (geometry.isEmpty()) {
             window->setGeometry(200, 200, 800, 800);
@@ -36,7 +40,9 @@ bool AppSettingsManager::loadAppearanceSettings(QMainWindow* window) {
             window->restoreGeometry(geometry);
         }
 
-        m_settings.endGroup();
+        if (!state.isEmpty()) {
+            window->restoreState(state);
+        }
     }
     catch (const std::exception& ex) {
         // Кэшируем ошибку (логгер может быть не инициализирован)
@@ -54,16 +60,14 @@ bool AppSettingsManager::loadAppearanceSettings(QMainWindow* window) {
 bool AppSettingsManager::saveAppearanceSettings(QMainWindow* window) {
     if (!window) return false;
 
-    m_settings.beginGroup("MainWindow");
-    m_settings.setValue("geometry", window->saveGeometry());
-    m_settings.endGroup();
+    m_settings.setValue(SK::MainWindow::geometry,
+                        window->saveGeometry());
+    m_settings.setValue(SK::MainWindow::state,
+                        window->saveState());
 
-    // objectName() может быть пустым, name() возвращает "fusion", "windows" и т.д.
     const QString styleName = QApplication::style()->objectName();
-    m_settings.setValue("appStyle", styleName.isEmpty() ? "Fusion" : styleName);
-    m_settings.setValue("mainWindowState", window->saveState());
-    spdlog::info("StyleName: {}", styleName.toStdString());
-
+    m_settings.setValue(SK::MainWindow::appStyle,
+                        styleName.isEmpty() ? "Fusion" : styleName);
     return true;
 }
 

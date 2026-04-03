@@ -2,15 +2,14 @@
 
 #include <memory>
 #include <QString>
-#include <QSettings>
 #include <QMessageBox>
 #include <QPluginLoader>
-
+#include <QPluginLoader>
 #include "common_qrastr.h"
 #include <spdlog/sinks/stdout_color_sinks.h>
 #include <spdlog/sinks/rotating_file_sink.h>
 #include <spdlog/sinks/qt_sinks.h>
-#include "params.h"
+#include "rastrParameters.h"
 using WrapperExceptionType = std::runtime_error;
 #include <astra/IPlainRastrWrappers.h>
 #include "plugins/rastr/plugin_interfaces.h"
@@ -20,6 +19,7 @@ using WrapperExceptionType = std::runtime_error;
 #include "qti.h"
 #include "qbarsmdp.h"
 #include "astra_headers/UIForms.h"
+#include "startupLoader.h"
 
 class QtSink : public spdlog::sinks::base_sink<std::mutex>
 {
@@ -40,7 +40,7 @@ App::App(int &argc, char **argv)
 App::~App() {
     //останавливаем фоновые потоки и гарантирует финальный сброс:
     spdlog::shutdown();
-    Params::destruct();
+    RastrParameters::destruct();
 }
 
 bool App::event( QEvent *event ){
@@ -81,10 +81,10 @@ bool App::init(){
 #endif
         bool res = readSettings();
 
-        const bool bl_res = QDir::setCurrent(Params::get_instance()->getDirData().path());
+        const bool bl_res = QDir::setCurrent(RastrParameters::get_instance()->getDirData().path());
             assert(bl_res==true);
 
-        fs::path path_log{ Params::get_instance()->getDirData().absolutePath().toStdString() };
+        fs::path path_log{ RastrParameters::get_instance()->getDirData().absolutePath().toStdString() };
         path_log /= L"qrastr_log.txt";
 
         auto file_sink = std::make_shared<spdlog::sinks::rotating_file_sink_mt>
@@ -114,23 +114,19 @@ bool App::init(){
 
 bool App::readSettings(){
     try{
-        Params::construct();
-        QSettings settings(Params::pch_org_qrastr_);
-        //QPoint pos = settings.value("pos", QPoint(200, 200)).toPoint();
-        //QSize size = settings.value("size", QSize(600, 800)).toSize();
-
+        RastrParameters::construct();
         QString qstr_curr_path = QDir::currentPath();
         std::string str_path_2_conf = "undef";
 #if(defined(COMPILE_WIN))
         str_path_2_conf = qstr_curr_path.toStdString()+ "/../"+
-                          Params::pch_dir_data_ +"/"+ Params::pch_fname_appsettings;
+                          RastrParameters::pch_dir_data_ +"/"+ RastrParameters::pch_fname_appsettings;
 #else
         //str_path_2_conf = R"(/home/ustas/projects/git_web/samples/qrastr/qrastr/appsettings.json)";
         str_path_2_conf = qstr_curr_path.toStdString()+ "/../"+Params::pch_dir_data_ +"/"+ Params::pch_fname_appsettings;
         // QMessageBox mb( QMessageBox::Icon::Critical, QObject::tr("Error"), QString("In lin not implemented!") );  mb.exec();
 #endif
         QFileInfo fi_appsettings(str_path_2_conf.c_str());
-        auto* const p_params = Params::get_instance();
+        auto* const p_params = RastrParameters::get_instance();
         if(p_params!=nullptr){
             p_params->setDirData(fi_appsettings.dir());
             const bool bl_res = QDir::setCurrent(p_params->getDirData().path());
@@ -181,94 +177,36 @@ bool App::readSettings(){
     return true;
 }
 
-bool App::start(){
-    try{
-        auto* const p_params = Params::get_instance();
-        QDir::setCurrent(p_params->getDirData().absolutePath());
+bool App::start() {
+    try {
+        auto* params = RastrParameters::get_instance();
+        QDir::setCurrent(params->getDirData().absolutePath());
 
-        if (!loadPlugins()){
+        emit sig_progressChanged(35, tr("Загрузка плагинов..."));
+        if (!loadPlugins())
+            return false;
+
+        // Загрузка стартовых шаблонов и файлов.
+        emit sig_progressChanged(65, tr("Загрузка шаблонов..."));
+        StartupLoader loader(m_sp_qastra);
+        connect(&loader, &StartupLoader::loadWarning, [](const QString& msg) {
+            spdlog::warn("{}", msg.toStdString());
+        });
+
+        if (!loader.load())
+            return false;
+
+        spdlog::info("DeserializeForms: starting");
+        emit sig_progressChanged(80, tr("Чтение форм..."));
+        if (!deserializeForms()) {
+            spdlog::error("Can't read forms");
+            QMessageBox::critical(nullptr, tr("Ошибка"), tr("Can't read forms"));
             return false;
         }
-
-        if(nullptr!=m_sp_qastra){
-            const QDir dir = p_params->getDirSHABLON();
-#if(QT_VERSION > QT_VERSION_CHECK(5, 16, 0))
-            const std::filesystem::path path_templates = p_params->getDirSHABLON().filesystemCanonicalPath();
-#else
-            std::filesystem::path path_templates = p_params->getDirSHABLON().canonicalPath().toStdString();
-#endif
-            const Params::_v_templates v_templates{ p_params->getStartLoadTemplates() };
-            for(const Params::_v_templates::value_type& templ_to_load : v_templates){
-                std::filesystem::path path_template = path_templates;
-                path_template /= templ_to_load;
-                IPlainRastrRetCode res =
-                    m_sp_qastra->Load( eLoadCode::RG_REPL, "", path_template.string() );
-                if(res != IPlainRastrRetCode::Ok){
-                    spdlog::error("Failed to load template: {}", templ_to_load);
-                    QMessageBox mb( QMessageBox::Icon::Critical, QObject::tr("Error"),
-                                   QString("error: wheh read file : %1").arg(templ_to_load.c_str())
-                                   );
-                    mb.exec();
-                }else {
-                    spdlog::info("Template loaded: {}", templ_to_load);
-                }
-            }
-            for (const auto& file_template : p_params->getStartLoadFileTemplates()) {
-                fs::path path_file = file_template.first;
-
-                // Проверяем существование до загрузки
-                if (!fs::exists(path_file)) {
-                    //MaxiMal: Нет, я считаю не нужно сбрасывать пользовательскую набивку
-                    //          Нет файла - информируем пользователя и идем дальше.
-                    //Params::_v_file_templates empty;
-                    //p_params->setStartLoadFileTemplates(empty);
-                    spdlog::warn("Startup file not found: {}", path_file.string());
-                    QMessageBox mb(QMessageBox::Icon::Warning,
-                                   QObject::tr("Файл не найден"),
-                                   //QString("Файл не найден:\n%1\n\nБудет открыт пустой проект.")
-                                   QString("Файл не найден:\n%1\n\n")
-                                       .arg(QString::fromStdString(path_file.string())));
-                    mb.exec();
-                    continue; // Не падаем — просто пропускаем
-                }
-                try {
-                    fs::path path_template = path_templates / file_template.second;
-                    IPlainRastrRetCode res = m_sp_qastra->Load(
-                        eLoadCode::RG_REPL,
-                        file_template.first,
-                        path_template.string()
-                        );
-                    if (res != IPlainRastrRetCode::Ok) {
-                        Params::_v_file_templates empty;
-                        p_params->setStartLoadFileTemplates(empty);
-                        spdlog::error("Failed to load file template: {}", file_template.first);
-                    }
-                } catch (const std::exception& ex) {
-                    Params::_v_file_templates empty;
-                    p_params->setStartLoadFileTemplates(empty);
-                    spdlog::error("Exception loading startup file {}: {}",
-                                  file_template.first, ex.what());
-                    QMessageBox mb( QMessageBox::Icon::Critical, QObject::tr("Error"),
-                                   QString("error: wheh read file : %1").arg(file_template.first.c_str())
-                                   );
-                    mb.exec();
-                }
-            }
-        }
-        spdlog::info("ReadForms: starting");
-        if(!readForms()){
-            spdlog::error("Can't read forms");
-            QMessageBox mb(QMessageBox::Icon::Critical, QObject::tr("Error"),
-                           QObject::tr("Can't read forms"));
-            mb.exec();
-        }else {
-            spdlog::info("ReadForms: OK");
-        }
-        spdlog::info("ReadForms: starting");
-    }catch(const std::exception& ex){
+    } catch (const std::exception& ex) {
         exclog(ex);
         return false;
-    }catch(...){
+    } catch (...) {
         exclog();
         return false;
     }
@@ -316,7 +254,6 @@ bool App::loadPlugins(){
         }
 
         QObject *plugin = loader.instance();
-
         if(plugin){
            spdlog::info("Load dynamic plugin {}/{} : {}",
                               pluginsDir.absolutePath().toStdString(), fileName.toStdString(),
@@ -418,14 +355,14 @@ bool App::loadPlugins(){
     return true;
 }
 
-bool App::readForms(){
+bool App::deserializeForms(){
     try{
         std::filesystem::path path_forms ("form");
         std::filesystem::path path_form_load;
 
         //on Windows, you MUST use 8bit ANSI (and it must match the user's locale) or UTF-16 !! Unicode!
         //!!! https://stackoverflow.com/questions/30829364/open-utf8-encoded-filename-in-c-windows  !!!
-        for(const Params::_v_forms::value_type &form : Params::get_instance()->getStartLoadForms()){
+        for(const RastrParameters::_v_forms::value_type &form : RastrParameters::get_instance()->getStartLoadForms()){
             std::filesystem::path path_file_form = stringutils::utf8_decode(form);
             path_form_load =  path_forms / path_file_form;
 

@@ -68,25 +68,47 @@ QVariant RModel::data(const QModelIndex& index, int role) const
 
     // ── BackgroundRole (Фон ячейки) ──────────────────────────────────────────
     if (role == Qt::BackgroundRole) {
-        // форматы не заданы
-        if (m_condFmt.formats().empty()) return {};
-        // Проверяем кеш
-        if (const QVariant* cached = m_bgCache.get(row, col)){
-            // QVariant() → нет формата, тоже ок
-            return *cached;
+        // COLOR-ячейки: фон = сам цвет, условные форматы не нужны
+        if (rcol.getComPropTT() == enComPropTT::COM_PR_COLOR) {
+            long packed = std::visit(ToLong(), m_rdata->pnparray_->Get(row, col));
+            return QColor(packed & 0xFF, (packed >> 8) & 0xFF, (packed >> 16) & 0xFF);
         }
-
+        // Для всех остальных — условный формат
+        if (m_condFmt.formats().empty())
+            return {}; // форматы не заданы
+        if (const QVariant* cached = m_bgCache.get(row, col))
+            return *cached;// QVariant() → нет формата, тоже ок
         const QString val = QString::fromStdString(
             std::visit(ToString(), m_rdata->pnparray_->Get(row, col)));
-
         QVariant fmt = getMatchingCondFormat(row, col, val, role);
-
         m_bgCache.put(row, col, fmt);
         return fmt;
     }
-
     // ── DisplayRole / EditRole (Текст для отображения/Значение для редактора)─
     if (role == Qt::DisplayRole || role == Qt::EditRole) {
+
+        // TIME: секунды от эпохи плагина → QDateTime
+        if (rcol.getComPropTT() == enComPropTT::COM_PR_TIME) {
+            QString qstr = QString::fromStdString(std::visit(ToString(), m_rdata->pnparray_->Get(row, col)));
+            // Отрезаем суффикс "--7199", если он есть
+            int dashPos = qstr.indexOf("--");
+            if (dashPos >= 0) qstr = qstr.left(dashPos);
+            QDateTime dt = QDateTime::fromString(qstr.trimmed(), "dd.MM.yyyy HH:mm:ss");
+            return dt; // QTitan GridEditor::DateTime ждёт именно QDateTime
+        }
+        // COLOR: упакованный RGB long → QColor
+        if (rcol.getComPropTT() == enComPropTT::COM_PR_COLOR) {
+            long packed = std::visit(ToLong(), m_rdata->pnparray_->Get(row, col));
+            // COLORREF хранит каналы в порядке **BGR** (`0x00BBGGRR`), а `QColor::fromRgb` ожидает **RGB**. К
+            QColor color(packed & 0xFF, (packed >> 8) & 0xFF, (packed >> 16) & 0xFF);
+            if (role == Qt::DecorationRole) {
+                QPixmap px(16, 16);
+                px.fill(color);
+                return px;
+            }
+            return color; // для EditRole — QTitan Color-editor ждёт QColor
+        }
+        // Все остальные типы
         QVariant item = std::visit(ToQVariant(), m_rdata->pnparray_->Get(row, col));
 
         if (!rcol.isDirectCode()) {
@@ -97,14 +119,12 @@ QVariant RModel::data(const QModelIndex& index, int role) const
             }
             if (const auto* enums = m_cache.enumItems(col))
                 return enums->at(item.toInt());
-
             if (const auto* superenum = m_cache.superenumMap(col)) {
                 auto it = superenum->find(static_cast<size_t>(item.toInt()));
                 if (it != superenum->end()) return QString::fromStdString(it->second);
             }
         }
-        // Для числовых колонок без справочника — форматируем отображение
-        // иначе редактор открывается с сырым double вроде 78.99999022339689
+
         if (item.type() == QVariant::Double) {
             const auto info = getColumnEditorInfo(col);
             if (info.editorType == ColumnEditorInfo::Type::Numeric)
@@ -115,6 +135,13 @@ QVariant RModel::data(const QModelIndex& index, int role) const
 
     // ── DecorationRole (Иконка слева от текста)───────────────────────────────
     if (role == Qt::DecorationRole) {
+        // Для COLOR-колонок отображаем цветной прямоугольник
+        if (rcol.getComPropTT() == enComPropTT::COM_PR_COLOR) {
+            long packed = std::visit(ToLong(), m_rdata->pnparray_->Get(row, col));
+            QPixmap px(16, 16);
+            px.fill(QColor::fromRgb(static_cast<QRgb>(packed)));
+            return px;
+        }
         if (const auto* pics = m_cache.pictureEnum(pluginIdx)) {
             int v = std::visit(ToLong(), m_rdata->pnparray_->Get(row, col));
             if (v >= 0 && v < pics->size()) return (*pics)[v].image;
@@ -129,9 +156,8 @@ QVariant RModel::data(const QModelIndex& index, int role) const
             for (const auto& p : *pics) result << p.image;
             return result;
         }
-
         QStringList list;
-        if (const auto* enums     = m_cache.enumItems(col))
+        if (const auto* enums  = m_cache.enumItems(col))
             list = *enums;
         else if (const auto* nref = m_cache.namerefMap(col))
             for (const auto& [k, v] : *nref) list.append(QString::fromStdString(v));
@@ -151,7 +177,7 @@ bool RModel::setData(const QModelIndex& index, const QVariant& value, int role)
 {
     const int col = index.column();
     const int row = index.row();
-
+    const long         prow     = row;   // plugin-индекс строки
     // читаем сырое значение из кеша
     QVariant raw = std::visit(ToQVariant(), m_rdata->pnparray_->Get(row, col));
     if (raw == value) return false;
@@ -161,51 +187,67 @@ bool RModel::setData(const QModelIndex& index, const QVariant& value, int role)
     const std::string& colName = iter_col->getColName();
 
     FieldVariantData vd;
+    // TIME: QDateTime → секунды от эпохи плагина
+    if (iter_col->getComPropTT() == enComPropTT::COM_PR_TIME) {
+        QDateTime dt = value.toDateTime();
+        if (!dt.isValid()) return false;
+        // Пишем в том же формате, что плагин ожидает на входе
+        vd = dt.toString("dd.MM.yyyy HH:mm:ss--7199").toStdString();
+    }
+    // COLOR: QColor → упакованный RGB
+    else if (iter_col->getComPropTT() == enComPropTT::COM_PR_COLOR) {
+        QColor c = value.value<QColor>();
+        // Собираем обратно в COLORREF (BGR)
+        long colorref = static_cast<long>(c.red())
+                        | (static_cast<long>(c.green()) << 8)
+                        | (static_cast<long>(c.blue())  << 16);
+        vd = colorref;
+    }
+    else {
+        switch (iter_col->getEnData()) {
+        case RCol::_en_data::DATA_BOOL:
+            vd = value.toBool();
+            break;
 
-    switch (iter_col->getEnData()) {
-    case RCol::_en_data::DATA_BOOL:
-        vd = value.toBool();
-        break;
-
-    case RCol::_en_data::DATA_INT: {
-        long val  = 0;
-        const size_t idx = static_cast<size_t>(col);
-
-        if (!iter_col->isDirectCode()) {
-            if (const auto* enums = m_cache.enumItems(idx)) {
-                for (int i = 0; i < enums->size(); ++i)
-                    if ((*enums)[i] == value) { val = i; break; }
-            } else if (const auto* senum = m_cache.superenumMap(idx)) {
-                for (const auto& [k, v] : *senum)
-                    if (v == value.toString().toStdString()) { val = static_cast<long>(k); break; }
-            } else if (const auto* nref = m_cache.namerefMap(idx)) {
-                for (const auto& [k, v] : *nref)
-                    if (v == value.toString().toStdString()) { val = static_cast<long>(k); break; }
+        case RCol::_en_data::DATA_INT: {
+            long val = 0;
+            const size_t idx = static_cast<size_t>(col);
+            if (!iter_col->isDirectCode()) {
+                if (const auto* enums = m_cache.enumItems(idx)) {
+                    for (int i = 0; i < enums->size(); ++i)
+                        if ((*enums)[i] == value) { val = i; break; }
+                } else if (const auto* senum = m_cache.superenumMap(idx)) {
+                    for (const auto& [k, v] : *senum)
+                        if (v == value.toString().toStdString()) { val = static_cast<long>(k); break; }
+                } else if (const auto* nref = m_cache.namerefMap(idx)) {
+                    for (const auto& [k, v] : *nref)
+                        if (v == value.toString().toStdString()) { val = static_cast<long>(k); break; }
+                } else {
+                    val = value.toInt();
+                }
             } else {
                 val = value.toInt();
             }
-        } else {
-            val = value.toInt();
+            vd = val;
+            break;
         }
-        vd = val;
-        break;
-    }
 
-    case RCol::_en_data::DATA_STR:
-        vd = value.toString().toStdString();
-        break;
+        case RCol::_en_data::DATA_STR:
+            vd = value.toString().toStdString();
+            break;
 
-    case RCol::_en_data::DATA_DBL:
-        vd = value.toDouble();
-        break;
+        case RCol::_en_data::DATA_DBL:
+            vd = value.toDouble();
+            break;
 
-    default:
-        return false;
+        default:
+            return false;
+        }
     }
     // Запись через RTDM — единственная точка доступа к плагину.
     // emit dataChanged НЕ вызывается: плагин сгенерирует ChangeData-хинт,
     // RTDM обновит QDataBlock и испустит sig_dataChanged → View обновится один раз.
-    m_rtdm->setValue(tname, colName, row, vd);
+    m_rtdm->setValue(tname, colName, prow, vd);
     return true;
 }
 
@@ -222,12 +264,13 @@ bool RModel::duplicateRow(int row, const QModelIndex&)
 {
     IRastrTablesPtr tablesx{ m_qastra->getRastr()->Tables() };
     IRastrTablePtr  table  { tablesx->Item(getRdata()->t_name_) };
-    IRastrResultVerify{ table->DuplicateRow(row) };
-    //Дублируем данные в клиенте (иначе дублированная строка будет пустой)
+    IRastrResultVerify{ table->DuplicateRow(row)};
+    // После DuplicateRow плагин сгенерирует InsertRow-хинт →
+    // handleInsertRow вставит пустую строку в pnparray_.
+    // DuplicateRow в QDenseDataBlock копирует данные из исходной строки в новую
     m_rdata->pnparray_->DuplicateRow(row);
     return true;
 }
-
 bool RModel::insertRows(int row, int count, const QModelIndex&)
 {
     IRastrTablesPtr tablesx{ m_qastra->getRastr()->Tables() };
@@ -348,21 +391,45 @@ QVariant RModel::getMatchingCondFormat(size_t row, size_t column,
     const auto* vec = m_condFmt.column(column);
     if (!vec || vec->empty()) return {};
 
-    bool isNumber;
-    value.toDouble(&isNumber);
-    if (!isNumber) return {};
-
     for (const CondFormat& fmt : *vec) {
-        STRING_BOOL sb(value.toStdString() + " " + fmt.sqlCondition());
-        for (const std::string& op : sb.Check()) {
-            if (contains(m_rdata->mCols_, op)) {
-                int cind = m_rdata->mCols_.at(op);
-                double v = std::visit(ToDouble(), m_rdata->pnparray_->Get(row, cind));
-                sb.replace(op, std::to_string(v));
+        // Пустой фильтр = правило по умолчанию, всегда срабатывает
+        if (fmt.filter().isEmpty()) {
+            switch (role) {
+            case Qt::ForegroundRole:    return fmt.foregroundColor();
+            case Qt::BackgroundRole:    return fmt.backgroundColor();
+            case Qt::FontRole:          return fmt.font();
+            case Qt::TextAlignmentRole: return static_cast<int>(fmt.alignmentFlag() | Qt::AlignVCenter);
             }
         }
 
-        if (fmt.filter().isEmpty() || sb.res()) {
+        STRING_BOOL sb(value.toStdString() + " " + fmt.sqlCondition());
+
+        // Подставляем значения колонок той же строки
+        bool allResolved = true;
+        for (const std::string& colName : sb.Check()) {
+            auto it = m_rdata->mCols_.find(colName);
+            if (it != m_rdata->mCols_.end()) {
+                double v = std::visit(ToDouble(), m_rdata->pnparray_->Get(row, it->second));
+                sb.replace(colName, std::to_string(v));
+            } else {
+                // Имя не найдено — условие не может быть вычислено
+                spdlog::warn("getMatchingCondFormat: unknown column '{}' in condition '{}'",
+                             colName, fmt.filter().toStdString());
+                allResolved = false;
+                break;
+            }
+        }
+        if (!allResolved) continue;
+
+        bool matches = false;
+        try {
+            matches = (sb.res() != 0.0);
+        } catch (const std::exception& e) {
+            spdlog::error("getMatchingCondFormat: eval error: {}", e.what());
+            continue;
+        }
+
+        if (matches) {
             switch (role) {
             case Qt::ForegroundRole:    return fmt.foregroundColor();
             case Qt::BackgroundRole:    return fmt.backgroundColor();
@@ -373,6 +440,7 @@ QVariant RModel::getMatchingCondFormat(size_t row, size_t column,
     }
     return {};
 }
+
 
 RModel::ColumnEditorInfo RModel::getColumnEditorInfo(int colIndex) const
 {
@@ -393,7 +461,10 @@ RModel::ColumnEditorInfo RModel::getColumnEditorInfo(int colIndex) const
         info.editorType = ColumnEditorInfo::Type::Numeric;
         info.decimals   = std::atoi(col->getPrec().c_str());
         break;
-
+    case enComPropTT::COM_PR_TIME:
+        info.editorType = ColumnEditorInfo::Type::DateTime;
+        info.decimals   = std::atoi(col->getPrec().c_str());
+        break;
     case enComPropTT::COM_PR_ENUM:
         if (!col->isDirectCode()) {
             if (const auto* enums = m_cache.enumItems(idx)) {

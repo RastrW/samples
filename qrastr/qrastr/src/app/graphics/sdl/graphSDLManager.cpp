@@ -6,7 +6,6 @@
 #include <QApplication>
 #include <spdlog/spdlog.h>
 #include <QWidget>
-#include <filesystem>
 
 GraphSDLManager::GraphSDLManager(ads::CDockManager* dockManager,
                                  QWidget*           parentWidget,

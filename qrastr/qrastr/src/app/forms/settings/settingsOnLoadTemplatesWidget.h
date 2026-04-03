@@ -1,42 +1,19 @@
 #pragma once
-#include "settingsStackedItemWidget.h"
+#include "checkableTableWidget.h"
 
 class QTableWidgetItem;
 class QTableWidget;
 
-/// @class Виджет для выбора шаблонов, загружаемых при старте приложения
-class SettingsOnLoadTemplatesWidget : public SettingsStackedItemWidget {
+/**
+ * @class SettingsOnLoadTemplatesWidget
+ * @brief Виджет выбора шаблонов для загрузки при старте.
+ * Знает только о том, откуда брать данные и куда их сохранять
+ */
+class SettingsOnLoadTemplatesWidget : public CheckableTableWidget {
     Q_OBJECT
-
 public:
-    explicit SettingsOnLoadTemplatesWidget(QWidget *parent = nullptr);
-    ~SettingsOnLoadTemplatesWidget() = default;
+    explicit SettingsOnLoadTemplatesWidget(QWidget* parent = nullptr);
 
-    /// Обновить содержимое при показе виджета
+    /// Сохраняет отмеченные шаблоны в Params
     void applyChanges() override;
-signals:
-    /// Сигнал об изменении выбранных шаблонов
-    void settingsChanged();
-
-private slots:
-    /// Обработчик изменения состояния чекбокса в таблице
-    void onItemChanged(QTableWidgetItem* item);
-
-private:
-    /// Создать и настроить UI элементы
-    void setupUI();
-
-    /// Заполнить таблицу доступными шаблонами
-    void populateTemplates();
-
-private:
-    QTableWidget* pTableWidget_;  ///< Таблица с чекбоксами шаблонов
-    std::vector<std::string>
-        m_pendingTemplates;  // Временное хранилище
-    bool m_hasChanges {false};
-
-    /// Индексы колонок в таблице
-    static constexpr const int COLUMN_CHECKED = 0;
-    static constexpr const int COLUMN_NAME = 1;
 };
-

@@ -1,5 +1,4 @@
 #include "saveAllDialog.h"
-#include <QSettings>
 #include <QFileInfo>
 #include <QDir>
 #include <QTableWidget>
