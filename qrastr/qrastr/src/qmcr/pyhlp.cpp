@@ -1,5 +1,4 @@
 #include "pyhlp.h"
-#define Py_LIMITED_API  0x030A0000 //minimal version Python 3.10
 #define PY_SSIZE_T_CLEAN
 
 #ifdef _DEBUG
@@ -74,6 +73,48 @@ static std::string pyObjToStr(PyObject* obj)
     return s ? s : "__bytes_failed__";
 }
 
+/// Возвращает путь к директории Python (где лежит python.exe),
+/// найденной через PYTHONHOME → PATH → пусто.
+std::wstring detectPythonHome()
+{
+#ifdef _WIN32
+    // 1. PYTHONHOME
+    wchar_t buf[32767];
+    if (GetEnvironmentVariableW(L"PYTHONHOME", buf, _countof(buf)) > 0) {
+        std::wstring home(buf);
+        spdlog::info("Python home detected via PYTHONHOME: {}",
+                     std::string(home.begin(), home.end()));
+        return home;
+    }
+
+    // 2. PATH (через python.exe)
+    wchar_t fullPath[MAX_PATH];
+    if (SearchPathW(nullptr, L"python.exe", nullptr, MAX_PATH, fullPath, nullptr) > 0) {
+        std::wstring ws(fullPath);
+        const auto slash = ws.rfind(L'\\');
+        if (slash != std::wstring::npos) {
+            std::wstring home = ws.substr(0, slash);
+            spdlog::info("Python executable found in PATH: {}",
+                         std::string(home.begin(), home.end()));
+            return home;
+        }
+    }
+
+    spdlog::warn("Python home not found via PYTHONHOME or PATH");
+    return {};
+
+#else
+    const char* h = std::getenv("PYTHONHOME");
+    if (h && *h) {
+        std::string s(h);
+        spdlog::info("Python home detected via PYTHONHOME: {}", s);
+        return std::wstring(s.begin(), s.end());
+    }
+
+    spdlog::info("Python home not set (using system defaults)");
+    return {};
+#endif
+}
 }
 
 #include <sstream>
@@ -94,15 +135,34 @@ PyHlp::~PyHlp()
 
 bool PyHlp::initialize()
 {
-    if (m_initialized)
-        return true;
+    if (m_initialized)  return true;
     if (Py_IsInitialized()) {
-        spdlog::warn("PyHlp::initialize: Python already initialized externally, cannot proceed");
+        spdlog::warn("PyHlp::initialize: Python already initialized externally");
         return false;
     }
+    //явно находим Python в PATH — на случай если переменная `PYTHONHOME` не задана, но `python.exe` есть в `PATH`
+    PyConfig config;
+    PyConfig_InitPythonConfig(&config);   // НЕ Isolated: уважает PYTHONPATH/PYTHONHOME
+    spdlog::error("PyHlp: Поиск python в системе");
+    const std::wstring home = PyUtils::detectPythonHome();
+    if (!home.empty()) {
+        PyStatus st = PyConfig_SetString(&config, &config.home, home.c_str());
+        if (PyStatus_Exception(st)) {
+            spdlog::warn("PyHlp: не удалось задать home='{}': {}",
+                         std::string(home.begin(), home.end()),
+                         st.err_msg ? st.err_msg : "?");
+            // не фатально — продолжаем без явного home
+        }
+    }
 
-    int nRes = 0;
-    Py_InitializeEx(0);
+    PyStatus status = Py_InitializeFromConfig(&config);
+    PyConfig_Clear(&config);
+
+    if (PyStatus_Exception(status)) {
+        spdlog::error("PyHlp: Py_InitializeFromConfig failed: {}",
+                      status.err_msg ? status.err_msg : "неизвестная ошибка");
+        return false;
+    }
 
     // Добавляем путь к astra_py в sys.path
     PyObject* sysPath = PySys_GetObject("path"); // borrowed ref
@@ -163,8 +223,10 @@ bool PyHlp::initialize()
 
 PyHlp::Result PyHlp::run(const std::string_view macroText)
 {
-    if (!initialize())
+    if (!initialize()){
+         spdlog::error("Ошибка инициализации python");
         return Result::Error;
+    }
 
     // borrowed refs — не декрементируем
     PyObject* mainModule = PyImport_AddModule("__main__");
