@@ -89,6 +89,11 @@ RtabWidget::RtabWidget(QAstra* pqastra,CUIForm UIForm, RTablesDataManager* pRTDM
     m_view->tableOptions().setColumnAutoWidth(true);
     //user can select several cells at time. Hold shift key to select multiple cells.
     m_view->options().setColumnHidingOnGroupingEnabled(false);
+    // Выделение: MultiRowSelection + rubber-band через indicator-колонку
+    m_view->options().setSelectionPolicy(Qtitan::GridViewOptions::MultiCellSelection);
+    m_view->options().setRubberBandSelection(true);
+    // Drag отключаем — он конкурирует с rubber-band
+    m_view->options().setDragEnabled(false);
     // Sets the value that indicates whether the filter panel can automatically hide or not.
     m_view->options().setFilterAutoHide(true);
     // Sets the painting the doted frame around the cell with focus to the enabled. By default frame is enabled.
@@ -100,21 +105,14 @@ RtabWidget::RtabWidget(QAstra* pqastra,CUIForm UIForm, RTablesDataManager* pRTDM
     m_view->options().setScrollRowStyle(Qtitan::ScrollItemStyle::ScrollByPixel);
     // Enables or disables wait cursor if grid is busy for lengthy operations with data like sorting or grouping.
     m_view->options().setShowWaitCursor(true);
-    m_view->options().setSelectionPolicy(GridViewOptions::MultiCellSelection);
-    m_view->options().setRubberBandSelection(true);        // Выделение "резинкой"
     m_view->tableOptions().setColumnsHeader(true);
     m_view->tableOptions().setRowsQuickSelection(true);
-    ///@todo Вынести в опцию контекстного меню (example MultiSelection)
     m_view->tableOptions().setRowFrozenButtonVisible(true);
     m_view->tableOptions().setFrozenPlaceQuickSelection(true);
 
-    m_view->options().setDragEnabled(true);
-    //m_view->options().setFocusFollowsMouse(true);
     //отключить встроенное меню Qtitan
     //m_view->options().setMainMenuDisabled(true);
 
-    // ── Блокируем встроенные в Qtitan события ──────────────────────────────────
-    m_grid->installEventFilter(this);
     ///@note создание модели обязатель до меню!
     createModel();
 
@@ -129,7 +127,7 @@ RtabWidget::RtabWidget(QAstra* pqastra,CUIForm UIForm, RTablesDataManager* pRTDM
 
     setupConnections();
 
-    //dumpShortcuts(m_grid, "before clear");
+    dumpShortcuts(m_grid, "before clear");
     // Снимаем F5/Delete со встроенных action-ов QTitan
     auto& acts = m_view->actions();
 
@@ -145,7 +143,7 @@ RtabWidget::RtabWidget(QAstra* pqastra,CUIForm UIForm, RTablesDataManager* pRTDM
         }
     }
 
-    //dumpShortcuts(m_grid, "after clear");
+    dumpShortcuts(m_grid, "after clear");
 }
 
 

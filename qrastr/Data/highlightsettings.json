@@ -12,7 +12,12 @@
     {
      "bgColor": "#004586",
      "fgColor": "#000000",
-     "filter": "> 500"
+     "filter": "< 500"
+    },
+    {
+     "bgColor": "#ff5500",
+     "fgColor": "#000000",
+     "filter": ">uhom"
     }
    ]
   }
