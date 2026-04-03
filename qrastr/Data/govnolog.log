@@ -199,3 +199,11 @@ IPlainElGraphImpl0::~IPlainElGraphImpl0
 		->ShutdownPlainDLL
 		~_GlobalData
 		->GCC::DLL_PROCESS_DETACH
+		GCC::DLL_PROCESS_ATTACH
+		->ShutdownPlainDLL
+		~_GlobalData
+		->GCC::DLL_PROCESS_DETACH
+		GCC::DLL_PROCESS_ATTACH
+		->ShutdownPlainDLL
+		~_GlobalData
+		->GCC::DLL_PROCESS_DETACH

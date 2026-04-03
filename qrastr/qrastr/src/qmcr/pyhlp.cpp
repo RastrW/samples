@@ -111,7 +111,12 @@ bool PyHlp::initialize()
         Py_FinalizeEx();
         return false;
     }
-    const QString pluginPath = QCoreApplication::applicationDirPath() + "/../Data/";
+#ifdef _DEBUG
+    const QString pluginPath = QCoreApplication::applicationDirPath() + "/../Data/astr_py/Debug/";
+#else
+    const QString pluginPath = QCoreApplication::applicationDirPath() + "/../Data/astr_py/Release/";
+#endif
+
     PyUtils::PyObjRaii pathItem(PyUnicode_FromString(pluginPath.toStdString().c_str()));
     if (PyList_Append(sysPath, pathItem) != 0) {
         captureError();

@@ -22,7 +22,7 @@
 #include <spdlog/spdlog.h>
 
 McrWnd::McrWnd(QWidget* parent)
-    : QWidget(parent)   // ← QMainWindow → QWidget
+    : QWidget(parent)
 {
     resize(600, 800);
     setWindowIcon(QIcon(":/images/new_style/python.png"));
@@ -301,23 +301,30 @@ void McrWnd::slot_run()
     if (!m_pyHlp) { m_glodLogWidget->onRastrPrint("No PyHlp!\n"); return; }
 
     const QByteArray src = m_editor->getText(m_editor->textLength());
-    const PyHlp::Result res = m_pyHlp->run(src.constData());
-    if (res == PyHlp::Result::Ok) return;
+    try{
+        const PyHlp::Result res = m_pyHlp->run(src.constData());
+        if (res == PyHlp::Result::Ok) return;
 
-    const QString errMsg = m_pyHlp->getErrorMessage().empty()
-                               ? tr("Неизвестная ошибка")
-                               : QString::fromStdString(m_pyHlp->getErrorMessage());
-    const long errLine = m_pyHlp->getErrorLine();
+        const QString errMsg = m_pyHlp->getErrorMessage().empty()
+                                   ? tr("Неизвестная ошибка")
+                                   : QString::fromStdString(m_pyHlp->getErrorMessage());
+        const long errLine = m_pyHlp->getErrorLine();
 
-    QMessageBox mb(QMessageBox::Critical, tr("Python error"), errMsg, {}, this);
-    if (errLine > -1) {
-        mb.setInformativeText(tr("Перейти к строке %1?").arg(errLine));
-        mb.setStandardButtons(QMessageBox::Yes | QMessageBox::Cancel);
-        if (mb.exec() == QMessageBox::Yes)
-            m_editor->gotoLine(errLine - 1);
-    } else {
-        mb.setStandardButtons(QMessageBox::Ok);
-        mb.exec();
+        QMessageBox mb(QMessageBox::Critical, tr("Python error"), errMsg, {}, this);
+        if (errLine > -1) {
+            mb.setInformativeText(tr("Перейти к строке %1?").arg(errLine));
+            mb.setStandardButtons(QMessageBox::Yes | QMessageBox::Cancel);
+            if (mb.exec() == QMessageBox::Yes)
+                m_editor->gotoLine(errLine - 1);
+        } else {
+            mb.setStandardButtons(QMessageBox::Ok);
+            mb.exec();
+        }
+    }catch (const std::exception& ex) {
+        spdlog::error("McrWnd:: проблема с запуском Python-скрипта threw: {}",
+                       ex.what());
+    } catch (...) {
+        spdlog::error("McrWnd:: проблема с запуском Python-скрипта exception");
     }
 }
 

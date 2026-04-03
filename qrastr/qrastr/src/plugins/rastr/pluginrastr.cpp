@@ -36,8 +36,10 @@ std::shared_ptr<IPlainRastr> PluginRastr::getIPlainRastrPtr(){
             }else{
                 spdlog::error("Not found functon: {} :: {}", qstr_path_astra.toStdString(), pch_name_plain_factory_fun);
             }
-        }else{
-            spdlog::error("Can't load: {}", qstr_path_astra.toStdString());
+        } else {
+            spdlog::error("Can't load: path_astra: {} — QLibrary.error: {}",
+                          qstr_path_astra.toStdString(),
+                          qlRastr.errorString().toStdString());
         }
     }catch(const std::exception& ex){
         spdlog::error("Catch exception: {}", ex.what());

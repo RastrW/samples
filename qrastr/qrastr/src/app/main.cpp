@@ -121,6 +121,16 @@ int main(int argc, char *argv[]) {
     w.show();
     splash->finish(&w);   // закрыть сплэш после показа MainWindow
     delete splash;
-
+//Логирование аварийных завершений на windows:
+#ifdef Q_OS_WIN
+#include <windows.h>
+    SetUnhandledExceptionFilter([](EXCEPTION_POINTERS* ep) -> LONG {
+        spdlog::critical("CRASH! ExceptionCode=0x{:08X} at 0x{:016X}",
+                         ep->ExceptionRecord->ExceptionCode,
+                         (uintptr_t)ep->ExceptionRecord->ExceptionAddress);
+        spdlog::default_logger()->flush();
+        return EXCEPTION_CONTINUE_SEARCH;
+    });
+#endif
     return app.exec();
 }

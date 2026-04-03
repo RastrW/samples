@@ -4,6 +4,8 @@
 #include <spdlog/spdlog.h>
 #include <DockWidget.h>
 #include <DockManager.h>
+#include <QTimer>
+#include <QTcpSocket>
 
 GraphWebManager::GraphWebManager(ads::CDockManager* dockManager,
                                  QWidget*           parentWidget,
@@ -20,7 +22,7 @@ void GraphWebManager::openWindow()
     // поэтому isRunning()==false и start() корректно запустит его снова.
     if (!m_graphServer) {
         m_graphServer = new GraphServer(m_rastr, m_parentWidget);
-		// Попадаем сюда только если остановили через закрытие дока
+        // Попадаем сюда только если остановили через закрытие дока
         connect(m_graphServer, &GraphServer::sig_stopped, this, [this]() {
             spdlog::info("GraphWebManager: GraphServer stopped");
             delete m_graphServer;
@@ -44,7 +46,7 @@ void GraphWebManager::openWindow()
     if (m_graphServer->isRunning()) {
         loadPage();
     } else {
-		//гарантируем, что соединение само отключится после первого срабатывания,
+        //гарантируем, что соединение само отключится после первого срабатывания,
         // сколько бы раз ни открывался dok до готовности сервера.
         auto* conn = new QMetaObject::Connection();
         *conn = connect(m_graphServer, &GraphServer::sig_ready,
