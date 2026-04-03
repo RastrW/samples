@@ -8,6 +8,7 @@
 #include "sdl/graphSDLManager.h"
 #include "macroDockManager.h"
 #include "qmcr/pyhlp.h"
+#include "rtabwidget.h"
 
 FormManager::FormManager(
     std::shared_ptr<QAstra> qastra,

@@ -2,6 +2,34 @@
 <!DOCTYPE TS>
 <TS version="2.1" language="ru_RU">
 <context>
+    <name>App</name>
+    <message>
+        <location filename="../app/main/app.cpp" line="185"/>
+        <source>Загрузка плагинов...</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../app/main/app.cpp" line="190"/>
+        <source>Загрузка шаблонов...</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../app/main/app.cpp" line="200"/>
+        <source>Чтение форм...</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../app/main/app.cpp" line="203"/>
+        <source>Ошибка</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../app/main/app.cpp" line="203"/>
+        <source>Can&apos;t read forms</source>
+        <translation type="unfinished"></translation>
+    </message>
+</context>
+<context>
     <name>CalcIacceptableDialog</name>
     <message>
         <location filename="../app/forms/calcIacceptableDialog.cpp" line="14"/>
@@ -41,6 +69,19 @@
     <message>
         <location filename="../app/forms/calcIacceptableDialog.cpp" line="42"/>
         <source>Дата:</source>
+        <translation type="unfinished"></translation>
+    </message>
+</context>
+<context>
+    <name>CheckableTableWidget</name>
+    <message>
+        <location filename="../app/forms/settings/checkableTableWidget.cpp" line="22"/>
+        <source>Выбрать</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../app/forms/settings/checkableTableWidget.cpp" line="22"/>
+        <source>Имя</source>
         <translation type="unfinished"></translation>
     </message>
 </context>
@@ -98,148 +139,244 @@
 <context>
     <name>CondFormatController</name>
     <message>
-        <location filename="../app/ui_components/condFormatController.cpp" line="47"/>
+        <location filename="../app/formatting/condFormatController.cpp" line="56"/>
         <source>Conditional formats for &quot;%1&quot;</source>
+        <translation type="unfinished"></translation>
+    </message>
+</context>
+<context>
+    <name>CondFormatDialog</name>
+    <message>
+        <location filename="../app/formatting/condFormatDialog.cpp" line="60"/>
+        <source>Условное форматирование</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../app/formatting/condFormatDialog.cpp" line="66"/>
+        <source>Условное форматирование применяет стиль ячейки по первому совпавшему правилу сверху вниз.
+
+Синтаксис условия:
+  &gt;5         — значение больше 5
+  &lt;&gt;0        — не равно нулю
+  10~50      — в диапазоне от 10 до 50 (включительно)
+  /авар/     — значение в строке соответствует регулярному выражению «авар»
+  (пусто)    — применяется ко всем значениям (правило по умолчанию)
+
+В условии можно ссылаться на другие колонки той же строки по их имени:
+  &gt;i_max       — значение больше, чем значение колонки i_max в этой строке
+
+Правила применяются сверху вниз: побеждает первое, чьё условие выполнилось.
+Поместите более специфичные условия выше общих — иначе общее правило сработает раньше.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../app/formatting/condFormatDialog.cpp" line="101"/>
+        <source>&amp;Добавить</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../app/formatting/condFormatDialog.cpp" line="101"/>
+        <source>Добавить новое условие форматирования</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../app/formatting/condFormatDialog.cpp" line="102"/>
+        <source>&amp;Удалить</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../app/formatting/condFormatDialog.cpp" line="102"/>
+        <source>Удалить выбранное условие</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../app/formatting/condFormatDialog.cpp" line="103"/>
+        <source>&amp;Выше</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../app/formatting/condFormatDialog.cpp" line="103"/>
+        <source>Повысить приоритет: переместить условие на строку вверх</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../app/formatting/condFormatDialog.cpp" line="104"/>
+        <source>&amp;Ниже</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../app/formatting/condFormatDialog.cpp" line="104"/>
+        <source>Понизить приоритет: переместить условие на строку вниз</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../app/formatting/condFormatDialog.cpp" line="118"/>
+        <source>Цвет текста</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../app/formatting/condFormatDialog.cpp" line="119"/>
+        <location filename="../app/formatting/condFormatDialog.cpp" line="200"/>
+        <source>Нажмите, чтобы выбрать цвет текста</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../app/formatting/condFormatDialog.cpp" line="120"/>
+        <source>Фон</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../app/formatting/condFormatDialog.cpp" line="121"/>
+        <location filename="../app/formatting/condFormatDialog.cpp" line="201"/>
+        <source>Нажмите, чтобы выбрать цвет фона</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../app/formatting/condFormatDialog.cpp" line="122"/>
+        <source>Шрифт</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../app/formatting/condFormatDialog.cpp" line="123"/>
+        <source>Размер</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../app/formatting/condFormatDialog.cpp" line="126"/>
+        <source>Жирный</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../app/formatting/condFormatDialog.cpp" line="128"/>
+        <source>Курсив</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../app/formatting/condFormatDialog.cpp" line="130"/>
+        <source>Подчёркивание</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../app/formatting/condFormatDialog.cpp" line="131"/>
+        <source>Выравнивание</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../app/formatting/condFormatDialog.cpp" line="132"/>
+        <source>Условие</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../app/formatting/condFormatDialog.cpp" line="357"/>
+        <source>Удалить все условия форматирования для этой колонки?</source>
         <translation type="unfinished"></translation>
     </message>
 </context>
 <context>
     <name>CondFormatManager</name>
     <message>
-        <location filename="../app/formatting/CondFormatManager.ui" line="14"/>
         <location filename="../../build/debug/qrastr_autogen/include/ui_CondFormatManager.h" line="148"/>
         <source>Conditional Format Manager</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../app/formatting/CondFormatManager.ui" line="20"/>
         <location filename="../../build/debug/qrastr_autogen/include/ui_CondFormatManager.h" line="149"/>
         <source>This dialog allows creating and editing conditional formats. Each cell style will be selected by the first accomplished condition for that cell data. Conditional formats can be moved up and down, where those at higher rows take precedence over those at lower. Syntax for conditions is the same as for filters and an empty condition applies to all values.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../app/formatting/CondFormatManager.ui" line="32"/>
         <location filename="../../build/debug/qrastr_autogen/include/ui_CondFormatManager.h" line="151"/>
         <source>Add new conditional format</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../app/formatting/CondFormatManager.ui" line="35"/>
         <location filename="../../build/debug/qrastr_autogen/include/ui_CondFormatManager.h" line="153"/>
         <source>&amp;Add</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../app/formatting/CondFormatManager.ui" line="52"/>
         <location filename="../../build/debug/qrastr_autogen/include/ui_CondFormatManager.h" line="155"/>
         <source>Remove selected conditional format</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../app/formatting/CondFormatManager.ui" line="55"/>
         <location filename="../../build/debug/qrastr_autogen/include/ui_CondFormatManager.h" line="157"/>
         <source>&amp;Remove</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../app/formatting/CondFormatManager.ui" line="72"/>
         <location filename="../../build/debug/qrastr_autogen/include/ui_CondFormatManager.h" line="159"/>
         <source>Move selected conditional format up</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../app/formatting/CondFormatManager.ui" line="75"/>
         <location filename="../../build/debug/qrastr_autogen/include/ui_CondFormatManager.h" line="161"/>
         <source>Move &amp;up</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../app/formatting/CondFormatManager.ui" line="92"/>
         <location filename="../../build/debug/qrastr_autogen/include/ui_CondFormatManager.h" line="163"/>
         <source>Move selected conditional format down</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../app/formatting/CondFormatManager.ui" line="95"/>
         <location filename="../../build/debug/qrastr_autogen/include/ui_CondFormatManager.h" line="165"/>
         <source>Move &amp;down</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../app/formatting/CondFormatManager.ui" line="158"/>
         <location filename="../../build/debug/qrastr_autogen/include/ui_CondFormatManager.h" line="172"/>
         <source>Foreground</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../app/formatting/CondFormatManager.ui" line="161"/>
         <location filename="../../build/debug/qrastr_autogen/include/ui_CondFormatManager.h" line="178"/>
         <source>Text color</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../app/formatting/CondFormatManager.ui" line="166"/>
         <location filename="../../build/debug/qrastr_autogen/include/ui_CondFormatManager.h" line="171"/>
         <source>Background</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../app/formatting/CondFormatManager.ui" line="169"/>
         <location filename="../../build/debug/qrastr_autogen/include/ui_CondFormatManager.h" line="177"/>
         <source>Background color</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../app/formatting/CondFormatManager.ui" line="174"/>
         <location filename="../../build/debug/qrastr_autogen/include/ui_CondFormatManager.h" line="170"/>
         <source>Font</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../app/formatting/CondFormatManager.ui" line="179"/>
         <location filename="../../build/debug/qrastr_autogen/include/ui_CondFormatManager.h" line="169"/>
         <source>Size</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../app/formatting/CondFormatManager.ui" line="187"/>
         <location filename="../../build/debug/qrastr_autogen/include/ui_CondFormatManager.h" line="176"/>
         <source>Bold</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../app/formatting/CondFormatManager.ui" line="199"/>
         <location filename="../../build/debug/qrastr_autogen/include/ui_CondFormatManager.h" line="175"/>
         <source>Italic</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../app/formatting/CondFormatManager.ui" line="211"/>
         <location filename="../../build/debug/qrastr_autogen/include/ui_CondFormatManager.h" line="174"/>
         <source>Underline</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../app/formatting/CondFormatManager.ui" line="220"/>
         <location filename="../../build/debug/qrastr_autogen/include/ui_CondFormatManager.h" line="168"/>
         <source>Alignment</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../app/formatting/CondFormatManager.ui" line="225"/>
         <location filename="../../build/debug/qrastr_autogen/include/ui_CondFormatManager.h" line="167"/>
         <source>Condition</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="../app/formatting/CondFormatManager.cpp" line="101"/>
-        <location filename="../app/formatting/CondFormatManager.cpp" line="102"/>
-        <source>Click to select color</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="../app/formatting/CondFormatManager.cpp" line="250"/>
-        <source>Are you sure you want to clear all the conditional formats of this field?</source>
         <translation type="unfinished"></translation>
     </message>
 </context>
@@ -256,62 +393,67 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../app/ui_components/contextMenuBuilder.cpp" line="48"/>
+        <location filename="../app/ui_components/contextMenuBuilder.cpp" line="53"/>
         <source>Вставить</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../app/ui_components/contextMenuBuilder.cpp" line="49"/>
+        <location filename="../app/ui_components/contextMenuBuilder.cpp" line="54"/>
         <source>Добавить</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../app/ui_components/contextMenuBuilder.cpp" line="50"/>
+        <location filename="../app/ui_components/contextMenuBuilder.cpp" line="55"/>
         <source>Дублировать</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../app/ui_components/contextMenuBuilder.cpp" line="51"/>
+        <location filename="../app/ui_components/contextMenuBuilder.cpp" line="56"/>
         <source>Удалить</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../app/ui_components/contextMenuBuilder.cpp" line="52"/>
+        <location filename="../app/ui_components/contextMenuBuilder.cpp" line="57"/>
         <source>Групповая коррекция</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../app/ui_components/contextMenuBuilder.cpp" line="65"/>
+        <location filename="../app/ui_components/contextMenuBuilder.cpp" line="71"/>
         <source>Выравнивание: по шаблону</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../app/ui_components/contextMenuBuilder.cpp" line="66"/>
+        <location filename="../app/ui_components/contextMenuBuilder.cpp" line="72"/>
         <source>Выравнивание: по данным</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../app/ui_components/contextMenuBuilder.cpp" line="70"/>
+        <location filename="../app/ui_components/contextMenuBuilder.cpp" line="77"/>
         <source>Экспорт CSV</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../app/ui_components/contextMenuBuilder.cpp" line="71"/>
+        <location filename="../app/ui_components/contextMenuBuilder.cpp" line="78"/>
         <source>Импорт CSV</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../app/ui_components/contextMenuBuilder.cpp" line="72"/>
+        <location filename="../app/ui_components/contextMenuBuilder.cpp" line="79"/>
         <source>Выборка</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../app/ui_components/contextMenuBuilder.cpp" line="77"/>
+        <location filename="../app/ui_components/contextMenuBuilder.cpp" line="109"/>
+        <source>(нет данных)</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../app/ui_components/contextMenuBuilder.cpp" line="47"/>
         <source>Прямой ввод кода</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../app/ui_components/contextMenuBuilder.cpp" line="83"/>
+        <location filename="../app/ui_components/contextMenuBuilder.cpp" line="88"/>
         <source>Условное форматирование</source>
         <translation type="unfinished"></translation>
     </message>
@@ -319,67 +461,67 @@
 <context>
     <name>DataSettingsWidget</name>
     <message>
-        <location filename="../app/forms/settings/dataSettingsWidget.cpp" line="25"/>
+        <location filename="../app/forms/settings/dataSettingsWidget.cpp" line="26"/>
         <source>Обслуживание пользовательского интерфейса</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../app/forms/settings/dataSettingsWidget.cpp" line="32"/>
+        <location filename="../app/forms/settings/dataSettingsWidget.cpp" line="33"/>
         <source>Количество элементов в меню &apos;Последние&apos;:</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../app/forms/settings/dataSettingsWidget.cpp" line="47"/>
+        <location filename="../app/forms/settings/dataSettingsWidget.cpp" line="52"/>
         <source>Восстановить</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../app/forms/settings/dataSettingsWidget.cpp" line="49"/>
+        <location filename="../app/forms/settings/dataSettingsWidget.cpp" line="54"/>
         <source>Восстановить директорию пользователя</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../app/forms/settings/dataSettingsWidget.cpp" line="60"/>
+        <location filename="../app/forms/settings/dataSettingsWidget.cpp" line="65"/>
         <source>Настройка истории</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../app/forms/settings/dataSettingsWidget.cpp" line="66"/>
+        <location filename="../app/forms/settings/dataSettingsWidget.cpp" line="71"/>
         <source>Запоминать режим Истории</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../app/forms/settings/dataSettingsWidget.cpp" line="71"/>
+        <location filename="../app/forms/settings/dataSettingsWidget.cpp" line="76"/>
         <source>Путь к XML протоколу:</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../app/forms/settings/dataSettingsWidget.cpp" line="76"/>
+        <location filename="../app/forms/settings/dataSettingsWidget.cpp" line="81"/>
         <source>Выберите путь к файлу XML протокола...</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../app/forms/settings/dataSettingsWidget.cpp" line="78"/>
+        <location filename="../app/forms/settings/dataSettingsWidget.cpp" line="83"/>
         <source>Обзор...</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../app/forms/settings/dataSettingsWidget.cpp" line="111"/>
+        <location filename="../app/forms/settings/dataSettingsWidget.cpp" line="116"/>
         <source>Подтверждение</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../app/forms/settings/dataSettingsWidget.cpp" line="112"/>
+        <location filename="../app/forms/settings/dataSettingsWidget.cpp" line="117"/>
         <source>Вы запросили восстановление рабочей области &quot;RastrWin3&quot;. После выполнения этой операции все файлы шаблонов, форм, макросов и других настроек будут восстановлены из резервной копии. Любые изменения, которые Вы сделали в этих файла будут потеряны. Пользовательские файлы, которые были созданы Вами (например файлы режима и графики) затронуты не будут. Чтобы отказаться от восстановления рабочей области нажмите кнопку &quot;Отменить&quot;. Продолжить?</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../app/forms/settings/dataSettingsWidget.cpp" line="132"/>
+        <location filename="../app/forms/settings/dataSettingsWidget.cpp" line="137"/>
         <source>Выберите XML файл протокола</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../app/forms/settings/dataSettingsWidget.cpp" line="134"/>
+        <location filename="../app/forms/settings/dataSettingsWidget.cpp" line="139"/>
         <source>XML файлы (*.xml);;Все файлы (*)</source>
         <translation type="unfinished"></translation>
     </message>
@@ -393,14 +535,18 @@
     </message>
     <message>
         <location filename="forms/dlgfindrepl.ui" line="36"/>
-        <location filename="forms/dlgfindrepl.cpp" line="10"/>
-        <location filename="forms/dlgfindrepl.cpp" line="18"/>
         <source>Find</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
+        <location filename="forms/dlgfindrepl.cpp" line="10"/>
+        <location filename="forms/dlgfindrepl.cpp" line="18"/>
+        <source>Найти</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
         <location filename="forms/dlgfindrepl.cpp" line="15"/>
-        <source>Search...</source>
+        <source>Поиск...</source>
         <translation type="unfinished"></translation>
     </message>
 </context>
@@ -455,12 +601,17 @@
 <context>
     <name>FileManager</name>
     <message>
-        <location filename="../app/main/fileManager.cpp" line="301"/>
+        <location filename="../app/main/fileManager.cpp" line="107"/>
+        <source>Ошибка</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../app/main/fileManager.cpp" line="302"/>
         <source>Open Rastr files</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../app/main/fileManager.cpp" line="322"/>
+        <location filename="../app/main/fileManager.cpp" line="323"/>
         <source>Save Rastr file</source>
         <translation type="unfinished"></translation>
     </message>
@@ -489,7 +640,7 @@
 <context>
     <name>GraphSDLManager</name>
     <message>
-        <location filename="../app/graphics/sdl/graphSDLManager.cpp" line="46"/>
+        <location filename="../app/graphics/sdl/graphSDLManager.cpp" line="45"/>
         <source>Графика SDL</source>
         <translation type="unfinished"></translation>
     </message>
@@ -497,7 +648,7 @@
 <context>
     <name>GraphWebManager</name>
     <message>
-        <location filename="../app/graphics/web/GraphWebManager.cpp" line="31"/>
+        <location filename="../app/graphics/web/GraphWebManager.cpp" line="33"/>
         <source>Графика Web</source>
         <translation type="unfinished"></translation>
     </message>
@@ -627,44 +778,52 @@
     </message>
 </context>
 <context>
+    <name>MacroDockManager</name>
+    <message>
+        <location filename="../app/main/macroDockManager.cpp" line="32"/>
+        <source>Macro Editor — Python</source>
+        <translation type="unfinished"></translation>
+    </message>
+</context>
+<context>
     <name>MainProtocolWidget</name>
     <message>
-        <location filename="../app/forms/mainProtocolWidget.cpp" line="76"/>
+        <location filename="../app/forms/mainProtocolWidget.cpp" line="80"/>
         <source>Все</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../app/forms/mainProtocolWidget.cpp" line="296"/>
+        <location filename="../app/forms/mainProtocolWidget.cpp" line="300"/>
         <source>Открыть</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../app/forms/mainProtocolWidget.cpp" line="299"/>
+        <location filename="../app/forms/mainProtocolWidget.cpp" line="303"/>
         <source>Связанные формы</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../app/forms/mainProtocolWidget.cpp" line="307"/>
+        <location filename="../app/forms/mainProtocolWidget.cpp" line="311"/>
         <source>Копировать</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../app/forms/mainProtocolWidget.cpp" line="312"/>
+        <location filename="../app/forms/mainProtocolWidget.cpp" line="316"/>
         <source>Раскрыть всё</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../app/forms/mainProtocolWidget.cpp" line="313"/>
+        <location filename="../app/forms/mainProtocolWidget.cpp" line="317"/>
         <source>Свернуть всё</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../app/forms/mainProtocolWidget.cpp" line="315"/>
+        <location filename="../app/forms/mainProtocolWidget.cpp" line="319"/>
         <source>Очистить</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../app/forms/mainProtocolWidget.cpp" line="316"/>
+        <location filename="../app/forms/mainProtocolWidget.cpp" line="320"/>
         <source>Настройка протоколов…</source>
         <translation type="unfinished"></translation>
     </message>
@@ -672,8 +831,23 @@
 <context>
     <name>MainWindow</name>
     <message>
-        <location filename="../app/main/mainwindow.cpp" line="48"/>
+        <location filename="../app/main/mainwindow.cpp" line="47"/>
         <source>~qrastr~</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../app/main/mainwindow.cpp" line="151"/>
+        <source>(нет файлов)</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../app/main/mainwindow.cpp" line="160"/>
+        <source>&amp;%1 %2</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../app/main/mainwindow.cpp" line="161"/>
+        <source>&amp;%1 %2 &lt;%3&gt;</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
@@ -700,159 +874,199 @@
 <context>
     <name>McrWnd</name>
     <message>
-        <location filename="mcrwnd.cpp" line="26"/>
-        <location filename="mcrwnd.cpp" line="101"/>
+        <location filename="mcrwnd.cpp" line="80"/>
+        <source>&amp;Новый</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="mcrwnd.cpp" line="82"/>
+        <source>&amp;Открыть</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="mcrwnd.cpp" line="84"/>
+        <source>&amp;Сохранить</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="mcrwnd.cpp" line="86"/>
+        <source>Сохранить как</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="mcrwnd.cpp" line="88"/>
+        <location filename="mcrwnd.cpp" line="105"/>
+        <source>&amp;Пуск</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="mcrwnd.cpp" line="90"/>
+        <source>&amp;Найти…</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="mcrwnd.cpp" line="92"/>
+        <source>&amp;Перейти к строке…</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="mcrwnd.cpp" line="95"/>
+        <source>Очистить лог</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="mcrwnd.cpp" line="98"/>
+        <source>&amp;Файл</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="mcrwnd.cpp" line="108"/>
+        <source>&amp;Правка</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="mcrwnd.cpp" line="130"/>
+        <location filename="mcrwnd.cpp" line="394"/>
+        <source>Без названия</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
         <location filename="mcrwnd.cpp" line="131"/>
-        <location filename="mcrwnd.cpp" line="295"/>
+        <source>Ln 1, Col 1</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="mcrwnd.cpp" line="138"/>
+        <source>Несохраненные изменения</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="mcrwnd.cpp" line="152"/>
+        <source>Ln %1, Col %2</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="mcrwnd.cpp" line="172"/>
         <source>Macro Python</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="mcrwnd.cpp" line="65"/>
-        <source>&amp;New</source>
+        <location filename="mcrwnd.cpp" line="173"/>
+        <source>Загрузить пример скрипта?</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="mcrwnd.cpp" line="67"/>
-        <source>&amp;Open</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="mcrwnd.cpp" line="69"/>
-        <source>&amp;Save</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="mcrwnd.cpp" line="72"/>
-        <source>Save &amp;as</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="mcrwnd.cpp" line="77"/>
-        <source>Run (F10)</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="mcrwnd.cpp" line="81"/>
-        <source>&amp;Find</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="mcrwnd.cpp" line="83"/>
-        <source>&amp;Go to line</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="mcrwnd.cpp" line="87"/>
-        <source>&amp;Clear log</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="mcrwnd.cpp" line="102"/>
-        <source>Load example script?</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="mcrwnd.cpp" line="114"/>
-        <source>Warning</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="mcrwnd.cpp" line="115"/>
-        <source>Example file not found:
-%1</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="mcrwnd.cpp" line="132"/>
-        <source>The macro has unsaved changes. Save?</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="mcrwnd.cpp" line="179"/>
-        <source>Open file</source>
+        <location filename="mcrwnd.cpp" line="185"/>
+        <source>Предупреждение</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="mcrwnd.cpp" line="186"/>
-        <location filename="mcrwnd.cpp" line="198"/>
-        <location filename="mcrwnd.cpp" line="205"/>
-        <source>Error</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="mcrwnd.cpp" line="187"/>
-        <source>Failed to load file:
+        <source>Пример файла не найден:
 %1</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="mcrwnd.cpp" line="194"/>
-        <source>Save file as</source>
+        <location filename="mcrwnd.cpp" line="208"/>
+        <location filename="mcrwnd.cpp" line="392"/>
+        <source>Macro Editor — Python</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="mcrwnd.cpp" line="199"/>
-        <source>Cannot set file path:
+        <location filename="mcrwnd.cpp" line="209"/>
+        <source>В макросе есть несохраненные изменения. Сохранить?</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="mcrwnd.cpp" line="263"/>
+        <location filename="mcrwnd.cpp" line="275"/>
+        <location filename="mcrwnd.cpp" line="292"/>
+        <source>Ошибка</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="mcrwnd.cpp" line="264"/>
+        <source>Не удалось загрузить файл:
 %1</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="mcrwnd.cpp" line="206"/>
-        <source>Failed to save file:
+        <location filename="mcrwnd.cpp" line="276"/>
+        <source>Не удалось сохранить файл:
 %1</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="mcrwnd.cpp" line="227"/>
-        <source>Unknown error</source>
+        <location filename="mcrwnd.cpp" line="287"/>
+        <source>Сохраните файл как</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="mcrwnd.cpp" line="232"/>
+        <location filename="mcrwnd.cpp" line="293"/>
+        <source>Не удается задать путь к файлу:
+%1</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="mcrwnd.cpp" line="309"/>
+        <source>Неизвестная ошибка</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="mcrwnd.cpp" line="315"/>
+        <source>Перейти к строке %1?</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="mcrwnd.cpp" line="336"/>
+        <source>Перейти к строке</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="mcrwnd.cpp" line="337"/>
+        <source>Номер строки (1..%1):</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="mcrwnd.cpp" line="363"/>
+        <source>Найти</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="mcrwnd.cpp" line="364"/>
+        <source>&apos;%1&apos; не найдена.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="mcrwnd.cpp" line="391"/>
+        <source>%1 — Macro Editor</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="mcrwnd.cpp" line="256"/>
+        <source>Open file</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="mcrwnd.cpp" line="313"/>
         <source>Python error</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="mcrwnd.cpp" line="234"/>
-        <source>Go to line %1?</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="mcrwnd.cpp" line="249"/>
-        <source>Go to line</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="mcrwnd.cpp" line="250"/>
-        <source>Line number (1..%1):</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="mcrwnd.cpp" line="269"/>
-        <source>Find</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="mcrwnd.cpp" line="270"/>
-        <source>&apos;%1&apos; not found.</source>
         <translation type="unfinished"></translation>
     </message>
 </context>
 <context>
     <name>ProtocolSettingsDialog</name>
     <message>
-        <location filename="../app/forms/protocolSettingsDialog.cpp" line="7"/>
+        <location filename="../app/forms/protocolSettingsDialog.cpp" line="9"/>
         <source>Свойства протокола</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../app/forms/protocolSettingsDialog.cpp" line="10"/>
+        <location filename="../app/forms/protocolSettingsDialog.cpp" line="12"/>
         <source>Сворачивать стадии без ошибок</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../app/forms/protocolSettingsDialog.cpp" line="11"/>
+        <location filename="../app/forms/protocolSettingsDialog.cpp" line="13"/>
         <source>Копировать буфер в XML</source>
         <translation type="unfinished"></translation>
     </message>
@@ -873,31 +1087,27 @@
 <context>
     <name>QObject</name>
     <message>
-        <location filename="../app/formatting/condFormat.h" line="27"/>
+        <location filename="../app/formatting/condFormat.h" line="25"/>
         <source>Left</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../app/formatting/condFormat.h" line="27"/>
+        <location filename="../app/formatting/condFormat.h" line="25"/>
         <source>Right</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../app/formatting/condFormat.h" line="27"/>
+        <location filename="../app/formatting/condFormat.h" line="25"/>
         <source>Center</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../app/formatting/condFormat.h" line="27"/>
+        <location filename="../app/formatting/condFormat.h" line="25"/>
         <source>Justify</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="../app/main/app.cpp" line="145"/>
-        <location filename="../app/main/app.cpp" line="204"/>
-        <location filename="../app/main/app.cpp" line="244"/>
-        <location filename="../app/main/app.cpp" line="254"/>
-        <location filename="../app/main/fileManager.cpp" line="98"/>
         <location filename="sciHlpBase.cpp" line="73"/>
         <source>Error</source>
         <translation type="unfinished"></translation>
@@ -909,13 +1119,32 @@ Check file for errors or delete it to reset defaults.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../app/main/app.cpp" line="221"/>
+        <location filename="../app/main/startupLoader.cpp" line="49"/>
+        <location filename="../app/main/startupLoader.cpp" line="95"/>
+        <source>Ошибка</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../app/main/startupLoader.cpp" line="50"/>
+        <source>Не удалось загрузить шаблон:
+%1</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../app/main/startupLoader.cpp" line="71"/>
         <source>Файл не найден</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../app/main/app.cpp" line="255"/>
-        <source>Can&apos;t read forms</source>
+        <location filename="../app/main/startupLoader.cpp" line="88"/>
+        <source>Не удалось загрузить файл:
+%1</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../app/main/startupLoader.cpp" line="96"/>
+        <source>Исключение при загрузке файла:
+%1</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
@@ -924,25 +1153,45 @@ Check file for errors or delete it to reset defaults.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../app/utilities/Settings.cpp" line="270"/>
-        <source>SQLite database files (*.db *.sqlite *.sqlite3 *.db3)</source>
+        <location filename="sciHlpBase.cpp" line="74"/>
+        <source>Cannot resolve lexilla.CreateLexer</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="sciHlpBase.cpp" line="74"/>
-        <source>Cannot resolve lexilla.CreateLexer</source>
+        <location filename="../app/main.cpp" line="82"/>
+        <source>Инициализация...</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../app/main.cpp" line="88"/>
+        <source>Настройки загружены</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../app/main.cpp" line="94"/>
+        <source>Загрузка плагинов...</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../app/main.cpp" line="107"/>
+        <source>Инициализация интерфейса...</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../app/main.cpp" line="115"/>
+        <source>Готово</source>
         <translation type="unfinished"></translation>
     </message>
 </context>
 <context>
     <name>RtabWidget</name>
     <message>
-        <location filename="../app/ui_components/rtabwidget.cpp" line="298"/>
+        <location filename="../app/ui_components/rtabwidget.cpp" line="333"/>
         <source>Ошибка открытия таблицы</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../app/ui_components/rtabwidget.cpp" line="299"/>
+        <location filename="../app/ui_components/rtabwidget.cpp" line="334"/>
         <source>Таблица &quot;%1&quot; недоступна.
 Убедитесь, что файл данных загружен.</source>
         <translation type="unfinished"></translation>
@@ -951,12 +1200,12 @@ Check file for errors or delete it to reset defaults.</source>
 <context>
     <name>SaveAllDialog</name>
     <message>
-        <location filename="../app/forms/files/saveAllDialog.cpp" line="17"/>
+        <location filename="../app/forms/files/saveAllDialog.cpp" line="16"/>
         <source>Сохранение файлов</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../app/forms/files/saveAllDialog.cpp" line="39"/>
+        <location filename="../app/forms/files/saveAllDialog.cpp" line="38"/>
         <source>Отметить всё</source>
         <translation type="unfinished"></translation>
     </message>
@@ -1057,11 +1306,68 @@ Check file for errors or delete it to reset defaults.</source>
     </message>
 </context>
 <context>
+    <name>SearchableComboPopup</name>
+    <message>
+        <location filename="../app/data/searchableComboPopup.cpp" line="19"/>
+        <source>Поиск...</source>
+        <translation type="unfinished"></translation>
+    </message>
+</context>
+<context>
     <name>SelectionDialog</name>
     <message>
-        <location filename="../app/forms/tables/selectionDialog.cpp" line="10"/>
         <location filename="../app/forms/tables/selectionDialog.cpp" line="14"/>
         <source>Выборка</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../app/forms/tables/selectionDialog.cpp" line="34"/>
+        <source>больше</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../app/forms/tables/selectionDialog.cpp" line="35"/>
+        <source>меньше</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../app/forms/tables/selectionDialog.cpp" line="36"/>
+        <source>равно</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../app/forms/tables/selectionDialog.cpp" line="37"/>
+        <source>не равно</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../app/forms/tables/selectionDialog.cpp" line="38"/>
+        <source>приблизительно</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../app/forms/tables/selectionDialog.cpp" line="40"/>
+        <source>И</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../app/forms/tables/selectionDialog.cpp" line="41"/>
+        <source>ИЛИ</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../app/forms/tables/selectionDialog.cpp" line="42"/>
+        <source>НЕ</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../app/forms/tables/selectionDialog.cpp" line="43"/>
+        <source>скобки</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../app/forms/tables/selectionDialog.cpp" line="64"/>
+        <source>Сбросить</source>
         <translation type="unfinished"></translation>
     </message>
 </context>
@@ -1171,39 +1477,13 @@ Check file for errors or delete it to reset defaults.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../app/forms/settings/settingsOnLoadFilesWidget.cpp" line="104"/>
+        <location filename="../app/forms/settings/settingsOnLoadFilesWidget.cpp" line="108"/>
         <source>Выберите файлы для загрузки</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../app/forms/settings/settingsOnLoadFilesWidget.cpp" line="105"/>
+        <location filename="../app/forms/settings/settingsOnLoadFilesWidget.cpp" line="109"/>
         <source>Все файлы (*);;RG файлы (*.rg2);;OS файлы (*.os);;GRF файлы (*.grf)</source>
-        <translation type="unfinished"></translation>
-    </message>
-</context>
-<context>
-    <name>SettingsOnLoadFormsWidget</name>
-    <message>
-        <location filename="../app/forms/settings/settingsOnLoadFormsWidget.cpp" line="22"/>
-        <source>Выбрать</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="../app/forms/settings/settingsOnLoadFormsWidget.cpp" line="22"/>
-        <source>Форма</source>
-        <translation type="unfinished"></translation>
-    </message>
-</context>
-<context>
-    <name>SettingsOnLoadTemplatesWidget</name>
-    <message>
-        <location filename="../app/forms/settings/settingsOnLoadTemplatesWidget.cpp" line="22"/>
-        <source>Выбрать</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="../app/forms/settings/settingsOnLoadTemplatesWidget.cpp" line="22"/>
-        <source>Шаблон</source>
         <translation type="unfinished"></translation>
     </message>
 </context>
@@ -1261,7 +1541,7 @@ Check file for errors or delete it to reset defaults.</source>
     </message>
     <message>
         <location filename="../app/main/uiBuilder.cpp" line="66"/>
-        <location filename="../app/main/uiBuilder.cpp" line="315"/>
+        <location filename="../app/main/uiBuilder.cpp" line="298"/>
         <source>&amp;Параметры</source>
         <translation type="unfinished"></translation>
     </message>
@@ -1281,333 +1561,323 @@ Check file for errors or delete it to reset defaults.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../app/main/uiBuilder.cpp" line="88"/>
+        <location filename="../app/main/uiBuilder.cpp" line="79"/>
         <source>&amp;Контроль</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../app/main/uiBuilder.cpp" line="91"/>
+        <location filename="../app/main/uiBuilder.cpp" line="82"/>
         <source>Контроль исходных данных</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../app/main/uiBuilder.cpp" line="93"/>
+        <location filename="../app/main/uiBuilder.cpp" line="84"/>
         <source>&amp;Режим</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../app/main/uiBuilder.cpp" line="96"/>
+        <location filename="../app/main/uiBuilder.cpp" line="87"/>
         <source>Расчет УР</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../app/main/uiBuilder.cpp" line="98"/>
+        <location filename="../app/main/uiBuilder.cpp" line="89"/>
         <source>&amp;ОС</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../app/main/uiBuilder.cpp" line="101"/>
+        <location filename="../app/main/uiBuilder.cpp" line="92"/>
         <source>Оценка состояния</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../app/main/uiBuilder.cpp" line="103"/>
+        <location filename="../app/main/uiBuilder.cpp" line="94"/>
         <source>&amp;МДП</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../app/main/uiBuilder.cpp" line="106"/>
+        <location filename="../app/main/uiBuilder.cpp" line="97"/>
         <source>Расчет МДП</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../app/main/uiBuilder.cpp" line="108"/>
+        <location filename="../app/main/uiBuilder.cpp" line="99"/>
         <source>&amp;ТКЗ</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../app/main/uiBuilder.cpp" line="111"/>
+        <location filename="../app/main/uiBuilder.cpp" line="102"/>
         <source>Расчет ТКЗ</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../app/main/uiBuilder.cpp" line="113"/>
+        <location filename="../app/main/uiBuilder.cpp" line="104"/>
         <source>&amp;Доп. ток от Т</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../app/main/uiBuilder.cpp" line="116"/>
+        <location filename="../app/main/uiBuilder.cpp" line="107"/>
         <source>Расчет допустимых токов от температуры</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../app/main/uiBuilder.cpp" line="121"/>
+        <location filename="../app/main/uiBuilder.cpp" line="112"/>
         <source>&amp;Пересчет дорасчетной ТМ</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../app/main/uiBuilder.cpp" line="124"/>
+        <location filename="../app/main/uiBuilder.cpp" line="115"/>
         <source>Пересчет дорасчетной ТМ</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../app/main/uiBuilder.cpp" line="126"/>
+        <location filename="../app/main/uiBuilder.cpp" line="117"/>
         <source>&amp;Обновить таблицы по ТМ</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../app/main/uiBuilder.cpp" line="129"/>
+        <location filename="../app/main/uiBuilder.cpp" line="120"/>
         <source>Обновить таблицы по ТМ</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../app/main/uiBuilder.cpp" line="131"/>
+        <location filename="../app/main/uiBuilder.cpp" line="122"/>
         <source>&amp;ПТИ</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../app/main/uiBuilder.cpp" line="134"/>
+        <location filename="../app/main/uiBuilder.cpp" line="125"/>
         <source>Расчет ПТИ</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../app/main/uiBuilder.cpp" line="136"/>
+        <location filename="../app/main/uiBuilder.cpp" line="127"/>
         <source>&amp;Фильтр ТИ</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../app/main/uiBuilder.cpp" line="139"/>
+        <location filename="../app/main/uiBuilder.cpp" line="130"/>
         <source>Расчет Фильтр ТИ</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../app/main/uiBuilder.cpp" line="144"/>
+        <location filename="../app/main/uiBuilder.cpp" line="135"/>
         <source>&amp;Подг. МДП</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../app/main/uiBuilder.cpp" line="147"/>
+        <location filename="../app/main/uiBuilder.cpp" line="138"/>
         <source>Подг. МДП</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../app/main/uiBuilder.cpp" line="152"/>
+        <location filename="../app/main/uiBuilder.cpp" line="143"/>
         <source>&amp;Графика Web</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../app/main/uiBuilder.cpp" line="155"/>
+        <location filename="../app/main/uiBuilder.cpp" line="146"/>
         <source>Графика Web</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../app/main/uiBuilder.cpp" line="157"/>
+        <location filename="../app/main/uiBuilder.cpp" line="148"/>
         <source>&amp;Графика SDL</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../app/main/uiBuilder.cpp" line="160"/>
+        <location filename="../app/main/uiBuilder.cpp" line="151"/>
         <source>Графика SDL</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../app/main/uiBuilder.cpp" line="165"/>
+        <location filename="../app/main/uiBuilder.cpp" line="156"/>
         <source>&amp;Макросы</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../app/main/uiBuilder.cpp" line="168"/>
+        <location filename="../app/main/uiBuilder.cpp" line="159"/>
         <source>Открыть макросы</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../app/main/uiBuilder.cpp" line="174"/>
+        <location filename="../app/main/uiBuilder.cpp" line="165"/>
         <source>&amp;Закрыть</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../app/main/uiBuilder.cpp" line="177"/>
+        <location filename="../app/main/uiBuilder.cpp" line="168"/>
         <source>Закрыть активное окно</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../app/main/uiBuilder.cpp" line="181"/>
+        <location filename="../app/main/uiBuilder.cpp" line="172"/>
         <source>&amp;Close All</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../app/main/uiBuilder.cpp" line="184"/>
+        <location filename="../app/main/uiBuilder.cpp" line="175"/>
         <source>Закрыть все окна</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../app/main/uiBuilder.cpp" line="188"/>
+        <location filename="../app/main/uiBuilder.cpp" line="179"/>
         <source>&amp;Плитка</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../app/main/uiBuilder.cpp" line="191"/>
+        <location filename="../app/main/uiBuilder.cpp" line="182"/>
         <source>Расположить окна плиткой</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../app/main/uiBuilder.cpp" line="195"/>
+        <location filename="../app/main/uiBuilder.cpp" line="186"/>
         <source>&amp;Каскад</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../app/main/uiBuilder.cpp" line="198"/>
+        <location filename="../app/main/uiBuilder.cpp" line="189"/>
         <source>Расположить окна каскадом</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../app/main/uiBuilder.cpp" line="201"/>
+        <location filename="../app/main/uiBuilder.cpp" line="192"/>
         <source>&amp;Протокол</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../app/main/uiBuilder.cpp" line="204"/>
+        <location filename="../app/main/uiBuilder.cpp" line="195"/>
         <source>Открыть окно протокола</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../app/main/uiBuilder.cpp" line="208"/>
+        <location filename="../app/main/uiBuilder.cpp" line="199"/>
         <source>&amp;Сохранить область</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../app/main/uiBuilder.cpp" line="211"/>
+        <location filename="../app/main/uiBuilder.cpp" line="202"/>
         <source>Сохранить рабочую область</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../app/main/uiBuilder.cpp" line="214"/>
+        <location filename="../app/main/uiBuilder.cpp" line="205"/>
         <source>&amp;Загрузить область</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../app/main/uiBuilder.cpp" line="217"/>
+        <location filename="../app/main/uiBuilder.cpp" line="208"/>
         <source>Загрузить рабочую область</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../app/main/uiBuilder.cpp" line="220"/>
+        <location filename="../app/main/uiBuilder.cpp" line="211"/>
         <source>&amp;Следующее</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../app/main/uiBuilder.cpp" line="223"/>
+        <location filename="../app/main/uiBuilder.cpp" line="214"/>
         <source>Перейти к следующему окну</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../app/main/uiBuilder.cpp" line="227"/>
+        <location filename="../app/main/uiBuilder.cpp" line="218"/>
         <source>&amp;Предыдущее</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../app/main/uiBuilder.cpp" line="230"/>
+        <location filename="../app/main/uiBuilder.cpp" line="221"/>
         <source>Перейти к предыдущему окну</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../app/main/uiBuilder.cpp" line="235"/>
+        <location filename="../app/main/uiBuilder.cpp" line="226"/>
         <source>&amp;О программе</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../app/main/uiBuilder.cpp" line="238"/>
+        <location filename="../app/main/uiBuilder.cpp" line="229"/>
         <source>Show the application&apos;s About box</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../app/main/uiBuilder.cpp" line="256"/>
+        <location filename="../app/main/uiBuilder.cpp" line="247"/>
         <source>&amp;Файлы</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../app/main/uiBuilder.cpp" line="265"/>
+        <location filename="../app/main/uiBuilder.cpp" line="256"/>
         <source>&amp;Настройки программы</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../app/main/uiBuilder.cpp" line="270"/>
+        <location filename="../app/main/uiBuilder.cpp" line="261"/>
         <source>&amp;Настройки</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../app/main/uiBuilder.cpp" line="275"/>
+        <location filename="../app/main/uiBuilder.cpp" line="266"/>
         <source>&amp;Последние</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../app/main/uiBuilder.cpp" line="287"/>
+        <location filename="../app/main/uiBuilder.cpp" line="273"/>
         <source>&amp;Макро</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../app/main/uiBuilder.cpp" line="294"/>
+        <location filename="../app/main/uiBuilder.cpp" line="279"/>
         <source>&amp;Графика</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../app/main/uiBuilder.cpp" line="304"/>
+        <location filename="../app/main/uiBuilder.cpp" line="287"/>
         <source>&amp;Расчеты</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../app/main/uiBuilder.cpp" line="318"/>
+        <location filename="../app/main/uiBuilder.cpp" line="301"/>
         <source>&amp;ТИ</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../app/main/uiBuilder.cpp" line="325"/>
+        <location filename="../app/main/uiBuilder.cpp" line="308"/>
         <source>&amp;Таблицы</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../app/main/uiBuilder.cpp" line="330"/>
+        <location filename="../app/main/uiBuilder.cpp" line="313"/>
         <source>Окна</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../app/main/uiBuilder.cpp" line="346"/>
+        <location filename="../app/main/uiBuilder.cpp" line="329"/>
         <source>&amp;Помощь</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../app/main/uiBuilder.cpp" line="350"/>
+        <location filename="../app/main/uiBuilder.cpp" line="333"/>
         <source>Стиль</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../app/main/uiBuilder.cpp" line="386"/>
+        <location filename="../app/main/uiBuilder.cpp" line="369"/>
         <source>Файл</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../app/main/uiBuilder.cpp" line="392"/>
+        <location filename="../app/main/uiBuilder.cpp" line="376"/>
         <source>Расчеты</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../app/main/uiBuilder.cpp" line="400"/>
+        <location filename="../app/main/uiBuilder.cpp" line="385"/>
         <source>Телеизмерения</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../app/main/uiBuilder.cpp" line="409"/>
+        <location filename="../app/main/uiBuilder.cpp" line="395"/>
         <source>Ready</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="../app/main/uiBuilder.cpp" line="487"/>
-        <source>&amp;%1 %2</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="../app/main/uiBuilder.cpp" line="489"/>
-        <source>&amp;%1 %2 %3</source>
         <translation type="unfinished"></translation>
     </message>
 </context>
