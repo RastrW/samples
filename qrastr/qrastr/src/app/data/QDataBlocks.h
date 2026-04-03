@@ -800,14 +800,15 @@ public :
         }
     }
 
-    IPlainRastrRetCode DuplicateRow(IndexT duprow ) noexcept
+    IPlainRastrRetCode DuplicateRow(IndexT duprow) noexcept
     {
+        // К этому моменту handleInsertRow уже вставил пустую строку сверху от исходной.
+        // Копируем данные из оригинала (duprow+1) в новую строку (duprow).
         try {
-            for (int col = 0 ; col < this->ColumnsCount() ; col++)
-            {
-                size_t indx = duprow * this->ColumnsCount() + col;
-                size_t indx2 = (duprow+1) * this->ColumnsCount() + col;
-                this->Data()[indx] = this->Data()[indx2];
+            for (int col = 0; col < this->ColumnsCount(); ++col) {
+                size_t dst = duprow       * this->ColumnsCount() + col;
+                size_t src = (duprow + 1) * this->ColumnsCount() + col;
+                this->Data()[dst] = this->Data()[src];
             }
             return IPlainRastrRetCode::Ok;
         } catch (...) {

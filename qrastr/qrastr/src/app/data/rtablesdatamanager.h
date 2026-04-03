@@ -125,6 +125,8 @@ private:
     void handleChangeRow(const std::string& tname, long row);
     /**
      * @brief EventHints::ChangeData — изменилось одно значение (tname, cname, row).
+     * При изменении в ячейке должна изменяться вся строка,
+     * т.к. значения в колонках могут быть связаны между собой
      */
     void handleChangeData(const std::string& tname,
                           const std::string& cname,

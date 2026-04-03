@@ -1,7 +1,7 @@
 #include "condFormatController.h"
 #include "rdata.h"
 #include "rmodel.h"
-#include "condFormatManager.h"
+#include "condFormatDialog.h"
 #include "condformatjson.h"
 
 CondFormatController::CondFormatController(RModel*                model,
@@ -52,7 +52,7 @@ void CondFormatController::editCondFormats(std::size_t column)
     const QString title = m_model->headerData(
                                      col, Qt::Horizontal, Qt::DisplayRole).toString();
 
-    CondFormatManager dlg(current, "UTF-8", m_parentWidget);
+    CondFormatDialog dlg(current, "UTF-8", m_parentWidget);
     dlg.setWindowTitle(tr("Conditional formats for \"%1\"").arg(title));
 
     if (dlg.exec() == QDialog::Accepted) {

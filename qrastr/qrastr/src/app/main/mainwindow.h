@@ -72,8 +72,6 @@ protected:
 private slots:
     // Активировать подокно
     void slot_subWindowActivated();
-    // Обновить список недавних файлов
-    void slot_updateRecentFiles();
     // Обновить меню
     void slot_updateMenu();
     
@@ -82,8 +80,7 @@ private slots:
     void showIdopDialog();
     // Подготовка данных для МДП
     void showMDPPrepareDialog();
-    // Диалог макросов
-    void slot_openMcrDialog();
+
     void slot_about();
 private:
     // ========== КОМПОНЕНТЫ-ДЕЛЕГАТЫ ==========
@@ -109,10 +106,7 @@ private:
     ads::CDockManager* m_dockManager = nullptr;   // The main container for Advanced Docking System
 
     // ========== ВСПОМОГАТЕЛЬНЫЕ КОМПОНЕНТЫ ==========
-    std::shared_ptr<PyHlp> m_pyHelper;          // Python helper (для выполнения макросов)
     std::shared_ptr<spdlog::sinks::sink> m_qtLogSink; // сохраняем в setupLogSinks
-    //Указатель на окно макросов, которое можно открыть только однократно
-    McrWnd* m_mcrWnd {nullptr};
     // ========== ИНИЦИАЛИЗАЦИЯ ==========
     void setupConnections();
 };

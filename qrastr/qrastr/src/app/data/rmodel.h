@@ -43,7 +43,7 @@ public slots:
 public:
     // Описание редактора для конкретной колонки — используется делегатом.
     struct ColumnEditorInfo {
-        enum class Type { None, Numeric, CheckBox, ComboBox, ComboBoxPicture };
+        enum class Type { None, Numeric, CheckBox, ComboBox, ComboBoxPicture, DateTime, Color};
 
         Type        editorType = Type::None;
         QStringList comboItems;

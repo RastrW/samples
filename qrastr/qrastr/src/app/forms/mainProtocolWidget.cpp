@@ -1,6 +1,5 @@
 #include "mainProtocolWidget.h"
 
-#include <set>
 #include <QListView>
 #include <QStringListModel>
 #include <QAbstractItemModelTester>
@@ -20,6 +19,7 @@
 #include "protocolFilterProxyModel.h"
 #include "qastra_events_data.h"
 #include "protocolSettingsDialog.h"
+#include "settingsKeys.h"
 
 static const char* kIconPaths[] = {
     ":images/new_style/information.png",  // 0 — about/info
@@ -39,8 +39,10 @@ MainProtocolWidget::MainProtocolWidget(QWidget* parent)
 {
     // Загружаем сохранённые настройки
     QSettings s;
-    m_collapseCleanStages = s.value(kKeyCollapse, true).toBool();
-    m_copyAsXml           = s.value(kKeyXml,      false).toBool();
+    m_collapseCleanStages = s.value(SK::Protocol::collapseCleanStages,
+                                    SK::Protocol::defCollapseCleanStages).toBool();
+    m_copyAsXml           = s.value(SK::Protocol::copyAsXml,
+                                    SK::Protocol::defCopyAsXml).toBool();
 
     auto* mainLayout = new QVBoxLayout(this);
     mainLayout->setContentsMargins(4, 4, 4, 4);

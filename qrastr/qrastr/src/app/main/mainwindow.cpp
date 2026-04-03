@@ -7,8 +7,7 @@
 #include "qastra.h"
 #include "qti.h"
 #include "qbarsmdp.h"
-#include "mcrwnd.h"
-#include "qmcr/pyhlp.h"
+
 #include "calcIacceptableDialog.h"
 
 #include <QStatusBar>
@@ -19,9 +18,9 @@
 #include <QInputDialog>
 #include <QApplication>
 #include <QMdiSubWindow>
-
+#include <QMimeData>
 #include <QTimer>
-
+#include <QFileInfo>
 #if (QT_VERSION >= QT_VERSION_CHECK(6, 0, 0))
 #include <QtSvgWidgets/QSvgWidget>
 #include <QSvgRenderer>
@@ -34,7 +33,7 @@
 #include "formManager.h"
 #include "appSettingsManager.h"
 #include "uiBuilder.h"
-#include "params.h"
+#include "settingsKeys.h"
 #include "UIForms.h"
 #include "workspaceManager.h"
 
@@ -83,32 +82,20 @@ void MainWindow::initialize(
     // ========== СОЗДАНИЕ КОМПОНЕНТОВ ==========
     // SettingsManager нужен первым для загрузки настроек
     m_appSettingsManager = std::make_unique<AppSettingsManager>(this);
-    m_appSettingsManager->loadAppearanceSettings(this);
-    // Restore the state of toolbars and dock widgets (menus are part of the overall layout)
-    restoreState(m_appSettingsManager->getSettings("mainWindowState"));
 
     m_fileManager = std::make_unique<FileManager>(m_qastra, this);
 
-    const auto& startFiles = Params::get_instance()->getStartLoadFileTemplates();
-    for (const auto& [file, tmpl] : startFiles) {
-        // Добавляем в карту БЕЗ добавления в "последние"
-        m_fileManager->registerStartupFile(
-            QString::fromStdString(file),
-            QString::fromStdString(tmpl));
-    }
 
     m_calcController = std::make_unique<CalculationController>(
         m_qastra, m_qti, m_qbarsmdp, this);
-    m_pyHelper    = std::make_shared<PyHlp>(*m_qastra->getRastr().get());
     m_formManager = std::make_unique<FormManager>(
-        m_qastra, m_dockManager, m_pyHelper, m_logManager, this);
+        m_qastra, m_dockManager, m_logManager, this);
     m_formManager->setForms(forms);
     m_uiBuilder = std::make_unique<UIBuilder>(this);
     m_uiBuilder->buildAll();
     // ========== НАСТРОЙКА КОМПОНЕНТОВ ==========
     m_logManager->setupRastrConnections(m_qastra);
 
-    slot_updateRecentFiles();
     // Построение меню форм
     m_formManager->buildFormsMenu(
         m_uiBuilder->menuByName("tables"),
@@ -125,6 +112,7 @@ void MainWindow::initialize(
     // Создаём виджеты протоколов и СРАЗУ добавляем Qt-синки в логгер.
     m_logManager->setupDockWidgets();
 
+    m_appSettingsManager->loadAppearanceSettings(this);
     m_workspaceManager->applyStartupWorkspace();
 
     spdlog::info("MainWindow initialized successfully");
@@ -148,15 +136,43 @@ void MainWindow::setupConnections() {
     connect(m_uiBuilder->actionByName("saveAll"), &QAction::triggered,
             m_fileManager.get(), &FileManager::saveAll);
 
-    for (int i = 0; i < Params::get_instance()->getMaxRecentFiles(); ++i) {
-        QString name = QString("recentFile%1").arg(i);
-        QAction* act = m_uiBuilder->actionByName(name);
-        if (act) {
-            connect(act, &QAction::triggered, this, [this, act]() {
-                m_fileManager->openRecentFile(act->data().toString());
-            });
-        }
-    }
+    connect(m_uiBuilder->menuByName("recentFiles"), &QMenu::aboutToShow,
+            this, [this]() {
+                QMenu* menu = m_uiBuilder->menuByName("recentFiles");
+                menu->clear();
+
+                QSettings s;
+                int maxAllowed = s.value(SK::Files::maxRecentFiles,
+                                         SK::Files::defMaxRecent).toInt();
+                const QList<RecentFileEntry> entries = m_fileManager->getRecentFiles();
+                int numVisible = qMin(entries.size(), maxAllowed);
+
+                if (numVisible == 0) {
+                    QAction* empty = menu->addAction(tr("(нет файлов)"));
+                    empty->setEnabled(false);
+                    return;
+                }
+
+                for (int i = 0; i < numVisible; ++i) {
+                    const RecentFileEntry& entry = entries[i];
+
+                    QString label = entry.tmpl.isEmpty()
+                                        ? tr("&%1 %2").arg(i + 1).arg(entry.file)
+                                        : tr("&%1 %2 <%3>").arg(i + 1)
+                                              .arg(entry.file)
+                                              .arg(QFileInfo(entry.tmpl).fileName());
+
+                    QAction* act = menu->addAction(label);
+
+                    // Захватываем значение, не указатель на act — act будет
+                    // пересоздан при следующем открытии меню
+                    connect(act, &QAction::triggered,
+                            this, [this, entry]() {
+                                m_fileManager->openRecentFile(entry.file, entry.tmpl);
+                            });
+                }
+    });
+
     // События файлов
     connect(m_fileManager.get(), &FileManager::currentFileChanged,
             this, [this](const QString& file) {
@@ -171,8 +187,6 @@ void MainWindow::setupConnections() {
             this, [](const QString& error) {
                 spdlog::error("File load error: {}", error.toStdString());
             });
-    connect(m_fileManager.get(), &FileManager::recentFilesChanged,
-            this, &MainWindow::slot_updateRecentFiles);
     connect(m_uiBuilder->actionByName("exit"), &QAction::triggered,
             qApp, &QApplication::closeAllWindows);
 
@@ -289,7 +303,7 @@ void MainWindow::setupConnections() {
     connect(m_uiBuilder->actionByName("graphSDL"), &QAction::triggered,
             m_formManager.get(), &FormManager::slot_openSDLGraph);
     connect(m_uiBuilder->actionByName("macro"), &QAction::triggered,
-            this, &MainWindow::slot_openMcrDialog);
+            m_formManager.get(), &FormManager::openMacroWindow);
     connect(m_uiBuilder->actionByName("protocol"), &QAction::triggered,
             m_formManager.get(), &FormManager::slot_openProtocol);
     // Закрыть активный dock widget
@@ -321,32 +335,6 @@ void MainWindow::setupConnections() {
 std::shared_ptr<spdlog::sinks::sink>
 MainWindow::getProtocolLogSink() const {
     return m_logManager->getProtocolLogSink();
-}
-
-void MainWindow::slot_updateRecentFiles() {
-    QStringList files = m_fileManager->getRecentFiles();
-    m_uiBuilder->updateRecentFileActions(files);
-}
-
-void MainWindow::slot_openMcrDialog(){
-    if (m_mcrWnd) {           // окно уже открыто
-        m_mcrWnd->raise();
-        m_mcrWnd->activateWindow();
-        return;
-    }
-
-    m_mcrWnd = new McrWnd(this);
-    m_mcrWnd->setAttribute(Qt::WA_DeleteOnClose);
-
-    // Обнуляем указатель, когда окно уничтожается
-    connect(m_mcrWnd, &QObject::destroyed,
-            this, [this]{ m_mcrWnd = nullptr; });
-
-    connect(m_qastra.get(), &QAstra::onRastrPrint,
-            m_mcrWnd, &McrWnd::slot_rastrPrint);
-
-    m_mcrWnd->setPyHlp(m_pyHelper);
-    m_mcrWnd->show();
 }
 
 void MainWindow::slot_about(){
@@ -383,8 +371,12 @@ void MainWindow::showMDPPrepareDialog() {
 void MainWindow::closeEvent(QCloseEvent* event)
 {
     spdlog::info("MainWindow closing");
+    // Закрыть все виджеты пока менеджеры живы
+    m_formManager->prepareForClose();
+    spdlog::info("All dock widgets closed");
     m_formManager->closeGraphWebServer();
     spdlog::info("The graphics web server is closed");
+
     m_appSettingsManager->saveAppearanceSettings(this);
     spdlog::info("The geometry is saved");
 

@@ -62,6 +62,4 @@ private:
     bool m_collapseCleanStages = true;
     bool m_copyAsXml           = false;
 
-    static constexpr auto kKeyCollapse = "protocol/collapseCleanStages";
-    static constexpr auto kKeyXml      = "protocol/copyAsXml";
 };

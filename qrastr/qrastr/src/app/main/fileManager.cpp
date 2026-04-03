@@ -1,6 +1,6 @@
 #include "fileManager.h"
 #include "qastra.h"
-#include "params.h"
+#include "rastrParameters.h"
 #include "files/fileNewDialog.h"
 #include "files/saveAllDialog.h"
 
@@ -10,6 +10,8 @@
 #include <QMessageBox>
 #include <QApplication>
 #include <spdlog/spdlog.h>
+#include "cursor_guard.h"
+#include "settingsKeys.h"
 
 FileManager::FileManager(std::shared_ptr<QAstra> qastra, QWidget* parent)
     : QObject(parent)
@@ -17,153 +19,134 @@ FileManager::FileManager(std::shared_ptr<QAstra> qastra, QWidget* parent)
     , m_parentWidget(parent)
 {
     assert(m_qastra != nullptr);
+
+    const auto& startFiles = RastrParameters::get_instance()->getStartLoadFileTemplates();
+    for (const auto& [file, tmpl] : startFiles) {
+        // Добавляем в карту БЕЗ добавления в "последние"
+        registerStartupFile(QString::fromStdString(file),
+                            QString::fromStdString(tmpl));
+    }
+
 }
 
 bool FileManager::newFile() {
     QStringList selectedTemplates;
-    if (!showNewFileDialog(selectedTemplates)) {
+    if (!showNewFileDialog(selectedTemplates))
         return false;
+
+    {
+        CursorGuard guard;
+        for (const QString& templateName : selectedTemplates) {
+            const std::string path =
+                RastrParameters::get_instance()->getDirSHABLON().absolutePath().toStdString()
+                + "//" + templateName.toStdString();
+            m_qastra->Load(eLoadCode::RG_REPL, "", path);
+        }
     }
-    
-    QApplication::setOverrideCursor(Qt::WaitCursor);
-    
-    for (const QString& templateName : selectedTemplates) {
-        const std::string str_path_to_shablon = 
-            Params::get_instance()->getDirSHABLON().absolutePath().toStdString() 
-            + "//" + templateName.toStdString();
-        
-        m_qastra->Load(eLoadCode::RG_REPL, "", str_path_to_shablon);
-    }
-    
-    QApplication::restoreOverrideCursor();
-    
     // Новый файл - сбрасываем текущий путь
     m_currentFile.clear();
-    
     return true;
 }
 
 int FileManager::openFiles() {
     QStringList selectedFiles;
-    QString selectedFilter;
-    
-    if (!showOpenDialog(selectedFiles, selectedFilter)) {
+    QString     selectedFilter;
+
+    if (!showOpenDialog(selectedFiles, selectedFilter))
         return 0;
-    }
-    
-    QApplication::setOverrideCursor(Qt::WaitCursor);
-    
+
+    CursorGuard guard;  // ← охватывает весь цикл, включая возможные исключения
+
     int successCount = 0;
-    const QString qstr_filter_no_template = "No template (*)";
-    
+    const QString noTemplate = "No template (*)";
     // Получаем список шаблонов из Params
-    const Params::_v_template_exts v_template_ext =
-        Params::get_instance()->getTemplateExts();
-    
+    const auto& templateExts = RastrParameters::get_instance()->getTemplateExts();
     //Загружаем каждый выбранный файл
-    for (const QString& rfile : selectedFiles) {
-        spdlog::info("Try load file: {}", rfile.toStdString());
-        
-        if (qstr_filter_no_template != selectedFilter) {
-            // Пользователь выбрал фильтр С шаблоном
-            bool bl_find_template = false;
-            
-            for (const Params::_v_template_exts::value_type& template_ext : v_template_ext) {
-                if (rfile.endsWith(QString::fromStdString(template_ext.second))) {
-                    bl_find_template = true;
-                    try {
-                        const fs::path path_shablon =
-                            fs::path(Params::get_instance()->getDirSHABLON().absolutePath().toStdString())
-                            / (template_ext.first + template_ext.second);
-                        const std::string str_path_to_shablon = path_shablon.string();
+    for (const QString& file : selectedFiles) {
+        spdlog::info("Try load file: {}", file.toStdString());
 
-                        IPlainRastrRetCode res = m_qastra->Load(
-                            eLoadCode::RG_REPL,
-                            rfile.toStdString(),
-                            str_path_to_shablon
-                        );
-
-                        if (res == IPlainRastrRetCode::Ok) {
-                            setCurrentFile(rfile, QString::fromStdString(str_path_to_shablon));
-
-                            spdlog::info("File loaded {}", rfile.toStdString());
-                            successCount++;
-                        } else {
-                            spdlog::info("Error File load result = {}", static_cast<int>(res));
-                            emit fileLoadError(QString("Failed to load: %1").arg(rfile));
-                        }
-                    } catch (const std::exception& ex) {
-                       spdlog::error("Exception loading startup file {}: {}",
-                                          rfile.toStdString(), ex.what());
-                        QMessageBox mb( QMessageBox::Icon::Critical, QObject::tr("Error"),
-                                       QString("error: wheh read file : %1").arg(rfile)
-                                       );
-                        mb.exec();
-                    }
-                    break;
-                }
-            }
-
-            if (!bl_find_template) {
-                spdlog::error("Template not found for: {}", rfile.toStdString());
-                emit fileLoadError(QString("Template not found for: %1").arg(rfile));
-            }
-        } else {
-            // Загрузка БЕЗ шаблона
-            IPlainRastrRetCode res = m_qastra->Load(
-                eLoadCode::RG_REPL,
-                rfile.toStdString(),
-                ""
-            );
-            
+        if (selectedFilter == noTemplate) {
+            // Загрузка без шаблона
+            IPlainRastrRetCode res =
+                m_qastra->Load(eLoadCode::RG_REPL, file.toStdString(), "");
             if (res == IPlainRastrRetCode::Ok) {
-                setCurrentFile(rfile, "");
-                spdlog::info("File loaded {}", rfile.toStdString());
-                successCount++;
+                setCurrentFile(file, "");
+                ++successCount;
             } else {
-                spdlog::info("Error File load result = {}", static_cast<int>(res));
-                emit fileLoadError(QString("Failed to load: %1").arg(rfile));
+                emit fileLoadError(QString("Failed to load: %1").arg(file));
             }
+            continue;
+        }
+
+        // Загрузка с шаблоном — ищем по расширению
+        bool templateFound = false;
+        for (const auto& [name, ext] : templateExts) {
+            if (!file.endsWith(QString::fromStdString(ext)))
+                continue;
+
+            templateFound = true;
+            try {
+                const fs::path shablon =
+                    fs::path(RastrParameters::get_instance()->getDirSHABLON()
+                                 .absolutePath().toStdString())
+                    / (name + ext);
+
+                IPlainRastrRetCode res = m_qastra->Load(
+                    eLoadCode::RG_REPL,
+                    file.toStdString(),
+                    shablon.string());
+
+                if (res == IPlainRastrRetCode::Ok) {
+                    setCurrentFile(file, QString::fromStdString(shablon.string()));
+                    ++successCount;
+                } else {
+                    emit fileLoadError(QString("Failed to load: %1").arg(file));
+                }
+            } catch (const std::exception& ex) {
+                spdlog::error("Exception loading file {}: {}", file.toStdString(), ex.what());
+                QMessageBox::critical(m_parentWidget, tr("Ошибка"),
+                                      QString("Ошибка при чтении файла: %1").arg(file));
+            }
+            break;
+        }
+
+        if (!templateFound) {
+            spdlog::error("Template not found for: {}", file.toStdString());
+            emit fileLoadError(QString("Template not found for: %1").arg(file));
         }
     }
-    
-    QApplication::restoreOverrideCursor();
-    
-    if (successCount > 0) {
+
+    if (successCount > 0)
         emit filesOpened(successCount);
-    }
-    
+
     return successCount;
 }
 
-bool FileManager::openFile(const QString& filePath,
-                           const QString& templatePath) {
-    if (filePath.isEmpty()) {
+bool FileManager::openFile(const QString& filePath, const QString& templatePath) {
+    if (filePath.isEmpty())
         return false;
+
+    IPlainRastrRetCode res;
+    {
+        CursorGuard guard;
+        res = m_qastra->Load(
+            eLoadCode::RG_REPL,
+            filePath.toStdString(),
+            templatePath.toStdString());
     }
-    
-    QApplication::setOverrideCursor(Qt::WaitCursor);
-    
-    IPlainRastrRetCode res = m_qastra->Load(
-        eLoadCode::RG_REPL,
-        filePath.toStdString(),
-        templatePath.toStdString()
-    );
-    
-    QApplication::restoreOverrideCursor();
-    
+
     if (res != IPlainRastrRetCode::Ok) {
-        QString error = QString("Failed to load file: %1 (code: %2)")
-            .arg(filePath)
-            .arg(static_cast<int>(res));
+        const QString error =
+            QString("Failed to load file: %1 (code: %2)")
+                .arg(filePath)
+                .arg(static_cast<int>(res));
         spdlog::error("{}", error.toStdString());
         emit fileLoadError(error);
         return false;
     }
-    
+
     setCurrentFile(filePath, templatePath);
     spdlog::info("File loaded successfully: {}", filePath.toStdString());
-    
     return true;
 }
 
@@ -192,7 +175,7 @@ bool FileManager::saveAs() {
     std::string str_path_to_shablon;
     if (!templatePath.isEmpty()) {
         str_path_to_shablon = 
-            Params::get_instance()->getDirSHABLON().absolutePath().toStdString() 
+            RastrParameters::get_instance()->getDirSHABLON().absolutePath().toStdString()
             + "/" + templatePath.toStdString();
     }
     
@@ -245,30 +228,63 @@ void FileManager::setCurrentFile(const QString& fileName,
 
 void FileManager::addToRecentFiles(const QString& filePath,
                                    const QString& templatePath) {
-    QSettings settings;
-    
-    QString _fileshabl = filePath;
-    if (!templatePath.isEmpty()) {
-        _fileshabl.append(" <").append(templatePath).append(">");
-    }
-    
-    QStringList files = settings.value(m_recentFilesKey).toStringList();
-    files.removeAll(_fileshabl);
-    files.prepend(_fileshabl);
+    QSettings s;
+    int maxRecent = s.value(SK::Files::maxRecentFiles,
+                            SK::Files::defMaxRecent).toInt();
 
-    auto* const p_params = Params::get_instance();
-    while (files.size() > p_params->getMaxRecentFiles()) {
-        files.removeLast();
-    }
-    
-    settings.setValue(m_recentFilesKey, files);
-    
-    emit recentFilesChanged();
+    auto entries = loadRecentFiles();
+
+    // Убираем дубликат по пути файла
+    entries.erase(std::remove_if(entries.begin(), entries.end(),
+                                 [&](const RecentFileEntry& e) { return e.file == filePath; }),
+                  entries.end());
+
+    entries.prepend({filePath, templatePath});
+
+    while (entries.size() > maxRecent)
+        entries.removeLast();
+
+    saveRecentFiles(entries);
 }
 
-QStringList FileManager::getRecentFiles() const {
-    QSettings settings;
-    return settings.value(m_recentFilesKey).toStringList();
+void FileManager::saveRecentFiles(const QList<RecentFileEntry>& entries) {
+    QSettings s;
+    s.remove(SK::Files::recentFiles);
+    s.beginWriteArray(SK::Files::recentFiles);
+    for (int i = 0; i < entries.size(); ++i) {
+        s.setArrayIndex(i);
+        s.setValue("file", entries[i].file);
+        s.setValue("tmpl", entries[i].tmpl);
+    }
+    s.endArray();
+}
+
+QList<RecentFileEntry> FileManager::loadRecentFiles() const {
+    QSettings s;
+    int n = s.beginReadArray(SK::Files::recentFiles);
+    QList<RecentFileEntry> result;
+    result.reserve(n);
+    for (int i = 0; i < n; ++i) {
+        s.setArrayIndex(i);
+        result.append({
+            s.value("file").toString(),
+            s.value("tmpl").toString()
+        });
+    }
+    s.endArray();
+    return result;
+}
+
+QList<RecentFileEntry> FileManager::getRecentFiles() const {
+    return loadRecentFiles();
+}
+
+void FileManager::openRecentFile(const QString& filePath,
+                                 const QString& templatePath) {
+    m_qastra->Load(eLoadCode::RG_REPL,
+                   filePath.toStdString(),
+                   templatePath.toStdString());
+    setCurrentFile(filePath, templatePath);
 }
 
 void FileManager::registerStartupFile(const QString& fileName,
@@ -279,21 +295,6 @@ void FileManager::registerStartupFile(const QString& fileName,
         m_currentFile = fileName;
         m_currentDir  = QFileInfo(fileName).absolutePath();
     }
-}
-
-void FileManager::openRecentFile(const QString& fileAndTemplate) {
-    QStringList qslist = fileAndTemplate.split("<");
-    
-    std::string file = qslist[0].trimmed().toStdString();
-    std::string shabl = "";
-    
-    if (qslist.size() > 1) {
-        shabl = qslist[1].toStdString();
-        shabl.erase(shabl.end() - 1);  // Удаляем '>'
-    }
-    
-    m_qastra->Load(eLoadCode::RG_REPL, file, shabl);
-    setCurrentFile(qslist[0], QString::fromStdString(shabl));
 }
 
 bool FileManager::showOpenDialog(QStringList& selectedFiles, QString& selectedFilter)
@@ -345,8 +346,8 @@ QString FileManager::buildFileFilter() const {
     
     // Known types (все расширения вместе)
     qstr_filter += "Known types(";
-    const Params::_v_template_exts v_template_ext = Params::get_instance()->getTemplateExts();
-    for (const Params::_v_template_exts::value_type& template_ext : v_template_ext) {
+    const RastrParameters::_v_template_exts v_template_ext = RastrParameters::get_instance()->getTemplateExts();
+    for (const RastrParameters::_v_template_exts::value_type& template_ext : v_template_ext) {
         qstr_filter += QString("*%1 ").arg(QString::fromStdString(template_ext.second));
     }
     qstr_filter += ");;";
@@ -364,9 +365,10 @@ QString FileManager::buildFileFilter() const {
 }
 
 QString FileManager::findTemplateByExtension(const QString& filePath) const {
-    const Params::_v_template_exts v_template_ext = Params::get_instance()->getTemplateExts();
+    const RastrParameters::_v_template_exts v_template_ext =
+        RastrParameters::get_instance()->getTemplateExts();
     
-    for (const Params::_v_template_exts::value_type& template_ext : v_template_ext) {
+    for (const RastrParameters::_v_template_exts::value_type& template_ext : v_template_ext) {
         if (filePath.endsWith(QString::fromStdString(template_ext.second))) {
             return QString::fromStdString(template_ext.first + template_ext.second);
         }
@@ -376,19 +378,16 @@ QString FileManager::findTemplateByExtension(const QString& filePath) const {
 }
 
 bool FileManager::showNewFileDialog(QStringList& selectedTemplates) {
-    FileNewDialog* pformFileNew = new FileNewDialog(m_parentWidget);
-    pformFileNew->setAttribute(Qt::WA_DeleteOnClose);
+    // Создаём на стеке — время жизни совпадает с областью видимости функции.
+    // WA_DeleteOnClose здесь НЕ нужен и ОПАСЕН для модальных диалогов.
+    FileNewDialog dialog(m_parentWidget);
 
-    if (QDialog::Accepted != pformFileNew->exec()) {
+    if (QDialog::Accepted != dialog.exec())
         return false;
-    }
-    
-    const FileNewDialog::_s_checked_templatenames s_checked_templatenames =
-        pformFileNew->getCheckedTemplateNames();
-    
-    for (const FileNewDialog::_s_checked_templatenames::value_type& templatename : s_checked_templatenames) {
-        selectedTemplates.append(QString::fromStdString(templatename));
-    }
-    
+
+    // dialog ещё жив — getCheckedTemplateNames() безопасен
+    for (const auto& name : dialog.getCheckedTemplateNames())
+        selectedTemplates.append(QString::fromStdString(name));
+
     return !selectedTemplates.isEmpty();
 }

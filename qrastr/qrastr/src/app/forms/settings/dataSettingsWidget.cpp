@@ -8,8 +8,9 @@
 #include <QPushButton>
 #include <QCheckBox>
 #include <QLineEdit>
+#include <QSettings>
 #include <spdlog/spdlog.h>
-#include "params.h"
+#include "settingsKeys.h"
 
 DataSettingsWidget::DataSettingsWidget(QWidget *parent)
     : SettingsStackedItemWidget(parent) {
@@ -30,10 +31,14 @@ void DataSettingsWidget::setupUI() {
     // Количество элементов в "Последние"
     QHBoxLayout* hLayoutNumItems = new QHBoxLayout();
     QLabel* labelNumItems = new QLabel(tr("Количество элементов в меню 'Последние':"), this);
+    QSettings s;
+    int maxAllowed = s.value(SK::Files::maxRecentFiles,
+                             SK::Files::defMaxRecent).toInt();
+
     pSpinBoxNumItems_ = new QSpinBox(this);
     pSpinBoxNumItems_->setMinimum(1);
     pSpinBoxNumItems_->setMaximum(100);
-    pSpinBoxNumItems_->setValue(10);
+    pSpinBoxNumItems_->setValue(maxAllowed);
     pSpinBoxNumItems_->setMinimumWidth(80);
 
     hLayoutNumItems->addWidget(labelNumItems);
@@ -142,7 +147,9 @@ void DataSettingsWidget::onSelectXmlProtocolPath() {
 
 void DataSettingsWidget::applyChanges() {
     if (m_hasChanges) {
-        Params::get_instance()->setMaxRecentFiles(m_maxRecent);
+        QSettings s;
+        s.setValue(SK::Files::maxRecentFiles,
+                   m_maxRecent);
         m_hasChanges = false;
     }
 }

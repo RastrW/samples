@@ -25,10 +25,12 @@ public:
 
     /// Строит персистентный QMenu и все статичные QAction.
     void initMenu(QWidget* menuParent);
-    /// @brief обновляет динамические пункты.
+    /// Меню ячейки: строковые операции, экспорт/импорт, выборка, связанные формы.
     void prepareForShow(const MenuContext& ctx, QMenu* qtitanMenu);
-    /// @brief Меню заголовка колонки.
-    void prepareForHeader(int column, QMenu* menu);
+
+    /// Меню заголовка колонки: описание, сумма, выравнивание, CF, прямой ввод.
+    /// @param col  указатель на RCol (действителен на время показа меню)
+    void prepareForHeader(int column, RCol* col, QMenu* menu);
 signals:
     // Сигналы для операций со строками
     void sig_addRow();
@@ -36,9 +38,9 @@ signals:
     void sig_deleteRow();
     void sig_duplicateRow();
     void sig_groupCorrection();
+    void sig_selection(int col);
     // Сигналы для вспомогательных форм
     void sig_colProp(int col);
-    void sig_selection();
     void sig_exportCsv();
     void sig_importCsv();
     // Настройка отображения

@@ -85,9 +85,4 @@ private:
     ads::CDockManager*  m_dockManager;
     FormManager*        m_formManager;
     QMainWindow*        m_mainWindow;
-
-    // ── Ключи QSettings ───────────────────────────────────────────────────
-    static constexpr const char* kNames   = "Workspaces/names";
-    static constexpr const char* kStartup = "Workspaces/startup";
-    static constexpr const char* kGroup   = "Workspaces";
 };
