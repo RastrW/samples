@@ -2,6 +2,7 @@
 #include <spdlog/spdlog.h>
 #include <QResizeEvent>
 
+
 HostWidget::HostWidget(QWidget* parent)
     : QWidget(parent)
 {

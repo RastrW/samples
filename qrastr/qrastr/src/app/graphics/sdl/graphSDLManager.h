@@ -1,11 +1,9 @@
 #pragma once
-#include <QObject>
-#include <memory>
-#include "graphControlService.h"
 #include "iGraphManager.h"
 
 namespace ads { class CDockManager; class CDockWidget; }
-
+class IPlainRastr;
+class GraphControlService;
 /**
  * @class Управляет всем жизненным циклом SDL-графики.
  *

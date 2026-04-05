@@ -1,8 +1,8 @@
 #include "rastrParameters.h"
 #include <fstream>
 #include "common_qrastr.h"
-#include <astra_headers/json.hpp>
-#include "astra_headers/UIForms.h"
+#include "json.hpp"
+#include "UIForms.h"
 
 RastrParameters::RastrParameters(){
 }

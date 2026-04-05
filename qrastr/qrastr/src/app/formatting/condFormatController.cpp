@@ -3,6 +3,7 @@
 #include "rmodel.h"
 #include "condFormatDialog.h"
 #include "condformatjson.h"
+#include "condFormat.h"
 
 CondFormatController::CondFormatController(RModel*                model,
                                            Qtitan::GridTableView* view,

@@ -1,6 +1,6 @@
 #pragma once
 #include <QWidget>
-#include "../app/astra/qastra_events_data.h"
+#include "../app/plugin_wrappers/qastra_events_data.h"
 #include "qmcr_api.h"
 
 class SciLogViewer;

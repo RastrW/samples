@@ -6,7 +6,7 @@
 #include <QApplication>
 #include <spdlog/spdlog.h>
 #include <QWidget>
-
+#include "graphControlService.h"
 GraphSDLManager::GraphSDLManager(ads::CDockManager* dockManager,
                                  QWidget*           parentWidget,
                                  IPlainRastr*       rastr,

@@ -9,6 +9,7 @@
 #include "macroDockManager.h"
 #include "qmcr/pyhlp.h"
 #include "rtabwidget.h"
+#include "logManager.h"
 
 FormManager::FormManager(
     std::shared_ptr<QAstra> qastra,

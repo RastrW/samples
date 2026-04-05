@@ -71,9 +71,6 @@ bool AppSettingsManager::saveAppearanceSettings(QMainWindow* window) {
     return true;
 }
 
-void AppSettingsManager::saveValue(const QString& key, const QByteArray& value) {
-    m_settings.setValue(key, value);
-}
 
 QByteArray AppSettingsManager::getSettings(const QString& name){
     return m_settings.value(name).toByteArray();

@@ -1,15 +1,7 @@
 #pragma once
 
 #include <QObject>
-#include <QString>
-#include <QMenu>
-#include <QAction>
-#include <QList>
 #include <QSet>
-#include <list>
-#include <memory>
-#include <rtablesdatamanager.h>
-#include "logManager.h"
 
 class QAstra;
 class RtabWidget;
@@ -19,6 +11,8 @@ class GraphServer;
 class IGraphManager;
 class MacroDockManager;
 class TableDockManager;
+class LogManager;
+class QMenu;
 
 namespace ads {
     class CDockManager;

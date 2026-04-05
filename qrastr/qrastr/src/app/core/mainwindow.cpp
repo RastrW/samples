@@ -21,6 +21,7 @@
 #include <QMimeData>
 #include <QTimer>
 #include <QFileInfo>
+#include <QMenu>
 #if (QT_VERSION >= QT_VERSION_CHECK(6, 0, 0))
 #include <QtSvgWidgets/QSvgWidget>
 #include <QSvgRenderer>
@@ -36,6 +37,7 @@
 #include "settingsKeys.h"
 #include "UIForms.h"
 #include "workspaceManager.h"
+#include "logManager.h"
 
 MainWindow::MainWindow()
     : QMainWindow(){
@@ -84,7 +86,6 @@ void MainWindow::initialize(
     m_appSettingsManager = std::make_unique<AppSettingsManager>(this);
 
     m_fileManager = std::make_unique<FileManager>(m_qastra, this);
-
 
     m_calcController = std::make_unique<CalculationController>(
         m_qastra, m_qti, m_qbarsmdp, this);

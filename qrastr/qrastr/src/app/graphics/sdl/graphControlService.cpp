@@ -4,6 +4,7 @@
 #include <QFile>
 #include <QApplication>
 #include "astra/IPlainRastr.h"
+#include "IPlainElGraph.h"
 
 GraphControlService::GraphControlService(IPlainRastr* rastr):
     m_rastr(rastr){

@@ -18,7 +18,36 @@ void updateSplash(int pct, const QString& msg,
     QApplication::processEvents();
 };
 
+void createUnhandledExceptionFilter(){
+//Логирование аварийных завершений на windows:
+#ifdef Q_OS_WIN
+#include <windows.h>
+    SetUnhandledExceptionFilter([](EXCEPTION_POINTERS* ep) -> LONG {
+        spdlog::critical("CRASH! ExceptionCode=0x{:08X} at 0x{:016X}",
+                         ep->ExceptionRecord->ExceptionCode,
+                         (uintptr_t)ep->ExceptionRecord->ExceptionAddress);
+        spdlog::default_logger()->flush();
+        return EXCEPTION_CONTINUE_SEARCH;
+    });
+#endif
+#ifdef Q_OS_UNIX
+#include <csignal>
+#include <cstring>
+    static void signalHandler(int sig) {
+        const char* name = (sig == SIGSEGV) ? "SIGSEGV" :
+                               (sig == SIGABRT) ? "SIGABRT" : "UNKNOWN";
+        spdlog::critical("CRASH signal: {} ({})", name, sig);
+        spdlog::default_logger()->flush();
+        std::signal(sig, SIG_DFL);
+        std::raise(sig);
+    }
+    std::signal(SIGSEGV, signalHandler);
+    std::signal(SIGABRT, signalHandler);
+#endif
+}
+
 int main(int argc, char *argv[]) {
+    createUnhandledExceptionFilter();
     // отключить sandbox ДО создания QApplication
     qputenv("QTWEBENGINE_DISABLE_SANDBOX", "1");
     // устанавливаем ПЕРЕД созданием QApplication
@@ -30,6 +59,7 @@ int main(int argc, char *argv[]) {
 #if defined(_MSC_VER)
     SetConsoleOutputCP(CP_UTF8);
 #endif
+
     app.setOrganizationName("STC UE");
     app.setApplicationName("QRastr");
     app.setWindowIcon(QIcon(":/images/rastr.png"));
@@ -121,16 +151,6 @@ int main(int argc, char *argv[]) {
     w.show();
     splash->finish(&w);   // закрыть сплэш после показа MainWindow
     delete splash;
-//Логирование аварийных завершений на windows:
-#ifdef Q_OS_WIN
-#include <windows.h>
-    SetUnhandledExceptionFilter([](EXCEPTION_POINTERS* ep) -> LONG {
-        spdlog::critical("CRASH! ExceptionCode=0x{:08X} at 0x{:016X}",
-                         ep->ExceptionRecord->ExceptionCode,
-                         (uintptr_t)ep->ExceptionRecord->ExceptionAddress);
-        spdlog::default_logger()->flush();
-        return EXCEPTION_CONTINUE_SEARCH;
-    });
-#endif
+
     return app.exec();
 }

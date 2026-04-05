@@ -1,7 +1,7 @@
 #pragma once
 #include <QLibrary>
-#include "IPlainElGraph.h"
 
+class IPlainElGraph;
 class IPlainRastr;
 
 // Сигнатуры экспортов GrCtrlClient.dll

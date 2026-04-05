@@ -248,17 +248,18 @@ set(PROJECT_INCLUDES
     ${CMAKE_CURRENT_SOURCE_DIR}
     ${QTITAN_ROOT}/include
     ${SRC_DIR}/
-    ${APP_DIR}/astra/
+    ${APP_DIR}/plugin_wrappers/
+    ${APP_DIR}/managers/
     ${APP_DIR}/data/
     ${APP_DIR}/formatting/
     ${APP_DIR}/forms/
-    ${APP_DIR}/main/
+    ${APP_DIR}/core/
     ${APP_DIR}/mdi/
     ${APP_DIR}/protocol_tree/
     ${APP_DIR}/graphics/
     ${APP_DIR}/ui_components/
     ${APP_DIR}/utilities/
-    ${APP_DIR}/astra/astra_headers
+    ${APP_DIR}/astra_headers
 )
 
 # Добавляем header-only include directories
@@ -281,8 +282,10 @@ list(APPEND PROJECT_INCLUDES
 # Source Files
 # ============================================================================
 file(GLOB_RECURSE PROJECT_SOURCES
-    "${APP_DIR}/main/*.cpp"
-    "${APP_DIR}/main/*.h"
+    "${APP_DIR}/core/*.cpp"
+    "${APP_DIR}/core/*.h"
+    "${APP_DIR}/managers/*.cpp"
+    "${APP_DIR}/managers/*.h"
     "${APP_DIR}/data/*.cpp"
     "${APP_DIR}/data/*.h"
     "${APP_DIR}/ui_components/*.cpp"
@@ -298,10 +301,10 @@ file(GLOB_RECURSE PROJECT_SOURCES
     "${APP_DIR}/utilities/*.h"
     "${APP_DIR}/graphics/*.cpp"
     "${APP_DIR}/graphics/*.h"
-    "${APP_DIR}/astra/*.cpp"
-    "${APP_DIR}/astra/*.h"
-    "${APP_DIR}/astra/astra_headers/*.h"
-    "${APP_DIR}/astra/astra_headers/*.hpp"
+    "${APP_DIR}/plugin_wrappers/*.cpp"
+    "${APP_DIR}/plugin_wrappers/*.h"
+    "${APP_DIR}/astra_headers/*.h"
+    "${APP_DIR}/astra_headers/*.hpp"
     "${SRC_DIR}/plugins/rastr/plugin_interfaces.h"
     "${APP_DIR}/main.cpp"
 )

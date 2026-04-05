@@ -1,8 +1,6 @@
 #pragma once
 
 #include <QMainWindow>
-#include <memory>
-#include <list>
 #include <spdlog/sinks/qt_sinks.h>
 
 class FileManager;

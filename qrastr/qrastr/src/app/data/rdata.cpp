@@ -1,9 +1,10 @@
 #include "rdata.h"
 #include "rtablesdatamanager.h"
-#include "astra_headers/UIForms.h"
+#include "UIForms.h"
 using WrapperExceptionType = std::runtime_error;
 #include "astra/IPlainRastrWrappers.h"
 #include "qastra.h"
+#include "rdata.h"
 
 RData::RData(QAstra* _pqastra, const CUIForm& _form):
     m_qastra{_pqastra}{

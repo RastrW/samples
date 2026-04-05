@@ -1,8 +1,5 @@
 #pragma once
 #include <QObject>
-#include <QStringList>
-#include <QByteArray>
-#include <optional>
 
 class QSettings;
 class QMainWindow;

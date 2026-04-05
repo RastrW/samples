@@ -10,6 +10,8 @@
 #include <QStatusBar>
 #include <QActionGroup>
 #include <QSettings>
+#include <QMainWindow>
+#include <QString>
 #include "settingsKeys.h"
 
 UIBuilder::UIBuilder(QMainWindow* mainWindow)

@@ -18,7 +18,7 @@ using WrapperExceptionType = std::runtime_error;
 #include "qastra.h"
 #include "qti.h"
 #include "qbarsmdp.h"
-#include "astra_headers/UIForms.h"
+#include "UIForms.h"
 #include "startupLoader.h"
 
 class QtSink : public spdlog::sinks::base_sink<std::mutex>

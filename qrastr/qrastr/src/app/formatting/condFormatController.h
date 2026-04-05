@@ -1,6 +1,6 @@
 #pragma once
 #include <QObject>
-#include "condFormat.h"
+
 
 class RModel;
 namespace Qtitan { class GridTableView; }

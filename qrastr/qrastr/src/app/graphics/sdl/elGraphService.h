@@ -1,7 +1,8 @@
 #pragma once
 
 #include <QLibrary>
-#include "IPlainElGraph.h"
+
+class IPlainElGraph;
 
 // Инкапсулирует загрузку ElGraphCtrl.dll и владение IPlainElGraph*.
 class ElGraphService

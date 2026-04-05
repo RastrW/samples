@@ -2,7 +2,6 @@
 
 #include <QObject>
 #include <QSettings>
-#include <memory>
 
 class QAstra;
 class QMainWindow;
@@ -19,7 +18,6 @@ public:
     
     bool loadAppearanceSettings(QMainWindow* window);
     bool saveAppearanceSettings(QMainWindow* window);
-    void saveValue(const QString& key, const QByteArray& value);
     // ========== Настройки форм ==========
     /// @brief Показать диалог настроек форм
     void showFormSettings(std::shared_ptr<QAstra> qastra); 

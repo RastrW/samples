@@ -1,8 +1,7 @@
 #pragma once
 #include <memory>
 #include <QAbstractItemModel>
-#include <QModelIndex>
-#include <QVariant>
+
 
 class ProtocolTreeItem;
 

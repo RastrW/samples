@@ -4,7 +4,7 @@
 #include "common_qrastr.h"
 //#include "UIForms.h"
 //#include <astra/UIForms.h>
-#include "astra_headers/UIForms.h"
+#include "UIForms.h"
 #include "utils.h"
 
 using WrapperExceptionType = std::runtime_error;

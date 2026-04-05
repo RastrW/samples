@@ -1,7 +1,8 @@
 #pragma once
 #include <QDialog>
-#include <QCheckBox>
-#include <QDialogButtonBox>
+
+class QCheckBox;
+class QDialogButtonBox;
 
 class ProtocolSettingsDialog : public QDialog {
     Q_OBJECT

@@ -482,8 +482,8 @@ void RtabWidget::on_calc_begin()
 
 void RtabWidget::on_calc_end()
 {
-   ///@todo  something
-   // view->endUpdate();
+    ///@todo  something
+    // view->endUpdate();
 }
 
 void RtabWidget::setTableView(int multiplier  )
@@ -658,7 +658,7 @@ void RtabWidget::slot_openColProp(int col)
     RCol* prcol = m_model->getRCol(col);
     if (!prcol) return;
     ColPropDialog* propDialog = new ColPropDialog(m_model->getRdata(),
-                                            m_view, prcol, this);
+                                                  m_view, prcol, this);
     propDialog->setAttribute(Qt::WA_DeleteOnClose);
     propDialog->exec();
 }
@@ -713,7 +713,7 @@ void RtabWidget::slot_condFormatsEdit(std::size_t column)
 
 void RtabWidget::slot_widthByTemplate(){
     if (m_view != nullptr && m_model != nullptr){
-       setTableView();
+        setTableView();
     }
 }
 

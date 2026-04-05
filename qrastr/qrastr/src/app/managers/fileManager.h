@@ -1,10 +1,7 @@
 #pragma once
 
 #include <QObject>
-#include <QString>
-#include <QStringList>
-#include <QWidget>
-#include <memory>
+
 
 class QAstra;
 enum class eLoadCode;

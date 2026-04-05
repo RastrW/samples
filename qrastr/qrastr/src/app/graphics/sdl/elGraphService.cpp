@@ -1,6 +1,7 @@
 #include "elGraphService.h"
 #include <spdlog/spdlog.h>
 #include <QCoreApplication>
+#include "IPlainElGraph.h"
 
 #if defined(Q_OS_WIN)
 using InitPlainDLL_t = IPlainElGraph* (__cdecl*)();

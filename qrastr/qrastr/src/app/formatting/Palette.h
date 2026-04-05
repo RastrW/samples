@@ -1,8 +1,6 @@
-#ifndef PALETTE_H
-#define PALETTE_H
 #pragma once
 
-#include <QColor>
+class QColor;
 
 // Class providing series of colours in a given dark or light side of
 // the spectrum.
@@ -18,5 +16,3 @@ public:
 private:
     int m_lastColourIndex;
 };
-
-#endif

@@ -1,8 +1,8 @@
 #pragma once
 #include <QObject>
 #include <filesystem>
-#include <iostream>
-#include "qastra.h"
+
+class QAstra;
 
 /**
  * @brief Загружает стартовые шаблоны и файлы через m_qastra->Load().

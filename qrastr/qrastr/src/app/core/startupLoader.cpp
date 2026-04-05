@@ -4,7 +4,8 @@
 #include <spdlog/spdlog.h>
 #include <QMessageBox>
 #include <filesystem>
-
+#include <iostream>
+#include "qastra.h"
 namespace fs = std::filesystem;
 
 StartupLoader::StartupLoader(std::shared_ptr<QAstra> qastra,

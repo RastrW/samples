@@ -1,9 +1,5 @@
 #pragma once
 #include "QtitanGrid.h"
-#include "QtitanGrid.h"
-#include "searchableComboPopup.h"
-#include <QVBoxLayout>
-#include <QApplication>
 
 class SearchableComboPopup;
 

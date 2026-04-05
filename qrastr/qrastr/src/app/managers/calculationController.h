@@ -1,8 +1,6 @@
 #pragma once
 
 #include <QObject>
-#include <QString>
-#include <memory>
 
 class QAstra;
 class QTI;

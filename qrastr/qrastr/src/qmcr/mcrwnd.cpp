@@ -16,7 +16,7 @@
 
 #include "mcrwnd.h"
 
-#include "../app/astra/qastra_events_data.h"
+#include "../app/plugin_wrappers/qastra_events_data.h"
 #include "pyhlp.h"
 #include "globalProtocolWidget.h"
 #include <spdlog/spdlog.h>

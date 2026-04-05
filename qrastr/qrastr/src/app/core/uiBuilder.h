@@ -1,13 +1,14 @@
 #pragma once
 
 #include <QObject>
-#include <QMainWindow>
-#include <QString>
+
 
 class QAction;
 class QMenu;
 class QToolBar;
 class QStatusBar;
+class QMainWindow;
+
 struct RecentFileEntry;
 
 /// @class Построитель UI элементов

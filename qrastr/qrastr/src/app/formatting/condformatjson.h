@@ -1,9 +1,8 @@
 #pragma once
-
-#include "condFormat.h"
+#include "json.hpp"
 #include <filesystem>
-#include <utils.h>
-#include "astra_headers/json.hpp"
+
+class CondFormat;
 
 ///@class Сохранение и загрузка условий в json
 class CondFormatJson

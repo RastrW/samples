@@ -1,5 +1,9 @@
 #include "condformatjson.h"
 #include <fstream>
+#include "condFormat.h"
+
+#include <utils.h>
+
 
 static int findColIndex(const std::vector<std::string>& cols, const std::string& name)
 {

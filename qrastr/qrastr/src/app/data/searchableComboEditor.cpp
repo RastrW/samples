@@ -1,5 +1,8 @@
 #include "searchableComboEditor.h"
 #include "searchableComboRepository.h"
+#include "searchableComboPopup.h"
+#include <QVBoxLayout>
+#include <QApplication>
 
 void SearchableComboEditor::createEditModeContext()
 {

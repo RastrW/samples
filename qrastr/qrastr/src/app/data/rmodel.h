@@ -3,7 +3,7 @@
 #include <QAbstractTableModel>
 #include "backInfoCache.h"
 #include "condFormatStorage.h"
-#include "rdata.h"
+
 
 class QAstra;
 class RTablesDataManager;

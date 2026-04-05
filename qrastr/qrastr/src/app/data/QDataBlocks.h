@@ -1,7 +1,3 @@
-#ifndef QDATABLOCKS_H
-#define QDATABLOCKS_H
-#pragma once
-
 #pragma once
 #include <algorithm>
 #include "IDataBlocksWrappers.h"
@@ -857,6 +853,3 @@ class QDataBlock : public QDenseDataBlock<FieldVariantData>
 {
 
 };
-
-
-#endif // RDATABLOCKS_H
