@@ -479,6 +479,13 @@ RModel::ColumnEditorInfo RModel::getColumnEditorInfo(int colIndex) const
     case enComPropTT::COM_PR_INT:
         if (!col->isDirectCode() && !col->getNameRef().empty()) {
             if (const auto* nref = m_cache.namerefMap(idx)) {
+                if (static_cast<int>(nref->size()) > 10) {
+                    // Много элементов → двухколоночный поиск
+                    info.editorType        = ColumnEditorInfo::Type::NameRef;
+                    info.nameRefData.items = *nref;
+                    break;
+                }
+                // Мало элементов → обычный ComboBox
                 info.editorType = ColumnEditorInfo::Type::ComboBox;
                 for (const auto& [k, v] : *nref)
                     info.comboItems.append(QString::fromStdString(v));
