@@ -1,14 +1,14 @@
 #pragma once
 #include <unordered_map>
 #include <vector>
-
-class CondFormat;
+#include "condFormat.h"
 
 ///@class Хранит unordered_map<col → [CondFormat]> для форматов по значению ячейки.
 /// Управляет добавлением и заменой правил.
 class CondFormatStorage
 {
 public:
+
     // Добавить или обновить одно правило для колонки column.
     // Условные правила идут в начало вектора (приоритет выше),
     // безусловные (пустой фильтр) — в конец.

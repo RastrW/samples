@@ -7,7 +7,10 @@
 #include <QProgressBar>
 #include "mainwindow.h"
 #include "app.h"
-
+#ifdef Q_OS_UNIX
+#include <csignal>
+#include <cstring>
+#endif
 void updateSplash(int pct, const QString& msg,
                   QSplashScreen* splash, QProgressBar* pb) {
 
@@ -16,10 +19,21 @@ void updateSplash(int pct, const QString& msg,
     splash->showMessage(
         msg, Qt::AlignBottom | Qt::AlignHCenter, Qt::white);
     QApplication::processEvents();
-};
+}
+
+//Логирование аварийных завершений на windows:
+#ifdef Q_OS_UNIX
+static void signalHandler(int sig) {
+    const char* name = (sig == SIGSEGV) ? "SIGSEGV" :
+                           (sig == SIGABRT) ? "SIGABRT" : "UNKNOWN";
+    spdlog::critical("CRASH signal: {} ({})", name, sig);
+    spdlog::default_logger()->flush();
+    std::signal(sig, SIG_DFL);
+    std::raise(sig);
+}
+#endif
 
 void createUnhandledExceptionFilter(){
-//Логирование аварийных завершений на windows:
 #ifdef Q_OS_WIN
 #include <windows.h>
     SetUnhandledExceptionFilter([](EXCEPTION_POINTERS* ep) -> LONG {
@@ -30,17 +44,8 @@ void createUnhandledExceptionFilter(){
         return EXCEPTION_CONTINUE_SEARCH;
     });
 #endif
+
 #ifdef Q_OS_UNIX
-#include <csignal>
-#include <cstring>
-    static void signalHandler(int sig) {
-        const char* name = (sig == SIGSEGV) ? "SIGSEGV" :
-                               (sig == SIGABRT) ? "SIGABRT" : "UNKNOWN";
-        spdlog::critical("CRASH signal: {} ({})", name, sig);
-        spdlog::default_logger()->flush();
-        std::signal(sig, SIG_DFL);
-        std::raise(sig);
-    }
     std::signal(SIGSEGV, signalHandler);
     std::signal(SIGABRT, signalHandler);
 #endif

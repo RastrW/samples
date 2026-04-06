@@ -1,5 +1,6 @@
 #pragma once
 #include <QSortFilterProxyModel>
+#include <QSet>
 
 class ProtocolTreeItem;
 enum class LogMessageTypes;

@@ -1,4 +1,5 @@
 #pragma once
+#include <memory>
 #include "iGraphManager.h"
 
 namespace ads { class CDockManager; class CDockWidget; }
