@@ -203,7 +203,7 @@ void LinkedFormController::openLinkedMacro(LinkedMacro lm, int contextRow)
     }
 
     // Чтобы макросы работали в Data должен лежать astra_py. модуль
-    fs::path astra_py_Path = QDir::currentPath().toStdString();
+    fs::path astra_py_Path = QDir::currentPath().toStdString() + "/../Data/astr_py/Release/";
 #ifdef _WIN32
     astra_py_Path /= "astra_py.cp312-win_amd64.pyd";
 #else
