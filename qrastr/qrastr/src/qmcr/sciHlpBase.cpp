@@ -65,12 +65,15 @@ void SciHlpBase::setStyleHlp(sptr_t style,
 
 SciHlpBase::CreateLexerFn SciHlpBase::resolveLexerFactory()
 {
+#ifdef Q_OS_UNIX
     QString path = QCoreApplication::applicationDirPath() + "/liblexilla.so";
-
+#else
+    QString path = QCoreApplication::applicationDirPath() + "/lexilla5.dll";
+#endif
     QLibrary lib(path);
     if (!lib.load()) {
         QMessageBox::critical(nullptr, "Error",
-                              "Cannot load liblexilla.so: " + lib.errorString());
+                              "Cannot load lexilla: " + lib.errorString());
         return nullptr;
     }
 
