@@ -1108,7 +1108,6 @@
     </message>
     <message>
         <location filename="../app/core/app.cpp" line="145"/>
-        <location filename="sciHlpBase.cpp" line="73"/>
         <source>Error</source>
         <translation type="unfinished"></translation>
     </message>
@@ -1153,32 +1152,27 @@ Check file for errors or delete it to reset defaults.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="sciHlpBase.cpp" line="74"/>
-        <source>Cannot resolve lexilla.CreateLexer</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="../app/main.cpp" line="112"/>
+        <location filename="../app/main.cpp" line="117"/>
         <source>Инициализация...</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../app/main.cpp" line="118"/>
+        <location filename="../app/main.cpp" line="123"/>
         <source>Настройки загружены</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../app/main.cpp" line="124"/>
+        <location filename="../app/main.cpp" line="129"/>
         <source>Загрузка плагинов...</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../app/main.cpp" line="137"/>
+        <location filename="../app/main.cpp" line="142"/>
         <source>Инициализация интерфейса...</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../app/main.cpp" line="145"/>
+        <location filename="../app/main.cpp" line="150"/>
         <source>Готово</source>
         <translation type="unfinished"></translation>
     </message>

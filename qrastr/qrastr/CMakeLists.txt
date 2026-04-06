@@ -521,9 +521,18 @@ target_include_directories(${PROJECT_NAME} PRIVATE
 # ============================================================================
 # Target Properties
 # ============================================================================
+# Гарантируем, что INSTALL_RPATH используется и при сборке
+set(CMAKE_BUILD_WITH_INSTALL_RPATH TRUE)
+# Не затирать RPATH после линковки
+set(CMAKE_SKIP_RPATH FALSE)
+set(CMAKE_SKIP_INSTALL_RPATH FALSE)
 # WIN32_EXECUTABLE создаёт GUI приложение на Windows (без консольного окна)
-set_target_properties(${PROJECT_NAME} PROPERTIES WIN32_EXECUTABLE TRUE)
-
+set_target_properties(${PROJECT_NAME} PROPERTIES
+    WIN32_EXECUTABLE TRUE
+    BUILD_RPATH      "\$ORIGIN/libs"
+    INSTALL_RPATH    "\$ORIGIN/libs"
+    BUILD_WITH_INSTALL_RPATH TRUE
+)
 # ============================================================================
 # Finalization
 # ============================================================================
