@@ -15,8 +15,8 @@ GraphSDLManager::GraphSDLManager(ads::CDockManager* dockManager,
     : IGraphManager(dockManager, parentWidget, parent)
     , m_rastr(rastr){
     m_gcc = std::make_unique<GraphControlService>(rastr);
-    //if (!m_gcc->load())
-    //   spdlog::warn("GraphSDLManager: GraphControlClient недоступен");
+    if (!m_gcc->load())
+       spdlog::warn("GraphSDLManager: GraphControlClient недоступен");
 }
 
 GraphSDLManager::~GraphSDLManager()

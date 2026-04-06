@@ -2,6 +2,7 @@
 #include <QMessageBox>
 #include <QFontDatabase>
 #include <QTextStream>
+#include <QCoreApplication>
 #include "sciHlpBase.h"
 #include <spdlog/spdlog.h>
 
@@ -64,15 +65,22 @@ void SciHlpBase::setStyleHlp(sptr_t style,
 
 SciHlpBase::CreateLexerFn SciHlpBase::resolveLexerFactory()
 {
-#ifdef _WIN32
-    const QFunctionPointer pfn = QLibrary::resolve("lexilla5", "CreateLexer");
-#else
-    const QFunctionPointer pfn = QLibrary::resolve("liblexilla", "CreateLexer");
-#endif
-    if (!pfn) {
-        QMessageBox::critical(nullptr, QObject::tr("Error"),
-                              QObject::tr("Cannot resolve lexilla.CreateLexer"));
+    QString path = QCoreApplication::applicationDirPath() + "/liblexilla.so";
+
+    QLibrary lib(path);
+    if (!lib.load()) {
+        QMessageBox::critical(nullptr, "Error",
+                              "Cannot load liblexilla.so: " + lib.errorString());
+        return nullptr;
     }
+
+    auto pfn = lib.resolve("CreateLexer");
+    if (!pfn) {
+        QMessageBox::critical(nullptr, "Error",
+                              "Cannot resolve CreateLexer: " + lib.errorString());
+        return nullptr;
+    }
+
     return reinterpret_cast<CreateLexerFn>(pfn);
 }
 
