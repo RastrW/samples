@@ -21,7 +21,7 @@ SearchableComboPopupTwo::SearchableComboPopupTwo(QWidget* parent)
 
     // ── Модель + прокси ──────────────────────────────────────────────────────
     m_model = new QStandardItemModel(0, 2, this);
-    m_model->setHorizontalHeaderLabels({ tr("Индекс"), tr("Название") });
+    m_model->setHorizontalHeaderLabels({ tr("Номер"), tr("Название") });
 
     m_proxy = new TwoColumnFilterProxy(this);
     m_proxy->setSourceModel(m_model);
@@ -31,7 +31,7 @@ SearchableComboPopupTwo::SearchableComboPopupTwo(QWidget* parent)
     filterRow->setSpacing(2);
 
     m_searchIndex = new QLineEdit(this);
-    m_searchIndex->setPlaceholderText(tr("Фильтр по индексу..."));
+    m_searchIndex->setPlaceholderText(tr("Фильтр по номеру..."));
     m_searchIndex->setClearButtonEnabled(true);
 
     m_searchName = new QLineEdit(this);
@@ -51,7 +51,7 @@ SearchableComboPopupTwo::SearchableComboPopupTwo(QWidget* parent)
     m_table->horizontalHeader()->setStretchLastSection(true);
     m_table->setHorizontalScrollBarPolicy(Qt::ScrollBarAsNeeded);
     m_table->setSortingEnabled(false);
-    m_table->setFixedHeight(220);
+    m_table->setMinimumHeight(150);
 
     // ── Кнопки внизу ─────────────────────────────────────────────────────────
     auto* btnRow = new QHBoxLayout();

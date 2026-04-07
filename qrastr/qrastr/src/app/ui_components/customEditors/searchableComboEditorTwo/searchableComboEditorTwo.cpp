@@ -29,6 +29,7 @@ void SearchableComboEditorTwo::createEditModeContext()
 
     QObject::connect(m_button, &QToolButton::clicked,
                      [this]() { showPopup(); });
+
 }
 
 void SearchableComboEditorTwo::destroyEditModeContext()

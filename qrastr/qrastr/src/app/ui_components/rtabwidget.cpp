@@ -637,6 +637,12 @@ void RtabWidget::slot_endResetModel(std::string tname)
             col->setCaption(title.toString());
     }
 
+    // Пересоздаём репозитории — данные nameref
+    // (например, для SearchableComboPopupTwo)  могли смениться
+    m_view->beginUpdate();
+    applyAllColumnEditors();
+    m_view->endUpdate();
+
     m_view->endUpdate();
 }
 
