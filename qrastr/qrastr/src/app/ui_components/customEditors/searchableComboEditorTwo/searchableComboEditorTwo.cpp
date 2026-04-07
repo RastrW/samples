@@ -1,39 +1,71 @@
 #include "searchableComboEditorTwo.h"
 #include "searchableComboRepositoryTwo.h"
 #include "searchableComboPopupTwo.h"
+#include <QHBoxLayout>
 #include <QVBoxLayout>
 #include <QApplication>
+#include <QLineEdit>
+#include <QToolButton>
 
 void SearchableComboEditorTwo::createEditModeContext()
 {
-    m_selectedKey = -1;
-    m_clearChosen = false;
-    m_currentKey  = getContextValue().toInt();
-    showPopup();
+    QWidget* parentWidget = site() ? site()->parent() : nullptr;
+
+    m_container = new QWidget(parentWidget);
+    auto* layout = new QHBoxLayout(m_container);
+    layout->setContentsMargins(0, 0, 0, 0);
+    layout->setSpacing(0);
+
+    m_lineEdit = new QLineEdit(m_container);
+    m_lineEdit->setReadOnly(true);
+    m_lineEdit->setFrame(false);
+
+    m_button = new QToolButton(m_container);
+    m_button->setText("...");
+    m_button->setFixedWidth(20);
+
+    layout->addWidget(m_lineEdit);
+    layout->addWidget(m_button);
+
+    QObject::connect(m_button, &QToolButton::clicked,
+                     [this]() { showPopup(); });
 }
 
 void SearchableComboEditorTwo::destroyEditModeContext()
 {
-    editorRepository()->setImmediatePost(true);
     if (m_popup) {
         m_popup->hide();
         m_popup->deleteLater();
         m_popup = nullptr;
     }
+
+    // Удаляем явно — Qtitan удаляет m_editor (GridEditorBase),
+    // но не m_container, у которого другой Qt-parent (GridEditorWidgetContainer)
+    if (m_container) {
+        delete m_container;   // дочерние m_lineEdit и m_button удалятся автоматически
+        m_container = nullptr;
+    }
+
+    m_lineEdit = nullptr;
+    m_button   = nullptr;
+}
+
+void SearchableComboEditorTwo::setValueToWidget(const QVariant& value)
+{
+    m_currentKey  = value.toInt();
+    m_selectedKey = -1;
+    m_clearChosen = false;
+    updateDisplayText();
 }
 
 QVariant SearchableComboEditorTwo::getContextValue() const
 {
     if (m_clearChosen)
-        // "Не задано" — возвращаем пустую строку;
-        // setData не найдёт совпадений в namerefMap → запишет 0.
-        // При необходимости поменяйте на нужный sentinel-ключ.
-        return QString{};
+        return QVariant(0);   // sentinel "не задано"
 
     if (m_selectedKey >= 0) {
-        // Возвращаем строку-имя, чтобы setData корректно нашёл ключ
-        const auto* repo = static_cast<SearchableComboRepositoryTwo*>(editorRepository());
-        return repo->nameByKey(m_selectedKey);
+        auto* repo = static_cast<SearchableComboRepositoryTwo*>(editorRepository());
+        return repo->nameByKey(m_selectedKey);   // setData найдёт ключ по имени
     }
 
     return Qtitan::GridEditorBase::getContextValue();
@@ -46,11 +78,11 @@ bool SearchableComboEditorTwo::isContextModified()
     return Qtitan::GridEditorBase::isContextModified();
 }
 
-void SearchableComboEditorTwo::setValueToWidget(const QVariant& value)
+void SearchableComboEditorTwo::updateDisplayText()
 {
-    m_currentKey = value.toInt();
-    if (m_popup)
-        m_popup->setCurrentKey(m_currentKey);
+    if (!m_lineEdit) return;
+    auto* repo = static_cast<SearchableComboRepositoryTwo*>(editorRepository());
+    m_lineEdit->setText(repo ? repo->nameByKey(m_currentKey) : QString{});
 }
 
 void SearchableComboEditorTwo::showPopup()
@@ -58,32 +90,31 @@ void SearchableComboEditorTwo::showPopup()
     auto* repo = static_cast<SearchableComboRepositoryTwo*>(editorRepository());
     if (!repo) return;
 
-    editorRepository()->setImmediatePost(false);
-
-    m_popup = new SearchableComboPopupTwo(repo->gridWidget()->window());
+    QWidget* topLevel = repo->gridWidget()->window();
+    m_popup = new SearchableComboPopupTwo(topLevel);
     m_popup->setItems(repo->items());
     m_popup->setCurrentKey(m_currentKey);
 
-    // ── Позиционирование: левый верхний угол popup = левый нижний угол ячейки
-    // site() в QTitan — это QWidget, занимающий ровно прямоугольник ячейки.
-    QPoint globalBottomLeft;
-    if (auto* siteWidget = dynamic_cast<QWidget*>(site())) {
-        globalBottomLeft = siteWidget->mapToGlobal(
-            QPoint(0, siteWidget->height()));
-    } else {
-        globalBottomLeft = QCursor::pos();  // fallback
-    }
+    // Позиционируем под контейнером
+    const QPoint globalPos = m_container
+                                 ? m_container->mapToGlobal(QPoint(0, m_container->height()))
+                                 : QCursor::pos();
 
-    m_popup->setMinimumWidth(qMax(site()->geometry().width(), 320));
-    m_popup->move(globalBottomLeft);
+    const int minW = m_container
+                         ? std::max(m_container->width(), 320)
+                         : 320;
+
+    m_popup->setMinimumWidth(minW);
+    m_popup->move(globalPos);
     m_popup->show();
     m_popup->setFocus();
 
-    // ── Сигналы ──────────────────────────────────────────────────────────────
     QObject::connect(m_popup, &SearchableComboPopupTwo::itemSelected,
-                     [this](int key) {
+                     [this, repo](int key) {
                          m_selectedKey = key;
                          m_clearChosen = false;
+                         if (m_lineEdit)
+                             m_lineEdit->setText(repo->nameByKey(key));
                          setContextModified(true);
                          editorRepository()->view()->postEditor();
                      });
@@ -92,6 +123,7 @@ void SearchableComboEditorTwo::showPopup()
                      [this]() {
                          m_clearChosen = true;
                          m_selectedKey = -1;
+                         if (m_lineEdit) m_lineEdit->clear();
                          setContextModified(true);
                          editorRepository()->view()->postEditor();
                      });
