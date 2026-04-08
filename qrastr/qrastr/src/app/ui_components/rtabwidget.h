@@ -48,12 +48,11 @@ public:
 
     void notifyParentRowChanged(int modelRow);
 public slots:
-
     void slot_close();
+
+private slots:
     void slot_contextMenu(ContextMenuEventArgs* args);
-
     void slot_focusRowChanged( int _row_old,int _row_new);
-
     void slot_addRow();
     void slot_insertRow();
     void slot_duplicateRow();
@@ -63,7 +62,6 @@ public slots:
     void slot_widthByTemplate();
     // ширина по контенту
     void slot_widthByData();
-
     //  Формы инструментов
     void slot_openColProp(int col);
     void slot_openSelection(int col);
@@ -78,10 +76,7 @@ public slots:
 
     void slot_beginResetModel(std::string tname);
     void slot_endResetModel(std::string tname);
-private slots:
-
-    void applyAllColumnEditors ();
-    void applyColumnEditor(int colIndex);
+    void slot_updateStatusLabel();
 private:
     /** @brief
      * a) создаёт RModel, вызывает setForm/populateDataFromRastr;
@@ -90,6 +85,8 @@ private:
      * d) восстанавливает условное форматирование из JSON.
     */
     void createModel();
+    void applyAllColumnEditors();
+    void applyColumnEditor(int colIndex);
 
     void setTableView(int multiplier = 10 );
     /// Блокирует горячие клавиши заданные по умолчанию в Qtitan
@@ -118,6 +115,7 @@ private:
     ads::CDockManager* m_DockManager;
 
     QToolBar* m_toolbar;
+    QLabel* m_statusLabel;
     // Действия в toolbar
     QAction* m_actAddRow;
     QAction* m_actInsertRow;

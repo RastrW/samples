@@ -69,8 +69,6 @@ void TableDockManager::openForm(const CUIForm& form)
             dw->setWidget(prtw->createDockContent());
             m_dockManager->addDockWidgetTab(ads::TopDockWidgetArea, dw);
             prtw->setPyHlp(m_pyHlp);
-            // Выравнивание данных по шаблону, выравнивание текста по левому краю
-            prtw->slot_widthByTemplate();
             // Добавляем в список открытых форм
             // Сигналы будут передаваться через onCalculationStarted/Finished
             m_openForms.append(prtw);

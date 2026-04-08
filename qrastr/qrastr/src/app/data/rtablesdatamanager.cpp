@@ -86,6 +86,8 @@ void RTablesDataManager::setValue(const std::string&      tname,
     IRastrColumnsPtr columns { table->Columns() };
     IRastrColumnPtr  col_ptr { columns->Item(cname) };
 
+    spdlog::debug("setValue tname={} col={} row={}", tname, cname, row);
+
     std::visit([&](const auto& v)
                {
                    using VT = std::decay_t<decltype(v)>;
@@ -199,6 +201,7 @@ QDataBlock* RTablesDataManager::findCachedBlock(const std::string& tname)
 
 void RTablesDataManager::handleChangeAll()
 {
+    spdlog::debug("handleChangeAll");
     // Все таблицы изменились — типично при загрузке нового файла расчёта.
     /// @note сигналы (sig_BeginResetModel/sig_EndResetModel) могут изменять mpTables,
     /// поэтому только копирование сначала собираем список ключей:
@@ -224,8 +227,8 @@ void RTablesDataManager::handleChangeAll()
 
 void RTablesDataManager::handleChangeTable(const std::string& tname)
 {
+    spdlog::debug("handleChangeTable tname={}", tname);
 
-    spdlog::info("ENTER handleChangeTable for table: {}", tname.c_str());
     QDataBlock* pqdb = findCachedBlock(tname);
     if (!pqdb) return;
 
@@ -241,6 +244,7 @@ void RTablesDataManager::handleChangeTable(const std::string& tname)
 void RTablesDataManager::handleChangeColumn(const std::string& tname,
                                             const std::string& cname)
 {
+    spdlog::debug("handleChangeColumn tname={} col={} cname={}", tname, cname);
     QDataBlock* pqdb = findCachedBlock(tname);
     if (!pqdb) return;
 
@@ -262,6 +266,7 @@ void RTablesDataManager::handleChangeColumn(const std::string& tname,
 
 void RTablesDataManager::handleChangeRow(const std::string& tname, long row)
 {
+    spdlog::debug("handleChangeRow tname={} row={}", tname, row);
     // Изменились все колонки одной строки.
     QDataBlock* pqdb = findCachedBlock(tname);
     if (!pqdb) return;
@@ -284,6 +289,7 @@ void RTablesDataManager::handleChangeData(const std::string& tname,
                                           const std::string& cname,
                                           long row)
 {
+    spdlog::debug("handleChangeData tname={} col={} row={}", tname, cname, row);
     QDataBlock* pqdb = findCachedBlock(tname);
     if (!pqdb){ return;}
 
@@ -301,6 +307,8 @@ void RTablesDataManager::handleChangeData(const std::string& tname,
 
 void RTablesDataManager::handleAddRow(const std::string& tname, long row)
 {
+    spdlog::debug("handleAddRow tname={} row={}", tname, row);
+
     // Строка добавлена в конец таблицы.
     // QDataBlock::AddRow() выделяет место под новую строку (данные будут 0/пусто).
     QDataBlock* pqdb = findCachedBlock(tname);
@@ -313,6 +321,8 @@ void RTablesDataManager::handleAddRow(const std::string& tname, long row)
 
 void RTablesDataManager::handleInsertRow(const std::string& tname, long row)
 {
+    spdlog::debug("handleInsertRow tname={} row={}", tname, row);
+
     // Строка вставлена в позицию row (InsertRow сдвигает остальные вниз).
     QDataBlock* pqdb = findCachedBlock(tname);
     if (!pqdb) return;
@@ -324,6 +334,7 @@ void RTablesDataManager::handleInsertRow(const std::string& tname, long row)
 
 void RTablesDataManager::handleDeleteRow(const std::string& tname, long row)
 {
+    spdlog::debug("handleDeleteRow tname={} row={}", tname, row);
     QDataBlock* pqdb = findCachedBlock(tname);
     if (!pqdb) return;
 

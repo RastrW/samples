@@ -177,7 +177,13 @@ bool RModel::setData(const QModelIndex& index, const QVariant& value, int role)
 {
     const int col = index.column();
     const int row = index.row();
-    const long         prow     = row;   // plugin-индекс строки
+
+    // --- ДИАГНОСТИКА ---
+    spdlog::debug("setData [{},{}] role={} value='{}' type={}",
+                  row, col, role,
+                  value.toString().toStdString(),
+                  value.typeName());  // покажет "QString", "int", "double"...
+    // -------------------
     // читаем сырое значение из кеша
     QVariant raw = std::visit(ToQVariant(), m_rdata->pnparray_->Get(row, col));
     if (raw == value) return false;
@@ -247,7 +253,7 @@ bool RModel::setData(const QModelIndex& index, const QVariant& value, int role)
     // Запись через RTDM — единственная точка доступа к плагину.
     // emit dataChanged НЕ вызывается: плагин сгенерирует ChangeData-хинт,
     // RTDM обновит QDataBlock и испустит sig_dataChanged → View обновится один раз.
-    m_rtdm->setValue(tname, colName, prow, vd);
+    m_rtdm->setValue(tname, colName, row, vd);
     return true;
 }
 
