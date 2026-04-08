@@ -40,11 +40,13 @@ public:
      * @param Cols   строка колонок через запятую ("ny,name,uhom")
      */
     std::shared_ptr<QDataBlock>
-        get(std::string tname, std::string Cols);
+        get(const std::string& tname, const std::string& cols);
 
     long column_index(std::string tname, std::string _col_name);
-    void getDataBlock(std::string tname, std::string Cols, QDataBlock& QDB);
-
+    void getDataBlock(const std::string& tname,
+                      QDataBlock& qdb,
+                      const std::string& cols = "",
+                      std::optional<FieldDataOptions> opts = std::nullopt);
     /** @brief Централизованная запись в плагин.
     * RModel::setData больше НЕ вызывает emit dataChanged вручную —
     * обновление View приходит ровно один раз, через цепочку хинтов.
@@ -54,8 +56,6 @@ public:
                   long               row,
                   const FieldVariantData& value);
 private:
-    void getDataBlock(std::string tname, QDataBlock& QDB, FieldDataOptions Options );
-    void getDataBlock(std::string tname, QDataBlock& QDB);
     std::string getTCols(std::string tname);
     long getColIndex(std::string tname,std::string cname);
     ePropType getColType(std::string tname,std::string cname);

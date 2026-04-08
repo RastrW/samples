@@ -4,8 +4,8 @@ using WrapperExceptionType = std::runtime_error;
 #include "astra/IPlainRastrWrappers.h"
 #include "UIForms.h"
 #include "QDataBlocks.h"
-
 #include <memory>
+
 void RTablesDataManager::setQAstra( QAstra* _pqastra)
 {
     m_pqastra = _pqastra;
@@ -50,35 +50,30 @@ void  RTablesDataManager::onRastrHint(const _hint_data& hint_data)
 }
 
 std::shared_ptr<QDataBlock>
-RTablesDataManager::get(std::string tname, std::string Cols)
+RTablesDataManager::get(const std::string& tname, const std::string& cols)
 {
     /*
      * Перед получением таблицы из RTDM удалим таблицы на которые никто не ссылается,
      * например если таблицу открыли, а потом закрыли, тогда она остается в RTDM со счетчиком ссылок (use_count()) = 1
      * если не удалять, тогда при расчете УР придется обновлять данные, но необходимости в этом нет.
     */
-    auto iter = mpTables.begin();
-    auto endIter = mpTables.end();
-    for(; iter != endIter; ) {
-        if (iter->second.use_count() == 1) {
-            spdlog::info ("RTDM: delete table with use_count() = 1 -> {}", iter->first.c_str());
-            iter = mpTables.erase(iter);
+    for (auto it = mpTables.begin(); it != mpTables.end(); ) {
+        if (it->second.use_count() == 1) {
+            spdlog::info ("RTDM: delete table with use_count() = 1 -> {}", it->first.c_str());
+            it = mpTables.erase(it);
         } else {
-           spdlog::info("RTDM: {} use_count() =  {}", iter->first.c_str(), iter->second.use_count());
-            ++iter;
+            spdlog::info("RTDM: {} use_count() =  {}", it->first.c_str(), it->second.use_count());
+            ++it;
         }
     }
 
-    auto it = mpTables.find(tname);
-    if (it != mpTables.end() ){
-        return it->second;
+    auto [it, inserted] = mpTables.emplace(tname, nullptr);
+    if (inserted) {
+        it->second = std::make_shared<QDataBlock>();
+        getDataBlock(tname, *it->second, cols);  // одна функция
+        spdlog::info("RTDM: add Table {}", tname.c_str());
     }
-
-    spdlog::info("RTDM: add Table {}", tname.c_str());
-    mpTables.insert(std::make_pair(tname, std::make_shared<QDataBlock>()));
-    getDataBlock(tname,Cols,*mpTables.find(tname)->second);
-
-    return mpTables.find(tname)->second;
+    return it->second;
 }
 
 void RTablesDataManager::setValue(const std::string&      tname,
@@ -129,35 +124,27 @@ long RTablesDataManager::column_index(std::string tname , std::string _col_name)
     return res.Value();
 }
 
-void  RTablesDataManager::getDataBlock(std::string tname , std::string Cols , QDataBlock& QDB)
+void RTablesDataManager::getDataBlock(const std::string& tname,
+                                      QDataBlock& qdb,
+                                      const std::string& cols,
+                                      std::optional<FieldDataOptions> opts)
 {
-    FieldDataOptions Options;
-    Options.SetEnumAsInt(TriBool::True);
-    Options.SetSuperEnumAsInt(TriBool::True);
-    Options.SetUseChangedIndices(true);
+    // Дефолтные опции — те же, что раньше были во всех перегрузках
+    FieldDataOptions options;
+    if (opts.has_value()) {
+        options = opts.value();
+    } else {
+        options.SetEnumAsInt(TriBool::True);
+        options.SetSuperEnumAsInt(TriBool::True);
+        options.SetUseChangedIndices(true);
+    }
+
+    // Если список колонок не задан — берём все колонки таблицы
+    const std::string& actualCols = cols.empty() ? getTCols(tname) : cols;
 
     IRastrTablesPtr tablesx{ m_pqastra->getRastr()->Tables() };
-    IRastrTablePtr table{ tablesx->Item(tname) };
-
-    IRastrResultVerify(table->DataBlock(Cols, QDB, Options));
-}
-
-void  RTablesDataManager::getDataBlock(std::string tname , QDataBlock& QDB,FieldDataOptions Options )
-{
-    std::string Cols = getTCols(tname);
-    IRastrTablesPtr tablesx{ m_pqastra->getRastr()->Tables() };
-    IRastrTablePtr table{ tablesx->Item(tname) };
-    IRastrResultVerify(table->DataBlock(Cols, QDB, Options));
-}
-
-void  RTablesDataManager::getDataBlock(std::string tname , QDataBlock& QDB)
-{
-    FieldDataOptions Options;
-    Options.SetEnumAsInt(TriBool::True);
-    Options.SetSuperEnumAsInt(TriBool::True);
-    Options.SetUseChangedIndices(true);
-
-    getDataBlock(tname,QDB,Options);
+    IRastrTablePtr  table  { tablesx->Item(tname) };
+    IRastrResultVerify(table->DataBlock(actualCols, qdb, options));
 }
 
 std::string  RTablesDataManager::getTCols(std::string tname)
@@ -262,7 +249,8 @@ void RTablesDataManager::handleChangeColumn(const std::string& tname,
 
     // Один вызов вместо N — плагин сам копирует колонку блоком
     QDataBlock colBlock;
-    getDataBlock(tname, cname, colBlock);
+    // все колонки, но только одна строка
+    getDataBlock(tname, colBlock, cname);
 
     const long nRows = static_cast<long>(pqdb->RowsCount());
     for (long row = 0; row < nRows; ++row)
@@ -282,7 +270,8 @@ void RTablesDataManager::handleChangeRow(const std::string& tname, long row)
     const std::string cols = getTCols(tname);
 
     QDataBlock rowBlock;
-    getDataBlock(tname, cols, rowBlock);   // все колонки, но только одна строка
+    // все колонки, но только одна строка
+    getDataBlock(tname, rowBlock, cols);
     // Копируем только нужную строку
     const long ncols = static_cast<long>(pqdb->ColumnsCount());
     for (long i = 0; i < ncols; ++i)

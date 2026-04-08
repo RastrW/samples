@@ -466,7 +466,7 @@ void RtabWidget::applyColumnEditor(int colIndex)
             column_qt->editorRepository());
         repo->setComboBoxEditable(false);
 
-        spdlog::info("applyColumnEditor ENPIC col= {}, picItems= ", colIndex,
+        spdlog::info("applyColumnEditor ENPIC col={}, picItems={}", colIndex,
                      info.picItems.size());
         break;
     }
@@ -596,7 +596,7 @@ void RtabWidget::slot_beginResetModel(std::string tname)
 {
     if (m_UIForm.TableName() != tname) return;
 
-    m_view->beginUpdate();
+    m_view->beginUpdate(); // ← открываем внешний блок
 
     // Сохраняем видимость по имени колонки (не по caption — он может меняться)
     m_columnsVisible.clear();
@@ -636,9 +636,11 @@ void RtabWidget::slot_endResetModel(std::string tname)
 
     // Пересоздаём репозитории — данные nameref
     // (например, для SearchableComboPopupTwo)  могли смениться
-    m_view->beginUpdate();
+    m_view->beginUpdate();  //← открываем внутренний для applyAllColumnEditors
     applyAllColumnEditors();
-    m_view->endUpdate();
+    m_view->endUpdate();    //← закрываем внутренний
+
+    m_view->endUpdate();     // ← закрываем внешний из slot_beginResetModel
 }
 
 void RtabWidget::slot_groupCorrection()

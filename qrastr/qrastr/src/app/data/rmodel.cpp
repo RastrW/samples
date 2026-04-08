@@ -539,6 +539,9 @@ std::vector<std::tuple<int, int>> RModel::columnsWidth() const
 
 RCol* RModel::getRCol(int col) const
 {
+    if (!m_rdata || col < 0 || col >= (int)m_rdata->size()){
+        return nullptr;
+    }
     return &(*(m_rdata->begin() + col));
 }
 

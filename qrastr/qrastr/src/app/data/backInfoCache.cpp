@@ -40,7 +40,7 @@ void BackInfoCache::rebuild(const RData& rdata, RTablesDataManager* pRTDM)
                 long indx2 = pRTDM->column_index(parts[0], parts[2]);
                 if (indx1 > -1 && indx2 > -1) {
                     QDataBlock qdb;
-                    pRTDM->getDataBlock(parts[0], parts[2] + "," + parts[1], qdb);
+                    pRTDM->getDataBlock(parts[0], qdb, parts[2] + "," + parts[1]);
 
                     std::map<size_t, std::string> map;
                     map.emplace(0, "не задано");
@@ -69,7 +69,7 @@ void BackInfoCache::rebuild(const RData& rdata, RTablesDataManager* pRTDM)
             std::string cols = col + "," + (nameIndx > -1 ? std::string("name") : col);
 
             QDataBlock qdb;
-            pRTDM->getDataBlock(table, cols, qdb);
+            pRTDM->getDataBlock(table, qdb, cols);
 
             std::map<size_t, std::string> map;
             map.emplace(0, "не задано");
