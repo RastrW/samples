@@ -111,7 +111,10 @@ QVariant RModel::data(const QModelIndex& index, int role) const
         // Все остальные типы
         QVariant item = std::visit(ToQVariant(), m_rdata->pnparray_->Get(row, col));
 
-        if (!rcol.isDirectCode()) {
+        // Enum / NameRef / SuperEnum — только для DisplayRole.
+        // EditRole возвращает сырой числовой код, чтобы QTitan
+        // использовал его при сортировке (числовое сравнение, не строковое).
+        if (role == Qt::DisplayRole && !rcol.isDirectCode()) {
             // Для ENPIC используем pluginIdx, для остальных — col
             if (const auto* pics = m_cache.pictureEnum(pluginIdx)) {
                 int v = item.toInt();
@@ -125,11 +128,19 @@ QVariant RModel::data(const QModelIndex& index, int role) const
             }
         }
 
+        // Вещественные числа:
+        //   DisplayRole → форматированная строка (отображение пользователю)
+        //   EditRole    → сырой double (сортировка + передача в редактор)
         if (item.type() == QVariant::Double) {
             const auto info = getColumnEditorInfo(col);
-            if (info.editorType == ColumnEditorInfo::Type::Numeric)
-                return QString::number(item.toDouble(), 'f', info.decimals);
+            if (info.editorType == ColumnEditorInfo::Type::Numeric) {
+                if (role == Qt::DisplayRole)
+                    return QString::number(item.toDouble(), 'f', info.decimals);
+                // EditRole — возвращаем double напрямую
+                return item;
+            }
         }
+
         return item;
     }
 
