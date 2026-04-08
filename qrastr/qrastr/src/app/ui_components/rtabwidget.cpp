@@ -83,8 +83,15 @@ RtabWidget::RtabWidget(QAstra* pqastra,CUIForm UIForm, RTablesDataManager* pRTDM
     }else{
         m_grid->setViewType(Qtitan::Grid::TableView);
     }
-
     m_view = m_grid->view< Qtitan::GridTableView>();
+
+    if (m_UIForm.Vertical()){
+        m_view->tableOptions().setRowSizingEnabled(true);
+    }else{
+        m_view->tableOptions().setRowFrozenButtonVisible(true);
+        m_view->tableOptions().setFrozenPlaceQuickSelection(true);
+        m_view->tableOptions().setRowsQuickSelection(true);
+    }
     m_view->options().setGridLines(Qtitan::LinesBoth);
     m_view->options().setGridLineWidth(1);
     m_view->tableOptions().setColumnAutoWidth(true);
@@ -107,12 +114,6 @@ RtabWidget::RtabWidget(QAstra* pqastra,CUIForm UIForm, RTablesDataManager* pRTDM
     // Enables or disables wait cursor if grid is busy for lengthy operations with data like sorting or grouping.
     m_view->options().setShowWaitCursor(true);
     m_view->tableOptions().setColumnsHeader(true);
-    m_view->tableOptions().setRowsQuickSelection(true);
-    m_view->tableOptions().setRowFrozenButtonVisible(true);
-    m_view->tableOptions().setFrozenPlaceQuickSelection(true);
-
-    //отключить встроенное меню Qtitan
-    //m_view->options().setMainMenuDisabled(true);
 
     ///@note создание модели обязатель до меню!
     createModel();
@@ -128,7 +129,7 @@ RtabWidget::RtabWidget(QAstra* pqastra,CUIForm UIForm, RTablesDataManager* pRTDM
 
     setupConnections();
 
-    dumpShortcuts(m_grid, "before clear");
+    //dumpShortcuts(m_grid, "before clear");
     // Снимаем F5/Delete со встроенных action-ов QTitan
     auto& acts = m_view->actions();
 
@@ -144,9 +145,8 @@ RtabWidget::RtabWidget(QAstra* pqastra,CUIForm UIForm, RTablesDataManager* pRTDM
         }
     }
 
-    dumpShortcuts(m_grid, "after clear");
+    //dumpShortcuts(m_grid, "after clear");
 }
-
 
 RtabWidget::~RtabWidget() {}
 
@@ -355,12 +355,11 @@ void RtabWidget::createModel()
             }
         }
     }
-
-    //Show button menu for all column headers.
-    //for (int i = 0; i < view->getColumnCount(); ++i)
-    //    static_cast<GridTableColumn *>(view->getColumn(i))->setMenuButtonVisible(true);
-
     m_view->endUpdate();
+
+    // ── Применяем ширины из бэка при первом открытии ──
+    // setTableView отключает columnAutoWidth и выставляет ширины из RCol::getWidth()
+    setTableView();
 
     m_linkedFormCtrl = std::make_unique<LinkedFormController>(
         m_pqastra,
@@ -525,15 +524,6 @@ void RtabWidget::slot_contextMenu(ContextMenuEventArgs* args)
     MenuContext ctx { column, row_model, col };
     m_menuBuilder->prepareForShow(ctx, args->contextMenu());
 }
-/*
-void RtabWidget::slot_focusRowChanged(int row_old, int row_new)
-{
-    ///@todo соединение только для дочернего виджета LinkedFormController
-    const int row_new2 = m_view->getRow(row_new).modelIndex().row();      // not work why?
-    m_linkedFormCtrl->onParentRowChanged(row_new);
-}
-*/
-
 
 void RtabWidget::slot_focusRowChanged(int row_old, int row_new)
 {
@@ -710,6 +700,15 @@ void RtabWidget::slot_directCodeToggle(std::size_t column)
     m_view->beginUpdate();
     applyColumnEditor(column);
     m_view->endUpdate();
+
+    // Принудительно перерисовать всю колонку — DisplayRole изменился
+    const int rows = m_model->rowCount();
+    if (rows > 0) {
+        emit m_model->dataChanged(
+            m_model->index(0,      static_cast<int>(column)),
+            m_model->index(rows-1, static_cast<int>(column)),
+            {Qt::DisplayRole, Qt::EditRole});
+    }
 }
 
 void RtabWidget::slot_condFormatsEdit(std::size_t column)

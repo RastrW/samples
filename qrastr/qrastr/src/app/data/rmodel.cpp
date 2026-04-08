@@ -46,11 +46,11 @@ QVariant RModel::headerData(int section, Qt::Orientation orientation, int role) 
 
 Qt::ItemFlags RModel::flags(const QModelIndex& index) const
 {
-    Qt::ItemFlags f = QAbstractTableModel::flags(index);
+    Qt::ItemFlags f = QAbstractTableModel::flags(index); // уже содержит Enabled|Selectable
     const RCol* col = getRCol(index.column());
-    if (col && col->getFF() == "1")    // формула активна → только чтение
-        return f | Qt::ItemIsSelectable;
-    return f | Qt::ItemIsEditable | Qt::ItemIsSelectable;
+    if (col && col->getFF() == "1")
+        return f & ~Qt::ItemIsEditable; // убираем только редактирование, Enabled оставляем
+    return f | Qt::ItemIsEditable;
 }
 
 QVariant RModel::data(const QModelIndex& index, int role) const
