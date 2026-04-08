@@ -54,7 +54,6 @@ public:
                   long               row,
                   const FieldVariantData& value);
 private:
-    void getDataBlock(std::string tname, std::string Cols, QDataBlock& QDB, FieldDataOptions Options );
     void getDataBlock(std::string tname, QDataBlock& QDB, FieldDataOptions Options );
     void getDataBlock(std::string tname, QDataBlock& QDB);
     std::string getTCols(std::string tname);

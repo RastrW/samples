@@ -439,10 +439,6 @@ void RtabWidget::applyColumnEditor(int colIndex)
     }
     case RModel::ColumnEditorInfo::Type::Color:{
         column_qt->setEditorType(GridEditor::Color);
-        // GridColorEditorRepository позволяет ограничить палитру,
-        // по умолчанию показывает стандартный color picker
-        auto* repo = static_cast<Qtitan::GridColorEditorRepository*>(
-            column_qt->editorRepository());
         break;
     }
     case RModel::ColumnEditorInfo::Type::ComboBox:
@@ -642,8 +638,6 @@ void RtabWidget::slot_endResetModel(std::string tname)
     // (например, для SearchableComboPopupTwo)  могли смениться
     m_view->beginUpdate();
     applyAllColumnEditors();
-    m_view->endUpdate();
-
     m_view->endUpdate();
 }
 

@@ -142,13 +142,6 @@ void  RTablesDataManager::getDataBlock(std::string tname , std::string Cols , QD
     IRastrResultVerify(table->DataBlock(Cols, QDB, Options));
 }
 
-void  RTablesDataManager::getDataBlock(std::string tname , std::string Cols , QDataBlock& QDB,FieldDataOptions Options )
-{
-    IRastrTablesPtr tablesx{ m_pqastra->getRastr()->Tables() };
-    IRastrTablePtr table{ tablesx->Item(tname) };
-    IRastrResultVerify(table->DataBlock(Cols, QDB, Options));
-}
-
 void  RTablesDataManager::getDataBlock(std::string tname , QDataBlock& QDB,FieldDataOptions Options )
 {
     std::string Cols = getTCols(tname);
