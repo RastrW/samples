@@ -184,7 +184,7 @@ QWidget* RtabWidget::createDockContent(bool addToolbar) {
 void RtabWidget::slot_updateStatusLabel() {
     if (!m_statusLabel || !m_model) return;
     const int rows = m_model->rowCount();
-    const int cols = m_view->getColumnCount();   // видимые колонки QTitan
+    const int cols = m_view->getColumnCount();   // все столбцы dataset
     m_statusLabel->setText(tr("Строк: %1   Столбцов: %2").arg(rows).arg(cols));
 }
 

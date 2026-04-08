@@ -143,6 +143,27 @@ private:
         void put(int row, int col, QVariant v) {
             data[row][col] = std::move(v);
         }
+        // Освободить место для вставки строк [first..last]:
+        // строки >= first сдвигаются вниз на count позиций.
+        void shiftRowsDown(int first, int count) {
+            std::unordered_map<int, std::unordered_map<int, QVariant>> shifted;
+            for (auto& [row, cols] : data) {
+                const int newRow = (row >= first) ? row + count : row;
+                shifted[newRow] = std::move(cols);
+            }
+            data = std::move(shifted);
+        }
+
+        // Удалить строки [first..first+count-1] и сдвинуть остальные вверх.
+        void shiftRowsUp(int first, int count) {
+            std::unordered_map<int, std::unordered_map<int, QVariant>> shifted;
+            for (auto& [row, cols] : data) {
+                if (row >= first && row < first + count) continue; // удалённые
+                const int newRow = (row >= first + count) ? row - count : row;
+                shifted[newRow] = std::move(cols);
+            }
+            data = std::move(shifted);
+        }
     };
     mutable BgCache m_bgCache;
 };

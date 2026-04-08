@@ -347,7 +347,11 @@ void RModel::slot_EndResetModel(std::string tName)
 
 void RModel::slot_BeginInsertRow(std::string tName, int first, int last)
 {
-    if (getRdata()->t_name_ == tName) beginInsertRows({}, first, last);
+    if (getRdata()->t_name_ != tName) return;
+    const int count = last - first + 1;
+    // ← сдвиг форматирования перед вставкой
+    m_bgCache.shiftRowsDown(first, count);
+    beginInsertRows({}, first, last);
 }
 
 void RModel::slot_EndInsertRow(std::string tName)
@@ -357,12 +361,17 @@ void RModel::slot_EndInsertRow(std::string tName)
 
 void RModel::slot_BeginRemoveRows(std::string tName, int first, int last)
 {
-    if (getRdata()->t_name_ == tName) beginRemoveRows({}, first, last);
+    if (getRdata()->t_name_ != tName) return;
+    beginRemoveRows({}, first, last);
 }
 
 void RModel::slot_EndRemoveRows(std::string tName)
 {
-    if (getRdata()->t_name_ == tName) endRemoveRows();
+    if (getRdata()->t_name_ != tName) return;
+    // Определяем диапазон через beginRemoveRows/endRemoveRows не передаёт параметры,
+    // поэтому проще инвалидировать весь кеш при удалении (операция редкая).
+    m_bgCache.clear();
+    endRemoveRows();
 }
 
 void RModel::addCondFormat(size_t column, const CondFormat& condFormat)
