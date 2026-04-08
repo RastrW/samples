@@ -99,6 +99,9 @@ private:
     void setupShortcuts();
     void setupConnections();
 
+    int getModelFocuedRow();
+    int getModelFocuedColumn();
+
     Qtitan::Grid* m_grid;
     Qtitan::GridTableView* m_view;
     std::shared_ptr<PyHlp> pPyHlp_;

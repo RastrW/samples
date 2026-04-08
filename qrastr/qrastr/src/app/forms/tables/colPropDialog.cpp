@@ -35,6 +35,8 @@ void ColPropDialog::setupUi()
     m_leName       = new QLineEdit;
     m_leName->setReadOnly(true);
     m_leName->setModified(false);
+    m_leName->setStyleSheet("QLineEdit { background-color: #f0f0f0; color: gray; }");
+    m_leName->setFocusPolicy(Qt::NoFocus);
 
     m_leTitle      = new QLineEdit;
     m_teDescr      = new QPlainTextEdit;

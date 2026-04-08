@@ -294,7 +294,8 @@ bool RModel::removeRows(int row, int count, const QModelIndex&)
     IRastrTablePtr  table  { tablesx->Item(getRdata()->t_name_) };
     size_t t_sz = IRastrPayload(table->Size()).Value();
 
-    beginRemoveRows({},row,(count>1)?count-1:row);
+    //beginRemoveRows({},row,(count>1)?count-1:row);
+    beginRemoveRows({}, row, row + count - 1);
     if (count == t_sz){
         IRastrResultVerify{ table->SetSize(0) };
     }
@@ -371,7 +372,7 @@ void RModel::addCondFormat(size_t column, const CondFormat& condFormat)
 void RModel::setCondFormats(size_t column, const std::vector<CondFormat>& condFormats)
 {
     m_condFmt.set(column, condFormats);
-    m_bgCache.clear();
+    m_bgCache.invalidateColumn(static_cast<int>(column));
     // layoutChanged вызывается из контроллера после
     // полной замены всех правил, не инкрементально.
 }

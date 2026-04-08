@@ -82,7 +82,7 @@ public :
                 double v2 = res(trim(operands[1]));
 
                 double op_res = perform_operation(v1, v2, op.second);
-                std::cout << op.first << ":\t"<<trim(operands[0])<<op.first << trim(operands[1])<<" -> "<<v1<< op.first<<v2<<"="<< op_res << std::endl;
+                //std::cout << op.first << ":\t"<<trim(operands[0])<<op.first << trim(operands[1])<<" -> "<<v1<< op.first<<v2<<"="<< op_res << std::endl;
                 return op_res;
             }
         }

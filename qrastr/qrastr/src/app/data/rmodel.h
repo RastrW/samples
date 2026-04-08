@@ -130,6 +130,10 @@ private:
         }
         void clear() { data.clear(); }
 
+        void invalidateColumn(int col) {
+            for (auto& [row, cols] : data)
+                cols.erase(col);
+        }
         const QVariant* get(int row, int col) const {
             auto it = data.find(row);
             if (it == data.end()) return nullptr;

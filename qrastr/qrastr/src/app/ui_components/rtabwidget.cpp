@@ -42,7 +42,6 @@
 #include "qastra.h"
 #include "rdata.h"
 #include "QDataBlocks.h"
-#include "customEditors/searchableComboEditor/searchableComboRepository.h"
 #include "customEditors/searchableComboEditorTwo/searchableComboRepositoryTwo.h"
 
 void dumpShortcuts(QWidget* root, const QString& tag)
@@ -79,7 +78,7 @@ RtabWidget::RtabWidget(QAstra* pqastra,CUIForm UIForm, RTablesDataManager* pRTDM
     Grid::loadTranslation();
     m_grid = new Qtitan::Grid(this);
     if (m_UIForm.Vertical()){
-        m_grid->setViewType(Qtitan::Grid::TableViewVertical);
+        m_grid->setViewType(Qtitan::Grid::BandedTableViewVertical);
     }else{
         m_grid->setViewType(Qtitan::Grid::TableView);
     }
@@ -92,9 +91,9 @@ RtabWidget::RtabWidget(QAstra* pqastra,CUIForm UIForm, RTablesDataManager* pRTDM
         m_view->tableOptions().setFrozenPlaceQuickSelection(true);
         m_view->tableOptions().setRowsQuickSelection(true);
     }
+
     m_view->options().setGridLines(Qtitan::LinesBoth);
     m_view->options().setGridLineWidth(1);
-    m_view->tableOptions().setColumnAutoWidth(true);
     //user can select several cells at time. Hold shift key to select multiple cells.
     m_view->options().setColumnHidingOnGroupingEnabled(false);
     // Выделение: MultiRowSelection + rubber-band через indicator-колонку
@@ -250,6 +249,12 @@ void RtabWidget::setupToolbar() {
     m_actDuplicateRow = m_toolbar->addAction(QIcon(":/images/Rastr3_grid_duprow_16x161.png"), "");
     m_groupCorrection = m_toolbar->addAction(QIcon(":/images/column_edit.png"), "");
 
+    m_actAddRow->setToolTip(tr("Добавить строку (Ctrl+A)"));
+    m_actInsertRow->setToolTip(tr("Вставить строку (Ctrl+I)"));
+    m_actDeleteRow->setToolTip(tr("Удалить строку (Ctrl+D)"));
+    m_actDuplicateRow->setToolTip(tr("Дублировать строку (Ctrl+R)"));
+    m_groupCorrection->setToolTip(tr("Групповая корректировка"));
+
     connect(m_actAddRow,       &QAction::triggered, this, &RtabWidget::slot_addRow);
     connect(m_actInsertRow,    &QAction::triggered, this, &RtabWidget::slot_insertRow);
     connect(m_actDeleteRow,    &QAction::triggered, this, &RtabWidget::slot_deleteRow);
@@ -359,7 +364,9 @@ void RtabWidget::createModel()
 
     // ── Применяем ширины из бэка при первом открытии ──
     // setTableView отключает columnAutoWidth и выставляет ширины из RCol::getWidth()
-    setTableView();
+    if (!m_UIForm.Vertical()){
+        setTableView();
+    }
 
     m_linkedFormCtrl = std::make_unique<LinkedFormController>(
         m_pqastra,
@@ -527,19 +534,15 @@ void RtabWidget::slot_contextMenu(ContextMenuEventArgs* args)
 
 void RtabWidget::slot_focusRowChanged(int row_old, int row_new)
 {
-    // getRow(row_new) возвращает невалидный GridRow, т.к. row_new —
-    // контроллерный индекс, не совпадающий с аргументом getRow.
-    // focusedRow() идёт через m_persistentFocusRow, который уже
-    // обновлён ДО эмиссии сигнала — это единственный надёжный способ.
-    GridRow row = m_view->focusedRow();
-    if (!row.isValid()) return;
+    m_linkedFormCtrl->onParentRowChanged(getModelFocuedRow());
+}
 
-    // modelIndex().row() — физический индекс в QAbstractTableModel (== pnparray_),
-    // правильный и при сортировке, и без неё
-    const int modelRow = row.modelIndex().row();
-    if (modelRow < 0) return;
+int RtabWidget::getModelFocuedRow(){
+    return m_view->focusedRowIndex();
+}
 
-    m_linkedFormCtrl->onParentRowChanged(modelRow);
+int RtabWidget::getModelFocuedColumn(){
+    return m_view->focusedColumnIndex();
 }
 
 void RtabWidget::slot_addRow()
@@ -556,6 +559,7 @@ void RtabWidget::slot_addRow()
 void RtabWidget::slot_insertRow()
 {
     int row = m_view->selection()->cell().rowIndex();
+    //int row = getModelFocuedRow();
 
     m_view->beginUpdate();
     m_model->insertRows(row,1);
@@ -576,6 +580,13 @@ void RtabWidget::slot_deleteRow()
 {
     int row = m_view->selection()->cell().rowIndex();
     QModelIndexList selections_rows = m_view->selection()->selectedRowIndexes();
+
+    if (selections_rows.count() > 1) {
+        auto btn = QMessageBox::question(this,
+                                         tr("Подтверждение"),
+                                         tr("Удалить %1 записей?").arg(selections_rows.count()));
+        if (btn != QMessageBox::Yes) return;
+    }
 
     m_view->beginUpdate();
     //Примем допущение что selection() один и не имеет разрывов
@@ -661,6 +672,7 @@ void RtabWidget::slot_openColProp(int col)
 
 void RtabWidget::slot_openSelection(int col)
 {
+    int column = getModelFocuedColumn();
     RCol* prcol = m_model->getRCol(col);
     std::string colName = prcol ? prcol->getColName() : "";
 

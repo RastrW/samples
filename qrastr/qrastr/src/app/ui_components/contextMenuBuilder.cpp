@@ -109,10 +109,6 @@ void ContextMenuBuilder::prepareForHeader(int column, RCol* col, QMenu* menu)
         m_actDesc->setText(tr("(нет данных)"));
     }
 
-    // ── Сумма выделенных ────────────────────────────────────────────────
-    auto [count, sum] = calcSumSelected();
-    m_actSum->setText(
-        QString("Сумма: %1   Элементов: %2").arg(sum).arg(count));
 
     // ── Прямой ввод кода ────────────────────────────────────────────────
     bool showDirect = false;
@@ -129,7 +125,7 @@ void ContextMenuBuilder::prepareForHeader(int column, RCol* col, QMenu* menu)
     // ── Добавляем пункты в меню заголовка ───────────────────────────────
     menu->addSeparator();
     menu->addAction(m_actDesc);
-    menu->addAction(m_actSum);
+
     menu->addSeparator();
     menu->addAction(m_actTmpl);
     menu->addAction(m_actData);
@@ -160,6 +156,12 @@ void ContextMenuBuilder::prepareForShow(const MenuContext& ctx, QMenu* menu)
     menu->addAction(m_actImport);
     menu->addAction(m_actSel);
     menu->addSeparator();
+
+    // ── Сумма выделенных ────────────────────────────────────────────────
+    auto [count, sum] = calcSumSelected();
+    m_actSum->setText(
+        QString("Сумма: %1   Элементов: %2").arg(sum).arg(count));
+    menu->addAction(m_actSum);
 
     // ── Связанные подменю ───────────────────────────────────────────────
     rebuildLinkedSubmenus(ctx.row);

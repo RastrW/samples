@@ -36,12 +36,11 @@ GroupCorrectionDialog::GroupCorrectionDialog(RData* _prdata, RCol* _prcol, QWidg
 
     // --- Row 2: "radioButton Удалять строки" ---
     QRadioButton* rbDelete = new QRadioButton(tr("Удалять строки"));
-    rbDelete->setChecked(true);
 
     // --- Row 3: radioButton + expression ---
     QRadioButton* rbFormula = new QRadioButton(tr("Формула расчета:"));
+    rbFormula->setChecked(true);
     m_leExpression = new QLineEdit();
-    m_leExpression->setEnabled(false); // неактивен по умолчанию
 
     // Активировать lineEdit только при выборе rbFormula
     connect(rbFormula, &QRadioButton::toggled,
