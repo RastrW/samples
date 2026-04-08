@@ -546,50 +546,78 @@ void RtabWidget::slot_addRow()
     m_view->beginUpdate();
     m_model->addRow();
     m_view->endUpdate();
-    // Переводим фокус на последнюю строку
-    int newRow = m_model->rowCount() - 1;
-    if (newRow >= 0)
-        m_view->setFocusedRowIndex(newRow);
+
+    int modelRow = m_model->rowCount() - 1;
+    if (modelRow < 0) return;
+
+    // Конвертируем модельный индекс → GridRow → визуальный индекс
+    QModelIndex newIdx = m_model->index(modelRow, 0);
+    GridRow newGridRow = m_view->getRow(newIdx);
+    if (newGridRow.isValid()) {
+        m_view->scrollToRow(newGridRow);
+        m_view->setFocusedRowIndex(newGridRow.rowIndex());
+    }
 }
 
 void RtabWidget::slot_insertRow()
 {
-    int row = m_view->selection()->cell().rowIndex();
-    //int row = getModelFocuedRow();
+    // cell().modelIndex() — правильно, возвращает QModelIndex
+    int modelRow = m_view->selection()->cell().modelIndex().row();
 
     m_view->beginUpdate();
-    m_model->insertRows(row,1);
+    m_model->insertRows(modelRow, 1);
     m_view->endUpdate();
-    m_view->setFocusedRowIndex(row);
+
+    // Переводим фокус на вставленную строку через модельный индекс
+    GridRow inserted = m_view->getRow(m_model->index(modelRow, 0));
+    if (inserted.isValid())
+        m_view->setFocusedRowIndex(inserted.rowIndex());
 }
 
 void RtabWidget::slot_duplicateRow()
 {
-    int row = m_view->selection()->cell().rowIndex();
+    int modelRow = m_view->selection()->cell().modelIndex().row();
 
     m_view->beginUpdate();
-    m_model->duplicateRow(row);
+    m_model->duplicateRow(modelRow);
     m_view->endUpdate();
+
+    // Дубликат вставляется на позицию modelRow
+    GridRow dup = m_view->getRow(m_model->index(modelRow, 0));
+    if (dup.isValid())
+        m_view->setFocusedRowIndex(dup.rowIndex());
 }
 
 void RtabWidget::slot_deleteRow()
 {
-    int row = m_view->selection()->cell().rowIndex();
-    QModelIndexList selections_rows = m_view->selection()->selectedRowIndexes();
+    QModelIndexList selected = m_view->selection()->selectedRowIndexes();
+    if (selected.isEmpty()) return;
 
-    if (selections_rows.count() > 1) {
+    if (selected.count() > 1) {
         auto btn = QMessageBox::question(this,
                                          tr("Подтверждение"),
-                                         tr("Удалить %1 записей?").arg(selections_rows.count()));
+                                         tr("Удалить %1 записей?").arg(selected.count()),
+                                         QMessageBox::Yes | QMessageBox::Cancel);
         if (btn != QMessageBox::Yes) return;
     }
 
+    // Минимальный model row — начало диапазона удаления
+    int minModelRow = selected.first().row();
+    for (const QModelIndex& mi : selected)
+        minModelRow = std::min(minModelRow, mi.row());
+
     m_view->beginUpdate();
     //Примем допущение что selection() один и не имеет разрывов
-    //m_model->removeRows(row,1);
-    m_model->removeRows(row,selections_rows.count());
+    m_model->removeRows(minModelRow, selected.count());
     m_view->endUpdate();
-    m_view->setFocusedRowIndex(row);
+
+    // Фокус на строку, которая оказалась на месте удалённых
+    int newFocus = std::min(minModelRow, m_model->rowCount() - 1);
+    if (newFocus >= 0) {
+        GridRow r = m_view->getRow(m_model->index(newFocus, 0));
+        if (r.isValid())
+            m_view->setFocusedRowIndex(r.rowIndex());
+    }
 }
 
 void RtabWidget::slot_beginResetModel(std::string tname)
