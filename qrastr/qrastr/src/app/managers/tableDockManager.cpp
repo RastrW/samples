@@ -128,25 +128,9 @@ void TableDockManager::openFormByName(const QString& formName)
     openFormByIndex(it->second);
 }
 
-void TableDockManager::slot_calculationStarted()
-{
-    // Передаём сигнал ВСЕМ открытым формам
-    for (RtabWidget* w : m_openForms){
-        if (w) {
-            w->on_calc_begin();
-        }
-    }
-}
+void TableDockManager::slot_calculationStarted(){}
 
-void TableDockManager::slot_calculationFinished()
-{
-    // Передаём сигнал ВСЕМ открытым формам
-    for (RtabWidget* w : m_openForms){
-        if (w) {
-            w->on_calc_end();
-        }
-    }
-}
+void TableDockManager::slot_calculationFinished(){}
 
 void TableDockManager::buildFormsMenu(QMenu* parentMenu,
                                       QMenu* calcParametersMenu)

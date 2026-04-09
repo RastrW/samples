@@ -36,7 +36,7 @@
 #include "linkedformcontroller.h"
 #include "tables/colPropDialog.h"
 #include "contextMenuBuilder.h"
-#include "customFilterCondition.h"
+#include "filter/customFilterCondition.h"
 #include "condFormatController.h"
 #include "rmodel.h"
 #include "rtablesdatamanager.h"
@@ -44,6 +44,9 @@
 #include "rdata.h"
 #include "QDataBlocks.h"
 #include "customEditors/searchableComboEditorTwo/searchableComboRepositoryTwo.h"
+#include "filter/autoFilter/autoFilterWidget.h"
+#include "filter/autoFilter/autoFilterCondition.h"
+#include "filter/autoFilter/filterRuleParser.h"
 
 void dumpShortcuts(QWidget* root, const QString& tag)
 {
@@ -160,6 +163,33 @@ QWidget* RtabWidget::createDockContent(bool addToolbar) {
         setupToolbar();
         layout->addWidget(m_toolbar);
     }
+    // ── Строка автофильтра (скрыта по умолчанию) ──
+    m_autoFilterCond = new AutoFilterCondition(m_view->filter());
+    m_autoFilter = new AutoFilterWidget(m_view, wrapper);
+    m_autoFilter->setVisible(false);
+    layout->addWidget(m_autoFilter);
+
+    // Синхронизация горизонтальной прокрутки
+    // QTitan не даёт прямого доступа к QScrollBar, поэтому ищем через children.
+    // Если QTitan обновится и сломается — достаточно поправить этот блок.
+    if (auto* hBar = m_grid->findChild<QScrollBar*>(QString(), Qt::FindDirectChildrenOnly)) {
+        connect(hBar, &QScrollBar::valueChanged,
+                m_autoFilter, &AutoFilterWidget::slot_scrollChanged);
+    } else {
+        // Fallback: ищем рекурсивно по ориентации
+        const auto bars = m_grid->findChildren<QScrollBar*>();
+        for (QScrollBar* bar : bars) {
+            if (bar->orientation() == Qt::Horizontal) {
+                connect(bar, &QScrollBar::valueChanged,
+                        m_autoFilter, &AutoFilterWidget::slot_scrollChanged);
+                break;
+            }
+        }
+    }
+
+    connect(m_autoFilter, &AutoFilterWidget::sig_filterChanged,
+            this, &RtabWidget::slot_applyAutoFilter);
+
     layout->addWidget(m_grid);
 
     // ── Статусная строка под таблицей ──
@@ -273,18 +303,30 @@ void RtabWidget::setupToolbar() {
     m_actDeleteRow = m_toolbar->addAction(QIcon(":/images/Rastr3_grid_delrow_16x16.png"), "");
     m_actDuplicateRow = m_toolbar->addAction(QIcon(":/images/Rastr3_grid_duprow_16x161.png"), "");
     m_groupCorrection = m_toolbar->addAction(QIcon(":/images/column_edit.png"), "");
+    m_actAutoFilter = m_toolbar->addAction(QIcon(":/images/new_style/filter.png"),"");
 
     m_actAddRow->setToolTip(tr("Добавить строку (Ctrl+A)"));
     m_actInsertRow->setToolTip(tr("Вставить строку (Ctrl+I)"));
     m_actDeleteRow->setToolTip(tr("Удалить строку (Ctrl+D)"));
     m_actDuplicateRow->setToolTip(tr("Дублировать строку (Ctrl+R)"));
     m_groupCorrection->setToolTip(tr("Групповая корректировка"));
+    m_actAutoFilter->setToolTip(tr("Показать/скрыть строку автофильтра"));
 
-    connect(m_actAddRow,       &QAction::triggered, this, &RtabWidget::slot_addRow);
-    connect(m_actInsertRow,    &QAction::triggered, this, &RtabWidget::slot_insertRow);
-    connect(m_actDeleteRow,    &QAction::triggered, this, &RtabWidget::slot_deleteRow);
-    connect(m_actDuplicateRow, &QAction::triggered, this, &RtabWidget::slot_duplicateRow);
-    connect(m_groupCorrection, &QAction::triggered, this, &RtabWidget::slot_groupCorrection);
+    m_actAutoFilter->setCheckable(true);
+    m_actAutoFilter->setChecked(false);
+
+    connect(m_actAddRow,        &QAction::triggered,
+            this, &RtabWidget::slot_addRow);
+    connect(m_actInsertRow,     &QAction::triggered,
+            this, &RtabWidget::slot_insertRow);
+    connect(m_actDeleteRow,     &QAction::triggered,
+            this, &RtabWidget::slot_deleteRow);
+    connect(m_actDuplicateRow,  &QAction::triggered,
+            this, &RtabWidget::slot_duplicateRow);
+    connect(m_groupCorrection,  &QAction::triggered,
+            this, &RtabWidget::slot_groupCorrection);
+    connect(m_actAutoFilter,    &QAction::toggled,
+            this, &RtabWidget::slot_toggleAutoFilter);
 }
 
 void RtabWidget::setupShortcuts(){
@@ -311,24 +353,6 @@ void RtabWidget::notifyParentRowChanged(int modelRow) {
     m_linkedFormCtrl->onParentRowChanged(modelRow);
 }
 
-bool RtabWidget::eventFilter(QObject* obj, QEvent* event)
-{
-    if (event->type() == QEvent::KeyPress) {
-        // Срабатываем только если событие пришло от нашего grid или viewport
-        bool fromGrid = (obj == m_grid)
-                        || (m_grid && m_grid->isAncestorOf(qobject_cast<QWidget*>(obj)));
-        if (fromGrid) {
-            auto* ke = static_cast<QKeyEvent*>(event);
-            if (ke->key() == Qt::Key_Delete) {
-                // Delete блокируем: QTitan удаляет содержимое ячейки,
-                // у нас удаление строки — Ctrl+D
-                return true;
-            }
-        }
-    }
-    return QWidget::eventFilter(obj, event);
-}
-
 void RtabWidget::closeEvent(QCloseEvent *event)
 {
     spdlog::info("RtabWidget::closeEvent [{}]", m_UIForm.Name().c_str() );
@@ -344,8 +368,7 @@ void RtabWidget::closeEvent(QCloseEvent *event)
     QWidget::closeEvent(event);
 };
 
-void RtabWidget::slot_close()
-{
+void RtabWidget::slot_close(){
     this->close();
 }
 
@@ -406,13 +429,12 @@ void RtabWidget::createModel()
         m_model.get(), m_view, this);
     m_condFormatCtrl->loadFromJson();
 
-    ///@todo проверить необходимо в этих сигналах
+    ///@todo проверить необходимость в этих сигналах
     this->update();
     this->repaint();
 }
 
-void RtabWidget::applyAllColumnEditors()
-{
+void RtabWidget::applyAllColumnEditors(){
     for (int i = 0; i < m_model->columnCount(); ++i)
         applyColumnEditor(i);
 }
@@ -509,18 +531,6 @@ void RtabWidget::applyColumnEditor(int colIndex)
     }
 }
 
-void RtabWidget::on_calc_begin()
-{
-    ///@todo something
-    //view->beginUpdate();
-}
-
-void RtabWidget::on_calc_end()
-{
-    ///@todo  something
-    // view->endUpdate();
-}
-
 void RtabWidget::setTableView(int multiplier  )
 {
     m_view->beginUpdate();
@@ -561,8 +571,7 @@ void RtabWidget::slot_contextMenu(ContextMenuEventArgs* args)
     m_menuBuilder->prepareForShow(ctx, args->contextMenu());
 }
 
-void RtabWidget::slot_focusRowChanged(int row_old, int row_new)
-{
+void RtabWidget::slot_focusRowChanged(int row_old, int row_new){
     m_linkedFormCtrl->onParentRowChanged(getModelFocuedRow());
 }
 
@@ -702,6 +711,17 @@ void RtabWidget::slot_endResetModel(std::string tname)
     m_view->endUpdate();    //← закрываем внутренний
 
     m_view->endUpdate();     // ← закрываем внешний из slot_beginResetModel
+
+    // После полного сброса модели очищаем автофильтр:
+    // структура колонок могла измениться.
+    if (m_autoFilter) {
+        m_autoFilterCond->clearAll();
+        m_autoFilter->clearAll();     // очищает поля и эмитит filterChanged→ rebuild
+        m_autoFilter->rebuild();      // пересоздаёт ячейки под новые колонки
+    }
+    m_selectionFilter.clear();
+    m_selection = "";
+    rebuildCombinedFilter();
 }
 
 void RtabWidget::slot_groupCorrection()
@@ -797,25 +817,70 @@ void RtabWidget::slot_widthByData(){
 
 void RtabWidget::slot_setFiltrForSelection(std::string selection)
 {
-    // selection должен быть в формате = "pg=10"
-    m_selection = selection;
+    m_selection    = selection;
+    m_selectionFilter = QString::fromStdString(selection);   // сохраняем для rebuildCombinedFilter
+    rebuildCombinedFilter();
+}
 
-    IRastrTablesPtr tablesx{ m_pqastra->getRastr()->Tables() };
-    IRastrTablePtr  table{ tablesx->Item(m_model->getRdata()->t_name_) };
-    IRastrResultVerify(table->SetSelection(selection));
+void RtabWidget::slot_toggleAutoFilter(bool checked)
+{
+    m_autoFilter->setVisible(checked);
+    if (!checked) {
+        // Сброс условий при скрытии
+        m_autoFilter->clearAll();
+        // clearAll уже испустит filterChanged → rebuildCombinedFilter
+        // но для надёжности вызовем явно
+        m_autoFilterCond->clearAll();
+        rebuildCombinedFilter();
+    }
+}
 
-    DataBlock<FieldVariantData> variantBlock;
-    const IRastrPayload keys = table->Key();
-    IRastrResultVerify(table->DataBlock(keys.Value(), variantBlock));
-    const auto indices = variantBlock.IndexesVector();
+void RtabWidget::slot_applyAutoFilter(int colIndex, const QString& text)
+{
+    FilterRule rule = FilterRuleParser::parse(text);
+    if (rule.isActive())
+        m_autoFilterCond->setRule(colIndex, rule);
+    else
+        m_autoFilterCond->clearRule(colIndex);
 
-    auto* groupCondition = new GridFilterGroupCondition(m_view->filter());
-    auto* condition      = new CustomFilterCondition(m_view->filter());
-    groupCondition->addCondition(condition);
-    for (long idx : indices)
-        condition->addRow(idx);
+    rebuildCombinedFilter();
+}
 
-    m_view->filter()->setCondition(groupCondition, true);
+void RtabWidget::rebuildCombinedFilter()
+{
+    const bool hasSelection  = !m_selectionFilter.isEmpty();
+    const bool hasAutoFilter = m_autoFilterCond && m_autoFilterCond->hasActiveRules();
+
+    if (!hasSelection && !hasAutoFilter) {
+        m_view->filter()->setActive(false);
+        return;
+    }
+
+    auto* group = new Qtitan::GridFilterGroupCondition(m_view->filter());
+
+    if (hasSelection) {
+        // Воссоздаём CustomFilterCondition из m_selectionFilter.
+        // Повторяем логику получения строк из плагина (как в slot_setFiltrForSelection).
+        IRastrTablesPtr tablesx{ m_pqastra->getRastr()->Tables() };
+        IRastrTablePtr  table{ tablesx->Item(m_model->getRdata()->t_name_) };
+        IRastrResultVerify(table->SetSelection(m_selectionFilter.toStdString()));
+
+        DataBlock<FieldVariantData> variantBlock;
+        const IRastrPayload keys = table->Key();
+        IRastrResultVerify(table->DataBlock(keys.Value(), variantBlock));
+        const auto indices = variantBlock.IndexesVector();
+
+        auto* selCond = new CustomFilterCondition(m_view->filter());
+        for (long idx : indices)
+            selCond->addRow(static_cast<int>(idx));
+        group->addCondition(selCond);
+    }
+
+    if (hasAutoFilter) {
+        // clone() — QTitan владеет копией, мы сохраняем оригинал для изменений
+        group->addCondition(m_autoFilterCond->clone());
+    }
+
+    m_view->filter()->setCondition(group, true);
     m_view->filter()->setActive(true);
-    m_view->showFilterPanel();
 }

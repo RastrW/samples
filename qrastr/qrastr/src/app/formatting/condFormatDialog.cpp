@@ -1,6 +1,6 @@
 #include "condFormatDialog.h"
 #include "condFormat.h"
-#include "filterlineedit.h"
+#include "filter/filterlineedit.h"
 
 #include <QColorDialog>
 #include <QDialogButtonBox>

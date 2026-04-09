@@ -78,5 +78,6 @@
 		<file>images/new_style/settings.png</file>
 		<file>images/new_style/exit.png</file>
 		<file>images/new_style/abstract.png</file>
+		<file>images/new_style/filter.png</file>
     </qresource>
 </RCC>

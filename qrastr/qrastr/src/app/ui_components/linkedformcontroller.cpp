@@ -7,7 +7,7 @@
 #include "rmodel.h"
 #include "rdata.h"
 #include "qmcr/pyhlp.h"
-#include "customFilterCondition.h"
+#include "filter/customFilterCondition.h"
 #include "utils.h"
 
 #include <DockManager.h>

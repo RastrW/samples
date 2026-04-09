@@ -19,6 +19,9 @@ class QTableView;
 class ContextMenuBuilder;
 class CondFormatController;
 
+class AutoFilterWidget;
+class AutoFilterCondition;
+
 ///@brief Виджет, отображающий одну таблицу Rastr в QTitan Grid.
 class RtabWidget : public QWidget
 {
@@ -43,8 +46,6 @@ public:
     /// @brief Применяет LinkedForm через контроллер.
     void applyLinkedFormFromController(const LinkedForm& lf);
     void setPyHlp(std::shared_ptr<PyHlp> pPyHlp);
-    void on_calc_begin();
-    void on_calc_end();
 
     void notifyParentRowChanged(int modelRow);
 public slots:
@@ -77,6 +78,9 @@ private slots:
     void slot_beginResetModel(std::string tname);
     void slot_endResetModel(std::string tname);
     void slot_updateStatusLabel();
+
+    void slot_toggleAutoFilter(bool checked);
+    void slot_applyAutoFilter(int colIndex, const QString& text);
 private:
     /** @brief
      * a) создаёт RModel, вызывает setForm/populateDataFromRastr;
@@ -89,8 +93,6 @@ private:
     void applyColumnEditor(int colIndex);
 
     void setTableView(int multiplier = 10 );
-    /// Блокирует горячие клавиши заданные по умолчанию в Qtitan
-    bool eventFilter(QObject* obj, QEvent* event) override;
 
     void setupToolbar();
     void setupShortcuts();
@@ -98,6 +100,9 @@ private:
 
     int getModelFocuedRow();
     int getModelFocuedColumn();
+    /// @brief Пересобирает общий фильтр (AND выборки + AND автофильтра) и
+    ///        передаёт его в m_view->filter().
+    void rebuildCombinedFilter();
 
     Qtitan::Grid* m_grid;
     Qtitan::GridTableView* m_view;
@@ -122,8 +127,13 @@ private:
     QAction* m_actDeleteRow;
     QAction* m_actDuplicateRow;
     QAction* m_groupCorrection;
+    QAction* m_actAutoFilter;
 
     std::string m_selection {""}; // Текущая выборка
     std::unordered_map<QString,bool>
         m_columnsVisible;
+
+    AutoFilterWidget*      m_autoFilter      {nullptr};
+    AutoFilterCondition*   m_autoFilterCond  {nullptr};  // НЕ владеет — clone уходит в QTitan
+    QString                m_selectionFilter;            // последняя строка выборки
 };
