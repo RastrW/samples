@@ -33,9 +33,6 @@ public slots:
     void slot_scrollChanged(int value);
 private slots:
     void slot_syncLayout();
-protected:
-    void showEvent(QShowEvent* event) override;
-    bool eventFilter(QObject* obj, QEvent* event) override;
 private:
     Qtitan::GridTableView* m_view;
     QScrollArea*           m_scrollArea;

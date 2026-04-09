@@ -48,7 +48,7 @@ AutoFilterWidget::AutoFilterWidget(GridTableView* view, QWidget* parent)
 
     // Следим за resize грида — он происходит при открытии таблицы,
     // изменении размера окна и при первом показе
-    m_view->grid()->installEventFilter(this);
+    //m_view->grid()->installEventFilter(this);
 
     rebuild();
 }
@@ -119,7 +119,6 @@ void AutoFilterWidget::clearAll(){
 }
 
 void AutoFilterWidget::slot_scrollChanged(int value){
-
     m_scrollArea->horizontalScrollBar()->setValue(value);
 }
 
@@ -154,17 +153,4 @@ void AutoFilterWidget::slot_syncLayout()
         xOffset += e.width;
     }
     m_content->setFixedSize(xOffset ? xOffset : 1, kRowHeight);
-}
-
-void AutoFilterWidget::showEvent(QShowEvent* event)
-{
-    QWidget::showEvent(event);
-    // Грид уже выложен к моменту show() AutoFilterWidget,
-    // поэтому измеряем индикатор здесь
-    //m_indicatorMeasured = false; // сбросить чтобы перемерить
-    //slot_syncLayout();
-}
-
-bool AutoFilterWidget::eventFilter(QObject* obj, QEvent* event){
-    return QWidget::eventFilter(obj, event);
 }
