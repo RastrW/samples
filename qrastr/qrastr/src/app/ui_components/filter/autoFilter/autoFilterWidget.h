@@ -29,15 +29,19 @@ signals:
     /// @param colIndex — модельный индекс колонки
     /// @param text     — текущий текст поля
     void sig_filterChanged(int colIndex, const QString& text);
-
 public slots:
     void slot_scrollChanged(int value);
 private slots:
     void slot_syncLayout();
+protected:
+    void showEvent(QShowEvent* event) override;
+    bool eventFilter(QObject* obj, QEvent* event) override;
 private:
     Qtitan::GridTableView* m_view;
     QScrollArea*           m_scrollArea;
     QWidget*               m_content;
+    bool m_indicatorMeasured = false;
+    QWidget*               m_indicatorSpacer; //заглушка под индикатор
 
     // modelIndex → QLineEdit
     QMap<int, QLineEdit*>  m_editors;

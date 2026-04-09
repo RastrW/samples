@@ -15,35 +15,48 @@ AutoFilterWidget::AutoFilterWidget(GridTableView* view, QWidget* parent)
 {
     setFixedHeight(kRowHeight + 2);
 
-    // ── QScrollArea без полос прокрутки — прокруткой управляет грид ──
+    auto* outerLayout = new QHBoxLayout(this);
+    outerLayout->setContentsMargins(0, 0, 0, 0);
+    outerLayout->setSpacing(0);
+
+    // Фиксированная заглушка под индикаторную колонку грида
+    m_indicatorSpacer = new QWidget(this);
+    m_indicatorSpacer->setFixedWidth(kBorderX);
+    outerLayout->addWidget(m_indicatorSpacer);
+
+    // Скроллируемая зона под данные колонки
     m_scrollArea = new QScrollArea(this);
     m_scrollArea->setFrameShape(QFrame::NoFrame);
     m_scrollArea->setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
     m_scrollArea->setVerticalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
+    outerLayout->addWidget(m_scrollArea, 1); // stretch=1, занимает остаток
 
     m_content = new QWidget;
     m_content->setMinimumHeight(kRowHeight);
     m_scrollArea->setWidget(m_content);
     m_scrollArea->setWidgetResizable(false);
 
-    auto* lay = new QVBoxLayout(this);
-    lay->setContentsMargins(0, 0, 0, 0);
-    lay->addWidget(m_scrollArea);
-
-    // ── Сигналы QTitan ──
-    // любые изменения колонок (ширина, порядок, и т.д.)
+    // Сигналы QTitan
     connect(m_view, &GridViewBase::columnsUpdated,
             this, &AutoFilterWidget::slot_syncLayout);
     connect(m_view, &GridViewBase::columnVisibleChanged,
-            this, [this](GridColumnBase*, bool) {
-                rebuild();
-            });
+            this, [this](GridColumnBase*, bool) { rebuild(); });
+
+    // Ресайз колонок → меняется scroll range
+    connect(m_view->horizontalScrollBar(), &QScrollBar::rangeChanged,
+            this, &AutoFilterWidget::slot_syncLayout);
+
+    // Следим за resize грида — он происходит при открытии таблицы,
+    // изменении размера окна и при первом показе
+    m_view->grid()->installEventFilter(this);
 
     rebuild();
 }
 
 void AutoFilterWidget::rebuild()
 {
+    m_indicatorMeasured = false; // структура колонок изменилась
+
     // Удаляем старые редакторы
     for (QLineEdit* ed : m_editors) {
         ed->hide();
@@ -114,11 +127,12 @@ void AutoFilterWidget::slot_syncLayout()
 {
     if (!m_view) return;
 
-    // Считаем суммарную ширину
-    int totalWidth = kBorderX;
+    const int iw = kBorderX;
+    if (iw > 0 && m_indicatorSpacer->width() != iw)
+        m_indicatorSpacer->setFixedWidth(iw);
+
     const int colCount = m_view->model() ? m_view->model()->columnCount() : 0;
 
-    // Собираем видимые колонки в порядке visualIndex
     struct ColEntry { int modelIdx; int visualIdx; int width; };
     QVector<ColEntry> visible;
     for (int i = 0; i < colCount; ++i) {
@@ -127,11 +141,11 @@ void AutoFilterWidget::slot_syncLayout()
         visible.push_back({ i, col->visualIndex(), col->width() });
     }
     std::sort(visible.begin(), visible.end(),
-              [](const ColEntry& a, const ColEntry& b){ return a.visualIdx < b.visualIdx; });
+              [](const ColEntry& a, const ColEntry& b) {
+                  return a.visualIdx < b.visualIdx;
+              });
 
-    // Учитываем ширину индикаторной колонки (row indicator) QTitan
-    int xOffset = kBorderX;
-
+    int xOffset = 0;
     for (const ColEntry& e : visible) {
         if (!m_editors.contains(e.modelIdx)) continue;
         QLineEdit* ed = m_editors[e.modelIdx];
@@ -139,7 +153,18 @@ void AutoFilterWidget::slot_syncLayout()
         ed->setFixedWidth(e.width);
         xOffset += e.width;
     }
+    m_content->setFixedSize(xOffset ? xOffset : 1, kRowHeight);
+}
 
-    totalWidth = xOffset;
-    m_content->setFixedSize(totalWidth, kRowHeight);
+void AutoFilterWidget::showEvent(QShowEvent* event)
+{
+    QWidget::showEvent(event);
+    // Грид уже выложен к моменту show() AutoFilterWidget,
+    // поэтому измеряем индикатор здесь
+    //m_indicatorMeasured = false; // сбросить чтобы перемерить
+    //slot_syncLayout();
+}
+
+bool AutoFilterWidget::eventFilter(QObject* obj, QEvent* event){
+    return QWidget::eventFilter(obj, event);
 }

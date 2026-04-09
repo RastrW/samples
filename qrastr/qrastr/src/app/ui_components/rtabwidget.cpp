@@ -818,7 +818,8 @@ void RtabWidget::slot_widthByData(){
 void RtabWidget::slot_setFiltrForSelection(std::string selection)
 {
     m_selection    = selection;
-    m_selectionFilter = QString::fromStdString(selection);   // сохраняем для rebuildCombinedFilter
+    // сохраняем для rebuildCombinedFilter
+    m_selectionFilter = QString::fromStdString(selection);
     rebuildCombinedFilter();
 }
 
@@ -860,7 +861,7 @@ void RtabWidget::rebuildCombinedFilter()
 
     if (hasSelection) {
         // Воссоздаём CustomFilterCondition из m_selectionFilter.
-        // Повторяем логику получения строк из плагина (как в slot_setFiltrForSelection).
+        // Повторяем логику получения строк из плагина
         IRastrTablesPtr tablesx{ m_pqastra->getRastr()->Tables() };
         IRastrTablePtr  table{ tablesx->Item(m_model->getRdata()->t_name_) };
         IRastrResultVerify(table->SetSelection(m_selectionFilter.toStdString()));
