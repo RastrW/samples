@@ -4,7 +4,7 @@
 #include "backInfoCache.h"
 #include "condFormatStorage.h"
 #include "rdata.h"
-#include "backGroundCache.h"
+#include "backgroundCache.h"
 
 class QAstra;
 class RTablesDataManager;
@@ -118,6 +118,6 @@ private:
     BackInfoCache    m_cache;      // справочники ENUM / NAMEREF / SUPERENUM / ENPIC
     CondFormatStorage m_condFmt;   // условные форматы
 
-    mutable BackGroundCache m_bgCache;
+    mutable BackgroundCache m_bgCache;
 };
 

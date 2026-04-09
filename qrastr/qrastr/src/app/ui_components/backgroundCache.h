@@ -7,7 +7,7 @@ class QVariant;
 /// Заполняется в data(BackgroundRole), инвалидируется в slot_DataChanged.
 /// QVariant() (invalid) = «формат не нашёлся» — тоже кешируется,
 /// чтобы не запускать STRING_BOOL повторно.
-struct BackGroundCache {
+struct BackgroundCache {
 	// row → col → результат (valid или invalid QVariant)
 	std::unordered_map<int, std::unordered_map<int, QVariant>> data;
 
