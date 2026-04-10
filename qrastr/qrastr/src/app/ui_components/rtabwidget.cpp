@@ -168,24 +168,6 @@ QWidget* RtabWidget::createDockContent(bool addToolbar) {
     m_autoFilter->setVisible(false);
     layout->addWidget(m_autoFilter);
 
-    // Синхронизация горизонтальной прокрутки
-    // QTitan не даёт прямого доступа к QScrollBar, поэтому ищем через children.
-    // Если QTitan обновится и сломается — достаточно поправить этот блок.
-    if (auto* hBar = m_grid->findChild<QScrollBar*>(QString(), Qt::FindDirectChildrenOnly)) {
-        connect(hBar, &QScrollBar::valueChanged,
-                m_autoFilter, &AutoFilterWidget::slot_scrollChanged);
-    } else {
-        // Fallback: ищем рекурсивно по ориентации
-        const auto bars = m_grid->findChildren<QScrollBar*>();
-        for (QScrollBar* bar : bars) {
-            if (bar->orientation() == Qt::Horizontal) {
-                connect(bar, &QScrollBar::valueChanged,
-                        m_autoFilter, &AutoFilterWidget::slot_scrollChanged);
-                break;
-            }
-        }
-    }
-
     connect(m_autoFilter, &AutoFilterWidget::sig_filterChanged,
             this, &RtabWidget::slot_applyAutoFilter);
 

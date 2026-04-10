@@ -33,14 +33,19 @@ signals:
 public slots:
     void slot_scrollChanged(int value);
 
+protected:
+    // Отслеживаем показ виджета
+    void showEvent(QShowEvent* event) override;
+
 private slots:
     void slot_syncLayout();
+
 private:
     Qtitan::GridTableView* m_view = nullptr;
     QScrollArea*           m_scrollArea = nullptr;
     QWidget*               m_content = nullptr;
     bool                   m_indicatorMeasured = false;
-    QWidget*               m_indicatorSpacer = nullptr; //заглушка под индикатор
+    QWidget*               m_indicatorSpacer = nullptr;
 
     QMap<int, FilterCell*> m_cells; // modelIndex → cell
 };

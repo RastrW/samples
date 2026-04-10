@@ -32,21 +32,36 @@ AutoFilterWidget::AutoFilterWidget(GridTableView* view, QWidget* parent)
     m_content->setMinimumHeight(kRowHeight);
     m_scrollArea->setWidget(m_content);
     m_scrollArea->setWidgetResizable(false);
-    // Сигналы QTitan
+
+    // ===== СИГНАЛЫ QTITAN =====
+
+    // Основной сигнал: структура колонок изменилась
+    // Сюда входит изменение ширины, видимости и т.д.
     connect(m_view, &GridViewBase::columnsUpdated,
             this, &AutoFilterWidget::slot_syncLayout);
+
+    // Дополнительный сигнал: колонна переместилась
+    // (может влиять на layout)
+    connect(m_view, &GridViewBase::columnMoved,
+            this, [this](const GridColumnBase*, int) {
+                slot_syncLayout();
+            });
+
+    // Когда видимость колонки меняется — пересоздаём ячейки
     connect(m_view, &GridViewBase::columnVisibleChanged,
-            this, [this](GridColumnBase*, bool) { rebuild(); });
-    // Ресайз колонок → меняется scroll range
-    connect(m_view->horizontalScrollBar(), &QScrollBar::rangeChanged,
-            this, &AutoFilterWidget::slot_syncLayout);
+            this, [this](GridColumnBase*, bool) {
+                rebuild();;
+            });
+
+    // Горизонтальный скролл
+    connect(m_view->horizontalScrollBar(), &QScrollBar::valueChanged,
+            this, &AutoFilterWidget::slot_scrollChanged);
 
     rebuild();
 }
 
 void AutoFilterWidget::rebuild()
 {
-    // структура колонок изменилась
     m_indicatorMeasured = false;
 
     qDeleteAll(m_cells);
@@ -86,10 +101,16 @@ void AutoFilterWidget::clearAll(){
         QSignalBlocker blk(cell);
         cell->clear();
     }
-    // Испускаем filterChanged с пустой строкой для всех колонок,
-    // чтобы контроллер знал о сбросе
     for (auto it = m_cells.constBegin(); it != m_cells.constEnd(); ++it)
         emit sig_filterChanged(it.key(), FilterRule{});
+}
+
+void AutoFilterWidget::showEvent(QShowEvent* event)
+{
+    QWidget::showEvent(event);
+    // Когда виджет показывается (после скрытия), синхронизируем
+    // гарантированно. Это важно при переоткрытии фильтра.
+    QTimer::singleShot(0, this, &AutoFilterWidget::slot_syncLayout);
 }
 
 void AutoFilterWidget::slot_scrollChanged(int value){
@@ -137,9 +158,7 @@ void AutoFilterWidget::slot_syncLayout()
         FilterCell* cell = m_cells[e.modelIdx];
         cell->move(xOffset, 1);
         cell->setFixedWidth(e.width);
-
-        // После setFixedWidth вызываем resize, чтобы triggerem resizeEvent
-        // Это необходимо для updateButtonWidth() в FilterCell
+        // Гарантируем вызов resizeEvent в FilterCell
         cell->resize(e.width, cell->height());
 
         xOffset += e.width;
