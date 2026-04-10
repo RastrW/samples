@@ -18,6 +18,7 @@
 #include <QShortcut>
 #include <QPalette>
 #include <QLabel>
+#include <QContextMenuEvent>
 #include "linkedform.h"
 
 #include <QtitanGrid.h>
@@ -46,6 +47,9 @@
 #include "customEditors/searchableComboEditorTwo/searchableComboRepositoryTwo.h"
 #include "filter/autoFilter/autoFilterWidget.h"
 #include "filter/autoFilter/autoFilterCondition.h"
+#include "rGridTableView.h"
+#include "rGrid.h"
+#include "QtitanBase.h"
 
 void dumpShortcuts(QWidget* root, const QString& tag)
 {
@@ -79,13 +83,14 @@ RtabWidget::RtabWidget(QAstra* pqastra,CUIForm UIForm, RTablesDataManager* pRTDM
 {
     //  Настройка QTitan Grid
     Grid::loadTranslation();
-    m_grid = new Qtitan::Grid(this);
-    if (m_UIForm.Vertical()){
-        m_grid->setViewType(Qtitan::Grid::BandedTableViewVertical);
-    }else{
+    m_grid = new RGrid(this);
+
+    if (m_UIForm.Vertical())
+        m_grid->setViewType(Qtitan::Grid::TableViewVertical);
+    else
         m_grid->setViewType(Qtitan::Grid::TableView);
-    }
-    m_view = m_grid->view< Qtitan::GridTableView>();
+
+    m_view = m_grid->view<RGridTableView>();
 
     if (m_UIForm.Vertical()){
         m_view->tableOptions().setRowSizingEnabled(true);

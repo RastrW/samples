@@ -16,12 +16,17 @@ class RTablesDataManager;
 class RModel;
 class RCol;
 class QTableView;
+class QTableView;
 class ContextMenuBuilder;
 class CondFormatController;
+
+class QLabel;
 
 class AutoFilterWidget;
 class AutoFilterCondition;
 struct FilterRule;
+class RGrid;
+class RGridTableView;
 
 ///@brief Виджет, отображающий одну таблицу Rastr в QTitan Grid.
 class RtabWidget : public QWidget
@@ -105,8 +110,8 @@ private:
     ///        передаёт его в m_view->filter().
     void rebuildCombinedFilter();
 
-    Qtitan::Grid* m_grid;
-    Qtitan::GridTableView* m_view;
+    RGrid* m_grid;
+    RGridTableView* m_view;
     std::shared_ptr<PyHlp> pPyHlp_;
 
     // ── Компоненты ──

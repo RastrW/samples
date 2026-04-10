@@ -5,6 +5,7 @@ using WrapperExceptionType = std::runtime_error;
 #include "rtabwidget.h"
 #include <QFileInfo>
 #include <DockManager.h>
+#include <QMenu>
 #include "utils.h"
 
 TableDockManager::TableDockManager(
