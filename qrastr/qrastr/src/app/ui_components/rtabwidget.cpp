@@ -46,7 +46,6 @@
 #include "customEditors/searchableComboEditorTwo/searchableComboRepositoryTwo.h"
 #include "filter/autoFilter/autoFilterWidget.h"
 #include "filter/autoFilter/autoFilterCondition.h"
-#include "filter/autoFilter/filterRuleParser.h"
 
 void dumpShortcuts(QWidget* root, const QString& tag)
 {
@@ -836,9 +835,8 @@ void RtabWidget::slot_toggleAutoFilter(bool checked)
     }
 }
 
-void RtabWidget::slot_applyAutoFilter(int colIndex, const QString& text)
+void RtabWidget::slot_applyAutoFilter(int colIndex, const FilterRule& rule)
 {
-    FilterRule rule = FilterRuleParser::parse(text);
     if (rule.isActive())
         m_autoFilterCond->setRule(colIndex, rule);
     else

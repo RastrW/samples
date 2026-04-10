@@ -4,8 +4,10 @@
 #include <QLineEdit>
 #include <QTimer>
 #include <QMap>
+#include "filterRule.h"
 
 namespace Qtitan {class GridTableView;}
+class FilterCell;
 
 /// @class Строка автофильтра над заголовком таблицы QTitan.
 /// Виджет создаёт по одному QLineEdit на каждую видимую колонку грида.
@@ -18,28 +20,27 @@ class AutoFilterWidget : public QWidget
 public:
     explicit AutoFilterWidget(Qtitan::GridTableView* view,
                               QWidget* parent = nullptr);
-
-    /// @brief Пересоздать ячейки (вызывать после endResetModel или изменения
-    ///        набора колонок).
+    /// @brief Пересоздать ячейки.
     void rebuild();
-    /// @brief Очистить все введённые условия (текст в полях).
+    /// @brief Очистить все введённые условия.
     void clearAll();
 signals:
     /// Испускается при изменении любого поля ввода.
     /// @param colIndex — модельный индекс колонки
     /// @param text     — текущий текст поля
-    void sig_filterChanged(int colIndex, const QString& text);
+    void sig_filterChanged(int colIndex, const FilterRule& rule);
+
 public slots:
     void slot_scrollChanged(int value);
+
 private slots:
     void slot_syncLayout();
 private:
-    Qtitan::GridTableView* m_view;
-    QScrollArea*           m_scrollArea;
-    QWidget*               m_content;
-    bool m_indicatorMeasured = false;
-    QWidget*               m_indicatorSpacer; //заглушка под индикатор
+    Qtitan::GridTableView* m_view = nullptr;
+    QScrollArea*           m_scrollArea = nullptr;
+    QWidget*               m_content = nullptr;
+    bool                   m_indicatorMeasured = false;
+    QWidget*               m_indicatorSpacer = nullptr; //заглушка под индикатор
 
-    // modelIndex → QLineEdit
-    QMap<int, QLineEdit*>  m_editors;
+    QMap<int, FilterCell*> m_cells; // modelIndex → cell
 };

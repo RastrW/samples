@@ -21,6 +21,7 @@ class CondFormatController;
 
 class AutoFilterWidget;
 class AutoFilterCondition;
+struct FilterRule;
 
 ///@brief Виджет, отображающий одну таблицу Rastr в QTitan Grid.
 class RtabWidget : public QWidget
@@ -80,7 +81,7 @@ private slots:
     void slot_updateStatusLabel();
 
     void slot_toggleAutoFilter(bool checked);
-    void slot_applyAutoFilter(int colIndex, const QString& text);
+    void slot_applyAutoFilter(int colIndex, const FilterRule& rule);
 private:
     /** @brief
      * a) создаёт RModel, вызывает setForm/populateDataFromRastr;
