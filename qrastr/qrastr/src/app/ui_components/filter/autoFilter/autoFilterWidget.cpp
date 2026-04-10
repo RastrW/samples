@@ -137,6 +137,11 @@ void AutoFilterWidget::slot_syncLayout()
         FilterCell* cell = m_cells[e.modelIdx];
         cell->move(xOffset, 1);
         cell->setFixedWidth(e.width);
+
+        // После setFixedWidth вызываем resize, чтобы triggerem resizeEvent
+        // Это необходимо для updateButtonWidth() в FilterCell
+        cell->resize(e.width, cell->height());
+
         xOffset += e.width;
     }
 

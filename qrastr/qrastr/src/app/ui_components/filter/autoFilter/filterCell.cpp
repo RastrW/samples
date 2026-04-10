@@ -15,22 +15,24 @@ FilterCell::FilterCell(bool isNumeric, bool isBool, QWidget* parent)
     setSizePolicy(QSizePolicy::Ignored, QSizePolicy::Fixed);
 
     auto* lay = new QHBoxLayout(this);
-    lay->setContentsMargins(1, 0, 1, 0);
-    lay->setSpacing(2);
+    // Убрали лишние отступы: был (1, 0, 1, 0) → (0, 0, 0, 0)
+    lay->setContentsMargins(0, 0, 0, 0);
+    // Убрали spacing между кнопкой и полем: был 2 → 0
+    lay->setSpacing(0);
 
     m_opBtn = new QToolButton(this);
     m_opBtn->setCursor(Qt::PointingHandCursor);
     m_opBtn->setAutoRaise(false);
     m_opBtn->setToolButtonStyle(Qt::ToolButtonTextOnly);
     m_opBtn->setFixedHeight(kRowHeight - 2);
-    m_opBtn->setFixedWidth(m_isBool ? 74 : 30);
+    // Убрали жёсткую ширину — будет устанавливаться динамически
     connect(m_opBtn, &QToolButton::clicked, this, &FilterCell::showOpMenu);
     lay->addWidget(m_opBtn, 0);
 
     if (!m_isBool) {
         m_edit = new QLineEdit(this);
         m_edit->setFrame(false);
-        m_edit->setFixedHeight(kRowHeight - 4);
+        m_edit->setFixedHeight(kRowHeight - 2);
         m_edit->setAlignment(Qt::AlignVCenter | Qt::AlignLeft);
         m_edit->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Fixed);
 
@@ -46,23 +48,30 @@ FilterCell::FilterCell(bool isNumeric, bool isBool, QWidget* parent)
         lay->addWidget(m_edit, 1);
     }
 
+    // Улучшенная стилизация: кнопка и поле теперь одного стиля
     setStyleSheet(
         "QToolButton {"
         "  border: 1px solid palette(mid);"
         "  border-radius: 2px;"
-        "  padding: 0 4px;"
+        "  padding: 0 3px;"
         "  background: palette(base);"
+        "  margin: 1px;"
         "}"
         "QToolButton:hover {"
         "  border: 1px solid palette(highlight);"
         "}"
         "QLineEdit {"
-        "  border: 0px;"
-        "  background: transparent;"
+        "  border: 1px solid palette(mid);"      // Добавили видимую границу
+        "  border-radius: 2px;"
+        "  background: palette(base);"
         "  padding: 0 3px;"
+        "  margin: 1px;"
+        "}"
+        "QLineEdit:focus {"
+        "  border: 1px solid palette(highlight);"
         "}"
         );
-    // По умолчанию — '=' для не-bool, пусто для bool.
+
     if (!m_isBool) {
         m_rule.op = FilterRule::Op::Eq;
     }
@@ -96,19 +105,21 @@ void FilterCell::clear()
 
 QSize FilterCell::minimumSizeHint() const
 {
-    const int margins = 2 + 2;   // left + right
-    const int spacing = 2;
+    // Минимальный размер: кнопка + хоть что-то на поле
+    const int btnW = m_isBool ? BOOL_BTN_WIDTH : MIN_BTN_WIDTH;
+    const int editW = m_isBool ? 0 : 15;
 
-    const int btnW = m_isBool ? 74 : 30;
-    const int editW = m_isBool ? 0 : 20;
-
-    return QSize(margins + btnW + (m_isBool ? 0 : spacing + editW) + margins,
-                 kRowHeight);
+    // Без лишних отступов (убрали margins 2+2)
+    return QSize(btnW + editW, kRowHeight);
 }
 
 QSize FilterCell::sizeHint() const
 {
-    return minimumSizeHint();
+    // Предпочтительный размер
+    const int btnW = m_isBool ? BOOL_BTN_WIDTH : MIN_BTN_WIDTH;
+    const int editW = m_isBool ? 0 : 40;
+
+    return QSize(btnW + editW, kRowHeight);
 }
 
 void FilterCell::setPlaceholderText(const QString& text)
@@ -166,7 +177,6 @@ void FilterCell::applyRule(const FilterRule& rule, bool emitSignal)
         m_rule.isBool = true;
         m_rule.isNum  = false;
         if (m_rule.op == FilterRule::Op::None) {
-            // пустое состояние
             m_rule.boolValue = false;
             m_rule.value.clear();
         }
@@ -201,7 +211,6 @@ void FilterCell::slotTextChanged(const QString& text)
 
     const QString trimmed = text.trimmed();
 
-    // Пусто → сброс условия
     if (trimmed.isEmpty()) {
         rule = FilterRule{};
         m_rule = rule;
@@ -210,11 +219,9 @@ void FilterCell::slotTextChanged(const QString& text)
         return;
     }
 
-    // Если оператор ещё не выбран, считаем, что это "="
     if (rule.op == FilterRule::Op::None)
         rule.op = FilterRule::Op::Eq;
 
-    // Для чисел пытаемся распарсить значение
     if (m_isNumeric) {
         bool ok = false;
         const double v = trimmed.toDouble(&ok);
@@ -317,3 +324,42 @@ void FilterCell::showOpMenu()
 
     menu.exec(m_opBtn->mapToGlobal(QPoint(0, m_opBtn->height())));
 }
+
+void FilterCell::resizeEvent(QResizeEvent* event)
+{
+    QWidget::resizeEvent(event);
+    updateButtonWidth();
+}
+
+void FilterCell::updateButtonWidth()
+{
+    if (!m_opBtn)
+        return;
+
+    int availableWidth = width();
+    int btnWidth;
+
+    if (m_isBool) {
+        // Для bool кнопка занимает всю ширину, но не менее MIN_BTN_WIDTH
+        btnWidth = qMax(BOOL_BTN_WIDTH, availableWidth);
+    } else {
+        // Для обычных полей:
+        // - если много места, кнопка MIN_BTN_WIDTH
+        // - если мало места (узкая колонка), кнопка адаптируется, но не менее MIN_BTN_WIDTH
+        const int minTotalWidth = MIN_BTN_WIDTH + 10; // минимум на QLineEdit
+
+        if (availableWidth >= minTotalWidth + 40) {
+            // Много места → маленькая кнопка, большое поле
+            btnWidth = MIN_BTN_WIDTH;
+        } else if (availableWidth >= minTotalWidth) {
+            // Среднее место → адаптивная кнопка
+            btnWidth = qMax(MIN_BTN_WIDTH, availableWidth / 4);
+        } else {
+            // Мало места → кнопка займёт примерно 50% (но не менее MIN)
+            btnWidth = qMax(MIN_BTN_WIDTH, availableWidth / 2 - 2);
+        }
+    }
+
+    m_opBtn->setFixedWidth(btnWidth);
+}
+
