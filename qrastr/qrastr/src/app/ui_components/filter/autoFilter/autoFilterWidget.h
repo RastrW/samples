@@ -32,13 +32,10 @@ signals:
 
 public slots:
     void slot_scrollChanged(int value);
-
+    void slot_syncLayout();
 protected:
     // Отслеживаем показ виджета
     void showEvent(QShowEvent* event) override;
-
-private slots:
-    void slot_syncLayout();
 
 private:
     Qtitan::GridTableView* m_view = nullptr;

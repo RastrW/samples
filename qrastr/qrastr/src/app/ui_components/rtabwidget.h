@@ -111,7 +111,7 @@ private:
     void rebuildCombinedFilter();
 
     RGrid* m_grid;
-    RGridTableView* m_view;
+    Qtitan::GridTableView* m_view;
     std::shared_ptr<PyHlp> pPyHlp_;
 
     // ── Компоненты ──
@@ -140,6 +140,6 @@ private:
         m_columnsVisible;
 
     AutoFilterWidget*      m_autoFilter      {nullptr};
-    AutoFilterCondition*   m_autoFilterCond  {nullptr};  // НЕ владеет — clone уходит в QTitan
+    AutoFilterCondition*   m_autoFilterCond  {nullptr};
     QString                m_selectionFilter;            // последняя строка выборки
 };

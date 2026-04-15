@@ -4,9 +4,8 @@
 class RGrid : public Qtitan::Grid
 {
 public:
-    explicit RGrid(QWidget* parent = nullptr)
-        : Qtitan::Grid(parent)
-    {}
+    explicit RGrid(QWidget* parent = nullptr);
+
 protected:
-    Qtitan::GridViewBase* createView(GridViewType type) override;
+    Qtitan::GridViewBase* createView(Qtitan::Grid::GridViewType type) override;
 };

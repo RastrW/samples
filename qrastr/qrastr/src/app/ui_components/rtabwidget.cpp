@@ -90,7 +90,7 @@ RtabWidget::RtabWidget(QAstra* pqastra,CUIForm UIForm, RTablesDataManager* pRTDM
     else
         m_grid->setViewType(Qtitan::Grid::TableView);
 
-    m_view = m_grid->view<RGridTableView>();
+    m_view = m_grid->view<Qtitan::GridTableView>();
 
     if (m_UIForm.Vertical()){
         m_view->tableOptions().setRowSizingEnabled(true);
@@ -175,7 +175,12 @@ QWidget* RtabWidget::createDockContent(bool addToolbar) {
 
     connect(m_autoFilter, &AutoFilterWidget::sig_filterChanged,
             this, &RtabWidget::slot_applyAutoFilter);
-
+    if (auto* viewH = qobject_cast<RGridTableView*>(m_view)) {
+        connect(viewH, &RGridTableView::sig_columnWidthChanged,
+                m_autoFilter, [this](Qtitan::GridColumnBase*) {
+                    m_autoFilter->slot_syncLayout();
+                });
+    }
     layout->addWidget(m_grid);
 
     // ── Статусная строка под таблицей ──

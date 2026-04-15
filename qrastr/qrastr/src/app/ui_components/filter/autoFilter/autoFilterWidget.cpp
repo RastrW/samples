@@ -33,13 +33,6 @@ AutoFilterWidget::AutoFilterWidget(GridTableView* view, QWidget* parent)
     m_scrollArea->setWidget(m_content);
     m_scrollArea->setWidgetResizable(false);
 
-    // Основной сигнал: структура колонок изменилась
-    // Сюда входит изменение ширины, видимости и т.д.
-    connect(m_view, &GridViewBase::columnsUpdated,
-            this, &AutoFilterWidget::slot_syncLayout);
-    connect(m_view->horizontalScrollBar(), &QScrollBar::rangeChanged,
-            this, &AutoFilterWidget::slot_syncLayout);
-
     // Дополнительный сигнал: колонна переместилась
     // (может влиять на layout)
     connect(m_view, &GridViewBase::columnMoved,
