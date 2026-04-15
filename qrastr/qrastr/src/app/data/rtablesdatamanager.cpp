@@ -303,12 +303,12 @@ void RTablesDataManager::handleChangeData(const std::string& tname,
 
     ///@note добавлен вызов сигнала, уведомляющий об изменении по аналогии
     emit sig_dataChanged(tname, row, colIdx, row, colIdx);
+    emit sig_ReferenceChanged(tname);
 }
 
 void RTablesDataManager::handleAddRow(const std::string& tname, long row)
 {
     spdlog::debug("handleAddRow tname={} row={}", tname, row);
-
     // Строка добавлена в конец таблицы.
     // QDataBlock::AddRow() выделяет место под новую строку (данные будут 0/пусто).
     QDataBlock* pqdb = findCachedBlock(tname);
@@ -317,6 +317,8 @@ void RTablesDataManager::handleAddRow(const std::string& tname, long row)
     emit sig_BeginInsertRow(tname, row, row);
     pqdb->AddRow();
     emit sig_EndInsertRow(tname);
+    // новая строка изменила справочник
+    emit sig_ReferenceChanged(tname);
 }
 
 void RTablesDataManager::handleInsertRow(const std::string& tname, long row)
@@ -330,6 +332,8 @@ void RTablesDataManager::handleInsertRow(const std::string& tname, long row)
     emit sig_BeginInsertRow(tname, row, row);
     pqdb->InsertRow(row);
     emit sig_EndInsertRow(tname);
+    // новая строка изменила справочник
+    emit sig_ReferenceChanged(tname);
 }
 
 void RTablesDataManager::handleDeleteRow(const std::string& tname, long row)
@@ -341,4 +345,5 @@ void RTablesDataManager::handleDeleteRow(const std::string& tname, long row)
     emit sig_BeginRemoveRows(tname, row, row);
     pqdb->DeleteRow(row);
     emit sig_EndRemoveRows(tname);
+    emit sig_ReferenceChanged(tname);
 }

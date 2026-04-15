@@ -385,6 +385,31 @@ void RModel::slot_EndRemoveRows(std::string tName)
     endRemoveRows();
 }
 
+void RModel::slot_RefTableChanged(std::string tname)
+{
+    spdlog::debug("Обновление ссылочных данных в {} для {}", tname, getRdata()->t_name_);
+    // Если изменилась наша же таблица — RTDM уже послал ChangeTable/ChangeAll,
+    // не нужно дублировать.
+    if (getRdata()->t_name_ == tname) return;
+
+    // Перестраиваем только затронутые записи кеша
+    std::vector<size_t> updated = m_cache.rebuildRefsFrom(tname, *m_rdata, m_rtdm);
+    if (updated.empty()) return;
+
+    // Преобразуем size_t → int для сигналов Qt
+    std::vector<int> updatedInt(updated.begin(), updated.end());
+
+    // Просим View обновить ячейки во всех строках затронутых колонок
+    const int nRows = rowCount();
+    if (nRows > 0) {
+        for (int col : updatedInt)
+            emit dataChanged(index(0, col), index(nRows - 1, col));
+    }
+
+    // Репозитории ComboBox тоже устарели — сигнализируем RtabWidget
+    emit sig_editorsNeedRefresh(updatedInt);
+}
+
 void RModel::addCondFormat(size_t column, const CondFormat& condFormat)
 {
     m_condFmt.add(column, condFormat);

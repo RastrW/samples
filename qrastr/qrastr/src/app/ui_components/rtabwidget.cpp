@@ -273,10 +273,22 @@ void RtabWidget::setupConnections(){
             this, &RtabWidget::slot_directCodeToggle);
     connect(m_menuBuilder.get(), &ContextMenuBuilder::sig_condFormatsEdit,
             this, &RtabWidget::slot_condFormatsEdit);
-
+    // Обновление ссылочных справочников при изменении строк в других таблицах
+    connect(m_pRTDM,  &RTablesDataManager::sig_ReferenceChanged,
+            m_model.get(), &RModel::slot_RefTableChanged);
+    // Переустановка редакторов (ComboBox-репозиториев) после обновления кеша
+    connect(m_model.get(), &RModel::sig_editorsNeedRefresh,
+            this, [this](std::vector<int> cols) {
+                spdlog::debug("Обновление ссылочных редакторов");
+                m_view->beginUpdate();
+                for (int col : cols)
+                    applyColumnEditor(col);
+                m_view->endUpdate();
+            });
     //QTitan
     //Connect Grid's context menu handler.
-    connect(m_view, &GridTableView::contextMenu, this, &RtabWidget::slot_contextMenu);
+    connect(m_view, &GridTableView::contextMenu,
+            this, &RtabWidget::slot_contextMenu);
 }
 
 void RtabWidget::setPyHlp(std::shared_ptr<PyHlp> pPyHlp){
@@ -520,7 +532,7 @@ void RtabWidget::applyColumnEditor(int colIndex)
         column_qt->setEditorType(GridEditor::Color);
         break;
     }
-    case RModel::ColumnEditorInfo::Type::ComboBox:
+    case RModel::ColumnEditorInfo::Type::ComboBox:{
         column_qt->setEditorType(GridEditor::ComboBox);
         if (!info.comboItems.isEmpty()) {
             column_qt->editorRepository()->setDefaultValue(
@@ -530,6 +542,7 @@ void RtabWidget::applyColumnEditor(int colIndex)
                 static_cast<Qt::ItemDataRole>(Qtitan::ComboBoxRole));
         }
         break;
+    }
     case RModel::ColumnEditorInfo::Type::NameRef: {
         auto* repo = new SearchableComboRepositoryTwo(info.nameRefData.items, m_grid);
         column_qt->setEditorRepository(repo);

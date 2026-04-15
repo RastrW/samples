@@ -29,7 +29,9 @@ class RModel : public QAbstractTableModel
 
 signals:
     void editCompleted(const QString&);
-
+    /// Кеш nameref/superenum обновлён; виджет должен переустановить
+    /// редакторы для указанных позиционных индексов колонок.
+    void sig_editorsNeedRefresh(std::vector<int> cols);
 public slots:
     ///@brief Уведомление от RTDM:
     /// плагин генерирует хинт → RTDM ловит → испускает сигнал → слот вызывает beginInsertRows / endInsertRows у Qt
@@ -40,6 +42,7 @@ public slots:
     void slot_EndInsertRow(std::string tName);
     void slot_BeginRemoveRows(std::string tName, int first, int last);
     void slot_EndRemoveRows(std::string tName);
+    void slot_RefTableChanged(std::string tname);
 
 public:
     // Описание редактора для конкретной колонки — используется делегатом.

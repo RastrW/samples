@@ -16,6 +16,8 @@ void BackInfoCache::clear()
 void BackInfoCache::rebuild(const RData& rdata, RTablesDataManager* pRTDM)
 {
     clear();
+    m_namerefSources.clear();
+    m_superenumSources.clear();
 
     for (const RCol& rcol : rdata)
     {
@@ -36,12 +38,12 @@ void BackInfoCache::rebuild(const RData& rdata, RTablesDataManager* pRTDM)
         if (propTT == enComPropTT::COM_PR_SUPERENUM && !nameRef.empty()) {
             std::vector<std::string> parts{ split(nameRef, '.') };
             if (parts.size() > 2) {
-                long indx1 = pRTDM->column_index(parts[0], parts[1]);
-                long indx2 = pRTDM->column_index(parts[0], parts[2]);
+                const std::string& srcTable = parts[0];          // ← запоминаем источник
+                long indx1 = pRTDM->column_index(srcTable, parts[1]);
+                long indx2 = pRTDM->column_index(srcTable, parts[2]);
                 if (indx1 > -1 && indx2 > -1) {
                     QDataBlock qdb;
-                    pRTDM->getDataBlock(parts[0], qdb, parts[2] + "," + parts[1]);
-
+                    pRTDM->getDataBlock(srcTable, qdb, parts[2] + "," + parts[1]);
                     std::map<size_t, std::string> map;
                     map.emplace(0, "не задано");
                     for (int i = 0; i < qdb.RowsCount(); ++i) {
@@ -50,6 +52,7 @@ void BackInfoCache::rebuild(const RData& rdata, RTablesDataManager* pRTDM)
                         map.emplace(key, std::move(val));
                     }
                     m_superenum.emplace(idx, std::move(map));
+                    m_superenumSources[srcTable].push_back(idx);  // ← регистрируем
                 }
             }
             continue;
@@ -62,14 +65,14 @@ void BackInfoCache::rebuild(const RData& rdata, RTablesDataManager* pRTDM)
             if (nopen == std::string::npos || nclose == std::string::npos)
                 continue;
 
-            std::string table = nameRef.substr(0, nopen);
-            std::string col   = nameRef.substr(nopen + 1, nclose - nopen - 1);
+            std::string srcTable = nameRef.substr(0, nopen);    // ← запоминаем источник
+            std::string col      = nameRef.substr(nopen + 1, nclose - nopen - 1);
 
-            long nameIndx   = pRTDM->column_index(table, "name");
+            long nameIndx = pRTDM->column_index(srcTable, "name");
             std::string cols = col + "," + (nameIndx > -1 ? std::string("name") : col);
 
             QDataBlock qdb;
-            pRTDM->getDataBlock(table, qdb, cols);
+            pRTDM->getDataBlock(srcTable, qdb, cols);
 
             std::map<size_t, std::string> map;
             map.emplace(0, "не задано");
@@ -79,6 +82,7 @@ void BackInfoCache::rebuild(const RData& rdata, RTablesDataManager* pRTDM)
                 map.emplace(key, std::move(val));
             }
             m_nameref.emplace(idx, std::move(map));
+            m_namerefSources[srcTable].push_back(idx);           // ← регистрируем
             continue;
         }
 
@@ -104,6 +108,79 @@ void BackInfoCache::rebuild(const RData& rdata, RTablesDataManager* pRTDM)
             m_pictureEnums.emplace(idx, std::move(items));
         }
     }
+}
+
+std::vector<size_t> BackInfoCache::rebuildRefsFrom(const std::string&  srcTable,
+                                                   const RData&        rdata,
+                                                   RTablesDataManager* pRTDM)
+{
+    std::vector<size_t> updatedCols; // позиционные индексы обновлённых колонок
+
+    // Перестраиваем NAMEREF-записи, ссылающиеся на srcTable
+    auto itNr = m_namerefSources.find(srcTable);
+    if (itNr != m_namerefSources.end()) {
+        for (size_t pluginIdx : itNr->second) {
+            // Найдём RCol по pluginIdx, чтобы взять nameRef-строку
+            for (size_t pos = 0; pos < rdata.size(); ++pos) {
+                const RCol& rcol = *(rdata.begin() + pos);
+                if (static_cast<size_t>(rcol.getIndex()) != pluginIdx) continue;
+
+                const auto& nameRef = rcol.getNameRef();
+                size_t nopen  = nameRef.find('[');
+                size_t nclose = nameRef.find(']');
+                if (nopen == std::string::npos || nclose == std::string::npos) break;
+
+                std::string col = nameRef.substr(nopen + 1, nclose - nopen - 1);
+                long nameIndx   = pRTDM->column_index(srcTable, "name");
+                std::string cols = col + "," + (nameIndx > -1 ? std::string("name") : col);
+
+                QDataBlock qdb;
+                pRTDM->getDataBlock(srcTable, qdb, cols);
+
+                std::map<size_t, std::string> map;
+                map.emplace(0, "не задано");
+                for (int i = 0; i < qdb.RowsCount(); ++i) {
+                    size_t      key = static_cast<size_t>(std::visit(ToLong(), qdb.Get(i, 0)));
+                    std::string val = std::visit(ToString(), qdb.Get(i, 1));
+                    map.emplace(key, std::move(val));
+                }
+                m_nameref[pluginIdx] = std::move(map);
+                updatedCols.push_back(pos);
+                break;
+            }
+        }
+    }
+
+    // Перестраиваем SUPERENUM-записи, ссылающиеся на srcTable
+    auto itSe = m_superenumSources.find(srcTable);
+    if (itSe != m_superenumSources.end()) {
+        for (size_t pluginIdx : itSe->second) {
+            for (size_t pos = 0; pos < rdata.size(); ++pos) {
+                const RCol& rcol = *(rdata.begin() + pos);
+                if (static_cast<size_t>(rcol.getIndex()) != pluginIdx) continue;
+
+                const auto& nameRef = rcol.getNameRef();
+                std::vector<std::string> parts{ split(nameRef, '.') };
+                if (parts.size() <= 2) break;
+
+                QDataBlock qdb;
+                pRTDM->getDataBlock(srcTable, qdb, parts[2] + "," + parts[1]);
+
+                std::map<size_t, std::string> map;
+                map.emplace(0, "не задано");
+                for (int i = 0; i < qdb.RowsCount(); ++i) {
+                    size_t      key = static_cast<size_t>(std::visit(ToLong(),   qdb.Get(i, 0)));
+                    std::string val = std::visit(ToString(), qdb.Get(i, 1));
+                    map.emplace(key, std::move(val));
+                }
+                m_superenum[pluginIdx] = std::move(map);
+                updatedCols.push_back(pos);
+                break;
+            }
+        }
+    }
+
+    return updatedCols;
 }
 
 const QStringList* BackInfoCache::enumItems(size_t colIdx) const

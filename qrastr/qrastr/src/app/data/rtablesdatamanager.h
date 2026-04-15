@@ -76,6 +76,9 @@ signals:
     void sig_UpdateModel(std::string tname);
     void sig_UpdateView(std::string tname);
     void sig_ResetModel(std::string tname);
+    /// Строки таблицы tname были добавлены/удалены —
+    /// все NAMEREF/SUPERENUM, ссылающиеся на неё, должны обновить кеш.
+    void sig_ReferenceChanged(std::string tname);
 private:
     QAstra* m_pqastra;
     std::list<CUIForm>* m_plstUIForms;

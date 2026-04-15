@@ -25,6 +25,11 @@ public:
     const std::map<size_t, std::string>*          namerefMap(size_t colIdx)    const;
     const QList<PictureItem>*                     pictureEnum(size_t pluginIdx) const;
 
+    /// Перестраивает только nameref/superenum-записи, чьи данные берутся из srcTable.
+    /// Возвращает список позиционных индексов колонок, которые были обновлены.
+    std::vector<size_t> rebuildRefsFrom(const std::string&  srcTable,
+                                        const RData&        rdata,
+                                        RTablesDataManager* pRTDM);
 private:
     static std::map<int, int> parseEnpicNameref(const std::string& nameref);
     static QPixmap        iconByIndex(int idx);
@@ -37,4 +42,7 @@ private:
     std::map<size_t, std::map<size_t, std::string>>       m_superenum;
     // plugin-индекс → список картинок
     std::map<size_t, QList<PictureItem>>                  m_pictureEnums;
+
+    std::map<std::string, std::vector<size_t>> m_namerefSources;   // srcTable → {colIdx}
+    std::map<std::string, std::vector<size_t>> m_superenumSources; // srcTable → {colIdx}
 };
