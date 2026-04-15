@@ -289,35 +289,52 @@ void RtabWidget::setupToolbar() {
 
     // Qtitan::Grid имеет встроенную кнопку поиска/фильтрации
     // Операции с данными
-    m_actAddRow = m_toolbar->addAction(QIcon(":/images/Rastr3_grid_addrow_16x16.png"), "");
-    m_actInsertRow = m_toolbar->addAction(QIcon(":/images/Rastr3_grid_insrow_16x16.png"), "");
-    m_actDeleteRow = m_toolbar->addAction(QIcon(":/images/Rastr3_grid_delrow_16x16.png"), "");
-    m_actDuplicateRow = m_toolbar->addAction(QIcon(":/images/Rastr3_grid_duprow_16x161.png"), "");
-    m_groupCorrection = m_toolbar->addAction(QIcon(":/images/column_edit.png"), "");
-    m_actAutoFilter = m_toolbar->addAction(QIcon(":/images/new_style/filter.png"),"");
+    auto* actAddRow = m_toolbar->addAction(QIcon(":/images/Rastr3_grid_addrow_16x16.png"), "");
+    auto* actInsertRow = m_toolbar->addAction(QIcon(":/images/Rastr3_grid_insrow_16x16.png"), "");
+    auto* actDeleteRow = m_toolbar->addAction(QIcon(":/images/Rastr3_grid_delrow_16x16.png"), "");
+    auto* actDuplicateRow = m_toolbar->addAction(QIcon(":/images/Rastr3_grid_duprow_16x161.png"), "");
+    auto* groupCorrection = m_toolbar->addAction(QIcon(":/images/column_edit.png"), "");
+    auto* actAutoFilter = m_toolbar->addAction(QIcon(":/images/new_style/filter.png"),"");
+    auto* actSearch = m_toolbar->addAction(QIcon(":/images/new_style/search.png"), "");
 
-    m_actAddRow->setToolTip(tr("Добавить строку (Ctrl+A)"));
-    m_actInsertRow->setToolTip(tr("Вставить строку (Ctrl+I)"));
-    m_actDeleteRow->setToolTip(tr("Удалить строку (Ctrl+D)"));
-    m_actDuplicateRow->setToolTip(tr("Дублировать строку (Ctrl+R)"));
-    m_groupCorrection->setToolTip(tr("Групповая корректировка"));
-    m_actAutoFilter->setToolTip(tr("Показать/скрыть строку автофильтра"));
+    actAddRow->setToolTip(tr("Добавить строку (Ctrl+A)"));
+    actInsertRow->setToolTip(tr("Вставить строку (Ctrl+I)"));
+    actDeleteRow->setToolTip(tr("Удалить строку (Ctrl+D)"));
+    actDuplicateRow->setToolTip(tr("Дублировать строку (Ctrl+R)"));
+    groupCorrection->setToolTip(tr("Групповая корректировка"));
+    actAutoFilter->setToolTip(tr("Показать/скрыть строку автофильтра"));
+    actSearch->setToolTip(tr("Поиск по колонке"));
 
-    m_actAutoFilter->setCheckable(true);
-    m_actAutoFilter->setChecked(false);
+    actAutoFilter->setCheckable(true);
+    actAutoFilter->setChecked(false);
 
-    connect(m_actAddRow,        &QAction::triggered,
+    connect(actAddRow,        &QAction::triggered,
             this, &RtabWidget::slot_addRow);
-    connect(m_actInsertRow,     &QAction::triggered,
+    connect(actInsertRow,     &QAction::triggered,
             this, &RtabWidget::slot_insertRow);
-    connect(m_actDeleteRow,     &QAction::triggered,
+    connect(actDeleteRow,     &QAction::triggered,
             this, &RtabWidget::slot_deleteRow);
-    connect(m_actDuplicateRow,  &QAction::triggered,
+    connect(actDuplicateRow,  &QAction::triggered,
             this, &RtabWidget::slot_duplicateRow);
-    connect(m_groupCorrection,  &QAction::triggered,
+    connect(groupCorrection,  &QAction::triggered,
             this, &RtabWidget::slot_groupCorrection);
-    connect(m_actAutoFilter,    &QAction::toggled,
+    connect(actAutoFilter,    &QAction::toggled,
             this, &RtabWidget::slot_toggleAutoFilter);
+
+    connect(actSearch, &QAction::triggered, this, [this]() {
+        // Показать меню выбора колонки
+        QMenu menu;
+        for (int i = 0; i < m_view->getColumnCount(); ++i) {
+            auto* col = static_cast<Qtitan::GridTableColumn*>(m_view->getColumn(i));
+            if (!col->isVisible()) continue;
+            QAction* a = menu.addAction(col->caption());
+            connect(a, &QAction::triggered, this, [this, col]() {
+                m_view->options().setFindColumnList({col->dataBinding()->columnName()});
+                m_view->showFindPanel();
+            });
+        }
+        menu.exec(QCursor::pos());
+    });
 }
 
 void RtabWidget::setupShortcuts(){
@@ -560,10 +577,6 @@ void RtabWidget::slot_contextMenu(ContextMenuEventArgs* args)
 
     MenuContext ctx { column, row_model, col };
     m_menuBuilder->prepareForShow(ctx, args->contextMenu());
-}
-
-void RtabWidget::slot_focusRowChanged(int row_old, int row_new){
-    m_linkedFormCtrl->onParentRowChanged(getModelFocuedRow());
 }
 
 int RtabWidget::getModelFocuedRow(){

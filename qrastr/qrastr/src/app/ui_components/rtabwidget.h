@@ -59,7 +59,6 @@ public slots:
 
 private slots:
     void slot_contextMenu(ContextMenuEventArgs* args);
-    void slot_focusRowChanged( int _row_old,int _row_new);
     void slot_addRow();
     void slot_insertRow();
     void slot_duplicateRow();
@@ -127,13 +126,6 @@ private:
 
     QToolBar* m_toolbar;
     QLabel* m_statusLabel;
-    // Действия в toolbar
-    QAction* m_actAddRow;
-    QAction* m_actInsertRow;
-    QAction* m_actDeleteRow;
-    QAction* m_actDuplicateRow;
-    QAction* m_groupCorrection;
-    QAction* m_actAutoFilter;
 
     std::string m_selection {""}; // Текущая выборка
     std::unordered_map<QString,bool>
