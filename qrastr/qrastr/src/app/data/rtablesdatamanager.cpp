@@ -244,7 +244,7 @@ void RTablesDataManager::handleChangeTable(const std::string& tname)
 void RTablesDataManager::handleChangeColumn(const std::string& tname,
                                             const std::string& cname)
 {
-    spdlog::debug("handleChangeColumn tname={} col={} cname={}", tname, cname);
+    spdlog::debug("handleChangeColumn tname={} cname={}", tname, cname);
     QDataBlock* pqdb = findCachedBlock(tname);
     if (!pqdb) return;
 
