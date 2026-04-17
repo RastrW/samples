@@ -460,6 +460,8 @@ void RtabWidget::createModel()
 }
 
 void RtabWidget::applyAllColumnEditors(){
+    spdlog::debug("Пересоздать все редакторы");
+
     for (int i = 0; i < m_model->columnCount(); ++i)
         applyColumnEditor(i);
 }

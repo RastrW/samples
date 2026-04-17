@@ -63,6 +63,25 @@ QVariant RModel::data(const QModelIndex& index, int role) const
         return {};
     }
 
+    QVariant item = std::visit(ToQVariant(), m_rdata->pnparray_->Get(row, col));
+    if (!item.isValid()) {
+        // Данные отсутствуют (например, новая строка)
+        if (role == Qt::EditRole || role == Qt::DisplayRole) {
+            const RCol& rcol = *(m_rdata->begin() + col);
+            if (rcol.getComPropTT() == enComPropTT::COM_PR_REAL ||
+                rcol.getComPropTT() == enComPropTT::COM_PR_INT ||
+                rcol.getComPropTT() == enComPropTT::COM_PR_ENUM ||
+                rcol.getComPropTT() == enComPropTT::COM_PR_SUPERENUM) {
+                return QVariant(0);   // числовой код
+            } else if (rcol.getComPropTT() == enComPropTT::COM_PR_TIME) {
+                return QDateTime();
+            } else {
+                return QVariant(QString());
+            }
+        }
+        return {};
+    }
+
     const RCol&       rcol      = *(m_rdata->begin() + col);
     const size_t      pluginIdx = static_cast<size_t>(rcol.getIndex());
 
