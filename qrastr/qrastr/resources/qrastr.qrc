@@ -79,5 +79,6 @@
 		<file>images/new_style/exit.png</file>
 		<file>images/new_style/abstract.png</file>
 		<file>images/new_style/filter.png</file>
+		<file>images/new_style/copy.png</file>
     </qresource>
 </RCC>

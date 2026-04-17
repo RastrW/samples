@@ -133,9 +133,9 @@ RtabWidget::RtabWidget(QAstra* pqastra,CUIForm UIForm, RTablesDataManager* pRTDM
     //Анимация подсветки при добавлении строки
     m_view->options().setNewRowHighlightEffect(Qtitan::HighlightEffect::FlashEffect);
     ///@todo (не работает?)
-    m_view->showNewRowEditor();
+    //m_view->showNewRowEditor();
     ///@todo (не работает?)
-     m_view->options().setGroupSummaryPlace(GridViewOptions::GroupSummaryPlace::SummaryRowPlus);
+    //m_view->options().setGroupSummaryPlace(GridViewOptions::GroupSummaryPlace::SummaryRowPlus);
     ///@note создание модели обязатель до меню!
     createModel();
 
@@ -313,6 +313,7 @@ void RtabWidget::setupToolbar() {
     auto* groupCorrection = m_toolbar->addAction(QIcon(":/images/column_edit.png"), "");
     auto* actAutoFilter = m_toolbar->addAction(QIcon(":/images/new_style/filter.png"),"");
     auto* actSearch = m_toolbar->addAction(QIcon(":/images/new_style/search.png"), "");
+    auto* actCopy = m_toolbar->addAction(QIcon(":/images/new_style/copy.png"), "");
 
     actAddRow->setToolTip(tr("Добавить строку (Ctrl+A)"));
     actInsertRow->setToolTip(tr("Вставить строку (Ctrl+I)"));
@@ -321,6 +322,8 @@ void RtabWidget::setupToolbar() {
     groupCorrection->setToolTip(tr("Групповая корректировка"));
     actAutoFilter->setToolTip(tr("Показать/скрыть строку автофильтра"));
     actSearch->setToolTip(tr("Поиск по колонке"));
+    actCopy->setToolTip(tr("Копировать таблицу в буфер обмена (Ctrl+C)"));
+    actCopy->setShortcut(QKeySequence::Copy);
 
     actAutoFilter->setCheckable(true);
     actAutoFilter->setChecked(false);
@@ -337,6 +340,8 @@ void RtabWidget::setupToolbar() {
             this, &RtabWidget::slot_groupCorrection);
     connect(actAutoFilter,    &QAction::toggled,
             this, &RtabWidget::slot_toggleAutoFilter);
+    connect(actCopy, &QAction::triggered,
+            this, &RtabWidget::slot_copyToClipboard);
 
     connect(actSearch, &QAction::triggered, this, [this]() {
         // Показать меню выбора колонки
@@ -453,15 +458,9 @@ void RtabWidget::createModel()
     m_condFormatCtrl = std::make_unique<CondFormatController>(
         m_model.get(), m_view, this);
     m_condFormatCtrl->loadFromJson();
-
-    ///@todo проверить необходимость в этих сигналах
-    this->update();
-    this->repaint();
 }
 
 void RtabWidget::applyAllColumnEditors(){
-    spdlog::debug("Пересоздать все редакторы");
-
     for (int i = 0; i < m_model->columnCount(); ++i)
         applyColumnEditor(i);
 }
@@ -529,11 +528,6 @@ void RtabWidget::applyColumnEditor(int colIndex)
         column_qt->editorRepository()->setDefaultValue(QString(), Qt::EditRole);
         column_qt->editorRepository()->setDefaultValue(info.comboItems,
                                                     (Qt::ItemDataRole)Qtitan::ComboBoxRole);
-
-        // Вместо стандартного репозитория используем динамический
-        //auto* repo = new DynamicComboBoxEditorRepository(m_model.get(), colIndex);
-        //column_qt->setEditorRepository(repo);
-        //spdlog::debug("applyColumnEditor ComboBox col={} using DynamicComboBoxEditorRepository", colIndex);
         break;
     }
     case RModel::ColumnEditorInfo::Type::NameRef: {
@@ -902,4 +896,70 @@ void RtabWidget::rebuildCombinedFilter()
 
     m_view->filter()->setCondition(group, true);
     m_view->filter()->setActive(true);
+}
+
+void RtabWidget::slot_copyToClipboard()
+{
+    const int rowCount = m_model->rowCount();
+    const int colCount = m_model->columnCount();
+    if (rowCount == 0 || colCount == 0) return;
+
+    // ── Определяем диапазон: выделение или вся таблица ──────────────────────
+    QModelIndexList selected = m_view->selection()->selectedIndexes();
+    const bool hasSelection  = !selected.isEmpty();
+
+    // Собираем заголовки только для видимых колонок
+    QStringList visibleHeaders;
+    QVector<int> visibleCols;
+    for (int c = 0; c < colCount; ++c) {
+        auto* col = static_cast<Qtitan::GridTableColumn*>(m_view->getColumn(c));
+        if (col && col->isVisible()) {
+            visibleCols.append(c);
+            visibleHeaders.append(
+                m_model->headerData(c, Qt::Horizontal, Qt::DisplayRole).toString());
+        }
+    }
+
+    // ── Строим TSV (Tab-Separated Values) — Excel понимает без доп. настроек ─
+    QString text = visibleHeaders.join('\t') + '\n';
+
+    if (hasSelection) {
+        // Копируем только выделенные ячейки, группируем по строкам
+        // Используем QMap для сортировки: row → (col → value)
+        QMap<int, QMap<int, QString>> cells;
+        for (const QModelIndex& idx : selected) {
+            const int visCol = visibleCols.indexOf(idx.column());
+            if (visCol < 0) continue;  // скрытая колонка
+            cells[idx.row()][visCol] =
+                m_model->data(idx, Qt::DisplayRole).toString();
+        }
+        for (auto rowIt = cells.begin(); rowIt != cells.end(); ++rowIt) {
+            QStringList rowData;
+            for (int vc = 0; vc < visibleCols.size(); ++vc)
+                rowData.append(rowIt.value().value(vc, ""));
+            text += rowData.join('\t') + '\n';
+        }
+    } else {
+        // Копируем все строки
+        for (int r = 0; r < rowCount; ++r) {
+            QStringList rowData;
+            rowData.reserve(visibleCols.size());
+            for (int c : visibleCols) {
+                QVariant val = m_model->data(m_model->index(r, c), Qt::DisplayRole);
+                rowData.append(val.toString());
+            }
+            text += rowData.join('\t') + '\n';
+        }
+    }
+
+    QGuiApplication::clipboard()->setText(text);
+
+    // Краткая индикация в статусной строке
+    if (m_statusLabel) {
+        const QString prev = m_statusLabel->text();
+        m_statusLabel->setText(tr("✓ Скопировано в буфер"));
+        QTimer::singleShot(2000, this, [this, prev]() {
+            if (m_statusLabel) m_statusLabel->setText(prev);
+        });
+    }
 }

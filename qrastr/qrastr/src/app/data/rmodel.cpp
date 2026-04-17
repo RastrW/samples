@@ -66,7 +66,7 @@ QVariant RModel::data(const QModelIndex& index, int role) const
     QVariant item = std::visit(ToQVariant(), m_rdata->pnparray_->Get(row, col));
     if (!item.isValid()) {
         // Данные отсутствуют (например, новая строка)
-        if (role == Qt::EditRole || role == Qt::DisplayRole) {
+        if (role == Qt::EditRole) {
             const RCol& rcol = *(m_rdata->begin() + col);
             if (rcol.getComPropTT() == enComPropTT::COM_PR_REAL ||
                 rcol.getComPropTT() == enComPropTT::COM_PR_INT ||
@@ -78,8 +78,25 @@ QVariant RModel::data(const QModelIndex& index, int role) const
             } else {
                 return QVariant(QString());
             }
+        } else if (role == Qtitan::ComboBoxRole) {
+            // список всегда доступен
+            const RCol& rcol = *(m_rdata->begin() + col);
+            const size_t pluginIdx = static_cast<size_t>(rcol.getIndex());
+            if (const auto* pics = m_cache.pictureEnum(pluginIdx)) {
+                QVariantList result;
+                for (const auto& p : *pics) result << p.image;
+                return result;
+            }
+            QStringList list;
+            if (const auto* enums  = m_cache.enumItems(col))
+                list = *enums;
+            else if (const auto* nref = m_cache.namerefMap(col))
+                for (const auto& [k, v] : *nref) list.append(QString::fromStdString(v));
+            else if (const auto* senum = m_cache.superenumMap(col))
+                for (const auto& [k, v] : *senum) list.append(QString::fromStdString(v));
+            return list;
         }
-        return {};
+
     }
 
     const RCol&       rcol      = *(m_rdata->begin() + col);
@@ -105,9 +122,6 @@ QVariant RModel::data(const QModelIndex& index, int role) const
     }
     // ── DisplayRole / EditRole (Текст для отображения/Значение для редактора)─
     if (role == Qt::DisplayRole || role == Qt::EditRole) {
-        if (role == Qt::EditRole){
-            spdlog::debug("data(EditRole) called col={} row={}", col, row);
-        }
         // TIME: секунды от эпохи плагина → QDateTime
         if (rcol.getComPropTT() == enComPropTT::COM_PR_TIME) {
             QString qstr = QString::fromStdString(std::visit(ToString(), m_rdata->pnparray_->Get(row, col)));
@@ -129,9 +143,6 @@ QVariant RModel::data(const QModelIndex& index, int role) const
             }
             return color; // для EditRole — QTitan Color-editor ждёт QColor
         }
-        // Все остальные типы
-        QVariant item = std::visit(ToQVariant(), m_rdata->pnparray_->Get(row, col));
-
         // Enum / NameRef / SuperEnum — только для DisplayRole.
         // EditRole возвращает сырой числовой код, чтобы QTitan
         // использовал его при сортировке (числовое сравнение, не строковое).

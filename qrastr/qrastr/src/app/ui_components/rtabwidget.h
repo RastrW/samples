@@ -86,6 +86,8 @@ private slots:
 
     void slot_toggleAutoFilter(bool checked);
     void slot_applyAutoFilter(int colIndex, const FilterRule& rule);
+
+    void slot_copyToClipboard();
 private:
     /** @brief
      * a) создаёт RModel, вызывает setForm/populateDataFromRastr;
