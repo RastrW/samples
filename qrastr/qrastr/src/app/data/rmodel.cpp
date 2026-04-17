@@ -161,6 +161,8 @@ QVariant RModel::data(const QModelIndex& index, int role) const
 
     // ── ComboBoxRole ──────────────────────────────────────────────────────────
     if (role == Qtitan::ComboBoxRole) {
+        spdlog::debug("data(ComboBoxRole) called col={} row={}", col, row);
+
         if (const auto* pics = m_cache.pictureEnum(pluginIdx)) {
             QVariantList result;
             for (const auto& p : *pics) result << p.image;
@@ -406,7 +408,7 @@ void RModel::slot_RefTableChanged(std::string tname)
     }
 
     // Репозитории ComboBox тоже устарели — сигнализируем RtabWidget
-    emit sig_editorsNeedRefresh(updatedInt);
+    //emit sig_editorsNeedRefresh(updatedInt);
 }
 
 void RModel::addCondFormat(size_t column, const CondFormat& condFormat)
@@ -527,7 +529,7 @@ RModel::ColumnEditorInfo RModel::getColumnEditorInfo(int colIndex) const
     case enComPropTT::COM_PR_INT:
         if (!col->isDirectCode() && !col->getNameRef().empty()) {
             if (const auto* nref = m_cache.namerefMap(idx)) {
-                if (static_cast<int>(nref->size()) > 10) {
+                if (static_cast<int>(nref->size()) > 20) {
                     // Много элементов → двухколоночный поиск
                     info.editorType        = ColumnEditorInfo::Type::NameRef;
                     info.nameRefData.items = *nref;

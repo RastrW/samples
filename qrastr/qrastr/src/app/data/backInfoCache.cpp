@@ -11,13 +11,13 @@ void BackInfoCache::clear()
     m_nameref.clear();
     m_superenum.clear();
     m_pictureEnums.clear();
+    m_namerefSources.clear();
+    m_superenumSources.clear();
 }
 
 void BackInfoCache::rebuild(const RData& rdata, RTablesDataManager* pRTDM)
 {
     clear();
-    m_namerefSources.clear();
-    m_superenumSources.clear();
 
     for (const RCol& rcol : rdata)
     {

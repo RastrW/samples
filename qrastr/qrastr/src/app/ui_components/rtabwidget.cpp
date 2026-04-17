@@ -276,7 +276,9 @@ void RtabWidget::setupConnections(){
     // Переустановка редакторов (ComboBox-репозиториев) после обновления кеша
     connect(m_model.get(), &RModel::sig_editorsNeedRefresh,
             this, [this](std::vector<int> cols) {
-                spdlog::debug("Обновление ссылочных редакторов");
+                spdlog::debug("Обновление ссылочных редакторов запланировано для {} колонок", cols.size());
+
+                spdlog::debug("Обновление ссылочных редакторов выполняется");
                 m_view->beginUpdate();
                 for (int col : cols)
                     applyColumnEditor(col);
@@ -529,15 +531,8 @@ void RtabWidget::applyColumnEditor(int colIndex)
         column_qt->setEditorType(GridEditor::Color);
         break;
     }
-    case RModel::ColumnEditorInfo::Type::ComboBox:{
+    case RModel::ColumnEditorInfo::Type::ComboBox: {
         column_qt->setEditorType(GridEditor::ComboBox);
-        if (!info.comboItems.isEmpty()) {
-            column_qt->editorRepository()->setDefaultValue(
-                info.comboItems.at(0), Qt::EditRole);
-            column_qt->editorRepository()->setDefaultValue(
-                info.comboItems,
-                static_cast<Qt::ItemDataRole>(Qtitan::ComboBoxRole));
-        }
         break;
     }
     case RModel::ColumnEditorInfo::Type::NameRef: {
@@ -547,14 +542,7 @@ void RtabWidget::applyColumnEditor(int colIndex)
     }
     case RModel::ColumnEditorInfo::Type::ComboBoxPicture:
     {
-        // GridPictureComboBoxEditorRepository -- НЕВЕРНО, это редактор одной картинки
-        // Используем обычный ComboBox — он умеет иконки через ComboBoxRole
         column_qt->setEditorType(GridEditor::ComboBox);
-        // Если нужна кастомная ширина под иконки:
-        auto* repo = static_cast<Qtitan::GridComboBoxEditorRepository*>(
-            column_qt->editorRepository());
-        repo->setComboBoxEditable(false);
-
         spdlog::info("applyColumnEditor ENPIC col={}, picItems={}", colIndex,
                      info.picItems.size());
         break;
