@@ -50,6 +50,7 @@
 #include "rGridTableView.h"
 #include "rGrid.h"
 #include "QtitanBase.h"
+#include "customEditors/dynamicComboBoxEditorRepository.h"
 
 void dumpShortcuts(QWidget* root, const QString& tag)
 {
@@ -273,17 +274,6 @@ void RtabWidget::setupConnections(){
     // Обновление ссылочных справочников при изменении строк в других таблицах
     connect(m_pRTDM,  &RTablesDataManager::sig_ReferenceChanged,
             m_model.get(), &RModel::slot_RefTableChanged);
-    // Переустановка редакторов (ComboBox-репозиториев) после обновления кеша
-    connect(m_model.get(), &RModel::sig_editorsNeedRefresh,
-            this, [this](std::vector<int> cols) {
-                spdlog::debug("Обновление ссылочных редакторов запланировано для {} колонок", cols.size());
-
-                spdlog::debug("Обновление ссылочных редакторов выполняется");
-                m_view->beginUpdate();
-                for (int col : cols)
-                    applyColumnEditor(col);
-                m_view->endUpdate();
-            });
     //QTitan
     //Connect Grid's context menu handler.
     connect(m_view, &GridTableView::contextMenu,
@@ -533,6 +523,15 @@ void RtabWidget::applyColumnEditor(int colIndex)
     }
     case RModel::ColumnEditorInfo::Type::ComboBox: {
         column_qt->setEditorType(GridEditor::ComboBox);
+
+        column_qt->editorRepository()->setDefaultValue(QString(), Qt::EditRole);
+        column_qt->editorRepository()->setDefaultValue(info.comboItems,
+                                                    (Qt::ItemDataRole)Qtitan::ComboBoxRole);
+
+        // Вместо стандартного репозитория используем динамический
+        //auto* repo = new DynamicComboBoxEditorRepository(m_model.get(), colIndex);
+        //column_qt->setEditorRepository(repo);
+        //spdlog::debug("applyColumnEditor ComboBox col={} using DynamicComboBoxEditorRepository", colIndex);
         break;
     }
     case RModel::ColumnEditorInfo::Type::NameRef: {

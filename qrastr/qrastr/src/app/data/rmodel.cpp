@@ -86,7 +86,9 @@ QVariant RModel::data(const QModelIndex& index, int role) const
     }
     // ── DisplayRole / EditRole (Текст для отображения/Значение для редактора)─
     if (role == Qt::DisplayRole || role == Qt::EditRole) {
-
+        if (role == Qt::EditRole){
+            spdlog::debug("data(EditRole) called col={} row={}", col, row);
+        }
         // TIME: секунды от эпохи плагина → QDateTime
         if (rcol.getComPropTT() == enComPropTT::COM_PR_TIME) {
             QString qstr = QString::fromStdString(std::visit(ToString(), m_rdata->pnparray_->Get(row, col)));
@@ -159,7 +161,7 @@ QVariant RModel::data(const QModelIndex& index, int role) const
         return {};
     }
 
-    // ── ComboBoxRole ──────────────────────────────────────────────────────────
+    // ── ComboBoxRole (popup для ComboBox)─────────────────────────────────────
     if (role == Qtitan::ComboBoxRole) {
         spdlog::debug("data(ComboBoxRole) called col={} row={}", col, row);
 
@@ -388,10 +390,10 @@ void RModel::slot_EndRemoveRows(std::string tName)
 
 void RModel::slot_RefTableChanged(std::string tname)
 {
-    spdlog::debug("Обновление ссылочных данных в {} для {}", tname, getRdata()->t_name_);
     // Если изменилась наша же таблица — RTDM уже послал ChangeTable/ChangeAll,
     // не нужно дублировать.
     if (getRdata()->t_name_ == tname) return;
+    spdlog::debug("Обновление ссылочных данных в {} для {}", tname, getRdata()->t_name_);
 
     // Перестраиваем только затронутые записи кеша
     std::vector<size_t> updated = m_cache.rebuildRefsFrom(tname, *m_rdata, m_rtdm);
@@ -406,9 +408,6 @@ void RModel::slot_RefTableChanged(std::string tname)
         for (int col : updatedInt)
             emit dataChanged(index(0, col), index(nRows - 1, col));
     }
-
-    // Репозитории ComboBox тоже устарели — сигнализируем RtabWidget
-    //emit sig_editorsNeedRefresh(updatedInt);
 }
 
 void RModel::addCondFormat(size_t column, const CondFormat& condFormat)
