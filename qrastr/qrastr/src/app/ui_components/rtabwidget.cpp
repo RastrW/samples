@@ -125,15 +125,12 @@ RtabWidget::RtabWidget(QAstra* pqastra,CUIForm UIForm, RTablesDataManager* pRTDM
     m_view->tableOptions().setColumnsHeader(true);
     ///@todo (при отладки текст мельтешит, может быть в Release лучше) Эффект ускорения при быстром скролле
     //m_view->options().setFastScrollEffect(true);
-    //Фокус следует за мышью без клика
-    m_view->options().setFocusFollowsMouse(true);
     //Сохраняет фокус на строке после сортировки/фильтрации
     //m_view->options().setKeepFocusedRow(true);
     ///@todo (не работает?) Кнопка быстрой настройки видимости колонок в заголовке
     m_view->tableOptions().setColumnsQuickCustomization(true);
     //Анимация подсветки при добавлении строки
     m_view->options().setNewRowHighlightEffect(Qtitan::HighlightEffect::FlashEffect);
-    m_view->options().setFocusFollowsMouse(true);
     ///@todo (не работает?)
     m_view->showNewRowEditor();
     ///@todo (не работает?)

@@ -114,7 +114,7 @@ QVariant RModel::data(const QModelIndex& index, int role) const
         // Enum / NameRef / SuperEnum — только для DisplayRole.
         // EditRole возвращает сырой числовой код, чтобы QTitan
         // использовал его при сортировке (числовое сравнение, не строковое).
-        if (role == Qt::DisplayRole && !rcol.isDirectCode()) {
+        if (!rcol.isDirectCode()) {
             // Для ENPIC используем pluginIdx, для остальных — col
             if (const auto* pics = m_cache.pictureEnum(pluginIdx)) {
                 int v = item.toInt();
@@ -127,7 +127,6 @@ QVariant RModel::data(const QModelIndex& index, int role) const
                 if (it != superenum->end()) return QString::fromStdString(it->second);
             }
         }
-
         // Вещественные числа:
         //   DisplayRole → форматированная строка (отображение пользователю)
         //   EditRole    → сырой double (сортировка + передача в редактор)
