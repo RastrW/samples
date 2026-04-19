@@ -33,11 +33,12 @@
 #include "fileManager.h"
 #include "formManager.h"
 #include "appSettingsManager.h"
-#include "uiBuilder.h"
+#include "mainwindow/uiBuilder.h"
 #include "settingsKeys.h"
 #include "UIForms.h"
 #include "workspaceManager.h"
 #include "logManager.h"
+#include "mainwindow/menuSearchWidget.h"
 
 MainWindow::MainWindow()
     : QMainWindow(){
@@ -103,6 +104,11 @@ void MainWindow::initialize(
         m_uiBuilder->menuByName("calcParameters"));
     m_formManager->buildPropertiesMenu(m_uiBuilder->menuByName("properties"));
 
+    // Подтягиваем динамические пункты меню в поиск ПОСЛЕ их построения
+    if (auto* searchWidget = m_uiBuilder->menuSearchWidget()) {
+        searchWidget->addActionsFromMenu(m_uiBuilder->menuByName("tables"));
+        searchWidget->addActionsFromMenu(m_uiBuilder->menuByName("calcParameters"));
+    }
     m_workspaceManager = std::make_unique<WorkspaceManager>(
         m_appSettingsManager->settings(),
         m_dockManager,

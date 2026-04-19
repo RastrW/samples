@@ -4,7 +4,7 @@
 #include "backInfoCache.h"
 #include "condFormatStorage.h"
 #include "rdata.h"
-#include "backgroundCache.h"
+#include "table/backgroundCache.h"
 
 class QAstra;
 class RTablesDataManager;

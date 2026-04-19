@@ -13,12 +13,17 @@
 #include <QMainWindow>
 #include <QString>
 #include "settingsKeys.h"
+#include "menuSearchWidget.h"
 
 UIBuilder::UIBuilder(QMainWindow* mainWindow)
     : QObject(mainWindow)
     , m_mainWindow(mainWindow)
 {
     assert(m_mainWindow != nullptr);
+}
+
+MenuSearchWidget* UIBuilder::menuSearchWidget() const {
+    return m_menuSearch;
 }
 
 void UIBuilder::buildAll() {
@@ -36,6 +41,9 @@ void UIBuilder::buildAll() {
     buildMenuBar();
     buildToolBars();
     buildStatusBar();
+    // Передаём все зарегистрированные действия в виджет поиска
+    if (m_menuSearch)
+        m_menuSearch->setActions(m_actions);
 }
 
 void UIBuilder::createFileActions() {
@@ -391,6 +399,13 @@ void UIBuilder::buildToolBars() {
     m_toolBars["ti"]->addAction(m_actions["opf"]);
     m_toolBars["ti"]->addAction(m_actions["recalcDor"]);
     m_toolBars["ti"]->addAction(m_actions["updateTables"]);
+
+    // ПАНЕЛЬ "ПОИСК ПО МЕНЮ"
+    m_toolBars["search"] = m_mainWindow->addToolBar(tr("Поиск"));
+    m_toolBars["search"]->setObjectName("searchToolBar");
+
+    m_menuSearch = new MenuSearchWidget(m_toolBars["search"]);
+    m_toolBars["search"]->addWidget(m_menuSearch);
 }
 
 void UIBuilder::buildStatusBar() {

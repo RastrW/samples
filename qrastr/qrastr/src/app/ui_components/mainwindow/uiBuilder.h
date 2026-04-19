@@ -8,6 +8,7 @@ class QMenu;
 class QToolBar;
 class QStatusBar;
 class QMainWindow;
+class MenuSearchWidget;
 
 struct RecentFileEntry;
 
@@ -26,6 +27,7 @@ public:
     QAction* actionByName(const QString& name) const;
     QMenu* menuByName(const QString& name) const;
     QToolBar* toolBarByName(const QString& name) const;
+    MenuSearchWidget* menuSearchWidget() const;
 private:
     /// @brief Построить только меню
     void buildMenuBar();
@@ -38,6 +40,7 @@ signals:
 
 private:
     QMainWindow* m_mainWindow;
+    MenuSearchWidget* m_menuSearch = nullptr; // поиск по меню
 
     // Хранилища UI элементов
     std::map<QString, QAction*> m_actions;

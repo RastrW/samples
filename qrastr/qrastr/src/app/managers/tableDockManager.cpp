@@ -2,7 +2,7 @@
 using WrapperExceptionType = std::runtime_error;
 #include "astra/IPlainRastrWrappers.h"
 #include "qastra.h"
-#include "rtabwidget.h"
+#include "table/rtabwidget.h"
 #include <QFileInfo>
 #include <DockManager.h>
 #include <QMenu>

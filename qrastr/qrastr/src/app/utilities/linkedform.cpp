@@ -1,5 +1,5 @@
 #include "linkedform.h"
-#include "rtabwidget.h"
+#include "table/rtabwidget.h"
 
 void LinkedForm::FillBindVals()
 {

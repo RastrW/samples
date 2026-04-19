@@ -8,7 +8,7 @@
 #include "sdl/graphSDLManager.h"
 #include "macroDockManager.h"
 #include "qmcr/pyhlp.h"
-#include "rtabwidget.h"
+#include "table/rtabwidget.h"
 #include "logManager.h"
 
 FormManager::FormManager(
