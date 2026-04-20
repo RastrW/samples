@@ -104,6 +104,8 @@ Release
 qrastr_log.txt
 Data/appsettings.json
 Data/appsettings_backup.json
+Data/highlightsettings.json
+Data/govnolog.log
 
 .qtcreator
 
