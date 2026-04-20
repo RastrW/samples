@@ -59,52 +59,37 @@ void BackInfoCache::loadEnum(const RCol& rcol)
 
 void BackInfoCache::loadSuperenum(const RCol& rcol, RTablesDataManager* pRTDM)
 {
+    if (rcol.getNameRef().empty() || !pRTDM) return;
+
+    const auto parts = parseSuperenumStr(rcol.getNameRef());
+    if (!parts) return;
+
+    // Проверяем наличие колонок в таблице-источнике прежде чем строить карту.
+    // column_index возвращает < 0, если колонка не найдена.
+    if (pRTDM->column_index(parts->srcTable, parts->keyCol)   < 0 ||
+        pRTDM->column_index(parts->srcTable, parts->valueCol) < 0)
+        return;
+
     const size_t idx = static_cast<size_t>(rcol.getIndex());
-    const auto& nameRef = rcol.getNameRef();
-
-    if (nameRef.empty() || !pRTDM)
-        return;
-
-    const std::vector<std::string> parts{ split(nameRef, '.') };
-    if (parts.size() < 3)
-        return;
-
-    const std::string& srcTable = parts[0]; // ← запоминаем источник
-    const std::string& keyCol    = parts[2];
-    const std::string& valueCol  = parts[1];
-
-    const long keyIdx   = pRTDM->column_index(srcTable, keyCol);
-    const long valueIdx = pRTDM->column_index(srcTable, valueCol);
-    if (keyIdx < 0 || valueIdx < 0)
-        return;
-
-    RefMap map = buildIdNameMap(pRTDM, srcTable, keyCol, valueCol);
-    m_superenum.emplace(idx, std::move(map));
-    m_superenumSources[srcTable].push_back(idx);
+    m_superenum.emplace(idx, buildIdNameMap(pRTDM, parts->srcTable,
+                                            parts->keyCol, parts->valueCol));
+    m_superenumSources[parts->srcTable].push_back(idx);
 }
 
 void BackInfoCache::loadNameref(const RCol& rcol, RTablesDataManager* pRTDM)
 {
+    if (rcol.getNameRef().empty() || !pRTDM) return;
+
+    const auto parts = parseNamerefStr(rcol.getNameRef());
+    if (!parts) return;
+
     const size_t idx = static_cast<size_t>(rcol.getIndex());
-    const auto& nameRef = rcol.getNameRef();
+    const long nameIdx = pRTDM->column_index(parts->srcTable, "name");
+    const std::string valueCol = (nameIdx > -1) ? "name" : parts->keyCol;
 
-    if (nameRef.empty() || !pRTDM)
-        return;
-
-    const size_t nopen  = nameRef.find('[');
-    const size_t nclose = nameRef.find(']');
-    if (nopen == std::string::npos || nclose == std::string::npos || nclose <= nopen + 1)
-        return;
-
-    const std::string srcTable = nameRef.substr(0, nopen);
-    const std::string keyCol   = nameRef.substr(nopen + 1, nclose - nopen - 1);
-
-    const long nameIdx = pRTDM->column_index(srcTable, "name");
-    const std::string valueCol = (nameIdx > -1) ? "name" : keyCol;
-
-    RefMap map = buildIdNameMap(pRTDM, srcTable, keyCol, valueCol);
-    m_nameref.emplace(idx, std::move(map));
-    m_namerefSources[srcTable].push_back(idx);
+    m_nameref.emplace(idx, buildIdNameMap(pRTDM, parts->srcTable,
+                                          parts->keyCol, valueCol));
+    m_namerefSources[parts->srcTable].push_back(idx);
 }
 
 void BackInfoCache::loadEnpic(const RCol& rcol)
@@ -171,31 +156,22 @@ std::vector<size_t> BackInfoCache::rebuildRefsFrom(const std::string& srcTable,
     };
 
     auto rebuildNameref = [&](size_t pluginIdx, const RCol& rcol) -> bool {
-        const std::string& nameRef = rcol.getNameRef();
-
-        const size_t nopen  = nameRef.find('[');
-        const size_t nclose = nameRef.find(']');
-        if (nopen == std::string::npos || nclose == std::string::npos || nclose <= nopen + 1)
-            return false;
-
-        const std::string keyCol = nameRef.substr(nopen + 1, nclose - nopen - 1);
-        const std::string valueCol = (nameIdx > -1) ? "name" : keyCol;
-
-        m_nameref[pluginIdx] = buildIdNameMap(pRTDM, srcTable, keyCol, valueCol);
+        const auto parts = BackInfoCache::parseNamerefStr(rcol.getNameRef());
+        if (!parts) return false;
+        const long nameIdx = pRTDM->column_index(srcTable, "name");
+        const std::string valueCol = (nameIdx > -1) ? "name" : parts->keyCol;
+        m_nameref[pluginIdx] = buildIdNameMap(pRTDM, srcTable, parts->keyCol, valueCol);
         return true;
     };
 
     auto rebuildSuperenum = [&](size_t pluginIdx, const RCol& rcol) -> bool {
-        const std::vector<std::string> parts{ split(rcol.getNameRef(), '.') };
-        if (parts.size() < 3)
+        const auto parts = BackInfoCache::parseSuperenumStr(rcol.getNameRef());
+        if (!parts) return false;
+        if (pRTDM->column_index(srcTable, parts->keyCol)   < 0 ||
+            pRTDM->column_index(srcTable, parts->valueCol) < 0)
             return false;
-
-        const long keyIdx   = pRTDM->column_index(srcTable, parts[2]);
-        const long valueIdx = pRTDM->column_index(srcTable, parts[1]);
-        if (keyIdx < 0 || valueIdx < 0)
-            return false;
-
-        m_superenum[pluginIdx] = buildIdNameMap(pRTDM, srcTable, parts[2], parts[1]);
+        m_superenum[pluginIdx] = buildIdNameMap(pRTDM, srcTable,
+                                                parts->keyCol, parts->valueCol);
         return true;
     };
 
@@ -229,19 +205,45 @@ BackInfoCache::RefMap BackInfoCache::buildIdNameMap(RTablesDataManager* pRTDM,
     RefMap result;
     result.emplace(0, "не задано");
 
-    if (!pRTDM)
-        return result;
+    if (!pRTDM) return result;
 
     QDataBlock qdb;
     pRTDM->getDataBlock(srcTable, qdb, keyCol + "," + valueCol);
 
     for (int row = 0; row < qdb.RowsCount(); ++row) {
-        const size_t key = static_cast<size_t>(std::visit(ToLong(), qdb.Get(row, 0)));
+        const size_t key  = static_cast<size_t>(std::visit(ToLong(), qdb.Get(row, 0)));
         const std::string value = std::visit(ToString(), qdb.Get(row, 1));
         result.emplace(key, value);
     }
 
     return result;
+}
+
+std::optional<BackInfoCache::NamerefParts>
+BackInfoCache::parseNamerefStr(const std::string& nameref)
+{
+    const size_t nopen  = nameref.find('[');
+    const size_t nclose = nameref.find(']');
+    if (nopen  == std::string::npos ||
+        nclose == std::string::npos ||
+        nclose <= nopen + 1)
+        return std::nullopt;
+
+    return NamerefParts{
+        nameref.substr(0, nopen),
+        nameref.substr(nopen + 1, nclose - nopen - 1)
+    };
+}
+
+std::optional<BackInfoCache::SuperenumParts>
+BackInfoCache::parseSuperenumStr(const std::string& nameref)
+{
+    const std::vector<std::string> parts{ split(nameref, '.') };
+    if (parts.size() < 3)
+        return std::nullopt;
+
+    // Формат: "srcTable.valueCol.keyCol"
+    return SuperenumParts{ parts[0], parts[2], parts[1] };
 }
 
 const QStringList* BackInfoCache::enumItems(size_t colIdx) const

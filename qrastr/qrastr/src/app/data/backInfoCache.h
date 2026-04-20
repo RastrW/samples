@@ -47,6 +47,21 @@ private:
     void loadNameref(const RCol& rcol, RTablesDataManager* pRTDM);
     void loadEnpic(const RCol& rcol);
 
+    ///Статические парсеры для ссылочных значений
+    struct NamerefParts {
+        std::string srcTable;
+        std::string keyCol;
+    };
+    struct SuperenumParts {
+        std::string srcTable;
+        std::string keyCol;    // parts[2]
+        std::string valueCol;  // parts[1]
+    };
+    static std::optional<NamerefParts>   parseNamerefStr
+        (const std::string& nameref);
+    static std::optional<SuperenumParts> parseSuperenumStr
+        (const std::string& nameref);
+
     // plugin-индекс → список строк: ex. "БАЗА|Ген|Нагр|Ген+"
     std::unordered_map<size_t, QStringList>            m_enum;
     // plugin-индекс → { ключ → отображаемое имя }: ex. RefCol → node[na]
