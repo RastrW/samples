@@ -53,7 +53,7 @@ public:
         double      maxVal     =  1e6;
 
         struct NameRefData {
-            std::map<size_t, std::string> items;   // key → имя
+            std::unordered_map<size_t, std::string> items;   // key → имя
         };
         NameRefData nameRefData;
 

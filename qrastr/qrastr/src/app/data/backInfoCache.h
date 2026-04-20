@@ -17,7 +17,7 @@ public:
         QPixmap image;
     };
 
-    using RefMap      = std::map<size_t, std::string>;
+    using RefMap      = std::unordered_map<size_t, std::string>;
     using PictureList = QList<PictureItem>;
 
     void rebuild(const RData& rdata, RTablesDataManager* pRTDM);
@@ -48,14 +48,14 @@ private:
     void loadEnpic(const RCol& rcol);
 
     // plugin-индекс → список строк: ex. "БАЗА|Ген|Нагр|Ген+"
-    std::map<size_t, QStringList>            m_enum;
+    std::unordered_map<size_t, QStringList>            m_enum;
     // plugin-индекс → { ключ → отображаемое имя }: ex. RefCol → node[na]
-    std::map<size_t, RefMap>                 m_nameref;
+    std::unordered_map<size_t, RefMap>                 m_nameref;
     // plugin-индекс → { ключ → отображаемое имя }: ex. ti_prv.Name.Num
-    std::map<size_t, RefMap>                 m_superenum;
+    std::unordered_map<size_t, RefMap>                 m_superenum;
     // plugin-индекс → список картинок
-    std::map<size_t, PictureList>            m_pictureEnums;
+    std::unordered_map<size_t, PictureList>            m_pictureEnums;
 
-    std::map<std::string, std::vector<size_t>> m_namerefSources;   // srcTable → {colIdx}
-    std::map<std::string, std::vector<size_t>> m_superenumSources;  // srcTable → {colIdx}
+    std::unordered_map<std::string, std::vector<size_t>> m_namerefSources;   // srcTable → {colIdx}
+    std::unordered_map<std::string, std::vector<size_t>> m_superenumSources;  // srcTable → {colIdx}
 };

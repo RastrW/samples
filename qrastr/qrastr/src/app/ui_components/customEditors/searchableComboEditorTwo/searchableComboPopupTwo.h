@@ -15,7 +15,7 @@ public:
     explicit SearchableComboPopupTwo(QWidget* parent = nullptr);
 
     /// Заполнить список (key → отображаемое имя)
-    void setItems(const std::map<size_t, std::string>& items);
+    void setItems(const std::unordered_map<size_t, std::string>& items);
     /// Выделить строку с заданным ключом и очистить фильтры
     void setCurrentKey(int key);
 

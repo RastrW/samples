@@ -7,7 +7,7 @@ class SearchableComboRepositoryTwo : public Qtitan::GridEditorRepository
     Q_OBJECT
 public:
     explicit SearchableComboRepositoryTwo(
-        const std::map<size_t, std::string>& items,
+        const std::unordered_map<size_t, std::string>& items,
         QWidget* gridWidget)
         : Qtitan::GridEditorRepository()
         , m_items(items)
@@ -16,7 +16,7 @@ public:
 
     Qtitan::GridEditor* createEditor() override;
 
-    const std::map<size_t, std::string>& items()      const { return m_items;      }
+    const std::unordered_map<size_t, std::string>& items()      const { return m_items;      }
     QWidget*                             gridWidget()  const { return m_gridWidget; }
 
     /// Поиск имени по ключу (используется для отображения текущего значения)
@@ -28,6 +28,6 @@ public:
     }
 
 private:
-    std::map<size_t, std::string> m_items;
+    std::unordered_map<size_t, std::string> m_items;
     QWidget*                      m_gridWidget;
 };

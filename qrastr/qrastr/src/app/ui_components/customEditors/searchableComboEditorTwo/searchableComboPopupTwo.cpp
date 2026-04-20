@@ -90,7 +90,7 @@ SearchableComboPopupTwo::SearchableComboPopupTwo(QWidget* parent)
     m_table->installEventFilter(this);
 }
 
-void SearchableComboPopupTwo::setItems(const std::map<size_t, std::string>& items)
+void SearchableComboPopupTwo::setItems(const std::unordered_map<size_t, std::string>& items)
 {
     m_model->removeRows(0, m_model->rowCount());
 
