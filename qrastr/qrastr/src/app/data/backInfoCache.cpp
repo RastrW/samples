@@ -140,11 +140,20 @@ std::vector<size_t> BackInfoCache::rebuildRefsFrom(const std::string& srcTable,
     if (!pRTDM || srcTable.empty())
         return updatedCols;
 
-    // Быстрый доступ к RCol по pluginIdx
+    // Быстрый доступ:
+    // pluginIdx -> RCol*
+    // pluginIdx -> позиция в rdata (pos)
     std::unordered_map<size_t, const RCol*> byPluginIdx;
+    std::unordered_map<size_t, size_t>      posByPluginIdx;
+
     byPluginIdx.reserve(rdata.size());
+    posByPluginIdx.reserve(rdata.size());
+
+    size_t pos = 0;
     for (const RCol& rcol : rdata) {
-        byPluginIdx.emplace(static_cast<size_t>(rcol.getIndex()), &rcol);
+        const size_t pluginIdx = static_cast<size_t>(rcol.getIndex());
+        byPluginIdx.emplace(pluginIdx, &rcol);
+        posByPluginIdx.emplace(pluginIdx, pos++);
     }
 
     const long nameIdx = pRTDM->column_index(srcTable, "name");
@@ -152,6 +161,13 @@ std::vector<size_t> BackInfoCache::rebuildRefsFrom(const std::string& srcTable,
     auto findRCol = [&](size_t pluginIdx) -> const RCol* {
         auto it = byPluginIdx.find(pluginIdx);
         return (it != byPluginIdx.end()) ? it->second : nullptr;
+    };
+
+    auto getPos = [&](size_t pluginIdx) -> std::optional<size_t> {
+        auto it = posByPluginIdx.find(pluginIdx);
+        if (it == posByPluginIdx.end())
+            return std::nullopt;
+        return it->second;
     };
 
     auto rebuildNameref = [&](size_t pluginIdx, const RCol& rcol) -> bool {
@@ -189,8 +205,10 @@ std::vector<size_t> BackInfoCache::rebuildRefsFrom(const std::string& srcTable,
             if (!rcol)
                 continue;
 
-            if (rebuildFn(pluginIdx, *rcol))
-                updatedCols.push_back(rcol->getIndex()); // позиционный индекс из RData
+            if (rebuildFn(pluginIdx, *rcol)) {
+                if (auto posOpt = getPos(pluginIdx))
+                    updatedCols.push_back(*posOpt); // позиционный индекс
+            }
         }
     };
 
