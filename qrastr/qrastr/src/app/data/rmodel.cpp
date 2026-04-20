@@ -63,158 +63,185 @@ QVariant RModel::data(const QModelIndex& index, int role) const
         return {};
     }
 
-    QVariant item = std::visit(ToQVariant(), m_rdata->pnparray_->Get(row, col));
-    if (!item.isValid()) {
-        // Данные отсутствуют (например, новая строка)
-        if (role == Qt::EditRole) {
-            const RCol& rcol = *(m_rdata->begin() + col);
-            if (rcol.getComPropTT() == enComPropTT::COM_PR_REAL ||
-                rcol.getComPropTT() == enComPropTT::COM_PR_INT ||
-                rcol.getComPropTT() == enComPropTT::COM_PR_ENUM ||
-                rcol.getComPropTT() == enComPropTT::COM_PR_SUPERENUM) {
-                return QVariant(0);   // числовой код
-            } else if (rcol.getComPropTT() == enComPropTT::COM_PR_TIME) {
-                return QDateTime();
-            } else {
-                return QVariant(QString());
-            }
-        } else if (role == Qtitan::ComboBoxRole) {
-            // список всегда доступен
-            const RCol& rcol = *(m_rdata->begin() + col);
-            const size_t pluginIdx = static_cast<size_t>(rcol.getIndex());
-            if (const auto* pics = m_cache.pictureEnum(pluginIdx)) {
-                QVariantList result;
-                for (const auto& p : *pics) result << p.image;
-                return result;
-            }
-            QStringList list;
-            if (const auto* enums  = m_cache.enumItems(col))
-                list = *enums;
-            else if (const auto* nref = m_cache.namerefMap(col))
-                for (const auto& [k, v] : *nref) list.append(QString::fromStdString(v));
-            else if (const auto* senum = m_cache.superenumMap(col))
-                for (const auto& [k, v] : *senum) list.append(QString::fromStdString(v));
-            return list;
-        }
+    const RCol& rcol = *(m_rdata->begin() + col);
 
-    }
+    // Читаем один раз — устраняем дублирование
+    const QVariant raw = std::visit(ToQVariant(), m_rdata->pnparray_->Get(row, col));
 
-    const RCol&       rcol      = *(m_rdata->begin() + col);
-    const size_t      pluginIdx = static_cast<size_t>(rcol.getIndex());
-
-    // ── BackgroundRole (Фон ячейки) ──────────────────────────────────────────
-    if (role == Qt::BackgroundRole) {
-        // COLOR-ячейки: фон = сам цвет, условные форматы не нужны
-        if (rcol.getComPropTT() == enComPropTT::COM_PR_COLOR) {
-            long packed = std::visit(ToLong(), m_rdata->pnparray_->Get(row, col));
-            return QColor(packed & 0xFF, (packed >> 8) & 0xFF, (packed >> 16) & 0xFF);
-        }
-        // Для всех остальных — условный формат
-        if (m_condFmt.formats().empty())
-            return {}; // форматы не заданы
-        if (const QVariant* cached = m_bgCache.get(row, col))
-            return *cached;// QVariant() → нет формата, тоже ок
-        const QString val = QString::fromStdString(
-            std::visit(ToString(), m_rdata->pnparray_->Get(row, col)));
-        QVariant fmt = getMatchingCondFormat(row, col, val, role);
-        m_bgCache.put(row, col, fmt);
-        return fmt;
-    }
-    // ── DisplayRole / EditRole (Текст для отображения/Значение для редактора)─
-    if (role == Qt::DisplayRole || role == Qt::EditRole) {
-        // TIME: секунды от эпохи плагина → QDateTime
-        if (rcol.getComPropTT() == enComPropTT::COM_PR_TIME) {
-            QString qstr = QString::fromStdString(std::visit(ToString(), m_rdata->pnparray_->Get(row, col)));
-            // Отрезаем суффикс "--7199", если он есть
-            int dashPos = qstr.indexOf("--");
-            if (dashPos >= 0) qstr = qstr.left(dashPos);
-            QDateTime dt = QDateTime::fromString(qstr.trimmed(), "dd.MM.yyyy HH:mm:ss");
-            return dt; // QTitan GridEditor::DateTime ждёт именно QDateTime
-        }
-        // COLOR: упакованный RGB long → QColor
-        if (rcol.getComPropTT() == enComPropTT::COM_PR_COLOR) {
-            long packed = std::visit(ToLong(), m_rdata->pnparray_->Get(row, col));
-            // COLORREF хранит каналы в порядке **BGR** (`0x00BBGGRR`), а `QColor::fromRgb` ожидает **RGB**. К
-            QColor color(packed & 0xFF, (packed >> 8) & 0xFF, (packed >> 16) & 0xFF);
-            if (role == Qt::DecorationRole) {
-                QPixmap px(16, 16);
-                px.fill(color);
-                return px;
-            }
-            return color; // для EditRole — QTitan Color-editor ждёт QColor
-        }
-        // Enum / NameRef / SuperEnum — только для DisplayRole.
-        // EditRole возвращает сырой числовой код, чтобы QTitan
-        // использовал его при сортировке (числовое сравнение, не строковое).
-        if (!rcol.isDirectCode()) {
-            // Для ENPIC используем pluginIdx, для остальных — col
-            if (const auto* pics = m_cache.pictureEnum(pluginIdx)) {
-                int v = item.toInt();
-                if (v >= 0 && v < pics->size()) return (*pics)[v].label;
-            }
-            if (const auto* enums = m_cache.enumItems(col))
-                return enums->at(item.toInt());
-            if (const auto* superenum = m_cache.superenumMap(col)) {
-                auto it = superenum->find(static_cast<size_t>(item.toInt()));
-                if (it != superenum->end()) return QString::fromStdString(it->second);
-            }
-        }
-        // Вещественные числа:
-        //   DisplayRole → форматированная строка (отображение пользователю)
-        //   EditRole    → сырой double (сортировка + передача в редактор)
-        if (item.type() == QVariant::Double) {
-            const auto info = getColumnEditorInfo(col);
-            if (info.editorType == ColumnEditorInfo::Type::Numeric) {
-                if (role == Qt::DisplayRole)
-                    return QString::number(item.toDouble(), 'f', info.decimals);
-                // EditRole — возвращаем double напрямую
-                return item;
-            }
-        }
-
-        return item;
-    }
-
-    // ── DecorationRole (Иконка слева от текста)───────────────────────────────
-    if (role == Qt::DecorationRole) {
-        // Для COLOR-колонок отображаем цветной прямоугольник
-        if (rcol.getComPropTT() == enComPropTT::COM_PR_COLOR) {
-            long packed = std::visit(ToLong(), m_rdata->pnparray_->Get(row, col));
-            QPixmap px(16, 16);
-            px.fill(QColor::fromRgb(static_cast<QRgb>(packed)));
-            return px;
-        }
-        if (const auto* pics = m_cache.pictureEnum(pluginIdx)) {
-            int v = std::visit(ToLong(), m_rdata->pnparray_->Get(row, col));
-            if (v >= 0 && v < pics->size()) return (*pics)[v].image;
-        }
+    switch (role) {
+    case Qtitan::ComboBoxRole:
+        return dataForComboBox(col, rcol, raw);
+    case Qt::DisplayRole:
+    case Qt::EditRole:
+        return dataForDisplayEdit(row, col, rcol, raw, role);
+    case Qt::BackgroundRole:
+        return dataForBackground(row, col, rcol, raw);
+    case Qt::DecorationRole:
+        return dataForDecoration(row, col, rcol, raw);
+    // ── ToolTipRole (Всплывающая подсказка)───────────────────────────────────
+    case Qt::ToolTipRole:
+        return QString("[%1, %2]").arg(row + 1).arg(col + 1);
+    default:
         return {};
     }
+}
 
-    // ── ComboBoxRole (popup для ComboBox)─────────────────────────────────────
-    if (role == Qtitan::ComboBoxRole) {
-        spdlog::debug("data(ComboBoxRole) called col={} row={}", col, row);
+QVariant RModel::dataForInvalidCellEditRole(int col, const RCol& rcol) const{
+    if (rcol.getComPropTT() == enComPropTT::COM_PR_REAL ||
+        rcol.getComPropTT() == enComPropTT::COM_PR_INT ||
+        rcol.getComPropTT() == enComPropTT::COM_PR_ENUM ||
+        rcol.getComPropTT() == enComPropTT::COM_PR_SUPERENUM) {
+        return QVariant(0);   // числовой код
+    } else if (rcol.getComPropTT() == enComPropTT::COM_PR_TIME) {
+        return QDateTime();
+    } else {
+        return QVariant(QString());
+    }
+}
 
-        if (const auto* pics = m_cache.pictureEnum(pluginIdx)) {
-            QVariantList result;
-            for (const auto& p : *pics) result << p.image;
-            return result;
-        }
-        QStringList list;
-        if (const auto* enums  = m_cache.enumItems(col))
-            list = *enums;
-        else if (const auto* nref = m_cache.namerefMap(col))
-            for (const auto& [k, v] : *nref) list.append(QString::fromStdString(v));
-        else if (const auto* senum = m_cache.superenumMap(col))
-            for (const auto& [k, v] : *senum) list.append(QString::fromStdString(v));
-        return list;
+QVariant RModel::dataForInvalidCellComboBoxRole(int col, const RCol& rcol) const{
+    const size_t pluginIdx = static_cast<size_t>(rcol.getIndex());
+    if (const auto* pics = m_cache.pictureEnum(pluginIdx)) {
+        QVariantList result;
+        for (const auto& p : *pics) result << p.image;
+        return result;
+    }
+    QStringList list;
+    if (const auto* enums  = m_cache.enumItems(col))
+        list = *enums;
+    else if (const auto* nref = m_cache.namerefMap(col))
+        for (const auto& [k, v] : *nref) list.append(QString::fromStdString(v));
+    else if (const auto* senum = m_cache.superenumMap(col))
+        for (const auto& [k, v] : *senum) list.append(QString::fromStdString(v));
+    return list;
+}
+
+QVariant RModel::dataForDisplayEdit(int row, int col, const RCol& rcol,
+                                    const QVariant& raw, int role) const{
+    if (!raw.isValid() && role == Qt::EditRole){
+        return dataForInvalidCellEditRole(col, rcol);
+    }
+    // TIME: секунды от эпохи плагина → QDateTime
+    if (rcol.getComPropTT() == enComPropTT::COM_PR_TIME) {
+        QString qstr = QString::fromStdString(
+            std::visit(ToString(), m_rdata->pnparray_->Get(row, col)));
+        // Отрезаем суффикс "--7199", если он есть
+        int dashPos = qstr.indexOf("--");
+        if (dashPos >= 0) qstr = qstr.left(dashPos);
+        // QTitan GridEditor::DateTime ждёт именно QDateTime
+        return QDateTime::fromString(qstr.trimmed(), "dd.MM.yyyy HH:mm:ss");
+    }
+    // COLOR: упакованный RGB long → QColor
+    if (rcol.getComPropTT() == enComPropTT::COM_PR_COLOR) {
+        long packed = std::visit(ToLong(), m_rdata->pnparray_->Get(row, col));
+        return QColor(packed & 0xFF, (packed >> 8) & 0xFF, (packed >> 16) & 0xFF);
     }
 
-    // ── ToolTipRole (Всплывающая подсказка)───────────────────────────────────
-    if (role == Qt::ToolTipRole)
-        return QString("[%1, %2]").arg(row + 1).arg(col + 1);
+    if (role == Qt::DisplayRole && !rcol.isDirectCode()) {
+        if (auto resolved = resolveDisplayText(col, rcol, raw); !resolved.isNull())
+            return resolved;
+    }
 
+    // Вещественные числа
+    //   DisplayRole → форматированная строка (отображение пользователю)
+    //   EditRole    → сырой double (сортировка + передача в редактор)
+    if (raw.type() == QVariant::Double) {
+        const auto info = getColumnEditorInfo(col);
+        if (info.editorType == ColumnEditorInfo::Type::Numeric) {
+            if (role == Qt::DisplayRole)
+                return QString::number(raw.toDouble(), 'f', info.decimals);
+            // EditRole — возвращаем double напрямую
+            return raw;
+        }
+    }
+    return raw;
+}
+
+QVariant RModel::dataForBackground (int row, int col,
+                                   const RCol& rcol, const QVariant& raw) const{
+    // COLOR-ячейки: фон = сам цвет, условные форматы не нужны
+    if (rcol.getComPropTT() == enComPropTT::COM_PR_COLOR) {
+        long packed = std::visit(ToLong(), m_rdata->pnparray_->Get(row, col));
+        // COLORREF хранит каналы в порядке **BGR** (`0x00BBGGRR`), а `QColor::fromRgb` ожидает **RGB**.
+        return QColor(packed & 0xFF, (packed >> 8) & 0xFF, (packed >> 16) & 0xFF);
+    }
+    // Для всех остальных — условный формат
+    if (m_condFmt.formats().empty())
+        return {};// форматы не заданы
+
+    if (const QVariant* cached = m_bgCache.get(row, col))
+        return *cached;// QVariant() → нет формата, тоже ок
+
+    const QString val = QString::fromStdString(
+        std::visit(ToString(), m_rdata->pnparray_->Get(row, col)));
+    QVariant fmt = getMatchingCondFormat(row, col, val, Qt::BackgroundRole);
+    m_bgCache.put(row, col, fmt);
+    return fmt;
+}
+
+QVariant RModel::dataForDecoration (int row, int col,
+                                   const RCol& rcol, const QVariant& raw) const{
+    // COLOR: упакованный RGB long → QColor
+    if (rcol.getComPropTT() == enComPropTT::COM_PR_COLOR) {
+        long packed = std::visit(ToLong(), m_rdata->pnparray_->Get(row, col));
+        QPixmap px(16, 16);
+        px.fill(QColor::fromRgb(static_cast<QRgb>(packed)));
+        return px;
+    }
+    const size_t pluginIdx = static_cast<size_t>(rcol.getIndex());
+    if (const auto* pics = m_cache.pictureEnum(pluginIdx)) {
+        int v = std::visit(ToLong(), m_rdata->pnparray_->Get(row, col));
+        if (v >= 0 && v < pics->size()) return (*pics)[v].image;
+    }
     return {};
+}
+
+QVariant RModel::dataForComboBox (int col, const RCol& rcol,
+                                 const QVariant& raw) const{
+
+    if (!raw.isValid()){
+        return dataForInvalidCellComboBoxRole(col, rcol);
+    }
+
+    const size_t pluginIdx = static_cast<size_t>(rcol.getIndex());
+    if (const auto* pics = m_cache.pictureEnum(pluginIdx)) {
+        QVariantList result;
+        for (const auto& p : *pics) result << p.image;
+        return result;
+    }
+    QStringList list;
+    if (const auto* enums = m_cache.enumItems(col))
+        list = *enums;
+    else if (const auto* nref = m_cache.namerefMap(col))
+        for (const auto& [k, v] : *nref) list.append(QString::fromStdString(v));
+    else if (const auto* senum = m_cache.superenumMap(col))
+        for (const auto& [k, v] : *senum) list.append(QString::fromStdString(v));
+    return list;
+}
+
+QString RModel::resolveDisplayText(int col, const RCol& rcol,
+                                   const QVariant& raw) const{
+    const size_t pluginIdx = static_cast<size_t>(rcol.getIndex());
+    // Для ENPIC используем pluginIdx, для остальных — col
+    if (const auto* pics = m_cache.pictureEnum(pluginIdx)) {
+        int v = raw.toInt();
+        if (v >= 0 && v < pics->size()) return (*pics)[v].label;
+        return {};
+    }
+    if (const auto* enums = m_cache.enumItems(col)) {
+        int v = raw.toInt();
+        // Безопасная версия вместо at()
+        if (v >= 0 && v < enums->size()) return (*enums)[v];
+        return {};
+    }
+    if (const auto* senum = m_cache.superenumMap(col)) {
+        auto it = senum->find(static_cast<size_t>(raw.toInt()));
+        if (it != senum->end()) return QString::fromStdString(it->second);
+        return {};
+    }
+    //nameref здесь не нужен
+
+    return {};  // null QVariant — вызывающий вернёт raw
 }
 
 bool RModel::setData(const QModelIndex& index, const QVariant& value, int role)

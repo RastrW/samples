@@ -50,7 +50,6 @@
 #include "rGridTableView.h"
 #include "rGrid.h"
 #include "QtitanBase.h"
-#include "customEditors/dynamicComboBoxEditorRepository.h"
 
 void dumpShortcuts(QWidget* root, const QString& tag)
 {
@@ -588,14 +587,6 @@ void RtabWidget::slot_contextMenu(ContextMenuEventArgs* args)
     m_menuBuilder->prepareForShow(ctx, args->contextMenu());
 }
 
-int RtabWidget::getModelFocuedRow(){
-    return m_view->focusedRowIndex();
-}
-
-int RtabWidget::getModelFocuedColumn(){
-    return m_view->focusedColumnIndex();
-}
-
 void RtabWidget::slot_addRow()
 {
     m_view->beginUpdate();
@@ -648,26 +639,32 @@ void RtabWidget::slot_deleteRow()
     QModelIndexList selected = m_view->selection()->selectedRowIndexes();
     if (selected.isEmpty()) return;
 
-    if (selected.count() > 1) {
-        auto btn = QMessageBox::question(this,
-                                         tr("Подтверждение"),
-                                         tr("Удалить %1 записей?").arg(selected.count()),
-                                         QMessageBox::Yes | QMessageBox::Cancel);
+    // Собираем уникальные строки (selectedRowIndexes может дублировать при MultiCell)
+    QSet<int> rowSet;
+    for (const QModelIndex& mi : selected)
+        rowSet.insert(mi.row());
+
+    if (rowSet.size() > 1) {
+        auto btn = QMessageBox::question(
+            this, tr("Подтверждение"),
+            tr("Удалить %1 записей?").arg(rowSet.size()),
+            QMessageBox::Yes | QMessageBox::Cancel);
         if (btn != QMessageBox::Yes) return;
     }
 
-    // Минимальный model row — начало диапазона удаления
-    int minModelRow = selected.first().row();
-    for (const QModelIndex& mi : selected)
-        minModelRow = std::min(minModelRow, mi.row());
+    // Сортируем по убыванию — удаляем снизу вверх,
+    // чтобы индексы вышестоящих строк не смещались
+    QList<int> rows(rowSet.begin(), rowSet.end());
+    std::sort(rows.begin(), rows.end(), std::greater<int>());
 
     m_view->beginUpdate();
-    //Примем допущение что selection() один и не имеет разрывов
-    m_model->removeRows(minModelRow, selected.count());
+    for (int row : rows)
+        m_model->removeRows(row, 1);
     m_view->endUpdate();
 
-    // Фокус на строку, которая оказалась на месте удалённых
-    int newFocus = std::min(minModelRow, m_model->rowCount() - 1);
+    // Фокус на строку, ближайшую к удалённому диапазону
+    const int topRow  = rows.last(); // наименьший (список убывающий)
+    const int newFocus = std::min(topRow, m_model->rowCount() - 1);
     if (newFocus >= 0) {
         GridRow r = m_view->getRow(m_model->index(newFocus, 0));
         if (r.isValid())
@@ -762,7 +759,6 @@ void RtabWidget::slot_openColProp(int col)
 
 void RtabWidget::slot_openSelection(int col)
 {
-    int column = getModelFocuedColumn();
     RCol* prcol = m_model->getRCol(col);
     std::string colName = prcol ? prcol->getColName() : "";
 

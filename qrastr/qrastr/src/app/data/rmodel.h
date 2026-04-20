@@ -104,10 +104,6 @@ public:
     RData* getRdata();
 
 private:
-    // ── Условное форматирование ────────────────────────────
-    QVariant getMatchingCondFormat(size_t row, size_t col,
-                                   const QString& value, int role) const;
-
     // ── Данные ───────────────────────────────────────────────────────────────
     QAstra*             m_qastra;
     RTablesDataManager* m_rtdm;
@@ -119,5 +115,28 @@ private:
     CondFormatStorage m_condFmt;   // условные форматы
 
     mutable BackgroundCache m_bgCache;
+
+    // ── Условное форматирование ────────────────────────────
+    QVariant getMatchingCondFormat(size_t row, size_t col,
+                                   const QString& value, int role) const;
+    // ── DisplayRole / EditRole (Текст для отображения/Значение для редактора)─
+    QVariant dataForDisplayEdit(int row, int col, const RCol& rcol,
+                                const QVariant& raw, int role) const;
+    // ── BackgroundRole (Фон ячейки) ──────────────────────────────────────────
+    QVariant dataForBackground (int row, int col,
+                               const RCol& rcol, const QVariant& raw) const;
+    // ── DecorationRole (Иконка слева от текста)───────────────────────────────
+    QVariant dataForDecoration (int row, int col,
+                               const RCol& rcol, const QVariant& raw) const;
+    // ── ComboBoxRole (popup для ComboBox)─────────────────────────────────────
+    QVariant dataForComboBox   (int col, const RCol& rcol, const QVariant& raw) const;
+    // Текст для DisplayRole ячеек Enpic/ Enum / NameRef / SuperEnum
+    // EditRole возвращает сырой числовой код, чтобы QTitan
+    // использовал его при сортировке (числовое сравнение, не строковое).
+    QString resolveDisplayText(int col, const RCol& rcol,
+                               const QVariant& raw) const;
+    // Данные отсутствуют (например, новая строка)
+    QVariant dataForInvalidCellEditRole(int col, const RCol& rcol) const;
+    QVariant dataForInvalidCellComboBoxRole(int col, const RCol& rcol) const;
 };
 

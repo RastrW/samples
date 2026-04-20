@@ -105,8 +105,6 @@ private:
     void setupShortcuts();
     void setupConnections();
 
-    int getModelFocuedRow();
-    int getModelFocuedColumn();
     /// @brief Пересобирает общий фильтр (AND выборки + AND автофильтра) и
     ///        передаёт его в m_view->filter().
     void rebuildCombinedFilter();
