@@ -21,166 +21,209 @@ void BackInfoCache::rebuild(const RData& rdata, RTablesDataManager* pRTDM)
 
     for (const RCol& rcol : rdata)
     {
-        const size_t idx       = static_cast<size_t>(rcol.getIndex());
-        const auto   propTT    = rcol.getComPropTT();
-        const auto&  nameRef   = rcol.getNameRef();
+        switch (rcol.getComPropTT())
+        {
+        case enComPropTT::COM_PR_ENUM:
+            loadEnum(rcol);
+            break;
 
-        // ── ENUM ─────────────────────────────────────────────────────────────
-        if (propTT == enComPropTT::COM_PR_ENUM) {
-            QStringList list;
-            for (const auto& val : split(nameRef, '|'))
-                list.append(QString::fromStdString(val));
-            m_enum.emplace(idx, std::move(list));
-            continue;
-        }
+        case enComPropTT::COM_PR_SUPERENUM:
+            loadSuperenum(rcol, pRTDM);
+            break;
 
-        // ── SUPERENUM ────────────────────────────────────────────────────────
-        if (propTT == enComPropTT::COM_PR_SUPERENUM && !nameRef.empty()) {
-            std::vector<std::string> parts{ split(nameRef, '.') };
-            if (parts.size() > 2) {
-                const std::string& srcTable = parts[0];          // ← запоминаем источник
-                long indx1 = pRTDM->column_index(srcTable, parts[1]);
-                long indx2 = pRTDM->column_index(srcTable, parts[2]);
-                if (indx1 > -1 && indx2 > -1) {
-                    QDataBlock qdb;
-                    pRTDM->getDataBlock(srcTable, qdb, parts[2] + "," + parts[1]);
-                    std::map<size_t, std::string> map;
-                    map.emplace(0, "не задано");
-                    for (int i = 0; i < qdb.RowsCount(); ++i) {
-                        size_t      key = static_cast<size_t>(std::visit(ToLong(),   qdb.Get(i, 0)));
-                        std::string val = std::visit(ToString(), qdb.Get(i, 1));
-                        map.emplace(key, std::move(val));
-                    }
-                    m_superenum.emplace(idx, std::move(map));
-                    m_superenumSources[srcTable].push_back(idx);  // ← регистрируем
-                }
-            }
-            continue;
-        }
+        case enComPropTT::COM_PR_INT:
+            loadNameref(rcol, pRTDM);
+            break;
 
-        // ── NAMEREF ──────────────────────────────────────────────────────────
-        if (propTT == enComPropTT::COM_PR_INT && !nameRef.empty()) {
-            size_t nopen  = nameRef.find('[');
-            size_t nclose = nameRef.find(']');
-            if (nopen == std::string::npos || nclose == std::string::npos)
-                continue;
+        case enComPropTT::COM_PR_ENPIC:
+            loadEnpic(rcol);
+            break;
 
-            std::string srcTable = nameRef.substr(0, nopen);    // ← запоминаем источник
-            std::string col      = nameRef.substr(nopen + 1, nclose - nopen - 1);
-
-            long nameIndx = pRTDM->column_index(srcTable, "name");
-            std::string cols = col + "," + (nameIndx > -1 ? std::string("name") : col);
-
-            QDataBlock qdb;
-            pRTDM->getDataBlock(srcTable, qdb, cols);
-
-            std::map<size_t, std::string> map;
-            map.emplace(0, "не задано");
-            for (int i = 0; i < qdb.RowsCount(); ++i) {
-                size_t      key = static_cast<size_t>(std::visit(ToLong(), qdb.Get(i, 0)));
-                std::string val = std::visit(ToString(), qdb.Get(i, 1));
-                map.emplace(key, std::move(val));
-            }
-            m_nameref.emplace(idx, std::move(map));
-            m_namerefSources[srcTable].push_back(idx);           // ← регистрируем
-            continue;
-        }
-
-        // ── ENPIC ────────────────────────────────────────────────────────────
-        if (propTT == enComPropTT::COM_PR_ENPIC) {
-            std::map<int, int> iconMap = parseEnpicNameref(nameRef);
-            QList<PictureItem> items;
-
-            if (!iconMap.empty()) {
-                int maxVal = iconMap.rbegin()->first;
-
-                auto it = iconMap.begin();
-                for (int v = 0; v <= maxVal; ++v) {
-                    if (it != iconMap.end() && it->first == v) {
-                        items.append({ "", iconByIndex(it->second) });
-                        ++it;
-                    } else {
-                        items.append({ "", QPixmap() });
-                    }
-                }
-            }
-
-            m_pictureEnums.emplace(idx, std::move(items));
+        default:
+            break;
         }
     }
 }
 
-std::vector<size_t> BackInfoCache::rebuildRefsFrom(const std::string&  srcTable,
-                                                   const RData&        rdata,
+void BackInfoCache::loadEnum(const RCol& rcol)
+{
+    const size_t idx = static_cast<size_t>(rcol.getIndex());
+    const auto& nameRef = rcol.getNameRef();
+
+    QStringList list;
+    for (const auto& val : split(nameRef, '|'))
+        list.append(QString::fromStdString(val));
+
+    m_enum.emplace(idx, std::move(list));
+}
+
+void BackInfoCache::loadSuperenum(const RCol& rcol, RTablesDataManager* pRTDM)
+{
+    const size_t idx = static_cast<size_t>(rcol.getIndex());
+    const auto& nameRef = rcol.getNameRef();
+
+    if (nameRef.empty() || !pRTDM)
+        return;
+
+    const std::vector<std::string> parts{ split(nameRef, '.') };
+    if (parts.size() < 3)
+        return;
+
+    const std::string& srcTable = parts[0]; // ← запоминаем источник
+    const std::string& keyCol    = parts[2];
+    const std::string& valueCol  = parts[1];
+
+    const long keyIdx   = pRTDM->column_index(srcTable, keyCol);
+    const long valueIdx = pRTDM->column_index(srcTable, valueCol);
+    if (keyIdx < 0 || valueIdx < 0)
+        return;
+
+    RefMap map = buildIdNameMap(pRTDM, srcTable, keyCol, valueCol);
+    m_superenum.emplace(idx, std::move(map));
+    m_superenumSources[srcTable].push_back(idx);
+}
+
+void BackInfoCache::loadNameref(const RCol& rcol, RTablesDataManager* pRTDM)
+{
+    const size_t idx = static_cast<size_t>(rcol.getIndex());
+    const auto& nameRef = rcol.getNameRef();
+
+    if (nameRef.empty() || !pRTDM)
+        return;
+
+    const size_t nopen  = nameRef.find('[');
+    const size_t nclose = nameRef.find(']');
+    if (nopen == std::string::npos || nclose == std::string::npos || nclose <= nopen + 1)
+        return;
+
+    const std::string srcTable = nameRef.substr(0, nopen);
+    const std::string keyCol   = nameRef.substr(nopen + 1, nclose - nopen - 1);
+
+    const long nameIdx = pRTDM->column_index(srcTable, "name");
+    const std::string valueCol = (nameIdx > -1) ? "name" : keyCol;
+
+    RefMap map = buildIdNameMap(pRTDM, srcTable, keyCol, valueCol);
+    m_nameref.emplace(idx, std::move(map));
+    m_namerefSources[srcTable].push_back(idx);
+}
+
+void BackInfoCache::loadEnpic(const RCol& rcol)
+{
+    const size_t idx = static_cast<size_t>(rcol.getIndex());
+    const auto& nameRef = rcol.getNameRef();
+
+    const std::map<int, int> iconMap = parseEnpicNameref(nameRef);
+    PictureList items;
+
+    if (!iconMap.empty()) {
+        const int maxVal = iconMap.rbegin()->first;
+
+        auto it = iconMap.begin();
+        for (int v = 0; v <= maxVal; ++v) {
+            if (it != iconMap.end() && it->first == v) {
+                items.append({ "", iconByIndex(it->second) });
+                ++it;
+            } else {
+                items.append({ "", QPixmap() });
+            }
+        }
+    }
+
+    m_pictureEnums.emplace(idx, std::move(items));
+}
+
+std::vector<size_t> BackInfoCache::rebuildRefsFrom(const std::string& srcTable,
+                                                   const RData& rdata,
                                                    RTablesDataManager* pRTDM)
 {
-    std::vector<size_t> updatedCols; // позиционные индексы обновлённых колонок
+    std::vector<size_t> updatedCols;
+    if (!pRTDM || srcTable.empty())
+        return updatedCols;
 
-    // Перестраиваем NAMEREF-записи, ссылающиеся на srcTable
-    auto itNr = m_namerefSources.find(srcTable);
-    if (itNr != m_namerefSources.end()) {
-        for (size_t pluginIdx : itNr->second) {
-            // Найдём RCol по pluginIdx, чтобы взять nameRef-строку
-            for (size_t pos = 0; pos < rdata.size(); ++pos) {
-                const RCol& rcol = *(rdata.begin() + pos);
-                if (static_cast<size_t>(rcol.getIndex()) != pluginIdx) continue;
-
-                const auto& nameRef = rcol.getNameRef();
-                size_t nopen  = nameRef.find('[');
-                size_t nclose = nameRef.find(']');
-                if (nopen == std::string::npos || nclose == std::string::npos) break;
-
-                std::string col = nameRef.substr(nopen + 1, nclose - nopen - 1);
-                long nameIndx   = pRTDM->column_index(srcTable, "name");
-                std::string cols = col + "," + (nameIndx > -1 ? std::string("name") : col);
-
-                QDataBlock qdb;
-                pRTDM->getDataBlock(srcTable, qdb, cols);
-
-                std::map<size_t, std::string> map;
-                map.emplace(0, "не задано");
-                for (int i = 0; i < qdb.RowsCount(); ++i) {
-                    size_t      key = static_cast<size_t>(std::visit(ToLong(), qdb.Get(i, 0)));
-                    std::string val = std::visit(ToString(), qdb.Get(i, 1));
-                    map.emplace(key, std::move(val));
-                }
-                m_nameref[pluginIdx] = std::move(map);
-                updatedCols.push_back(pos);
-                break;
-            }
-        }
+    // Быстрый доступ к RCol по pluginIdx
+    std::unordered_map<size_t, const RCol*> byPluginIdx;
+    byPluginIdx.reserve(rdata.size());
+    for (const RCol& rcol : rdata) {
+        byPluginIdx.emplace(static_cast<size_t>(rcol.getIndex()), &rcol);
     }
 
-    // Перестраиваем SUPERENUM-записи, ссылающиеся на srcTable
-    auto itSe = m_superenumSources.find(srcTable);
-    if (itSe != m_superenumSources.end()) {
-        for (size_t pluginIdx : itSe->second) {
-            for (size_t pos = 0; pos < rdata.size(); ++pos) {
-                const RCol& rcol = *(rdata.begin() + pos);
-                if (static_cast<size_t>(rcol.getIndex()) != pluginIdx) continue;
+    const long nameIdx = pRTDM->column_index(srcTable, "name");
 
-                const auto& nameRef = rcol.getNameRef();
-                std::vector<std::string> parts{ split(nameRef, '.') };
-                if (parts.size() <= 2) break;
+    auto findRCol = [&](size_t pluginIdx) -> const RCol* {
+        auto it = byPluginIdx.find(pluginIdx);
+        return (it != byPluginIdx.end()) ? it->second : nullptr;
+    };
 
-                QDataBlock qdb;
-                pRTDM->getDataBlock(srcTable, qdb, parts[2] + "," + parts[1]);
+    auto rebuildNameref = [&](size_t pluginIdx, const RCol& rcol) -> bool {
+        const std::string& nameRef = rcol.getNameRef();
 
-                std::map<size_t, std::string> map;
-                map.emplace(0, "не задано");
-                for (int i = 0; i < qdb.RowsCount(); ++i) {
-                    size_t      key = static_cast<size_t>(std::visit(ToLong(),   qdb.Get(i, 0)));
-                    std::string val = std::visit(ToString(), qdb.Get(i, 1));
-                    map.emplace(key, std::move(val));
-                }
-                m_superenum[pluginIdx] = std::move(map);
-                updatedCols.push_back(pos);
-                break;
-            }
+        const size_t nopen  = nameRef.find('[');
+        const size_t nclose = nameRef.find(']');
+        if (nopen == std::string::npos || nclose == std::string::npos || nclose <= nopen + 1)
+            return false;
+
+        const std::string keyCol = nameRef.substr(nopen + 1, nclose - nopen - 1);
+        const std::string valueCol = (nameIdx > -1) ? "name" : keyCol;
+
+        m_nameref[pluginIdx] = buildIdNameMap(pRTDM, srcTable, keyCol, valueCol);
+        return true;
+    };
+
+    auto rebuildSuperenum = [&](size_t pluginIdx, const RCol& rcol) -> bool {
+        const std::vector<std::string> parts{ split(rcol.getNameRef(), '.') };
+        if (parts.size() < 3)
+            return false;
+
+        const long keyIdx   = pRTDM->column_index(srcTable, parts[2]);
+        const long valueIdx = pRTDM->column_index(srcTable, parts[1]);
+        if (keyIdx < 0 || valueIdx < 0)
+            return false;
+
+        m_superenum[pluginIdx] = buildIdNameMap(pRTDM, srcTable, parts[2], parts[1]);
+        return true;
+    };
+
+    auto process = [&](const std::vector<size_t>& indices, auto&& rebuildFn) {
+        for (size_t pluginIdx : indices) {
+            const RCol* rcol = findRCol(pluginIdx);
+            if (!rcol)
+                continue;
+
+            if (rebuildFn(pluginIdx, *rcol))
+                updatedCols.push_back(rcol->getIndex()); // позиционный индекс из RData
         }
-    }
+    };
+
+    if (auto it = m_namerefSources.find(srcTable); it != m_namerefSources.end())
+        process(it->second, rebuildNameref);
+
+    if (auto it = m_superenumSources.find(srcTable); it != m_superenumSources.end())
+        process(it->second, rebuildSuperenum);
 
     return updatedCols;
+}
+
+BackInfoCache::RefMap BackInfoCache::buildIdNameMap(RTablesDataManager* pRTDM,
+                                                    const std::string& srcTable,
+                                                    const std::string& keyCol,
+                                                    const std::string& valueCol)
+{
+    RefMap result;
+    result.emplace(0, "не задано");
+
+    if (!pRTDM)
+        return result;
+
+    QDataBlock qdb;
+    pRTDM->getDataBlock(srcTable, qdb, keyCol + "," + valueCol);
+
+    for (int row = 0; row < qdb.RowsCount(); ++row) {
+        const size_t key = static_cast<size_t>(std::visit(ToLong(), qdb.Get(row, 0)));
+        const std::string value = std::visit(ToString(), qdb.Get(row, 1));
+        result.emplace(key, value);
+    }
+
+    return result;
 }
 
 const QStringList* BackInfoCache::enumItems(size_t colIdx) const
@@ -189,19 +232,19 @@ const QStringList* BackInfoCache::enumItems(size_t colIdx) const
     return it != m_enum.end() ? &it->second : nullptr;
 }
 
-const std::map<size_t, std::string>* BackInfoCache::superenumMap(size_t colIdx) const
+const BackInfoCache::RefMap* BackInfoCache::superenumMap(size_t colIdx) const
 {
     auto it = m_superenum.find(colIdx);
     return it != m_superenum.end() ? &it->second : nullptr;
 }
 
-const std::map<size_t, std::string>* BackInfoCache::namerefMap(size_t colIdx) const
+const BackInfoCache::RefMap* BackInfoCache::namerefMap(size_t colIdx) const
 {
     auto it = m_nameref.find(colIdx);
     return it != m_nameref.end() ? &it->second : nullptr;
 }
 
-const QList<BackInfoCache::PictureItem>* BackInfoCache::pictureEnum(size_t pluginIdx) const
+const BackInfoCache::PictureList* BackInfoCache::pictureEnum(size_t pluginIdx) const
 {
     auto it = m_pictureEnums.find(pluginIdx);
     return it != m_pictureEnums.end() ? &it->second : nullptr;
@@ -211,46 +254,53 @@ std::map<int, int> BackInfoCache::parseEnpicNameref(const std::string& nameref)
 {
     std::map<int, int> result;
     QString s = QString::fromStdString(nameref).trimmed();
+
+    auto parseInts = [](const QString& text) -> QList<int> {
+        QList<int> values;
+        for (const QString& token : text.split(',', Qt::SkipEmptyParts)) {
+            bool ok = false;
+            const int value = token.trimmed().toInt(&ok);
+            if (ok)
+                values << value;
+        }
+        return values;
+    };
+
     // Если нет групп (нет ';') — просто плоский список иконок
     // "2,0,1,4,5" -> value=0 -> иконка 2, value=1 -> иконка 0, ...
     if (!s.contains(';')) {
         int fieldVal = 0;
-        for (const QString& t : s.split(',', Qt::SkipEmptyParts)) {
-            bool ok = false;
-            int iconIdx = t.trimmed().toInt(&ok);
-            if (ok) result[fieldVal++] = iconIdx;
-        }
+        for (const int iconIdx : parseInts(s))
+            result[fieldVal++] = iconIdx;
         return result;
     }
-    // Разбиваем на группы по ';', убираем скобки
+
+    // Группы: "(...),(...);(...)" — лишние скобки просто убираем
     QStringList groups;
     for (const QString& part : s.split(';', Qt::SkipEmptyParts))
         groups << QString(part).remove('(').remove(')').trimmed();
 
-    auto parseGroup = [](const QString& g) -> QList<int> {
-        QList<int> res;
-        for (const QString& t : g.split(',', Qt::SkipEmptyParts)) {
-            bool ok = false;
-            int v = t.trimmed().toInt(&ok);
-            if (ok) res << v;
-        }
-        return res;
-    };
     // Группа 0: РисункиИстинаЛожь — [0]=иконка для value=1, [1]=иконка для value=0
     if (!groups.isEmpty()) {
-        QList<int> g = parseGroup(groups[0]);
-        if (g.size() >= 1) result[1] = g[0];
-        if (g.size() >= 2) result[0] = g[1];
+        const QList<int> g = parseInts(groups[0]);
+        if (!g.isEmpty())      result[1] = g[0];
+        if (g.size() >= 2)     result[0] = g[1];
     }
+
     // Группа 1: РисункиИстина — значения начинаются с 2
     int nextVal = 2;
-    if (groups.size() >= 2)
-        for (int idx : parseGroup(groups[1]))
+    if (groups.size() >= 2) {
+        const QList<int> g = parseInts(groups[1]);
+        for (const int idx : g)
             result[nextVal++] = idx;
+    }
+
     // Группа 2: РисункиЛожь — значения продолжаются
-    if (groups.size() >= 3)
-        for (int idx : parseGroup(groups[2]))
+    if (groups.size() >= 3) {
+        const QList<int> g = parseInts(groups[2]);
+        for (const int idx : g)
             result[nextVal++] = idx;
+    }
 
     return result;
 }
