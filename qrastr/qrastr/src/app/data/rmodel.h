@@ -129,7 +129,9 @@ private:
     QVariant dataForDecoration (int row, int col,
                                const RCol& rcol, const QVariant& raw) const;
     // ── ComboBoxRole (popup для ComboBox)─────────────────────────────────────
-    QVariant dataForComboBox   (int col, const RCol& rcol, const QVariant& raw) const;
+    ///@note Строит список элементов для ComboBox/ComboBoxPicture.
+    /// Не зависит от raw-значения — возвращает одно и то же для валидных и невалидных ячеек.
+    QVariant dataForComboBox(const RCol& rcol) const;
     // Текст для DisplayRole ячеек Enpic/ Enum / NameRef / SuperEnum
     // EditRole возвращает сырой числовой код, чтобы QTitan
     // использовал его при сортировке (числовое сравнение, не строковое).
@@ -137,6 +139,5 @@ private:
                                const QVariant& raw) const;
     // Данные отсутствуют (например, новая строка)
     QVariant dataForInvalidCellEditRole(int col, const RCol& rcol) const;
-    QVariant dataForInvalidCellComboBoxRole(int col, const RCol& rcol) const;
 };
 

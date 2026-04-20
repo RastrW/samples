@@ -70,7 +70,7 @@ QVariant RModel::data(const QModelIndex& index, int role) const
 
     switch (role) {
     case Qtitan::ComboBoxRole:
-        return dataForComboBox(col, rcol, raw);
+        return dataForComboBox(rcol);
     case Qt::DisplayRole:
     case Qt::EditRole:
         return dataForDisplayEdit(row, col, rcol, raw, role);
@@ -97,23 +97,6 @@ QVariant RModel::dataForInvalidCellEditRole(int col, const RCol& rcol) const{
     } else {
         return QVariant(QString());
     }
-}
-
-QVariant RModel::dataForInvalidCellComboBoxRole(int col, const RCol& rcol) const{
-    const size_t pluginIdx = static_cast<size_t>(rcol.getIndex());
-    if (const auto* pics = m_cache.pictureEnum(pluginIdx)) {
-        QVariantList result;
-        for (const auto& p : *pics) result << p.image;
-        return result;
-    }
-    QStringList list;
-    if (const auto* enums  = m_cache.enumItems(col))
-        list = *enums;
-    else if (const auto* nref = m_cache.namerefMap(col))
-        for (const auto& [k, v] : *nref) list.append(QString::fromStdString(v));
-    else if (const auto* senum = m_cache.superenumMap(col))
-        for (const auto& [k, v] : *senum) list.append(QString::fromStdString(v));
-    return list;
 }
 
 QVariant RModel::dataForDisplayEdit(int row, int col, const RCol& rcol,
@@ -196,52 +179,51 @@ QVariant RModel::dataForDecoration (int row, int col,
     return {};
 }
 
-QVariant RModel::dataForComboBox (int col, const RCol& rcol,
-                                 const QVariant& raw) const{
-
-    if (!raw.isValid()){
-        return dataForInvalidCellComboBoxRole(col, rcol);
-    }
-
+QVariant RModel::dataForComboBox(const RCol& rcol) const
+{
     const size_t pluginIdx = static_cast<size_t>(rcol.getIndex());
+
     if (const auto* pics = m_cache.pictureEnum(pluginIdx)) {
         QVariantList result;
+        result.reserve(pics->size());
         for (const auto& p : *pics) result << p.image;
         return result;
     }
+
     QStringList list;
-    if (const auto* enums = m_cache.enumItems(col))
+    if (const auto* enums = m_cache.enumItems(pluginIdx))
         list = *enums;
-    else if (const auto* nref = m_cache.namerefMap(col))
-        for (const auto& [k, v] : *nref) list.append(QString::fromStdString(v));
-    else if (const auto* senum = m_cache.superenumMap(col))
-        for (const auto& [k, v] : *senum) list.append(QString::fromStdString(v));
+    else if (const auto* nref = m_cache.namerefMap(pluginIdx))
+        for (const auto& [k, v] : *nref)
+            list.append(QString::fromStdString(v));
+    else if (const auto* senum = m_cache.superenumMap(pluginIdx))
+        for (const auto& [k, v] : *senum)
+            list.append(QString::fromStdString(v));
     return list;
 }
 
 QString RModel::resolveDisplayText(int col, const RCol& rcol,
-                                   const QVariant& raw) const{
-    const size_t pluginIdx = static_cast<size_t>(rcol.getIndex());
-    // Для ENPIC используем pluginIdx, для остальных — col
+                                   const QVariant& raw) const
+{
+    const size_t pluginIdx = static_cast<size_t>(rcol.getIndex()); // единый ключ
+
     if (const auto* pics = m_cache.pictureEnum(pluginIdx)) {
         int v = raw.toInt();
         if (v >= 0 && v < pics->size()) return (*pics)[v].label;
         return {};
     }
-    if (const auto* enums = m_cache.enumItems(col)) {
+    if (const auto* enums = m_cache.enumItems(pluginIdx)) {
         int v = raw.toInt();
-        // Безопасная версия вместо at()
         if (v >= 0 && v < enums->size()) return (*enums)[v];
         return {};
     }
-    if (const auto* senum = m_cache.superenumMap(col)) {
+    if (const auto* senum = m_cache.superenumMap(pluginIdx)) {
         auto it = senum->find(static_cast<size_t>(raw.toInt()));
         if (it != senum->end()) return QString::fromStdString(it->second);
         return {};
     }
     //nameref здесь не нужен
-
-    return {};  // null QVariant — вызывающий вернёт raw
+    return {};
 }
 
 bool RModel::setData(const QModelIndex& index, const QVariant& value, int role)
@@ -288,15 +270,15 @@ bool RModel::setData(const QModelIndex& index, const QVariant& value, int role)
 
         case RCol::_en_data::DATA_INT: {
             long val = 0;
-            const size_t idx = static_cast<size_t>(col);
+            const size_t pluginIdx = static_cast<size_t>(iter_col->getIndex());
             if (!iter_col->isDirectCode()) {
-                if (const auto* enums = m_cache.enumItems(idx)) {
+                if (const auto* enums = m_cache.enumItems(pluginIdx)) {
                     for (int i = 0; i < enums->size(); ++i)
                         if ((*enums)[i] == value) { val = i; break; }
-                } else if (const auto* senum = m_cache.superenumMap(idx)) {
+                } else if (const auto* senum = m_cache.superenumMap(pluginIdx)) {
                     for (const auto& [k, v] : *senum)
                         if (v == value.toString().toStdString()) { val = static_cast<long>(k); break; }
-                } else if (const auto* nref = m_cache.namerefMap(idx)) {
+                } else if (const auto* nref = m_cache.namerefMap(pluginIdx)) {
                     for (const auto& [k, v] : *nref)
                         if (v == value.toString().toStdString()) { val = static_cast<long>(k); break; }
                 } else {
@@ -547,16 +529,16 @@ QVariant RModel::getMatchingCondFormat(size_t row, size_t column,
     return {};
 }
 
-
 RModel::ColumnEditorInfo RModel::getColumnEditorInfo(int colIndex) const
 {
     ColumnEditorInfo info;
     const RCol* col = getRCol(colIndex);
     if (!col) return info;
 
-    const size_t idx      = static_cast<size_t>(colIndex);
+    // pluginIdx — индекс колонки в плагине (стабилен, не зависит от визуального порядка).
+    // Именно по нему BackInfoCache хранит все справочники.
     const size_t pluginIdx = static_cast<size_t>(col->getIndex());
-    const auto   propTT   = col->getComPropTT();
+    const auto   propTT    = col->getComPropTT();
 
     switch (propTT) {
     case enComPropTT::COM_PR_BOOL:
@@ -567,13 +549,14 @@ RModel::ColumnEditorInfo RModel::getColumnEditorInfo(int colIndex) const
         info.editorType = ColumnEditorInfo::Type::Numeric;
         info.decimals   = std::atoi(col->getPrec().c_str());
         break;
+
     case enComPropTT::COM_PR_TIME:
         info.editorType = ColumnEditorInfo::Type::DateTime;
-        info.decimals   = std::atoi(col->getPrec().c_str());
         break;
+
     case enComPropTT::COM_PR_ENUM:
         if (!col->isDirectCode()) {
-            if (const auto* enums = m_cache.enumItems(idx)) {
+            if (const auto* enums = m_cache.enumItems(pluginIdx)) {
                 info.editorType = ColumnEditorInfo::Type::ComboBox;
                 info.comboItems = *enums;
                 break;
@@ -584,14 +567,12 @@ RModel::ColumnEditorInfo RModel::getColumnEditorInfo(int colIndex) const
 
     case enComPropTT::COM_PR_INT:
         if (!col->isDirectCode() && !col->getNameRef().empty()) {
-            if (const auto* nref = m_cache.namerefMap(idx)) {
+            if (const auto* nref = m_cache.namerefMap(pluginIdx)) {
                 if (static_cast<int>(nref->size()) > 20) {
-                    // Много элементов → двухколоночный поиск
                     info.editorType        = ColumnEditorInfo::Type::NameRef;
                     info.nameRefData.items = *nref;
                     break;
                 }
-                // Мало элементов → обычный ComboBox
                 info.editorType = ColumnEditorInfo::Type::ComboBox;
                 for (const auto& [k, v] : *nref)
                     info.comboItems.append(QString::fromStdString(v));
@@ -603,7 +584,7 @@ RModel::ColumnEditorInfo RModel::getColumnEditorInfo(int colIndex) const
 
     case enComPropTT::COM_PR_SUPERENUM:
         if (!col->isDirectCode() && !col->getNameRef().empty()) {
-            if (const auto* senum = m_cache.superenumMap(idx)) {
+            if (const auto* senum = m_cache.superenumMap(pluginIdx)) {
                 info.editorType = ColumnEditorInfo::Type::ComboBox;
                 for (const auto& [k, v] : *senum)
                     info.comboItems.append(QString::fromStdString(v));
@@ -615,7 +596,6 @@ RModel::ColumnEditorInfo RModel::getColumnEditorInfo(int colIndex) const
 
     case enComPropTT::COM_PR_ENPIC:
         if (!col->isDirectCode()) {
-            // Ключ в m_pictureEnums_ — это plugin-индекс, не позиционный
             if (const auto* pics = m_cache.pictureEnum(pluginIdx)) {
                 info.editorType = ColumnEditorInfo::Type::ComboBoxPicture;
                 for (const auto& p : *pics)
