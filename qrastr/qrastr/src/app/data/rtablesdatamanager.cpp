@@ -76,6 +76,24 @@ RTablesDataManager::get(const std::string& tname, const std::string& cols)
     return it->second;
 }
 
+std::vector<long> RTablesDataManager::getRowsBySelection(const std::string& tname,
+                                                         const std::string& selection)
+{
+    std::vector<long> indices;
+    if (selection.empty()) return indices;
+
+    IRastrTablesPtr tablesx{ m_pqastra->getRastr()->Tables() };
+    IRastrTablePtr  table  { tablesx->Item(tname) };
+    IRastrResultVerify(table->SetSelection(selection));
+
+    DataBlock<FieldVariantData> variantBlock;
+    const IRastrPayload keys = table->Key();
+    IRastrResultVerify(table->DataBlock(keys.Value(), variantBlock));
+
+    indices = variantBlock.IndexesVector();
+    return indices;
+}
+
 void RTablesDataManager::setValue(const std::string&      tname,
                                   const std::string&      cname,
                                   long                    row,

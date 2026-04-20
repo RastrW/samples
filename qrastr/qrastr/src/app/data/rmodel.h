@@ -102,7 +102,7 @@ public:
     RCol*  getRCol    (int col) const;
     int    getIndexCol(std::string col) const;
     RData* getRdata();
-
+    std::vector<long> getRowsBySelection(const std::string& selection) const;
 private:
     // ── Данные ───────────────────────────────────────────────────────────────
     QAstra*             m_qastra;

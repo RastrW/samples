@@ -95,7 +95,7 @@ private:
      * c) устанавливает редакторы колонок (SetEditors);
      * d) восстанавливает условное форматирование из JSON.
     */
-    void createModel();
+    void createModel(QAstra* pqastra);
     void applyAllColumnEditors();
     void applyColumnEditor(int colIndex);
 
@@ -120,7 +120,6 @@ private:
     std::unique_ptr<CondFormatController> m_condFormatCtrl;
 
     CUIForm m_UIForm;
-    QAstra* m_pqastra;
     RTablesDataManager* m_pRTDM;
     ads::CDockManager* m_DockManager;
 

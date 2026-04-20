@@ -641,3 +641,8 @@ RData* RModel::getRdata()
 {
     return m_rdata.get();
 }
+
+std::vector<long> RModel::getRowsBySelection(const std::string& selection) const
+{
+    return m_rtdm->getRowsBySelection(m_rdata->t_name_, selection);
+}

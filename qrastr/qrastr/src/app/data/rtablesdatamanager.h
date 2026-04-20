@@ -47,6 +47,9 @@ public:
                       QDataBlock& qdb,
                       const std::string& cols = "",
                       std::optional<FieldDataOptions> opts = std::nullopt);
+    /// Применяет выборку к таблице tname и возвращает вектор строковых индексов.
+    std::vector<long> getRowsBySelection(const std::string& tname,
+                                         const std::string& selection);
     /** @brief Централизованная запись в плагин.
     * RModel::setData больше НЕ вызывает emit dataChanged вручную —
     * обновление View приходит ровно один раз, через цепочку хинтов.

@@ -41,7 +41,6 @@
 #include "condFormatController.h"
 #include "rmodel.h"
 #include "rtablesdatamanager.h"
-#include "qastra.h"
 #include "rdata.h"
 #include "QDataBlocks.h"
 #include "customEditors/searchableComboEditorTwo/searchableComboRepositoryTwo.h"
@@ -77,7 +76,6 @@ RtabWidget::RtabWidget(QAstra* pqastra,CUIForm UIForm, RTablesDataManager* pRTDM
                        ads::CDockManager* pDockManager, QWidget *parent)
     : QWidget(parent),
     m_UIForm {UIForm},
-    m_pqastra {pqastra},
     m_pRTDM {pRTDM},
     m_DockManager {pDockManager}
 {
@@ -136,7 +134,7 @@ RtabWidget::RtabWidget(QAstra* pqastra,CUIForm UIForm, RTablesDataManager* pRTDM
     ///@todo (не работает?)
     //m_view->options().setGroupSummaryPlace(GridViewOptions::GroupSummaryPlace::SummaryRowPlus);
     ///@note создание модели обязатель до меню!
-    createModel();
+    createModel(pqastra);
 
     //  Горячие клавиши
     setupShortcuts();
@@ -401,9 +399,9 @@ void RtabWidget::slot_close(){
     this->close();
 }
 
-void RtabWidget::createModel()
+void RtabWidget::createModel(QAstra* pqastra)
 {
-    m_model = std::make_unique<RModel>(this, m_pqastra, m_pRTDM);
+    m_model = std::make_unique<RModel>(this, pqastra, m_pRTDM);
     m_model->setForm(&m_UIForm);
     if (!m_model->populateDataFromRastr())
     {
@@ -446,7 +444,7 @@ void RtabWidget::createModel()
     }
 
     m_linkedFormCtrl = std::make_unique<LinkedFormController>(
-        m_pqastra,
+        pqastra,
         m_pRTDM,
         m_DockManager,
         m_view,
@@ -868,16 +866,8 @@ void RtabWidget::rebuildCombinedFilter()
     auto* group = new Qtitan::GridFilterGroupCondition(m_view->filter());
 
     if (hasSelection) {
-        // Воссоздаём CustomFilterCondition из m_selectionFilter.
-        // Повторяем логику получения строк из плагина
-        IRastrTablesPtr tablesx{ m_pqastra->getRastr()->Tables() };
-        IRastrTablePtr  table{ tablesx->Item(m_model->getRdata()->t_name_) };
-        IRastrResultVerify(table->SetSelection(m_selectionFilter.toStdString()));
-
-        DataBlock<FieldVariantData> variantBlock;
-        const IRastrPayload keys = table->Key();
-        IRastrResultVerify(table->DataBlock(keys.Value(), variantBlock));
-        const auto indices = variantBlock.IndexesVector();
+        // Обращаемся к модели — она сама знает имя таблицы и идёт через RTDM
+        const std::vector<long> indices = m_model->getRowsBySelection(m_selection);
 
         auto* selCond = new CustomFilterCondition(m_view->filter());
         for (long idx : indices)
