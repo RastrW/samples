@@ -900,13 +900,10 @@ void RtabWidget::slot_copyToClipboard()
     const int colCount = m_model->columnCount();
     if (rowCount == 0 || colCount == 0) return;
 
-    // ── Определяем диапазон: выделение или вся таблица ──────────────────────
-    QModelIndexList selected = m_view->selection()->selectedIndexes();
-    const bool hasSelection  = !selected.isEmpty();
-
     // Собираем заголовки только для видимых колонок
     QStringList visibleHeaders;
     QVector<int> visibleCols;
+    visibleCols.reserve(colCount);
     for (int c = 0; c < colCount; ++c) {
         auto* col = static_cast<Qtitan::GridTableColumn*>(m_view->getColumn(c));
         if (col && col->isVisible()) {
@@ -916,40 +913,58 @@ void RtabWidget::slot_copyToClipboard()
         }
     }
 
-    // ── Строим TSV (Tab-Separated Values) — Excel понимает без доп. настроек ─
-    QString text = visibleHeaders.join('\t') + '\n';
+    QString text;
+    text.reserve(rowCount * visibleCols.size() * 8); // приблизительно
+    text += visibleHeaders.join('\t') + '\n';
+    // ── Определяем диапазон: выделение или вся таблица ──────────────────────
+    QModelIndexList selected = m_view->selection()->selectedIndexes();
+    if (!selected.isEmpty()) {
+        // Структура для сортировки: {row, visColPos, value}
+        struct Cell { int row; int visCol; QString value; };
+        std::vector<Cell> cells;
+        cells.reserve(selected.size());
 
-    if (hasSelection) {
-        // Копируем только выделенные ячейки, группируем по строкам
-        // Используем QMap для сортировки: row → (col → value)
-        QMap<int, QMap<int, QString>> cells;
         for (const QModelIndex& idx : selected) {
             const int visCol = visibleCols.indexOf(idx.column());
-            if (visCol < 0) continue;  // скрытая колонка
-            cells[idx.row()][visCol] =
-                m_model->data(idx, Qt::DisplayRole).toString();
+            if (visCol < 0) continue;
+            cells.push_back({ idx.row(), visCol,
+                             m_model->data(idx, Qt::DisplayRole).toString() });
         }
-        for (auto rowIt = cells.begin(); rowIt != cells.end(); ++rowIt) {
-            QStringList rowData;
-            for (int vc = 0; vc < visibleCols.size(); ++vc)
-                rowData.append(rowIt.value().value(vc, ""));
-            text += rowData.join('\t') + '\n';
+
+        // Сортируем по (row, visCol) — std::vector + std::sort
+        std::sort(cells.begin(), cells.end(), [](const Cell& a, const Cell& b) {
+            return a.row != b.row ? a.row < b.row : a.visCol < b.visCol;
+        });
+
+        int prevRow = -1;
+        QStringList rowData;
+        rowData.reserve(visibleCols.size());
+
+        auto flushRow = [&]() {
+            if (prevRow >= 0) text += rowData.join('\t') + '\n';
+        };
+
+        for (const Cell& c : cells) {
+            if (c.row != prevRow) {
+                flushRow();
+                rowData.assign(visibleCols.size(), QString());
+                prevRow = c.row;
+            }
+            rowData[c.visCol] = c.value;
         }
+        flushRow();
     } else {
         // Копируем все строки
         for (int r = 0; r < rowCount; ++r) {
             QStringList rowData;
             rowData.reserve(visibleCols.size());
-            for (int c : visibleCols) {
-                QVariant val = m_model->data(m_model->index(r, c), Qt::DisplayRole);
-                rowData.append(val.toString());
-            }
+            for (int c : visibleCols)
+                rowData.append(m_model->data(m_model->index(r, c), Qt::DisplayRole).toString());
             text += rowData.join('\t') + '\n';
         }
     }
 
     QGuiApplication::clipboard()->setText(text);
-
     // Краткая индикация в статусной строке
     if (m_statusLabel) {
         const QString prev = m_statusLabel->text();
