@@ -27,8 +27,7 @@ TableDockManager::TableDockManager(
     m_rtdm.setQAstra(m_qastra.get());
 }
 
-void TableDockManager::setForms(const std::list<CUIForm>& forms)
-{
+void TableDockManager::setForms(const std::list<CUIForm>& forms){
     m_forms = forms;
     m_rtdm.setForms(&m_forms);
 

@@ -1,8 +1,8 @@
 #include "linkedform.h"
 #include "table/rtabController.h"
 
-void LinkedForm::FillBindVals()
-{
+void LinkedForm::fillBindVals(){
+
     vbindvals.clear();
     for (const auto& key : split( bind ,','))
     {

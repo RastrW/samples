@@ -254,9 +254,8 @@ void LinkedFormController::onParentRowChanged(int newRow)
 
     m_lf.row = newRow;
 
-    // FillBindVals обращается к pbaseform->getLongValue —
-    // публичному методу RtabWidget, изменений не требует.
-    m_lf.FillBindVals();
+    // fillBindVals обращается к pbaseform->getLongValue
+    m_lf.fillBindVals();
 
     applyLinkedForm(m_lf);
 }

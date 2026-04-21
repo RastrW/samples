@@ -75,6 +75,8 @@ QVariant RModel::data(const QModelIndex& index, int role) const
     case Qt::UserRole:
         // Сырое значение для сортировки числовых колонок.
         // QTitan получает double и сортирует числово, а не лексикографически.
+        if (!raw.isValid() && rcol.getComPropTT() == enComPropTT::COM_PR_REAL)
+            return 0.0;   // пустая ячейка = 0.0 для сортировки
         return raw;
     case Qt::BackgroundRole:
         return dataForBackground(row, col, rcol, raw);
@@ -91,7 +93,8 @@ QVariant RModel::data(const QModelIndex& index, int role) const
 QVariant RModel::dataForInvalidCellEditRole(int col, const RCol& rcol) const
 {
     if (rcol.getComPropTT() == enComPropTT::COM_PR_REAL) {
-        return QVariant(static_cast<double>(0.0));
+        const auto info = getColumnEditorInfo(col);
+        return QVariant(QString::number(0.0, 'f', info.decimals));
     }
     if (rcol.getComPropTT() == enComPropTT::COM_PR_INT  ||
         rcol.getComPropTT() == enComPropTT::COM_PR_ENUM ||

@@ -33,8 +33,6 @@ namespace Qtitan { class GridTableView; }
  *   1. Родитель для диалогов (ColPropDialog, GroupCorrectionDialog и др.),
  *      которым нужен QWidget* parent.
  *   2. Реализует closeEvent для корректного отключения сигналов.
- *
- * Сам невидим: dw->setWidget(controller->createShell()), а не сам контроллер.
  */
 class RtabController : public QWidget
 {

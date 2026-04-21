@@ -1,7 +1,7 @@
 #pragma once
 #include <QSortFilterProxyModel>
 
-// TwoColumnFilterProxy — независимая фильтрация по двум столбцам
+// Независимая фильтрация по двум столбцам
 class TwoColumnFilterProxy : public QSortFilterProxyModel
 {
     Q_OBJECT

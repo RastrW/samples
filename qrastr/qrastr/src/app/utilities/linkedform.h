@@ -26,7 +26,7 @@ public:
         replaceAll(selection_result,"%d",vbindvals);
         return selection_result;
     }
-     void FillBindVals();
+     void fillBindVals();
 private:
     std::string selection_result;
 
