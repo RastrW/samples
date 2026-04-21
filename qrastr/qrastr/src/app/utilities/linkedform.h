@@ -6,7 +6,7 @@
 #include "utils.h"
 
 
-class RtabWidget;
+class RtabController;
 
 class LinkedForm
 {
@@ -17,7 +17,7 @@ public:
     std::string bind;
     long row;
     std::vector<int> vbindvals;
-    RtabWidget* pbaseform;
+    RtabController* pbaseform;
     std::vector<QMetaObject::Connection> vconn;
 
     std::string get_selection_result()
@@ -42,7 +42,7 @@ public:
     std::string templatetags;
     long row;
     std::vector<int> vbindvals;
-    RtabWidget* pbaseform;
+    RtabController* pbaseform;
     std::vector<QMetaObject::Connection> vconn;
 
     void FillBindVals();

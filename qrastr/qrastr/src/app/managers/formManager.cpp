@@ -8,7 +8,6 @@
 #include "sdl/graphSDLManager.h"
 #include "macroDockManager.h"
 #include "qmcr/pyhlp.h"
-#include "table/rtabwidget.h"
 #include "logManager.h"
 
 FormManager::FormManager(
@@ -105,7 +104,7 @@ void FormManager::buildPropertiesMenu(QMenu* propertiesMenu){
     m_tableDockManager->buildPropertiesMenu(propertiesMenu);
 }
 
-RtabWidget* FormManager::activeForm() const{
+RtabController* FormManager::activeForm() const{
     return m_tableDockManager->activeForm();
 }
 // Делегаты — макросы

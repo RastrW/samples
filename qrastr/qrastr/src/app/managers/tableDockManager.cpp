@@ -2,7 +2,8 @@
 using WrapperExceptionType = std::runtime_error;
 #include "astra/IPlainRastrWrappers.h"
 #include "qastra.h"
-#include "table/rtabwidget.h"
+#include "table/rtabcontroller.h"
+#include "table/rtabshell.h"
 #include <QFileInfo>
 #include <DockManager.h>
 #include <QMenu>
@@ -54,45 +55,41 @@ void TableDockManager::openForm(const CUIForm& form)
 
         spdlog::info("Прочитана таблица [{}] - [{}]",
                      form.Name(), form.TableName());
-
         // ── Dock-виджет ───────────────────────────────────────────────────────
         const QString qName = QString::fromStdString(form.Name());
 
         auto* dw = new ads::CDockWidget(qName, m_parentWidget);
         dw->setObjectName(qName);
         dw->setFeature(ads::CDockWidget::DockWidgetDeleteOnClose, true);
-
         // ── Виджет таблицы ────────────────────────────────────────────────────
-        auto* prtw = new RtabWidget(
+        auto* ctrl = new RtabController(
             m_qastra.get(), form, &m_rtdm, m_dockManager, dw);
 
-        if (prtw) {
-            dw->setWidget(prtw->createDockContent());
-            m_dockManager->addDockWidgetTab(ads::TopDockWidgetArea, dw);
-            prtw->setPyHlp(m_pyHlp);
-            // Добавляем в список открытых форм
-            // Сигналы будут передаваться через onCalculationStarted/Finished
-            m_openForms.append(prtw);
-            m_activeForm = prtw;
+        // true (по умолчанию) = с тулбаром и шорткатами
+        dw->setWidget(ctrl->createShell());
 
-            // Уведомляем FormManager о новом dock-виджете
-            emit windowOpened(dw);
+        m_dockManager->addDockWidgetTab(ads::TopDockWidgetArea, dw);
+        ctrl->setPyHlp(m_pyHlp);
+        // Добавляем в список открытых форм
+        // Сигналы будут передаваться через onCalculationStarted/Finished
+        m_openForms.append(ctrl);
+        m_activeForm = ctrl;
+        // Уведомляем FormManager о новом dock-виджете
+        emit windowOpened(dw);
 
-            // Очистка при закрытии
-            connect(dw, &ads::CDockWidget::closed,
-                    prtw, &RtabWidget::slot_close);
+        connect(dw, &ads::CDockWidget::closed,
+                ctrl, &RtabController::slot_close);
 
-            connect(dw, &ads::CDockWidget::closed,
-                    this, [this, prtw, name = form.Name()]() {
-                        m_openForms.removeOne(prtw);
-                        if (m_activeForm == prtw)
-                            m_activeForm = nullptr;
-                        emit formClosed(QString::fromStdString(name));
-                    });
-        }
+        connect(dw, &ads::CDockWidget::closed,
+                this, [this, ctrl, name = form.Name()]() {
+                    m_openForms.removeOne(ctrl);
+                    if (m_activeForm == ctrl)
+                        m_activeForm = nullptr;
+                    emit formClosed(QString::fromStdString(name));
+                });
 
         emit formOpened(qName);
-        emit activeFormChanged(prtw);
+        emit activeFormChanged(ctrl);
 
     } catch (const std::exception& ex) {
         spdlog::error("TableDockManager::openForm('{}') threw: {}",

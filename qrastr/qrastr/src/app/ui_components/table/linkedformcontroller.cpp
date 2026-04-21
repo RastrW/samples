@@ -1,6 +1,7 @@
 #include "linkedformcontroller.h"
 
-#include "rtabwidget.h"
+#include "rtabController.h"
+#include "rtabshell.h"
 
 #include "qastra.h"
 #include "rtablesdatamanager.h"
@@ -67,7 +68,7 @@ void LinkedFormController::buildLinkedFormsMenu(int contextRow, QMenu* menu)
         lf.linkedname = std::visit(ToString(), table->Get(irow, 2));
         lf.selection  = std::visit(ToString(), table->Get(irow, 3));
         lf.bind       = std::visit(ToString(), table->Get(irow, 4));
-        lf.pbaseform  = static_cast<RtabWidget*>(m_parentWidget);
+        lf.pbaseform  = static_cast<RtabController*>(m_parentWidget);
         // Заполняем bind-значения из текущей строки контекстного меню
         for (const auto& key : split(lf.bind, ','))
             lf.vbindvals.push_back(getLongValue(key, contextRow));
@@ -98,7 +99,7 @@ void LinkedFormController::buildLinkedMacroMenu(int contextRow, QMenu* menu)
         lm.macrofile = std::visit(ToString(), table->Get(irow, 2));
         lm.macrodesc = std::visit(ToString(), table->Get(irow, 3));
         lm.addstr    = std::visit(ToString(), table->Get(irow, 5));
-        lm.pbaseform = static_cast<RtabWidget*>(m_parentWidget);
+        lm.pbaseform = static_cast<RtabController*>(m_parentWidget);
 
         QAction* action = new QAction(
             QString::fromStdString(lm.macrodesc), menu);
@@ -144,15 +145,12 @@ void LinkedFormController::applyLinkedForm(LinkedForm lf)
 void LinkedFormController::openLinkedForm(LinkedForm lf)
 {
     CUIForm* pUIForm = m_rtdm->getForm(lf.linkedform);
-    if (pUIForm  == nullptr)
-    {
-        spdlog::warn("LinkedFormController: форма [{}] не найдена",
-                     lf.linkedform);
+    if (!pUIForm) {
+        spdlog::warn("LinkedFormController: форма [{}] не найдена", lf.linkedform);
         return;
     }
-
     // Создаём дочерний виджет — он заведёт собственный LinkedFormController
-    RtabWidget* child = new RtabWidget(
+    auto* child = new RtabController(
         m_qastra, *pUIForm, m_rtdm, m_dockManager, m_parentWidget);
 
     if (m_pyHlp)
@@ -164,28 +162,26 @@ void LinkedFormController::openLinkedForm(LinkedForm lf)
     lf.vconn.push_back(
         connect(m_view, &Qtitan::GridTableView::focusRowChanged,
                 child, [parentView = m_view, child](int, int) {
-                    // Здесь parentView — это родительский grid, а не дочерний
                     GridRow row = parentView->focusedRow();
                     if (!row.isValid()) return;
                     const int modelRow = row.modelIndex().row();
                     if (modelRow >= 0)
                         child->notifyParentRowChanged(modelRow);
                 }));
-
     // Передаём LinkedForm в дочерний контроллер — он сохранит vconn
     child->applyLinkedFormFromController(lf);
 
-    // Добавляем в нижнюю авто-скрытую панель Dock
     auto* dw = new ads::CDockWidget(
         stringutils::MkToUtf8(pUIForm->Name()).c_str(), m_parentWidget);
-    dw->setWidget(child->createDockContent(false));
+
+    dw->setWidget(child->createShell(false));   // false = без тулбара
+    // Добавляем в нижнюю авто-скрытую панель Dock
     dw->setFeature(ads::CDockWidget::DockWidgetDeleteOnClose, true);
-    connect(dw, &ads::CDockWidget::closed, child, &RtabWidget::slot_close);
+    connect(dw, &ads::CDockWidget::closed, child, &RtabController::slot_close);
 
     m_dockManager->addDockWidgetTab(ads::BottomAutoHideArea, dw);
     child->show();
 }
-
 void LinkedFormController::openLinkedMacro(LinkedMacro lm, int contextRow)
 {
     spdlog::info("LinkedFormController: run macro {}", lm.macrofile.c_str());

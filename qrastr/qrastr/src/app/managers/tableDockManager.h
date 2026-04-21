@@ -4,7 +4,7 @@
 
 namespace ads { class CDockManager; class CDockWidget; }
 
-class RtabWidget;
+class RtabController;
 class QAstra;
 class PyHlp;
 class CUIForm;
@@ -46,9 +46,9 @@ public:
     void openFormByIndex (int index);
 
     /// Все открытые RtabWidget (для трансляции calc-сигналов).
-    const QList<RtabWidget*>& openForms() const { return m_openForms; }
+    const QList<RtabController*>& openForms() const { return m_openForms; }
 
-    RtabWidget* activeForm() const { return m_activeForm; }
+    RtabController* activeForm() const { return m_activeForm; }
 
     // ── Меню ─────────────────────────────────────────────────────────────────
 
@@ -72,7 +72,7 @@ signals:
 
     void formOpened   (const QString& formName);
     void formClosed   (const QString& formName);
-    void activeFormChanged(RtabWidget* form);
+    void activeFormChanged(RtabController* form);
 
 public slots:
     /// Транслировать начало расчёта всем открытым RtabWidget.
@@ -95,8 +95,8 @@ private:
     // ── Состояние ────────────────────────────────────────────────────────────
     std::list<CUIForm>         m_forms;
     std::map<QString, int>     m_formNameToIndex;  ///< Быстрый поиск по имени
-    QList<RtabWidget*>         m_openForms;
-    RtabWidget*                m_activeForm {nullptr};
+    QList<RtabController*>         m_openForms;
+    RtabController*                m_activeForm {nullptr};
 
     // ── Вспомогательные методы ───────────────────────────────────────────────
 

@@ -4,7 +4,7 @@
 #include <QSet>
 
 class QAstra;
-class RtabWidget;
+class RtabController;
 class CUIForm;
 class PyHlp;
 class GraphServer;
@@ -54,7 +54,7 @@ public:
                         QMenu* calcParametersMenu = nullptr);
     void buildPropertiesMenu(QMenu* propertiesMenu);
 
-    RtabWidget* activeForm() const;
+    RtabController* activeForm() const;
 
     // ── Графика ──────────────────────────────────────────────────────────────
     void closeGraphWebServer();
@@ -92,7 +92,7 @@ public:
 signals:
     void formOpened       (const QString& formName);
     void formClosed       (const QString& formName);
-    void activeFormChanged(RtabWidget* form);
+    void activeFormChanged(RtabController* form);
 
 public slots:
     void slot_cascadeForms();

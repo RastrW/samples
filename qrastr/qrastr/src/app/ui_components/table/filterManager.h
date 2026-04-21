@@ -8,8 +8,6 @@ struct FilterRule;
 namespace Qtitan { class GridTableView; }
 
 /// @brief Управляет выборкой и автофильтром, пересобирает общий фильтр грида.
-/// Владеет AutoFilterWidget и AutoFilterCondition.
-/// Вся логика rebuildCombinedFilter сосредоточена здесь.
 class FilterManager : public QObject
 {
     Q_OBJECT
