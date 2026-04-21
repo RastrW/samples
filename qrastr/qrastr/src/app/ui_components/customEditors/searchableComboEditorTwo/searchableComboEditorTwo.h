@@ -21,6 +21,8 @@ public:
     QWidget* getCellWidget()          override { return m_container; }
 
 private:
+    //Открыть popup (можно открыть и редактировать множество раз, пока
+    //фокус находится на выбранной ячейке)
     void showPopup();
     void updateDisplayText();
 

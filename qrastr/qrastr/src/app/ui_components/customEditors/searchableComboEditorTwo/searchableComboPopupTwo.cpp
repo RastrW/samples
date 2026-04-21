@@ -90,20 +90,32 @@ SearchableComboPopupTwo::SearchableComboPopupTwo(QWidget* parent)
     m_table->installEventFilter(this);
 }
 
-void SearchableComboPopupTwo::setItems(const std::unordered_map<size_t, std::string>& items)
+void SearchableComboPopupTwo::setItems(
+    const std::unordered_map<size_t, std::string>& items)
 {
     m_model->removeRows(0, m_model->rowCount());
 
-    for (const auto& [key, name] : items) {
+    // unordered_map не гарантирует порядок итерации —
+    // без сортировки список каждый раз разный.
+    std::vector<std::pair<size_t, std::string>> sorted(items.begin(), items.end());
+    std::sort(sorted.begin(), sorted.end(),
+              [](const auto& a, const auto& b) { return a.first < b.first; });
+
+    m_model->setRowCount(static_cast<int>(sorted.size()));   // одно выделение
+    int r = 0;
+    for (const auto& [key, name] : sorted) {
         auto* itemKey  = new QStandardItem(QString::number(key));
         auto* itemName = new QStandardItem(QString::fromStdString(name));
         // Храним числовой ключ в UserRole — используем при itemSelected
         itemKey ->setData(static_cast<int>(key), Qt::UserRole);
         itemKey ->setEditable(false);
         itemName->setEditable(false);
-        m_model->appendRow({ itemKey, itemName });
+        m_model->setItem(r, 0, itemKey);
+        m_model->setItem(r, 1, itemName);
+        ++r;
     }
-    m_table->resizeColumnToContents(0);  // подогнать ширину столбца "Индекс"
+    // подогнать ширину столбца "Индекс"
+    m_table->resizeColumnToContents(0);
 }
 
 void SearchableComboPopupTwo::setCurrentKey(int key)
