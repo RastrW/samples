@@ -37,18 +37,17 @@
 #include "linkedformcontroller.h"
 #include "tables/colPropDialog.h"
 #include "contextMenuBuilder.h"
-#include "filter/customFilterCondition.h"
 #include "condFormatController.h"
 #include "rmodel.h"
 #include "rtablesdatamanager.h"
 #include "rdata.h"
 #include "QDataBlocks.h"
 #include "customEditors/searchableComboEditorTwo/searchableComboRepositoryTwo.h"
-#include "filter/autoFilter/autoFilterWidget.h"
-#include "filter/autoFilter/autoFilterCondition.h"
 #include "rGridTableView.h"
 #include "rGrid.h"
 #include "QtitanBase.h"
+#include "filterManager.h"
+#include "filter/autoFilter/autoFilterWidget.h"
 
 void dumpShortcuts(QWidget* root, const QString& tag)
 {
@@ -145,6 +144,9 @@ RtabWidget::RtabWidget(QAstra* pqastra,CUIForm UIForm, RTablesDataManager* pRTDM
         this);
     m_menuBuilder->initMenu(this);
 
+    m_filterManager = std::make_unique<FilterManager>(m_view, m_model.get(),
+                                                      this);
+
     setupConnections();
 
     //dumpShortcuts(m_grid, "before clear");
@@ -178,18 +180,16 @@ QWidget* RtabWidget::createDockContent(bool addToolbar) {
         setupToolbar();
         layout->addWidget(m_toolbar);
     }
-    // ── Строка автофильтра (скрыта по умолчанию) ──
-    m_autoFilterCond = new AutoFilterCondition(m_view->filter());
-    m_autoFilter = new AutoFilterWidget(m_view, wrapper);
-    m_autoFilter->setVisible(false);
-    layout->addWidget(m_autoFilter);
 
-    connect(m_autoFilter, &AutoFilterWidget::sig_filterChanged,
+    layout->addWidget(m_filterManager->widget());
+
+    connect(m_filterManager->widget(), &AutoFilterWidget::sig_filterChanged,
             this, &RtabWidget::slot_applyAutoFilter);
+
     if (auto* viewH = qobject_cast<RGridTableView*>(m_view)) {
         connect(viewH, &RGridTableView::sig_columnWidthChanged,
-                m_autoFilter, [this](Qtitan::GridColumnBase*) {
-                    m_autoFilter->slot_syncLayout();
+                m_filterManager->widget(), [this](Qtitan::GridColumnBase*) {
+                    m_filterManager->widget()->slot_syncLayout();
                 });
     }
     layout->addWidget(m_grid);
@@ -209,6 +209,7 @@ QWidget* RtabWidget::createDockContent(bool addToolbar) {
             this, &RtabWidget::slot_updateStatusLabel);
     connect(m_model.get(), &QAbstractTableModel::modelReset,
             this, &RtabWidget::slot_updateStatusLabel);
+
 
     return wrapper;
 }
@@ -254,8 +255,6 @@ void RtabWidget::setupConnections(){
             this, &RtabWidget::slot_groupCorrection);
     connect(m_menuBuilder.get(), &ContextMenuBuilder::sig_colProp,
             this, &RtabWidget::slot_openColProp);
-    connect(m_menuBuilder.get(), &ContextMenuBuilder::sig_selection,
-            this, &RtabWidget::slot_openSelection);
     connect(m_menuBuilder.get(), &ContextMenuBuilder::sig_exportCsv,
             this, &RtabWidget::slot_openExportCSVForm);
     connect(m_menuBuilder.get(), &ContextMenuBuilder::sig_importCsv,
@@ -268,6 +267,9 @@ void RtabWidget::setupConnections(){
             this, &RtabWidget::slot_directCodeToggle);
     connect(m_menuBuilder.get(), &ContextMenuBuilder::sig_condFormatsEdit,
             this, &RtabWidget::slot_condFormatsEdit);
+
+    connect(m_menuBuilder.get(), &ContextMenuBuilder::sig_selection,
+            m_filterManager.get(), &FilterManager::slot_openSelection);
     // Обновление ссылочных справочников при изменении строк в других таблицах
     connect(m_pRTDM,  &RTablesDataManager::sig_ReferenceChanged,
             m_model.get(), &RModel::slot_RefTableChanged);
@@ -720,16 +722,7 @@ void RtabWidget::slot_endResetModel(std::string tname)
 
     m_view->endUpdate();     // ← закрываем внешний из slot_beginResetModel
 
-    // После полного сброса модели очищаем автофильтр:
-    // структура колонок могла измениться.
-    if (m_autoFilter) {
-        m_autoFilterCond->clearAll();
-        m_autoFilter->clearAll();     // очищает поля и эмитит filterChanged→ rebuild
-        m_autoFilter->rebuild();      // пересоздаёт ячейки под новые колонки
-    }
-    m_selectionFilter.clear();
-    m_selection = "";
-    rebuildCombinedFilter();
+    m_filterManager->resetAfterModelReset();
 }
 
 void RtabWidget::slot_groupCorrection()
@@ -753,24 +746,6 @@ void RtabWidget::slot_openColProp(int col)
                                                   m_view, prcol, this);
     propDialog->setAttribute(Qt::WA_DeleteOnClose);
     propDialog->exec();
-}
-
-void RtabWidget::slot_openSelection(int col)
-{
-    RCol* prcol = m_model->getRCol(col);
-    std::string colName = prcol ? prcol->getColName() : "";
-
-    auto* selectionDialog = new SelectionDialog(m_selection, colName, this);
-    selectionDialog->setAttribute(Qt::WA_DeleteOnClose);
-
-    connect(selectionDialog, &SelectionDialog::sig_selectionAccepted,
-            this, &RtabWidget::slot_setFiltrForSelection);
-
-    // Закрываем диалог сразу после того, как пользователь принял выборку
-    connect(selectionDialog, &SelectionDialog::sig_selectionAccepted,
-            selectionDialog, &QDialog::close);
-
-    selectionDialog->show();
 }
 
 void RtabWidget::slot_openExportCSVForm()
@@ -822,66 +797,17 @@ void RtabWidget::slot_widthByData(){
     m_view->tableOptions().setColumnAutoWidth(true);
 }
 
-void RtabWidget::slot_setFiltrForSelection(std::string selection)
-{
-    m_selection    = selection;
-    // сохраняем для rebuildCombinedFilter
-    m_selectionFilter = QString::fromStdString(selection);
-    rebuildCombinedFilter();
+void RtabWidget::slot_setFiltrForSelection(std::string selection){
+
+    m_filterManager->setSelection(selection);
 }
 
-void RtabWidget::slot_toggleAutoFilter(bool checked)
-{
-    m_autoFilter->setVisible(checked);
-    if (!checked) {
-        // Сброс условий при скрытии
-        m_autoFilter->clearAll();
-        // clearAll уже испустит filterChanged → rebuildCombinedFilter
-        // но для надёжности вызовем явно
-        m_autoFilterCond->clearAll();
-        rebuildCombinedFilter();
-    }
+void RtabWidget::slot_toggleAutoFilter(bool checked){
+    m_filterManager->toggle(checked);
 }
 
-void RtabWidget::slot_applyAutoFilter(int colIndex, const FilterRule& rule)
-{
-    if (rule.isActive())
-        m_autoFilterCond->setRule(colIndex, rule);
-    else
-        m_autoFilterCond->clearRule(colIndex);
-
-    rebuildCombinedFilter();
-}
-
-void RtabWidget::rebuildCombinedFilter()
-{
-    const bool hasSelection  = !m_selectionFilter.isEmpty();
-    const bool hasAutoFilter = m_autoFilterCond && m_autoFilterCond->hasActiveRules();
-
-    if (!hasSelection && !hasAutoFilter) {
-        m_view->filter()->setActive(false);
-        return;
-    }
-
-    auto* group = new Qtitan::GridFilterGroupCondition(m_view->filter());
-
-    if (hasSelection) {
-        // Обращаемся к модели — она сама знает имя таблицы и идёт через RTDM
-        const std::vector<long> indices = m_model->getRowsBySelection(m_selection);
-
-        auto* selCond = new CustomFilterCondition(m_view->filter());
-        for (long idx : indices)
-            selCond->addRow(static_cast<int>(idx));
-        group->addCondition(selCond);
-    }
-
-    if (hasAutoFilter) {
-        // clone() — QTitan владеет копией, мы сохраняем оригинал для изменений
-        group->addCondition(m_autoFilterCond->clone());
-    }
-
-    m_view->filter()->setCondition(group, true);
-    m_view->filter()->setActive(true);
+void RtabWidget::slot_applyAutoFilter(int colIndex, const FilterRule& rule){
+    m_filterManager->applyRule(colIndex, rule);
 }
 
 void RtabWidget::slot_copyToClipboard()

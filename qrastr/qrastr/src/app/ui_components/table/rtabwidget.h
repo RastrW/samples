@@ -21,12 +21,10 @@ class ContextMenuBuilder;
 class CondFormatController;
 
 class QLabel;
-
-class AutoFilterWidget;
-class AutoFilterCondition;
-struct FilterRule;
 class RGrid;
 class RGridTableView;
+class FilterManager;
+struct FilterRule;
 
 ///@brief Виджет, отображающий одну таблицу Rastr в QTitan Grid.
 class RtabWidget : public QWidget
@@ -70,7 +68,6 @@ private slots:
     void slot_widthByData();
     //  Формы инструментов
     void slot_openColProp(int col);
-    void slot_openSelection(int col);
 
     void slot_openExportCSVForm();
     void slot_openImportCSVForm();
@@ -105,10 +102,6 @@ private:
     void setupShortcuts();
     void setupConnections();
 
-    /// @brief Пересобирает общий фильтр (AND выборки + AND автофильтра) и
-    ///        передаёт его в m_view->filter().
-    void rebuildCombinedFilter();
-
     RGrid* m_grid;
     Qtitan::GridTableView* m_view;
     std::shared_ptr<PyHlp> pPyHlp_;
@@ -126,11 +119,7 @@ private:
     QToolBar* m_toolbar;
     QLabel* m_statusLabel;
 
-    std::string m_selection {""}; // Текущая выборка
     std::unordered_map<QString,bool>
         m_columnsVisible;
-
-    AutoFilterWidget*      m_autoFilter      {nullptr};
-    AutoFilterCondition*   m_autoFilterCond  {nullptr};
-    QString                m_selectionFilter;            // последняя строка выборки
+    std::unique_ptr<FilterManager> m_filterManager;
 };
