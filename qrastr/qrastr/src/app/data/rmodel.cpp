@@ -24,6 +24,8 @@ bool RModel::populateDataFromRastr()
         m_cache.rebuild(*m_rdata, m_rtdm);
         //структура могла смениться
         m_bgCache.clear();
+        // заполняем кеш после перестройки структуры
+        buildEditorInfoCache();
     } catch (...) {
        spdlog::critical("ERROR! populateDataFromRastr: {}",
                     (m_rdata ? m_rdata->t_name_.c_str() : "<null>"));
@@ -534,7 +536,22 @@ QVariant RModel::getMatchingCondFormat(size_t row, size_t column,
     return {};
 }
 
+void RModel::buildEditorInfoCache()
+{
+    const int n = columnCount();
+    m_editorInfoCache.resize(n);
+    for (int i = 0; i < n; ++i)
+        m_editorInfoCache[i] = buildColumnEditorInfo(i);
+}
+
 RModel::ColumnEditorInfo RModel::getColumnEditorInfo(int colIndex) const
+{
+    if (colIndex >= 0 && colIndex < static_cast<int>(m_editorInfoCache.size()))
+        return m_editorInfoCache[colIndex];
+    return {};
+}
+
+RModel::ColumnEditorInfo RModel::buildColumnEditorInfo(int colIndex) const
 {
     ColumnEditorInfo info;
     const RCol* col = getRCol(colIndex);

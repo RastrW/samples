@@ -97,12 +97,12 @@ public:
     const std::vector<CondFormat>& getCondFormats(int column) const;
 
     // ── Утилиты ──────────────────────────────────────────────────────────────
-    ColumnEditorInfo            getColumnEditorInfo(int colIndex) const;
     std::vector<std::tuple<int,int>> columnsWidth() const;
     RCol*  getRCol    (int col) const;
     int    getIndexCol(std::string col) const;
     RData* getRdata();
     std::vector<long> getRowsBySelection(const std::string& selection) const;
+    ColumnEditorInfo getColumnEditorInfo(int colIndex) const;
 private:
     // ── Данные ───────────────────────────────────────────────────────────────
     QAstra*             m_qastra;
@@ -115,6 +115,9 @@ private:
     CondFormatStorage m_condFmt;   // условные форматы
 
     mutable BackgroundCache m_bgCache;
+    // Кеш: индекс = логический номер колонки (позиция в RData).
+    // Инвалидируется при полном перестроении модели.
+    mutable std::vector<ColumnEditorInfo> m_editorInfoCache;
 
     // ── Условное форматирование ────────────────────────────
     QVariant getMatchingCondFormat(size_t row, size_t col,
@@ -139,5 +142,8 @@ private:
                                const QVariant& raw) const;
     // Данные отсутствуют (например, новая строка)
     QVariant dataForInvalidCellEditRole(int col, const RCol& rcol) const;
-};
+    // Функции получения редактора из кеша и вычисление редактора для колонки в кеш
 
+    ColumnEditorInfo buildColumnEditorInfo(int colIndex) const;
+    void buildEditorInfoCache();
+};
