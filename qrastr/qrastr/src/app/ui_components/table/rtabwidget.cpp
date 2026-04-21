@@ -496,13 +496,13 @@ void RtabWidget::applyColumnEditor(int colIndex)
         val->setNotation(QDoubleValidator::StandardNotation);
         repo->setValidator(val);
 
-        // QTitan должен сортировать по EditRole (double),
-        // а не по DisplayRole (QString вида "117.20").
+        // QTitan должен сортировать по UserRole (double),
+        // а не по DisplayRole/EditRole (QString вида "117.20").
         // Без этого "21.20" < "117.20" даёт неверный результат при сортировке,
         // потому что строковое сравнение идёт посимвольно ('2' > '1').
         GridModelDataBinding* binding = m_view->getDataBinding(column_qt);
         if (binding)
-            binding->setSortRole(Qt::EditRole);
+            binding->setSortRole(Qt::UserRole);
         break;
     }
     case RModel::ColumnEditorInfo::Type::DateTime: {

@@ -64,8 +64,6 @@ QVariant RModel::data(const QModelIndex& index, int role) const
     }
 
     const RCol& rcol = *(m_rdata->begin() + col);
-
-    // Читаем один раз — устраняем дублирование
     const QVariant raw = std::visit(ToQVariant(), m_rdata->pnparray_->Get(row, col));
 
     switch (role) {
@@ -74,6 +72,10 @@ QVariant RModel::data(const QModelIndex& index, int role) const
     case Qt::DisplayRole:
     case Qt::EditRole:
         return dataForDisplayEdit(row, col, rcol, raw, role);
+    case Qt::UserRole:
+        // Сырое значение для сортировки числовых колонок.
+        // QTitan получает double и сортирует числово, а не лексикографически.
+        return raw;
     case Qt::BackgroundRole:
         return dataForBackground(row, col, rcol, raw);
     case Qt::DecorationRole:
@@ -86,17 +88,19 @@ QVariant RModel::data(const QModelIndex& index, int role) const
     }
 }
 
-QVariant RModel::dataForInvalidCellEditRole(int col, const RCol& rcol) const{
-    if (rcol.getComPropTT() == enComPropTT::COM_PR_REAL ||
-        rcol.getComPropTT() == enComPropTT::COM_PR_INT ||
+QVariant RModel::dataForInvalidCellEditRole(int col, const RCol& rcol) const
+{
+    if (rcol.getComPropTT() == enComPropTT::COM_PR_REAL) {
+        return QVariant(static_cast<double>(0.0));
+    }
+    if (rcol.getComPropTT() == enComPropTT::COM_PR_INT  ||
         rcol.getComPropTT() == enComPropTT::COM_PR_ENUM ||
         rcol.getComPropTT() == enComPropTT::COM_PR_SUPERENUM) {
-        return QVariant(0);   // числовой код
-    } else if (rcol.getComPropTT() == enComPropTT::COM_PR_TIME) {
-        return QDateTime();
-    } else {
-        return QVariant(QString());
+        return QVariant(0);
     }
+    if (rcol.getComPropTT() == enComPropTT::COM_PR_TIME)
+        return QDateTime();
+    return QVariant(QString());
 }
 
 QVariant RModel::dataForDisplayEdit(int row, int col, const RCol& rcol,
@@ -125,17 +129,14 @@ QVariant RModel::dataForDisplayEdit(int row, int col, const RCol& rcol,
             return resolved;
     }
 
-    // Вещественные числа
-    //   DisplayRole → форматированная строка (отображение пользователю)
-    //   EditRole    → сырой double (сортировка + передача в редактор)
+    // ── Вещественные числа ───────────────────────────────────────────────────
+    // DisplayRole И EditRole → одна и та же отформатированная строка.
+    // Пользователь видит "3.14" в ячейке и то же самое видит в редакторе.
+    // Сортировка идёт по Qt::UserRole (raw double)
     if (raw.type() == QVariant::Double) {
         const auto info = getColumnEditorInfo(col);
-        if (info.editorType == ColumnEditorInfo::Type::Numeric) {
-            if (role == Qt::DisplayRole)
-                return QString::number(raw.toDouble(), 'f', info.decimals);
-            // EditRole — возвращаем double напрямую
-            return raw;
-        }
+        if (info.editorType == ColumnEditorInfo::Type::Numeric)
+            return QString::number(raw.toDouble(), 'f', info.decimals);
     }
     return raw;
 }
@@ -330,6 +331,7 @@ bool RModel::duplicateRow(int row, const QModelIndex&)
     m_rdata->pnparray_->DuplicateRow(row);
     return true;
 }
+
 bool RModel::insertRows(int row, int count, const QModelIndex&)
 {
     IRastrTablesPtr tablesx{ m_qastra->getRastr()->Tables() };
