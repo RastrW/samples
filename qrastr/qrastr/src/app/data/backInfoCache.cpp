@@ -85,6 +85,8 @@ void BackInfoCache::loadNameref(const RCol& rcol, RTablesDataManager* pRTDM)
 
     const size_t idx = static_cast<size_t>(rcol.getIndex());
     const long nameIdx = pRTDM->column_index(parts->srcTable, "name");
+    //если колонке не "name", то описание в nameref нет, в редакторе одна колонка
+    //если ссылка на таблицу `graphikIT`, `graphik2`, то в редакторе должны демонстрироваться все колонки этой таблицы.
     const std::string valueCol = (nameIdx > -1) ? "name" : parts->keyCol;
 
     m_nameref.emplace(idx, buildIdNameMap(pRTDM, parts->srcTable,
@@ -203,7 +205,6 @@ BackInfoCache::RefMap BackInfoCache::buildIdNameMap(RTablesDataManager* pRTDM,
                                                     const std::string& valueCol)
 {
     RefMap result;
-    //result.emplace(0, "не задано");
 
     if (!pRTDM) return result;
 

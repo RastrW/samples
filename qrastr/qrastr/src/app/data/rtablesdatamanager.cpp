@@ -199,16 +199,6 @@ long  RTablesDataManager::getColIndex(std::string tname,std::string cname)
     return IRastrPayload(col->Index()).Value();
 }
 
-ePropType  RTablesDataManager::getColType(std::string tname,std::string cname)
-{
-    IRastrTablesPtr tablesx{ m_pqastra->getRastr()->Tables() };
-    IRastrTablePtr table{ tablesx->Item(tname) };
-    IRastrColumnsPtr columns{ table->Columns() };
-    IRastrColumnPtr col{ columns->Item(cname) };
-
-    return IRastrPayload(col->Type()).Value();
-}
-
 QDataBlock* RTablesDataManager::findCachedBlock(const std::string& tname)
 {
     // Вспомогательный метод: все handle* вызывают его первым.

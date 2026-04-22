@@ -61,7 +61,6 @@ public:
 private:
     std::string getTCols(std::string tname);
     long getColIndex(std::string tname,std::string cname);
-    ePropType getColType(std::string tname,std::string cname);
 signals:
     ///< изменены данные в диапазоне
     void sig_dataChanged(std::string tname,int row_from ,
