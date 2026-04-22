@@ -5,6 +5,9 @@ using WrapperExceptionType = std::runtime_error;
 #include "astra/IPlainRastrWrappers.h"
 #include "qastra.h"
 #include "rdata.h"
+#include <QElapsedTimer>
+#include <unordered_set>
+#include <QDebug>
 
 RData::RData(QAstra* _pqastra, const CUIForm& _form):
     m_qastra{_pqastra}{
@@ -50,6 +53,9 @@ RData::RData(QAstra* _pqastra, const CUIForm& _form):
             mCols_.insert(std::pair(col_Name,index));
     }
 
+    QElapsedTimer timer;
+    timer.start();
+    /*
     //Скрыть колонки не входящие в форму
     //Скрытые колонки всё равно присутствуют в pnparray_
     for (const CUIFormField &f : _form.Fields())
@@ -60,6 +66,17 @@ RData::RData(QAstra* _pqastra, const CUIForm& _form):
                 rc.setHidden(false);
         }
     }
+    */
+
+    std::unordered_set<std::string> formCols;
+    for (const auto& f : _form.Fields())
+        formCols.insert(f.Name());
+    for (RCol& rc : *this)
+        if (formCols.count(rc.getColName()))
+            rc.setHidden(false);
+
+    qint64 mks = timer.nsecsElapsed() / 1000;
+    qDebug() << "Время выполнения:" << mks << "мкс";
 
     if(m_str_cols.length()>0)
         m_str_cols.pop_back();

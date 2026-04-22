@@ -60,7 +60,8 @@ QVariant RModel::data(const QModelIndex& index, int role) const
     const int col = index.column();
     const int row = index.row();
 
-    if (col < 0 || static_cast<size_t>(col) >= m_rdata->size()) {
+    if ((row < 0 || row >= rowCount()) ||
+        (col < 0 || col >= columnCount())) {
         spdlog::error("Выход за границы модели");
         return {};
     }
@@ -237,15 +238,16 @@ bool RModel::setData(const QModelIndex& index, const QVariant& value, int role)
     const int col = index.column();
     const int row = index.row();
 
-    // --- ДИАГНОСТИКА ---
     spdlog::debug("setData [{},{}] role={} value='{}' type={}",
                   row, col, role,
                   value.toString().toStdString(),
                   value.typeName());  // покажет "QString", "int", "double"...
-    // -------------------
-    // читаем сырое значение из кеша
+    //Проверяем, если значение не изменилось, то не записываем лишний раз в базу данных
     QVariant raw = std::visit(ToQVariant(), m_rdata->pnparray_->Get(row, col));
-    if (raw == value) return false;
+    if (raw == value){
+        spdlog::debug("Значение не изменилось");
+        return true;
+    }
 
     RData::iterator iter_col = m_rdata->begin() + col;
     const std::string& tname   = iter_col->getTableName();
@@ -273,7 +275,6 @@ bool RModel::setData(const QModelIndex& index, const QVariant& value, int role)
         case RCol::_en_data::DATA_BOOL:
             vd = value.toBool();
             break;
-
         case RCol::_en_data::DATA_INT: {
             long val = 0;
             const size_t pluginIdx = static_cast<size_t>(iter_col->getIndex());
