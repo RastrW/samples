@@ -36,7 +36,7 @@ public:
         Qtitan::GridTableView*   view,
         RModel*                  model,
         const CUIForm&           form,
-        QWidget*                 parentWidget);
+        RtabController*          parentController);
 
     ~LinkedFormController() override = default;
 	
@@ -85,6 +85,7 @@ private:
     CUIForm                  m_form;
     QWidget*                 m_parentWidget;
     std::shared_ptr<PyHlp>   m_pyHlp;
+    RtabController* m_parentController;
 
     LinkedForm               m_lf;           ///< текущая активная связанная форма
 };

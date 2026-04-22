@@ -49,15 +49,15 @@ RtabController::RtabController(QAstra*             pqastra,
                                 CUIForm             UIForm,
                                 RTablesDataManager* pRTDM,
                                 ads::CDockManager*  pDockManager,
-                                QWidget*            parent)
-    : QWidget(parent)
+                                QObject*            parent)
+    : QObject(parent)
     , m_UIForm(std::move(UIForm))
     , m_pRTDM(pRTDM)
     , m_DockManager(pDockManager)
 {
     //  Настройка QTitan Grid
     Grid::loadTranslation();
-    m_grid = new RGrid(this);
+    m_grid = new RGrid(nullptr);
 
     if (m_UIForm.Vertical())
         m_grid->setViewType(Qtitan::Grid::TableViewVertical);
@@ -115,10 +115,10 @@ RtabController::RtabController(QAstra*             pqastra,
 
     m_menuBuilder = std::make_unique<ContextMenuBuilder>(
         m_view, m_linkedFormCtrl.get(), this);
-    m_menuBuilder->initMenu(this);
+    m_menuBuilder->initMenu(m_grid);
 
     m_filterManager = std::make_unique<FilterManager>(m_view, m_model.get(),
-                                                      this);
+                                                      m_grid);
 
     setupConnections();
 
@@ -165,21 +165,6 @@ RtabShell* RtabController::createShell(bool withToolbar)
     return shell;
 }
 
-void RtabController::closeEvent(QCloseEvent *event)
-{
-    spdlog::info("RtabController::closeEvent [{}]", m_UIForm.Name().c_str() );
-
-    // Сначала — отключить все входящие сигналы к модели
-    disconnect(m_pRTDM, nullptr, m_model.get(), nullptr);
-    disconnect(m_pRTDM, nullptr, this, nullptr);
-
-    // Контроллер отключает Qt-соединения связанных форм
-    m_linkedFormCtrl->disconnectAll();
-    // Освобождаем DataBlock — модель перестаёт держать shared_ptr
-    m_model->getRdata()->pnparray_.reset();
-    QWidget::closeEvent(event);
-};
-
 void RtabController::setupShortcuts(RtabController* target, RGrid* grid)
 {
     // Qt::WidgetWithChildrenShortcut + parent=m_grid:
@@ -194,9 +179,9 @@ void RtabController::setupShortcuts(RtabController* target, RGrid* grid)
         { Qt::CTRL | Qt::Key_D, &RtabController::slot_deleteRow    },
     };
     for (const auto& d : defs) {
-        auto* sc = new QShortcut(d.key, grid);
-        sc->setContext(Qt::WidgetWithChildrenShortcut);
-        QObject::connect(sc, &QShortcut::activated, target, d.slot);
+        auto* sc = new QShortcut(d.key, grid); // parent — grid (дочерний к shell)
+        sc->setContext(Qt::WidgetWithChildrenShortcut); // фокус внутри grid
+        QObject::connect(sc, &QShortcut::activated, target, d.slot); // цель — контроллер
     }
 }
 
@@ -211,7 +196,7 @@ void RtabController::createModel(QAstra* pqastra)
         spdlog::error("RtabWidget: populateDataFromRastr failed for table [{}]",
                       m_UIForm.TableName());
         QMessageBox::warning(
-            this,
+            m_grid,
             tr("Ошибка открытия таблицы"),
             tr("Таблица \"%1\" недоступна.\n"
                "Убедитесь, что файл данных загружен.")
@@ -254,7 +239,7 @@ void RtabController::createModel(QAstra* pqastra)
         this);
 
     m_condFormatCtrl = std::make_unique<CondFormatController>(
-        m_model.get(), m_view, this);
+        m_model.get(), m_view, m_grid);
     m_condFormatCtrl->loadFromJson();
 }
 
@@ -439,9 +424,19 @@ void RtabController::notifyParentRowChanged(int modelRow) {
     m_linkedFormCtrl->onParentRowChanged(modelRow);
 }
 
-void RtabController::slot_close()
-{
-    this->close();
+void RtabController::slot_close(){
+
+    spdlog::info("RtabController::slot_close [{}]", m_UIForm.Name());
+    // Сначала — отключить все входящие сигналы к модели
+    disconnect(m_pRTDM, nullptr, m_model.get(), nullptr);
+    disconnect(m_pRTDM, nullptr, this, nullptr);
+    // Контроллер отключает Qt-соединения связанных форм
+    m_linkedFormCtrl->disconnectAll();
+    // Освобождаем DataBlock — модель перестаёт держать shared_ptr
+    m_model->getRdata()->pnparray_.reset();
+
+    // Вместо close() — явное удаление через deleteLater
+    this->deleteLater();
 }
 
 void RtabController::slot_addRow(){
@@ -502,7 +497,7 @@ void RtabController::slot_deleteRow(){
 
     if (rowSet.size() > 1) {
         auto btn = QMessageBox::question(
-            this, tr("Подтверждение"),
+            m_grid, tr("Подтверждение"),
             tr("Удалить %1 записей?").arg(rowSet.size()),
             QMessageBox::Yes | QMessageBox::Cancel);
         if (btn != QMessageBox::Yes) return;
@@ -534,7 +529,7 @@ void RtabController::slot_groupCorrection(){
     if (!prcol){
         return;
     }
-    GroupCorrectionDialog* fgc =  new GroupCorrectionDialog(m_model->getRdata(),prcol,this);
+    GroupCorrectionDialog* fgc =  new GroupCorrectionDialog(m_model->getRdata(),prcol,m_grid);
     fgc->setAttribute(Qt::WA_DeleteOnClose);
 
     fgc->show();
@@ -544,7 +539,7 @@ void RtabController::slot_openColProp(int col){
     RCol* prcol = m_model->getRCol(col);
     if (!prcol) return;
     auto* propDialog = new ColPropDialog(m_model->getRdata(),
-                                                  m_view, prcol, this);
+                                                  m_view, prcol, m_grid);
     propDialog->setAttribute(Qt::WA_DeleteOnClose);
     propDialog->exec();
 }
@@ -597,14 +592,14 @@ void RtabController::slot_setFiltrForSelection(std::string selection){
 
 void RtabController::slot_openExportCSVForm()
 {
-    ExportCSVdialog* dlg = new ExportCSVdialog( m_model->getRdata(),this);
+    ExportCSVdialog* dlg = new ExportCSVdialog( m_model->getRdata(),m_grid);
     dlg->setAttribute(Qt::WA_DeleteOnClose);
     dlg->show();
 }
 
 void RtabController::slot_openImportCSVForm()
 {
-    auto* dlg = new ImportCSV2dialog( m_model->getRdata(),this);
+    auto* dlg = new ImportCSV2dialog( m_model->getRdata(),m_grid);
     dlg->setAttribute(Qt::WA_DeleteOnClose);
     dlg->show();
 }

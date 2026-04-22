@@ -113,6 +113,7 @@ void RtabShell::buildLayout(bool withToolbar)
         layout->addWidget(m_toolbar);
 
     layout->addWidget(m_filterManager->widget());
+    // Qt автоматически делает m_grid дочерним к RtabShell через layout
     layout->addWidget(m_grid);
     // ── Статусная строка под таблицей ──
     m_statusLabel = new QLabel(this);

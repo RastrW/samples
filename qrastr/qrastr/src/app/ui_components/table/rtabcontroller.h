@@ -28,13 +28,8 @@ namespace Qtitan { class GridTableView; }
 /**
  * @brief Контроллер таблицы Rastr — управляет данными и
  * отображает одну таблицу Rastr в QTitan Grid.
- *
- * Наследует QWidget по двум причинам:
- *   1. Родитель для диалогов (ColPropDialog, GroupCorrectionDialog и др.),
- *      которым нужен QWidget* parent.
- *   2. Реализует closeEvent для корректного отключения сигналов.
  */
-class RtabController : public QWidget
+class RtabController : public QObject
 {
     Q_OBJECT
 public:
@@ -42,11 +37,8 @@ public:
                             CUIForm             UIForm,
                             RTablesDataManager* pRTDM,
                             ads::CDockManager*  pDockManager,
-                            QWidget*            parent = nullptr);
-
+                            QObject*            parent = nullptr);
     ~RtabController() override;
-    //отключает сигналы LinkedForm, сбрасывает pnparray_.
-    void closeEvent(QCloseEvent* event) override;
 
     /**
      * @brief Создаёт и возвращает RtabShell — видимую оболочку для CDockWidget.
@@ -64,8 +56,9 @@ public:
 
     /// Регистрирует шорткаты Ctrl+I/A/R/D на grid.
     /// Вызывается из RtabShell (только когда withToolbar = true).
+    /// Функция сделана статической, потому что шорткаты создаются в `RtabShell`,
+    /// а не в контроллере.
     static void setupShortcuts(RtabController* target, RGrid* grid);
-
 public slots:
     void slot_close();
 
