@@ -439,21 +439,23 @@ void RModel::slot_RefTableChanged(std::string tname)
     // Если изменилась наша же таблица — RTDM уже послал ChangeTable/ChangeAll,
     // не нужно дублировать.
     if (getRdata()->t_name_ == tname) return;
-    spdlog::debug("Обновление ссылочных данных в {} для {}", tname, getRdata()->t_name_);
-
     // Перестраиваем только затронутые записи кеша
     std::vector<size_t> updated = m_cache.rebuildRefsFrom(tname, *m_rdata, m_rtdm);
     if (updated.empty()) return;
 
-    // Преобразуем size_t → int для сигналов Qt
-    std::vector<int> updatedInt(updated.begin(), updated.end());
-
+    // Обновляем m_editorInfoCache для затронутых колонок
+    for (size_t col : updated)
+        if (col < m_editorInfoCache.size())
+            m_editorInfoCache[col] = buildColumnEditorInfo(static_cast<int>(col));
     // Просим View обновить ячейки во всех строках затронутых колонок
     const int nRows = rowCount();
-    if (nRows > 0) {
-        for (int col : updatedInt)
-            emit dataChanged(index(0, col), index(nRows - 1, col));
-    }
+    if (nRows > 0)
+        for (size_t col : updated)
+            emit dataChanged(index(0, static_cast<int>(col)),
+                             index(nRows - 1, static_cast<int>(col)));
+
+    // Уведомляем контроллер — пусть обновит репозитории Qtitan
+    emit sig_nameRefUpdated(updated);
 }
 
 void RModel::buildEditorInfoCache()
@@ -510,14 +512,8 @@ RModel::ColumnEditorInfo RModel::buildColumnEditorInfo(int colIndex) const
     case enComPropTT::COM_PR_INT:
         if (!col->isDirectCode() && !col->getNameRef().empty()) {
             if (const auto* nref = m_cache.namerefMap(pluginIdx)) {
-                if (static_cast<int>(nref->size()) > 20) {
-                    info.editorType        = ColumnEditorInfo::Type::NameRef;
-                    info.nameRefData.items = *nref;
-                    break;
-                }
-                info.editorType = ColumnEditorInfo::Type::ComboBox;
-                for (const auto& [k, v] : *nref)
-                    info.comboItems.append(QString::fromStdString(v));
+                info.editorType        = ColumnEditorInfo::Type::NameRef;
+                info.nameRefData.items = *nref;
                 break;
             }
         }

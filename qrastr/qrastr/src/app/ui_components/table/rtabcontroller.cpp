@@ -296,6 +296,19 @@ void RtabController::setupConnections()
     // Обновление ссылочных справочников при изменении строк в других таблицах
     connect(m_pRTDM,  &RTablesDataManager::sig_ReferenceChanged,
             m_model.get(), &RModel::slot_RefTableChanged);
+    connect(m_model.get(), &RModel::sig_nameRefUpdated,
+            this, [this](std::vector<size_t> cols) {
+                for (size_t i : cols) {
+                    auto* column_qt = static_cast<Qtitan::GridTableColumn*>(
+                        m_view->getColumn(static_cast<int>(i)));
+                    if (!column_qt) continue;
+                    auto* repo = static_cast<SearchableComboRepositoryTwo*>(
+                        column_qt->editorRepository());
+                    if (!repo) continue;
+                    repo->updateItems(
+                        m_model->getColumnEditorInfo(static_cast<int>(i)).nameRefData.items);
+                }
+            });
     //QTitan
     //Connect Grid's context menu handler.
     connect(m_view, &GridTableView::contextMenu,

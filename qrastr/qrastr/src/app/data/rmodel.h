@@ -29,6 +29,7 @@ class RModel : public QAbstractTableModel
 
 signals:
     void editCompleted(const QString&);
+    void sig_nameRefUpdated(std::vector<size_t> updatedCols);
 public slots:
     ///@brief Уведомление от RTDM:
     /// плагин генерирует хинт → RTDM ловит → испускает сигнал → слот вызывает beginInsertRows / endInsertRows у Qt

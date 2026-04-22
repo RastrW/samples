@@ -203,7 +203,7 @@ BackInfoCache::RefMap BackInfoCache::buildIdNameMap(RTablesDataManager* pRTDM,
                                                     const std::string& valueCol)
 {
     RefMap result;
-    result.emplace(0, "не задано");
+    //result.emplace(0, "не задано");
 
     if (!pRTDM) return result;
 

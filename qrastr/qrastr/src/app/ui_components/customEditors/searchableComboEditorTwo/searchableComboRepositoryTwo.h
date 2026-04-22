@@ -27,6 +27,10 @@ public:
                    : QString{};
     }
 
+    void updateItems(const std::unordered_map<size_t, std::string>& items)
+    {
+        m_items = items;
+    }
 private:
     std::unordered_map<size_t, std::string> m_items;
     QWidget*                      m_gridWidget;
