@@ -15,7 +15,8 @@ class RtabWidget;
 class PyHlp;
 class QWidget;
 
-namespace ads      { class CDockManager;  }
+namespace ads      {class CDockManager;
+                    class CDockWidget;}
 namespace Qtitan   { class GridTableView; }
 
 /**
@@ -86,6 +87,8 @@ private:
     QWidget*                 m_parentWidget;
     std::shared_ptr<PyHlp>   m_pyHlp;
     RtabController* m_parentController;
+
+    ads::CDockWidget* m_childDockWidget {nullptr};
 
     LinkedForm               m_lf;           ///< текущая активная связанная форма
 };

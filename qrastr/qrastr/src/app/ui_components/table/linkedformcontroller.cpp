@@ -41,18 +41,135 @@ LinkedFormController::LinkedFormController(
     , m_model(model)
     , m_form(form)
     , m_parentController(parentController)
+    , m_childDockWidget(nullptr)
 {}
-
-void LinkedFormController::setPyHlp(std::shared_ptr<PyHlp> pyHlp)
-{
-    m_pyHlp = pyHlp;
-}
 
 void LinkedFormController::disconnectAll()
 {
+    // Отключаем соединения focusRowChanged → child
     for (auto& conn : m_lf.vconn)
         QObject::disconnect(conn);
     m_lf.vconn.clear();
+
+    // Дочерний dock закроется сам при удалении CDockManager.
+    m_childDockWidget = nullptr;
+}
+
+void LinkedFormController::openLinkedForm(LinkedForm lf)
+{
+    CUIForm* pUIForm = m_rtdm->getForm(lf.linkedform);
+    if (!pUIForm) return;
+    // Создаём дочерний виджет — он заведёт собственный LinkedFormController
+    auto* child = new RtabController(
+        m_qastra, *pUIForm, m_rtdm, m_dockManager,
+        nullptr); //parent для QObject, dock управляет временем жизни
+
+    if (m_pyHlp)
+        child->setPyHlp(m_pyHlp);
+    // смена фокусной строки в НАШЕМ view => обновление дочерней формы.
+    // Соединение сохраняем в lf.vconn, который потом уйдёт в child->m_lf
+    // и будет отключён при закрытии дочернего виджета.
+    lf.vconn.push_back(
+        connect(m_view, &Qtitan::GridTableView::focusRowChanged,
+                child, [parentView = m_view, child](int, int) {
+                    GridRow row = parentView->focusedRow();
+                    if (!row.isValid()) return;
+                    const int modelRow = row.modelIndex().row();
+                    if (modelRow >= 0)
+                        child->notifyParentRowChanged(modelRow);
+                }));
+
+    child->applyLinkedFormFromController(lf);
+
+    m_childDockWidget = new ads::CDockWidget(
+        stringutils::MkToUtf8(pUIForm->Name()).c_str(), nullptr);
+
+    m_childDockWidget->setWidget(child->createShell(false)); // false = без тулбара
+    m_childDockWidget->setFeature(ads::CDockWidget::DockWidgetDeleteOnClose, true);
+
+    // Когда дочерний dock закрывается пользователем — зануляем указатель
+    connect(m_childDockWidget, &ads::CDockWidget::closed,
+            this, [this]() { m_childDockWidget = nullptr; });
+
+    // Когда дочерний dock закрывается — вызываем slot_close у child
+    connect(m_childDockWidget, &ads::CDockWidget::closed,
+            child, &RtabController::slot_close);
+
+    // Когда РОДИТЕЛЬСКИЙ контроллер уничтожается — закрываем дочерний dock.
+    // Используем destroyed (не closed) — это безопасно: сигнал из деструктора,
+    // не из цепочки закрытия dock.
+    connect(m_parentController, &QObject::destroyed,
+            m_childDockWidget, [dw = m_childDockWidget]() {
+                dw->closeDockWidget();
+            });
+
+    m_dockManager->addDockWidgetTab(ads::BottomAutoHideArea, m_childDockWidget);
+}
+
+void LinkedFormController::openLinkedMacro(LinkedMacro lm, int contextRow)
+{
+    spdlog::info("LinkedFormController: run macro {}", lm.macrofile.c_str());
+
+    // Макросы лежат в <рабочая директория>/contextmacro/  с расширением .py
+    fs::path macroPath = QDir::currentPath().toStdString();
+
+    macroPath /= "contextmacro";
+    macroPath /= lm.macrofile;
+    macroPath.replace_extension(".py");
+    if (!fs::exists(macroPath))
+    {
+        spdlog::warn("context macro not found: {}", macroPath.string());
+        return;
+    }
+
+    // Чтобы макросы работали в Data должен лежать astra_py. модуль
+    fs::path astra_py_Path = QDir::currentPath().toStdString() + "/../Data/astr_py/Release/";
+#ifdef _WIN32
+    astra_py_Path /= "astra_py.cp312-win_amd64.pyd";
+#else
+    astra_py_Path /= "astra_py.cpython-311-x86_64-linux-gnu.so";
+#endif
+    if (!fs::exists(astra_py_Path))
+    {
+        spdlog::warn("astra_py. module not found: {}", astra_py_Path.string());
+        return;
+    }
+
+    std::ifstream file(macroPath);
+    std::string content(
+        (std::istreambuf_iterator<char>(file)),
+        std::istreambuf_iterator<char>());
+
+    // Вставляем в начало макроса отладочный вывод и переменную aRow
+    const std::string debugLine = fmt::format(
+        "rastr.print(f\"run contextmacro: {}[row={}]\")\n",
+        lm.macrofile, contextRow);
+    const std::string aRowLine =
+        "aRow=" + std::to_string(contextRow) + "\n";
+
+    content.insert(0, aRowLine);
+    content.insert(0, debugLine);
+
+    if (m_pyHlp)
+    {
+        PyHlp::Result py_res = m_pyHlp->run(content.data());
+        switch(py_res)
+        {
+        case PyHlp::Result::Error:
+            spdlog::warn("LinkedFormController:  m_pyHlp->run() return Error!");
+            break;
+        case PyHlp::Result::RuntimeError:
+            spdlog::warn("LinkedFormController:  m_pyHlp->run() return RuntimeError!");
+            break;
+        case PyHlp::Result::SyntaxError:
+            spdlog::warn("LinkedFormController:  m_pyHlp->run() return SyntaxError!");
+            break;
+        default:
+            break;
+        }
+    }
+    else
+        spdlog::warn("LinkedFormController: PyHlp не установлен, макрос не выполнен!");
 }
 
 void LinkedFormController::buildLinkedFormsMenu(int contextRow, QMenu* menu)
@@ -142,113 +259,6 @@ void LinkedFormController::applyLinkedForm(LinkedForm lf)
     m_view->showFilterPanel();
 }
 
-void LinkedFormController::openLinkedForm(LinkedForm lf)
-{
-    CUIForm* pUIForm = m_rtdm->getForm(lf.linkedform);
-    if (!pUIForm) {
-        spdlog::warn("LinkedFormController: форма [{}] не найдена", lf.linkedform);
-        return;
-    }
-    // Создаём дочерний виджет — он заведёт собственный LinkedFormController
-    auto* child = new RtabController(
-        m_qastra, *pUIForm, m_rtdm, m_dockManager,
-        nullptr);   //parent для QObject, dock управляет временем жизни
-
-    if (m_pyHlp)
-        child->setPyHlp(m_pyHlp);
-
-    // смена фокусной строки в НАШЕМ view => обновление дочерней формы.
-    // Соединение сохраняем в lf.vconn, который потом уйдёт в child->m_lf
-    // и будет отключён при закрытии дочернего виджета.
-    lf.vconn.push_back(
-        connect(m_view, &Qtitan::GridTableView::focusRowChanged,
-                child, [parentView = m_view, child](int, int) {
-                    GridRow row = parentView->focusedRow();
-                    if (!row.isValid()) return;
-                    const int modelRow = row.modelIndex().row();
-                    if (modelRow >= 0)
-                        child->notifyParentRowChanged(modelRow);
-                }));
-    // Передаём LinkedForm в дочерний контроллер — он сохранит vconn
-    child->applyLinkedFormFromController(lf);
-
-    auto* dw = new ads::CDockWidget(
-        stringutils::MkToUtf8(pUIForm->Name()).c_str(),
-        nullptr); // CDockWidget без явного QWidget* parent — dock сам управляет
-
-    dw->setWidget(child->createShell(false));   // false = без тулбара
-    // Добавляем в нижнюю авто-скрытую панель Dock
-    dw->setFeature(ads::CDockWidget::DockWidgetDeleteOnClose, true);
-    connect(dw, &ads::CDockWidget::closed, child, &RtabController::slot_close);
-
-    m_dockManager->addDockWidgetTab(ads::BottomAutoHideArea, dw);
-}
-
-void LinkedFormController::openLinkedMacro(LinkedMacro lm, int contextRow)
-{
-    spdlog::info("LinkedFormController: run macro {}", lm.macrofile.c_str());
-
-    // Макросы лежат в <рабочая директория>/contextmacro/  с расширением .py
-    fs::path macroPath = QDir::currentPath().toStdString();
-
-    macroPath /= "contextmacro";
-    macroPath /= lm.macrofile;
-    macroPath.replace_extension(".py");
-    if (!fs::exists(macroPath))
-    {
-        spdlog::warn("context macro not found: {}", macroPath.string());
-        return;
-    }
-
-    // Чтобы макросы работали в Data должен лежать astra_py. модуль
-    fs::path astra_py_Path = QDir::currentPath().toStdString() + "/../Data/astr_py/Release/";
-#ifdef _WIN32
-    astra_py_Path /= "astra_py.cp312-win_amd64.pyd";
-#else
-    astra_py_Path /= "astra_py.cpython-311-x86_64-linux-gnu.so";
-#endif
-    if (!fs::exists(astra_py_Path))
-    {
-        spdlog::warn("astra_py. module not found: {}", astra_py_Path.string());
-        return;
-    }
-
-    std::ifstream file(macroPath);
-    std::string content(
-        (std::istreambuf_iterator<char>(file)),
-         std::istreambuf_iterator<char>());
-
-    // Вставляем в начало макроса отладочный вывод и переменную aRow
-    const std::string debugLine = fmt::format(
-        "rastr.print(f\"run contextmacro: {}[row={}]\")\n",
-        lm.macrofile, contextRow);
-    const std::string aRowLine =
-        "aRow=" + std::to_string(contextRow) + "\n";
-
-    content.insert(0, aRowLine);
-    content.insert(0, debugLine);
-
-    if (m_pyHlp)
-    {
-        PyHlp::Result py_res = m_pyHlp->run(content.data());
-        switch(py_res)
-        {
-            case PyHlp::Result::Error:
-                spdlog::warn("LinkedFormController:  m_pyHlp->run() return Error!");
-                break;
-            case PyHlp::Result::RuntimeError:
-                spdlog::warn("LinkedFormController:  m_pyHlp->run() return RuntimeError!");
-                break;
-            case PyHlp::Result::SyntaxError:
-                spdlog::warn("LinkedFormController:  m_pyHlp->run() return SyntaxError!");
-                break;
-            default:
-                break;
-        }
-    }
-    else
-        spdlog::warn("LinkedFormController: PyHlp не установлен, макрос не выполнен!");
-}
 
 void LinkedFormController::onParentRowChanged(int newRow)
 {
@@ -270,3 +280,9 @@ int LinkedFormController::getLongValue(const std::string& col, long row)
     return std::visit(ToLong(),
                       m_model->getRdata()->pnparray_->Get(row, colIdx));
 }
+
+void LinkedFormController::setPyHlp(std::shared_ptr<PyHlp> pyHlp)
+{
+    m_pyHlp = pyHlp;
+}
+

@@ -346,14 +346,6 @@ bool RModel::insertRows(int row, int count, const QModelIndex&)
     return true;
 }
 
-bool RModel::insertColumns(int column, int count, const QModelIndex& parent)
-{
-    beginInsertColumns(parent, column, column + count - 1);
-    ///@todo FIXME: Implement me!
-    endInsertColumns();
-    return true;
-}
-
 bool RModel::removeRows(int row, int count, const QModelIndex&)
 {
     IRastrTablesPtr tablesx{ m_qastra->getRastr()->Tables() };
@@ -376,6 +368,14 @@ bool RModel::removeColumns(int column, int count, const QModelIndex& parent)
     beginRemoveColumns(parent, column, column + count - 1);
     ///@todo FIXME: Implement me!
     endRemoveColumns();
+    return true;
+}
+
+bool RModel::insertColumns(int column, int count, const QModelIndex& parent)
+{
+    beginInsertColumns(parent, column, column + count - 1);
+    ///@todo FIXME: Implement me!
+    endInsertColumns();
     return true;
 }
 
@@ -454,86 +454,6 @@ void RModel::slot_RefTableChanged(std::string tname)
         for (int col : updatedInt)
             emit dataChanged(index(0, col), index(nRows - 1, col));
     }
-}
-
-void RModel::addCondFormat(size_t column, const CondFormat& condFormat)
-{
-    m_condFmt.add(column, condFormat);
-    m_bgCache.clear();
-    emit layoutChanged();
-}
-
-void RModel::setCondFormats(size_t column, const std::vector<CondFormat>& condFormats)
-{
-    m_condFmt.set(column, condFormats);
-    m_bgCache.invalidateColumn(static_cast<int>(column));
-    // layoutChanged вызывается из контроллера после
-    // полной замены всех правил, не инкрементально.
-}
-
-const std::vector<CondFormat>& RModel::getCondFormats(int column) const
-{
-    // Если для колонки нет правил, возвращаем ссылку на статический пустой вектор.
-    // Это безопаснее, чем бросать исключение или возвращать указатель.
-    static const std::vector<CondFormat> empty;
-    const auto* vec = m_condFmt.column(static_cast<size_t>(column));
-    return vec ? *vec : empty;
-}
-
-QVariant RModel::getMatchingCondFormat(size_t row, size_t column,
-                                       const QString& value, int role) const
-{
-    const auto* vec = m_condFmt.column(column);
-    if (!vec || vec->empty()) return {};
-
-    for (const CondFormat& fmt : *vec) {
-        // Пустой фильтр = правило по умолчанию, всегда срабатывает
-        if (fmt.filter().isEmpty()) {
-            switch (role) {
-            case Qt::ForegroundRole:    return fmt.foregroundColor();
-            case Qt::BackgroundRole:    return fmt.backgroundColor();
-            case Qt::FontRole:          return fmt.font();
-            case Qt::TextAlignmentRole: return static_cast<int>(fmt.alignmentFlag() | Qt::AlignVCenter);
-            }
-        }
-
-        STRING_BOOL sb(value.toStdString() + " " + fmt.sqlCondition());
-
-        // Подставляем значения колонок той же строки
-        bool allResolved = true;
-        for (const std::string& colName : sb.Check()) {
-            auto it = m_rdata->mCols_.find(colName);
-            if (it != m_rdata->mCols_.end()) {
-                double v = std::visit(ToDouble(), m_rdata->pnparray_->Get(row, it->second));
-                sb.replace(colName, std::to_string(v));
-            } else {
-                // Имя не найдено — условие не может быть вычислено
-                spdlog::warn("getMatchingCondFormat: unknown column '{}' in condition '{}'",
-                             colName, fmt.filter().toStdString());
-                allResolved = false;
-                break;
-            }
-        }
-        if (!allResolved) continue;
-
-        bool matches = false;
-        try {
-            matches = (sb.res() != 0.0);
-        } catch (const std::exception& e) {
-            spdlog::error("getMatchingCondFormat: eval error: {}", e.what());
-            continue;
-        }
-
-        if (matches) {
-            switch (role) {
-            case Qt::ForegroundRole:    return fmt.foregroundColor();
-            case Qt::BackgroundRole:    return fmt.backgroundColor();
-            case Qt::FontRole:          return fmt.font();
-            case Qt::TextAlignmentRole: return static_cast<int>(fmt.alignmentFlag() | Qt::AlignVCenter);
-            }
-        }
-    }
-    return {};
 }
 
 void RModel::buildEditorInfoCache()
@@ -632,6 +552,86 @@ RModel::ColumnEditorInfo RModel::buildColumnEditorInfo(int colIndex) const
         break;
     }
     return info;
+}
+
+void RModel::addCondFormat(size_t column, const CondFormat& condFormat)
+{
+    m_condFmt.add(column, condFormat);
+    m_bgCache.clear();
+    emit layoutChanged();
+}
+
+void RModel::setCondFormats(size_t column, const std::vector<CondFormat>& condFormats)
+{
+    m_condFmt.set(column, condFormats);
+    m_bgCache.invalidateColumn(static_cast<int>(column));
+    // layoutChanged вызывается из контроллера после
+    // полной замены всех правил, не инкрементально.
+}
+
+const std::vector<CondFormat>& RModel::getCondFormats(int column) const
+{
+    // Если для колонки нет правил, возвращаем ссылку на статический пустой вектор.
+    // Это безопаснее, чем бросать исключение или возвращать указатель.
+    static const std::vector<CondFormat> empty;
+    const auto* vec = m_condFmt.column(static_cast<size_t>(column));
+    return vec ? *vec : empty;
+}
+
+QVariant RModel::getMatchingCondFormat(size_t row, size_t column,
+                                       const QString& value, int role) const
+{
+    const auto* vec = m_condFmt.column(column);
+    if (!vec || vec->empty()) return {};
+
+    for (const CondFormat& fmt : *vec) {
+        // Пустой фильтр = правило по умолчанию, всегда срабатывает
+        if (fmt.filter().isEmpty()) {
+            switch (role) {
+            case Qt::ForegroundRole:    return fmt.foregroundColor();
+            case Qt::BackgroundRole:    return fmt.backgroundColor();
+            case Qt::FontRole:          return fmt.font();
+            case Qt::TextAlignmentRole: return static_cast<int>(fmt.alignmentFlag() | Qt::AlignVCenter);
+            }
+        }
+
+        STRING_BOOL sb(value.toStdString() + " " + fmt.sqlCondition());
+
+        // Подставляем значения колонок той же строки
+        bool allResolved = true;
+        for (const std::string& colName : sb.Check()) {
+            auto it = m_rdata->mCols_.find(colName);
+            if (it != m_rdata->mCols_.end()) {
+                double v = std::visit(ToDouble(), m_rdata->pnparray_->Get(row, it->second));
+                sb.replace(colName, std::to_string(v));
+            } else {
+                // Имя не найдено — условие не может быть вычислено
+                spdlog::warn("getMatchingCondFormat: unknown column '{}' in condition '{}'",
+                             colName, fmt.filter().toStdString());
+                allResolved = false;
+                break;
+            }
+        }
+        if (!allResolved) continue;
+
+        bool matches = false;
+        try {
+            matches = (sb.res() != 0.0);
+        } catch (const std::exception& e) {
+            spdlog::error("getMatchingCondFormat: eval error: {}", e.what());
+            continue;
+        }
+
+        if (matches) {
+            switch (role) {
+            case Qt::ForegroundRole:    return fmt.foregroundColor();
+            case Qt::BackgroundRole:    return fmt.backgroundColor();
+            case Qt::FontRole:          return fmt.font();
+            case Qt::TextAlignmentRole: return static_cast<int>(fmt.alignmentFlag() | Qt::AlignVCenter);
+            }
+        }
+    }
+    return {};
 }
 
 std::vector<std::tuple<int, int>> RModel::columnsWidth() const

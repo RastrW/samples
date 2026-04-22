@@ -390,55 +390,6 @@ void RtabController::applyColumnEditor(int colIndex)
     }
 }
 
-void RtabController::setTableView(int multiplier  )
-{
-    m_view->beginUpdate();
-    m_view->tableOptions().setColumnAutoWidth(false);
-    // Выравнивание
-    for (auto [idx, width] : m_model->columnsWidth()) {
-        m_view->getColumn(idx)->setWidth(width * multiplier);
-        m_view->getColumn(idx)->setTextAlignment(Qt::AlignLeft);
-    }
-    m_view->endUpdate();
-}
-
-void RtabController::setPyHlp(std::shared_ptr<PyHlp> pPyHlp){
-    pPyHlp_ = pPyHlp;
-    if (m_linkedFormCtrl){
-        m_linkedFormCtrl->setPyHlp(pPyHlp);
-    }
-}
-
-int RtabController::getLongValue(const std::string& key, long row){
-    int col = m_model->getRdata()->mCols_.at(key);
-    return std::visit(ToLong(), m_model->getRdata()->pnparray_->Get(row,col));
-}
-
-void RtabController::applyLinkedFormFromController(const LinkedForm& lf){
-    // Точка входа для родительского LinkedFormController:
-    // он вызывает этот метод на дочернем RtabWidget.
-    m_linkedFormCtrl->applyLinkedForm(lf);
-}
-
-void RtabController::notifyParentRowChanged(int modelRow) {
-    m_linkedFormCtrl->onParentRowChanged(modelRow);
-}
-
-void RtabController::slot_close(){
-
-    spdlog::info("RtabController::slot_close [{}]", m_UIForm.Name());
-    // Сначала — отключить все входящие сигналы к модели
-    disconnect(m_pRTDM, nullptr, m_model.get(), nullptr);
-    disconnect(m_pRTDM, nullptr, this, nullptr);
-    // Контроллер отключает Qt-соединения связанных форм
-    m_linkedFormCtrl->disconnectAll();
-    // Освобождаем DataBlock — модель перестаёт держать shared_ptr
-    m_model->getRdata()->pnparray_.reset();
-
-    // Вместо close() — явное удаление через deleteLater
-    this->deleteLater();
-}
-
 void RtabController::slot_addRow(){
 
     m_view->beginUpdate();
@@ -535,6 +486,95 @@ void RtabController::slot_groupCorrection(){
     fgc->show();
 }
 
+void RtabController::slot_beginResetModel(std::string tname){
+    if (m_UIForm.TableName() != tname) return;
+
+    m_view->beginUpdate(); // ← открываем внешний блок
+
+    // Сохраняем видимость по имени колонки (не по caption — он может меняться)
+    m_columnsVisible.clear();
+    for (const RCol& rcol : *m_model->getRdata()) {
+        auto* col = static_cast<Qtitan::GridTableColumn*>(
+            m_view->getColumn(rcol.getIndex()));
+        m_columnsVisible[QString::fromStdString(rcol.getColName())]
+            = col ? col->isVisible() : true;
+    }
+}
+
+void RtabController::slot_endResetModel(std::string tname){
+    if (m_UIForm.TableName() != tname) return;
+
+    // Восстанавливаем видимость и переназначаем редакторы.
+    // К этому моменту RModel::slot_EndResetModel уже вызвал
+    // populateDataFromRastr() — новые RData/RCol уже готовы.
+    for (const RCol& rcol : *m_model->getRdata()) {
+        auto* col = static_cast<Qtitan::GridTableColumn*>(
+            m_view->getColumn(rcol.getIndex()));
+        if (!col) continue;
+
+        // Восстанавливаем видимость
+        auto it = m_columnsVisible.find(
+            QString::fromStdString(rcol.getColName()));
+        col->setVisible(it != m_columnsVisible.end() ? it->second : true);
+
+        // Синхронизируем caption с обновлённым заголовком модели.
+        // Qtitan кеширует caption независимо от headerData() — нужно
+        // обновить вручную после сброса.
+        QVariant title = m_model->headerData(
+            rcol.getIndex(), Qt::Horizontal, Qt::DisplayRole);
+        if (title.isValid())
+            col->setCaption(title.toString());
+    }
+
+    // Пересоздаём репозитории — данные nameref
+    // (например, для SearchableComboPopupTwo)  могли смениться
+    m_view->beginUpdate();  //← открываем внутренний для applyAllColumnEditors
+    applyAllColumnEditors();
+    m_view->endUpdate();    //← закрываем внутренний
+
+    m_view->endUpdate();     // ← закрываем внешний из slot_beginResetModel
+
+    m_filterManager->resetAfterModelReset();
+}
+
+void RtabController::slot_close()
+{
+    spdlog::info("RtabController::slot_close [{}]", m_UIForm.Name());
+
+    // RTDM → модель и контроллер
+    if (m_pRTDM) {
+        disconnect(m_pRTDM, nullptr, m_model.get(), nullptr);
+        disconnect(m_pRTDM, nullptr, this, nullptr);
+    }
+
+    // Отключаем focusRowChanged → child
+    if (m_linkedFormCtrl)
+        m_linkedFormCtrl->disconnectAll();
+
+    // Сбрасываем компоненты в порядке зависимостей
+    m_condFormatCtrl.reset();
+    m_menuBuilder.reset();
+    m_filterManager.reset();
+
+    if (m_model && m_model->getRdata())
+        m_model->getRdata()->pnparray_.reset();
+
+    m_linkedFormCtrl.reset();
+    m_model.reset();
+
+    m_grid = nullptr;
+    m_view = nullptr;
+
+    this->deleteLater();
+}
+
+void RtabController::setPyHlp(std::shared_ptr<PyHlp> pPyHlp){
+    pPyHlp_ = pPyHlp;
+    if (m_linkedFormCtrl){
+        m_linkedFormCtrl->setPyHlp(pPyHlp);
+    }
+}
+
 void RtabController::slot_openColProp(int col){
     RCol* prcol = m_model->getRCol(col);
     if (!prcol) return;
@@ -566,6 +606,18 @@ void RtabController::slot_directCodeToggle(std::size_t column)
 
 void RtabController::slot_condFormatsEdit(std::size_t column){
     m_condFormatCtrl->editCondFormats(column);
+}
+
+void RtabController::setTableView(int multiplier  )
+{
+    m_view->beginUpdate();
+    m_view->tableOptions().setColumnAutoWidth(false);
+    // Выравнивание
+    for (auto [idx, width] : m_model->columnsWidth()) {
+        m_view->getColumn(idx)->setWidth(width * multiplier);
+        m_view->getColumn(idx)->setTextAlignment(Qt::AlignLeft);
+    }
+    m_view->endUpdate();
 }
 
 void RtabController::slot_widthByTemplate(){
@@ -632,53 +684,17 @@ void RtabController::slot_contextMenu(ContextMenuEventArgs* args)
     m_menuBuilder->prepareForShow(ctx, args->contextMenu());
 }
 
-void RtabController::slot_beginResetModel(std::string tname){
-    if (m_UIForm.TableName() != tname) return;
-
-    m_view->beginUpdate(); // ← открываем внешний блок
-
-    // Сохраняем видимость по имени колонки (не по caption — он может меняться)
-    m_columnsVisible.clear();
-    for (const RCol& rcol : *m_model->getRdata()) {
-        auto* col = static_cast<Qtitan::GridTableColumn*>(
-            m_view->getColumn(rcol.getIndex()));
-        m_columnsVisible[QString::fromStdString(rcol.getColName())]
-            = col ? col->isVisible() : true;
-    }
+int RtabController::getLongValue(const std::string& key, long row){
+    int col = m_model->getRdata()->mCols_.at(key);
+    return std::visit(ToLong(), m_model->getRdata()->pnparray_->Get(row,col));
 }
 
-void RtabController::slot_endResetModel(std::string tname){
-    if (m_UIForm.TableName() != tname) return;
+void RtabController::applyLinkedFormFromController(const LinkedForm& lf){
+    // Точка входа для родительского LinkedFormController:
+    // он вызывает этот метод на дочернем RtabWidget.
+    m_linkedFormCtrl->applyLinkedForm(lf);
+}
 
-    // Восстанавливаем видимость и переназначаем редакторы.
-    // К этому моменту RModel::slot_EndResetModel уже вызвал
-    // populateDataFromRastr() — новые RData/RCol уже готовы.
-    for (const RCol& rcol : *m_model->getRdata()) {
-        auto* col = static_cast<Qtitan::GridTableColumn*>(
-            m_view->getColumn(rcol.getIndex()));
-        if (!col) continue;
-
-        // Восстанавливаем видимость
-        auto it = m_columnsVisible.find(
-            QString::fromStdString(rcol.getColName()));
-        col->setVisible(it != m_columnsVisible.end() ? it->second : true);
-
-        // Синхронизируем caption с обновлённым заголовком модели.
-        // Qtitan кеширует caption независимо от headerData() — нужно
-        // обновить вручную после сброса.
-        QVariant title = m_model->headerData(
-            rcol.getIndex(), Qt::Horizontal, Qt::DisplayRole);
-        if (title.isValid())
-            col->setCaption(title.toString());
-    }
-
-    // Пересоздаём репозитории — данные nameref
-    // (например, для SearchableComboPopupTwo)  могли смениться
-    m_view->beginUpdate();  //← открываем внутренний для applyAllColumnEditors
-    applyAllColumnEditors();
-    m_view->endUpdate();    //← закрываем внутренний
-
-    m_view->endUpdate();     // ← закрываем внешний из slot_beginResetModel
-
-    m_filterManager->resetAfterModelReset();
+void RtabController::notifyParentRowChanged(int modelRow) {
+    m_linkedFormCtrl->onParentRowChanged(modelRow);
 }
