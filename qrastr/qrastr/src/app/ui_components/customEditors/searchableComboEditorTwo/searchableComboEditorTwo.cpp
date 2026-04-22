@@ -88,6 +88,13 @@ void SearchableComboEditorTwo::updateDisplayText()
 
 void SearchableComboEditorTwo::showPopup()
 {
+    // m_popup либо nullptr (закрыт), либо жив (открыт повторно).
+    // Если жив — просто поднимаем на передний план.
+    if (m_popup) {
+        m_popup->show();
+        return;
+    }
+
     auto* repo = static_cast<SearchableComboRepositoryTwo*>(editorRepository());
     if (!repo) return;
 
