@@ -50,7 +50,7 @@ void  RTablesDataManager::onRastrHint(const _hint_data& hint_data)
 }
 
 std::shared_ptr<QDataBlock>
-RTablesDataManager::get(const std::string& tname, const std::string& cols)
+RTablesDataManager::getBlock(const std::string& tname, const std::string& cols)
 {
     /*
      * Перед получением таблицы из RTDM удалим таблицы на которые никто не ссылается,
@@ -70,13 +70,13 @@ RTablesDataManager::get(const std::string& tname, const std::string& cols)
     auto [it, inserted] = mpTables.emplace(tname, nullptr);
     if (inserted) {
         it->second = std::make_shared<QDataBlock>();
-        getDataBlock(tname, *it->second, cols);  // одна функция
+        fillBlock(tname, *it->second, cols);  // одна функция
         spdlog::info("RTDM: add Table {}", tname.c_str());
     }
     return it->second;
 }
 
-std::vector<long> RTablesDataManager::getRowsBySelection(const std::string& tname,
+std::vector<long> RTablesDataManager::rowsBySelection(const std::string& tname,
                                                          const std::string& selection)
 {
     std::vector<long> indices;
@@ -131,7 +131,8 @@ void RTablesDataManager::setValue(const std::string&      tname,
                }, value);
 }
 
-long RTablesDataManager::column_index(std::string tname , std::string _col_name)
+long RTablesDataManager::columnIndex(const std::string& tname,
+                                     const std::string& colName)
 {
     IRastrTablesPtr tablesx{ m_pqastra->getRastr()->Tables() };
     IRastrPayload tindex{tablesx->FindIndex(tname)};
@@ -140,11 +141,11 @@ long RTablesDataManager::column_index(std::string tname , std::string _col_name)
     }
     IRastrTablePtr table{ tablesx->Item(tname) };
     IRastrColumnsPtr columns{ table->Columns() };
-    IRastrPayload res{columns->FindIndex(_col_name)};
+    IRastrPayload res{columns->FindIndex(colName)};
     return res.Value();
 }
 
-void RTablesDataManager::getDataBlock(const std::string& tname,
+void RTablesDataManager::fillBlock(const std::string& tname,
                                       QDataBlock& qdb,
                                       const std::string& cols,
                                       std::optional<FieldDataOptions> opts)
@@ -227,7 +228,7 @@ void RTablesDataManager::handleChangeAll()
         emit sig_BeginResetModel(tname);
 
         it->second->Clear();
-        getDataBlock(tname, *it->second);
+        fillBlock(tname, *it->second);
 
         emit sig_EndResetModel(tname);
     }
@@ -244,7 +245,7 @@ void RTablesDataManager::handleChangeTable(const std::string& tname)
 
     // Перезагружаем данные И структуру
     pqdb->Clear();
-    getDataBlock(tname, *pqdb); // читает всё заново из плагина
+    fillBlock(tname, *pqdb); // читает всё заново из плагина
 
     emit sig_EndResetModel(tname);
 }
@@ -262,7 +263,7 @@ void RTablesDataManager::handleChangeColumn(const std::string& tname,
     // Один вызов вместо N — плагин сам копирует колонку блоком
     QDataBlock colBlock;
     // все колонки, но только одна строка
-    getDataBlock(tname, colBlock, cname);
+    fillBlock(tname, colBlock, cname);
 
     const long nRows = static_cast<long>(pqdb->RowsCount());
     for (long row = 0; row < nRows; ++row)
@@ -284,7 +285,7 @@ void RTablesDataManager::handleChangeRow(const std::string& tname, long row)
 
     QDataBlock rowBlock;
     // все колонки, но только одна строка
-    getDataBlock(tname, rowBlock, cols);
+    fillBlock(tname, rowBlock, cols);
     // Копируем только нужную строку
     const long ncols = static_cast<long>(pqdb->ColumnsCount());
     for (long i = 0; i < ncols; ++i)
@@ -354,4 +355,133 @@ void RTablesDataManager::handleDeleteRow(const std::string& tname, long row)
     pqdb->DeleteRow(row);
     emit sig_EndRemoveRows(tname);
     emit sig_ReferenceChanged(tname);
+}
+
+ITableRepository::TableSchema
+RTablesDataManager::getSchema(const std::string& tname)
+{
+    TableSchema schema;
+    schema.name = tname;
+
+    IRastrTablesPtr  tablesx { m_pqastra->getRastr()->Tables() };
+    IRastrTablePtr   table   { tablesx->Item(tname) };
+    IRastrColumnsPtr columns { table->Columns() };
+
+    schema.title = IRastrPayload(table->Description()).Value();
+
+    const long count = IRastrPayload(columns->Count()).Value();
+    schema.columns.reserve(count);
+
+    auto prop = [&](IRastrColumnPtr& col, FieldProperties p) -> std::string {
+        return IRastrPayload(
+                   IRastrVariantPtr(col->Property(p))->String()
+                   ).Value();
+    };
+
+    for (long i = 0; i < count; ++i) {
+        IRastrColumnPtr col { columns->Item(i) };
+
+        ColumnSchema cs;
+        cs.tableName   = tname;
+        cs.index       = i;
+        cs.name        = IRastrPayload(col->Name()).Value();
+        cs.title       = prop(col, FieldProperties::Title);
+        cs.description = prop(col, FieldProperties::Description);
+        cs.unit        = prop(col, FieldProperties::Unit);
+        cs.width       = prop(col, FieldProperties::Width);
+        cs.prec        = prop(col, FieldProperties::Precision);
+        cs.expression  = prop(col, FieldProperties::Expression);
+        cs.nameRef     = prop(col, FieldProperties::NameRef);
+        cs.afor        = prop(col, FieldProperties::AFOR);
+        cs.ff          = prop(col, FieldProperties::IsActiveFormula);
+        cs.min         = prop(col, FieldProperties::Min);
+        cs.max         = prop(col, FieldProperties::Max);
+        cs.scale       = prop(col, FieldProperties::Scale);
+        cs.cache       = prop(col, FieldProperties::Cache);
+
+        try {
+            cs.comPropTT = static_cast<enComPropTT>(
+                std::stoi(prop(col, FieldProperties::Type)));
+        } catch (...) {
+            cs.comPropTT = enComPropTT::COM_PR_INT;
+            spdlog::warn("getSchema: не удалось разобрать Type для колонки {}", cs.name);
+        }
+
+        schema.columns.push_back(std::move(cs));
+    }
+
+    return schema;
+}
+
+void RTablesDataManager::setColumnProperty(const std::string& tname,
+                                           const std::string& colName,
+                                           FieldProperties    prop,
+                                           const std::string& value)
+{
+    IRastrTablesPtr  tables  { m_pqastra->getRastr()->Tables() };
+    IRastrTablePtr   table   { tables->Item(tname) };
+    IRastrColumnsPtr columns { table->Columns() };
+    IRastrColumnPtr  col_ptr { columns->Item(colName) };
+    IRastrResultVerify { col_ptr->SetProperty(prop, value) };
+}
+
+void RTablesDataManager::calcColumn(const std::string& tname,
+                const std::string& colName,
+                const std::string& expression,
+                const std::string& selection) {
+
+    IRastrTablesPtr  tables  { m_pqastra->getRastr()->Tables() };
+    IRastrTablePtr   table   { tables->Item(tname) };
+    IRastrResultVerify(table->SetSelection(selection));
+    IRastrColumnsPtr columns { table->Columns() };
+    IRastrColumnPtr  col_ptr { columns->Item(colName) };
+    IRastrResultVerify(col_ptr->Calculate(expression));
+}
+
+void RTablesDataManager::addRows(const std::string& tname, size_t count)
+{
+    IRastrTablesPtr tablesx { m_pqastra->getRastr()->Tables() };
+    IRastrTablePtr  table   { tablesx->Item(tname) };
+    for (size_t i = 0; i < count; ++i)
+        IRastrPayload { table->AddRow() };
+}
+
+void RTablesDataManager::insertRows(const std::string& tname,
+                                    long               startRow,
+                                    int                count){
+    IRastrTablesPtr tablesx { m_pqastra->getRastr()->Tables() };
+    IRastrTablePtr  table   { tablesx->Item(tname) };
+    for (int i = 0; i < count; ++i)
+        IRastrResultVerify { table->InsertRow(startRow) };
+}
+
+void RTablesDataManager::deleteRows(const std::string& tname,
+                                    long               startRow,
+                                    int                count)
+{
+    IRastrTablesPtr tablesx { m_pqastra->getRastr()->Tables() };
+    IRastrTablePtr  table   { tablesx->Item(tname) };
+    for (int i = 0; i < count; ++i)
+        IRastrResultVerify { table->DeleteRow(startRow) };
+}
+
+void RTablesDataManager::duplicateRow(const std::string& tname, long row)
+{
+    IRastrTablesPtr tablesx { m_pqastra->getRastr()->Tables() };
+    IRastrTablePtr  table   { tablesx->Item(tname) };
+    IRastrResultVerify { table->DuplicateRow(row) };
+}
+
+long RTablesDataManager::tableSize(const std::string& tname)
+{
+    IRastrTablesPtr tablesx { m_pqastra->getRastr()->Tables() };
+    IRastrTablePtr  table   { tablesx->Item(tname) };
+    return static_cast<long>(IRastrPayload(table->Size()).Value());
+}
+
+void RTablesDataManager::setTableSize(const std::string& tname, long size)
+{
+    IRastrTablesPtr tablesx { m_pqastra->getRastr()->Tables() };
+    IRastrTablePtr  table   { tablesx->Item(tname) };
+    IRastrResultVerify { table->SetSize(static_cast<IndexT>(size)) };
 }

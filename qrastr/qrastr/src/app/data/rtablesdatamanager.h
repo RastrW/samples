@@ -2,6 +2,7 @@
 #include <memory>
 #include <QObject>
 #include "astra/IPlainRastr.h"
+#include "ITableRepository.h"
 
 class QAstra;
 class CUIForm;
@@ -22,7 +23,7 @@ class _hint_data;
  * Время жизни QDataBlock:
  *   Блок удаляется из кеша при следующем вызове get(), если use_count() == 1.
  */
-class RTablesDataManager : public QObject
+class RTablesDataManager : public QObject, public ITableRepository
 {
     Q_OBJECT
 public:
@@ -31,6 +32,9 @@ public:
     CUIForm* getForm ( std::string _name);
     ///< Обработчик событий от Rastr
     void onRastrHint(const _hint_data& hint_data);
+
+    virtual TableSchema getSchema(const std::string& tname) override;
+    // ── Данные ───────────────────────────────────────────────────────────────
     /**
      * Получить (или создать) QDataBlock для таблицы tname.
      *
@@ -40,27 +44,50 @@ public:
      * @param Cols   строка колонок через запятую ("ny,name,uhom")
      */
     std::shared_ptr<QDataBlock>
-        get(const std::string& tname, const std::string& cols);
-
-    long column_index(std::string tname, std::string _col_name);
-    void getDataBlock(const std::string& tname,
-                      QDataBlock& qdb,
-                      const std::string& cols = "",
-                      std::optional<FieldDataOptions> opts = std::nullopt);
+    getBlock(const std::string& tname,
+             const std::string& cols) override;
+    void fillBlock(const std::string& tname,
+                   QDataBlock&        block,
+                   const std::string& cols = "",
+                   std::optional<FieldDataOptions> opts = std::nullopt) override;
+    long columnIndex(const std::string& tname,
+                     const std::string& colName) override;
     /// Применяет выборку к таблице tname и возвращает вектор строковых индексов.
-    std::vector<long> getRowsBySelection(const std::string& tname,
-                                         const std::string& selection);
+    std::vector<long>
+    rowsBySelection(const std::string& tname,
+                    const std::string& selection) override;
+    // ── Запись ───────────────────────────────────────────────────────────────
     /** @brief Централизованная запись в плагин.
     * RModel::setData больше НЕ вызывает emit dataChanged вручную —
     * обновление View приходит ровно один раз, через цепочку хинтов.
     */
-    void setValue(const std::string& tname,
-                  const std::string& cname,
-                  long               row,
-                  const FieldVariantData& value);
-private:
-    std::string getTCols(std::string tname);
-    long getColIndex(std::string tname,std::string cname);
+    void setValue(const std::string&      tname,
+                  const std::string&      colName,
+                  long                    row,
+                  const FieldVariantData& value) override;
+
+    void setColumnProperty(const std::string& tname,
+                                   const std::string& colName,
+                                   FieldProperties    prop,
+                                   const std::string& value) override;
+
+    void calcColumn(const std::string& tname,
+                            const std::string& colName,
+                            const std::string& expression,
+                            const std::string& selection) override;
+
+    void addRows   (const std::string& tname,
+                size_t             count) override;
+    void insertRows(const std::string& tname,
+                   long               startRow,
+                   int                count) override;
+    void deleteRows(const std::string& tname,
+                   long               startRow,
+                   int                count) override;
+    void duplicateRow(const std::string& tname, long row) override;
+
+    long tableSize(const std::string& tname) override;
+    void setTableSize(const std::string& tname, long size) override;
 signals:
     ///< изменены данные в диапазоне
     void sig_dataChanged(std::string tname,int row_from ,
@@ -147,4 +174,7 @@ private:
     // =========================================================================
     /// @brief Найти кешированный блок или вернуть nullptr
     QDataBlock* findCachedBlock(const std::string& tname);
+
+    std::string getTCols(std::string tname);
+    long getColIndex(std::string tname,std::string cname);
 };

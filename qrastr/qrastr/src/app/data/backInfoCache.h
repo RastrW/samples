@@ -4,7 +4,7 @@
 #include <map>
 
 class RData;
-class RTablesDataManager;
+class ITableRepository;
 class RCol;
 
 ///@class Справочные данные для отображения ячеек:
@@ -20,7 +20,7 @@ public:
     using RefMap      = std::unordered_map<size_t, std::string>;
     using PictureList = QList<PictureItem>;
 
-    void rebuild(const RData& rdata, RTablesDataManager* pRTDM);
+    void rebuild(const RData& rdata, ITableRepository* repo);
     void clear();
 
     // Lookup helpers — возвращают nullptr / end() если нет данных для колонки.
@@ -33,18 +33,18 @@ public:
     /// Возвращает список позиционных индексов колонок, которые были обновлены.
     std::vector<size_t> rebuildRefsFrom(const std::string&  srcTable,
                                         const RData&        rdata,
-                                        RTablesDataManager* pRTDM);
+                                        ITableRepository* repo);
 private:
     static std::map<int, int> parseEnpicNameref(const std::string& nameref);
     static QPixmap        iconByIndex(int idx);
 
-    static RefMap  buildIdNameMap(RTablesDataManager* pRTDM,
+    static RefMap  buildIdNameMap(ITableRepository* repo,
                                  const std::string& srcTable,
                                  const std::string& keyCol,
                                  const std::string& valueCol);
     void loadEnum(const RCol& rcol);
-    void loadSuperenum(const RCol& rcol, RTablesDataManager* pRTDM);
-    void loadNameref(const RCol& rcol, RTablesDataManager* pRTDM);
+    void loadSuperenum(const RCol& rcol, ITableRepository* repo);
+    void loadNameref(const RCol& rcol, ITableRepository* repo);
     void loadEnpic(const RCol& rcol);
 
     ///Статические парсеры для ссылочных значений

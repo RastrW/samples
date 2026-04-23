@@ -8,8 +8,10 @@
 #include "rdata.h"
 #include "rcol.h"
 
-GroupCorrectionDialog::GroupCorrectionDialog(RData* _prdata, RCol* _prcol, QWidget *parent)
-    : QDialog(parent), m_prdata{_prdata}, m_prcol {_prcol}
+GroupCorrectionDialog::GroupCorrectionDialog(ITableRepository* repo,
+                                             RData* prdata,
+                                             RCol* prcol, QWidget *parent)
+    : QDialog(parent), m_repo(repo), m_prdata(prdata), m_prcol(prcol)
 {
     setWindowTitle(tr("Групповая коррекция"));
 
@@ -17,11 +19,11 @@ GroupCorrectionDialog::GroupCorrectionDialog(RData* _prdata, RCol* _prcol, QWidg
     QComboBox* cbParameters = new QComboBox();
     QLabel* lTable = new QLabel();
     QString str_lab3 = "в таблице ";
-    str_lab3.append(_prdata->t_name_.c_str());
+    str_lab3.append(m_prdata->t_name_.c_str());
     lTable->setText(str_lab3);
 
-    std::string str_par = _prdata->t_name_;
-    str_par.append("[").append(_prdata->t_title_).append("]."); //node[Узлы].
+    std::string str_par = m_prdata->t_name_;
+    str_par.append("[").append(m_prdata->t_title_).append("]."); //node[Узлы].
     for (auto& col : *m_prdata) {
         std::string par = str_par;
         par.append(col.getColName()).append("[").append(col.getTitle()).append("]");
@@ -75,6 +77,9 @@ void GroupCorrectionDialog::on_buttonBox_accepted()
 {
     m_selection  = m_leExpression->text().toStdString();
     m_expression = m_leExpression->text().toStdString();
-    m_prcol->calc(m_prdata->getAstra(), m_expression, m_selection);
+    m_repo->calcColumn(m_prdata->t_name_,
+                       m_prcol->getColName(),
+                       m_expression,
+                       m_selection);
     close();
 }

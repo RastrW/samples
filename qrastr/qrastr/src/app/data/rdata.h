@@ -1,45 +1,44 @@
 #pragma once
 
 #include "rcol.h"
+#include "rtablesdatamanager.h"
 
 class CUIForm;
-class RTablesDataManager;
 class QDataBlock;
 
 /**
- * @brief Метаданные таблицы: вектор RCol + ссылка на общий плоский массив данных.
- * pnparray_ — shared_ptr на QDataBlock в RTablesDataManager.
+ * @brief Метаданные таблицы: вектор RCol + ссылка на общий блок данных.
  * Несколько открытых окон одной таблицы разделяют ОДИН блок памяти.
- * Поэтому RTablesDataManager::get() возвращает shared_ptr, а не копию.
  */
 class RData
     : public std::vector<RCol> {
 public:
-    /** Строит вектор RCol по метаданным плагина.
-     * @note reserve() вызывается ДО push_back, иначе при reallocate
-     * указатели на элементы вектора инвалидируются и RCol теряют данные.
-     */
-    RData(QAstra* _pqastra, const CUIForm& _form);
-    QAstra* getAstra() const;
-
-    int AddCol(const RCol& rcol);
     /**
-     * Получает (или создаёт, если ещё нет) общий QDataBlock из RTablesDataManager.
-     * После этого вызова pnparray_ указывает на тот же объект, что и у других
-     * открытых окон этой таблицы — данные НЕ дублируются.
+     * @param schema  Схема таблицы, полученная из ITableRepository::getSchema().
+     *                Передаётся по const& — RData не владеет схемой,
+     *                копирует из неё только нужные строки.
+     * @param form    Описание формы UI (видимые колонки, порядок).
      */
-    void populate_qastra(QAstra* _pqastra, RTablesDataManager* _pRTDM);
-    std::string get_cols(bool visible = true);
+    RData(const ITableRepository::TableSchema& schema,
+          const CUIForm&                        form);
 
-    std::string getCommaSeparatedFieldNames();
+    /**
+     * Получает общий QDataBlock из репозитория.
+     * После вызова pnparray_ указывает на тот же объект,
+     * что и у других открытых окон этой таблицы.
+     */
+    void populateBlock(ITableRepository* repo);
 
-    std::string t_name_ = "";
-    std::string t_title_ = "";
+    int         AddCol(const RCol& rcol);
+    std::string get_cols(bool visible = true) const;
+    std::string getCommaSeparatedFieldNames() const;
 
-    std::vector<std::string> vCols_;   ///< вектор имён колонок в порядке следования.
-    std::shared_ptr<QDataBlock> pnparray_;
+    std::string t_name_;
+    std::string t_title_;
+
+    std::vector<std::string>          vCols_; ///< вектор имён колонок в порядке следования.
+    std::shared_ptr<QDataBlock>       pnparray_;
     std::unordered_map<std::string, int> mCols_; ///< unordered_map<имя_колонки, индекс> для быстрого поиска колонки по имени.
 private:
-    std::string m_str_cols = "";       ///< vCols_ в виде строки имен столбцов ex: "ny,pn,qn,vras"
-    QAstra* m_qastra;
+    std::string m_str_cols; ///< vCols_ в виде строки имен столбцов ex: "ny,pn,qn,vras"
 };

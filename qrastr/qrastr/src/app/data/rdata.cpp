@@ -1,118 +1,87 @@
 #include "rdata.h"
-#include "rtablesdatamanager.h"
+
 #include "UIForms.h"
-using WrapperExceptionType = std::runtime_error;
-#include "astra/IPlainRastrWrappers.h"
-#include "qastra.h"
 #include "rdata.h"
 #include <unordered_set>
 
-RData::RData(QAstra* _pqastra, const CUIForm& _form):
-    m_qastra{_pqastra}{
+RData::RData(const ITableRepository::TableSchema& schema,
+             const CUIForm&                        form)
+{
+    // schema передан по const& — объект не копируется.
+    // Строки (name, title) копируются по одному разу в члены RData/RCol
 
-    t_name_ = _form.TableName();
+    t_name_  = schema.name;
+    t_title_ = schema.title;
 
-    t_title_ = _form.Name().c_str();
+    const long n_reserve = static_cast<long>(schema.columns.size()) + 5;
+    reserve(n_reserve);
+    // reserve() вызван ДО push_back, иначе при reallocation
+    // итераторы инвалидируются и RCol теряют данные.
 
-    IRastrTablesPtr tablesx{ _pqastra->getRastr()->Tables() };
-    IRastrPayload res{ tablesx->FindIndex(t_name_) };
-    int t_ind = res.Value();
-    if (t_ind < 0)
-        return;
+    m_str_cols.clear();
 
-    IRastrTablePtr table{ tablesx->Item(t_name_) };
-    IRastrColumnsPtr columns{ table->Columns() };
-
-    IRastrPayload ColumnsCount{ columns->Count() };
-    long n_reserve = ColumnsCount.Value()+5;
-    spdlog::debug("ColumnsCount : {}", ColumnsCount.Value());
-    reserve( n_reserve);                // Без reserve RCol данные обнуляются видимио при reallocation  If a reallocation happens, all contained elements are modified.
-    spdlog::debug("reserve : {} ok", n_reserve);
-
-    m_str_cols = "";
-    // Берем все колонки таблицы
-    for (long index{ 0 }; index < ColumnsCount.Value(); index++)
-    {
-        IRastrColumnPtr col{ columns->Item(index) };
-        std::string col_Name = IRastrPayload(col->Name()).Value();
-
-        vCols_.push_back(col_Name);
-        m_str_cols.append(col_Name);
-        m_str_cols.append(",");
+    for (const auto& cs : schema.columns) {
+        // initialize() принимает const& — объект ColumnSchema не копируется.
+        vCols_.push_back(cs.name);
+        m_str_cols += cs.name + ",";
 
         RCol rc;
-        //Сначала все колонки добавляются с hidden=true,
-        rc.initialize(col_Name, t_name_, index);
-        rc.setMeta(_pqastra);
+        rc.initialize(cs);
 
-        int nRes = AddCol(rc);
-        Q_ASSERT(nRes>=0);
-        if (mCols_.find(col_Name) == mCols_.end())
-            mCols_.insert(std::pair(col_Name,index));
+        AddCol(rc);
+
+        if (mCols_.find(cs.name) == mCols_.end())
+            mCols_.insert({cs.name, static_cast<int>(cs.index)});
     }
 
-    //Скрыть колонки не входящие в форму
-    //Скрытые колонки всё равно присутствуют в pnparray_
+    // Скрываем колонки, не входящие в форму.
+    // Скрытые колонки присутствуют в pnparray_ — просто не показываются в UI.
     std::unordered_set<std::string> formCols;
-    for (const auto& f : _form.Fields())
+    for (const auto& f : form.Fields())
         formCols.insert(f.Name());
+
     for (RCol& rc : *this)
         if (formCols.count(rc.getColName()))
             rc.setHidden(false);
 
-    if(m_str_cols.length()>0)
+    if (!m_str_cols.empty())
         m_str_cols.pop_back();
-    spdlog::debug("Open Table : {}", t_name_.c_str());
-    spdlog::debug("Fields : {}", m_str_cols.c_str());
+
+    spdlog::debug("RData: table={} columns={}", t_name_, schema.columns.size());
 }
 
-QAstra* RData::getAstra() const { return m_qastra; }
-
-int RData::AddCol(const RCol& rcol){
+int RData::AddCol(const RCol& rcol)
+{
     emplace_back(rcol);
     return static_cast<int>(size());
 }
 
-std::string RData::getCommaSeparatedFieldNames(){
-    std::string str_tmp;
-    for( const RCol& col_data : *this ) {
-        str_tmp += col_data.getColName();
-        str_tmp += ",";
-    }
-    if(str_tmp.length()>0){
-        str_tmp.erase(str_tmp.length()-1);
-    }
-    return str_tmp;
+void RData::populateBlock(ITableRepository* repo)
+{
+    // repo — невладеющий указатель, время жизни гарантировано RtabController.
+    // getBlock возвращает shared_ptr — счётчик ссылок увеличивается,
+    // данные не копируются.
+    pnparray_ = repo->getBlock(t_name_, m_str_cols);
 }
 
-void RData::populate_qastra(QAstra* _pqastra, RTablesDataManager* _pRTDM )
+std::string RData::getCommaSeparatedFieldNames() const
 {
-    /*
-     * Идея иметь 1 хранилище данных таблицы для всех клиентов
-     * Теперь попробуем обратиться к менеджеру данных таблиц
-     * если такая таблица уже есть берем указатель на нее, если нет
-     * тогда создаем в менеджере и отдаем указатель
-    */
-    pnparray_ = _pRTDM->get(t_name_, m_str_cols);
+    std::string ret;
+    for (const RCol& rc : *this)
+        ret += rc.getColName() + ",";
+    if (!ret.empty())
+        ret.pop_back();
+    return ret;
 }
 
-std::string RData::get_cols(bool visible)
+std::string RData::get_cols(bool visible) const
 {
-    std::string ret_cols="";
-    if (visible)
-    {
-        for  (RCol &rc : *this)
-            if (!rc.isHidden())
-                ret_cols += rc.getColName() + ",";
+    std::string ret;
+    for (const RCol& rc : *this) {
+        if (!visible || !rc.isHidden())
+            ret += rc.getColName() + ",";
     }
-    else
-    {
-        for  (RCol &rc : *this)
-            ret_cols += rc.getColName() + ",";
-    }
-
-    if (!ret_cols.empty())
-        ret_cols.pop_back();
-
-    return ret_cols;
+    if (!ret.empty())
+        ret.pop_back();
+    return ret;
 }

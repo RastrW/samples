@@ -173,7 +173,7 @@ void LinkedFormController::openLinkedMacro(LinkedMacro lm, int contextRow)
 
 void LinkedFormController::buildLinkedFormsMenu(int contextRow, QMenu* menu)
 {
-    auto table = m_rtdm->get("formcontext", "");
+    auto table = m_rtdm->getBlock("formcontext", "");
 
     for (int irow = 0; irow < table->RowsCount(); ++irow) {
         const std::string formName = std::get<std::string>(table->Get(irow, 0));
@@ -200,7 +200,7 @@ void LinkedFormController::buildLinkedFormsMenu(int contextRow, QMenu* menu)
 
 void LinkedFormController::buildLinkedMacroMenu(int contextRow, QMenu* menu)
 {
-    auto table = m_rtdm->get("macrocontext", "");
+    auto table = m_rtdm->getBlock("macrocontext", "");
 
     for (int irow = 0; irow < table->RowsCount(); ++irow) {
         const std::string formName = std::visit(ToString(), table->Get(irow, 0));

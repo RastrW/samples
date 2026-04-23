@@ -5,44 +5,55 @@
 
 #include "rdata.h"
 #include "QDataBlocks.h"
-#include "qastra.h"
+#include "UIForms.h"
 #include "rtablesdatamanager.h"
 #include <string_bool.h>
 #include "condFormat.h"
 
-RModel::RModel(QObject* parent, QAstra* pqastra, RTablesDataManager* pRTDM)
+RModel::RModel(QObject* parent, ITableRepository* repo)
     : QAbstractTableModel(parent)
-    , m_qastra(pqastra)
-    , m_rtdm(pRTDM)
+    , m_repo(repo)
 {}
 
 bool RModel::populateDataFromRastr()
 {
     try {
-        m_rdata = std::make_unique<RData>(m_qastra, *m_UIform);
-        m_rdata->populate_qastra(m_qastra, m_rtdm);
-        m_cache.rebuild(*m_rdata, m_rtdm);
-        //структура могла смениться
-        m_bgCache.clear();
+        // Схема запрашивается у репозитория — единственный вызов
+        // который обращается к плагину на этапе построения модели.
+        // RData и RCol не знают про плагин вообще.
+        auto schema = m_repo->getSchema(m_UIform->TableName());
+
+        // schema передаётся по const& в конструктор RData —
+        // объект схемы не копируется, строки копируются по одному разу.
+        m_rdata = std::make_unique<RData>(schema, *m_UIform);
+        m_rdata->populateBlock(m_repo);
+        m_cache.rebuild(*m_rdata, m_repo);
         // заполняем кеш после перестройки структуры
+        m_bgCache.clear();
         buildEditorInfoCache();
     } catch (...) {
-       spdlog::critical("ERROR! populateDataFromRastr: {}",
-                    (m_rdata ? m_rdata->t_name_.c_str() : "<null>"));
-            return false;
+        spdlog::critical("populateDataFromRastr failed: {}",
+                         m_rdata ? m_rdata->t_name_ : "<null>");
+        return false;
     }
     return true;
 }
 
-int RModel::rowCount   (const QModelIndex&) const { return static_cast<int>(m_rdata->pnparray_->RowsCount()); }
-int RModel::columnCount(const QModelIndex&) const { return static_cast<int>(m_rdata->pnparray_->ColumnsCount()); }
+int RModel::rowCount   (const QModelIndex&) const
+{
+    return static_cast<int>(m_rdata->pnparray_->RowsCount());
+}
+
+int RModel::columnCount(const QModelIndex&) const
+{
+    return static_cast<int>(m_rdata->pnparray_->ColumnsCount());
+}
 
 QVariant RModel::headerData(int section, Qt::Orientation orientation, int role) const
 {
     if (role != Qt::DisplayRole) return {};
-    if (orientation == Qt::Horizontal){
-        return m_rdata->at(section).getTitle().c_str();
-    }
+    if (orientation == Qt::Horizontal)
+        return QString::fromStdString(m_rdata->at(section).getTitle());
     return section + 1;
 }
 
@@ -60,20 +71,21 @@ QVariant RModel::data(const QModelIndex& index, int role) const
     const int col = index.column();
     const int row = index.row();
 
-    if ((row < 0 || row >= rowCount()) ||
-        (col < 0 || col >= columnCount())) {
-        spdlog::error("Выход за границы модели");
+    if (row < 0 || row >= rowCount() || col < 0 || col >= columnCount()) {
+        spdlog::error("RModel::data — выход за границы [{},{}]", row, col);
         return {};
     }
 
     const RCol& rcol = *(m_rdata->begin() + col);
 
-    // Роли, не требующие данных из блока — обрабатываем ДО чтения raw
-    if (role == Qt::ToolTipRole) //Всплывающая подсказка
+    // Ранние ветки — до чтения raw, чтобы не читать блок вхолостую
+    if (role == Qt::ToolTipRole)
         return QString("[%1, %2]").arg(row + 1).arg(col + 1);
 
-    if (role == Qtitan::ComboBoxRole)//Выпадающий popup ComboBox
+    if (role == Qtitan::ComboBoxRole) //Выпадающий popup ComboBox
         return dataForComboBox(rcol);
+
+    // Читаем данные из блока только тогда, когда они реально нужны
     const QVariant raw = std::visit(ToQVariant(), m_rdata->pnparray_->Get(row, col));
 
     switch (role) {
@@ -84,7 +96,7 @@ QVariant RModel::data(const QModelIndex& index, int role) const
         // Сырое значение для сортировки числовых колонок.
         // QTitan получает double и сортирует числово, а не лексикографически.
         if (!raw.isValid() && rcol.getComPropTT() == enComPropTT::COM_PR_REAL)
-            return 0.0;   // пустая ячейка = 0.0 для сортировки
+            return 0.0; // пустая ячейка = 0.0 для сортировки
         return raw;
     case Qt::BackgroundRole:
         return dataForBackground(row, col, rcol, raw);
@@ -243,11 +255,11 @@ bool RModel::setData(const QModelIndex& index, const QVariant& value, int role)
     spdlog::debug("setData [{},{}] role={} value='{}' type={}",
                   row, col, role,
                   value.toString().toStdString(),
-                  value.typeName());  // покажет "QString", "int", "double"...
+                  value.typeName());// покажет "QString", "int", "double"...
     //Проверяем, если значение не изменилось, то не записываем лишний раз в базу данных
     QVariant raw = std::visit(ToQVariant(), m_rdata->pnparray_->Get(row, col));
-    if (raw == value){
-        spdlog::debug("Значение не изменилось");
+    if (raw == value) {
+        spdlog::debug("setData: значение не изменилось");
         return true;
     }
 
@@ -286,10 +298,12 @@ bool RModel::setData(const QModelIndex& index, const QVariant& value, int role)
                         if ((*enums)[i] == value) { val = i; break; }
                 } else if (const auto* senum = m_cache.superenumMap(pluginIdx)) {
                     for (const auto& [k, v] : *senum)
-                        if (v == value.toString().toStdString()) { val = static_cast<long>(k); break; }
+                        if (v == value.toString().toStdString())
+                        { val = static_cast<long>(k); break; }
                 } else if (const auto* nref = m_cache.namerefMap(pluginIdx)) {
                     for (const auto& [k, v] : *nref)
-                        if (v == value.toString().toStdString()) { val = static_cast<long>(k); break; }
+                        if (v == value.toString().toStdString())
+                        { val = static_cast<long>(k); break; }
                 } else {
                     val = value.toInt();
                 }
@@ -299,40 +313,33 @@ bool RModel::setData(const QModelIndex& index, const QVariant& value, int role)
             vd = val;
             break;
         }
-
         case RCol::_en_data::DATA_STR:
             vd = value.toString().toStdString();
             break;
-
         case RCol::_en_data::DATA_DBL:
             vd = value.toDouble();
             break;
-
         default:
             return false;
         }
     }
-    // Запись через RTDM — единственная точка доступа к плагину.
-    // emit dataChanged НЕ вызывается: плагин сгенерирует ChangeData-хинт,
-    // RTDM обновит QDataBlock и испустит sig_dataChanged → View обновится один раз.
-    m_rtdm->setValue(tname, colName, row, vd);
+
+    // Единственная точка записи — репозиторий.
+    // emit dataChanged не вызываем: плагин сгенерирует хинт →
+    // RTDM обновит блок → sig_dataChanged → slot_DataChanged → View.
+    m_repo->setValue(tname, colName, row, vd);
     return true;
 }
 
 bool RModel::addRow(size_t count, const QModelIndex&)
 {
-    IRastrTablesPtr tablesx{ m_qastra->getRastr()->Tables() };
-    IRastrTablePtr  table  { tablesx->Item(getRdata()->t_name_) };
-    for (size_t i = 0; i < count; ++i)
-        IRastrResultVerify{ table->AddRow() };
+    m_repo->addRows(m_rdata->t_name_, count);
     return true;
 }
 
 bool RModel::duplicateRow(int row, const QModelIndex&)
 {
-    IRastrTablesPtr tablesx{ m_qastra->getRastr()->Tables() };
-    IRastrTablePtr  table  { tablesx->Item(getRdata()->t_name_) };
-    IRastrResultVerify{ table->DuplicateRow(row)};
+    m_repo->duplicateRow(m_rdata->t_name_, row);
     // После DuplicateRow плагин сгенерирует InsertRow-хинт →
     // handleInsertRow вставит пустую строку в pnparray_.
     // DuplicateRow в QDenseDataBlock копирует данные из исходной строки в новую
@@ -342,27 +349,19 @@ bool RModel::duplicateRow(int row, const QModelIndex&)
 
 bool RModel::insertRows(int row, int count, const QModelIndex&)
 {
-    IRastrTablesPtr tablesx{ m_qastra->getRastr()->Tables() };
-    IRastrTablePtr  table  { tablesx->Item(getRdata()->t_name_) };
-    for (int i = 0; i < count; ++i)
-        IRastrResultVerify{ table->InsertRow(row) };
+    m_repo->insertRows(m_rdata->t_name_, row, count);
     return true;
 }
 
 bool RModel::removeRows(int row, int count, const QModelIndex&)
 {
-    IRastrTablesPtr tablesx{ m_qastra->getRastr()->Tables() };
-    IRastrTablePtr  table  { tablesx->Item(getRdata()->t_name_) };
-    size_t t_sz = IRastrPayload(table->Size()).Value();
-
+    const long sz = m_repo->tableSize(m_rdata->t_name_);
     // НЕ вызываем beginRemoveRows здесь —
     // это сделает slot_BeginRemoveRows через цепочку хинтов
-    if (static_cast<size_t>(count) == t_sz) {
-        IRastrResultVerify{ table->SetSize(0) };
-    } else {
-        for (int i = 0; i < count; ++i)
-            IRastrResultVerify{ table->DeleteRow(row) };
-    }
+    if (static_cast<long>(count) == sz)
+        m_repo->setTableSize(m_rdata->t_name_, 0);
+    else
+        m_repo->deleteRows(m_rdata->t_name_, row, count);
     return true;
 }
 
@@ -383,8 +382,9 @@ bool RModel::insertColumns(int column, int count, const QModelIndex& parent)
 }
 
 void RModel::slot_DataChanged(std::string tName, int rowFrom, int colFrom,
-                              int rowTo, int colTo){
-    if (getRdata()->t_name_ != tName) return;
+                              int rowTo, int colTo)
+{
+    if (m_rdata->t_name_ != tName) return;
     // инвалидируем затронутые строки
     m_bgCache.invalidateRows(rowFrom, rowTo);
     emit dataChanged(index(rowFrom, colFrom), index(rowTo, colTo));
@@ -392,14 +392,12 @@ void RModel::slot_DataChanged(std::string tName, int rowFrom, int colFrom,
 
 void RModel::slot_BeginResetModel(std::string tName)
 {
-    if (getRdata()->t_name_ == tName) beginResetModel();
+    if (m_rdata->t_name_ == tName) beginResetModel();
 }
 
 void RModel::slot_EndResetModel(std::string tName)
 {
-    if (getRdata()->t_name_ != tName) return;
-    // структура пересоздаётся полностью
-    m_bgCache.clear();
+    if (m_rdata->t_name_ != tName) return;
     ///@note при сборсе обязательно целиком пересоздавать data
     /// populateDataFromRastr() вызывается МЕЖДУ beginResetModel и endResetModel.
     /// В этот момент View не обращается к модели — безопасно полностью
@@ -410,27 +408,26 @@ void RModel::slot_EndResetModel(std::string tName)
 
 void RModel::slot_BeginInsertRow(std::string tName, int first, int last)
 {
-    if (getRdata()->t_name_ != tName) return;
-    const int count = last - first + 1;
-    // ← сдвиг форматирования перед вставкой
-    m_bgCache.shiftRowsDown(first, count);
+    if (m_rdata->t_name_ != tName) return;
+    // сдвиг форматирования перед вставкой
+    m_bgCache.shiftRowsDown(first, last - first + 1);
     beginInsertRows({}, first, last);
 }
 
 void RModel::slot_EndInsertRow(std::string tName)
 {
-    if (getRdata()->t_name_ == tName) endInsertRows();
+    if (m_rdata->t_name_ == tName) endInsertRows();
 }
 
 void RModel::slot_BeginRemoveRows(std::string tName, int first, int last)
 {
-    if (getRdata()->t_name_ != tName) return;
+    if (m_rdata->t_name_ != tName) return;
     beginRemoveRows({}, first, last);
 }
 
 void RModel::slot_EndRemoveRows(std::string tName)
 {
-    if (getRdata()->t_name_ != tName) return;
+    if (m_rdata->t_name_ != tName) return;
     // Определяем диапазон через beginRemoveRows/endRemoveRows не передаёт параметры,
     // поэтому проще инвалидировать весь кеш при удалении (операция редкая).
     m_bgCache.clear();
@@ -441,11 +438,10 @@ void RModel::slot_RefTableChanged(std::string tname)
 {
     // Если изменилась наша же таблица — RTDM уже послал ChangeTable/ChangeAll,
     // не нужно дублировать.
-    if (getRdata()->t_name_ == tname) return;
+    if (m_rdata->t_name_ == tname) return;
     // Перестраиваем только затронутые записи кеша
-    std::vector<size_t> updated = m_cache.rebuildRefsFrom(tname, *m_rdata, m_rtdm);
+    std::vector<size_t> updated = m_cache.rebuildRefsFrom(tname, *m_rdata, m_repo);
     if (updated.empty()) return;
-
     // Обновляем m_editorInfoCache для затронутых колонок
     for (size_t col : updated)
         if (col < m_editorInfoCache.size())
@@ -456,7 +452,6 @@ void RModel::slot_RefTableChanged(std::string tname)
         for (size_t col : updated)
             emit dataChanged(index(0, static_cast<int>(col)),
                              index(nRows - 1, static_cast<int>(col)));
-
     // Уведомляем контроллер — пусть обновит репозитории Qtitan
     emit sig_nameRefUpdated(updated);
 }
@@ -481,7 +476,6 @@ RModel::ColumnEditorInfo RModel::buildColumnEditorInfo(int colIndex) const
     ColumnEditorInfo info;
     const RCol* col = getRCol(colIndex);
     if (!col) return info;
-
     // pluginIdx — индекс колонки в плагине (стабилен, не зависит от визуального порядка).
     // Именно по нему BackInfoCache хранит все справочники.
     const size_t pluginIdx = static_cast<size_t>(col->getIndex());
@@ -494,7 +488,9 @@ RModel::ColumnEditorInfo RModel::buildColumnEditorInfo(int colIndex) const
 
     case enComPropTT::COM_PR_REAL:
         info.editorType = ColumnEditorInfo::Type::Numeric;
-        info.decimals   = std::atoi(col->getPrec().c_str());
+        // пустая строка и мусор дают 2
+        try { info.decimals = std::stoi(col->getPrec()); }
+        catch (...) { info.decimals = 2; }
         break;
 
     case enComPropTT::COM_PR_TIME:
@@ -540,7 +536,7 @@ RModel::ColumnEditorInfo RModel::buildColumnEditorInfo(int colIndex) const
             if (const auto* pics = m_cache.pictureEnum(pluginIdx)) {
                 info.editorType = ColumnEditorInfo::Type::ComboBoxPicture;
                 for (const auto& p : *pics)
-                    info.picItems.append({ p.image, p.label });
+                    info.picItems.append({p.image, p.label});
                 break;
             }
         }
@@ -633,21 +629,23 @@ QVariant RModel::getMatchingCondFormat(size_t row, size_t column,
     return {};
 }
 
-std::vector<std::tuple<int, int>> RModel::columnsWidth() const
+std::vector<std::tuple<int,int>> RModel::columnsWidth() const
 {
-    std::vector<std::tuple<int, int>> cw;
+    std::vector<std::tuple<int,int>> cw;
     if (!m_rdata) return cw;
     int i = 0;
-    for (const RCol& col : *m_rdata)
-        cw.emplace_back(i++, std::stoi(col.getWidth()));
+    for (const RCol& col : *m_rdata) {
+        try { cw.emplace_back(i, std::stoi(col.getWidth())); }
+        catch (...) { cw.emplace_back(i, 10); }
+        ++i;
+    }
     return cw;
 }
 
 RCol* RModel::getRCol(int col) const
 {
-    if (!m_rdata || col < 0 || col >= (int)m_rdata->size()){
+    if (!m_rdata || col < 0 || col >= static_cast<int>(m_rdata->size()))
         return nullptr;
-    }
     return &(*(m_rdata->begin() + col));
 }
 
@@ -665,5 +663,5 @@ RData* RModel::getRdata()
 
 std::vector<long> RModel::getRowsBySelection(const std::string& selection) const
 {
-    return m_rtdm->getRowsBySelection(m_rdata->t_name_, selection);
+    return m_repo->rowsBySelection(m_rdata->t_name_, selection);
 }

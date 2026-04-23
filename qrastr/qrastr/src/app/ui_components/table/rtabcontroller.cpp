@@ -490,7 +490,8 @@ void RtabController::slot_groupCorrection(){
     if (!prcol){
         return;
     }
-    GroupCorrectionDialog* fgc =  new GroupCorrectionDialog(m_model->getRdata(),prcol,m_grid);
+    GroupCorrectionDialog* fgc =  new GroupCorrectionDialog(m_pRTDM,
+                                                           m_model->getRdata(),prcol,m_grid);
     fgc->setAttribute(Qt::WA_DeleteOnClose);
 
     fgc->show();
