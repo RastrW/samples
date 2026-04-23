@@ -213,9 +213,8 @@ void RtabController::createModel(QAstra* pqastra)
     for (const auto& f : m_UIForm.Fields()){
         for (const RCol& rcol : *m_model->getRdata()){
             if (f.Name() == rcol.getColName()){
-                Qtitan::GridTableColumn* column_qt;
-                column_qt = static_cast<GridTableColumn*>(
-                    m_view->getColumn(rcol.getIndex()));
+                auto* column_qt =
+                    getColumnByIndex(rcol.getIndex());
                 column_qt->setVisualIndex(vi++);
                 break;
             }
@@ -299,8 +298,7 @@ void RtabController::setupConnections()
     connect(m_model.get(), &RModel::sig_nameRefUpdated,
             this, [this](std::vector<size_t> cols) {
                 for (size_t i : cols) {
-                    auto* column_qt = static_cast<Qtitan::GridTableColumn*>(
-                        m_view->getColumn(static_cast<int>(i)));
+                    auto* column_qt = getColumnByIndex(i);
                     if (!column_qt) continue;
                     auto* repo = static_cast<SearchableComboRepositoryTwo*>(
                         column_qt->editorRepository());
@@ -322,8 +320,7 @@ void RtabController::applyAllColumnEditors(){
 
 void RtabController::applyColumnEditor(int colIndex)
 {
-    auto* column_qt = static_cast<Qtitan::GridTableColumn*>(
-        m_view->getColumn(colIndex));
+    auto* column_qt = getColumnByIndex(colIndex);
     if (!column_qt) return;
 
     const RCol* col = m_model->getRCol(colIndex);
@@ -507,8 +504,7 @@ void RtabController::slot_beginResetModel(std::string tname){
     // Сохраняем видимость по имени колонки (не по caption — он может меняться)
     m_columnsVisible.clear();
     for (const RCol& rcol : *m_model->getRdata()) {
-        auto* col = static_cast<Qtitan::GridTableColumn*>(
-            m_view->getColumn(rcol.getIndex()));
+        auto* col = getColumnByIndex(rcol.getIndex());
         m_columnsVisible[QString::fromStdString(rcol.getColName())]
             = col ? col->isVisible() : true;
     }
@@ -521,8 +517,7 @@ void RtabController::slot_endResetModel(std::string tname){
     // К этому моменту RModel::slot_EndResetModel уже вызвал
     // populateDataFromRastr() — новые RData/RCol уже готовы.
     for (const RCol& rcol : *m_model->getRdata()) {
-        auto* col = static_cast<Qtitan::GridTableColumn*>(
-            m_view->getColumn(rcol.getIndex()));
+        auto* col = getColumnByIndex(rcol.getIndex());
         if (!col) continue;
 
         // Восстанавливаем видимость
@@ -710,4 +705,7 @@ void RtabController::applyLinkedFormFromController(const LinkedForm& lf){
 
 void RtabController::notifyParentRowChanged(int modelRow) {
     m_linkedFormCtrl->onParentRowChanged(modelRow);
+}
+Qtitan::GridTableColumn* RtabController::getColumnByIndex(int index) const {
+    return static_cast<Qtitan::GridTableColumn*>(m_view->getColumn(index));
 }

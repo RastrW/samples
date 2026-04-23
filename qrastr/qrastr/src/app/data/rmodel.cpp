@@ -67,11 +67,16 @@ QVariant RModel::data(const QModelIndex& index, int role) const
     }
 
     const RCol& rcol = *(m_rdata->begin() + col);
+
+    // Роли, не требующие данных из блока — обрабатываем ДО чтения raw
+    if (role == Qt::ToolTipRole) //Всплывающая подсказка
+        return QString("[%1, %2]").arg(row + 1).arg(col + 1);
+
+    if (role == Qtitan::ComboBoxRole)//Выпадающий popup ComboBox
+        return dataForComboBox(rcol);
     const QVariant raw = std::visit(ToQVariant(), m_rdata->pnparray_->Get(row, col));
 
     switch (role) {
-    case Qtitan::ComboBoxRole:
-        return dataForComboBox(rcol);
     case Qt::DisplayRole:
     case Qt::EditRole:
         return dataForDisplayEdit(row, col, rcol, raw, role);
@@ -85,9 +90,6 @@ QVariant RModel::data(const QModelIndex& index, int role) const
         return dataForBackground(row, col, rcol, raw);
     case Qt::DecorationRole:
         return dataForDecoration(row, col, rcol, raw);
-    // ── ToolTipRole (Всплывающая подсказка)───────────────────────────────────
-    case Qt::ToolTipRole:
-        return QString("[%1, %2]").arg(row + 1).arg(col + 1);
     default:
         return {};
     }

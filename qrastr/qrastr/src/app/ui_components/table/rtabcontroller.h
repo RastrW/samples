@@ -106,6 +106,7 @@ private:
     void setTableView(int multiplier = 10);
     void setupConnections();
 
+    Qtitan::GridTableColumn* getColumnByIndex(int index) const;
     // ── Компоненты (данные) ─────────────────────────────────────────────────
     std::unique_ptr<RModel>               m_model;
     std::unique_ptr<FilterManager>        m_filterManager;
