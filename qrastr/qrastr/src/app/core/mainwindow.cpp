@@ -349,14 +349,18 @@ void MainWindow::slot_about(){
                        tr("About the <b>QRastr</b>.") );
 }
 
-void MainWindow::showIdopDialog() {  
+void MainWindow::showIdopDialog() {
     emit sig_calcBegin();
-    
-    CalcIacceptableDialog* dialog = new CalcIacceptableDialog(m_qastra.get(), this);
-    dialog->setAttribute(Qt::WA_DeleteOnClose);
-    dialog->show();
 
-    emit sig_calcEnd();
+    auto* dialog = new CalcIacceptableDialog(m_qastra.get(), this);
+    dialog->setAttribute(Qt::WA_DeleteOnClose);
+
+    // FIX P1: sig_calcEnd только когда диалог действительно закрыт
+    // (после расчёта, не после show())
+    connect(dialog, &CalcIacceptableDialog::sig_calculationFinished,
+            this,   &MainWindow::sig_calcEnd);
+
+    dialog->show();
 }
 
 void MainWindow::showMDPPrepareDialog() {

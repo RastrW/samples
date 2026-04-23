@@ -210,6 +210,7 @@ void SettingsDialog::onBtnApplyClick()
         msgBox.setDefaultButton(QMessageBox::No);
 
         if (msgBox.exec() == QMessageBox::Yes) {
+            // Создать резервную копию
             const QString backupPath =
                 fi.dir().filePath(
                     fi.completeBaseName() + "_backup" +

@@ -36,8 +36,6 @@ signals:
     void sig_progressChanged(int percent, const QString& message);
 private:
     // Переопределённые методы Qt
-    ///@brief Обработка событий Qt
-    bool event( QEvent *event ) override;
     ///@brief  Глобальная обработка исключений
     bool notify(QObject* receiver, QEvent* event) override;
 

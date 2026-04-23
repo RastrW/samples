@@ -87,3 +87,10 @@ void CalcIacceptableDialog::on_checkBox_checkStateChanged(int state)
     m_lData->setEnabled(enabled);
     m_dateTimeEdit->setEnabled(enabled);
 }
+
+void CalcIacceptableDialog::done(int result) {
+    emit sig_calculationFinished();
+    QDialog::done(result);
+}
+
+

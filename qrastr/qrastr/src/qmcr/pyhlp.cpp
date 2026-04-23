@@ -117,7 +117,6 @@ std::wstring detectPythonHome()
 }
 }
 
-#include <sstream>
 #include <pyerrors.h>
 #include <frameobject.h>
 PyHlp::PyHlp(const IPlainRastr& ipr)

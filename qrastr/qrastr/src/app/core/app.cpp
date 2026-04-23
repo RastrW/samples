@@ -43,18 +43,12 @@ App::~App() {
     RastrParameters::destruct();
 }
 
-bool App::event( QEvent *event ){
-    const bool done = QApplication::event( event);
-    return done;
-}
-
 bool App::notify(QObject* receiver, QEvent* event){
     bool done = false;
     try {
         done = QApplication::notify(receiver, event);
     }catch(std::exception& ex){
         exclog(ex);
-        const std::string str{fmt::format("std::exception: {}",ex.what())};
     }catch (...){
         exclog();
     }
@@ -273,8 +267,14 @@ bool App::loadPlugins(){
                 spdlog::info("it is Rastr.test.finished");
             }
             auto iTI = qobject_cast<InterfaceTI *>(plugin);
-            if(iTI){
-                try{
+            if (auto* iTI = qobject_cast<InterfaceTI*>(plugin)) {
+                //Rastr обязателен для TI
+                if (!m_sp_qastra) {
+                    spdlog::error("TI plugin requires Rastr to be loaded first — "
+                                  "check plugin load order");
+                    continue;   // не фатально: TI необязателен
+                }
+                try {
                     spdlog::info("it is TI" );
                     const std::shared_ptr<spdlog::logger> sp_logger =
                         spdlog::default_logger();
@@ -302,9 +302,12 @@ bool App::loadPlugins(){
                 }
                 spdlog::info("it is TI.test.finished");
             }
-            auto iBarsMDP = qobject_cast<InterfaceBarsMDP *>(plugin);
-            if(iBarsMDP){
-                try{
+            if (auto* iBarsMDP = qobject_cast<InterfaceBarsMDP*>(plugin)) {
+                if (!m_sp_qastra) {
+                    spdlog::error("BarsMDP plugin requires Rastr to be loaded first");
+                    continue;
+                }
+                try { // не фатально: Bars необязателен
                     spdlog::info("it is BarsMDP" );
                     const std::shared_ptr<spdlog::logger> sp_logger =
                         spdlog::default_logger();

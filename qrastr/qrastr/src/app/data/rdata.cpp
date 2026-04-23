@@ -52,7 +52,7 @@ RData::RData(QAstra* _pqastra, const CUIForm& _form):
     }
 
     //Скрыть колонки не входящие в форму
-    //Скрытые колонки всё равно присутствуют в pnparray_ 
+    //Скрытые колонки всё равно присутствуют в pnparray_
     std::unordered_set<std::string> formCols;
     for (const auto& f : _form.Fields())
         formCols.insert(f.Name());

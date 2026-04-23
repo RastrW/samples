@@ -50,8 +50,8 @@ FormManager::FormManager(
             this,               &FormManager::registerDockWidget);
 
     // ── Графика ───────────────────────────────────────────────────────────────
-    //m_graphSDLManager = new GraphSDLManager(
-    //    m_dockManager, m_parentWidget, m_qastra->getRastr().get(), this);
+    m_graphSDLManager = new GraphSDLManager(
+        m_dockManager, m_parentWidget, m_qastra->getRastr().get(), this);
     m_graphWebManager = new GraphWebManager(
         m_dockManager, m_parentWidget, m_qastra->getRastr().get(), this);
 
