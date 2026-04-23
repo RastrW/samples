@@ -1,7 +1,5 @@
 #include "rcol.h"
 
-#include <astra/IPlainRastrWrappers.h>
-
 void RCol::initialize(const ITableRepository::ColumnSchema& schema)
 {
     // Каждая строка копируется ровно один раз — из схемы в член класса.

@@ -187,7 +187,7 @@ void RtabController::setupShortcuts(RtabController* target, RGrid* grid)
 
 void RtabController::createModel(QAstra* pqastra)
 {
-    m_model = std::make_unique<RModel>(this, pqastra, m_pRTDM);
+    m_model = std::make_unique<RModel>(this, m_pRTDM);
     m_model->setForm(&m_UIForm);
     if (!m_model->populateDataFromRastr())
     {
@@ -584,13 +584,17 @@ void RtabController::setPyHlp(std::shared_ptr<PyHlp> pPyHlp){
     }
 }
 
-void RtabController::slot_openColProp(int col){
-    RCol* prcol = m_model->getRCol(col);
-    if (!prcol) return;
-    auto* propDialog = new ColPropDialog(m_model->getRdata(),
-                                                  m_view, prcol, m_grid);
-    propDialog->setAttribute(Qt::WA_DeleteOnClose);
-    propDialog->exec();
+void RtabController::slot_openColProp(int col)
+{
+    // Получаем схему колонки через репозиторий
+    const auto schema_full = m_pRTDM->getSchema(m_UIForm.TableName());
+    if (col < 0 || col >= (int)schema_full.columns.size()) return;
+
+    const auto& colSchema = schema_full.columns[col];
+
+    auto* dlg = new ColPropDialog(m_pRTDM, colSchema, m_view, m_grid);
+    dlg->setAttribute(Qt::WA_DeleteOnClose);
+    dlg->exec();
 }
 
 void RtabController::slot_directCodeToggle(std::size_t column)
@@ -653,14 +657,22 @@ void RtabController::slot_setFiltrForSelection(std::string selection){
 
 void RtabController::slot_openExportCSVForm()
 {
-    ExportCSVdialog* dlg = new ExportCSVdialog( m_model->getRdata(),m_grid);
+    auto* dlg = new ExportCSVdialog(
+        m_pRTDM,
+        m_UIForm.TableName(),
+        m_model->getRdata()->get_cols(),
+        m_grid);
     dlg->setAttribute(Qt::WA_DeleteOnClose);
     dlg->show();
 }
 
 void RtabController::slot_openImportCSVForm()
 {
-    auto* dlg = new ImportCSV2dialog( m_model->getRdata(),m_grid);
+    auto* dlg = new ImportCSV2dialog(
+        m_pRTDM,
+        m_UIForm.TableName(),
+        m_model->getRdata()->get_cols(),
+        m_grid);
     dlg->setAttribute(Qt::WA_DeleteOnClose);
     dlg->show();
 }
@@ -707,6 +719,7 @@ void RtabController::applyLinkedFormFromController(const LinkedForm& lf){
 void RtabController::notifyParentRowChanged(int modelRow) {
     m_linkedFormCtrl->onParentRowChanged(modelRow);
 }
+
 Qtitan::GridTableColumn* RtabController::getColumnByIndex(int index) const {
     return static_cast<Qtitan::GridTableColumn*>(m_view->getColumn(index));
 }

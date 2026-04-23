@@ -1,33 +1,32 @@
 #include "colPropDialog.h"
-#include "rdata.h"
 #include <QtitanGrid.h>
 #include <QPlainTextEdit>
 #include <QLineEdit>
 #include <QHBoxLayout>
-#include "qastra.h"
-#include <astra/IPlainRastrWrappers.h>
 
-ColPropDialog::ColPropDialog(RData* prdata, Qtitan::GridTableView* view,
-                         RCol* prcol, QWidget *parent)
+ColPropDialog::ColPropDialog(ITableRepository*                   repo,
+                             const ITableRepository::ColumnSchema& schema,
+                             Qtitan::GridTableView*              view,
+                             QWidget*                            parent)
     : QDialog(parent)
-    , m_prdata(prdata)
-    , m_prcol(prcol)
-    , m_view(view){
-
-    std::string title = prdata->t_name_ + "[" + prdata->t_title_ + "]." +
-                        prcol->getColName() + "[" + prcol->getTitle() + "]";
+    , m_repo(repo)
+    , m_schema(schema)
+    , m_view(view)
+{
+    std::string title = schema.tableName + "." +
+                        schema.name + "[" + schema.title + "]";
     setWindowTitle(QString::fromStdString(title));
     setWindowModality(Qt::ApplicationModal);
     setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Fixed);
 
     setupUi();
 
-    m_leName->setText(QString::fromStdString(prcol->getColName()));
-    m_leTitle->setText(QString::fromStdString(prcol->getTitle()));
-    m_teDescr->appendPlainText(QString::fromStdString(prcol->getDesc()));
-    m_leWidth->setText(QString::fromStdString(prcol->getWidth()));
-    m_lePrecision->setText(QString::fromStdString(prcol->getPrec()));
-    m_leExpression->setText(QString::fromStdString(prcol->getExpr()));
+    m_leName->setText(QString::fromStdString(schema.name));
+    m_leTitle->setText(QString::fromStdString(schema.title));
+    m_teDescr->appendPlainText(QString::fromStdString(schema.description));
+    m_leWidth->setText(QString::fromStdString(schema.width));
+    m_lePrecision->setText(QString::fromStdString(schema.prec));
+    m_leExpression->setText(QString::fromStdString(schema.expression));
 }
 
 void ColPropDialog::setupUi()
@@ -88,36 +87,32 @@ void ColPropDialog::setupUi()
 
 void ColPropDialog::on_btn_ok_clicked()
 {
-    IRastrResultVerify{m_prdata->getAstra()->getRastr()->SetLockEvent(true)};
+    m_repo->setLockEvent(true);
 
-    m_prcol->set_prec(m_prdata->getAstra(),
-                      m_lePrecision->text().toStdString().c_str());
+    m_repo->setColumnProperty(m_schema.tableName, m_schema.name,
+                              FieldProperties::Precision,
+                              m_lePrecision->text().toStdString());
+    m_repo->setColumnProperty(m_schema.tableName, m_schema.name,
+                              FieldProperties::Description,
+                              m_teDescr->toPlainText().toStdString());
+    m_repo->setColumnProperty(m_schema.tableName, m_schema.name,
+                              FieldProperties::Expression,
+                              m_leExpression->text().toStdString());
+    m_repo->setColumnProperty(m_schema.tableName, m_schema.name,
+                              FieldProperties::Title,
+                              m_leTitle->text().toStdString());
+    m_repo->setColumnProperty(m_schema.tableName, m_schema.name,
+                              FieldProperties::Width,
+                              m_leWidth->text().toStdString());
+    m_repo->setLockEvent(false);
 
-    m_prcol->set_prop(m_prdata->getAstra(),
-                      FieldProperties::Description,
-                      m_teDescr->toPlainText().toStdString());
-    m_prcol->set_prop(m_prdata->getAstra(),
-                      FieldProperties::Expression,
-                      m_leExpression->text().toStdString());
-    m_prcol->set_prop(m_prdata->getAstra(),
-                      FieldProperties::Title,
-                      m_leTitle->text().toStdString());
-    m_prcol->set_prop(m_prdata->getAstra(),
-                      FieldProperties::Width,
-                      m_leWidth->text().toStdString());
-
-    long textind = m_prcol->getIndex();
-    IRastrResultVerify{m_prdata->getAstra()->getRastr()->SetLockEvent(false)};
-    // 1. Получаем колонку с правильным приведением типов
-    auto* tableView   = static_cast<Qtitan::GridTableView*>(m_view);
-    auto* column_base = tableView->getColumn(textind);
-    auto* column_qt   = static_cast<Qtitan::GridTableColumn*>(column_base);
-    // 2. Устанавливаем точность (Decimals)
+    // Обновляем decimals в редакторе колонки QTitan
+    auto* column_qt = static_cast<Qtitan::GridTableColumn*>(
+        m_view->getColumn(m_schema.index));
+    // Устанавливаем точность (Decimals)
     if (column_qt) {
-        // 3. Вызываем editorRepository()
-        Qtitan::GridEditorRepository* repo = column_qt->editorRepository();
-        // 4. Приводим репозиторий к числовому типу и устанавливаем точность
-        auto* numEditor = qobject_cast<Qtitan::GridNumericEditorRepository*>(repo);
+        auto* numEditor = qobject_cast<Qtitan::GridNumericEditorRepository*>(
+            column_qt->editorRepository());
         if (numEditor)
             numEditor->setDecimals(m_lePrecision->text().toInt());
     }

@@ -2,6 +2,8 @@
 #include "QDataBlocks.h"
 #include "astra_shared.h"
 
+class CUIForm;
+
 class ITableRepository
 {
 public:
@@ -83,4 +85,21 @@ public:
 
     virtual long tableSize(const std::string& tname) = 0;
     virtual void setTableSize(const std::string& tname, long size) = 0;
+    //──Администрирование ───────────────────────────────────────────────
+    virtual void exportToCsv(const std::string& tname,
+                             const std::string& cols,
+                             const std::string& selection,
+                             const std::string& path,
+                             const std::string& divider,
+                             eCSVCode           mode) = 0;
+    virtual void importToCsv(const std::string& tname,
+                             const std::string& cols,
+                             const std::string& selection,
+                             const std::string& file,
+                             const std::string& divider,
+                             const std::string& byDefault,
+                             eCSVCode           mode) = 0;
+    virtual void setLockEvent(bool lock) = 0;
+
+    virtual CUIForm* getForm(std::string name)= 0;
 };

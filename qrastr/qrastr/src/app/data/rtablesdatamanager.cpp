@@ -17,10 +17,10 @@ void  RTablesDataManager::setForms ( std::list<CUIForm>* _lstUIForms)
     m_plstUIForms = _lstUIForms;
 }
 
-CUIForm*  RTablesDataManager::getForm ( std::string _name)
+CUIForm*  RTablesDataManager::getForm ( std::string name)
 {
     for (CUIForm &form : *m_plstUIForms){
-        if (stringutils::MkToUtf8(form.Name()) == _name){
+        if (stringutils::MkToUtf8(form.Name()) == name){
             return &form;
         }
     }
@@ -81,11 +81,11 @@ std::vector<long> RTablesDataManager::rowsBySelection(const std::string& tname,
 {
     std::vector<long> indices;
     if (selection.empty()) return indices;
-
+    // Передаём строку выборки в плагин
     IRastrTablesPtr tablesx{ m_pqastra->getRastr()->Tables() };
     IRastrTablePtr  table  { tablesx->Item(tname) };
     IRastrResultVerify(table->SetSelection(selection));
-
+    // Получаем индексы строк, прошедших выборку
     DataBlock<FieldVariantData> variantBlock;
     const IRastrPayload keys = table->Key();
     IRastrResultVerify(table->DataBlock(keys.Value(), variantBlock));
@@ -484,4 +484,35 @@ void RTablesDataManager::setTableSize(const std::string& tname, long size)
     IRastrTablesPtr tablesx { m_pqastra->getRastr()->Tables() };
     IRastrTablePtr  table   { tablesx->Item(tname) };
     IRastrResultVerify { table->SetSize(static_cast<IndexT>(size)) };
+}
+
+void RTablesDataManager::exportToCsv(const std::string& tname,
+                                   const std::string& cols,
+                                   const std::string& selection,
+                                   const std::string& path,
+                                   const std::string& divider,
+                                   eCSVCode           mode)
+{
+    IRastrTablesPtr tablesx { m_pqastra->getRastr()->Tables() };
+    IRastrTablePtr  table   { tablesx->Item(tname) };
+    if (!selection.empty())
+        IRastrResultVerify { table->SetSelection(selection) };
+    IRastrResultVerify { table->ToCsv(mode, path, cols, divider) };
+}
+
+void RTablesDataManager::importToCsv(const std::string& tname,
+                                     const std::string& cols,
+                                     const std::string& selection,
+                                     const std::string& file,
+                                     const std::string& divider,
+                                     const std::string& byDefault,
+                                     eCSVCode           mode)
+{
+    IRastrTablesPtr tablesx { m_pqastra->getRastr()->Tables() };
+    IRastrTablePtr  table   { tablesx->Item(tname) };
+    IRastrResultVerify { table->ReadCsv(mode, file, cols, divider, byDefault) };
+}
+
+void RTablesDataManager::setLockEvent(bool lock) {
+    IRastrResultVerify{m_pqastra->getRastr()->SetLockEvent(lock)};
 }

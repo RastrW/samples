@@ -2,23 +2,26 @@
 
 #include <QDialog>
 
-class RData;
 class QLineEdit;
 class QRadioButton;
+class ITableRepository;
 
 class ImportCSV2dialog : public QDialog
 {
     Q_OBJECT
 public:
-    explicit ImportCSV2dialog(RData* prdata,
-                            QWidget *parent = nullptr);
+    explicit ImportCSV2dialog(ITableRepository*  repo,
+                              const std::string& tableName,
+                              const std::string& defaultCols,
+                              QWidget*           parent = nullptr);
     virtual ~ImportCSV2dialog() = default;
 private slots:
     void on_pushButton_clicked();
     void on_buttonBox_accepted();
 
 private:
-    RData*        m_prdata;
+    ITableRepository* m_repo;
+
     QLineEdit*    m_leFile;
     QLineEdit*    m_leTname;
     QLineEdit*    m_leParams;

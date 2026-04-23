@@ -8,12 +8,12 @@
 #include "linkedform.h"
 #include "UIForms.h"
 
-class QAstra;
-class RTablesDataManager;
 class RModel;
 class RtabWidget;
 class PyHlp;
 class QWidget;
+class RTablesDataManager;
+class QAstra;
 
 namespace ads      {class CDockManager;
                     class CDockWidget;}
@@ -32,7 +32,7 @@ class LinkedFormController : public QObject
 public:
     explicit LinkedFormController(
         QAstra*                  qastra,
-        RTablesDataManager*      rtdm,
+        RTablesDataManager*      pRTDM,
         ads::CDockManager*       dockManager,
         Qtitan::GridTableView*   view,
         RModel*                  model,
@@ -78,8 +78,8 @@ private:
     /// @brief Читает long-значение ячейки из кешированного DataBlock модели.
     int getLongValue(const std::string& col, long row);
 
-    QAstra*                  m_qastra;
-    RTablesDataManager*      m_rtdm;
+    QAstra*                  m_qastra;   // только для new RtabController(...)
+    RTablesDataManager*      m_rtdm;     // для всех обращений к данным плагина
     ads::CDockManager*       m_dockManager;
     Qtitan::GridTableView*   m_view;         ///< не владеет; живёт дольше
     RModel*                  m_model;        ///< не владеет; живёт дольше

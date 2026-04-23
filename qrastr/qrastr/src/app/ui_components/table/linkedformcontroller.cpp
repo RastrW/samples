@@ -2,8 +2,6 @@
 
 #include "rtabController.h"
 #include "rtabshell.h"
-
-#include "qastra.h"
 #include "rtablesdatamanager.h"
 #include "rmodel.h"
 #include "rdata.h"
@@ -17,14 +15,13 @@
 
 #include <QDir>
 
-#include <fstream>
 #include <fmt/format.h>
 #include <spdlog/spdlog.h>
-#include "QDataBlocks.h"
+#include "ITableRepository.h"
 
 LinkedFormController::LinkedFormController(
     QAstra*                  qastra,
-    RTablesDataManager*      rtdm,
+    RTablesDataManager*      pRTDM,
     ads::CDockManager*       dockManager,
     Qtitan::GridTableView*   view,
     RModel*                  model,
@@ -32,15 +29,13 @@ LinkedFormController::LinkedFormController(
     RtabController*          parentController)
     : QObject(parentController)
     , m_qastra(qastra)
-    , m_rtdm(rtdm)
+    , m_rtdm(pRTDM)
     , m_dockManager(dockManager)
     , m_view(view)
     , m_model(model)
     , m_form(form)
     , m_parentController(parentController)
-    , m_childDockWidget(nullptr)
 {}
-
 void LinkedFormController::disconnectAll()
 {
     // Отключаем соединения focusRowChanged → child
@@ -58,7 +53,10 @@ void LinkedFormController::openLinkedForm(LinkedForm lf)
     if (!pUIForm) return;
     // Создаём дочерний виджет — он заведёт собственный LinkedFormController
     auto* child = new RtabController(
-        m_qastra, *pUIForm, m_rtdm, m_dockManager,
+        m_qastra,
+        *pUIForm,
+        m_rtdm,
+        m_dockManager,
         nullptr); //parent для QObject, dock управляет временем жизни
 
     if (m_pyHlp)
@@ -231,33 +229,23 @@ void LinkedFormController::applyLinkedForm(LinkedForm lf)
 {
     m_lf = lf;
 
+    const std::string tname     = m_model->getRdata()->t_name_;
     const std::string selection = lf.get_selection_result();
 
-    // Передаём строку выборки в плагин
-    IRastrTablesPtr tablesx{ m_qastra->getRastr()->Tables() };
-    IRastrTablePtr  table{ tablesx->Item(m_model->getRdata()->t_name_) };
-    IRastrResultVerify(table->SetSelection(selection));
+    const std::vector<long> indices = m_rtdm->rowsBySelection(tname, selection);
 
-    // Получаем индексы строк, прошедших выборку
-    DataBlock<FieldVariantData> variantBlock;
-    const IRastrPayload keys = table->Key();
-    IRastrResultVerify(table->DataBlock(keys.Value(), variantBlock));
-    const auto indices = variantBlock.IndexesVector();
-
-	//Создаём CustomFilterCondition для QTitan Grid с этими индексами
+    //Создаём CustomFilterCondition для QTitan Grid с этими индексами
     auto* groupCondition = new GridFilterGroupCondition(m_view->filter());
     auto* condition      = new CustomFilterCondition(m_view->filter());
     groupCondition->addCondition(condition);
 
     for (long idx : indices)
         condition->addRow(idx);
-	
-	//Активируем фильтр — Grid показывает только нужные строки.
+    //Активируем фильтр — Grid показывает только нужные строки.
     m_view->filter()->setCondition(groupCondition, true);
     m_view->filter()->setActive(true);
     m_view->showFilterPanel();
 }
-
 
 void LinkedFormController::onParentRowChanged(int newRow)
 {

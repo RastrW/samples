@@ -4,12 +4,16 @@
 class RData;
 class QLineEdit;
 class QRadioButton;
+class ITableRepository;
 
 class ExportCSVdialog : public QDialog
 {
     Q_OBJECT
 public:
-    explicit ExportCSVdialog(RData* _prdata, QWidget *parent = nullptr);
+    explicit ExportCSVdialog(ITableRepository* repo,
+                             const std::string& tableName,
+                             const std::string& defaultCols,
+                             QWidget* parent = nullptr);
     ~ExportCSVdialog() = default;
 
 private slots:
@@ -17,7 +21,7 @@ private slots:
     void accept() override;
 
 private:
-    RData*        prdata_;
+    ITableRepository*              m_repo;
     std::string   m_path;
     QLineEdit*    m_lePath;
     QLineEdit*    m_leTable;

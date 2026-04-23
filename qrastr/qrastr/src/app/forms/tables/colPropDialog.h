@@ -2,6 +2,7 @@
 
 #include <QDialog>
 #include <QString>
+#include "ITableRepository.h"
 
 namespace Qtitan   { class GridTableView; }
 
@@ -13,27 +14,27 @@ class QLineEdit;
 class ColPropDialog : public QDialog
 {
     Q_OBJECT
-
 public:
-    explicit ColPropDialog(RData* prdata,
-                         Qtitan::GridTableView* view,
-                         RCol* prcol, QWidget *parent = nullptr);
+    explicit ColPropDialog(ITableRepository*                   repo,
+                           const ITableRepository::ColumnSchema& schema,
+                           Qtitan::GridTableView*              view,
+                           QWidget*                            parent = nullptr);
     ~ColPropDialog() = default;
 
 private slots:
     void on_btn_ok_clicked();
 
 private:
-    Qtitan::GridTableView* m_view;
-    RData*  m_prdata;
-    RCol*   m_prcol;
+    ITableRepository*              m_repo;
+    ITableRepository::ColumnSchema m_schema;   // копия — имя, таблица, индекс
+    Qtitan::GridTableView*         m_view;
 
-    QLineEdit* m_leName;
-    QLineEdit* m_leTitle;
+    QLineEdit*      m_leName;
+    QLineEdit*      m_leTitle;
     QPlainTextEdit* m_teDescr;
-    QLineEdit* m_leWidth;
-    QLineEdit* m_lePrecision;
-    QLineEdit* m_leExpression;
+    QLineEdit*      m_leWidth;
+    QLineEdit*      m_lePrecision;
+    QLineEdit*      m_leExpression;
 
     void setupUi();
 };

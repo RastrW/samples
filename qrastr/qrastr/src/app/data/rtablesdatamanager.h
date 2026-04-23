@@ -29,7 +29,6 @@ class RTablesDataManager : public QObject, public ITableRepository
 public:
     void setQAstra( QAstra* _pqastra);
     void setForms ( std::list<CUIForm>* _lstUIForms);
-    CUIForm* getForm ( std::string _name);
     ///< Обработчик событий от Rastr
     void onRastrHint(const _hint_data& hint_data);
 
@@ -88,6 +87,22 @@ public:
 
     long tableSize(const std::string& tname) override;
     void setTableSize(const std::string& tname, long size) override;
+    //──Администрирование ───────────────────────────────────────────────
+    void exportToCsv(const std::string& tname,
+                     const std::string& cols,
+                     const std::string& selection,
+                     const std::string& path,
+                     const std::string& divider,
+                     eCSVCode           mode) override;
+    void importToCsv(const std::string& tname,
+                     const std::string& cols,
+                     const std::string& selection,
+                     const std::string& file,
+                     const std::string& divider,
+                     const std::string& byDefault,
+                     eCSVCode           mode) override;
+    void setLockEvent(bool lock) override;
+    CUIForm* getForm ( std::string name) override;
 signals:
     ///< изменены данные в диапазоне
     void sig_dataChanged(std::string tname,int row_from ,

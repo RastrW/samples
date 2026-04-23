@@ -9,12 +9,13 @@
 #include <QRadioButton>
 #include <QDialogButtonBox>
 #include <QLabel>
-#include "qastra.h"
-#include "rdata.h"
-#include <astra/IPlainRastrWrappers.h>
+#include "ITableRepository.h"
 
-ExportCSVdialog::ExportCSVdialog(RData* _prdata, QWidget *parent)
-    : QDialog(parent), prdata_(_prdata)
+ExportCSVdialog::ExportCSVdialog(ITableRepository* repo,
+                                 const std::string& tableName,
+                                 const std::string& defaultCols,
+                                 QWidget* parent)
+    : QDialog(parent), m_repo(repo)
 {
     setWindowTitle(tr("Экспорт в формате CSV"));
 
@@ -44,8 +45,8 @@ ExportCSVdialog::ExportCSVdialog(RData* _prdata, QWidget *parent)
     gbLay->addLayout(radioRow);
 
     // --- Нижняя часть ---
-    m_leTable = new QLineEdit(_prdata->t_name_.c_str());
-    m_leParam = new QLineEdit(_prdata->get_cols().c_str());
+    m_leTable = new QLineEdit(QString::fromStdString(tableName));
+    m_leParam = new QLineEdit(QString::fromStdString(defaultCols));
     m_leSeparator = new QLineEdit(";");
     m_leSeparator->setFixedWidth(50);
     m_leSelection = new QLineEdit();
@@ -86,21 +87,16 @@ void ExportCSVdialog::on_pushButton_clicked()
 
 void ExportCSVdialog::accept()
 {
-    std::string table_name = m_leTable->text().toStdString();
-    std::string div        = m_leSeparator->text().toStdString();
-    std::string cols       = m_leParam->text().toStdString();
-    std::string selection  = m_leSelection->text().toStdString();
-
-    IRastrTablesPtr tablesx{ prdata_->getAstra()->getRastr()->Tables() };
-    IRastrTablePtr  table{ tablesx->Item(table_name) };
-    if (!selection.empty())
-        IRastrResultVerify{table->SetSelection(selection)};
-
     eCSVCode kod = eCSVCode::Replace;
-    if (m_rbOverwrite->isChecked())   kod = eCSVCode::Replace;
-    if (m_rbExtend->isChecked()) kod = eCSVCode::KeyAdd;
+    if (m_rbExtend->isChecked())          kod = eCSVCode::KeyAdd;
     if (m_rbOverwriteHeaders->isChecked()) kod = eCSVCode::ReplaceName;
 
-    IRastrResultVerify{table->ToCsv(kod, m_path, cols, div)};
+    m_repo->exportToCsv(
+        m_leTable->text().toStdString(),
+        m_leParam->text().toStdString(),
+        m_leSelection->text().toStdString(),
+        m_path,
+        m_leSeparator->text().toStdString(),
+        kod);
     close();
 }

@@ -8,12 +8,14 @@
 #include <QFormLayout>
 #include <QLabel>
 #include <QDialogButtonBox>
-#include "rdata.h"
-#include "qastra.h"
-#include <astra/IPlainRastrWrappers.h>
+#include "astra/IPlainRastr.h"
+#include "rtablesdatamanager.h"
 
-ImportCSV2dialog::ImportCSV2dialog(RData* prdata, QWidget *parent)
-    : QDialog(parent), m_prdata(prdata)
+ImportCSV2dialog::ImportCSV2dialog(ITableRepository*  repo,
+                                   const std::string& tableName,
+                                   const std::string& defaultCols,
+                                   QWidget*           parent)
+    : QDialog(parent), m_repo(repo)
 {
     setWindowTitle(tr("Импорт из формата CSV"));
 
@@ -47,10 +49,10 @@ ImportCSV2dialog::ImportCSV2dialog(RData* prdata, QWidget *parent)
     gbLay->addLayout(radioGrid);
 
     // --- Fields below groupBox ---
-    m_leTname     = new QLineEdit(m_prdata->t_name_.c_str());
+    m_leTname  = new QLineEdit(QString::fromStdString(tableName));
     m_leDivider   = new QLineEdit(";");
     m_leDivider->setFixedWidth(50);
-    m_leParams    = new QLineEdit(m_prdata->get_cols().c_str());
+    m_leParams = new QLineEdit(QString::fromStdString(defaultCols));
     m_leSelection   = new QLineEdit();
     m_leByDefault = new QLineEdit();
 
@@ -89,23 +91,22 @@ void ImportCSV2dialog::on_pushButton_clicked()
 
 void ImportCSV2dialog::on_buttonBox_accepted()
 {
-    std::string table_name = m_leTname->text().toStdString();
-    std::string div        = m_leSelection->text().toStdString();
-    std::string cols       = m_leParams->text().toStdString();
-    std::string selection  = m_leSelection->text().toStdString();
+    eCSVCode kod = eCSVCode::Key;  // Обновить — по умолчанию
+    if (m_rbAdd->isChecked())    kod = eCSVCode::Add;
+    if (m_rbLoad->isChecked())   kod = eCSVCode::Replace;
+    if (m_rbLoad2->isChecked())  kod = eCSVCode::Index;
+    if (m_rbUnion->isChecked())  kod = eCSVCode::KeyAdd;
+    if (m_rbUpdate->isChecked()) kod = eCSVCode::Key;
 
-    IRastrTablesPtr tablesx{ m_prdata->getAstra()->getRastr()->Tables() };
-    IRastrTablePtr  table{ tablesx->Item(table_name) };
+    m_repo->importToCsv(
+        m_leTname->text().toStdString(),
+        m_leParams->text().toStdString(),
+        m_leSelection->text().toStdString(),
+        m_leFile->text().toStdString(),
+        m_leDivider->text().toStdString(),
+        m_leByDefault->text().toStdString(),
+        kod);
 
-    eCSVCode kod = eCSVCode::Replace;
-    if (m_rbAdd->isChecked())    {kod = eCSVCode::Add;}
-    if (m_rbLoad->isChecked())   {kod = eCSVCode::Replace;}
-    if (m_rbLoad2->isChecked())  {kod = eCSVCode::Index;}
-    if (m_rbUnion->isChecked())  {kod = eCSVCode::KeyAdd;}
-    if (m_rbUpdate->isChecked()) {kod = eCSVCode::Key;}
-
-    std::string file = m_leFile->text().toStdString();
-    IRastrResultVerify{table->ReadCsv(kod, file, cols, div, "")};
     close();
 }
 
