@@ -1,8 +1,8 @@
 #pragma once
 #include <QObject>
-#include <filesystem>
 
 class QAstra;
+class QDir;
 
 /**
  * @brief Загружает стартовые шаблоны и файлы через m_qastra->Load().
@@ -33,8 +33,8 @@ signals:
     void loadWarning(const QString& message);
 
 private:
-    bool loadTemplates(const std::filesystem::path& templatesDir);
-    bool loadFiles(const std::filesystem::path& templatesDir);
+    bool loadTemplates(const QDir& templatesDir);
+    bool loadFiles(const QDir& templatesDir);
 
     std::shared_ptr<QAstra> m_qastra;
     QWidget*                m_parentWidget;

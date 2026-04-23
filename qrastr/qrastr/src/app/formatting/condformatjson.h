@@ -1,6 +1,6 @@
 #pragma once
 #include "json.hpp"
-#include <filesystem>
+#include <QDir>
 
 class CondFormat;
 
@@ -24,9 +24,8 @@ public:
 
 private:
     // Путь к файлу — константа, не нужно передавать через конструктор.
-    static std::filesystem::path jsonPath()
-    {
-        return std::filesystem::current_path() / "highlightsettings.json";
+    static QString jsonPath() {
+        return QDir::current().filePath("highlightsettings.json");
     }
 
     // Сериализовать форматы одной таблицы в JSON-объект.

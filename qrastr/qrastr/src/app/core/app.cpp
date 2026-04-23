@@ -81,20 +81,20 @@ bool App::init(){
 #endif
         bool res = readSettings();
 
-        const bool bl_res = QDir::setCurrent(RastrParameters::get_instance()->getDirData().path());
-            assert(bl_res==true);
+        const bool bl_res = QDir::setCurrent(
+            RastrParameters::get_instance()->getDirData().path());
+        assert(bl_res);
 
-        fs::path path_log{ RastrParameters::get_instance()->getDirData().absolutePath().toStdString() };
-        path_log /= L"qrastr_log.txt";
-
-        auto file_sink = std::make_shared<spdlog::sinks::rotating_file_sink_mt>
-            ( path_log.string(), 1024*1024*1, 3);
+        const std::string log_path =
+            RastrParameters::get_instance()->getLogDirPath() + "/qrastr_log.txt";
+        auto file_sink = std::make_shared<spdlog::sinks::rotating_file_sink_mt>(
+            log_path, 1024 * 1024 * 1, 3);
         logg->sinks().push_back(file_sink);
         spdlog::flush_every(std::chrono::seconds(1));
 
         // Теперь есть консоль + файл — сбрасываем кэш readSettings
         m_v_cache_log.add(spdlog::level::info, "ReadSetting: {}", res);
-        m_v_cache_log.add(spdlog::level::info, "Log: {}", path_log.generic_u8string());
+        m_v_cache_log.add(spdlog::level::info, "Log: {}", log_path);
         // Флашим ТОЛЬКО в file+console синки, НЕ очищаем кэш:
 #ifdef _DEBUG
         m_v_cache_log.flushToSinks({qt_sink, file_sink});
@@ -113,65 +113,53 @@ bool App::init(){
 }
 
 bool App::readSettings(){
-    try{
+    try {
         RastrParameters::construct();
-        QString qstr_curr_path = QDir::currentPath();
-        std::string str_path_2_conf = "undef";
-#if(defined(COMPILE_WIN))
-        str_path_2_conf = qstr_curr_path.toStdString()+ "/../"+
-                          RastrParameters::pch_dir_data_ +"/"+ RastrParameters::pch_fname_appsettings;
-#else
-        //str_path_2_conf = R"(/home/ustas/projects/git_web/samples/qrastr/qrastr/appsettings.json)";
-        str_path_2_conf = qstr_curr_path.toStdString()+ "/../"+RastrParameters::pch_dir_data_ +"/"+ RastrParameters::pch_fname_appsettings;
-        // QMessageBox mb( QMessageBox::Icon::Critical, QObject::tr("Error"), QString("In lin not implemented!") );  mb.exec();
-#endif
-        QFileInfo fi_appsettings(str_path_2_conf.c_str());
+
+        const QString confPath =
+            QDir::cleanPath(
+                QDir::currentPath() + "/../" +
+                RastrParameters::pch_dir_data_ + "/" +
+                RastrParameters::pch_fname_appsettings);
+
+        QFileInfo fi(confPath);
         auto* const p_params = RastrParameters::get_instance();
-        if(p_params!=nullptr){
-            p_params->setDirData(fi_appsettings.dir());
-            const bool bl_res = QDir::setCurrent(p_params->getDirData().path());
-            if(bl_res == true){
-                m_v_cache_log.add(spdlog::level::info, "Set DataDir: {}",
-                                  p_params->getDirData().path().toStdString());
-            }else{
-                m_v_cache_log.add(spdlog::level::err, "Can't set DataDir: {}",
-                                  p_params->getDirData().path().toStdString());
-            }
-            if(!p_params->readJsonFile(str_path_2_conf)){
-                //повреждённый JSON или проблемы с правами доступа
-                m_v_cache_log.add(spdlog::level::err,
-                                  "ReadJsonFile failed: {}", str_path_2_conf);
-                QMessageBox mb(QMessageBox::Icon::Critical,
-                               QObject::tr("Error"),
-                               QObject::tr("Failed to parse appsettings.json.\n"
-                                           "Check file for errors or delete it to reset defaults."));
-                mb.exec();
-                return false;
-            }
-            p_params->setFileAppsettings(str_path_2_conf);
-            m_v_cache_log.add(spdlog::level::info, "ReadTemplates: {}",
-                              p_params->getDirSHABLON().absolutePath().toStdString());
 
-            if(!p_params->readTemplates()){
-                m_v_cache_log.add(spdlog::level::err, "Error while read");
-            }
-            m_v_cache_log.add(spdlog::level::info, "ReadForms: {}",
-                              p_params->getPathForms().string());
-            if(!p_params->readFormsExists()){
-                m_v_cache_log.add(spdlog::level::err, "Error while read existed forms");
-            }
-            if(!p_params->readForms()){
-                m_v_cache_log.add(spdlog::level::err, "Error while read");
-            }
+        p_params->setDirData(fi.dir());
 
-        }else{
-            m_v_cache_log.add(spdlog::level::err, "Can't create singleton Params");
+        const bool bl_res = QDir::setCurrent(p_params->getDirData().path());
+        m_v_cache_log.add(bl_res ? spdlog::level::info : spdlog::level::err,
+                          bl_res ? "Set DataDir: {}" : "Can't set DataDir: {}",
+                          p_params->getDirData().path().toStdString());
+
+        // readJsonFile теперь принимает QString — передаём напрямую
+        if (!p_params->readJsonFile(confPath)) {
+            //повреждённый JSON или проблемы с правами доступа
+            m_v_cache_log.add(spdlog::level::err,
+                              "ReadJsonFile failed: {}", confPath.toStdString());
+            QMessageBox::critical(
+                nullptr, QObject::tr("Ошибка"),
+                QObject::tr("Не удалось разобрать appsettings.json.\n"
+                            "Файл повреждён — удалите его для сброса настроек."));
+            return false;
         }
-    }catch(const std::exception& ex){
-        m_v_cache_log.add( spdlog::level::err,"Exception: {} ", ex.what());
+
+        p_params->setFileAppsettings(confPath);
+
+        m_v_cache_log.add(spdlog::level::info, "ReadTemplates: {}",
+                          p_params->getDirSHABLON().absolutePath().toStdString());
+        if (!p_params->readTemplates())
+            m_v_cache_log.add(spdlog::level::err, "Error reading templates");
+
+        m_v_cache_log.add(spdlog::level::info, "ReadForms: {}",
+                          p_params->getDirForms().absolutePath().toStdString());
+        if (!p_params->readFormsExists())
+            m_v_cache_log.add(spdlog::level::err, "Error reading existed forms");
+    } catch (const std::exception& ex) {
+        m_v_cache_log.add(spdlog::level::err, "Exception: {}", ex.what());
         return false;
-    }catch(...){
-        m_v_cache_log.add( spdlog::level::err,"Unknown exception.");
+    } catch (...) {
+        m_v_cache_log.add(spdlog::level::err, "Unknown exception.");
         return false;
     }
     return true;
@@ -356,32 +344,30 @@ bool App::loadPlugins(){
 }
 
 bool App::deserializeForms(){
-    try{
-        std::filesystem::path path_forms ("form");
-        std::filesystem::path path_form_load;
+    try {
+        const QDir& formsDir = RastrParameters::get_instance()->getDirForms();
 
-        //on Windows, you MUST use 8bit ANSI (and it must match the user's locale) or UTF-16 !! Unicode!
-        //!!! https://stackoverflow.com/questions/30829364/open-utf8-encoded-filename-in-c-windows  !!!
-        for(const RastrParameters::_v_forms::value_type &form : RastrParameters::get_instance()->getStartLoadForms()){
-            std::filesystem::path path_file_form = stringutils::utf8_decode(form);
-            path_form_load =  path_forms / path_file_form;
+        for (const auto& form : RastrParameters::get_instance()->getStartLoadForms()) {
+            const QString fullPath =
+                formsDir.filePath(QString::fromUtf8(form.c_str()));
 
-            auto tempCollection = std::make_unique<CUIFormsCollection>();
+            //только как локальная переменная для CUIFormCollectionSerializerBinary
+            const fs::path path_form(fullPath.toStdWString());
 
-            if (path_form_load.extension() == ".fm")
-                *tempCollection = CUIFormCollectionSerializerBinary
-                                       (path_form_load).Deserialize();
+            CUIFormsCollection tmp;
+            if (path_form.extension() == ".fm")
+                tmp = CUIFormCollectionSerializerBinary(path_form).Deserialize();
             else
-                *tempCollection = CUIFormCollectionSerializerJson
-                                       (path_form_load).Deserialize();
-            for(const  CUIForm& uiform : tempCollection->Forms()){
-                upCUIFormsCollection_->Forms().emplace_back(uiform);
-            }
+                tmp = CUIFormCollectionSerializerJson(path_form).Deserialize();
+
+            auto& dest = upCUIFormsCollection_->Forms();
+            for (auto& uiform : tmp.Forms())
+                dest.emplace_back(std::move(uiform));
         }
-    }catch(const std::exception& ex){
+    } catch (const std::exception& ex) {
         exclog(ex);
         return false;
-    }catch(...){
+    } catch (...) {
         exclog();
         return false;
     }

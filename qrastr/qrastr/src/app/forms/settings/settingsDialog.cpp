@@ -8,7 +8,6 @@
 #include <QMessageBox>
 #include <QCloseEvent>
 
-#include <filesystem>
 #include "qastra.h"
 #include "rastrParameters.h"
 #include "dataSettingsWidget.h"
@@ -190,7 +189,8 @@ void SettingsDialog::setAppSettingsChanged() {
     m_pbApplySettings->setEnabled(true);
 }
 
-void SettingsDialog::onBtnApplyClick() {
+void SettingsDialog::onBtnApplyClick()
+{
     // Применить изменения со всех виджетов
     for (auto* widget : m_settingWidgets) {
         if (widget != nullptr) {
@@ -199,26 +199,30 @@ void SettingsDialog::onBtnApplyClick() {
     }
 
     RastrParameters* p_params = RastrParameters::get_instance();
-    const std::filesystem::path path_appsettings = p_params->getFileAppsettings();
+    const QString path_appsettings = p_params->getFileAppsettings();
+    const QFileInfo fi(path_appsettings);
 
-    if (std::filesystem::exists(path_appsettings)) {
+    if (fi.exists()) {
         QMessageBox msgBox(this);
         msgBox.setText(tr("Файл существует. Перезаписать?"));
         msgBox.setIcon(QMessageBox::Question);
         msgBox.setStandardButtons(QMessageBox::Yes | QMessageBox::No | QMessageBox::Cancel);
         msgBox.setDefaultButton(QMessageBox::No);
 
-        if (QMessageBox::Yes == msgBox.exec()) {
-            // Создать резервную копию
-            std::filesystem::path path_appsettings_backup = path_appsettings;
-            path_appsettings_backup.replace_filename(
-                path_appsettings.stem().string() + "_backup" +
-                path_appsettings.extension().string());
+        if (msgBox.exec() == QMessageBox::Yes) {
+            const QString backupPath =
+                fi.dir().filePath(
+                    fi.completeBaseName() + "_backup" +
+                    (fi.suffix().isEmpty() ? "" : "." + fi.suffix())
+                    );
 
             try {
-                std::filesystem::copy(path_appsettings, path_appsettings_backup,
-                                      std::filesystem::copy_options::overwrite_existing);
-                spdlog::info("Создана резервная копия: {}", path_appsettings_backup.string());
+                QFile::remove(backupPath);
+                if (!QFile::copy(path_appsettings, backupPath)) {
+                    throw std::runtime_error("QFile::copy failed");
+                }
+
+                spdlog::info("Создана резервная копия: {}", backupPath.toStdString());
             } catch (const std::exception& e) {
                 spdlog::error("Не удалось создать резервную копию: {}", e.what());
                 QMessageBox::warning(this, tr("Ошибка"),
@@ -226,7 +230,7 @@ void SettingsDialog::onBtnApplyClick() {
                 return;
             }
 
-            if (p_params->writeJsonFile(path_appsettings.string())) {
+            if (p_params->writeJsonFile(path_appsettings)) {
                 m_settingsChanged = false;
                 m_pbApplySettings->setEnabled(false);
                 spdlog::info("Настройки успешно сохранены");
@@ -237,12 +241,12 @@ void SettingsDialog::onBtnApplyClick() {
             }
         }
     } else {
-
-        spdlog::error("Файл настроек не найден: {} и будет создан заново" , path_appsettings.string());
+        spdlog::error("Файл настроек не найден: {} и будет создан заново",
+                      path_appsettings.toStdString());
         QMessageBox::warning(this, tr("Ошибка"),
                              tr("Файл настроек не найден и будет создан заново"));
 
-        if (p_params->writeJsonFile(path_appsettings.string())) {
+        if (p_params->writeJsonFile(path_appsettings)) {
             m_settingsChanged = false;
             m_pbApplySettings->setEnabled(false);
             spdlog::info("Настройки успешно сохранены");

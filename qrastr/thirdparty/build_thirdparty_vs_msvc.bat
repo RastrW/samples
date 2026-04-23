@@ -558,14 +558,14 @@ for %%T in (%BUILD_TYPES%) do (
         REM call :build_library "spdlog" "%THIRDPARTY_DIR%\spdlog" "%%T" "-DSPDLOG_FMT_EXTERNAL=ON -DBUILD_SHARED_LIBS=OFF -DCMAKE_MSVC_RUNTIME_LIBRARY=MultiThreaded"
     )
     
-	call :build_scintilla "%THIRDPARTY_DIR%\scintilla" "%%T"   
+	REM call :build_scintilla "%THIRDPARTY_DIR%\scintilla" "%%T"   
     REM call :build_library "SDL3" "%THIRDPARTY_DIR%\SDL" "%%T" "-DSDL_TESTS=OFF -DSDL_EXAMPLES=OFF -DSDL_INSTALL=ON -DSDL_SHARED=ON -DSDL_STATIC=OFF"
     REM call :build_library "SDL3_image" "%THIRDPARTY_DIR%\SDL_image" "%%T" "-DSDL3IMAGE_SAMPLES=OFF -DBUILD_SHARED_LIBS=ON"
     REM call :build_lexilla "%THIRDPARTY_DIR%\lexilla\src" "%%T"
     REM call :build_library "qtadvanceddocking" "%THIRDPARTY_DIR%\Qt-Advanced-Docking-System" "%%T" "-DBUILD_EXAMPLES=OFF -DBUILD_SHARED_LIBS=ON"
     REM call :build_metakit "%THIRDPARTY_DIR%\metakit" "%%T"
-    call :build_qmake_library "ScintillaEditBase" "%THIRDPARTY_DIR%\scintilla\qt\ScintillaEditBase" "%%T" "0"
-    call :build_qmake_library "ScintillaEdit" "%THIRDPARTY_DIR%\scintilla\qt\ScintillaEdit" "%%T" "1"
+    REM call :build_qmake_library "ScintillaEditBase" "%THIRDPARTY_DIR%\scintilla\qt\ScintillaEditBase" "%%T" "0"
+    REM call :build_qmake_library "ScintillaEdit" "%THIRDPARTY_DIR%\scintilla\qt\ScintillaEdit" "%%T" "1"
    
     REM Очищаем временную папку bin
     if exist "%THIRDPARTY_DIR%\..\bin" (

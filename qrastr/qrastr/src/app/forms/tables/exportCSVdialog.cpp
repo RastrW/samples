@@ -78,7 +78,7 @@ void ExportCSVdialog::on_pushButton_clicked()
     QFileDialog fileDlg(this);
     fileDlg.setAcceptMode(QFileDialog::AcceptSave);
     fileDlg.setWindowTitle("Сохранение");
-    fileDlg.setDirectory(QString::fromStdString(std::filesystem::current_path().string()));
+    fileDlg.setDirectory(QDir::currentPath());
     if (fileDlg.exec() == QDialog::Rejected) return;
     m_path = (fileDlg.selectedFiles())[0].toStdString();
     m_lePath->setText(m_path.c_str());

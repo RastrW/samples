@@ -86,18 +86,17 @@ int FileManager::openFiles() {
 
             templateFound = true;
             try {
-                const fs::path shablon =
-                    fs::path(RastrParameters::get_instance()->getDirSHABLON()
-                                 .absolutePath().toStdString())
-                    / (name + ext);
+                const QString shablon =
+                    RastrParameters::get_instance()->getDirSHABLON()
+                        .filePath(QString::fromStdString(name + ext));
 
                 IPlainRastrRetCode res = m_qastra->Load(
                     eLoadCode::RG_REPL,
                     file.toStdString(),
-                    shablon.string());
+                    shablon.toStdString());
 
-                if (res == IPlainRastrRetCode::Ok) {
-                    setCurrentFile(file, QString::fromStdString(shablon.string()));
+                if (res == IPlainRastrRetCode::Ok){
+                    setCurrentFile(file, shablon);
                     ++successCount;
                 } else {
                     emit fileLoadError(QString("Failed to load: %1").arg(file));

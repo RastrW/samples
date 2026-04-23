@@ -82,7 +82,7 @@ void ImportCSV2dialog::on_pushButton_clicked()
     QFileDialog fileDlg(this);
     fileDlg.setAcceptMode(QFileDialog::AcceptOpen);
     fileDlg.setWindowTitle("Открытие");
-    fileDlg.setDirectory(QString::fromStdString(std::filesystem::current_path().string()));
+    fileDlg.setDirectory(QDir::currentPath());
     if (fileDlg.exec() == QDialog::Rejected) {return;}
     m_leFile->setText((fileDlg.selectedFiles())[0]);
 }

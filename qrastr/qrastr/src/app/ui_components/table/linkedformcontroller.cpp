@@ -17,13 +17,10 @@
 
 #include <QDir>
 
-#include <filesystem>
 #include <fstream>
 #include <fmt/format.h>
 #include <spdlog/spdlog.h>
 #include "QDataBlocks.h"
-
-namespace fs = std::filesystem;
 
 LinkedFormController::LinkedFormController(
     QAstra*                  qastra,
@@ -110,37 +107,43 @@ void LinkedFormController::openLinkedMacro(LinkedMacro lm, int contextRow)
 {
     spdlog::info("LinkedFormController: run macro {}", lm.macrofile.c_str());
 
-    // Макросы лежат в <рабочая директория>/contextmacro/  с расширением .py
-    fs::path macroPath = QDir::currentPath().toStdString();
+    // ── Путь к макросу ────────────────────────────────────────────
+    const QString macroPath =
+        QDir::current().filePath(
+            "contextmacro/" +
+            QFileInfo(QString::fromStdString(lm.macrofile)).completeBaseName() +
+            ".py");
 
-    macroPath /= "contextmacro";
-    macroPath /= lm.macrofile;
-    macroPath.replace_extension(".py");
-    if (!fs::exists(macroPath))
-    {
-        spdlog::warn("context macro not found: {}", macroPath.string());
+    if (!QFileInfo::exists(macroPath)) {
+        spdlog::warn("context macro not found: {}", macroPath.toStdString());
         return;
     }
 
     // Чтобы макросы работали в Data должен лежать astra_py. модуль
-    fs::path astra_py_Path = QDir::currentPath().toStdString() + "/../Data/astr_py/Release/";
 #ifdef _WIN32
-    astra_py_Path /= "astra_py.cp312-win_amd64.pyd";
+    const QString astraPyFile = "astra_py.cp312-win_amd64.pyd";
 #else
-    astra_py_Path /= "astra_py.cpython-311-x86_64-linux-gnu.so";
+    const QString astraPyFile = "astra_py.cpython-311-x86_64-linux-gnu.so";
 #endif
-    if (!fs::exists(astra_py_Path))
-    {
-        spdlog::warn("astra_py. module not found: {}", astra_py_Path.string());
+    // QDir::cleanPath убирает лишние /../ из пути
+    const QString astraPyPath =
+        QDir::cleanPath(
+            QDir::current().filePath("../Data/astr_py/Release/" + astraPyFile));
+
+    if (!QFileInfo::exists(astraPyPath)) {
+        spdlog::warn("astra_py module not found: {}", astraPyPath.toStdString());
         return;
     }
 
-    std::ifstream file(macroPath);
-    std::string content(
-        (std::istreambuf_iterator<char>(file)),
-        std::istreambuf_iterator<char>());
+    // ── Чтение файла макроса ──────────────────────────────────────
+    QFile file(macroPath);
+    if (!file.open(QIODevice::ReadOnly | QIODevice::Text)) {
+        spdlog::error("Cannot open macro file: {}", macroPath.toStdString());
+        return;
+    }
+    std::string content = file.readAll().toStdString();
 
-    // Вставляем в начало макроса отладочный вывод и переменную aRow
+    // ── Вставляем отладочный заголовок ───────────────────────────
     const std::string debugLine = fmt::format(
         "rastr.print(f\"run contextmacro: {}[row={}]\")\n",
         lm.macrofile, contextRow);
@@ -150,26 +153,22 @@ void LinkedFormController::openLinkedMacro(LinkedMacro lm, int contextRow)
     content.insert(0, aRowLine);
     content.insert(0, debugLine);
 
-    if (m_pyHlp)
-    {
-        PyHlp::Result py_res = m_pyHlp->run(content.data());
-        switch(py_res)
-        {
-        case PyHlp::Result::Error:
-            spdlog::warn("LinkedFormController:  m_pyHlp->run() return Error!");
-            break;
-        case PyHlp::Result::RuntimeError:
-            spdlog::warn("LinkedFormController:  m_pyHlp->run() return RuntimeError!");
-            break;
-        case PyHlp::Result::SyntaxError:
-            spdlog::warn("LinkedFormController:  m_pyHlp->run() return SyntaxError!");
-            break;
-        default:
-            break;
-        }
-    }
-    else
+    // ── Запуск ───────────────────────────────────────────────────
+    if (!m_pyHlp) {
         spdlog::warn("LinkedFormController: PyHlp не установлен, макрос не выполнен!");
+        return;
+    }
+
+    switch (m_pyHlp->run(content.data())) {
+    case PyHlp::Result::Error:
+        spdlog::warn("LinkedFormController: m_pyHlp->run() return Error!");        break;
+    case PyHlp::Result::RuntimeError:
+        spdlog::warn("LinkedFormController: m_pyHlp->run() return RuntimeError!"); break;
+    case PyHlp::Result::SyntaxError:
+        spdlog::warn("LinkedFormController: m_pyHlp->run() return SyntaxError!");  break;
+    default:
+        break;
+    }
 }
 
 void LinkedFormController::buildLinkedFormsMenu(int contextRow, QMenu* menu)

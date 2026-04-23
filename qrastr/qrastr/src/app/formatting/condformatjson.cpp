@@ -38,22 +38,24 @@ void CondFormatJson::save(
     const std::vector<std::string>& cols,
     const std::unordered_map<int, std::vector<CondFormat>>& formats)
 {
-    auto path = jsonPath();
-
+    const QString path = jsonPath();
     // Загружаем существующий файл (если есть), чтобы не затереть другие таблицы.
     nlohmann::json root;
-    if (std::filesystem::exists(path)) {
-        std::ifstream ifs(path);
-        root = nlohmann::json::parse(ifs, nullptr, /*exceptions=*/false);
+    QFile fileIn(path);
+    if (fileIn.exists() && fileIn.open(QIODevice::ReadOnly | QIODevice::Text)) {
+        const QByteArray raw = fileIn.readAll();
+        root = nlohmann::json::parse(
+            raw.constData(), raw.constData() + raw.size(),
+            nullptr, /*exceptions=*/false);
         if (root.is_discarded()) root = nlohmann::json::object();
     }
-
     // Перезаписываем только секцию нашей таблицы.
     root[kRoot][tableName] = tableToJson(cols, formats);
 
-    std::ofstream ofs(path);
-    if (ofs.is_open())
-        ofs << root.dump(1, ' ');
+    QFile fileOut(path);
+    if (!fileOut.open(QIODevice::WriteOnly | QIODevice::Text)) return;
+    const std::string dump = root.dump(1, ' ');
+    fileOut.write(dump.data(), static_cast<qint64>(dump.size()));
 }
 
 std::unordered_map<int, std::vector<CondFormat>>
@@ -62,11 +64,16 @@ CondFormatJson::load(const std::string& tableName,
 {
     std::unordered_map<int, std::vector<CondFormat>> result;
 
-    auto path = jsonPath();
-    if (!std::filesystem::exists(path)) return result;
+    const QString path = jsonPath();
+    if (!QFileInfo::exists(path)) return result;        // QFileInfo::exists
 
-    std::ifstream ifs(path);
-    const auto root = nlohmann::json::parse(ifs, nullptr, /*exceptions=*/false);
+    QFile file(path);
+    if (!file.open(QIODevice::ReadOnly | QIODevice::Text)) return result;
+    const QByteArray raw = file.readAll();              // QFile::readAll
+
+    const auto root = nlohmann::json::parse(
+        raw.constData(), raw.constData() + raw.size(),
+        nullptr, /*exceptions=*/false);
     if (root.is_discarded()) return result;
 
     if (!root.contains(kRoot) || !root[kRoot].contains(tableName))

@@ -1,5 +1,6 @@
 #include <QLibrary>
 #include <QCoreApplication>
+#include <QDir>
 #include <spdlog/spdlog.h>
 using WrapperExceptionType = std::runtime_error;
 
@@ -10,12 +11,13 @@ void PluginTI::setLoggerPtr(std::shared_ptr<spdlog::logger> spLoger){
     spdlog::set_default_logger(spLoger);
     spdlog::info("RastrPlugin get logger");
 }
+
 std::shared_ptr<IPlainTI> PluginTI::getIPlainTIPtr(){
     std::shared_ptr<IPlainTI> shTIOut;
     try{
         const char* pch_name_plain_factory_fun {"PlainTIFactory"};
-        QString qstr_path_comck{QCoreApplication::applicationDirPath()};
-        qstr_path_comck += "/plugins/COMCK";
+        QDir dir(QCoreApplication::applicationDirPath());
+        QString qstr_path_comck = dir.filePath("plugins/COMCK.dll");
         QLibrary qlCOMCK{qstr_path_comck};
         if(qlCOMCK.load()){
             const QFunctionPointer pfn{ qlCOMCK.resolve(pch_name_plain_factory_fun) };
@@ -32,7 +34,9 @@ std::shared_ptr<IPlainTI> PluginTI::getIPlainTIPtr(){
                               pch_name_plain_factory_fun);
             }
         }else{
-            spdlog::error("Can't load: {}", qstr_path_comck.toStdString().c_str());
+            spdlog::error("Can't load: {} | error: {}",
+                          qstr_path_comck.toStdString(),
+                          qlCOMCK.errorString().toStdString());
         }
     }catch(const std::exception& ex){
         spdlog::error("Catch exception: {}", ex.what());
