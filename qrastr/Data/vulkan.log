@@ -1,0 +1,44 @@
+Loader Message	vkCreateDevice extension VK_KHR_portability_subset not available for devices associated with ICD C:\Windows\System32\DriverStore\FileRepository\iigd_dch.inf_amd64_08a52cf2f322ba79\.\igvk64.dll	16	1
+Validation	vkWaitForFences(): pFences[0] is VK_NULL_HANDLE.	8	0
+Validation	vkWaitForFences(): pFences[0] Invalid VkFence Object 0x0.
+The Vulkan spec states: pFences must be a valid pointer to an array of fenceCount valid VkFence handles (https://vulkan.lunarg.com/doc/view/1.4.321.1/windows/antora/spec/latest/chapters/synchronization.html#VUID-vkWaitForFences-pFences-parameter)	8	0
+Loader Message	vkCreateDevice extension VK_KHR_portability_subset not available for devices associated with ICD C:\Windows\System32\DriverStore\FileRepository\iigd_dch.inf_amd64_08a52cf2f322ba79\.\igvk64.dll	16	1
+Validation	vkWaitForFences(): pFences[0] is VK_NULL_HANDLE.	8	0
+Validation	vkWaitForFences(): pFences[0] Invalid VkFence Object 0x0.
+The Vulkan spec states: pFences must be a valid pointer to an array of fenceCount valid VkFence handles (https://vulkan.lunarg.com/doc/view/1.4.321.1/windows/antora/spec/latest/chapters/synchronization.html#VUID-vkWaitForFences-pFences-parameter)	8	0
+Loader Message	vkCreateDevice extension VK_KHR_portability_subset not available for devices associated with ICD C:\Windows\System32\DriverStore\FileRepository\iigd_dch.inf_amd64_08a52cf2f322ba79\.\igvk64.dll	16	1
+Loader Message	vkCreateDevice extension VK_KHR_portability_subset not available for devices associated with ICD C:\Windows\System32\DriverStore\FileRepository\iigd_dch.inf_amd64_08a52cf2f322ba79\.\igvk64.dll	16	1
+Validation	vkWaitForFences(): pFences[0] is VK_NULL_HANDLE.	8	0
+Validation	vkWaitForFences(): pFences[0] Invalid VkFence Object 0x0.
+The Vulkan spec states: pFences must be a valid pointer to an array of fenceCount valid VkFence handles (https://vulkan.lunarg.com/doc/view/1.4.321.1/windows/antora/spec/latest/chapters/synchronization.html#VUID-vkWaitForFences-pFences-parameter)	8	0
+Loader Message	vkCreateDevice extension VK_KHR_portability_subset not available for devices associated with ICD C:\Windows\System32\DriverStore\FileRepository\iigd_dch.inf_amd64_08a52cf2f322ba79\.\igvk64.dll	16	1
+Validation	vkWaitForFences(): pFences[0] is VK_NULL_HANDLE.	8	0
+Validation	vkWaitForFences(): pFences[0] Invalid VkFence Object 0x0.
+The Vulkan spec states: pFences must be a valid pointer to an array of fenceCount valid VkFence handles (https://vulkan.lunarg.com/doc/view/1.4.321.1/windows/antora/spec/latest/chapters/synchronization.html#VUID-vkWaitForFences-pFences-parameter)	8	0
+Loader Message	vkCreateDevice extension VK_KHR_portability_subset not available for devices associated with ICD C:\Windows\System32\DriverStore\FileRepository\iigd_dch.inf_amd64_08a52cf2f322ba79\.\igvk64.dll	16	1
+Loader Message	vkCreateDevice extension VK_KHR_portability_subset not available for devices associated with ICD C:\Windows\System32\DriverStore\FileRepository\iigd_dch.inf_amd64_08a52cf2f322ba79\.\igvk64.dll	16	1
+Loader Message	vkCreateDevice extension VK_KHR_portability_subset not available for devices associated with ICD C:\Windows\System32\DriverStore\FileRepository\iigd_dch.inf_amd64_08a52cf2f322ba79\.\igvk64.dll	16	1
+Validation	vkWaitForFences(): pFences[0] is VK_NULL_HANDLE.	8	0
+Validation	vkWaitForFences(): pFences[0] Invalid VkFence Object 0x0.
+The Vulkan spec states: pFences must be a valid pointer to an array of fenceCount valid VkFence handles (https://vulkan.lunarg.com/doc/view/1.4.321.1/windows/antora/spec/latest/chapters/synchronization.html#VUID-vkWaitForFences-pFences-parameter)	8	0
+Loader Message	vkCreateDevice extension VK_KHR_portability_subset not available for devices associated with ICD C:\Windows\System32\DriverStore\FileRepository\iigd_dch.inf_amd64_08a52cf2f322ba79\.\igvk64.dll	16	1
+Loader Message	vkCreateDevice extension VK_KHR_portability_subset not available for devices associated with ICD C:\Windows\System32\DriverStore\FileRepository\iigd_dch.inf_amd64_08a52cf2f322ba79\.\igvk64.dll	16	1
+Loader Message	vkCreateDevice extension VK_KHR_portability_subset not available for devices associated with ICD C:\Windows\System32\DriverStore\FileRepository\iigd_dch.inf_amd64_08a52cf2f322ba79\.\igvk64.dll	16	1
+Loader Message	vkCreateDevice extension VK_KHR_portability_subset not available for devices associated with ICD C:\Windows\System32\DriverStore\FileRepository\iigd_dch.inf_amd64_08a52cf2f322ba79\.\igvk64.dll	16	1
+Loader Message	vkCreateDevice extension VK_KHR_portability_subset not available for devices associated with ICD C:\Windows\System32\DriverStore\FileRepository\iigd_dch.inf_amd64_08a52cf2f322ba79\.\igvk64.dll	16	1
+Loader Message	vkCreateDevice extension VK_KHR_portability_subset not available for devices associated with ICD C:\Windows\System32\DriverStore\FileRepository\iigd_dch.inf_amd64_08a52cf2f322ba79\.\igvk64.dll	16	1
+Loader Message	vkCreateDevice extension VK_KHR_portability_subset not available for devices associated with ICD C:\Windows\System32\DriverStore\FileRepository\iigd_dch.inf_amd64_08a52cf2f322ba79\.\igvk64.dll	16	1
+Loader Message	vkCreateDevice extension VK_KHR_portability_subset not available for devices associated with ICD C:\Windows\System32\DriverStore\FileRepository\iigd_dch.inf_amd64_08a52cf2f322ba79\.\igvk64.dll	16	1
+Loader Message	vkCreateDevice extension VK_KHR_portability_subset not available for devices associated with ICD C:\Windows\System32\DriverStore\FileRepository\iigd_dch.inf_amd64_08a52cf2f322ba79\.\igvk64.dll	16	1
+Loader Message	vkCreateDevice extension VK_KHR_portability_subset not available for devices associated with ICD C:\Windows\System32\DriverStore\FileRepository\iigd_dch.inf_amd64_08a52cf2f322ba79\.\igvk64.dll	16	1
+Loader Message	vkCreateDevice extension VK_KHR_portability_subset not available for devices associated with ICD C:\Windows\System32\DriverStore\FileRepository\iigd_dch.inf_amd64_08a52cf2f322ba79\.\igvk64.dll	16	1
+Loader Message	vkCreateDevice extension VK_KHR_portability_subset not available for devices associated with ICD C:\Windows\System32\DriverStore\FileRepository\iigd_dch.inf_amd64_08a52cf2f322ba79\.\igvk64.dll	16	1
+Loader Message	vkCreateDevice extension VK_KHR_portability_subset not available for devices associated with ICD C:\Windows\System32\DriverStore\FileRepository\iigd_dch.inf_amd64_08a52cf2f322ba79\.\igvk64.dll	16	1
+Loader Message	vkCreateDevice extension VK_KHR_portability_subset not available for devices associated with ICD C:\Windows\System32\DriverStore\FileRepository\iigd_dch.inf_amd64_08a52cf2f322ba79\.\igvk64.dll	16	1
+Loader Message	vkCreateDevice extension VK_KHR_portability_subset not available for devices associated with ICD C:\Windows\System32\DriverStore\FileRepository\iigd_dch.inf_amd64_08a52cf2f322ba79\.\igvk64.dll	16	1
+Loader Message	vkCreateDevice extension VK_KHR_portability_subset not available for devices associated with ICD C:\Windows\System32\DriverStore\FileRepository\iigd_dch.inf_amd64_08a52cf2f322ba79\.\igvk64.dll	16	1
+Loader Message	vkCreateDevice extension VK_KHR_portability_subset not available for devices associated with ICD C:\Windows\System32\DriverStore\FileRepository\iigd_dch.inf_amd64_08a52cf2f322ba79\.\igvk64.dll	16	1
+Loader Message	vkCreateDevice extension VK_KHR_portability_subset not available for devices associated with ICD C:\Windows\System32\DriverStore\FileRepository\iigd_dch.inf_amd64_08a52cf2f322ba79\.\igvk64.dll	16	1
+Loader Message	vkCreateDevice extension VK_KHR_portability_subset not available for devices associated with ICD C:\Windows\System32\DriverStore\FileRepository\iigd_dch.inf_amd64_08a52cf2f322ba79\.\igvk64.dll	16	1
+Loader Message	vkCreateDevice extension VK_KHR_portability_subset not available for devices associated with ICD C:\Windows\System32\DriverStore\FileRepository\iigd_dch.inf_amd64_08a52cf2f322ba79\.\igvk64.dll	16	1
+Loader Message	vkCreateDevice extension VK_KHR_portability_subset not available for devices associated with ICD C:\Windows\System32\DriverStore\FileRepository\iigd_dch.inf_amd64_08a52cf2f322ba79\.\igvk64.dll	16	1

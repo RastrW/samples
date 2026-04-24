@@ -6,8 +6,16 @@
 HostWidget::HostWidget(QWidget* parent)
     : QWidget(parent)
 {
-    setAttribute(Qt::WA_NativeWindow);
-    setAttribute(Qt::WA_PaintOnScreen);
+    //setAttribute(Qt::WA_NativeWindow);      //с WA_NativeWindow WM_PAINT не приходит при первом открытии
+    setAttribute(Qt::WA_PaintOnScreen);             //указывает Qt рисовать напрямую на экране (в обход графического конвейера Qt)
+//  setAttribute(Qt::WA_UpdatesDisabled);           //программный «выключатель» отрисовки виджета. Когда он установлен, любые запросы на перерисовку (update(), repaint()) игнорируются, а события paintEvent не доставляются
+//  setUpdatesEnabled(false);
+    setAttribute(Qt::WA_OpaquePaintEvent);          //виджет самостоятельно закрашивает всю свою область непрозрачным цветом
+    setAttribute(Qt::WA_NoSystemBackground);        //виджет не должен запрашивать у операционной системы отрисовку стандартного фона окна перед вызовом события paintEvent
+    //setAttribute(Qt::WA_PendingResizeEvent)
+    setAttribute(Qt::WA_Resized);
+
+
     setMinimumSize(100, 100);
 }
 
@@ -30,8 +38,8 @@ bool HostWidget::init()
         LONG_PTR style = ::GetWindowLongPtrW(hwnd, GWL_STYLE);
         ::SetWindowLongPtrW(hwnd, GWL_STYLE,
                             style | WS_CLIPCHILDREN | WS_CLIPSIBLINGS);
-        ::SetWindowPos(hwnd, nullptr, 0, 0, 0, 0,
-                       SWP_NOMOVE | SWP_NOSIZE | SWP_NOZORDER | SWP_FRAMECHANGED);
+//        ::SetWindowPos(hwnd, nullptr, 0, 0, 0, 0,
+//                      SWP_NOMOVE | SWP_NOSIZE | SWP_NOZORDER | SWP_FRAMECHANGED);
     }
 #endif
 

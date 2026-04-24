@@ -30,9 +30,13 @@ set(CMAKE_AUTOMOC ON)
 set(CMAKE_AUTORCC ON)
 
 # Output directories - все бинарники идут в ../Debug или ../Release
-set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY "${CMAKE_SOURCE_DIR}/../${CMAKE_BUILD_TYPE}")
-set(CMAKE_LIBRARY_OUTPUT_DIRECTORY "${CMAKE_SOURCE_DIR}/../${CMAKE_BUILD_TYPE}")
-set(CMAKE_RUNTIME_OUTPUT_DIRECTORY "${CMAKE_SOURCE_DIR}/../${CMAKE_BUILD_TYPE}")
+set(OUTPUT_BASE_DIR "${CMAKE_SOURCE_DIR}/..")
+
+set(CMAKE_RUNTIME_OUTPUT_DIRECTORY "${OUTPUT_BASE_DIR}")
+set(CMAKE_LIBRARY_OUTPUT_DIRECTORY "${OUTPUT_BASE_DIR}")
+set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY "${OUTPUT_BASE_DIR}")
+
+message(STATUS "CMAKE_RUNTIME_OUTPUT_DIRECTORY: ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}")
 
 # ============================================================================
 # Compile Definitions
@@ -47,7 +51,6 @@ add_compile_definitions(FMT_HEADER_ONLY)
 add_compile_definitions(
     $<$<CONFIG:Debug>:q4_INLINE=0>  # Отключает inline функции в Debug
     $<$<CONFIG:Debug>:YYDEBUG>      # Включает отладочный вывод для yacc/bison парсеров
-    $<$<CONFIG:Debug>:_DEBUG>       # Чтобы на win/lin был одинаковый #define _DEBUG
 )
 
 if(MSVC)
@@ -99,6 +102,8 @@ endif()
 
 # Составляем CMAKE_PREFIX_PATH на базе ASTRA_ROOT
 list(APPEND CMAKE_PREFIX_PATH "${ASTRA_ROOT}/lib/cmake")
+
+message(STATUS ${ASTRA_ROOT}/lib/cmake)
 
 # Ищем конфигурацию ASTRA
 find_package(COMCK CONFIG REQUIRED)
@@ -203,7 +208,7 @@ message(STATUS "Qt found: ${QT_VERSION} at ${Qt${QT_VERSION_MAJOR}_DIR}")
 # ============================================================================
 # Plugins (ASTRA-dependent)
 # ============================================================================
-set(PLUGIN_OUTPUT_DIR "${CMAKE_SOURCE_DIR}/../${CMAKE_BUILD_TYPE}/plugins")
+set(PLUGIN_OUTPUT_DIR "${OUTPUT_BASE_DIR}")
 
 add_subdirectory(${SRC_DIR}/plugins/rastr)
 add_subdirectory(${SRC_DIR}/plugins/ti)
@@ -272,11 +277,12 @@ list(APPEND PROJECT_INCLUDES ${SPDLOG_INCLUDES})
 get_target_property(FMT_INCLUDES Fmt::fmt INTERFACE_INCLUDE_DIRECTORIES)
 list(APPEND PROJECT_INCLUDES ${FMT_INCLUDES})
 
+
 # Добавляем ASTRA include директории
 list(APPEND PROJECT_INCLUDES
     ${ASTRA_ROOT}/include
     ${ASTRA_ROOT}/include/comck
-    ${EL_GRAPH_CTRL_DIR}/include
+    D:/rastr/RastrWin/ElGraphCtrl
 )
 # ============================================================================
 # Source Files
@@ -447,26 +453,16 @@ else()
     set(ASTRA_FOLDER "lib")
 endif()
 
-add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
-    COMMAND ${CMAKE_COMMAND} -E copy_if_different
-        "${ASTRA_ROOT}/${ASTRA_FOLDER}/${LIB_PREFIX}astra${SHLIB_SUFFIX}"
-        "$<TARGET_FILE_DIR:${PROJECT_NAME}>/plugins/"
-    COMMAND ${CMAKE_COMMAND} -E copy_if_different
-        "${ASTRA_ROOT}/${ASTRA_FOLDER}/${LIB_PREFIX}COMCK${SHLIB_SUFFIX}"
-        "$<TARGET_FILE_DIR:${PROJECT_NAME}>/plugins/"
-    COMMENT "Copying ASTRA"
-)
-
 # ============================================================================
 # Копируем SVGgenerator, ElGraphCtrl, GraphClient
 # ============================================================================
 if(WIN32)
     set(SVG_PLATFORM_DIR "${SVG_DIR}/win")
-    set(SVG_DLL_FILE     "${SVG_PLATFORM_DIR}/${CONFIG_DIR}/SVGgenerator.dll")
+    set(SVG_DLL_FILE     "${SVG_PLATFORM_DIR}/SVGgenerator.dll")
     set(EGC_PLATFORM_DIR "${EL_GRAPH_CTRL_DIR}/win")
-    set(EGC_DLL_FILE     "${EGC_PLATFORM_DIR}/${CONFIG_DIR}/ElGraphCtrl.dll")
+    set(EGC_DLL_FILE     "D:/rastr/RastrWin/ElGraphCtrl/build/Debug/ElGraphCtrl.dll")
     set(GR_CTRL_CLIENT_PLATFORM_DIR "${GR_CTRL_CLIENT_DIR}/win")
-    set(GR_CTRL_CLIENT_DLL_FILE     "${GR_CTRL_CLIENT_PLATFORM_DIR}/${CONFIG_DIR}/GraphClient.dll")
+    set(GR_CTRL_CLIENT_DLL_FILE     "D:/rastr/RastrWin/GraphControlClient/build-client/Debug/GraphClient.dll")
 else()
     set(SVG_PLATFORM_DIR "${SVG_DIR}/linux")
     set(SVG_DLL_FILE     "${SVG_PLATFORM_DIR}/${CONFIG_DIR}/libSVGgenerator.so")
@@ -492,22 +488,12 @@ function(copy_runtime_file_if_exists target src comment)
     endif()
 endfunction()
 
-# Временное решение ввиду отсутствия .so сборок
-if(WIN32)
-copy_runtime_file(${PROJECT_NAME} "${SVG_DLL_FILE}" "Copying SVGgenerator (${CONFIG_DIR})")
-copy_runtime_file(${PROJECT_NAME} "${EGC_DLL_FILE}" "Copying ElGraphCtrl (${CONFIG_DIR})")
-copy_runtime_file(${PROJECT_NAME} "${GR_CTRL_CLIENT_DLL_FILE}" "Copying GrCtrlClient (${CONFIG_DIR})")
-endif()
+message(STATUS "SVG_PLATFORM_DIR: ${SVG_PLATFORM_DIR}")
+message(STATUS "EGC_PLATFORM_DIR: ${EGC_PLATFORM_DIR}")
+message(STATUS "GR_CTRL_CLIENT_DIR: ${GR_CTRL_CLIENT_DIR}")
 
-if(WIN32 AND CMAKE_BUILD_TYPE MATCHES Debug)
-    set(SVG_PDB_FILE "${SVG_PLATFORM_DIR}/${CONFIG_DIR}/SVGgenerator.pdb")
-    set(EGC_PDB_FILE "${EGC_PLATFORM_DIR}/${CONFIG_DIR}/ElGraphCtrl.pdb")
-    set(GR_CTRL_CLIENT_PDB_FILE "${GR_CTRL_CLIENT_PLATFORM_DIR}/${CONFIG_DIR}/GraphClient.pdb")
+message(STATUS "CONFIG_DIR: ${CONFIG_DIR}")
 
-    copy_runtime_file_if_exists(${PROJECT_NAME} "${SVG_PDB_FILE}" "Copying SVGgenerator PDB")
-    copy_runtime_file_if_exists(${PROJECT_NAME} "${EGC_PDB_FILE}" "Copying ElGraphCtrl PDB")
-    copy_runtime_file_if_exists(${PROJECT_NAME} "${GR_CTRL_CLIENT_PDB_FILE}" "Copying GrCtrlClient PDB")
-endif()
 
 # ============================================================================
 # Include Directories
@@ -521,18 +507,9 @@ target_include_directories(${PROJECT_NAME} PRIVATE
 # ============================================================================
 # Target Properties
 # ============================================================================
-# Гарантируем, что INSTALL_RPATH используется и при сборке
-set(CMAKE_BUILD_WITH_INSTALL_RPATH TRUE)
-# Не затирать RPATH после линковки
-set(CMAKE_SKIP_RPATH FALSE)
-set(CMAKE_SKIP_INSTALL_RPATH FALSE)
 # WIN32_EXECUTABLE создаёт GUI приложение на Windows (без консольного окна)
-set_target_properties(${PROJECT_NAME} PROPERTIES
-    WIN32_EXECUTABLE TRUE
-    BUILD_RPATH      "\$ORIGIN/libs"
-    INSTALL_RPATH    "\$ORIGIN/libs"
-    BUILD_WITH_INSTALL_RPATH TRUE
-)
+set_target_properties(${PROJECT_NAME} PROPERTIES WIN32_EXECUTABLE TRUE)
+
 # ============================================================================
 # Finalization
 # ============================================================================

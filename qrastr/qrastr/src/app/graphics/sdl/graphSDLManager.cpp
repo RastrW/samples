@@ -53,7 +53,7 @@ void GraphSDLManager::openWindow()
         dw->setFeature(ads::CDockWidget::DockWidgetDeleteOnClose, true);
         // ── 3. Встраиваем в dock ─────────────────────────────────────────────────
         m_dockManager->addDockWidgetTab(ads::TopDockWidgetArea, dw);
-        dw->show();  // ← сначала показываем
+        //dw->show();  // ← сначала показываем (нахуя?)
 
         // ← SDLInit ПОСЛЕ show(), чтобы HWND был видимым когда ElGraph его получит
         QApplication::processEvents();  // дать Qt обработать show()
@@ -69,10 +69,14 @@ void GraphSDLManager::openWindow()
             m_gcc->initControl(hostWidget->elGraph().graph());
         }
         dw->show();
+
         // Сохраняем указатель на sdlHostWidget внутри dock-виджета через свойство,
         // чтобы в слоте onDockClosed можно было его получить без lambda-захвата.
         // Используем динамическое свойство Qt.
         dw->setProperty("HostWidget", QVariant::fromValue(static_cast<QObject*>(hostWidget)));
+
+        hostWidget->update();   //WM_PAINT типа (в РастреWin это присутствует, тут же я не уверен что помогает)
+
     }else {
         // ── SDL_Init — только при первом открытии окна ────────────────────────
         if (!ensureSDLInited()) return;

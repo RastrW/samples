@@ -10,7 +10,8 @@ using InitPlainDLL_t = IPlainElGraph* (*)();
 #endif
 
 ElGraphService::ElGraphService(){
-    const QString libDir = QCoreApplication::applicationDirPath() + "/";
+    //const QString libDir = QCoreApplication::applicationDirPath() + "/";
+    const QString libDir = "D:/rastr/RastrWin/ElGraphCtrl/build/Debug/";
     //Qt сам добавит .dll / .so / .dylib
     m_lib.setFileName(libDir + "ElGraphCtrl");
 }
