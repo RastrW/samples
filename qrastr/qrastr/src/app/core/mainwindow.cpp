@@ -73,6 +73,7 @@ void MainWindow::initialize(
     const EngineContext& engCtxt,
     const std::list<CUIForm>& forms)
 {
+    m_calcEngine = engCtxt.calcEngine;
     // ========== СОЗДАНИЕ КОМПОНЕНТОВ ==========
     // SettingsManager нужен первым для загрузки настроек
     m_appSettingsManager = std::make_unique<AppSettingsManager>(this);
@@ -87,7 +88,7 @@ void MainWindow::initialize(
     m_uiBuilder = std::make_unique<UIBuilder>(this);
     m_uiBuilder->buildAll();
     // ========== НАСТРОЙКА КОМПОНЕНТОВ ==========
-    m_logManager->setupRastrConnections(engCtxt.logSource);
+    m_logManager->setupRastrConnections(engCtxt.logEvents);
 
     // Построение меню форм
     m_formManager->buildFormsMenu(
@@ -213,15 +214,6 @@ void MainWindow::setupConnections() {
     connect(m_uiBuilder->actionByName("kz"), &QAction::triggered,
             m_calcController.get(), [this]() {
                 KzParameters params;
-                params.parameters = "";
-                params.nonsym = eNonsym::KZ_1;
-                params.p1 = 1;
-                params.p2 = 0;
-                params.p3 = 0;
-                params.lengthFromP1InProc = 0;
-                params.rd = 0;
-                params.z_re = 0;
-                params.z_im = 0;
                 m_calcController->executeTkz(params);
             });
     // Диалоговые расчёты
@@ -292,7 +284,7 @@ void MainWindow::setupConnections() {
     // ========== SETTINGSMANAGER ==========
     connect(m_uiBuilder->actionByName("settings"), &QAction::triggered,
             m_appSettingsManager.get(), [this]() {
-                m_appSettingsManager->showFormSettings(m_qastra);
+                m_appSettingsManager->showFormSettings();
             });
 
     // ========== Окна ==========
@@ -343,7 +335,7 @@ void MainWindow::slot_about(){
 void MainWindow::showIdopDialog() {
     emit sig_calcBegin();
 
-    auto* dialog = new CalcIacceptableDialog(m_qastra.get(), this);
+    auto* dialog = new CalcIacceptableDialog(m_calcEngine, this);
     dialog->setAttribute(Qt::WA_DeleteOnClose);
 
     // FIX P1: sig_calcEnd только когда диалог действительно закрыт

@@ -5,7 +5,7 @@
 namespace ads { class CDockManager; class CDockWidget; }
 class MainProtocolWidget;
 class GlobalProtocolWidget;
-class ILogSource;
+class ILogEvents;
 
 /**
  * @class LogManager
@@ -34,7 +34,7 @@ public:
         return m_qtLogSink;
     }
     void setupLogSinks();
-    void setupRastrConnections(std::shared_ptr<ILogSource> logSource);
+    void setupRastrConnections(std::shared_ptr<ILogEvents> logEvents);
     /// Удалить Qt-синки из spdlog ДО разрушения виджетов протоколов.
     /// Необходимо вызывать до ~FormManager (в MainWindow::closeEvent).
     void teardownLogSinks();

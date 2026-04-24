@@ -14,6 +14,7 @@ class PyHlp;
 class QWidget;
 class RTablesDataManager;
 class ITableRepository;
+class ITableEvents;
 
 namespace ads      {class CDockManager;
                     class CDockWidget;}
@@ -32,6 +33,7 @@ class LinkedFormController : public QObject
 public:
     explicit LinkedFormController(
         std::shared_ptr<ITableRepository> tables,
+        std::shared_ptr<ITableEvents>     tableEvents,
         ads::CDockManager*       dockManager,
         Qtitan::GridTableView*   view,
         RModel*                  model,
@@ -78,6 +80,8 @@ private:
     int getLongValue(const std::string& col, long row);
 
     std::shared_ptr<ITableRepository> m_tables;     ///< для всех обращений к данным плагина
+    std::shared_ptr<ITableEvents>     m_tableEvents;
+
     ads::CDockManager*       m_dockManager;
     Qtitan::GridTableView*   m_view;         ///< не владеет; живёт дольше
     RModel*                  m_model;        ///< не владеет; живёт дольше

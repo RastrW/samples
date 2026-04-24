@@ -3,9 +3,9 @@
 #include "mainProtocolWidget.h"
 #include <DockManager.h>
 #include <DockWidget.h>
-#include "qastra.h"
 #include <spdlog/spdlog.h>
 #include <spdlog/sinks/qt_sinks.h>
+#include "log/ILogEvents.h"
 
 LogManager::LogManager(ads::CDockManager* dockManager,
                        QWidget* parent)
@@ -32,11 +32,12 @@ void LogManager::setupLogSinks()
     m_protocolSink = protocolSink;
 }
 
-void LogManager::setupRastrConnections(std::shared_ptr<ILogSource> logSource) {
+void LogManager::setupRastrConnections(std::shared_ptr<ILogEvents> logEvents)
+{
     // Второй поток данных — структурированные _log_data от Rastr
-    connect(qastra.get(), &QAstra::onRastrLog,
+    connect(logEvents.get(), &ILogEvents::sig_rastrLog,
             m_mainProtocol,   &MainProtocolWidget::onRastrLog);
-    connect(qastra.get(), &QAstra::onRastrLog,
+    connect(logEvents.get(), &ILogEvents::sig_rastrLog,
             m_globalProtocol, &GlobalProtocolWidget::onRastrLog);
 }
 

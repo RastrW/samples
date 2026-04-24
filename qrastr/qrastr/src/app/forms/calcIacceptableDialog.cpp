@@ -1,5 +1,4 @@
 #include "calcIacceptableDialog.h"
-#include "qastra.h"
 #include <QGroupBox>
 #include <QLineEdit>
 #include <QHBoxLayout>
@@ -7,9 +6,11 @@
 #include <QCheckBox>
 #include <QDateTimeEdit>
 #include <QDialogButtonBox>
+#include "calculation/ICalculationEngine.h"
 
-CalcIacceptableDialog::CalcIacceptableDialog(QAstra* _pqastra, QWidget *parent)
-    : QDialog(parent), pqastra(_pqastra)
+CalcIacceptableDialog::CalcIacceptableDialog(std::shared_ptr<ICalculationEngine> calcEngine,
+                                             QWidget *parent)
+    : QDialog(parent), m_calcEngine(calcEngine)
 {
     setWindowTitle(tr("Расчет I доп от Т"));
     //Qt Layout-ы (такие как QHBoxLayout, QVBoxLayout) автоматически делают виджеты,
@@ -76,7 +77,7 @@ void CalcIacceptableDialog::on_buttonBox_accepted()
     double temp   = m_leTemperature->text().toDouble();
     double emL  = m_leEmergencyLoading->text().toDouble();
     std::string sel = m_leSelection->text().toStdString();
-    pqastra->CalcIdop(temp, emL, sel);
+    m_calcEngine->CalcIdop(temp, emL, sel);
     accept();
 }
 

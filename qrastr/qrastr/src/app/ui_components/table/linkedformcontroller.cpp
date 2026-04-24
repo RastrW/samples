@@ -21,6 +21,7 @@
 
 LinkedFormController::LinkedFormController(
     std::shared_ptr<ITableRepository> tables,
+    std::shared_ptr<ITableEvents>     tableEvents,
     ads::CDockManager*       dockManager,
     Qtitan::GridTableView*   view,
     RModel*                  model,
@@ -28,6 +29,7 @@ LinkedFormController::LinkedFormController(
     RtabController*          parentController)
     : QObject(parentController)
     , m_tables(tables)
+    , m_tableEvents(tableEvents)
     , m_dockManager(dockManager)
     , m_view(view)
     , m_model(model)
@@ -52,6 +54,7 @@ void LinkedFormController::openLinkedForm(LinkedForm lf)
     // Создаём дочерний виджет — он заведёт собственный LinkedFormController
     auto* child = new RtabController(
         m_tables,
+        m_tableEvents,
         *pUIForm,
         m_dockManager,
         nullptr); //parent для QObject, dock управляет временем жизни

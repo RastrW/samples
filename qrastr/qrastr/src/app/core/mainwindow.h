@@ -20,6 +20,7 @@ class WorkspaceManager;
 class CUIForm;
 class QAction;
 class McrWnd;
+class ICalculationEngine;
 
 namespace ads {
     class CDockManager;
@@ -93,7 +94,9 @@ private:
     LogManager* m_logManager = nullptr;
     std::unique_ptr<WorkspaceManager>
         m_workspaceManager;
-    
+
+     std::shared_ptr<ICalculationEngine>
+        m_calcEngine;
     // ========== GUI ЭЛЕМЕНТЫ ==========
     ads::CDockManager* m_dockManager = nullptr;   // The main container for Advanced Docking System
 

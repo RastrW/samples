@@ -7,8 +7,8 @@
 #include <QPushButton>
 #include <QMessageBox>
 #include <QCloseEvent>
+#include <spdlog/spdlog.h>
 
-#include "qastra.h"
 #include "rastrParameters.h"
 #include "dataSettingsWidget.h"
 #include "settingsOnLoadFilesWidget.h"

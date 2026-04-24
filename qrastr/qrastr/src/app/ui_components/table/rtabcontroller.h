@@ -9,6 +9,7 @@
 #include "QtitanGrid.h"
 
 class ITableRepository;
+class ITableEvents;
 class RGrid;
 class RModel;
 class RCol;
@@ -21,7 +22,6 @@ class PyHlp;
 class LinkedForm;
 struct FilterRule;
 
-class RTablesDataManager;
 namespace ads { class CDockManager; }
 namespace Qtitan { class GridTableView; }
 
@@ -34,6 +34,7 @@ class RtabController : public QObject
     Q_OBJECT
 public:
     explicit RtabController(std::shared_ptr<ITableRepository> tables,
+                            std::shared_ptr<ITableEvents>     tableEvents,
                             CUIForm             UIForm,
                             ads::CDockManager*  pDockManager,
                             QObject*            parent = nullptr);
@@ -113,6 +114,7 @@ private:
     std::unique_ptr<ContextMenuBuilder>   m_menuBuilder;
     std::unique_ptr<CondFormatController> m_condFormatCtrl;
     std::shared_ptr<ITableRepository>     m_tables;
+    std::shared_ptr<ITableEvents>     m_tableEvents;
     // ── Грид (создан здесь, передан в RtabShell) ────────────────────────────
     RGrid*                 m_grid  {nullptr};
     Qtitan::GridTableView* m_view  {nullptr};

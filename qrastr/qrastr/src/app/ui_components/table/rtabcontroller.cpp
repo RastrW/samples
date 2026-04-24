@@ -6,7 +6,6 @@
 #include "rdata.h"
 #include "rcol.h"
 #include "rgrid.h"
-#include "table/rtablesdatamanager.h"
 #include "linkedformcontroller.h"
 #include "contextmenubuilder.h"
 #include "condformatcontroller.h"
@@ -22,6 +21,8 @@
 #include <QCloseEvent>
 #include "table/QDataBlocks.h"
 #include <spdlog/spdlog.h>
+#include "table/ITableEvents.h"
+#include "table/ITableRepository.h"
 
 void dumpShortcuts(QWidget* root, const QString& tag)
 {
@@ -46,11 +47,13 @@ void dumpShortcuts(QWidget* root, const QString& tag)
 }
 
 RtabController::RtabController( std::shared_ptr<ITableRepository> tables,
+                                std::shared_ptr<ITableEvents>     tableEvents,
                                 CUIForm             UIForm,
                                 ads::CDockManager*  pDockManager,
                                 QObject*            parent)
     : QObject(parent)
     , m_tables (tables)
+    , m_tableEvents(tableEvents)
     , m_UIForm(std::move(UIForm))
     , m_DockManager(pDockManager)
 {
@@ -229,6 +232,7 @@ void RtabController::createModel(std::shared_ptr<ITableRepository> tables)
 
     m_linkedFormCtrl = std::make_unique<LinkedFormController>(
         tables,
+        m_tableEvents,
         m_DockManager,
         m_view,
         m_model.get(),
@@ -242,25 +246,26 @@ void RtabController::createModel(std::shared_ptr<ITableRepository> tables)
 
 void RtabController::setupConnections()
 {
-    //RTablesDataManager -> RModel
-    connect(m_pRTDM, &RTablesDataManager::sig_dataChanged,this->m_model.get(),
+    auto* ev = m_tableEvents.get();
+    //ITableEvents -> RModel
+    connect(ev, &ITableEvents::sig_dataChanged,this->m_model.get(),
             &RModel::slot_DataChanged);
-    connect(m_pRTDM, &RTablesDataManager::sig_BeginResetModel,this->m_model.get(),
+    connect(ev, &ITableEvents::sig_BeginResetModel,this->m_model.get(),
             &RModel::slot_BeginResetModel);
-    connect(m_pRTDM, &RTablesDataManager::sig_EndResetModel,this->m_model.get(),
+    connect(ev, &ITableEvents::sig_EndResetModel,this->m_model.get(),
             &RModel::slot_EndResetModel);
-    connect(m_pRTDM, &RTablesDataManager::sig_BeginInsertRow,this->m_model.get(),
+    connect(ev, &ITableEvents::sig_BeginInsertRow,this->m_model.get(),
             &RModel::slot_BeginInsertRow);
-    connect(m_pRTDM, &RTablesDataManager::sig_EndInsertRow,this->m_model.get(),
+    connect(ev, &ITableEvents::sig_EndInsertRow,this->m_model.get(),
             &RModel::slot_EndInsertRow);
-    connect(m_pRTDM, &RTablesDataManager::sig_BeginRemoveRows,this->m_model.get(),
+    connect(ev, &ITableEvents::sig_BeginRemoveRows,this->m_model.get(),
             &RModel::slot_BeginRemoveRows);
-    connect(m_pRTDM, &RTablesDataManager::sig_EndRemoveRows,this->m_model.get(),
+    connect(ev, &ITableEvents::sig_EndRemoveRows,this->m_model.get(),
             &RModel::slot_EndRemoveRows);
-    //RTablesDataManager -> RtabController
-    connect(m_pRTDM, &RTablesDataManager::sig_BeginResetModel,this,
+    //ITableEvents -> RtabController
+    connect(ev, &ITableEvents::sig_BeginResetModel,this,
             &RtabController::slot_beginResetModel);
-    connect(m_pRTDM, &RTablesDataManager::sig_EndResetModel,this,
+    connect(ev, &ITableEvents::sig_EndResetModel,this,
             &RtabController::slot_endResetModel);
     //ContextMenuBuilder -> RtabController
     connect(m_menuBuilder.get(), &ContextMenuBuilder::sig_addRow,
@@ -291,7 +296,7 @@ void RtabController::setupConnections()
     connect(m_menuBuilder.get(), &ContextMenuBuilder::sig_selection,
             m_filterManager.get(), &FilterManager::slot_openSelection);
     // Обновление ссылочных справочников при изменении строк в других таблицах
-    connect(m_pRTDM,  &RTablesDataManager::sig_ReferenceChanged,
+    connect(ev,  &ITableEvents::sig_ReferenceChanged,
             m_model.get(), &RModel::slot_RefTableChanged);
     connect(m_model.get(), &RModel::sig_nameRefUpdated,
             this, [this](std::vector<size_t> cols) {
@@ -549,9 +554,9 @@ void RtabController::slot_close()
     spdlog::info("RtabController::slot_close [{}]", m_UIForm.Name());
 
     // RTDM → модель и контроллер
-    if (m_pRTDM) {
-        disconnect(m_pRTDM, nullptr, m_model.get(), nullptr);
-        disconnect(m_pRTDM, nullptr, this, nullptr);
+    if (m_tableEvents) {
+        disconnect(m_tableEvents.get(), nullptr, m_model.get(), nullptr);
+        disconnect(m_tableEvents.get(), nullptr, this, nullptr);
     }
 
     // Отключаем focusRowChanged → child

@@ -34,7 +34,6 @@ private:
     void setAppSettingsChanged();
     void setupUI();
 
-    std::shared_ptr<QAstra> m_qAstra;
     QPushButton* m_pbApplySettings {nullptr};
     QTreeWidget* m_twSections {nullptr};
     QStackedWidget* m_sw {nullptr};

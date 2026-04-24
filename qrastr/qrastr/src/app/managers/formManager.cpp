@@ -26,7 +26,7 @@ FormManager::FormManager(
 
     // ── Таблицы ───────────────────────────────────────────────────────────────
     m_tableDockManager = new TableDockManager(
-        m_ctx.tables, m_dockManager, m_pPyHlp, m_parentWidget);
+        m_ctx.tables, m_ctx.tableEvents, m_dockManager, m_pPyHlp, m_parentWidget);
 
     connect(m_tableDockManager, &TableDockManager::windowOpened,
             this,               &FormManager::registerDockWidget);

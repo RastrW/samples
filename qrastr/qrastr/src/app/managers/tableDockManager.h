@@ -30,6 +30,7 @@ class TableDockManager : public QObject {
 public:
     explicit TableDockManager(
         std::shared_ptr<ITableRepository> tables,
+        std::shared_ptr<ITableEvents>     tableEvents,
         ads::CDockManager*      dockManager,
         std::shared_ptr<PyHlp>  pyHlp,
         QWidget*                parent = nullptr);
@@ -85,13 +86,11 @@ private slots:
 
 private:
     // ── Зависимости ──────────────────────────────────────────────────────────
-    std::shared_ptr<ITableRepository>   m_tables;
+    std::shared_ptr<ITableRepository> m_tables;
+    std::shared_ptr<ITableEvents>     m_tableEvents;
     ads::CDockManager*                  m_dockManager;
     std::shared_ptr<PyHlp>              m_pyHlp;
     QWidget*                            m_parentWidget;
-
-    std::unique_ptr<RTablesDataManager>
-        m_rtdm;
 
     // ── Состояние ────────────────────────────────────────────────────────────
     std::list<CUIForm>         m_forms;
@@ -100,7 +99,6 @@ private:
     RtabController*                m_activeForm {nullptr};
 
     // ── Вспомогательные методы ───────────────────────────────────────────────
-
     /// Генерировать пункты меню «Свойства» из таблиц с .form-шаблонами.
     void generateDynamicForms(QMenu* menu);
 };

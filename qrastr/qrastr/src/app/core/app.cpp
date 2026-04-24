@@ -403,11 +403,14 @@ EngineContext App::buildEngineContext() {
     // QAstra не знает об адаптерах и не меняется.
     ctx.fileOps    = std::make_shared<RastrFileAdapter> (m_sp_qastra);
     ctx.calcEngine = std::make_shared<RastrCalcAdapter> (m_sp_qastra);
-    ctx.logSource= std::make_shared<RastrLogAdapter>(m_sp_qastra);
+    ctx.logEvents = std::make_shared<RastrLogAdapter>(m_sp_qastra);
 
-    // RTablesDataManager — уже существующий адаптер, создаём как раньше
+    // rtdm реализует ОБА интерфейса — один объект, два shared_ptr на него.
+    // Используем aliasing constructor: оба shared_ptr владеют одним объектом,
+    // счётчик ссылок общий — объект живёт пока жив хотя бы один из них.
     auto rtdm = std::make_shared<RTablesDataManager>(m_sp_qastra);
-    ctx.tables = rtdm;
+    ctx.tables      = rtdm;  // shared_ptr<ITableRepository>
+    ctx.tableEvents = rtdm;  // shared_ptr<ITableEvents> — тот же объект
 
     if (m_sp_qti)
         ctx.ti = std::make_shared<TIAdapter>(m_sp_qti);

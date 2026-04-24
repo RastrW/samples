@@ -1,7 +1,6 @@
 #include "tableDockManager.h"
 using WrapperExceptionType = std::runtime_error;
 #include "astra/IPlainRastrWrappers.h"
-#include "qastra.h"
 #include "table/rtabcontroller.h"
 #include "table/rtabshell.h"
 #include <QFileInfo>
@@ -11,11 +10,13 @@ using WrapperExceptionType = std::runtime_error;
 
 TableDockManager::TableDockManager(
     std::shared_ptr<ITableRepository> tables,
-    ads::CDockManager*      dockManager,
-    std::shared_ptr<PyHlp>  pyHlp,
-    QWidget*                parent)
+    std::shared_ptr<ITableEvents>     tableEvents,
+    ads::CDockManager*                dockManager,
+    std::shared_ptr<PyHlp>            pyHlp,
+    QWidget*                          parent)
     : QObject(parent)
     , m_tables(tables)
+    , m_tableEvents(tableEvents)
     , m_dockManager(dockManager)
     , m_pyHlp(pyHlp)
     , m_parentWidget(parent)
@@ -36,31 +37,33 @@ void TableDockManager::setForms(const std::list<CUIForm>& forms){
 void TableDockManager::openForm(const CUIForm& form)
 {
     try {
-        IRastrTablesPtr tablesx{ m_qastra->getRastr()->Tables() };
-        IRastrPayload   res    { tablesx->FindIndex(form.TableName()) };
-        const int t_ind = res.Value();
-
-        if (t_ind < 0) {
-            spdlog::info("Таблица [{}] - [{}] не существует!",
-                         form.Name(), form.TableName());
+        // Используем интерфейс — tableSize вернёт -1 или бросит если нет таблицы:
+        const long t_ind = m_tables->columnIndex(form.TableName(), "");
+        try {
+            const long sz = m_tables->tableSize(form.TableName());
+            if (sz < 0) {
+                spdlog::info("Таблица [{}] не существует!", form.TableName());
+                return;
+            }else{
+                spdlog::info("Прочитана таблица [{}] - [{}]",
+                             form.Name(), form.TableName());
+            }
+        } catch (...) {
+            spdlog::info("Таблица [{}] не существует!", form.TableName());
             return;
         }
 
-        spdlog::info("Прочитана таблица [{}] - [{}]",
-                     form.Name(), form.TableName());
         // ── Dock-виджет ───────────────────────────────────────────────────────
-        const QString qName = QString::fromStdString(form.Name());
-
-        auto* dw = new ads::CDockWidget(qName, m_parentWidget);
-        dw->setObjectName(qName);
+        auto* dw   = new ads::CDockWidget(
+            QString::fromStdString(form.Name()), m_parentWidget);
+        dw->setObjectName(QString::fromStdString(form.Name()));
         dw->setFeature(ads::CDockWidget::DockWidgetDeleteOnClose, true);
+
         // ── Виджет таблицы ────────────────────────────────────────────────────
         auto* ctrl = new RtabController(
-            m_tables, form, m_dockManager, dw);
-
+            m_tables, m_tableEvents, form, m_dockManager, dw);
         // true (по умолчанию) = с тулбаром и шорткатами
         dw->setWidget(ctrl->createShell());
-
         m_dockManager->addDockWidgetTab(ads::TopDockWidgetArea, dw);
         ctrl->setPyHlp(m_pyHlp);
         // Добавляем в список открытых форм
@@ -70,20 +73,17 @@ void TableDockManager::openForm(const CUIForm& form)
         // Уведомляем FormManager о новом dock-виджете
         emit windowOpened(dw);
 
-        connect(dw, &ads::CDockWidget::closed,
+        connect(dw,   &ads::CDockWidget::closed,
                 ctrl, &RtabController::slot_close);
-
-        connect(dw, &ads::CDockWidget::closed,
+        connect(dw,   &ads::CDockWidget::closed,
                 this, [this, ctrl, name = form.Name()]() {
                     m_openForms.removeOne(ctrl);
-                    if (m_activeForm == ctrl)
-                        m_activeForm = nullptr;
+                    if (m_activeForm == ctrl) m_activeForm = nullptr;
                     emit formClosed(QString::fromStdString(name));
                 });
 
-        emit formOpened(qName);
+        emit formOpened(QString::fromStdString(form.Name()));
         emit activeFormChanged(ctrl);
-
     } catch (const std::exception& ex) {
         spdlog::error("TableDockManager::openForm('{}') threw: {}",
                       form.Name(), ex.what());
