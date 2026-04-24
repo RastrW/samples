@@ -1,7 +1,7 @@
 #include "backInfoCache.h"
-#include "rtablesdatamanager.h"
+#include "table/rtablesdatamanager.h"
 #include "rdata.h"
-#include "QDataBlocks.h"
+#include "table/QDataBlocks.h"
 #include "utils.h"
 #include <spdlog/spdlog.h>
 

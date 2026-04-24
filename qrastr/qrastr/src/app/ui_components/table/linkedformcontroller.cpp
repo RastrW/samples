@@ -2,7 +2,7 @@
 
 #include "rtabController.h"
 #include "rtabshell.h"
-#include "rtablesdatamanager.h"
+#include "table/rtablesdatamanager.h"
 #include "rmodel.h"
 #include "rdata.h"
 #include "qmcr/pyhlp.h"
@@ -17,7 +17,7 @@
 
 #include <fmt/format.h>
 #include <spdlog/spdlog.h>
-#include "ITableRepository.h"
+#include "table/ITableRepository.h"
 
 LinkedFormController::LinkedFormController(
     QAstra*                  qastra,

@@ -2,7 +2,7 @@
 
 #include <QDialog>
 #include <QString>
-#include "ITableRepository.h"
+#include "table/ITableRepository.h"
 
 namespace Qtitan   { class GridTableView; }
 

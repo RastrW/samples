@@ -260,6 +260,7 @@ set(PROJECT_INCLUDES
     ${APP_DIR}/ui_components/
     ${APP_DIR}/utilities/
     ${APP_DIR}/astra_headers
+    ${APP_DIR}/adapters/
 )
 
 # Добавляем header-only include directories
@@ -306,6 +307,8 @@ file(GLOB_RECURSE PROJECT_SOURCES
     "${APP_DIR}/astra_headers/*.h"
     "${APP_DIR}/astra_headers/*.hpp"
     "${SRC_DIR}/plugins/rastr/plugin_interfaces.h"
+    "${APP_DIR}/adapters/*.cpp"
+    "${APP_DIR}/adapters/*.h"
     "${APP_DIR}/main.cpp"
 )
 

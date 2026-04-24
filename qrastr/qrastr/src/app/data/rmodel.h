@@ -6,7 +6,6 @@
 #include "rdata.h"
 #include "table/backgroundCache.h"
 
-class QAstra;
 class RTablesDataManager;
 class CUIForm;
 class RData;
@@ -69,8 +68,6 @@ public:
     /**
      * @param repo  Невладеющий указатель на ITableRepository.
      *              Время жизни репозитория гарантируется RtabController.
-     *              QAstra* больше не нужен — все обращения к плагину
-     *              идут через repo.
      */
     explicit RModel(QObject* parent, ITableRepository* repo);
 
@@ -79,7 +76,7 @@ public:
     /**
      * Перестроение структуры данных модели.
      * Вызывается при первом открытии и при slot_EndResetModel.
-     * Запрашивает схему у репозитория — QAstra* не нужен.
+     * Запрашивает схему у репозитория
      */
     bool populateDataFromRastr();
 

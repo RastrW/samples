@@ -9,7 +9,7 @@
 #include <QLabel>
 #include <QDialogButtonBox>
 #include "astra/IPlainRastr.h"
-#include "rtablesdatamanager.h"
+#include "table/rtablesdatamanager.h"
 
 ImportCSV2dialog::ImportCSV2dialog(ITableRepository*  repo,
                                    const std::string& tableName,

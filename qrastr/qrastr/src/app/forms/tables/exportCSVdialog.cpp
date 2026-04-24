@@ -9,7 +9,7 @@
 #include <QRadioButton>
 #include <QDialogButtonBox>
 #include <QLabel>
-#include "ITableRepository.h"
+#include "table/ITableRepository.h"
 
 ExportCSVdialog::ExportCSVdialog(ITableRepository* repo,
                                  const std::string& tableName,

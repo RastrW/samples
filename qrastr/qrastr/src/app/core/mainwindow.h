@@ -17,7 +17,6 @@ class ProtocolWidget;
 class LogManager;
 class WorkspaceManager;
 
-class PyHlp;
 class CUIForm;
 class QAction;
 class McrWnd;

@@ -6,7 +6,7 @@
 #include "rdata.h"
 #include "rcol.h"
 #include "rgrid.h"
-#include "rtablesdatamanager.h"
+#include "table/rtablesdatamanager.h"
 #include "linkedformcontroller.h"
 #include "contextmenubuilder.h"
 #include "condformatcontroller.h"
@@ -20,7 +20,7 @@
 #include <QShortcut>
 #include <QMessageBox>
 #include <QCloseEvent>
-#include "QDataBlocks.h"
+#include "table/QDataBlocks.h"
 #include <spdlog/spdlog.h>
 
 void dumpShortcuts(QWidget* root, const QString& tag)

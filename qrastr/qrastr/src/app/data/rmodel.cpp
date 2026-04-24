@@ -4,9 +4,9 @@
 #include "QtitanGrid.h"
 
 #include "rdata.h"
-#include "QDataBlocks.h"
+#include "table/QDataBlocks.h"
 #include "UIForms.h"
-#include "rtablesdatamanager.h"
+#include "table/rtablesdatamanager.h"
 #include <string_bool.h>
 #include "condFormat.h"
 
