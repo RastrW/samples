@@ -412,6 +412,10 @@ EngineContext App::buildEngineContext() {
     ctx.tables      = rtdm;  // shared_ptr<ITableRepository>
     ctx.tableEvents = rtdm;  // shared_ptr<ITableEvents> — тот же объект
 
+    // getRastr() возвращает shared_ptr<IPlainRastr>, владение у QAstra.
+    // Сохраняем голый указатель — время жизни гарантировано временем жизни App.
+    ctx.rawRastr = m_sp_qastra->getRastr().get();
+
     if (m_sp_qti)
         ctx.ti = std::make_shared<TIAdapter>(m_sp_qti);
 

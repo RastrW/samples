@@ -22,7 +22,7 @@ FormManager::FormManager(
     , m_logManager(logManager){
 
 
-    m_pPyHlp    = std::make_shared<PyHlp>(*m_qastra->getRastr().get());
+    m_pPyHlp = std::make_shared<PyHlp>(*ctx.rawRastr);
 
     // ── Таблицы ───────────────────────────────────────────────────────────────
     m_tableDockManager = new TableDockManager(
@@ -41,16 +41,16 @@ FormManager::FormManager(
 
     // ── Макросы ───────────────────────────────────────────────────────────────
     m_macroDockManager = new MacroDockManager(
-        m_dockManager, m_pPyHlp, m_qastra, m_parentWidget);
+        m_dockManager, m_pPyHlp, ctx.logEvents, m_parentWidget);
 
     connect(m_macroDockManager, &MacroDockManager::windowOpened,
             this,               &FormManager::registerDockWidget);
 
     // ── Графика ───────────────────────────────────────────────────────────────
     m_graphSDLManager = new GraphSDLManager(
-        m_dockManager, m_parentWidget, m_qastra->getRastr().get(), this);
+        m_dockManager, m_parentWidget, ctx.rawRastr, this);
     m_graphWebManager = new GraphWebManager(
-        m_dockManager, m_parentWidget, m_qastra->getRastr().get(), this);
+        m_dockManager, m_parentWidget, ctx.rawRastr, this);
 
     for (IGraphManager* mgr : {m_graphSDLManager, m_graphWebManager}) {
         connect(mgr,  &IGraphManager::windowOpened,

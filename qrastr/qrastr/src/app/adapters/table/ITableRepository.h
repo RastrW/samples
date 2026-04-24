@@ -102,4 +102,6 @@ public:
     virtual void setLockEvent(bool lock) = 0;
 
     virtual CUIForm* getForm(const std::string& name)= 0;
+    virtual void setForms(std::list<CUIForm>* forms) = 0;
+    virtual void getDynamicForms(std::vector<CUIForm>& out) = 0;
 };

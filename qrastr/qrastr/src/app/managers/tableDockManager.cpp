@@ -24,7 +24,7 @@ TableDockManager::TableDockManager(
 
 void TableDockManager::setForms(const std::list<CUIForm>& forms){
     m_forms = forms;
-    m_rtdm->setForms(&m_forms);
+    m_tables->setForms(&m_forms);
 
     int index = 0;
     for (const auto& form : m_forms) {
@@ -206,38 +206,14 @@ void TableDockManager::generateDynamicForms(QMenu* menu)
     // Очищаем меню перед обновлением
     menu->clear();
 
-    IRastrTablesPtr tablesx{ m_qastra->getRastr()->Tables() };
-    IRastrPayload   cnt    { tablesx->Count() };
+    // Вся COM-логика скрыта за интерфейсом
+    std::vector<CUIForm> dynamicForms;
+    m_tables->getDynamicForms(dynamicForms);
 
-    for (int i = 0; i < cnt.Value(); ++i) {
-        IRastrTablePtr  table     { tablesx->Item(i) };
-        IRastrPayload   tab_name  { table->Name() };
-        IRastrPayload   templ_name{ table->TemplateName() };
-        IRastrPayload   tab_desc  { table->Description() };
-
-        const std::string str_templ = templ_name.Value();
-        // Проверяем, что шаблон таблицы - это .form файл
-        if (QFileInfo(QString::fromStdString(str_templ)).suffix() != "form")
-            continue;
-        // Создаём динамическую форму
-        CUIForm form;
-        form.SetName(tab_desc.Value());
-        form.SetTableName(tab_name.Value());
-        // Определяем вертикальность (если 1 строка)
-        IRastrColumnsPtr columns{ table->Columns() };
-        const size_t nrows = IRastrPayload{ table->Size()          }.Value();
-        const size_t ncols = IRastrPayload{ columns->Count()       }.Value();
-
-        if (nrows == 1)
-            form.SetVertical(true);
-        // Добавляем поля из колонок
-        for (size_t j = 0; j < ncols; ++j) {
-            IRastrColumnPtr col     { columns->Item(j) };
-            IRastrPayload   col_name{ col->Name()       };
-            form.Fields().emplace_back(col_name.Value());
-        }
+    for (const CUIForm& form : dynamicForms) {
         // Добавляем действие в меню
-        QAction* action = menu->addAction(QString::fromStdString(form.Name()));
+        QAction* action = menu->addAction(
+            QString::fromStdString(form.Name()));
         // При клике - открываем динамическую форму
         connect(action, &QAction::triggered,
                 this,   [this, form]() { openForm(form); });

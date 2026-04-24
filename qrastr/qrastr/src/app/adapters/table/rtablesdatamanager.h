@@ -30,11 +30,10 @@ class RTablesDataManager : public ITableEvents,
     Q_OBJECT
 public:
     RTablesDataManager(std::shared_ptr<QAstra> _pqastra);
-    void setForms ( std::list<CUIForm>* _lstUIForms);
-    ///< Обработчик событий от Rastr
-    void onRastrHint(const _hint_data& hint_data);
 
-    virtual TableSchema getSchema(const std::string& tname) override;
+    void setForms ( std::list<CUIForm>* _lstUIForms) override;
+    TableSchema getSchema(const std::string& tname) override;
+    void getDynamicForms(std::vector<CUIForm>& out) override;
     // ── Данные ───────────────────────────────────────────────────────────────
     /**
      * Получить (или создать) QDataBlock для таблицы tname.
@@ -105,6 +104,10 @@ public:
                      eCSVCode           mode) override;
     void setLockEvent(bool lock) override;
     CUIForm* getForm (const std::string& name) override;
+
+private slots:
+    ///< Обработчик событий от Rastr
+    void slot_rastrHint(const _hint_data& hint_data);
 private:
     std::shared_ptr<QAstra> m_pqastra;
     std::list<CUIForm>* m_plstUIForms;

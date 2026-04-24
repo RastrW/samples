@@ -1,17 +1,17 @@
 #include "macroDockManager.h"
 #include <DockManager.h>
 #include "mcrwnd.h"
-#include "qastra.h"
+#include "log/ILogEvents.h"
 
 MacroDockManager::MacroDockManager(
     ads::CDockManager*      dockManager,
     std::shared_ptr<PyHlp>  pyHlp,
-    std::shared_ptr<QAstra> qastra,
+    std::shared_ptr<ILogEvents> logEvents,
     QWidget*                parent)
     : QObject(parent)
     , m_dockManager(dockManager)
     , m_pyHlp(pyHlp)
-    , m_qastra(qastra)
+    , m_logEvents(logEvents)
     , m_parentWidget(parent)
 {}
 
@@ -51,7 +51,7 @@ void MacroDockManager::openWindow()
             });
 
     // Подключаем вывод rastr-сообщений в лог редактора
-    connect(m_qastra.get(), &QAstra::onRastrPrint,
+    connect(m_logEvents.get(), &ILogEvents::sig_rastrPrint,
             m_mcrWnd,       &McrWnd::slot_rastrPrint);
 
     m_dockWidget = dw;

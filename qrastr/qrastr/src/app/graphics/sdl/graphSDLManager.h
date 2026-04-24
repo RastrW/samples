@@ -45,7 +45,6 @@ private slots:
     void slot_dockClosed();
 
 private:
-    IPlainRastr* m_rastr       = nullptr;
     int          m_windowCount = 0; ///< Счётчик открытых SDL-окон
     bool         m_sdlInited   = false;
     std::unique_ptr<GraphControlService> m_gcc;

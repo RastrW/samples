@@ -5,12 +5,13 @@ using WrapperExceptionType = std::runtime_error;
 #include "UIForms.h"
 #include "QDataBlocks.h"
 #include <memory>
+#include <QFileInfo>
 
 RTablesDataManager::RTablesDataManager(std::shared_ptr<QAstra> _pqastra) :
     m_pqastra(_pqastra)
 {
     connect(m_pqastra.get(), &QAstra::onRastrHint,
-            this, &RTablesDataManager::onRastrHint);
+            this, &RTablesDataManager::slot_rastrHint);
 }
 
 void  RTablesDataManager::setForms ( std::list<CUIForm>* _lstUIForms)
@@ -28,7 +29,45 @@ CUIForm*  RTablesDataManager::getForm (const std::string& name)
     return nullptr;
 }
 
-void  RTablesDataManager::onRastrHint(const _hint_data& hint_data)
+void RTablesDataManager::getDynamicForms(std::vector<CUIForm>& out)
+{
+    IRastrTablesPtr tablesx{ m_pqastra->getRastr()->Tables() };
+    IRastrPayload   cnt    { tablesx->Count() };
+
+    for (int i = 0; i < cnt.Value(); ++i) {
+        IRastrTablePtr  table     { tablesx->Item(i) };
+        IRastrPayload   tab_name  { table->Name() };
+        IRastrPayload   templ_name{ table->TemplateName() };
+        IRastrPayload   tab_desc  { table->Description() };
+
+        const std::string str_templ = templ_name.Value();
+
+        // Проверяем, что шаблон таблицы - это .form файл
+        if (QFileInfo(QString::fromStdString(str_templ)).suffix() != "form")
+            continue;
+        // Создаём динамическую форму
+        CUIForm form;
+        form.SetName(tab_desc.Value());
+        form.SetTableName(tab_name.Value());
+        // Определяем вертикальность (если 1 строка)
+        IRastrColumnsPtr columns{ table->Columns() };
+        const size_t nrows = IRastrPayload{ table->Size()    }.Value();
+        const size_t ncols = IRastrPayload{ columns->Count() }.Value();
+
+        if (nrows == 1)
+            form.SetVertical(true);
+        // Добавляем поля из колонок
+        for (size_t j = 0; j < ncols; ++j) {
+            IRastrColumnPtr col     { columns->Item(j) };
+            IRastrPayload   col_name{ col->Name()      };
+            form.Fields().emplace_back(col_name.Value());
+        }
+
+        out.push_back(std::move(form));
+    }
+}
+
+void  RTablesDataManager::slot_rastrHint(const _hint_data& hint_data)
 {
     long row = hint_data.n_indx;
     std::string cname = hint_data.str_column;

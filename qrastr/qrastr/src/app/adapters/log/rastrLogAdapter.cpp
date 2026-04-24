@@ -14,4 +14,6 @@ RastrLogAdapter::RastrLogAdapter(std::shared_ptr<QAstra> qastra,
             this,           &ILogEvents::sig_rastrLog);
     connect(m_qastra.get(), &QAstra::onRastrHint,
             this,           &ILogEvents::sig_rastrHint);
+    connect(m_qastra.get(), &QAstra::onRastrPrint,
+            this,           &ILogEvents::sig_rastrPrint);
 }

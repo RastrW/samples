@@ -14,4 +14,5 @@ public:
 signals:
     void sig_rastrLog (const _log_data&);
     void sig_rastrHint(const _hint_data&);
+    void sig_rastrPrint(const std::string&);
 };
