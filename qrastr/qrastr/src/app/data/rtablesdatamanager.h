@@ -27,7 +27,7 @@ class RTablesDataManager : public QObject, public ITableRepository
 {
     Q_OBJECT
 public:
-    void setQAstra( QAstra* _pqastra);
+    RTablesDataManager(std::shared_ptr<QAstra> _pqastra);
     void setForms ( std::list<CUIForm>* _lstUIForms);
     ///< Обработчик событий от Rastr
     void onRastrHint(const _hint_data& hint_data);
@@ -102,29 +102,29 @@ public:
                      const std::string& byDefault,
                      eCSVCode           mode) override;
     void setLockEvent(bool lock) override;
-    CUIForm* getForm ( std::string name) override;
+    CUIForm* getForm (const std::string& name) override;
 signals:
     ///< изменены данные в диапазоне
-    void sig_dataChanged(std::string tname,int row_from ,
+    void sig_dataChanged(const std::string& tname,int row_from ,
                          int col_from , int row_to, int col_to);
     ///< перестроение модели
-    void sig_BeginResetModel(std::string tname);
-    void sig_EndResetModel(std::string tname);
+    void sig_BeginResetModel(const std::string& tname);
+    void sig_EndResetModel(const std::string& tname);
     ///< вставка строки
-    void sig_BeginInsertRow(std::string tname,int first,int last);
-    void sig_EndInsertRow(std::string tname);
+    void sig_BeginInsertRow(const std::string& tname,int first,int last);
+    void sig_EndInsertRow(const std::string& tname);
     ///< удаление строк
-    void sig_BeginRemoveRows(std::string tname,int first,int last);
-    void sig_EndRemoveRows(std::string tname);
+    void sig_BeginRemoveRows(const std::string& tname,int first,int last);
+    void sig_EndRemoveRows(const std::string& tname);
     ///< обновление представлений
-    void sig_UpdateModel(std::string tname);
-    void sig_UpdateView(std::string tname);
-    void sig_ResetModel(std::string tname);
+    void sig_UpdateModel(const std::string& tname);
+    void sig_UpdateView(const std::string& tname);
+    void sig_ResetModel(const std::string& tname);
     /// Строки таблицы tname были добавлены/удалены —
     /// все NAMEREF/SUPERENUM, ссылающиеся на неё, должны обновить кеш.
-    void sig_ReferenceChanged(std::string tname);
+    void sig_ReferenceChanged(const std::string& tname);
 private:
-    QAstra* m_pqastra;
+    std::shared_ptr<QAstra> m_pqastra;
     std::list<CUIForm>* m_plstUIForms;
 
      /* Хранилище данных для моделей
@@ -190,6 +190,7 @@ private:
     /// @brief Найти кешированный блок или вернуть nullptr
     QDataBlock* findCachedBlock(const std::string& tname);
 
-    std::string getTCols(std::string tname);
-    long getColIndex(std::string tname,std::string cname);
+    std::string getTCols(const std::string& tname);
+    long getColIndex(const std::string& tname,
+                     const std::string& cname);
 };

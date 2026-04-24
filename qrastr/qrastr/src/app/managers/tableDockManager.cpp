@@ -19,17 +19,12 @@ TableDockManager::TableDockManager(
     , m_dockManager(dockManager)
     , m_pyHlp(pyHlp)
     , m_parentWidget(parent)
-{
-    assert(m_qastra      != nullptr);
-    assert(m_dockManager != nullptr);
-    assert(m_pyHlp       != nullptr);
-
-    m_rtdm.setQAstra(m_qastra.get());
-}
+    , m_rtdm(std::make_unique<RTablesDataManager>(m_qastra))
+{}
 
 void TableDockManager::setForms(const std::list<CUIForm>& forms){
     m_forms = forms;
-    m_rtdm.setForms(&m_forms);
+    m_rtdm->setForms(&m_forms);
 
     int index = 0;
     for (const auto& form : m_forms) {
@@ -62,7 +57,7 @@ void TableDockManager::openForm(const CUIForm& form)
         dw->setFeature(ads::CDockWidget::DockWidgetDeleteOnClose, true);
         // ── Виджет таблицы ────────────────────────────────────────────────────
         auto* ctrl = new RtabController(
-            m_qastra.get(), form, &m_rtdm, m_dockManager, dw);
+            m_qastra.get(), form, m_rtdm.get(), m_dockManager, dw);
 
         // true (по умолчанию) = с тулбаром и шорткатами
         dw->setWidget(ctrl->createShell());

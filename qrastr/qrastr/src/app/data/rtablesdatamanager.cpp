@@ -6,10 +6,11 @@ using WrapperExceptionType = std::runtime_error;
 #include "QDataBlocks.h"
 #include <memory>
 
-void RTablesDataManager::setQAstra( QAstra* _pqastra)
+RTablesDataManager::RTablesDataManager(std::shared_ptr<QAstra> _pqastra) :
+    m_pqastra(_pqastra)
 {
-    m_pqastra = _pqastra;
-    connect(m_pqastra, &QAstra::onRastrHint, this, &RTablesDataManager::onRastrHint);
+    connect(m_pqastra.get(), &QAstra::onRastrHint,
+            this, &RTablesDataManager::onRastrHint);
 }
 
 void  RTablesDataManager::setForms ( std::list<CUIForm>* _lstUIForms)
@@ -17,7 +18,7 @@ void  RTablesDataManager::setForms ( std::list<CUIForm>* _lstUIForms)
     m_plstUIForms = _lstUIForms;
 }
 
-CUIForm*  RTablesDataManager::getForm ( std::string name)
+CUIForm*  RTablesDataManager::getForm (const std::string& name)
 {
     for (CUIForm &form : *m_plstUIForms){
         if (stringutils::MkToUtf8(form.Name()) == name){
@@ -168,7 +169,7 @@ void RTablesDataManager::fillBlock(const std::string& tname,
     IRastrResultVerify(table->DataBlock(actualCols, qdb, options));
 }
 
-std::string  RTablesDataManager::getTCols(std::string tname)
+std::string  RTablesDataManager::getTCols(const std::string& tname)
 {
     std::string str_cols_ = "";
     IRastrTablesPtr tablesx{ m_pqastra->getRastr()->Tables() };
@@ -190,7 +191,8 @@ std::string  RTablesDataManager::getTCols(std::string tname)
     return str_cols_;
 }
 
-long  RTablesDataManager::getColIndex(std::string tname,std::string cname)
+long  RTablesDataManager::getColIndex(const std::string& tname,
+                                      const std::string& cname)
 {
     IRastrTablesPtr tablesx{ m_pqastra->getRastr()->Tables() };
     IRastrTablePtr table{ tablesx->Item(tname) };

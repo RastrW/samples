@@ -90,7 +90,8 @@ private:
     std::shared_ptr<PyHlp>  m_pyHlp;
     QWidget*                m_parentWidget;
 
-    RTablesDataManager      m_rtdm;
+    std::unique_ptr<RTablesDataManager>
+        m_rtdm;
 
     // ── Состояние ────────────────────────────────────────────────────────────
     std::list<CUIForm>         m_forms;

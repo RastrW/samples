@@ -34,15 +34,15 @@ signals:
 public slots:
     ///@brief Уведомление от RTDM:
     /// плагин генерирует хинт → RTDM ловит → испускает сигнал → слот вызывает beginInsertRows / endInsertRows у Qt
-    void slot_DataChanged(std::string tName, int rowFrom, int colFrom,
+    void slot_DataChanged(const std::string& tName, int rowFrom, int colFrom,
                           int rowTo, int colTo);
-    void slot_BeginResetModel(std::string tName);
-    void slot_EndResetModel(std::string tName);
-    void slot_BeginInsertRow(std::string tName, int first, int last);
-    void slot_EndInsertRow(std::string tName);
-    void slot_BeginRemoveRows(std::string tName, int first, int last);
-    void slot_EndRemoveRows(std::string tName);
-    void slot_RefTableChanged(std::string tname);
+    void slot_BeginResetModel(const std::string& tName);
+    void slot_EndResetModel(const std::string& tName);
+    void slot_BeginInsertRow(const std::string& tName, int first, int last);
+    void slot_EndInsertRow(const std::string& tName);
+    void slot_BeginRemoveRows(const std::string& tName, int first, int last);
+    void slot_EndRemoveRows(const std::string& tName);
+    void slot_RefTableChanged(const std::string& tname);
 
 public:
     struct ColumnEditorInfo {
@@ -109,7 +109,7 @@ public:
     // ── Утилиты ───────────────────────────────────────────────────────────
     std::vector<std::tuple<int,int>> columnsWidth() const;
     RCol*             getRCol    (int col) const;
-    int               getIndexCol(std::string col) const;
+    int               getIndexCol(const std::string& col) const;
     RData*            getRdata   ();
     std::vector<long> getRowsBySelection(const std::string& selection) const;
     ColumnEditorInfo  getColumnEditorInfo(int colIndex) const;

@@ -381,7 +381,7 @@ bool RModel::insertColumns(int column, int count, const QModelIndex& parent)
     return true;
 }
 
-void RModel::slot_DataChanged(std::string tName, int rowFrom, int colFrom,
+void RModel::slot_DataChanged(const std::string& tName, int rowFrom, int colFrom,
                               int rowTo, int colTo)
 {
     if (m_rdata->t_name_ != tName) return;
@@ -390,12 +390,12 @@ void RModel::slot_DataChanged(std::string tName, int rowFrom, int colFrom,
     emit dataChanged(index(rowFrom, colFrom), index(rowTo, colTo));
 }
 
-void RModel::slot_BeginResetModel(std::string tName)
+void RModel::slot_BeginResetModel(const std::string& tName)
 {
     if (m_rdata->t_name_ == tName) beginResetModel();
 }
 
-void RModel::slot_EndResetModel(std::string tName)
+void RModel::slot_EndResetModel(const std::string& tName)
 {
     if (m_rdata->t_name_ != tName) return;
     ///@note при сборсе обязательно целиком пересоздавать data
@@ -406,7 +406,8 @@ void RModel::slot_EndResetModel(std::string tName)
     endResetModel();
 }
 
-void RModel::slot_BeginInsertRow(std::string tName, int first, int last)
+void RModel::slot_BeginInsertRow(const std::string& tName,
+                                 int first, int last)
 {
     if (m_rdata->t_name_ != tName) return;
     // сдвиг форматирования перед вставкой
@@ -414,18 +415,19 @@ void RModel::slot_BeginInsertRow(std::string tName, int first, int last)
     beginInsertRows({}, first, last);
 }
 
-void RModel::slot_EndInsertRow(std::string tName)
+void RModel::slot_EndInsertRow(const std::string& tName)
 {
     if (m_rdata->t_name_ == tName) endInsertRows();
 }
 
-void RModel::slot_BeginRemoveRows(std::string tName, int first, int last)
+void RModel::slot_BeginRemoveRows(const std::string& tName,
+                                  int first, int last)
 {
     if (m_rdata->t_name_ != tName) return;
     beginRemoveRows({}, first, last);
 }
 
-void RModel::slot_EndRemoveRows(std::string tName)
+void RModel::slot_EndRemoveRows(const std::string& tName)
 {
     if (m_rdata->t_name_ != tName) return;
     // Определяем диапазон через beginRemoveRows/endRemoveRows не передаёт параметры,
@@ -434,7 +436,7 @@ void RModel::slot_EndRemoveRows(std::string tName)
     endRemoveRows();
 }
 
-void RModel::slot_RefTableChanged(std::string tname)
+void RModel::slot_RefTableChanged(const std::string& tname)
 {
     // Если изменилась наша же таблица — RTDM уже послал ChangeTable/ChangeAll,
     // не нужно дублировать.
@@ -649,7 +651,7 @@ RCol* RModel::getRCol(int col) const
     return &(*(m_rdata->begin() + col));
 }
 
-int RModel::getIndexCol(std::string col) const
+int RModel::getIndexCol(const std::string& col) const
 {
     for (int i = 0; i < columnCount(); ++i)
         if (getRCol(i)->getColName() == col) return i;

@@ -101,5 +101,5 @@ public:
                              eCSVCode           mode) = 0;
     virtual void setLockEvent(bool lock) = 0;
 
-    virtual CUIForm* getForm(std::string name)= 0;
+    virtual CUIForm* getForm(const std::string& name)= 0;
 };
