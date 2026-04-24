@@ -45,14 +45,13 @@ void dumpShortcuts(QWidget* root, const QString& tag)
     }
 }
 
-RtabController::RtabController(QAstra*             pqastra,
+RtabController::RtabController( std::shared_ptr<ITableRepository> tables,
                                 CUIForm             UIForm,
-                                RTablesDataManager* pRTDM,
                                 ads::CDockManager*  pDockManager,
                                 QObject*            parent)
     : QObject(parent)
+    , m_tables (tables)
     , m_UIForm(std::move(UIForm))
-    , m_pRTDM(pRTDM)
     , m_DockManager(pDockManager)
 {
     //  Настройка QTitan Grid
@@ -111,7 +110,7 @@ RtabController::RtabController(QAstra*             pqastra,
     //m_view->options().setGroupSummaryPlace(GridViewOptions::GroupSummaryPlace::SummaryRowPlus);
     ///@note создание модели обязатель до меню!
 
-    createModel(pqastra);
+    createModel(tables);
 
     m_menuBuilder = std::make_unique<ContextMenuBuilder>(
         m_view, m_linkedFormCtrl.get(), this);
@@ -185,9 +184,9 @@ void RtabController::setupShortcuts(RtabController* target, RGrid* grid)
     }
 }
 
-void RtabController::createModel(QAstra* pqastra)
+void RtabController::createModel(std::shared_ptr<ITableRepository> tables)
 {
-    m_model = std::make_unique<RModel>(this, m_pRTDM);
+    m_model = std::make_unique<RModel>(this, tables);
     m_model->setForm(&m_UIForm);
     if (!m_model->populateDataFromRastr())
     {
@@ -229,8 +228,7 @@ void RtabController::createModel(QAstra* pqastra)
     }
 
     m_linkedFormCtrl = std::make_unique<LinkedFormController>(
-        pqastra,
-        m_pRTDM,
+        tables,
         m_DockManager,
         m_view,
         m_model.get(),
@@ -490,7 +488,7 @@ void RtabController::slot_groupCorrection(){
     if (!prcol){
         return;
     }
-    GroupCorrectionDialog* fgc =  new GroupCorrectionDialog(m_pRTDM,
+    GroupCorrectionDialog* fgc =  new GroupCorrectionDialog(m_tables,
                                                            m_model->getRdata(),prcol,m_grid);
     fgc->setAttribute(Qt::WA_DeleteOnClose);
 
@@ -587,12 +585,12 @@ void RtabController::setPyHlp(std::shared_ptr<PyHlp> pPyHlp){
 void RtabController::slot_openColProp(int col)
 {
     // Получаем схему колонки через репозиторий
-    const auto schema_full = m_pRTDM->getSchema(m_UIForm.TableName());
+    const auto schema_full = m_tables->getSchema(m_UIForm.TableName());
     if (col < 0 || col >= (int)schema_full.columns.size()) return;
 
     const auto& colSchema = schema_full.columns[col];
 
-    auto* dlg = new ColPropDialog(m_pRTDM, colSchema, m_view, m_grid);
+    auto* dlg = new ColPropDialog(m_tables, colSchema, m_view, m_grid);
     dlg->setAttribute(Qt::WA_DeleteOnClose);
     dlg->exec();
 }
@@ -658,7 +656,7 @@ void RtabController::slot_setFiltrForSelection(std::string selection){
 void RtabController::slot_openExportCSVForm()
 {
     auto* dlg = new ExportCSVdialog(
-        m_pRTDM,
+        m_tables,
         m_UIForm.TableName(),
         m_model->getRdata()->get_cols(),
         m_grid);
@@ -669,7 +667,7 @@ void RtabController::slot_openExportCSVForm()
 void RtabController::slot_openImportCSVForm()
 {
     auto* dlg = new ImportCSV2dialog(
-        m_pRTDM,
+        m_tables,
         m_UIForm.TableName(),
         m_model->getRdata()->get_cols(),
         m_grid);

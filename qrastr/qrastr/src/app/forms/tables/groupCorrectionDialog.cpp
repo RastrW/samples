@@ -8,10 +8,10 @@
 #include "rdata.h"
 #include "rcol.h"
 
-GroupCorrectionDialog::GroupCorrectionDialog(ITableRepository* repo,
+GroupCorrectionDialog::GroupCorrectionDialog(std::shared_ptr<ITableRepository> tables,
                                              RData* prdata,
                                              RCol* prcol, QWidget *parent)
-    : QDialog(parent), m_repo(repo), m_prdata(prdata), m_prcol(prcol)
+    : QDialog(parent), m_tables(tables), m_prdata(prdata), m_prcol(prcol)
 {
     setWindowTitle(tr("Групповая коррекция"));
 
@@ -77,7 +77,7 @@ void GroupCorrectionDialog::on_buttonBox_accepted()
 {
     m_selection  = m_leExpression->text().toStdString();
     m_expression = m_leExpression->text().toStdString();
-    m_repo->calcColumn(m_prdata->t_name_,
+    m_tables->calcColumn(m_prdata->t_name_,
                        m_prcol->getColName(),
                        m_expression,
                        m_selection);

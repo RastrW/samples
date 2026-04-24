@@ -20,6 +20,13 @@ using WrapperExceptionType = std::runtime_error;
 #include "qbarsmdp.h"
 #include "UIForms.h"
 #include "startupLoader.h"
+#include "engineContext.h"
+#include "files/rastrFileAdapter.h"
+#include "calculation/rastrCalcAdapter.h"
+#include "log/rastrLogAdapter.h"
+#include "table/rtablesdatamanager.h"
+#include "ti/tiAdapter.h"
+#include "bars/barsMDPAdapter.h"
 
 class QtSink : public spdlog::sinks::base_sink<std::mutex>
 {
@@ -385,4 +392,28 @@ std::list<CUIForm>& App::getForms() const {
 void App::flushLogCache(std::shared_ptr<spdlog::sinks::sink> qt_sink) {
     m_v_cache_log.flushToSinks({qt_sink}); // только Qt, без дублей
     m_v_cache_log.clear();
+}
+
+EngineContext App::buildEngineContext() {
+    assert(m_sp_qastra != nullptr);  // Rastr обязателен
+
+    EngineContext ctx;
+
+    // Каждый адаптер держит shared_ptr<QAstra> и реализует свой интерфейс.
+    // QAstra не знает об адаптерах и не меняется.
+    ctx.fileOps    = std::make_shared<RastrFileAdapter> (m_sp_qastra);
+    ctx.calcEngine = std::make_shared<RastrCalcAdapter> (m_sp_qastra);
+    ctx.logSource= std::make_shared<RastrLogAdapter>(m_sp_qastra);
+
+    // RTablesDataManager — уже существующий адаптер, создаём как раньше
+    auto rtdm = std::make_shared<RTablesDataManager>(m_sp_qastra);
+    ctx.tables = rtdm;
+
+    if (m_sp_qti)
+        ctx.ti = std::make_shared<TIAdapter>(m_sp_qti);
+
+    if (m_sp_qbarsmdp)
+        ctx.barsMDP = std::make_shared<BarsMDPAdapter>(m_sp_qbarsmdp);
+
+    return ctx;
 }

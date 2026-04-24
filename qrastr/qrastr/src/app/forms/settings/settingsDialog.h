@@ -15,7 +15,7 @@ public:
     explicit SettingsDialog(QWidget *parent = nullptr);
     ~SettingsDialog();
 
-    bool init(const std::shared_ptr<QAstra>& sp_qastra);
+    bool init();
     void closeEvent(QCloseEvent *event) override;
 
 public slots:

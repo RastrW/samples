@@ -25,6 +25,7 @@ namespace ads {
     class CDockManager;
     class CDockWidget;
 }
+struct EngineContext;
 
 /// @class Главное окно приложения
 class MainWindow : public QMainWindow {
@@ -39,9 +40,7 @@ public:
      * @param forms список форм
      */
     void initialize(
-        std::shared_ptr<QAstra> qastra,
-        std::shared_ptr<QTI> qti,
-        std::shared_ptr<QBarsMDP> qbarsmdp,
+        const EngineContext& engCtxt,
         const std::list<CUIForm>& forms);
 
     std::shared_ptr<spdlog::sinks::sink> getProtocolLogSink() const;
@@ -94,10 +93,6 @@ private:
     LogManager* m_logManager = nullptr;
     std::unique_ptr<WorkspaceManager>
         m_workspaceManager;
-    // ========== ПЛАГИНЫ ==========
-    std::shared_ptr<QAstra> m_qastra;
-    std::shared_ptr<QTI> m_qti;
-    std::shared_ptr<QBarsMDP> m_qbarsmdp;
     
     // ========== GUI ЭЛЕМЕНТЫ ==========
     ads::CDockManager* m_dockManager = nullptr;   // The main container for Advanced Docking System

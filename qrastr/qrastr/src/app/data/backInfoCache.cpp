@@ -15,7 +15,8 @@ void BackInfoCache::clear()
     m_superenumSources.clear();
 }
 
-void BackInfoCache::rebuild(const RData& rdata, ITableRepository* repo)
+void BackInfoCache::rebuild(const RData& rdata,
+                            std::shared_ptr<ITableRepository> tables)
 {
     clear();
 
@@ -28,11 +29,11 @@ void BackInfoCache::rebuild(const RData& rdata, ITableRepository* repo)
             break;
 
         case enComPropTT::COM_PR_SUPERENUM:
-            loadSuperenum(rcol, repo);
+            loadSuperenum(rcol, tables);
             break;
 
         case enComPropTT::COM_PR_INT:
-            loadNameref(rcol, repo);
+            loadNameref(rcol, tables);
             break;
 
         case enComPropTT::COM_PR_ENPIC:
@@ -57,39 +58,41 @@ void BackInfoCache::loadEnum(const RCol& rcol)
     m_enum.emplace(idx, std::move(list));
 }
 
-void BackInfoCache::loadSuperenum(const RCol& rcol, ITableRepository* repo)
+void BackInfoCache::loadSuperenum(const RCol& rcol,
+                                  std::shared_ptr<ITableRepository> tables)
 {
-    if (rcol.getNameRef().empty() || !repo) return;
+    if (rcol.getNameRef().empty() || !tables) return;
 
     const auto parts = parseSuperenumStr(rcol.getNameRef());
     if (!parts) return;
 
     // Проверяем наличие колонок в таблице-источнике прежде чем строить карту.
     // column_index возвращает < 0, если колонка не найдена.
-    if (repo->columnIndex(parts->srcTable, parts->keyCol)   < 0 ||
-        repo->columnIndex(parts->srcTable, parts->valueCol) < 0)
+    if (tables->columnIndex(parts->srcTable, parts->keyCol)   < 0 ||
+        tables->columnIndex(parts->srcTable, parts->valueCol) < 0)
         return;
 
     const size_t idx = static_cast<size_t>(rcol.getIndex());
-    m_superenum.emplace(idx, buildIdNameMap(repo, parts->srcTable,
+    m_superenum.emplace(idx, buildIdNameMap(tables, parts->srcTable,
                                             parts->keyCol, parts->valueCol));
     m_superenumSources[parts->srcTable].push_back(idx);
 }
 
-void BackInfoCache::loadNameref(const RCol& rcol, ITableRepository* repo)
+void BackInfoCache::loadNameref(const RCol& rcol,
+                                std::shared_ptr<ITableRepository> tables)
 {
-    if (rcol.getNameRef().empty() || !repo) return;
+    if (rcol.getNameRef().empty() || !tables) return;
 
     const auto parts = parseNamerefStr(rcol.getNameRef());
     if (!parts) return;
 
     const size_t idx = static_cast<size_t>(rcol.getIndex());
-    const long nameIdx = repo->columnIndex(parts->srcTable, "name");
+    const long nameIdx = tables->columnIndex(parts->srcTable, "name");
     //если колонке не "name", то описание в nameref нет, в редакторе одна колонка
     //если ссылка на таблицу `graphikIT`, `graphik2`, то в редакторе должны демонстрироваться все колонки этой таблицы.
     const std::string valueCol = (nameIdx > -1) ? "name" : parts->keyCol;
 
-    m_nameref.emplace(idx, buildIdNameMap(repo, parts->srcTable,
+    m_nameref.emplace(idx, buildIdNameMap(tables, parts->srcTable,
                                           parts->keyCol, valueCol));
     m_namerefSources[parts->srcTable].push_back(idx);
 }
@@ -121,10 +124,10 @@ void BackInfoCache::loadEnpic(const RCol& rcol)
 
 std::vector<size_t> BackInfoCache::rebuildRefsFrom(const std::string& srcTable,
                                                    const RData& rdata,
-                                                   ITableRepository* repo)
+                                                   std::shared_ptr<ITableRepository> tables)
 {
     std::vector<size_t> updatedCols;
-    if (!repo || srcTable.empty())
+    if (!tables || srcTable.empty())
         return updatedCols;
 
     // Быстрый доступ:
@@ -143,7 +146,7 @@ std::vector<size_t> BackInfoCache::rebuildRefsFrom(const std::string& srcTable,
         posByPluginIdx.emplace(pluginIdx, pos++);
     }
 
-    const long nameIdx = repo->columnIndex(srcTable, "name");
+    const long nameIdx = tables->columnIndex(srcTable, "name");
 
     auto findRCol = [&](size_t pluginIdx) -> const RCol* {
         auto it = byPluginIdx.find(pluginIdx);
@@ -160,19 +163,19 @@ std::vector<size_t> BackInfoCache::rebuildRefsFrom(const std::string& srcTable,
     auto rebuildNameref = [&](size_t pluginIdx, const RCol& rcol) -> bool {
         const auto parts = BackInfoCache::parseNamerefStr(rcol.getNameRef());
         if (!parts) return false;
-        const long nameIdx = repo->columnIndex(srcTable, "name");
+        const long nameIdx = tables->columnIndex(srcTable, "name");
         const std::string valueCol = (nameIdx > -1) ? "name" : parts->keyCol;
-        m_nameref[pluginIdx] = buildIdNameMap(repo, srcTable, parts->keyCol, valueCol);
+        m_nameref[pluginIdx] = buildIdNameMap(tables, srcTable, parts->keyCol, valueCol);
         return true;
     };
 
     auto rebuildSuperenum = [&](size_t pluginIdx, const RCol& rcol) -> bool {
         const auto parts = BackInfoCache::parseSuperenumStr(rcol.getNameRef());
         if (!parts) return false;
-        if (repo->columnIndex(srcTable, parts->keyCol)   < 0 ||
-            repo->columnIndex(srcTable, parts->valueCol) < 0)
+        if (tables->columnIndex(srcTable, parts->keyCol)   < 0 ||
+            tables->columnIndex(srcTable, parts->valueCol) < 0)
             return false;
-        m_superenum[pluginIdx] = buildIdNameMap(repo, srcTable,
+        m_superenum[pluginIdx] = buildIdNameMap(tables, srcTable,
                                                 parts->keyCol, parts->valueCol);
         return true;
     };
@@ -199,17 +202,17 @@ std::vector<size_t> BackInfoCache::rebuildRefsFrom(const std::string& srcTable,
     return updatedCols;
 }
 
-BackInfoCache::RefMap BackInfoCache::buildIdNameMap(ITableRepository* repo,
+BackInfoCache::RefMap BackInfoCache::buildIdNameMap(std::shared_ptr<ITableRepository> tables,
                                                     const std::string& srcTable,
                                                     const std::string& keyCol,
                                                     const std::string& valueCol)
 {
     RefMap result;
 
-    if (!repo) return result;
+    if (!tables) return result;
 
     QDataBlock qdb;
-    repo->fillBlock(srcTable, qdb, keyCol + "," + valueCol);
+    tables->fillBlock(srcTable, qdb, keyCol + "," + valueCol);
 
     for (int row = 0; row < qdb.RowsCount(); ++row) {
         const size_t key  = static_cast<size_t>(std::visit(ToLong(), qdb.Get(row, 0)));

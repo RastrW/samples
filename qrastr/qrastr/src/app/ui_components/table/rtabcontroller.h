@@ -8,7 +8,7 @@
 #include "UIForms.h"
 #include "QtitanGrid.h"
 
-class QAstra;
+class ITableRepository;
 class RGrid;
 class RModel;
 class RCol;
@@ -33,9 +33,8 @@ class RtabController : public QObject
 {
     Q_OBJECT
 public:
-    explicit RtabController(QAstra*             pqastra,
+    explicit RtabController(std::shared_ptr<ITableRepository> tables,
                             CUIForm             UIForm,
-                            RTablesDataManager* pRTDM,
                             ads::CDockManager*  pDockManager,
                             QObject*            parent = nullptr);
     ~RtabController() override;
@@ -100,7 +99,7 @@ private:
      * c) устанавливает редакторы колонок (SetEditors);
      * d) восстанавливает условное форматирование из JSON.
     */
-    void createModel(QAstra* pqastra);
+    void createModel(std::shared_ptr<ITableRepository> tables);
     void applyAllColumnEditors();
     void applyColumnEditor(int colIndex);
     void setTableView(int multiplier = 10);
@@ -113,14 +112,13 @@ private:
     std::unique_ptr<LinkedFormController> m_linkedFormCtrl;
     std::unique_ptr<ContextMenuBuilder>   m_menuBuilder;
     std::unique_ptr<CondFormatController> m_condFormatCtrl;
-
+    std::shared_ptr<ITableRepository>     m_tables;
     // ── Грид (создан здесь, передан в RtabShell) ────────────────────────────
     RGrid*                 m_grid  {nullptr};
     Qtitan::GridTableView* m_view  {nullptr};
 
     // ── Конфигурация ────────────────────────────────────────────────────────
     CUIForm              m_UIForm;
-    RTablesDataManager*  m_pRTDM       {nullptr};
     ads::CDockManager*   m_DockManager {nullptr};
     std::shared_ptr<PyHlp> pPyHlp_;
 

@@ -4,12 +4,12 @@
 #include <QLineEdit>
 #include <QHBoxLayout>
 
-ColPropDialog::ColPropDialog(ITableRepository*                   repo,
+ColPropDialog::ColPropDialog(std::shared_ptr<ITableRepository>        tables,
                              const ITableRepository::ColumnSchema& schema,
                              Qtitan::GridTableView*              view,
                              QWidget*                            parent)
     : QDialog(parent)
-    , m_repo(repo)
+    , m_tables(tables)
     , m_schema(schema)
     , m_view(view)
 {
@@ -87,24 +87,24 @@ void ColPropDialog::setupUi()
 
 void ColPropDialog::on_btn_ok_clicked()
 {
-    m_repo->setLockEvent(true);
+    m_tables->setLockEvent(true);
 
-    m_repo->setColumnProperty(m_schema.tableName, m_schema.name,
+    m_tables->setColumnProperty(m_schema.tableName, m_schema.name,
                               FieldProperties::Precision,
                               m_lePrecision->text().toStdString());
-    m_repo->setColumnProperty(m_schema.tableName, m_schema.name,
+    m_tables->setColumnProperty(m_schema.tableName, m_schema.name,
                               FieldProperties::Description,
                               m_teDescr->toPlainText().toStdString());
-    m_repo->setColumnProperty(m_schema.tableName, m_schema.name,
+    m_tables->setColumnProperty(m_schema.tableName, m_schema.name,
                               FieldProperties::Expression,
                               m_leExpression->text().toStdString());
-    m_repo->setColumnProperty(m_schema.tableName, m_schema.name,
+    m_tables->setColumnProperty(m_schema.tableName, m_schema.name,
                               FieldProperties::Title,
                               m_leTitle->text().toStdString());
-    m_repo->setColumnProperty(m_schema.tableName, m_schema.name,
+    m_tables->setColumnProperty(m_schema.tableName, m_schema.name,
                               FieldProperties::Width,
                               m_leWidth->text().toStdString());
-    m_repo->setLockEvent(false);
+    m_tables->setLockEvent(false);
 
     // Обновляем decimals в редакторе колонки QTitan
     auto* column_qt = static_cast<Qtitan::GridTableColumn*>(

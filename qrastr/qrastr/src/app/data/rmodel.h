@@ -69,7 +69,7 @@ public:
      * @param repo  Невладеющий указатель на ITableRepository.
      *              Время жизни репозитория гарантируется RtabController.
      */
-    explicit RModel(QObject* parent, ITableRepository* repo);
+    explicit RModel(QObject* parent, std::shared_ptr<ITableRepository>        tables);
 
     void setForm(CUIForm* pUIForm) { m_UIform = pUIForm; }
 
@@ -113,7 +113,7 @@ public:
 
 private:
     // ── Данные ───────────────────────────────────────────────────────────────
-    ITableRepository*  m_repo;// m_repo — единственная точка входа к плагину.
+    std::shared_ptr<ITableRepository> m_tables;
     CUIForm*           m_UIform  {nullptr};
 
     std::unique_ptr<RData> m_rdata;

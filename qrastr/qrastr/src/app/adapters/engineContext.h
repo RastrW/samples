@@ -3,7 +3,7 @@
 
 class IFileOperations;
 class ICalculationEngine;
-class IEventSource;
+class ILogSource;
 class ITableRepository;
 class ITIEngine;
 class IBarsMDPEngine;
@@ -11,7 +11,7 @@ class IBarsMDPEngine;
 struct EngineContext {
     std::shared_ptr<IFileOperations>    fileOps;
     std::shared_ptr<ICalculationEngine> calcEngine;
-    std::shared_ptr<IEventSource>       eventSource;
+    std::shared_ptr<ILogSource>         logSource;
     std::shared_ptr<ITableRepository>   tables;
     std::shared_ptr<ITIEngine>          ti;       // nullptr если не загружен
     std::shared_ptr<IBarsMDPEngine>     barsMDP;  // nullptr если не загружен

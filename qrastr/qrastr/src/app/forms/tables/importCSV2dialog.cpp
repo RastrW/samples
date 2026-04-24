@@ -11,11 +11,11 @@
 #include "astra/IPlainRastr.h"
 #include "table/rtablesdatamanager.h"
 
-ImportCSV2dialog::ImportCSV2dialog(ITableRepository*  repo,
+ImportCSV2dialog::ImportCSV2dialog(std::shared_ptr<ITableRepository> tables,
                                    const std::string& tableName,
                                    const std::string& defaultCols,
                                    QWidget*           parent)
-    : QDialog(parent), m_repo(repo)
+    : QDialog(parent), m_tables(tables)
 {
     setWindowTitle(tr("Импорт из формата CSV"));
 
@@ -98,7 +98,7 @@ void ImportCSV2dialog::on_buttonBox_accepted()
     if (m_rbUnion->isChecked())  kod = eCSVCode::KeyAdd;
     if (m_rbUpdate->isChecked()) kod = eCSVCode::Key;
 
-    m_repo->importToCsv(
+    m_tables->importToCsv(
         m_leTname->text().toStdString(),
         m_leParams->text().toStdString(),
         m_leSelection->text().toStdString(),

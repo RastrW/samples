@@ -4,10 +4,6 @@
 #include <spdlog/sinks/rotating_file_sink.h>
 #include <spdlog/sinks/qt_sinks.h>
 
-#include "qastra.h"
-#include "qti.h"
-#include "qbarsmdp.h"
-
 #include "calcIacceptableDialog.h"
 
 #include <QStatusBar>
@@ -39,6 +35,7 @@
 #include "workspaceManager.h"
 #include "logManager.h"
 #include "mainwindow/menuSearchWidget.h"
+#include "engineContext.h"
 
 MainWindow::MainWindow()
     : QMainWindow(){
@@ -73,30 +70,24 @@ MainWindow::MainWindow()
 MainWindow::~MainWindow() = default;
 
 void MainWindow::initialize(
-    std::shared_ptr<QAstra> qastra,
-    std::shared_ptr<QTI> qti,
-    std::shared_ptr<QBarsMDP> qbarsmdp,
+    const EngineContext& engCtxt,
     const std::list<CUIForm>& forms)
 {
-    m_qastra   = qastra;
-    m_qti      = qti;
-    m_qbarsmdp = qbarsmdp;
-
     // ========== СОЗДАНИЕ КОМПОНЕНТОВ ==========
     // SettingsManager нужен первым для загрузки настроек
     m_appSettingsManager = std::make_unique<AppSettingsManager>(this);
 
-    m_fileManager = std::make_unique<FileManager>(m_qastra, this);
+    m_fileManager = std::make_unique<FileManager>(engCtxt.fileOps, this);
 
     m_calcController = std::make_unique<CalculationController>(
-        m_qastra, m_qti, m_qbarsmdp, this);
+        engCtxt.calcEngine, engCtxt.ti, engCtxt.barsMDP, this);
     m_formManager = std::make_unique<FormManager>(
-        m_qastra, m_dockManager, m_logManager, this);
+        engCtxt, m_dockManager, m_logManager, this);
     m_formManager->setForms(forms);
     m_uiBuilder = std::make_unique<UIBuilder>(this);
     m_uiBuilder->buildAll();
     // ========== НАСТРОЙКА КОМПОНЕНТОВ ==========
-    m_logManager->setupRastrConnections(m_qastra);
+    m_logManager->setupRastrConnections(engCtxt.logSource);
 
     // Построение меню форм
     m_formManager->buildFormsMenu(

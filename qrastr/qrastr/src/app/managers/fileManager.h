@@ -2,10 +2,9 @@
 #include <memory>
 #include <QObject>
 
-
-class QAstra;
 enum class eLoadCode;
 enum class IPlainRastrRetCode;
+class IFileOperations;
 
 struct RecentFileEntry {
     QString file;
@@ -18,7 +17,7 @@ class FileManager : public QObject {
     
 public:
     explicit FileManager(
-        std::shared_ptr<QAstra> qastra,
+        std::shared_ptr<IFileOperations> fileOps,
         QWidget* parent = nullptr
     );
     ~FileManager() = default;
@@ -94,7 +93,7 @@ signals:
     void currentFileChanged(const QString& filePath);   
 private:
     // ========== Зависимости ==========
-    std::shared_ptr<QAstra> m_qastra;
+    std::shared_ptr<IFileOperations> m_fileOps;
     QWidget* m_parentWidget;
     
     // ========== Состояние файлов ==========

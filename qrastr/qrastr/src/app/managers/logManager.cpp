@@ -32,7 +32,7 @@ void LogManager::setupLogSinks()
     m_protocolSink = protocolSink;
 }
 
-void LogManager::setupRastrConnections(std::shared_ptr<QAstra> qastra) {
+void LogManager::setupRastrConnections(std::shared_ptr<ILogSource> logSource) {
     // Второй поток данных — структурированные _log_data от Rastr
     connect(qastra.get(), &QAstra::onRastrLog,
             m_mainProtocol,   &MainProtocolWidget::onRastrLog);

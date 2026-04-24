@@ -7,6 +7,7 @@ class QTI;
 class QBarsMDP;
 class CUIFormsCollection;
 class CUIForm;
+class EngineContext;
 
 /**
  * @class App
@@ -32,6 +33,8 @@ public:
     std::shared_ptr<QBarsMDP> getQBarsMDPPtr(){ return m_sp_qbarsmdp;}
     // Сбросить накопленные за время init() сообщения в логгер
     void flushLogCache(std::shared_ptr<spdlog::sinks::sink> qt_sink);
+
+    EngineContext buildEngineContext();
 signals:
     void sig_progressChanged(int percent, const QString& message);
 private:

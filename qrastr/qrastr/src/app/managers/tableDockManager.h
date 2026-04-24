@@ -29,7 +29,7 @@ class TableDockManager : public QObject {
 
 public:
     explicit TableDockManager(
-        std::shared_ptr<QAstra> qastra,
+        std::shared_ptr<ITableRepository> tables,
         ads::CDockManager*      dockManager,
         std::shared_ptr<PyHlp>  pyHlp,
         QWidget*                parent = nullptr);
@@ -85,10 +85,10 @@ private slots:
 
 private:
     // ── Зависимости ──────────────────────────────────────────────────────────
-    std::shared_ptr<QAstra> m_qastra;
-    ads::CDockManager*      m_dockManager;
-    std::shared_ptr<PyHlp>  m_pyHlp;
-    QWidget*                m_parentWidget;
+    std::shared_ptr<ITableRepository>   m_tables;
+    ads::CDockManager*                  m_dockManager;
+    std::shared_ptr<PyHlp>              m_pyHlp;
+    QWidget*                            m_parentWidget;
 
     std::unique_ptr<RTablesDataManager>
         m_rtdm;

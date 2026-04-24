@@ -10,16 +10,15 @@ using WrapperExceptionType = std::runtime_error;
 #include "utils.h"
 
 TableDockManager::TableDockManager(
-    std::shared_ptr<QAstra> qastra,
+    std::shared_ptr<ITableRepository> tables,
     ads::CDockManager*      dockManager,
     std::shared_ptr<PyHlp>  pyHlp,
     QWidget*                parent)
     : QObject(parent)
-    , m_qastra(qastra)
+    , m_tables(tables)
     , m_dockManager(dockManager)
     , m_pyHlp(pyHlp)
     , m_parentWidget(parent)
-    , m_rtdm(std::make_unique<RTablesDataManager>(m_qastra))
 {}
 
 void TableDockManager::setForms(const std::list<CUIForm>& forms){
@@ -57,7 +56,7 @@ void TableDockManager::openForm(const CUIForm& form)
         dw->setFeature(ads::CDockWidget::DockWidgetDeleteOnClose, true);
         // ── Виджет таблицы ────────────────────────────────────────────────────
         auto* ctrl = new RtabController(
-            m_qastra.get(), form, m_rtdm.get(), m_dockManager, dw);
+            m_tables, form, m_dockManager, dw);
 
         // true (по умолчанию) = с тулбаром и шорткатами
         dw->setWidget(ctrl->createShell());

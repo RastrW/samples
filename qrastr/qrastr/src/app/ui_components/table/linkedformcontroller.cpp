@@ -20,16 +20,14 @@
 #include "table/ITableRepository.h"
 
 LinkedFormController::LinkedFormController(
-    QAstra*                  qastra,
-    RTablesDataManager*      pRTDM,
+    std::shared_ptr<ITableRepository> tables,
     ads::CDockManager*       dockManager,
     Qtitan::GridTableView*   view,
     RModel*                  model,
     const CUIForm&           form,
     RtabController*          parentController)
     : QObject(parentController)
-    , m_qastra(qastra)
-    , m_rtdm(pRTDM)
+    , m_tables(tables)
     , m_dockManager(dockManager)
     , m_view(view)
     , m_model(model)
@@ -49,13 +47,12 @@ void LinkedFormController::disconnectAll()
 
 void LinkedFormController::openLinkedForm(LinkedForm lf)
 {
-    CUIForm* pUIForm = m_rtdm->getForm(lf.linkedform);
+    CUIForm* pUIForm = m_tables->getForm(lf.linkedform);
     if (!pUIForm) return;
     // Создаём дочерний виджет — он заведёт собственный LinkedFormController
     auto* child = new RtabController(
-        m_qastra,
+        m_tables,
         *pUIForm,
-        m_rtdm,
         m_dockManager,
         nullptr); //parent для QObject, dock управляет временем жизни
 
@@ -171,7 +168,7 @@ void LinkedFormController::openLinkedMacro(LinkedMacro lm, int contextRow)
 
 void LinkedFormController::buildLinkedFormsMenu(int contextRow, QMenu* menu)
 {
-    auto table = m_rtdm->getBlock("formcontext", "");
+    auto table = m_tables->getBlock("formcontext", "");
 
     for (int irow = 0; irow < table->RowsCount(); ++irow) {
         const std::string formName = std::get<std::string>(table->Get(irow, 0));
@@ -198,7 +195,7 @@ void LinkedFormController::buildLinkedFormsMenu(int contextRow, QMenu* menu)
 
 void LinkedFormController::buildLinkedMacroMenu(int contextRow, QMenu* menu)
 {
-    auto table = m_rtdm->getBlock("macrocontext", "");
+    auto table = m_tables->getBlock("macrocontext", "");
 
     for (int irow = 0; irow < table->RowsCount(); ++irow) {
         const std::string formName = std::visit(ToString(), table->Get(irow, 0));
@@ -232,7 +229,7 @@ void LinkedFormController::applyLinkedForm(LinkedForm lf)
     const std::string tname     = m_model->getRdata()->t_name_;
     const std::string selection = lf.get_selection_result();
 
-    const std::vector<long> indices = m_rtdm->rowsBySelection(tname, selection);
+    const std::vector<long> indices = m_tables->rowsBySelection(tname, selection);
 
     //Создаём CustomFilterCondition для QTitan Grid с этими индексами
     auto* groupCondition = new GridFilterGroupCondition(m_view->filter());

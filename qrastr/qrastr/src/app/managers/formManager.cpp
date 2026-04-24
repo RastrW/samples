@@ -11,25 +11,22 @@
 #include "logManager.h"
 
 FormManager::FormManager(
-    std::shared_ptr<QAstra> qastra,
+    const EngineContext&    ctx,
     ads::CDockManager*      dockManager,
     LogManager*             logManager,
     QWidget*                parent)
     : QObject(parent)
-    , m_qastra(qastra)
+    , m_ctx(ctx)
     , m_dockManager(dockManager)
     , m_parentWidget(parent)
-    , m_logManager(logManager)
-{
-    assert(m_qastra      != nullptr);
-    assert(m_dockManager != nullptr);
-    assert(m_logManager  != nullptr);
+    , m_logManager(logManager){
+
 
     m_pPyHlp    = std::make_shared<PyHlp>(*m_qastra->getRastr().get());
 
     // ── Таблицы ───────────────────────────────────────────────────────────────
     m_tableDockManager = new TableDockManager(
-        m_qastra, m_dockManager, m_pPyHlp, m_parentWidget);
+        m_ctx.tables, m_dockManager, m_pPyHlp, m_parentWidget);
 
     connect(m_tableDockManager, &TableDockManager::windowOpened,
             this,               &FormManager::registerDockWidget);

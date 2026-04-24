@@ -11,11 +11,11 @@
 #include <QLabel>
 #include "table/ITableRepository.h"
 
-ExportCSVdialog::ExportCSVdialog(ITableRepository* repo,
+ExportCSVdialog::ExportCSVdialog(std::shared_ptr<ITableRepository> tables,
                                  const std::string& tableName,
                                  const std::string& defaultCols,
                                  QWidget* parent)
-    : QDialog(parent), m_repo(repo)
+    : QDialog(parent), m_tables(tables)
 {
     setWindowTitle(tr("Экспорт в формате CSV"));
 
@@ -91,7 +91,7 @@ void ExportCSVdialog::accept()
     if (m_rbExtend->isChecked())          kod = eCSVCode::KeyAdd;
     if (m_rbOverwriteHeaders->isChecked()) kod = eCSVCode::ReplaceName;
 
-    m_repo->exportToCsv(
+    m_tables->exportToCsv(
         m_leTable->text().toStdString(),
         m_leParam->text().toStdString(),
         m_leSelection->text().toStdString(),

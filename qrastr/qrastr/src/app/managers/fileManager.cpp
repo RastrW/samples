@@ -12,13 +12,13 @@
 #include <spdlog/spdlog.h>
 #include "cursor_guard.h"
 #include "settingsKeys.h"
+#include "files/IFileOperations.h"
 
-FileManager::FileManager(std::shared_ptr<QAstra> qastra, QWidget* parent)
+FileManager::FileManager(std::shared_ptr<IFileOperations> fileOps, QWidget* parent)
     : QObject(parent)
-    , m_qastra(qastra)
+    , m_fileOps(fileOps)
     , m_parentWidget(parent)
 {
-    assert(m_qastra != nullptr);
 
     const auto& startFiles = RastrParameters::get_instance()->getStartLoadFileTemplates();
     for (const auto& [file, tmpl] : startFiles) {
@@ -40,7 +40,7 @@ bool FileManager::newFile() {
             const std::string path =
                 RastrParameters::get_instance()->getDirSHABLON().absolutePath().toStdString()
                 + "//" + templateName.toStdString();
-            m_qastra->Load(eLoadCode::RG_REPL, "", path);
+            m_fileOps->Load(eLoadCode::RG_REPL, "", path);
         }
     }
     // Новый файл - сбрасываем текущий путь
@@ -68,7 +68,7 @@ int FileManager::openFiles() {
         if (selectedFilter == noTemplate) {
             // Загрузка без шаблона
             IPlainRastrRetCode res =
-                m_qastra->Load(eLoadCode::RG_REPL, file.toStdString(), "");
+                m_fileOps->Load(eLoadCode::RG_REPL, file.toStdString(), "");
             if (res == IPlainRastrRetCode::Ok) {
                 setCurrentFile(file, "");
                 ++successCount;
@@ -90,7 +90,7 @@ int FileManager::openFiles() {
                     RastrParameters::get_instance()->getDirSHABLON()
                         .filePath(QString::fromStdString(name + ext));
 
-                IPlainRastrRetCode res = m_qastra->Load(
+                IPlainRastrRetCode res = m_fileOps->Load(
                     eLoadCode::RG_REPL,
                     file.toStdString(),
                     shablon.toStdString());
@@ -128,7 +128,7 @@ bool FileManager::openFile(const QString& filePath, const QString& templatePath)
     IPlainRastrRetCode res;
     {
         CursorGuard guard;
-        res = m_qastra->Load(
+        res = m_fileOps->Load(
             eLoadCode::RG_REPL,
             filePath.toStdString(),
             templatePath.toStdString());
@@ -154,7 +154,7 @@ bool FileManager::save() {
         return saveAs();
     }
     
-    m_qastra->Save(m_currentFile.toStdString().c_str(), "");
+    m_fileOps->Save(m_currentFile.toStdString().c_str(), "");
     
     std::string str_msg = fmt::format("{}: {}", "Сохранен файл", m_currentFile.toStdString());
     emit fileSaved(m_currentFile);
@@ -178,7 +178,7 @@ bool FileManager::saveAs() {
             + "/" + templatePath.toStdString();
     }
     
-    m_qastra->Save(
+    m_fileOps->Save(
         filePath.toStdString(),
         str_path_to_shablon.c_str()
     );
@@ -197,7 +197,7 @@ bool FileManager::saveAll() {
     }
 
     SaveAllDialog* fsaveall = new SaveAllDialog(
-        m_qastra.get(),
+        m_fileOps,
         m_loadedFiles,
         m_parentWidget
     );
@@ -280,7 +280,7 @@ QList<RecentFileEntry> FileManager::getRecentFiles() const {
 
 void FileManager::openRecentFile(const QString& filePath,
                                  const QString& templatePath) {
-    m_qastra->Load(eLoadCode::RG_REPL,
+    m_fileOps->Load(eLoadCode::RG_REPL,
                    filePath.toStdString(),
                    templatePath.toStdString());
     setCurrentFile(filePath, templatePath);
