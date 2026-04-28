@@ -6,7 +6,7 @@
 #include "rdata.h"
 #include "table/QDataBlocks.h"
 #include "UIForms.h"
-#include "table/rtablesdatamanager.h"
+#include "table/rTablesDataAdapter.h"
 #include <string_bool.h>
 #include "condFormat.h"
 
@@ -326,7 +326,7 @@ bool RModel::setData(const QModelIndex& index, const QVariant& value, int role)
 
     // Единственная точка записи — репозиторий.
     // emit dataChanged не вызываем: плагин сгенерирует хинт →
-    // RTDM обновит блок → sig_dataChanged → slot_DataChanged → View.
+    // RTDA обновит блок → sig_dataChanged → slot_DataChanged → View.
     m_tables->setValue(tname, colName, row, vd);
     return true;
 }
@@ -438,7 +438,7 @@ void RModel::slot_EndRemoveRows(const std::string& tName)
 
 void RModel::slot_RefTableChanged(const std::string& tname)
 {
-    // Если изменилась наша же таблица — RTDM уже послал ChangeTable/ChangeAll,
+    // Если изменилась наша же таблица — RTDA уже послал ChangeTable/ChangeAll,
     // не нужно дублировать.
     if (m_rdata->t_name_ == tname) return;
     // Перестраиваем только затронутые записи кеша
@@ -653,9 +653,8 @@ RCol* RModel::getRCol(int col) const
 
 int RModel::getIndexCol(const std::string& col) const
 {
-    for (int i = 0; i < columnCount(); ++i)
-        if (getRCol(i)->getColName() == col) return i;
-    return -1;
+    auto it = m_rdata->mCols_.find(col);
+    return it != m_rdata->mCols_.end() ? it->second : -1;
 }
 
 RData* RModel::getRdata()

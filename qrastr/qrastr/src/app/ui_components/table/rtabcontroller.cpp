@@ -500,7 +500,7 @@ void RtabController::slot_groupCorrection(){
     fgc->show();
 }
 
-void RtabController::slot_beginResetModel(std::string tname){
+void RtabController::slot_beginResetModel(const std::string& tname){
     if (m_UIForm.TableName() != tname) return;
 
     m_view->beginUpdate(); // ← открываем внешний блок
@@ -514,7 +514,7 @@ void RtabController::slot_beginResetModel(std::string tname){
     }
 }
 
-void RtabController::slot_endResetModel(std::string tname){
+void RtabController::slot_endResetModel(const std::string& tname){
     if (m_UIForm.TableName() != tname) return;
 
     // Восстанавливаем видимость и переназначаем редакторы.
@@ -553,7 +553,7 @@ void RtabController::slot_close()
 {
     spdlog::info("RtabController::slot_close [{}]", m_UIForm.Name());
 
-    // RTDM → модель и контроллер
+    // RTDA → модель и контроллер
     if (m_tableEvents) {
         disconnect(m_tableEvents.get(), nullptr, m_model.get(), nullptr);
         disconnect(m_tableEvents.get(), nullptr, this, nullptr);
@@ -581,7 +581,6 @@ void RtabController::slot_close()
 }
 
 void RtabController::setPyHlp(std::shared_ptr<PyHlp> pPyHlp){
-    pPyHlp_ = pPyHlp;
     if (m_linkedFormCtrl){
         m_linkedFormCtrl->setPyHlp(pPyHlp);
     }

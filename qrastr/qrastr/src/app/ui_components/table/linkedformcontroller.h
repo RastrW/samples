@@ -12,7 +12,6 @@ class RModel;
 class RtabWidget;
 class PyHlp;
 class QWidget;
-class RTablesDataManager;
 class ITableRepository;
 class ITableEvents;
 

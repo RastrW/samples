@@ -2,7 +2,6 @@
 
 #include <DockWidget.h>
 #include <DockManager.h>
-#include "qastra.h"
 #include "tableDockManager.h"
 #include "web/graphWebManager.h"
 #include "sdl/graphSDLManager.h"

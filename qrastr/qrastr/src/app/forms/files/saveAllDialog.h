@@ -11,8 +11,8 @@ class SaveAllDialog : public CheckboxListDialog
 {
     Q_OBJECT
 public:
-    explicit SaveAllDialog(std::shared_ptr<IFileOperations> fileOps,
-                           std::map<QString,QString> _mFilesLoad,
+    explicit SaveAllDialog( std::shared_ptr<IFileOperations> fileOps,
+                            std::unordered_map<QString,QString> filesLoad,
                             QWidget *parent = nullptr);
 
     void showEvent(QShowEvent* event) override;
@@ -22,7 +22,7 @@ private slots:
 private:
     std::shared_ptr<IFileOperations> m_fileOps;
     QDir                  m_dirShabl;
-    std::map<QString,QString> m_FilesLoad;
+    std::unordered_map<QString,QString> m_FilesLoad;
 
     enum class _cols : int { save, templ, file, path };
 };

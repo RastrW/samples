@@ -90,13 +90,13 @@ public slots:
 
 private slots:
     void slot_contextMenu(ContextMenuEventArgs* args);
-    void slot_beginResetModel(std::string tname);
-    void slot_endResetModel(std::string tname);
+    void slot_beginResetModel(const std::string& tname);
+    void slot_endResetModel(const std::string& tname);
 
 private:
     /** @brief
      * a) создаёт RModel, вызывает setForm/populateDataFromRastr;
-     * b) подключает сигналы RTDM к слотам RModel (обновления данных);
+     * b) подключает сигналы RTDA к слотам RModel (обновления данных);
      * c) устанавливает редакторы колонок (SetEditors);
      * d) восстанавливает условное форматирование из JSON.
     */
@@ -122,7 +122,6 @@ private:
     // ── Конфигурация ────────────────────────────────────────────────────────
     CUIForm              m_UIForm;
     ads::CDockManager*   m_DockManager {nullptr};
-    std::shared_ptr<PyHlp> pPyHlp_;
 
     std::unordered_map<QString, bool> m_columnsVisible;
 

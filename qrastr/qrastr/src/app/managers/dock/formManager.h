@@ -4,7 +4,6 @@
 #include <QObject>
 #include <QSet>
 
-class QAstra;
 class RtabController;
 class CUIForm;
 class PyHlp;

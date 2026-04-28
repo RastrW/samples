@@ -1,11 +1,10 @@
 #pragma once
 #include <QObject>
-#include "table/rtablesdatamanager.h"
+#include "table/rTablesDataAdapter.h"
 
 namespace ads { class CDockManager; class CDockWidget; }
 
 class RtabController;
-class QAstra;
 class PyHlp;
 class CUIForm;
 class QAction;

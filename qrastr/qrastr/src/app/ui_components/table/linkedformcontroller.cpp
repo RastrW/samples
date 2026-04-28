@@ -2,7 +2,7 @@
 
 #include "rtabController.h"
 #include "rtabshell.h"
-#include "table/rtablesdatamanager.h"
+#include "table/rTablesDataAdapter.h"
 #include "rmodel.h"
 #include "rdata.h"
 #include "qmcr/pyhlp.h"

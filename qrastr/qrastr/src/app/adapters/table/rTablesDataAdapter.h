@@ -24,12 +24,12 @@ class _hint_data;
  * Время жизни QDataBlock:
  *   Блок удаляется из кеша при следующем вызове get(), если use_count() == 1.
  */
-class RTablesDataManager : public ITableEvents,
+class RTablesDataAdapter : public ITableEvents,
                            public ITableRepository
 {
     Q_OBJECT
 public:
-    RTablesDataManager(std::shared_ptr<QAstra> _pqastra);
+    RTablesDataAdapter(std::shared_ptr<QAstra> _pqastra);
 
     void setForms ( std::list<CUIForm>* _lstUIForms) override;
     TableSchema getSchema(const std::string& tname) override;
@@ -110,7 +110,7 @@ private slots:
     void slot_rastrHint(const _hint_data& hint_data);
 private:
     std::shared_ptr<QAstra> m_pqastra;
-    std::list<CUIForm>* m_plstUIForms;
+    std::list<CUIForm>* m_plstUIForms = nullptr;
 
      /* Хранилище данных для моделей
       * 1:n то есть на 10 окон узлы -> 1 DataBlock

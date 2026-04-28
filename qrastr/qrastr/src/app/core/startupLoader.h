@@ -5,7 +5,7 @@ class IFileOperations;
 class QDir;
 
 /**
- * @brief Загружает стартовые шаблоны и файлы через m_qastra->Load().
+ * @brief Загружает стартовые шаблоны и файлы.
  * Ответственности этого класса:
  *  - Загрузить шаблоны из Params::getStartLoadTemplates().
  *  - Загрузить файлы из Params::getStartLoadFileTemplates().
@@ -34,7 +34,7 @@ signals:
 
 private:
     bool loadTemplates(const QDir& templatesDir);
-    bool loadFiles(const QDir& templatesDir);
+    void loadFiles(const QDir& templatesDir);
 
     std::shared_ptr<IFileOperations> m_fileOps;
     QWidget*                m_parentWidget;
