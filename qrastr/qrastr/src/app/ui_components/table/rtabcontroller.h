@@ -55,10 +55,8 @@ public:
     void setPyHlp(std::shared_ptr<PyHlp> pPyHlp);
 
     /// Регистрирует шорткаты Ctrl+I/A/R/D на grid.
-    /// Вызывается из RtabShell (только когда withToolbar = true).
-    /// Функция сделана статической, потому что шорткаты создаются в `RtabShell`,
-    /// а не в контроллере.
-    static void setupShortcuts(RtabController* target, RGrid* grid);
+    /// Вызывается только когда withToolbar = true.
+    void setupShortcuts(RGrid* grid);
 public slots:
     void slot_close();
 

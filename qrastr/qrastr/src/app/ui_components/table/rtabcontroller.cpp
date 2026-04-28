@@ -167,7 +167,7 @@ RtabShell* RtabController::createShell(bool withToolbar)
     return shell;
 }
 
-void RtabController::setupShortcuts(RtabController* target, RGrid* grid)
+void RtabController::setupShortcuts(RGrid* grid)
 {
     // Qt::WidgetWithChildrenShortcut + parent=m_grid:
     // шорткат срабатывает, когда фокус внутри m_grid или его дочерних виджетов.
@@ -183,7 +183,7 @@ void RtabController::setupShortcuts(RtabController* target, RGrid* grid)
     for (const auto& d : defs) {
         auto* sc = new QShortcut(d.key, grid); // parent — grid (дочерний к shell)
         sc->setContext(Qt::WidgetWithChildrenShortcut); // фокус внутри grid
-        QObject::connect(sc, &QShortcut::activated, target, d.slot); // цель — контроллер
+        QObject::connect(sc, &QShortcut::activated, this, d.slot); // цель — контроллер
     }
 }
 

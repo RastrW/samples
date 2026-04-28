@@ -32,7 +32,7 @@ RtabShell::RtabShell(RGrid*                 grid,
     if (withToolbar) {
         buildToolbar(controller);
         //  Горячие клавиши
-        RtabController::setupShortcuts(controller, m_grid);
+        controller->setupShortcuts(m_grid);
     }
 
     buildLayout(withToolbar);

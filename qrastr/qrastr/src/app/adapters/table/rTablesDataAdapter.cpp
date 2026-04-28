@@ -30,6 +30,12 @@ RTablesDataAdapter::getForm (const std::string& name)
     return nullptr;
 }
 
+bool RTablesDataAdapter::tableExists(const std::string& tname) {
+    IRastrTablesPtr tablesx{ m_pqastra->getRastr()->Tables() };
+    IRastrPayload   res    { tablesx->FindIndex(tname) };
+    return res.Value() >= 0;
+}
+
 void RTablesDataAdapter::getDynamicForms(std::vector<CUIForm>& out)
 {
     IRastrTablesPtr tablesx{ m_pqastra->getRastr()->Tables() };

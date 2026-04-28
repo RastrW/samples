@@ -104,7 +104,7 @@ public:
                      eCSVCode           mode) override;
     void setLockEvent(bool lock) override;
     CUIForm* getForm (const std::string& name) override;
-
+    bool tableExists(const std::string& tname) override;
 private slots:
     ///< Обработчик событий от Rastr
     void slot_rastrHint(const _hint_data& hint_data);

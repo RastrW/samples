@@ -35,20 +35,13 @@ void TableDockManager::setForms(const std::list<CUIForm>& forms){
 void TableDockManager::openForm(const CUIForm& form)
 {
     try {
-        // Используем интерфейс — tableSize вернёт -1 или бросит если нет таблицы:
-        const long t_ind = m_tables->columnIndex(form.TableName(), "");
-        try {
-            const long sz = m_tables->tableSize(form.TableName());
-            if (sz < 0) {
-                spdlog::info("Таблица [{}] не существует!", form.TableName());
-                return;
-            }else{
-                spdlog::info("Прочитана таблица [{}] - [{}]",
-                             form.Name(), form.TableName());
-            }
-        } catch (...) {
+
+        if (!m_tables->tableExists(form.TableName())) {
             spdlog::info("Таблица [{}] не существует!", form.TableName());
             return;
+        }else{
+            spdlog::info("Прочитана таблица [{}] - [{}]",
+                         form.Name(), form.TableName());
         }
 
         // ── Dock-виджет ───────────────────────────────────────────────────────
@@ -60,8 +53,17 @@ void TableDockManager::openForm(const CUIForm& form)
         // ── Виджет таблицы ────────────────────────────────────────────────────
         auto* ctrl = new RtabController(
             m_tables, m_tableEvents, form, m_dockManager, dw);
+
+        auto* shell = ctrl->createShell();
+        Q_ASSERT_X(shell, "openForm", "createShell returned nullptr");
+        if (!shell) {
+            delete ctrl; // или ctrl->deleteLater()
+            dw->deleteLater();
+            return;
+        }
         // true (по умолчанию) = с тулбаром и шорткатами
-        dw->setWidget(ctrl->createShell());
+        dw->setWidget(shell);
+
         m_dockManager->addDockWidgetTab(ads::TopDockWidgetArea, dw);
         ctrl->setPyHlp(m_pyHlp);
         // Добавляем в список открытых форм

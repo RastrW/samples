@@ -82,9 +82,6 @@ public:
     virtual void addRows   (const std::string& tname,
                          size_t             count) = 0;
     virtual void duplicateRow(const std::string& tname, long row) = 0;
-
-    virtual long tableSize(const std::string& tname) = 0;
-    virtual void setTableSize(const std::string& tname, long size) = 0;
     //──Администрирование ───────────────────────────────────────────────
     virtual void exportToCsv(const std::string& tname,
                              const std::string& cols,
@@ -104,4 +101,9 @@ public:
     virtual CUIForm* getForm(const std::string& name)= 0;
     virtual void setForms(std::list<CUIForm>* forms) = 0;
     virtual void getDynamicForms(std::vector<CUIForm>& out) = 0;
+
+
+    virtual long tableSize(const std::string& tname) = 0;
+    virtual void setTableSize(const std::string& tname, long size) = 0;
+    virtual bool tableExists(const std::string& tname) = 0;
 };
