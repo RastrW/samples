@@ -21,6 +21,7 @@ class CondFormatController;
 class PyHlp;
 class LinkedForm;
 struct FilterRule;
+class TableDockManager;
 
 namespace ads { class CDockManager; }
 namespace Qtitan { class GridTableView; }
@@ -37,6 +38,7 @@ public:
                             std::shared_ptr<ITableEvents>     tableEvents,
                             CUIForm             UIForm,
                             ads::CDockManager*  pDockManager,
+                            TableDockManager*   tableDockManager,
                             QObject*            parent = nullptr);
     ~RtabController() override;
 
@@ -65,9 +67,10 @@ public:
     /// Вызывается только когда withToolbar = true.
     void setupShortcuts(RGrid* grid);
     const CommonTableActions& actions() const { return m_comTabAct; }
-public slots:
-    void slot_close();
 
+    /// Снять фильтр связанной формы (вызывается при закрытии родительской таблицы)
+    void clearLinkedFilter();
+public slots:
     // ── Строки ──────────────────────────────────────────────────────────────
     void slot_addRow();
     void slot_insertRow();
@@ -135,4 +138,5 @@ private:
     /// Защита от повторного вызова createShell()
     bool m_shellCreated {false};
     CommonTableActions m_comTabAct;
+    TableDockManager* m_tableDockManager;
 };

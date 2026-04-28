@@ -5,6 +5,8 @@
 #include <DockManager.h>
 #include <QMenu>
 #include "utils.h"
+#include "table/linkedForm/linkedFormBond.h"
+
 
 TableDockManager::TableDockManager(
     std::shared_ptr<ITableRepository> tables,
@@ -32,39 +34,43 @@ void TableDockManager::setForms(const std::list<CUIForm>& forms){
     }
 }
 
-void TableDockManager::openForm(const CUIForm& form)
+std::pair<ads::CDockWidget*, RtabController*>
+TableDockManager::openForm(const CUIForm& form,
+                           std::optional<LinkedForm> linkedFilter)
 {
     try {
-
         if (!m_tables->tableExists(form.TableName())) {
             spdlog::info("Таблица [{}] не существует!", form.TableName());
-            return;
-        }else{
-            spdlog::info("Прочитана таблица [{}] - [{}]",
-                         form.Name(), form.TableName());
+            return {nullptr, nullptr};
         }
-
         // ── Dock-виджет ───────────────────────────────────────────────────────
-        auto* dw   = new ads::CDockWidget(
+        auto* dw = new ads::CDockWidget(
             QString::fromStdString(form.Name()), m_parentWidget);
         dw->setObjectName(QString::fromStdString(form.Name()));
         dw->setFeature(ads::CDockWidget::DockWidgetDeleteOnClose, true);
 
+        const bool withToolbar = !linkedFilter.has_value();
         // ── Виджет таблицы ────────────────────────────────────────────────────
         auto* ctrl = new RtabController(
-            m_tables, m_tableEvents, form, m_dockManager, dw);
+            m_tables, m_tableEvents, form, m_dockManager, this, dw);
 
-        auto* shell = ctrl->createShell();
+        auto* shell = ctrl->createShell(withToolbar);
         Q_ASSERT_X(shell, "openForm", "createShell returned nullptr");
         if (!shell) {
-            delete ctrl; // или ctrl->deleteLater()
             dw->deleteLater();
-            return;
+            return {nullptr, nullptr};
         }
         // true (по умолчанию) = с тулбаром и шорткатами
         dw->setWidget(shell);
 
-        m_dockManager->addDockWidgetTab(ads::TopDockWidgetArea, dw);
+        if (linkedFilter.has_value())
+            ctrl->applyLinkedFormFromController(*linkedFilter);
+
+        if (linkedFilter.has_value())
+            m_dockManager->addDockWidgetTab(ads::BottomAutoHideArea, dw);
+        else
+            m_dockManager->addDockWidgetTab(ads::TopDockWidgetArea, dw);
+
         ctrl->setPyHlp(m_pyHlp);
         // Добавляем в список открытых форм
         // Сигналы будут передаваться через onCalculationStarted/Finished
@@ -73,9 +79,7 @@ void TableDockManager::openForm(const CUIForm& form)
         // Уведомляем FormManager о новом dock-виджете
         emit windowOpened(dw);
 
-        connect(dw,   &ads::CDockWidget::closed,
-                ctrl, &RtabController::slot_close);
-        connect(dw,   &ads::CDockWidget::closed,
+        connect(dw, &ads::CDockWidget::closed,
                 this, [this, ctrl, name = form.Name()]() {
                     m_openForms.removeOne(ctrl);
                     if (m_activeForm == ctrl) m_activeForm = nullptr;
@@ -84,12 +88,16 @@ void TableDockManager::openForm(const CUIForm& form)
 
         emit formOpened(QString::fromStdString(form.Name()));
         emit activeFormChanged(ctrl);
+
+        return {dw, ctrl};
     } catch (const std::exception& ex) {
         spdlog::error("TableDockManager::openForm('{}') threw: {}",
                       form.Name(), ex.what());
+        return {nullptr, nullptr};
     } catch (...) {
         spdlog::error("TableDockManager::openForm('{}') threw unknown exception",
                       form.Name());
+        return {nullptr, nullptr};
     }
 }
 
@@ -122,6 +130,33 @@ void TableDockManager::openFormByName(const QString& formName)
 void TableDockManager::slot_calculationStarted(){}
 
 void TableDockManager::slot_calculationFinished(){}
+
+RtabController* TableDockManager::openLinkedForm(
+    const LinkedForm&      lf,
+    Qtitan::GridTableView* parentView,
+    RtabController*        parentCtrl)
+{
+    CUIForm* pUIForm = m_tables->getForm(lf.linkedform);
+    if (!pUIForm) {
+        spdlog::error("TableDockManager::openLinkedForm: form '{}' not found",
+                      lf.linkedform);
+        return nullptr;
+    }
+
+    // Копия с конвертацией имени — аналогично openFormByIndex
+    CUIForm formCopy = *pUIForm;
+    formCopy.SetName(stringutils::MkToUtf8(formCopy.Name()));
+
+    // Создаём dock и контроллер через openForm с фильтром
+    // openForm регистрирует dock в FormManager через windowOpened
+    auto [childDock, childCtrl] = openForm(formCopy, lf);
+    if (!childCtrl) return nullptr;
+
+    // Создаём bond — он сам управляет временем жизни связи
+    // parent = parentCtrl: bond удалится вместе с родительским контроллером
+    new LinkedFormBond(parentCtrl, parentView, childCtrl, childDock);
+    return childCtrl;
+}
 
 void TableDockManager::buildFormsMenu(QMenu* parentMenu,
                                       QMenu* calcParametersMenu)

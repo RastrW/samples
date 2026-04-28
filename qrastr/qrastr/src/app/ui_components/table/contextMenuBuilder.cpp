@@ -1,7 +1,7 @@
 #include "contextMenuBuilder.h"
 #include <QtitanGrid.h>
 #include "rcol.h"
-#include "linkedformcontroller.h"
+#include "table/linkedForm/linkedformcontroller.h"
 #include <QElapsedTimer>
 
 ContextMenuBuilder::ContextMenuBuilder(

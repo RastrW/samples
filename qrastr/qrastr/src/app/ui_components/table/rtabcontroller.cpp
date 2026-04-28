@@ -6,7 +6,7 @@
 #include "rdata.h"
 #include "rcol.h"
 #include "rgrid.h"
-#include "linkedformcontroller.h"
+#include "table/linkedForm/linkedformcontroller.h"
 #include "contextmenubuilder.h"
 #include "condformatcontroller.h"
 #include "tables/colPropDialog.h"
@@ -50,12 +50,14 @@ RtabController::RtabController( std::shared_ptr<ITableRepository> tables,
                                 std::shared_ptr<ITableEvents>     tableEvents,
                                 CUIForm             UIForm,
                                 ads::CDockManager*  pDockManager,
+                                TableDockManager*   tableDockManager,
                                 QObject*            parent)
     : QObject(parent)
     , m_tables (tables)
     , m_tableEvents(tableEvents)
     , m_UIForm(std::move(UIForm))
     , m_DockManager(pDockManager)
+    , m_tableDockManager(tableDockManager)
 {
     //  Настройка QTitan Grid
     Grid::loadTranslation();
@@ -124,6 +126,7 @@ RtabController::RtabController( std::shared_ptr<ITableRepository> tables,
     m_menuBuilder = std::make_unique<ContextMenuBuilder>(
         m_view, m_linkedFormCtrl.get(), m_comTabAct, this);
     m_menuBuilder->initMenu(m_grid);
+
     //dumpShortcuts(m_grid, "before clear");
     // Снимаем F5/Delete со встроенных action-ов QTitan
     auto& acts = m_view->actions();
@@ -143,7 +146,15 @@ RtabController::RtabController( std::shared_ptr<ITableRepository> tables,
     //dumpShortcuts(m_grid, "after clear");
 }
 
-RtabController::~RtabController() = default;
+RtabController::~RtabController()
+{
+    spdlog::info("RtabController::~RtabController [{}]", m_UIForm.Name());
+
+    if (m_tableEvents) {
+        disconnect(m_tableEvents.get(), nullptr, m_model.get(), nullptr);
+        disconnect(m_tableEvents.get(), nullptr, this, nullptr);
+    }
+}
 
 RtabShell* RtabController::createShell(bool withToolbar)
 {
@@ -195,7 +206,6 @@ void RtabController::createCommonTableActions(){
     m_comTabAct.groupCorr = new QAction(
         QIcon(":/images/column_edit.png"),
         tr("Групповая корректировка"), this);
-
 
     // Подключаем к слотам контроллера — единственное место подключения
     connect(m_comTabAct.addRow,       &QAction::triggered,
@@ -276,7 +286,7 @@ void RtabController::createModel(std::shared_ptr<ITableRepository> tables)
     m_linkedFormCtrl = std::make_unique<LinkedFormController>(
         tables,
         m_tableEvents,
-        m_DockManager,
+        m_tableDockManager,
         m_view,
         m_model.get(),
         m_UIForm,
@@ -582,37 +592,6 @@ void RtabController::slot_endResetModel(const std::string& tname){
     m_filterManager->resetAfterModelReset();
 }
 
-void RtabController::slot_close()
-{
-    spdlog::info("RtabController::slot_close [{}]", m_UIForm.Name());
-
-    // RTDA → модель и контроллер
-    if (m_tableEvents) {
-        disconnect(m_tableEvents.get(), nullptr, m_model.get(), nullptr);
-        disconnect(m_tableEvents.get(), nullptr, this, nullptr);
-    }
-
-    // Отключаем focusRowChanged → child
-    if (m_linkedFormCtrl)
-        m_linkedFormCtrl->disconnectAll();
-
-    // Сбрасываем компоненты в порядке зависимостей
-    m_condFormatCtrl.reset();
-    m_menuBuilder.reset();
-    m_filterManager.reset();
-
-    if (m_model && m_model->getRdata())
-        m_model->getRdata()->pnparray_.reset();
-
-    m_linkedFormCtrl.reset();
-    m_model.reset();
-
-    m_grid = nullptr;
-    m_view = nullptr;
-
-    this->deleteLater();
-}
-
 void RtabController::setPyHlp(std::shared_ptr<PyHlp> pPyHlp){
     if (m_linkedFormCtrl){
         m_linkedFormCtrl->setPyHlp(pPyHlp);
@@ -743,6 +722,12 @@ void RtabController::slot_contextMenu(ContextMenuEventArgs* args)
 int RtabController::getLongValue(const std::string& key, long row){
     int col = m_model->getRdata()->mCols_.at(key);
     return std::visit(ToLong(), m_model->getRdata()->pnparray_->Get(row,col));
+}
+
+void RtabController::clearLinkedFilter()
+{
+    if (!m_linkedFormCtrl) return;
+    m_linkedFormCtrl->clearFilter();
 }
 
 void RtabController::applyLinkedFormFromController(const LinkedForm& lf){
