@@ -115,15 +115,15 @@ RtabController::RtabController( std::shared_ptr<ITableRepository> tables,
 
     createModel(tables);
 
-    m_menuBuilder = std::make_unique<ContextMenuBuilder>(
-        m_view, m_linkedFormCtrl.get(), this);
-    m_menuBuilder->initMenu(m_grid);
-
     m_filterManager = std::make_unique<FilterManager>(m_view, m_model.get(),
                                                       m_grid);
 
     setupConnections();
+    createCommonTableActions();
 
+    m_menuBuilder = std::make_unique<ContextMenuBuilder>(
+        m_view, m_linkedFormCtrl.get(), m_comTabAct, this);
+    m_menuBuilder->initMenu(m_grid);
     //dumpShortcuts(m_grid, "before clear");
     // Снимаем F5/Delete со встроенных action-ов QTitan
     auto& acts = m_view->actions();
@@ -165,6 +165,49 @@ RtabShell* RtabController::createShell(bool withToolbar)
             shell, &RtabShell::slot_updateStatusLabel);
 
     return shell;
+}
+
+void RtabController::createCommonTableActions(){
+    m_comTabAct.addRow = new QAction(
+        QIcon(":/images/Rastr3_grid_addrow_16x16.png"),
+        tr("Добавить строку (Ctrl+A)"), this);
+    m_comTabAct.addRow->setShortcut(Qt::CTRL | Qt::Key_A);
+    m_comTabAct.addRow->setShortcutContext(Qt::WidgetWithChildrenShortcut);
+
+    m_comTabAct.insertRow = new QAction(
+        QIcon(":/images/Rastr3_grid_insrow_16x16.png"),
+        tr("Вставить строку (Ctrl+I)"), this);
+    m_comTabAct.insertRow->setShortcut(Qt::CTRL | Qt::Key_I);
+    m_comTabAct.insertRow->setShortcutContext(Qt::WidgetWithChildrenShortcut);
+
+    m_comTabAct.deleteRow = new QAction(
+        QIcon(":/images/Rastr3_grid_delrow_16x16.png"),
+        tr("Удалить строку (Ctrl+D)"), this);
+    m_comTabAct.deleteRow->setShortcut(Qt::CTRL | Qt::Key_D);
+    m_comTabAct.deleteRow->setShortcutContext(Qt::WidgetWithChildrenShortcut);
+
+    m_comTabAct.duplicateRow = new QAction(
+        QIcon(":/images/Rastr3_grid_duprow_16x161.png"),
+        tr("Дублировать строку (Ctrl+R)"), this);
+    m_comTabAct.duplicateRow->setShortcut(Qt::CTRL | Qt::Key_R);
+    m_comTabAct.duplicateRow->setShortcutContext(Qt::WidgetWithChildrenShortcut);
+
+    m_comTabAct.groupCorr = new QAction(
+        QIcon(":/images/column_edit.png"),
+        tr("Групповая корректировка"), this);
+
+
+    // Подключаем к слотам контроллера — единственное место подключения
+    connect(m_comTabAct.addRow,       &QAction::triggered,
+            this, &RtabController::slot_addRow);
+    connect(m_comTabAct.insertRow,    &QAction::triggered,
+            this, &RtabController::slot_insertRow);
+    connect(m_comTabAct.deleteRow,    &QAction::triggered,
+            this, &RtabController::slot_deleteRow);
+    connect(m_comTabAct.duplicateRow, &QAction::triggered,
+            this, &RtabController::slot_duplicateRow);
+    connect(m_comTabAct.groupCorr,    &QAction::triggered,
+            this, &RtabController::slot_groupCorrection);
 }
 
 void RtabController::setupShortcuts(RGrid* grid)
@@ -268,16 +311,6 @@ void RtabController::setupConnections()
     connect(ev, &ITableEvents::sig_EndResetModel,this,
             &RtabController::slot_endResetModel);
     //ContextMenuBuilder -> RtabController
-    connect(m_menuBuilder.get(), &ContextMenuBuilder::sig_addRow,
-            this, &RtabController::slot_addRow);
-    connect(m_menuBuilder.get(), &ContextMenuBuilder::sig_insertRow,
-            this, &RtabController::slot_insertRow);
-    connect(m_menuBuilder.get(), &ContextMenuBuilder::sig_deleteRow,
-            this, &RtabController::slot_deleteRow);
-    connect(m_menuBuilder.get(), &ContextMenuBuilder::sig_duplicateRow,
-            this, &RtabController::slot_duplicateRow);
-    connect(m_menuBuilder.get(), &ContextMenuBuilder::sig_groupCorrection,
-            this, &RtabController::slot_groupCorrection);
     connect(m_menuBuilder.get(), &ContextMenuBuilder::sig_colProp,
             this, &RtabController::slot_openColProp);
     connect(m_menuBuilder.get(), &ContextMenuBuilder::sig_exportCsv,

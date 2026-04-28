@@ -3,11 +3,11 @@
 #include <QWidget>
 #include <QToolBar>
 #include <QLabel>
+#include "rtabcontroller.h"
 
 class RGrid;
 class RModel;
 class FilterManager;
-class RtabController;
 
 namespace Qtitan { class GridTableView; }
 
@@ -42,7 +42,8 @@ public slots:
     void slot_showSearchMenu();
 
 private:
-    void buildToolbar(RtabController* controller);
+    void buildToolbar(const RtabController::CommonTableActions& acts,
+                      RtabController* controller);
     void buildLayout(bool withToolbar);
 
     RGrid*                 m_grid;

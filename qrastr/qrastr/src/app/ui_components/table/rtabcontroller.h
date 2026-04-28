@@ -40,6 +40,13 @@ public:
                             QObject*            parent = nullptr);
     ~RtabController() override;
 
+    struct CommonTableActions {
+        QAction* addRow       = nullptr;
+        QAction* insertRow    = nullptr;
+        QAction* deleteRow    = nullptr;
+        QAction* duplicateRow = nullptr;
+        QAction* groupCorr    = nullptr;
+    };
     /**
      * @brief Создаёт и возвращает RtabShell — видимую оболочку для CDockWidget.
      * Можно вызвать только один раз: повторный вызов вернёт nullptr и залогирует ошибку.
@@ -57,6 +64,7 @@ public:
     /// Регистрирует шорткаты Ctrl+I/A/R/D на grid.
     /// Вызывается только когда withToolbar = true.
     void setupShortcuts(RGrid* grid);
+    const CommonTableActions& actions() const { return m_comTabAct; }
 public slots:
     void slot_close();
 
@@ -103,6 +111,7 @@ private:
     void applyColumnEditor(int colIndex);
     void setTableView(int multiplier = 10);
     void setupConnections();
+    void createCommonTableActions();
 
     Qtitan::GridTableColumn* getColumnByIndex(int index) const;
     // ── Компоненты (данные) ─────────────────────────────────────────────────
@@ -125,4 +134,5 @@ private:
 
     /// Защита от повторного вызова createShell()
     bool m_shellCreated {false};
+    CommonTableActions m_comTabAct;
 };
