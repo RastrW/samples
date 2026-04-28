@@ -1,6 +1,4 @@
 #include "tableDockManager.h"
-using WrapperExceptionType = std::runtime_error;
-#include "astra/IPlainRastrWrappers.h"
 #include "table/rtabcontroller.h"
 #include "table/rtabshell.h"
 #include <QFileInfo>

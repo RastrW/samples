@@ -168,24 +168,25 @@ bool App::readSettings(){
 
 bool App::start() {
     try {
-        auto* params = RastrParameters::get_instance();
-        QDir::setCurrent(params->getDirData().absolutePath());
+        QDir::setCurrent(RastrParameters::get_instance()->getDirData().absolutePath());
 
         emit sig_progressChanged(35, tr("Загрузка плагинов..."));
         if (!loadPlugins())
             return false;
 
-        // Загрузка стартовых шаблонов и файлов.
+        // Создаём адаптер один раз: он нужен StartupLoader прямо сейчас
+        assert(m_sp_qastra != nullptr);
+        m_fileOps = std::make_shared<RastrFileAdapter>(m_sp_qastra);
+
         emit sig_progressChanged(65, tr("Загрузка шаблонов..."));
-        StartupLoader loader(m_sp_qastra);
-        connect(&loader, &StartupLoader::loadWarning, [](const QString& msg) {
+        StartupLoader loader(m_fileOps);             // ← IFileOperations, не QAstra
+        connect(&loader, &StartupLoader::sig_loadWarning, [](const QString& msg) {
             spdlog::warn("{}", msg.toStdString());
         });
 
         if (!loader.load())
             return false;
 
-        spdlog::info("DeserializeForms: starting");
         emit sig_progressChanged(80, tr("Чтение форм..."));
         if (!deserializeForms()) {
             spdlog::error("Can't read forms");
@@ -401,12 +402,12 @@ EngineContext App::buildEngineContext() {
 
     // Каждый адаптер держит shared_ptr<QAstra> и реализует свой интерфейс.
     // QAstra не знает об адаптерах и не меняется.
-    ctx.fileOps    = std::make_shared<RastrFileAdapter> (m_sp_qastra);
+    ctx.fileOps    = m_fileOps;
     ctx.calcEngine = std::make_shared<RastrCalcAdapter> (m_sp_qastra);
     ctx.logEvents = std::make_shared<RastrLogAdapter>(m_sp_qastra);
 
     // rtdm реализует ОБА интерфейса — один объект, два shared_ptr на него.
-    // Используем aliasing constructor: оба shared_ptr владеют одним объектом,
+    // Используем конструктор псевдонимов в shared_ptr: оба указателя владеют одним объектом,
     // счётчик ссылок общий — объект живёт пока жив хотя бы один из них.
     auto rtdm = std::make_shared<RTablesDataManager>(m_sp_qastra);
     ctx.tables      = rtdm;  // shared_ptr<ITableRepository>

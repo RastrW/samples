@@ -8,13 +8,17 @@ class RastrFileAdapter : public IFileOperations {
 public:
     explicit RastrFileAdapter(std::shared_ptr<QAstra> qastra);
 
-    IPlainRastrRetCode Load(eLoadCode        loadCode,
-                            std::string_view filePath,
-                            std::string_view templatePath) override;
+    [[nodiscard]]
+    bool Load(eLoadCode        loadCode,
+              std::string_view filePath,
+              std::string_view templatePath) noexcept override;
 
-    void Save(std::string_view filePath,
-              std::string_view templatePath) override;
+    [[nodiscard]]
+    bool Save(std::string_view filePath,
+                  std::string_view templatePath) noexcept override;
 
+    std::string lastError() const noexcept override { return m_lastError; }
 private:
     std::shared_ptr<QAstra> m_qastra;
+    mutable std::string     m_lastError;
 };

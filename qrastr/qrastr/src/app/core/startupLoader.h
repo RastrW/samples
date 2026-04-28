@@ -1,7 +1,7 @@
 #pragma once
 #include <QObject>
 
-class QAstra;
+class IFileOperations;
 class QDir;
 
 /**
@@ -17,7 +17,7 @@ class StartupLoader : public QObject {
     Q_OBJECT
 
 public:
-    explicit StartupLoader(std::shared_ptr<QAstra> qastra,
+    explicit StartupLoader(std::shared_ptr<IFileOperations> fileOps,
                            QWidget*                parentWidget = nullptr,
                            QObject*                parent       = nullptr);
 
@@ -30,12 +30,12 @@ public:
 
 signals:
     /// Некритическая проблема при загрузке файла (файл не найден и т.п.)
-    void loadWarning(const QString& message);
+    void sig_loadWarning(const QString& message);
 
 private:
     bool loadTemplates(const QDir& templatesDir);
     bool loadFiles(const QDir& templatesDir);
 
-    std::shared_ptr<QAstra> m_qastra;
+    std::shared_ptr<IFileOperations> m_fileOps;
     QWidget*                m_parentWidget;
 };

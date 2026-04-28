@@ -26,14 +26,14 @@
 #include <spdlog/spdlog.h>
 
 #include "calculationController.h"
-#include "fileManager.h"
-#include "formManager.h"
+#include "files/fileManager.h"
+#include "dock/formManager.h"
 #include "appSettingsManager.h"
 #include "mainwindow/uiBuilder.h"
 #include "settingsKeys.h"
 #include "UIForms.h"
-#include "workspaceManager.h"
-#include "logManager.h"
+#include "dock/workspaceManager.h"
+#include "dock/logManager.h"
 #include "mainwindow/menuSearchWidget.h"
 #include "engineContext.h"
 
@@ -173,16 +173,16 @@ void MainWindow::setupConnections() {
     });
 
     // События файлов
-    connect(m_fileManager.get(), &FileManager::currentFileChanged,
+    connect(m_fileManager.get(), &FileManager::sig_currentFileChanged,
             this, [this](const QString& file) {
                 setWindowTitle(file);
                 emit sig_fileLoaded();
             });
-    connect(m_fileManager.get(), &FileManager::filesOpened,
+    connect(m_fileManager.get(), &FileManager::sig_filesOpened,
             this, [](int count) {
                 spdlog::info("Opened {} files", count);
             });
-    connect(m_fileManager.get(), &FileManager::fileLoadError,
+    connect(m_fileManager.get(), &FileManager::sig_fileLoadError,
             this, [](const QString& error) {
                 spdlog::error("File load error: {}", error.toStdString());
             });
