@@ -10,7 +10,7 @@ struct FilterRule {
         Eq, Neq, Lt, Le, Gt, Ge,
         // Строковые
         Contains,
-        Like,       // wildcards: * ?
+        Like,
         NotLike,
         StartsWith,
         EndsWith

@@ -93,10 +93,11 @@ QVariant RModel::data(const QModelIndex& index, int role) const
     case Qt::EditRole:
         return dataForDisplayEdit(row, col, rcol, raw, role);
     case Qt::UserRole:
-        // Сырое значение для сортировки числовых колонок.
-        // QTitan получает double и сортирует числово, а не лексикографически.
-        if (!raw.isValid() && rcol.getComPropTT() == enComPropTT::COM_PR_REAL)
-            return 0.0; // пустая ячейка = 0.0 для сортировки
+        if (rcol.getComPropTT() == enComPropTT::COM_PR_REAL) {
+            const bool isEmpty = std::holds_alternative<std::monostate>(
+                m_rdata->pnparray_->Get(row, col));
+            return isEmpty ? 0.0 : raw;
+        }
         return raw;
     case Qt::BackgroundRole:
         return dataForBackground(row, col, rcol, raw);
@@ -109,10 +110,8 @@ QVariant RModel::data(const QModelIndex& index, int role) const
 
 QVariant RModel::dataForInvalidCellEditRole(int col, const RCol& rcol) const
 {
-    if (rcol.getComPropTT() == enComPropTT::COM_PR_REAL) {
-        const auto info = getColumnEditorInfo(col);
-        return QVariant(QString::number(0.0, 'f', info.decimals));
-    }
+    if (rcol.getComPropTT() == enComPropTT::COM_PR_REAL)
+        return QString();
     if (rcol.getComPropTT() == enComPropTT::COM_PR_INT  ||
         rcol.getComPropTT() == enComPropTT::COM_PR_ENUM ||
         rcol.getComPropTT() == enComPropTT::COM_PR_SUPERENUM) {
@@ -148,15 +147,23 @@ QVariant RModel::dataForDisplayEdit(int row, int col, const RCol& rcol,
         if (auto resolved = resolveDisplayText(col, rcol, raw); !resolved.isNull())
             return resolved;
     }
+    if (rcol.getComPropTT() == enComPropTT::COM_PR_REAL) {
+        int decimals = 2;
+        try { decimals = std::stoi(rcol.getPrec()); } catch (...) {}
 
-    // ── Вещественные числа ───────────────────────────────────────────────────
-    // DisplayRole И EditRole → одна и та же отформатированная строка.
-    // Пользователь видит "3.14" в ячейке и то же самое видит в редакторе.
-    // Сортировка идёт по Qt::UserRole (raw double)
-    if (raw.type() == QVariant::Double) {
-        const auto info = getColumnEditorInfo(col);
-        if (info.editorType == ColumnEditorInfo::Type::Numeric)
-            return QString::number(raw.toDouble(), 'f', info.decimals);
+        // Проверяем именно monostate, а не isValid() —
+        // raw.isValid() == true даже для double(0.0)
+        const bool isEmpty = std::holds_alternative<std::monostate>(
+            m_rdata->pnparray_->Get(row, col));
+
+        if (role == Qt::DisplayRole) {
+            if (isEmpty) return QString(); // пустая ячейка — ничего не показываем
+            return QString::number(raw.toDouble(), 'f', decimals);
+        }
+
+        // EditRole
+        if (isEmpty) return QString();
+        return QString::number(raw.toDouble(), 'f', decimals);
     }
     return raw;
 }
@@ -316,9 +323,17 @@ bool RModel::setData(const QModelIndex& index, const QVariant& value, int role)
         case RCol::_en_data::DATA_STR:
             vd = value.toString().toStdString();
             break;
-        case RCol::_en_data::DATA_DBL:
-            vd = value.toDouble();
+        case RCol::_en_data::DATA_DBL: {
+            const QString str = value.toString().trimmed();
+            if (str.isEmpty()) {
+                vd = 0.0;
+            } else {
+                QString normalized = str;
+                normalized.replace(',', '.');
+                vd = normalized.toDouble();
+            }
             break;
+        }
         default:
             return false;
         }

@@ -24,7 +24,7 @@ TableDockManager::TableDockManager(
 
 void TableDockManager::setForms(const std::list<CUIForm>& forms){
     m_forms = forms;
-    m_tables->setForms(&m_forms);
+    m_tables->setForms(m_forms);
 
     int index = 0;
     for (const auto& form : m_forms) {

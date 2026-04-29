@@ -48,7 +48,6 @@ FilterCell::FilterCell(bool isNumeric, bool isBool, QWidget* parent)
         lay->addWidget(m_edit, 1);
     }
 
-    // Улучшенная стилизация: кнопка и поле теперь одного стиля
     setStyleSheet(
         "QToolButton {"
         "  border: 1px solid palette(mid);"

@@ -99,9 +99,8 @@ public:
     virtual void setLockEvent(bool lock) = 0;
 
     virtual CUIForm* getForm(const std::string& name)= 0;
-    virtual void setForms(std::list<CUIForm>* forms) = 0;
+    virtual void setForms(const std::list<CUIForm>& forms) = 0;
     virtual void getDynamicForms(std::vector<CUIForm>& out) = 0;
-
 
     virtual long tableSize(const std::string& tname) = 0;
     virtual void setTableSize(const std::string& tname, long size) = 0;

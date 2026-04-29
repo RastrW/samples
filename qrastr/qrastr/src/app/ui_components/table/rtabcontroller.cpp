@@ -23,6 +23,7 @@
 #include <spdlog/spdlog.h>
 #include "table/ITableEvents.h"
 #include "table/ITableRepository.h"
+#include "customEditors/doubleEditor/doubleEditorRepository.h"
 
 void dumpShortcuts(QWidget* root, const QString& tag)
 {
@@ -120,12 +121,14 @@ RtabController::RtabController( std::shared_ptr<ITableRepository> tables,
     m_filterManager = std::make_unique<FilterManager>(m_view, m_model.get(),
                                                       m_grid);
 
-    setupConnections();
     createCommonTableActions();
 
     m_menuBuilder = std::make_unique<ContextMenuBuilder>(
         m_view, m_linkedFormCtrl.get(), m_comTabAct, this);
     m_menuBuilder->initMenu(m_grid);
+
+    setupConnections();
+
 
     //dumpShortcuts(m_grid, "before clear");
     // Снимаем F5/Delete со встроенных action-ов QTitan
@@ -373,37 +376,33 @@ void RtabController::applyColumnEditor(int colIndex)
     if (!col) return;
 
     column_qt->setVisible(!col->isHidden());
+    // Сбрасываем флаги перед переназначением
+    column_qt->setProperty("isNumeric", false);
+    column_qt->setProperty("isBool",    false);
 
     const auto info = m_model->getColumnEditorInfo(colIndex);
 
     switch (info.editorType)
     {
     case RModel::ColumnEditorInfo::Type::CheckBox:
+        column_qt->setProperty("isBool", true);
         column_qt->setEditorType(GridEditor::CheckBox);
         static_cast<Qtitan::GridCheckBoxEditorRepository*>(
             column_qt->editorRepository())
             ->setAppearance(GridCheckBox::StyledAppearance);
         break;
     case RModel::ColumnEditorInfo::Type::Numeric: {
-        column_qt->setEditorType(GridEditor::String);
-        // При использовании GridEditor::Numeric не удаётся убрать кнопки виджета,
-        //поэтому валидатор добавляется вручную
-        auto* repo = static_cast<GridStringEditorRepository*>(
-            column_qt->editorRepository());
+        auto* repo = new DoubleEditorRepository(
+            info.decimals, info.minVal, info.maxVal);
+        column_qt->setProperty("isNumeric", true);
+        column_qt->setEditorRepository(repo);
 
-        // QDoubleValidator::decimals ограничивает знаки при вводе
-        auto* val = new QDoubleValidator(info.minVal, info.maxVal,
-                                         info.decimals, repo);
-        val->setNotation(QDoubleValidator::StandardNotation);
-        repo->setValidator(val);
-
-        // QTitan должен сортировать по UserRole (double),
-        // а не по DisplayRole/EditRole (QString вида "117.20").
-        // Без этого "21.20" < "117.20" даёт неверный результат при сортировке,
-        // потому что строковое сравнение идёт посимвольно ('2' > '1').
+        // Сортировка по UserRole (raw double), не по DisplayRole (QString)
         GridModelDataBinding* binding = m_view->getDataBinding(column_qt);
         if (binding)
             binding->setSortRole(Qt::UserRole);
+
+        column_qt->setProperty("isNumeric", true);
         break;
     }
     case RModel::ColumnEditorInfo::Type::DateTime: {
@@ -421,6 +420,7 @@ void RtabController::applyColumnEditor(int colIndex)
         break;
     }
     case RModel::ColumnEditorInfo::Type::ComboBox: {
+        column_qt->setProperty("isNumeric", true);
         column_qt->setEditorType(GridEditor::ComboBox);
 
         column_qt->editorRepository()->setDefaultValue(QString(), Qt::EditRole);
@@ -429,12 +429,14 @@ void RtabController::applyColumnEditor(int colIndex)
         break;
     }
     case RModel::ColumnEditorInfo::Type::NameRef: {
+        column_qt->setProperty("isNumeric", true);
         auto* repo = new SearchableComboRepositoryTwo(info.nameRefData.items, m_grid);
         column_qt->setEditorRepository(repo);
         break;
     }
     case RModel::ColumnEditorInfo::Type::ComboBoxPicture:
     {
+        column_qt->setProperty("isNumeric", true);
         column_qt->setEditorType(GridEditor::ComboBox);
         spdlog::info("applyColumnEditor ENPIC col={}, picItems={}", colIndex,
                      info.picItems.size());
