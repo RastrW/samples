@@ -316,15 +316,8 @@ bool RModel::setData(const QModelIndex& index, const QVariant& value, int role)
                         if (v == value.toString().toStdString())
                         { val = static_cast<long>(k); break; }
                 } else if (const auto* nrd = m_cache.namerefData(pluginIdx)) {
-                    const QString target = value.toString();
-                    for (const auto& row : nrd->rows) {
-                        if (!row.values.empty() &&
-                            QString::fromStdString(row.values[0]) == target)
-                        {
-                            val = static_cast<long>(row.key);
-                            break;
-                        }
-                    }
+                    // value содержит числовой ключ (int), установленный getContextValue()
+                    val = value.toLongLong();
                 } else {
                     val = value.toInt();
                 }

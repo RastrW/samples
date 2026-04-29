@@ -64,11 +64,8 @@ QVariant SearchableComboEditorTwo::getContextValue() const
     if (m_clearChosen)
         return QVariant(0);
 
-    if (m_selectedKey >= 0) {
-        auto* repo = static_cast<SearchableComboRepositoryTwo*>(editorRepository());
-        // Возвращаем имя первого значения (для setData → поиск по имени)
-        return repo->nameByKey(m_selectedKey);
-    }
+    if (m_selectedKey >= 0)
+        return QVariant(m_selectedKey);  // возвращаем ключ напрямую
 
     return Qtitan::GridEditorBase::getContextValue();
 }
@@ -84,7 +81,16 @@ void SearchableComboEditorTwo::updateDisplayText()
 {
     if (!m_lineEdit) return;
     auto* repo = static_cast<SearchableComboRepositoryTwo*>(editorRepository());
-    m_lineEdit->setText(repo ? repo->nameByKey(m_currentKey) : QString{});
+    if (!repo) {
+        m_lineEdit->clear();
+        return;
+    }
+    // nameByKey вернёт пустую строку если values пустой —
+    // в этом случае показываем сам ключ
+    QString text = repo->nameByKey(m_currentKey);
+    if (text.isEmpty() && m_currentKey > 0)
+        text = QString::number(m_currentKey);
+    m_lineEdit->setText(text);
 }
 
 void SearchableComboEditorTwo::showPopup()
