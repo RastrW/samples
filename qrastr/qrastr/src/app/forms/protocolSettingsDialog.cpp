@@ -4,7 +4,7 @@
 #include <QCheckBox>
 #include <QDialogButtonBox>
 #include "settingsKeys.h"
-#include "IPlainElGraph.h"
+//#include "IPlainElGraph.h"
 
 ProtocolSettingsDialog::ProtocolSettingsDialog(QWidget* parent)
     : QDialog(parent)
