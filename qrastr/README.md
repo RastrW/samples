@@ -54,6 +54,6 @@ COMPILE_DIR C:\Projects\compile_cmake  #(который по умолчанию 
 DEPENDENCIES_LOCATION c:/projects/compile/ # win: "c:/projects/compile/ lin: /home/ustas/projects/compile
 ```
 
-
+## 4. Дальнейшие инструкции по сборке снуля в файле рядом, называется "START_INSTRUCTION.md"!
 
     

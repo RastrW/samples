@@ -113,16 +113,6 @@ git submodule update --init --recursive
 ...\rastr\qrastr\thirdparty\lexilla\
 ```
 
-### boost 1.80
-Скачать исходники библиотеки boost 1.80 с официального сайта:
-[Скачать](https://www.boost.org/releases/1.80.0/)
-
-Поместите их в:
-
-```
-...\rastr\qrastr\thirdparty\boost_1_80_0
-```
-
 ---
 
 ## Шаг 3. Сборка сторонних библиотек
@@ -176,6 +166,17 @@ ${THIRDPARTY_DIR}\compile\${LIB_NAME}\win\msvc\${CONFIG}\
 
 ---
 
+## Шаг 6. Лёшины либы находятся 
+
+1. Под Windows:
+в MinIO
+```
+http://msk-n9e-psu4.ntc.ntcees.ru:9001/browser/qrastr  бакет Alexey_graph_libs
+
+```
+
+---
+
 ## Итоговая структура проекта
 
 ```
@@ -185,7 +186,6 @@ C:\work\rastr\qrastr\
 │   ├───form
 │   └───SHABLON
 ├── lib
-│   ├── astra
 │   ├── astra
 │   └── QtitanDataGrid8.2.0_win_qt_6_7
 ├── qrastr
@@ -207,7 +207,6 @@ C:\work\rastr\qrastr\
     ├── SDL_image
     ├── scintilla        ← скачать вручную
     ├── lexilla          ← скачать вручную
-	├── boost_1_80_0     ← скачать вручную	
     ├── Qt-Advanced-Docking-System
     └── libpqxx
 ```
