@@ -543,3 +543,4 @@ if(QT_VERSION_MAJOR EQUAL 6)
     # - Добавление Windows manifest
     qt_finalize_executable(${PROJECT_NAME})
 endif()
+add_subdirectory(src/plugins/pgdriver)
