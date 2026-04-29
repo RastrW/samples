@@ -8,7 +8,9 @@
 #include <QEvent>
 #include <QKeyEvent>
 #include <QApplication>
+#include <QSizeGrip>
 #include "twoColumnFilterProxy.h"
+
 
 SearchableComboPopupTwo::SearchableComboPopupTwo(QWidget* parent)
     : QFrame(parent, Qt::Popup | Qt::FramelessWindowHint)
@@ -88,34 +90,60 @@ SearchableComboPopupTwo::SearchableComboPopupTwo(QWidget* parent)
     m_searchIndex->installEventFilter(this);
     m_searchName->installEventFilter(this);
     m_table->installEventFilter(this);
+
+    // ── Size grip ────────────────────────────────────────────────────────────
+    // Qt::Popup перехватывает события мыши, поэтому стандартный QSizeGrip
+    // работает корректно только если его добавить в layout.
+    auto* gripRow = new QHBoxLayout();
+    gripRow->addStretch();
+    auto* grip = new QSizeGrip(this);
+    gripRow->addWidget(grip);
+    gripRow->setContentsMargins(0, 0, 0, 0);
+    mainLayout->addLayout(gripRow);
+
+    // Минимальный размер чтобы grip был видимым
+    setMinimumSize(280, 200);
+    resize(400, 300); // начальный размер
 }
 
-void SearchableComboPopupTwo::setItems(
-    const std::unordered_map<size_t, std::string>& items)
+void SearchableComboPopupTwo::setItems(const ColumnEditorInfo::NameRefData& nrd)
 {
-    m_model->removeRows(0, m_model->rowCount());
+    const int nValueCols = static_cast<int>(nrd.columns.size());
+    const int totalCols  = 1 + nValueCols; // ключ + значения
 
-    // unordered_map не гарантирует порядок итерации —
-    // без сортировки список каждый раз разный.
-    std::vector<std::pair<size_t, std::string>> sorted(items.begin(), items.end());
-    std::sort(sorted.begin(), sorted.end(),
-              [](const auto& a, const auto& b) { return a.first < b.first; });
+    m_model->clear();
+    m_model->setColumnCount(totalCols);
 
-    m_model->setRowCount(static_cast<int>(sorted.size()));   // одно выделение
+    QStringList headers;
+    headers << tr("Ключ");
+    for (const auto& cd : nrd.columns)
+        headers << cd.header;
+    m_model->setHorizontalHeaderLabels(headers);
+
+    // Пересоздаём фильтры под фактическое число колонок
+    // (упрощение: фильтруем по col 0 и col 1 как раньше,
+    //  для 4 колонок можно добавить ещё поля)
+
+    m_model->setRowCount(static_cast<int>(nrd.rows.size()));
     int r = 0;
-    for (const auto& [key, name] : sorted) {
-        auto* itemKey  = new QStandardItem(QString::number(key));
-        auto* itemName = new QStandardItem(QString::fromStdString(name));
-        // Храним числовой ключ в UserRole — используем при itemSelected
-        itemKey ->setData(static_cast<int>(key), Qt::UserRole);
-        itemKey ->setEditable(false);
-        itemName->setEditable(false);
-        m_model->setItem(r, 0, itemKey);
-        m_model->setItem(r, 1, itemName);
+    for (const auto& row : nrd.rows) {
+        auto* keyItem = new QStandardItem(QString::number(row.key));
+        keyItem->setData(static_cast<int>(row.key), Qt::UserRole);
+        keyItem->setEditable(false);
+        m_model->setItem(r, 0, keyItem);
+
+        for (int c = 0; c < nValueCols && c < static_cast<int>(row.values.size()); ++c) {
+            auto* valItem = new QStandardItem(
+                QString::fromStdString(row.values[c]));
+            valItem->setEditable(false);
+            m_model->setItem(r, 1 + c, valItem);
+        }
         ++r;
     }
-    // подогнать ширину столбца "Индекс"
+
     m_table->resizeColumnToContents(0);
+    for (int c = 1; c < totalCols - 1; ++c)
+        m_table->resizeColumnToContents(c);
 }
 
 void SearchableComboPopupTwo::setCurrentKey(int key)

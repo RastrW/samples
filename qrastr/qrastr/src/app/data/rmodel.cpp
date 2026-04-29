@@ -9,6 +9,7 @@
 #include "table/rTablesDataAdapter.h"
 #include <string_bool.h>
 #include "condFormat.h"
+#include "сolumnEditorInfo.h"
 
 RModel::RModel(QObject* parent, std::shared_ptr<ITableRepository>        tables)
     : QAbstractTableModel(parent)
@@ -219,14 +220,21 @@ QVariant RModel::dataForComboBox(const RCol& rcol) const
     }
 
     QStringList list;
-    if (const auto* enums = m_cache.enumItems(pluginIdx))
+    if (const auto* enums = m_cache.enumItems(pluginIdx)){
         list = *enums;
-    else if (const auto* nref = m_cache.namerefMap(pluginIdx))
-        for (const auto& [k, v] : *nref)
+    }
+    else if (const auto* nrd = m_cache.namerefData(pluginIdx)){
+        for (const auto& row : nrd->rows){
+            if (!row.values.empty()){
+                list.append(QString::fromStdString(row.values[0]));
+            }
+        }
+    }
+    else if (const auto* senum = m_cache.superenumMap(pluginIdx)){
+        for (const auto& [k, v] : *senum){
             list.append(QString::fromStdString(v));
-    else if (const auto* senum = m_cache.superenumMap(pluginIdx))
-        for (const auto& [k, v] : *senum)
-            list.append(QString::fromStdString(v));
+        }
+    }
     return list;
 }
 
@@ -307,10 +315,16 @@ bool RModel::setData(const QModelIndex& index, const QVariant& value, int role)
                     for (const auto& [k, v] : *senum)
                         if (v == value.toString().toStdString())
                         { val = static_cast<long>(k); break; }
-                } else if (const auto* nref = m_cache.namerefMap(pluginIdx)) {
-                    for (const auto& [k, v] : *nref)
-                        if (v == value.toString().toStdString())
-                        { val = static_cast<long>(k); break; }
+                } else if (const auto* nrd = m_cache.namerefData(pluginIdx)) {
+                    const QString target = value.toString();
+                    for (const auto& row : nrd->rows) {
+                        if (!row.values.empty() &&
+                            QString::fromStdString(row.values[0]) == target)
+                        {
+                            val = static_cast<long>(row.key);
+                            break;
+                        }
+                    }
                 } else {
                     val = value.toInt();
                 }
@@ -481,14 +495,14 @@ void RModel::buildEditorInfoCache()
         m_editorInfoCache[i] = buildColumnEditorInfo(i);
 }
 
-RModel::ColumnEditorInfo RModel::getColumnEditorInfo(int colIndex) const
+ColumnEditorInfo RModel::getColumnEditorInfo(int colIndex) const
 {
     if (colIndex >= 0 && colIndex < static_cast<int>(m_editorInfoCache.size()))
         return m_editorInfoCache[colIndex];
     return {};
 }
 
-RModel::ColumnEditorInfo RModel::buildColumnEditorInfo(int colIndex) const
+ColumnEditorInfo RModel::buildColumnEditorInfo(int colIndex) const
 {
     ColumnEditorInfo info;
     const RCol* col = getRCol(colIndex);
@@ -527,9 +541,9 @@ RModel::ColumnEditorInfo RModel::buildColumnEditorInfo(int colIndex) const
 
     case enComPropTT::COM_PR_INT:
         if (!col->isDirectCode() && !col->getNameRef().empty()) {
-            if (const auto* nref = m_cache.namerefMap(pluginIdx)) {
-                info.editorType        = ColumnEditorInfo::Type::NameRef;
-                info.nameRefData.items = *nref;
+            if (const auto* nrd = m_cache.namerefData(pluginIdx)) {
+                info.editorType  = ColumnEditorInfo::Type::NameRef;
+                info.nameRefData = *nrd;   // копируем всю структуру
                 break;
             }
         }

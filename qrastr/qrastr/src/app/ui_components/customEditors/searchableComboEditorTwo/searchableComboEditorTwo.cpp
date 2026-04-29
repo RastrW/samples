@@ -62,11 +62,12 @@ void SearchableComboEditorTwo::setValueToWidget(const QVariant& value)
 QVariant SearchableComboEditorTwo::getContextValue() const
 {
     if (m_clearChosen)
-        return QVariant(0);   // sentinel "не задано"
+        return QVariant(0);
 
     if (m_selectedKey >= 0) {
         auto* repo = static_cast<SearchableComboRepositoryTwo*>(editorRepository());
-        return repo->nameByKey(m_selectedKey);   // setData найдёт ключ по имени
+        // Возвращаем имя первого значения (для setData → поиск по имени)
+        return repo->nameByKey(m_selectedKey);
     }
 
     return Qtitan::GridEditorBase::getContextValue();
@@ -100,17 +101,13 @@ void SearchableComboEditorTwo::showPopup()
 
     QWidget* topLevel = repo->gridWidget()->window();
     m_popup = new SearchableComboPopupTwo(topLevel);
-    m_popup->setItems(repo->items());
+    m_popup->setItems(repo->nameRefData());
     m_popup->setCurrentKey(m_currentKey);
-
     // Позиционируем под контейнером
     const QPoint globalPos = m_container
                                  ? m_container->mapToGlobal(QPoint(0, m_container->height()))
                                  : QCursor::pos();
-
-    const int minW = m_container
-                         ? std::max(m_container->width(), 320)
-                         : 320;
+    const int minW = m_container ? std::max(m_container->width(), 320) : 320;
 
     m_popup->setMinimumWidth(minW);
     m_popup->move(globalPos);

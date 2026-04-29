@@ -10,6 +10,7 @@ class CUIForm;
 class RData;
 class RCol;
 class CondFormat;
+struct ColumnEditorInfo;
 
 struct ToQVariant {
     QVariant operator()(std::monostate) { return { QVariant() }; }
@@ -43,27 +44,6 @@ public slots:
     void slot_RefTableChanged(const std::string& tname);
 
 public:
-    struct ColumnEditorInfo {
-        enum class Type {
-            None, Numeric, CheckBox, ComboBox,
-            ComboBoxPicture, DateTime, Color, NameRef
-        };
-
-        Type        editorType = Type::None;
-        QStringList comboItems;
-        int         decimals   = 2;
-        double      minVal     = -1e6;
-        double      maxVal     =  1e6;
-
-        struct NameRefData {
-            std::unordered_map<size_t, std::string> items;
-        };
-        NameRefData nameRefData;
-
-        struct PicItem { QPixmap image; QString label; };
-        QList<PicItem> picItems;
-    };
-
     /**
      * @param repo  Невладеющий указатель на ITableRepository.
      *              Время жизни репозитория гарантируется RtabController.

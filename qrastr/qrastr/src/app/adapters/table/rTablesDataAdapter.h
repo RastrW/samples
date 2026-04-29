@@ -67,23 +67,23 @@ public:
                   const FieldVariantData& value) override;
 
     void setColumnProperty(const std::string& tname,
-                                   const std::string& colName,
-                                   FieldProperties    prop,
-                                   const std::string& value) override;
+                           const std::string& colName,
+                           FieldProperties    prop,
+                           const std::string& value) override;
 
     void calcColumn(const std::string& tname,
-                            const std::string& colName,
-                            const std::string& expression,
-                            const std::string& selection) override;
+                    const std::string& colName,
+                    const std::string& expression,
+                    const std::string& selection) override;
 
     void addRows   (const std::string& tname,
-                size_t             count) override;
+                 size_t             count) override;
     void insertRows(const std::string& tname,
-                   long               startRow,
-                   int                count) override;
+                    long               startRow,
+                    int                count) override;
     void deleteRows(const std::string& tname,
-                   long               startRow,
-                   int                count) override;
+                    long               startRow,
+                    int                count) override;
     void duplicateRow(const std::string& tname, long row) override;
 
     long tableSize(const std::string& tname) override;
@@ -112,7 +112,7 @@ private:
     std::shared_ptr<QAstra> m_pqastra;
     std::list<CUIForm> m_plstUIForms;
 
-     /* Хранилище данных для моделей
+    /* Хранилище данных для моделей
       * 1:n то есть на 10 окон узлы -> 1 DataBlock
       * из overhead'а наверно только обновление данных если была открыта таблица , а потом
       * все её экземляры закрыты, так как удаления из хранилища пока нет.

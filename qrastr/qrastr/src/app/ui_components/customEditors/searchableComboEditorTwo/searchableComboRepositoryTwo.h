@@ -1,5 +1,6 @@
 #pragma once
 #include "QtitanGrid.h"
+#include "сolumnEditorInfo.h"
 
 // SearchableComboRepositoryTwo — репозиторий для nameref-колонок
 class SearchableComboRepositoryTwo : public Qtitan::GridEditorRepository
@@ -7,31 +8,30 @@ class SearchableComboRepositoryTwo : public Qtitan::GridEditorRepository
     Q_OBJECT
 public:
     explicit SearchableComboRepositoryTwo(
-        const std::unordered_map<size_t, std::string>& items,
+        const ColumnEditorInfo::NameRefData& nrd,
         QWidget* gridWidget)
         : Qtitan::GridEditorRepository()
-        , m_items(items)
+        , m_nrd(nrd)
         , m_gridWidget(gridWidget)
     {}
 
     Qtitan::GridEditor* createEditor() override;
 
-    const std::unordered_map<size_t, std::string>& items()      const { return m_items;      }
-    QWidget*                             gridWidget()  const { return m_gridWidget; }
+    /// Доступ к данным для popup
+    const ColumnEditorInfo::NameRefData& nameRefData() const { return m_nrd; }
 
-    /// Поиск имени по ключу (используется для отображения текущего значения)
+    /// Совместимость: gridWidget нужен в showPopup() для позиционирования
+    QWidget* gridWidget() const { return m_gridWidget; }
+
     QString nameByKey(int key) const {
-        auto it = m_items.find(static_cast<size_t>(key));
-        return it != m_items.end()
-                   ? QString::fromStdString(it->second)
-                   : QString{};
+        return m_nrd.nameByKey(key);
     }
 
-    void updateItems(const std::unordered_map<size_t, std::string>& items)
-    {
-        m_items = items;
+    void updateItems(const ColumnEditorInfo::NameRefData& nrd) {
+        m_nrd = nrd;
     }
+
 private:
-    std::unordered_map<size_t, std::string> m_items;
+    ColumnEditorInfo::NameRefData m_nrd;
     QWidget*                      m_gridWidget;
 };

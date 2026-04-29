@@ -353,7 +353,7 @@ void RtabController::setupConnections()
                         column_qt->editorRepository());
                     if (!repo) continue;
                     repo->updateItems(
-                        m_model->getColumnEditorInfo(static_cast<int>(i)).nameRefData.items);
+                        m_model->getColumnEditorInfo(static_cast<int>(i)).nameRefData);
                 }
             });
     //QTitan
@@ -384,14 +384,14 @@ void RtabController::applyColumnEditor(int colIndex)
 
     switch (info.editorType)
     {
-    case RModel::ColumnEditorInfo::Type::CheckBox:
+    case ColumnEditorInfo::Type::CheckBox:
         column_qt->setProperty("isBool", true);
         column_qt->setEditorType(GridEditor::CheckBox);
         static_cast<Qtitan::GridCheckBoxEditorRepository*>(
             column_qt->editorRepository())
             ->setAppearance(GridCheckBox::StyledAppearance);
         break;
-    case RModel::ColumnEditorInfo::Type::Numeric: {
+    case ColumnEditorInfo::Type::Numeric: {
         auto* repo = new DoubleEditorRepository(
             info.decimals, info.minVal, info.maxVal);
         column_qt->setProperty("isNumeric", true);
@@ -405,7 +405,7 @@ void RtabController::applyColumnEditor(int colIndex)
         column_qt->setProperty("isNumeric", true);
         break;
     }
-    case RModel::ColumnEditorInfo::Type::DateTime: {
+    case ColumnEditorInfo::Type::DateTime: {
         column_qt->setEditorType(GridEditor::DateTime);
         auto* repo = static_cast<Qtitan::GridDateTimeEditorRepository*>(
             column_qt->editorRepository());
@@ -415,11 +415,11 @@ void RtabController::applyColumnEditor(int colIndex)
         repo->setCalendarPopup(false);
         break;
     }
-    case RModel::ColumnEditorInfo::Type::Color:{
+    case ColumnEditorInfo::Type::Color:{
         column_qt->setEditorType(GridEditor::Color);
         break;
     }
-    case RModel::ColumnEditorInfo::Type::ComboBox: {
+    case ColumnEditorInfo::Type::ComboBox: {
         column_qt->setProperty("isNumeric", true);
         column_qt->setEditorType(GridEditor::ComboBox);
 
@@ -428,13 +428,13 @@ void RtabController::applyColumnEditor(int colIndex)
                                                        (Qt::ItemDataRole)Qtitan::ComboBoxRole);
         break;
     }
-    case RModel::ColumnEditorInfo::Type::NameRef: {
+    case ColumnEditorInfo::Type::NameRef: {
         column_qt->setProperty("isNumeric", true);
-        auto* repo = new SearchableComboRepositoryTwo(info.nameRefData.items, m_grid);
+        auto* repo = new SearchableComboRepositoryTwo(info.nameRefData, m_grid);
         column_qt->setEditorRepository(repo);
         break;
     }
-    case RModel::ColumnEditorInfo::Type::ComboBoxPicture:
+    case ColumnEditorInfo::Type::ComboBoxPicture:
     {
         column_qt->setProperty("isNumeric", true);
         column_qt->setEditorType(GridEditor::ComboBox);
@@ -442,7 +442,7 @@ void RtabController::applyColumnEditor(int colIndex)
                      info.picItems.size());
         break;
     }
-    case RModel::ColumnEditorInfo::Type::None:
+    case ColumnEditorInfo::Type::None:
     default:
         break;
     }
