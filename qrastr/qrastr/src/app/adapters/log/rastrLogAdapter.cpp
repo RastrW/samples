@@ -1,5 +1,5 @@
 #include "rastrLogAdapter.h"
-#include "QAstra.h"
+#include "qastra.h"
 
 RastrLogAdapter::RastrLogAdapter(std::shared_ptr<QAstra> qastra,
                                  QObject* parent)

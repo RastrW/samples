@@ -1,9 +1,8 @@
 #include "rtabshell.h"
 
-#include "rgrid.h"
+#include "rGrid.h"
 #include "rmodel.h"
-#include "filtermanager.h"
-
+#include "filterManager.h"
 
 #include <QVBoxLayout>
 #include <QMenu>
@@ -178,14 +177,16 @@ void RtabShell::slot_copyToClipboard()
                              m_model->data(idx, Qt::DisplayRole).toString() });
         }
 
-        // Сортируем по (row, visCol) — std::vector + std::sort
         std::sort(cells.begin(), cells.end(), [](const Cell& a, const Cell& b) {
             return a.row != b.row ? a.row < b.row : a.visCol < b.visCol;
         });
 
         int prevRow = -1;
         QStringList rowData;
-        rowData.reserve(visibleCols.size());
+        // Инициализируем пустыми строками
+        for (int i = 0; i < visibleCols.size(); ++i) {
+            rowData.append(QString());
+        }
 
         auto flushRow = [&]() {
             if (prevRow >= 0) text += rowData.join('\t') + '\n';
@@ -194,7 +195,11 @@ void RtabShell::slot_copyToClipboard()
         for (const Cell& c : cells) {
             if (c.row != prevRow) {
                 flushRow();
-                rowData.assign(visibleCols.size(), QString());
+                // Очищаем и заново заполняем
+                rowData.clear();
+                for (int i = 0; i < visibleCols.size(); ++i) {
+                    rowData.append(QString());
+                }
                 prevRow = c.row;
             }
             rowData[c.visCol] = c.value;

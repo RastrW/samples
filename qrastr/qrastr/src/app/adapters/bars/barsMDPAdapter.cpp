@@ -1,5 +1,5 @@
-#include "BarsMDPAdapter.h"
-#include "QBarsMDP.h"
+#include "barsMDPAdapter.h"
+#include "qbarsmdp.h"
 
 BarsMDPAdapter::BarsMDPAdapter(std::shared_ptr<QBarsMDP> qbarsmdp)
     : m_qbarsmdp(std::move(qbarsmdp))

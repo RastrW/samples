@@ -1,5 +1,5 @@
 #include "rastrCalcAdapter.h"
-#include "QAstra.h"
+#include "qastra.h"
 
 RastrCalcAdapter::RastrCalcAdapter(std::shared_ptr<QAstra> qastra)
     : m_qastra(std::move(qastra))

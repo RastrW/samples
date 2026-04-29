@@ -2,6 +2,7 @@
 #include <QString>
 #include <QPixmap>
 #include <map>
+#include <optional>
 
 class RData;
 class ITableRepository;

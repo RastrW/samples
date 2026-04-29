@@ -1,5 +1,6 @@
 #pragma once
 #include <QObject>
+#include <memory>
 
 class IFileOperations;
 class QDir;

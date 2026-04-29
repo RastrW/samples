@@ -359,8 +359,11 @@ bool App::deserializeForms(){
             const QString fullPath =
                 formsDir.filePath(QString::fromUtf8(form.c_str()));
 
-            //только как локальная переменная для CUIFormCollectionSerializerBinary
+#ifdef Q_OS_WIN
             const fs::path path_form(fullPath.toStdWString());
+#else
+            const fs::path path_form(fullPath.toStdString());
+#endif
 
             CUIFormsCollection tmp;
             if (path_form.extension() == ".fm")

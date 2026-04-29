@@ -1,7 +1,7 @@
 #include "linkedFormBond.h"
 #include <DockWidget.h>
 #include <QtitanGrid.h>
-#include "table/rtabController.h"
+#include "table/rtabcontroller.h"
 
 LinkedFormBond::LinkedFormBond(RtabController*        parentCtrl,
                                Qtitan::GridTableView* parentView,

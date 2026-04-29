@@ -8,6 +8,7 @@
 #include "macroDockManager.h"
 #include "qmcr/pyhlp.h"
 #include "logManager.h"
+#include "table/rtabcontroller.h"
 
 FormManager::FormManager(
     const EngineContext&    ctx,

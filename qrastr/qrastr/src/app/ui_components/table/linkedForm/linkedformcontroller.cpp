@@ -1,6 +1,6 @@
 #include "linkedformcontroller.h"
 
-#include "table/rtabController.h"
+#include "table/rtabcontroller.h"
 #include "table/rtabshell.h"
 #include "table/rTablesDataAdapter.h"
 #include "rmodel.h"

@@ -1,5 +1,5 @@
-#include "TIAdapter.h"
-#include "QTI.h"
+#include "tiAdapter.h"
+#include "qti.h"
 
 TIAdapter::TIAdapter(std::shared_ptr<QTI> qti)
     : m_qti(std::move(qti))
