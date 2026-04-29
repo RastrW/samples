@@ -47,7 +47,7 @@ bool StartupLoader::loadTemplates(const QDir& templatesDir) {
     return true;
 }
 
-bool StartupLoader::loadFiles(const QDir& templatesDir) {
+void StartupLoader::loadFiles(const QDir& templatesDir) {
     for (const auto& [filePath, templateName]
          : RastrParameters::get_instance()->getStartLoadFileTemplates())
     {
@@ -78,5 +78,4 @@ bool StartupLoader::loadFiles(const QDir& templatesDir) {
             spdlog::info("Startup file loaded: {}", filePath);
         }
     }
-    return true;
 }

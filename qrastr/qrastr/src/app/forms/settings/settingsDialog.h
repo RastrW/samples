@@ -3,7 +3,6 @@
 #include <QDialog>
 
 class QTreeWidgetItem;
-class QAstra;
 class QTreeWidget;
 class QStackedWidget;
 class SettingsStackedItemWidget;

@@ -6,7 +6,6 @@
 #include "rdata.h"
 #include "table/backgroundCache.h"
 
-class RTablesDataManager;
 class CUIForm;
 class RData;
 class RCol;
@@ -31,8 +30,8 @@ signals:
     void sig_nameRefUpdated(std::vector<size_t> updatedCols);
 
 public slots:
-    ///@brief Уведомление от RTDM:
-    /// плагин генерирует хинт → RTDM ловит → испускает сигнал → слот вызывает beginInsertRows / endInsertRows у Qt
+    ///@brief Уведомление от RTDA:
+    /// плагин генерирует хинт → RTDA ловит → испускает сигнал → слот вызывает beginInsertRows / endInsertRows у Qt
     void slot_DataChanged(const std::string& tName, int rowFrom, int colFrom,
                           int rowTo, int colTo);
     void slot_BeginResetModel(const std::string& tName);

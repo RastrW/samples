@@ -1,19 +1,20 @@
 #pragma once
 #include <QObject>
-#include "table/rtablesdatamanager.h"
+#include "table/rTablesDataAdapter.h"
+#include "table/linkedForm/linkedform.h"
 
 namespace ads { class CDockManager; class CDockWidget; }
+namespace Qtitan   { class GridTableView; }
 
 class RtabController;
-class QAstra;
 class PyHlp;
 class CUIForm;
 class QAction;
 class QMenu;
 
+
 /**
- * @class TableDockManager
- * @brief Управляет dock-виджетами таблиц (CUIForm).
+ * @class Управляет dock-виджетами таблиц (CUIForm).
  *
  * Отвечает за:
  *  - хранение списка статических форм и быстрый поиск по имени
@@ -42,9 +43,15 @@ public:
 
     const std::list<CUIForm>& forms() const { return m_forms; }
 
-    void openForm        (const CUIForm& form);
+    std::pair<ads::CDockWidget*, RtabController*>
+    openForm(const CUIForm& form,
+             std::optional<LinkedForm> linkedFilter = std::nullopt);
     void openFormByName  (const QString& formName);
     void openFormByIndex (int index);
+    //Открыть связанную форму
+    RtabController* openLinkedForm(const LinkedForm&      lf,
+                                   Qtitan::GridTableView* parentView,
+                                   RtabController*        parentCtrl);
 
     /// Все открытые RtabWidget (для трансляции calc-сигналов).
     const QList<RtabController*>& openForms() const { return m_openForms; }

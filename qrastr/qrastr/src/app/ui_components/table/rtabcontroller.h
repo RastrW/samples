@@ -21,6 +21,7 @@ class CondFormatController;
 class PyHlp;
 class LinkedForm;
 struct FilterRule;
+class TableDockManager;
 
 namespace ads { class CDockManager; }
 namespace Qtitan { class GridTableView; }
@@ -37,9 +38,17 @@ public:
                             std::shared_ptr<ITableEvents>     tableEvents,
                             CUIForm             UIForm,
                             ads::CDockManager*  pDockManager,
+                            TableDockManager*   tableDockManager,
                             QObject*            parent = nullptr);
     ~RtabController() override;
 
+    struct CommonTableActions {
+        QAction* addRow       = nullptr;
+        QAction* insertRow    = nullptr;
+        QAction* deleteRow    = nullptr;
+        QAction* duplicateRow = nullptr;
+        QAction* groupCorr    = nullptr;
+    };
     /**
      * @brief Создаёт и возвращает RtabShell — видимую оболочку для CDockWidget.
      * Можно вызвать только один раз: повторный вызов вернёт nullptr и залогирует ошибку.
@@ -55,13 +64,13 @@ public:
     void setPyHlp(std::shared_ptr<PyHlp> pPyHlp);
 
     /// Регистрирует шорткаты Ctrl+I/A/R/D на grid.
-    /// Вызывается из RtabShell (только когда withToolbar = true).
-    /// Функция сделана статической, потому что шорткаты создаются в `RtabShell`,
-    /// а не в контроллере.
-    static void setupShortcuts(RtabController* target, RGrid* grid);
-public slots:
-    void slot_close();
+    /// Вызывается только когда withToolbar = true.
+    void setupShortcuts(RGrid* grid);
+    const CommonTableActions& actions() const { return m_comTabAct; }
 
+    /// Снять фильтр связанной формы (вызывается при закрытии родительской таблицы)
+    void clearLinkedFilter();
+public slots:
     // ── Строки ──────────────────────────────────────────────────────────────
     void slot_addRow();
     void slot_insertRow();
@@ -90,13 +99,13 @@ public slots:
 
 private slots:
     void slot_contextMenu(ContextMenuEventArgs* args);
-    void slot_beginResetModel(std::string tname);
-    void slot_endResetModel(std::string tname);
+    void slot_beginResetModel(const std::string& tname);
+    void slot_endResetModel(const std::string& tname);
 
 private:
     /** @brief
      * a) создаёт RModel, вызывает setForm/populateDataFromRastr;
-     * b) подключает сигналы RTDM к слотам RModel (обновления данных);
+     * b) подключает сигналы RTDA к слотам RModel (обновления данных);
      * c) устанавливает редакторы колонок (SetEditors);
      * d) восстанавливает условное форматирование из JSON.
     */
@@ -105,6 +114,7 @@ private:
     void applyColumnEditor(int colIndex);
     void setTableView(int multiplier = 10);
     void setupConnections();
+    void createCommonTableActions();
 
     Qtitan::GridTableColumn* getColumnByIndex(int index) const;
     // ── Компоненты (данные) ─────────────────────────────────────────────────
@@ -122,10 +132,11 @@ private:
     // ── Конфигурация ────────────────────────────────────────────────────────
     CUIForm              m_UIForm;
     ads::CDockManager*   m_DockManager {nullptr};
-    std::shared_ptr<PyHlp> pPyHlp_;
 
     std::unordered_map<QString, bool> m_columnsVisible;
 
     /// Защита от повторного вызова createShell()
     bool m_shellCreated {false};
+    CommonTableActions m_comTabAct;
+    TableDockManager* m_tableDockManager;
 };

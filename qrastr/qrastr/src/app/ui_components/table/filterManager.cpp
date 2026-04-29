@@ -70,7 +70,7 @@ void FilterManager::rebuildCombinedFilter(){
     auto* group = new Qtitan::GridFilterGroupCondition(m_view->filter());
 
     if (hasSelection) {
-        // Обращаемся к модели — она сама знает имя таблицы и идёт через RTDM
+        // Обращаемся к модели — она сама знает имя таблицы и идёт через RTDA
         const std::vector<long> indices =
             m_model->getRowsBySelection(m_selection);
         auto* selCond = new CustomFilterCondition(m_view->filter());

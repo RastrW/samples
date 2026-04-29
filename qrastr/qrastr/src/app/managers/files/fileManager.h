@@ -53,7 +53,7 @@ public:
      * @brief Получить карту ВСЕХ загруженных файлов
      * @return map<template, file>
      */
-    const std::map<QString, QString>& loadedFiles() const { return m_loadedFiles; }
+    const std::unordered_map<QString, QString>& loadedFiles() const { return m_loadedFiles; }
     /// @brief Установить текущий файл И добавить в карту загруженных
     void setCurrentFile(const QString& fileName, const QString& templatePath = "");
     
@@ -87,7 +87,7 @@ private:
     // ========== Состояние файлов ==========
     QString m_currentFile;
     QString m_currentDir;
-    std::map<QString, QString> m_loadedFiles; // key=templatePath, value=filePath
+    std::unordered_map<QString, QString> m_loadedFiles; // key=templatePath, value=filePath
     RecentFilesManager               m_recentFiles;
     // ========== Вспомогательные методы ==========
     /**

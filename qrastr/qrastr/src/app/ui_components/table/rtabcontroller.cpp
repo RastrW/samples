@@ -6,7 +6,7 @@
 #include "rdata.h"
 #include "rcol.h"
 #include "rgrid.h"
-#include "linkedformcontroller.h"
+#include "table/linkedForm/linkedformcontroller.h"
 #include "contextmenubuilder.h"
 #include "condformatcontroller.h"
 #include "tables/colPropDialog.h"
@@ -23,6 +23,7 @@
 #include <spdlog/spdlog.h>
 #include "table/ITableEvents.h"
 #include "table/ITableRepository.h"
+#include "customEditors/doubleEditor/doubleEditorRepository.h"
 
 void dumpShortcuts(QWidget* root, const QString& tag)
 {
@@ -50,12 +51,14 @@ RtabController::RtabController( std::shared_ptr<ITableRepository> tables,
                                 std::shared_ptr<ITableEvents>     tableEvents,
                                 CUIForm             UIForm,
                                 ads::CDockManager*  pDockManager,
+                                TableDockManager*   tableDockManager,
                                 QObject*            parent)
     : QObject(parent)
     , m_tables (tables)
     , m_tableEvents(tableEvents)
     , m_UIForm(std::move(UIForm))
     , m_DockManager(pDockManager)
+    , m_tableDockManager(tableDockManager)
 {
     //  Настройка QTitan Grid
     Grid::loadTranslation();
@@ -115,14 +118,17 @@ RtabController::RtabController( std::shared_ptr<ITableRepository> tables,
 
     createModel(tables);
 
-    m_menuBuilder = std::make_unique<ContextMenuBuilder>(
-        m_view, m_linkedFormCtrl.get(), this);
-    m_menuBuilder->initMenu(m_grid);
-
     m_filterManager = std::make_unique<FilterManager>(m_view, m_model.get(),
                                                       m_grid);
 
+    createCommonTableActions();
+
+    m_menuBuilder = std::make_unique<ContextMenuBuilder>(
+        m_view, m_linkedFormCtrl.get(), m_comTabAct, this);
+    m_menuBuilder->initMenu(m_grid);
+
     setupConnections();
+
 
     //dumpShortcuts(m_grid, "before clear");
     // Снимаем F5/Delete со встроенных action-ов QTitan
@@ -143,7 +149,15 @@ RtabController::RtabController( std::shared_ptr<ITableRepository> tables,
     //dumpShortcuts(m_grid, "after clear");
 }
 
-RtabController::~RtabController() = default;
+RtabController::~RtabController()
+{
+    spdlog::info("RtabController::~RtabController [{}]", m_UIForm.Name());
+
+    if (m_tableEvents) {
+        disconnect(m_tableEvents.get(), nullptr, m_model.get(), nullptr);
+        disconnect(m_tableEvents.get(), nullptr, this, nullptr);
+    }
+}
 
 RtabShell* RtabController::createShell(bool withToolbar)
 {
@@ -167,7 +181,49 @@ RtabShell* RtabController::createShell(bool withToolbar)
     return shell;
 }
 
-void RtabController::setupShortcuts(RtabController* target, RGrid* grid)
+void RtabController::createCommonTableActions(){
+    m_comTabAct.addRow = new QAction(
+        QIcon(":/images/Rastr3_grid_addrow_16x16.png"),
+        tr("Добавить строку (Ctrl+A)"), this);
+    m_comTabAct.addRow->setShortcut(Qt::CTRL | Qt::Key_A);
+    m_comTabAct.addRow->setShortcutContext(Qt::WidgetWithChildrenShortcut);
+
+    m_comTabAct.insertRow = new QAction(
+        QIcon(":/images/Rastr3_grid_insrow_16x16.png"),
+        tr("Вставить строку (Ctrl+I)"), this);
+    m_comTabAct.insertRow->setShortcut(Qt::CTRL | Qt::Key_I);
+    m_comTabAct.insertRow->setShortcutContext(Qt::WidgetWithChildrenShortcut);
+
+    m_comTabAct.deleteRow = new QAction(
+        QIcon(":/images/Rastr3_grid_delrow_16x16.png"),
+        tr("Удалить строку (Ctrl+D)"), this);
+    m_comTabAct.deleteRow->setShortcut(Qt::CTRL | Qt::Key_D);
+    m_comTabAct.deleteRow->setShortcutContext(Qt::WidgetWithChildrenShortcut);
+
+    m_comTabAct.duplicateRow = new QAction(
+        QIcon(":/images/Rastr3_grid_duprow_16x161.png"),
+        tr("Дублировать строку (Ctrl+R)"), this);
+    m_comTabAct.duplicateRow->setShortcut(Qt::CTRL | Qt::Key_R);
+    m_comTabAct.duplicateRow->setShortcutContext(Qt::WidgetWithChildrenShortcut);
+
+    m_comTabAct.groupCorr = new QAction(
+        QIcon(":/images/column_edit.png"),
+        tr("Групповая корректировка"), this);
+
+    // Подключаем к слотам контроллера — единственное место подключения
+    connect(m_comTabAct.addRow,       &QAction::triggered,
+            this, &RtabController::slot_addRow);
+    connect(m_comTabAct.insertRow,    &QAction::triggered,
+            this, &RtabController::slot_insertRow);
+    connect(m_comTabAct.deleteRow,    &QAction::triggered,
+            this, &RtabController::slot_deleteRow);
+    connect(m_comTabAct.duplicateRow, &QAction::triggered,
+            this, &RtabController::slot_duplicateRow);
+    connect(m_comTabAct.groupCorr,    &QAction::triggered,
+            this, &RtabController::slot_groupCorrection);
+}
+
+void RtabController::setupShortcuts(RGrid* grid)
 {
     // Qt::WidgetWithChildrenShortcut + parent=m_grid:
     // шорткат срабатывает, когда фокус внутри m_grid или его дочерних виджетов.
@@ -183,7 +239,7 @@ void RtabController::setupShortcuts(RtabController* target, RGrid* grid)
     for (const auto& d : defs) {
         auto* sc = new QShortcut(d.key, grid); // parent — grid (дочерний к shell)
         sc->setContext(Qt::WidgetWithChildrenShortcut); // фокус внутри grid
-        QObject::connect(sc, &QShortcut::activated, target, d.slot); // цель — контроллер
+        QObject::connect(sc, &QShortcut::activated, this, d.slot); // цель — контроллер
     }
 }
 
@@ -233,7 +289,7 @@ void RtabController::createModel(std::shared_ptr<ITableRepository> tables)
     m_linkedFormCtrl = std::make_unique<LinkedFormController>(
         tables,
         m_tableEvents,
-        m_DockManager,
+        m_tableDockManager,
         m_view,
         m_model.get(),
         m_UIForm,
@@ -268,16 +324,6 @@ void RtabController::setupConnections()
     connect(ev, &ITableEvents::sig_EndResetModel,this,
             &RtabController::slot_endResetModel);
     //ContextMenuBuilder -> RtabController
-    connect(m_menuBuilder.get(), &ContextMenuBuilder::sig_addRow,
-            this, &RtabController::slot_addRow);
-    connect(m_menuBuilder.get(), &ContextMenuBuilder::sig_insertRow,
-            this, &RtabController::slot_insertRow);
-    connect(m_menuBuilder.get(), &ContextMenuBuilder::sig_deleteRow,
-            this, &RtabController::slot_deleteRow);
-    connect(m_menuBuilder.get(), &ContextMenuBuilder::sig_duplicateRow,
-            this, &RtabController::slot_duplicateRow);
-    connect(m_menuBuilder.get(), &ContextMenuBuilder::sig_groupCorrection,
-            this, &RtabController::slot_groupCorrection);
     connect(m_menuBuilder.get(), &ContextMenuBuilder::sig_colProp,
             this, &RtabController::slot_openColProp);
     connect(m_menuBuilder.get(), &ContextMenuBuilder::sig_exportCsv,
@@ -330,37 +376,33 @@ void RtabController::applyColumnEditor(int colIndex)
     if (!col) return;
 
     column_qt->setVisible(!col->isHidden());
+    // Сбрасываем флаги перед переназначением
+    column_qt->setProperty("isNumeric", false);
+    column_qt->setProperty("isBool",    false);
 
     const auto info = m_model->getColumnEditorInfo(colIndex);
 
     switch (info.editorType)
     {
     case RModel::ColumnEditorInfo::Type::CheckBox:
+        column_qt->setProperty("isBool", true);
         column_qt->setEditorType(GridEditor::CheckBox);
         static_cast<Qtitan::GridCheckBoxEditorRepository*>(
             column_qt->editorRepository())
             ->setAppearance(GridCheckBox::StyledAppearance);
         break;
     case RModel::ColumnEditorInfo::Type::Numeric: {
-        column_qt->setEditorType(GridEditor::String);
-        // При использовании GridEditor::Numeric не удаётся убрать кнопки виджета,
-        //поэтому валидатор добавляется вручную
-        auto* repo = static_cast<GridStringEditorRepository*>(
-            column_qt->editorRepository());
+        auto* repo = new DoubleEditorRepository(
+            info.decimals, info.minVal, info.maxVal);
+        column_qt->setProperty("isNumeric", true);
+        column_qt->setEditorRepository(repo);
 
-        // QDoubleValidator::decimals ограничивает знаки при вводе
-        auto* val = new QDoubleValidator(info.minVal, info.maxVal,
-                                         info.decimals, repo);
-        val->setNotation(QDoubleValidator::StandardNotation);
-        repo->setValidator(val);
-
-        // QTitan должен сортировать по UserRole (double),
-        // а не по DisplayRole/EditRole (QString вида "117.20").
-        // Без этого "21.20" < "117.20" даёт неверный результат при сортировке,
-        // потому что строковое сравнение идёт посимвольно ('2' > '1').
+        // Сортировка по UserRole (raw double), не по DisplayRole (QString)
         GridModelDataBinding* binding = m_view->getDataBinding(column_qt);
         if (binding)
             binding->setSortRole(Qt::UserRole);
+
+        column_qt->setProperty("isNumeric", true);
         break;
     }
     case RModel::ColumnEditorInfo::Type::DateTime: {
@@ -378,6 +420,7 @@ void RtabController::applyColumnEditor(int colIndex)
         break;
     }
     case RModel::ColumnEditorInfo::Type::ComboBox: {
+        column_qt->setProperty("isNumeric", true);
         column_qt->setEditorType(GridEditor::ComboBox);
 
         column_qt->editorRepository()->setDefaultValue(QString(), Qt::EditRole);
@@ -386,12 +429,14 @@ void RtabController::applyColumnEditor(int colIndex)
         break;
     }
     case RModel::ColumnEditorInfo::Type::NameRef: {
+        column_qt->setProperty("isNumeric", true);
         auto* repo = new SearchableComboRepositoryTwo(info.nameRefData.items, m_grid);
         column_qt->setEditorRepository(repo);
         break;
     }
     case RModel::ColumnEditorInfo::Type::ComboBoxPicture:
     {
+        column_qt->setProperty("isNumeric", true);
         column_qt->setEditorType(GridEditor::ComboBox);
         spdlog::info("applyColumnEditor ENPIC col={}, picItems={}", colIndex,
                      info.picItems.size());
@@ -500,7 +545,7 @@ void RtabController::slot_groupCorrection(){
     fgc->show();
 }
 
-void RtabController::slot_beginResetModel(std::string tname){
+void RtabController::slot_beginResetModel(const std::string& tname){
     if (m_UIForm.TableName() != tname) return;
 
     m_view->beginUpdate(); // ← открываем внешний блок
@@ -514,7 +559,7 @@ void RtabController::slot_beginResetModel(std::string tname){
     }
 }
 
-void RtabController::slot_endResetModel(std::string tname){
+void RtabController::slot_endResetModel(const std::string& tname){
     if (m_UIForm.TableName() != tname) return;
 
     // Восстанавливаем видимость и переназначаем редакторы.
@@ -549,39 +594,7 @@ void RtabController::slot_endResetModel(std::string tname){
     m_filterManager->resetAfterModelReset();
 }
 
-void RtabController::slot_close()
-{
-    spdlog::info("RtabController::slot_close [{}]", m_UIForm.Name());
-
-    // RTDM → модель и контроллер
-    if (m_tableEvents) {
-        disconnect(m_tableEvents.get(), nullptr, m_model.get(), nullptr);
-        disconnect(m_tableEvents.get(), nullptr, this, nullptr);
-    }
-
-    // Отключаем focusRowChanged → child
-    if (m_linkedFormCtrl)
-        m_linkedFormCtrl->disconnectAll();
-
-    // Сбрасываем компоненты в порядке зависимостей
-    m_condFormatCtrl.reset();
-    m_menuBuilder.reset();
-    m_filterManager.reset();
-
-    if (m_model && m_model->getRdata())
-        m_model->getRdata()->pnparray_.reset();
-
-    m_linkedFormCtrl.reset();
-    m_model.reset();
-
-    m_grid = nullptr;
-    m_view = nullptr;
-
-    this->deleteLater();
-}
-
 void RtabController::setPyHlp(std::shared_ptr<PyHlp> pPyHlp){
-    pPyHlp_ = pPyHlp;
     if (m_linkedFormCtrl){
         m_linkedFormCtrl->setPyHlp(pPyHlp);
     }
@@ -711,6 +724,12 @@ void RtabController::slot_contextMenu(ContextMenuEventArgs* args)
 int RtabController::getLongValue(const std::string& key, long row){
     int col = m_model->getRdata()->mCols_.at(key);
     return std::visit(ToLong(), m_model->getRdata()->pnparray_->Get(row,col));
+}
+
+void RtabController::clearLinkedFilter()
+{
+    if (!m_linkedFormCtrl) return;
+    m_linkedFormCtrl->clearFilter();
 }
 
 void RtabController::applyLinkedFormFromController(const LinkedForm& lf){

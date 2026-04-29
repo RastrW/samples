@@ -1,5 +1,6 @@
 #pragma once
 #include <QObject>
+#include "rtabcontroller.h"
 
 class RCol;
 class LinkedFormController;
@@ -21,6 +22,7 @@ class ContextMenuBuilder : public QObject
 public:
     explicit ContextMenuBuilder(Qtitan::GridTableView*   view,
                                 LinkedFormController*    linkedFormCtrl,
+                                const RtabController::CommonTableActions& actions,
                                 QObject*                 parent = nullptr);
 
     /// Строит персистентный QMenu и все статичные QAction.
@@ -33,11 +35,6 @@ public:
     void prepareForHeader(int column, RCol* col, QMenu* menu);
 signals:
     // Сигналы для операций со строками
-    void sig_addRow();
-    void sig_insertRow();
-    void sig_deleteRow();
-    void sig_duplicateRow();
-    void sig_groupCorrection();
     void sig_selection(int col);
     // Сигналы для вспомогательных форм
     void sig_colProp(int col);
@@ -71,11 +68,6 @@ private:
     QMenu*   m_linkedMacrosMenu = nullptr;
 
     // Статические экшны
-    QAction* m_actInsert    = nullptr;
-    QAction* m_actAdd       = nullptr;
-    QAction* m_actDuplicate = nullptr;
-    QAction* m_actDelete    = nullptr;
-    QAction* m_actGroup     = nullptr;
     QAction* m_actTmpl      = nullptr;
     QAction* m_actData      = nullptr;
     QAction* m_actExport    = nullptr;
@@ -84,4 +76,6 @@ private:
     QAction* m_actCF        = nullptr;
     // ── Хранители для отсоединения сигналов ────────────────────────────
     int      m_currentCol = -1;   ///< col при последнем вызове prepareForShow
+
+    RtabController::CommonTableActions m_comTabAct;
 };

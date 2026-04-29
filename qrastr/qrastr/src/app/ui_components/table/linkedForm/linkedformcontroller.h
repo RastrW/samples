@@ -12,9 +12,9 @@ class RModel;
 class RtabWidget;
 class PyHlp;
 class QWidget;
-class RTablesDataManager;
 class ITableRepository;
 class ITableEvents;
+class TableDockManager;
 
 namespace ads      {class CDockManager;
                     class CDockWidget;}
@@ -34,7 +34,7 @@ public:
     explicit LinkedFormController(
         std::shared_ptr<ITableRepository> tables,
         std::shared_ptr<ITableEvents>     tableEvents,
-        ads::CDockManager*       dockManager,
+        TableDockManager*        tableDockManager,
         Qtitan::GridTableView*   view,
         RModel*                  model,
         const CUIForm&           form,
@@ -73,8 +73,8 @@ public:
      * @param newRow  новый индекс строки
      */
     void onParentRowChanged(int newRow);
-    /// @brief Отключает все Qt-соединения, хранящиеся в m_lf.vconn.
-    void disconnectAll();
+
+    void clearFilter();
 private:
     /// @brief Читает long-значение ячейки из кешированного DataBlock модели.
     int getLongValue(const std::string& col, long row);
@@ -82,7 +82,6 @@ private:
     std::shared_ptr<ITableRepository> m_tables;     ///< для всех обращений к данным плагина
     std::shared_ptr<ITableEvents>     m_tableEvents;
 
-    ads::CDockManager*       m_dockManager;
     Qtitan::GridTableView*   m_view;         ///< не владеет; живёт дольше
     RModel*                  m_model;        ///< не владеет; живёт дольше
     CUIForm                  m_form;
@@ -90,7 +89,6 @@ private:
     std::shared_ptr<PyHlp>   m_pyHlp;
     RtabController* m_parentController;
 
-    ads::CDockWidget* m_childDockWidget {nullptr};
-
     LinkedForm               m_lf;           ///< текущая активная связанная форма
+    TableDockManager* m_tableDockManager;
 };

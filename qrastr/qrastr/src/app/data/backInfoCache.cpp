@@ -1,5 +1,5 @@
 #include "backInfoCache.h"
-#include "table/rtablesdatamanager.h"
+#include "table/rTablesDataAdapter.h"
 #include "rdata.h"
 #include "table/QDataBlocks.h"
 #include "utils.h"

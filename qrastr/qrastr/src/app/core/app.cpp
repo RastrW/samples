@@ -10,8 +10,6 @@
 #include <spdlog/sinks/rotating_file_sink.h>
 #include <spdlog/sinks/qt_sinks.h>
 #include "rastrParameters.h"
-using WrapperExceptionType = std::runtime_error;
-#include <astra/IPlainRastrWrappers.h>
 #include "plugins/rastr/plugin_interfaces.h"
 #include "plugins/ti/plugin_ti_interfaces.h"
 #include "plugins/barsmdp/plugin_barsmdp_interfaces.h"
@@ -24,7 +22,7 @@ using WrapperExceptionType = std::runtime_error;
 #include "files/rastrFileAdapter.h"
 #include "calculation/rastrCalcAdapter.h"
 #include "log/rastrLogAdapter.h"
-#include "table/rtablesdatamanager.h"
+#include "table/rTablesDataAdapter.h"
 #include "ti/tiAdapter.h"
 #include "bars/barsMDPAdapter.h"
 
@@ -274,7 +272,6 @@ bool App::loadPlugins(){
                 }
                 spdlog::info("it is Rastr.test.finished");
             }
-            auto iTI = qobject_cast<InterfaceTI *>(plugin);
             if (auto* iTI = qobject_cast<InterfaceTI*>(plugin)) {
                 //Rastr обязателен для TI
                 if (!m_sp_qastra) {
@@ -406,12 +403,12 @@ EngineContext App::buildEngineContext() {
     ctx.calcEngine = std::make_shared<RastrCalcAdapter> (m_sp_qastra);
     ctx.logEvents = std::make_shared<RastrLogAdapter>(m_sp_qastra);
 
-    // rtdm реализует ОБА интерфейса — один объект, два shared_ptr на него.
+    // rtda реализует ОБА интерфейса — один объект, два shared_ptr на него.
     // Используем конструктор псевдонимов в shared_ptr: оба указателя владеют одним объектом,
     // счётчик ссылок общий — объект живёт пока жив хотя бы один из них.
-    auto rtdm = std::make_shared<RTablesDataManager>(m_sp_qastra);
-    ctx.tables      = rtdm;  // shared_ptr<ITableRepository>
-    ctx.tableEvents = rtdm;  // shared_ptr<ITableEvents> — тот же объект
+    auto rtda = std::make_shared<RTablesDataAdapter>(m_sp_qastra);
+    ctx.tables      = rtda;  // shared_ptr<ITableRepository>
+    ctx.tableEvents = rtda;  // shared_ptr<ITableEvents> — тот же объект
 
     // getRastr() возвращает shared_ptr<IPlainRastr>, владение у QAstra.
     // Сохраняем голый указатель — время жизни гарантировано временем жизни App.

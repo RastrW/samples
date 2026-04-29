@@ -1,7 +1,7 @@
 #pragma once
 
 #include "rcol.h"
-#include "table/rtablesdatamanager.h"
+#include "table/rTablesDataAdapter.h"
 
 class CUIForm;
 class QDataBlock;

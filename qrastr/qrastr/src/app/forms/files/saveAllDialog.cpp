@@ -9,11 +9,11 @@
 #include "files/IFileOperations.h"
 
 SaveAllDialog::SaveAllDialog(std::shared_ptr<IFileOperations> fileOps,
-                             std::map<QString,QString> _mFilesLoad,
+                             std::unordered_map<QString,QString> filesLoad,
                              QWidget *parent)
     : CheckboxListDialog(static_cast<int>(_cols::save), parent)
     , m_fileOps(fileOps)
-    , m_FilesLoad(_mFilesLoad)
+    , m_FilesLoad(filesLoad)
 {
     setWindowTitle(tr("Сохранение файлов"));
     setWindowModality(Qt::ApplicationModal);
