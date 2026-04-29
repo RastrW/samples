@@ -1,19 +1,20 @@
 #pragma once
 #include <QObject>
-#include "rtablesdatamanager.h"
+#include "table/rTablesDataAdapter.h"
+#include "table/linkedForm/linkedform.h"
 
 namespace ads { class CDockManager; class CDockWidget; }
+namespace Qtitan   { class GridTableView; }
 
 class RtabController;
-class QAstra;
 class PyHlp;
 class CUIForm;
 class QAction;
 class QMenu;
 
+
 /**
- * @class TableDockManager
- * @brief Управляет dock-виджетами таблиц (CUIForm).
+ * @class Управляет dock-виджетами таблиц (CUIForm).
  *
  * Отвечает за:
  *  - хранение списка статических форм и быстрый поиск по имени
@@ -29,7 +30,8 @@ class TableDockManager : public QObject {
 
 public:
     explicit TableDockManager(
-        std::shared_ptr<QAstra> qastra,
+        std::shared_ptr<ITableRepository> tables,
+        std::shared_ptr<ITableEvents>     tableEvents,
         ads::CDockManager*      dockManager,
         std::shared_ptr<PyHlp>  pyHlp,
         QWidget*                parent = nullptr);
@@ -41,9 +43,15 @@ public:
 
     const std::list<CUIForm>& forms() const { return m_forms; }
 
-    void openForm        (const CUIForm& form);
+    std::pair<ads::CDockWidget*, RtabController*>
+    openForm(const CUIForm& form,
+             std::optional<LinkedForm> linkedFilter = std::nullopt);
     void openFormByName  (const QString& formName);
     void openFormByIndex (int index);
+    //Открыть связанную форму
+    RtabController* openLinkedForm(const LinkedForm&      lf,
+                                   Qtitan::GridTableView* parentView,
+                                   RtabController*        parentCtrl);
 
     /// Все открытые RtabWidget (для трансляции calc-сигналов).
     const QList<RtabController*>& openForms() const { return m_openForms; }
@@ -85,13 +93,11 @@ private slots:
 
 private:
     // ── Зависимости ──────────────────────────────────────────────────────────
-    std::shared_ptr<QAstra> m_qastra;
-    ads::CDockManager*      m_dockManager;
-    std::shared_ptr<PyHlp>  m_pyHlp;
-    QWidget*                m_parentWidget;
-
-    std::unique_ptr<RTablesDataManager>
-        m_rtdm;
+    std::shared_ptr<ITableRepository> m_tables;
+    std::shared_ptr<ITableEvents>     m_tableEvents;
+    ads::CDockManager*                  m_dockManager;
+    std::shared_ptr<PyHlp>              m_pyHlp;
+    QWidget*                            m_parentWidget;
 
     // ── Состояние ────────────────────────────────────────────────────────────
     std::list<CUIForm>         m_forms;
@@ -100,7 +106,6 @@ private:
     RtabController*                m_activeForm {nullptr};
 
     // ── Вспомогательные методы ───────────────────────────────────────────────
-
     /// Генерировать пункты меню «Свойства» из таблиц с .form-шаблонами.
     void generateDynamicForms(QMenu* menu);
 };

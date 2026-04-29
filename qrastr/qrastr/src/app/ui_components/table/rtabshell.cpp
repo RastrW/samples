@@ -1,9 +1,8 @@
 #include "rtabshell.h"
 
-#include "rgrid.h"
+#include "rGrid.h"
 #include "rmodel.h"
-#include "filtermanager.h"
-#include "rtabcontroller.h"
+#include "filterManager.h"
 
 #include <QVBoxLayout>
 #include <QMenu>
@@ -30,9 +29,9 @@ RtabShell::RtabShell(RGrid*                 grid,
     , m_filterManager(filterManager)
 {
     if (withToolbar) {
-        buildToolbar(controller);
+        buildToolbar(controller->actions(), controller);
         //  Горячие клавиши
-        RtabController::setupShortcuts(controller, m_grid);
+        controller->setupShortcuts(m_grid);
     }
 
     buildLayout(withToolbar);
@@ -61,27 +60,25 @@ RtabShell::RtabShell(RGrid*                 grid,
     slot_updateStatusLabel();
 }
 
-void RtabShell::buildToolbar(RtabController* controller)
+void RtabShell::buildToolbar(const RtabController::CommonTableActions& acts,
+                             RtabController* controller)
 {
     m_toolbar = new QToolBar(this);
     m_toolbar->setIconSize(QSize(16, 16));
     m_toolbar->setToolButtonStyle(Qt::ToolButtonIconOnly);
+
     // Qtitan::Grid имеет встроенную кнопку поиска/фильтрации
     // Операции с данными
-    auto* actAddRow       = m_toolbar->addAction(QIcon(":/images/Rastr3_grid_addrow_16x16.png"),   "");
-    auto* actInsertRow    = m_toolbar->addAction(QIcon(":/images/Rastr3_grid_insrow_16x16.png"),   "");
-    auto* actDeleteRow    = m_toolbar->addAction(QIcon(":/images/Rastr3_grid_delrow_16x16.png"),   "");
-    auto* actDuplicateRow = m_toolbar->addAction(QIcon(":/images/Rastr3_grid_duprow_16x161.png"),  "");
-    auto* actGroupCorr    = m_toolbar->addAction(QIcon(":/images/column_edit.png"),                 "");
+    m_toolbar->addAction(acts.addRow);
+    m_toolbar->addAction(acts.insertRow);
+    m_toolbar->addAction(acts.deleteRow);
+    m_toolbar->addAction(acts.duplicateRow);
+    m_toolbar->addAction(acts.groupCorr);
+
     auto* actAutoFilter   = m_toolbar->addAction(QIcon(":/images/new_style/filter.png"),            "");
     auto* actSearch       = m_toolbar->addAction(QIcon(":/images/new_style/search.png"),            "");
     auto* actCopy         = m_toolbar->addAction(QIcon(":/images/new_style/copy.png"),              "");
 
-    actAddRow      ->setToolTip(tr("Добавить строку (Ctrl+A)"));
-    actInsertRow   ->setToolTip(tr("Вставить строку (Ctrl+I)"));
-    actDeleteRow   ->setToolTip(tr("Удалить строку (Ctrl+D)"));
-    actDuplicateRow->setToolTip(tr("Дублировать строку (Ctrl+R)"));
-    actGroupCorr   ->setToolTip(tr("Групповая корректировка"));
     actAutoFilter  ->setToolTip(tr("Показать/скрыть строку автофильтра"));
     actSearch      ->setToolTip(tr("Поиск по колонке"));
     actCopy        ->setToolTip(tr("Копировать таблицу в буфер обмена (Ctrl+C)"));
@@ -91,12 +88,8 @@ void RtabShell::buildToolbar(RtabController* controller)
     actAutoFilter->setChecked(false);
 
     // Действия с данными — делегируются контроллеру
-    connect(actAddRow,       &QAction::triggered, controller, &RtabController::slot_addRow);
-    connect(actInsertRow,    &QAction::triggered, controller, &RtabController::slot_insertRow);
-    connect(actDeleteRow,    &QAction::triggered, controller, &RtabController::slot_deleteRow);
-    connect(actDuplicateRow, &QAction::triggered, controller, &RtabController::slot_duplicateRow);
-    connect(actGroupCorr,    &QAction::triggered, controller, &RtabController::slot_groupCorrection);
-    connect(actAutoFilter,   &QAction::toggled,   controller, &RtabController::slot_toggleAutoFilter);
+    connect(actAutoFilter,   &QAction::toggled,
+            controller, &RtabController::slot_toggleAutoFilter);
 
     // UI-действия — остаются в шелле
     connect(actCopy,   &QAction::triggered, this, &RtabShell::slot_copyToClipboard);
@@ -184,14 +177,16 @@ void RtabShell::slot_copyToClipboard()
                              m_model->data(idx, Qt::DisplayRole).toString() });
         }
 
-        // Сортируем по (row, visCol) — std::vector + std::sort
         std::sort(cells.begin(), cells.end(), [](const Cell& a, const Cell& b) {
             return a.row != b.row ? a.row < b.row : a.visCol < b.visCol;
         });
 
         int prevRow = -1;
         QStringList rowData;
-        rowData.reserve(visibleCols.size());
+        // Инициализируем пустыми строками
+        for (int i = 0; i < visibleCols.size(); ++i) {
+            rowData.append(QString());
+        }
 
         auto flushRow = [&]() {
             if (prevRow >= 0) text += rowData.join('\t') + '\n';
@@ -200,7 +195,11 @@ void RtabShell::slot_copyToClipboard()
         for (const Cell& c : cells) {
             if (c.row != prevRow) {
                 flushRow();
-                rowData.assign(visibleCols.size(), QString());
+                // Очищаем и заново заполняем
+                rowData.clear();
+                for (int i = 0; i < visibleCols.size(); ++i) {
+                    rowData.append(QString());
+                }
                 prevRow = c.row;
             }
             rowData[c.visCol] = c.value;

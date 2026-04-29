@@ -13,7 +13,7 @@ class GroupCorrectionDialog : public QDialog
 {
     Q_OBJECT
 public:
-    explicit GroupCorrectionDialog( ITableRepository* repo,
+    explicit GroupCorrectionDialog( std::shared_ptr<ITableRepository> tables,
                                     RData* prdata,
                                     RCol* prcol,
                                     QWidget *parent = nullptr);
@@ -22,7 +22,7 @@ private slots:
     void on_buttonBox_accepted();
 
 private:
-    ITableRepository* m_repo;
+    std::shared_ptr<ITableRepository> m_tables;
     RData*            m_prdata;
     RCol*             m_prcol;
 

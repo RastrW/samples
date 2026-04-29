@@ -1,7 +1,7 @@
 #pragma once
 
 #include "rcol.h"
-#include "rtablesdatamanager.h"
+#include "table/rTablesDataAdapter.h"
 
 class CUIForm;
 class QDataBlock;
@@ -27,7 +27,7 @@ public:
      * После вызова pnparray_ указывает на тот же объект,
      * что и у других открытых окон этой таблицы.
      */
-    void populateBlock(ITableRepository* repo);
+    void populateBlock(std::shared_ptr<ITableRepository> tables);
 
     int         AddCol(const RCol& rcol);
     std::string get_cols(bool visible = true) const;

@@ -10,7 +10,7 @@ struct FilterRule {
         Eq, Neq, Lt, Le, Gt, Ge,
         // Строковые
         Contains,
-        Like,       // wildcards: * ?
+        Like,
         NotLike,
         StartsWith,
         EndsWith
@@ -39,7 +39,7 @@ struct FilterRule {
             return false;
         }
 
-        if (v.metaType().id() == QMetaType::Bool) {
+        if (v.type() == QVariant::Bool) {
             if (ok) *ok = true;
             return v.toBool();
         }

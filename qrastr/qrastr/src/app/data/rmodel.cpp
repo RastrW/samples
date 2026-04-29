@@ -4,15 +4,15 @@
 #include "QtitanGrid.h"
 
 #include "rdata.h"
-#include "QDataBlocks.h"
+#include "table/QDataBlocks.h"
 #include "UIForms.h"
-#include "rtablesdatamanager.h"
+#include "table/rTablesDataAdapter.h"
 #include <string_bool.h>
 #include "condFormat.h"
 
-RModel::RModel(QObject* parent, ITableRepository* repo)
+RModel::RModel(QObject* parent, std::shared_ptr<ITableRepository>        tables)
     : QAbstractTableModel(parent)
-    , m_repo(repo)
+    , m_tables(tables)
 {}
 
 bool RModel::populateDataFromRastr()
@@ -21,13 +21,13 @@ bool RModel::populateDataFromRastr()
         // Схема запрашивается у репозитория — единственный вызов
         // который обращается к плагину на этапе построения модели.
         // RData и RCol не знают про плагин вообще.
-        auto schema = m_repo->getSchema(m_UIform->TableName());
+        auto schema = m_tables->getSchema(m_UIform->TableName());
 
         // schema передаётся по const& в конструктор RData —
         // объект схемы не копируется, строки копируются по одному разу.
         m_rdata = std::make_unique<RData>(schema, *m_UIform);
-        m_rdata->populateBlock(m_repo);
-        m_cache.rebuild(*m_rdata, m_repo);
+        m_rdata->populateBlock(m_tables);
+        m_cache.rebuild(*m_rdata, m_tables);
         // заполняем кеш после перестройки структуры
         m_bgCache.clear();
         buildEditorInfoCache();
@@ -93,10 +93,11 @@ QVariant RModel::data(const QModelIndex& index, int role) const
     case Qt::EditRole:
         return dataForDisplayEdit(row, col, rcol, raw, role);
     case Qt::UserRole:
-        // Сырое значение для сортировки числовых колонок.
-        // QTitan получает double и сортирует числово, а не лексикографически.
-        if (!raw.isValid() && rcol.getComPropTT() == enComPropTT::COM_PR_REAL)
-            return 0.0; // пустая ячейка = 0.0 для сортировки
+        if (rcol.getComPropTT() == enComPropTT::COM_PR_REAL) {
+            const bool isEmpty = std::holds_alternative<std::monostate>(
+                m_rdata->pnparray_->Get(row, col));
+            return isEmpty ? 0.0 : raw;
+        }
         return raw;
     case Qt::BackgroundRole:
         return dataForBackground(row, col, rcol, raw);
@@ -109,10 +110,8 @@ QVariant RModel::data(const QModelIndex& index, int role) const
 
 QVariant RModel::dataForInvalidCellEditRole(int col, const RCol& rcol) const
 {
-    if (rcol.getComPropTT() == enComPropTT::COM_PR_REAL) {
-        const auto info = getColumnEditorInfo(col);
-        return QVariant(QString::number(0.0, 'f', info.decimals));
-    }
+    if (rcol.getComPropTT() == enComPropTT::COM_PR_REAL)
+        return QString();
     if (rcol.getComPropTT() == enComPropTT::COM_PR_INT  ||
         rcol.getComPropTT() == enComPropTT::COM_PR_ENUM ||
         rcol.getComPropTT() == enComPropTT::COM_PR_SUPERENUM) {
@@ -148,15 +147,23 @@ QVariant RModel::dataForDisplayEdit(int row, int col, const RCol& rcol,
         if (auto resolved = resolveDisplayText(col, rcol, raw); !resolved.isNull())
             return resolved;
     }
+    if (rcol.getComPropTT() == enComPropTT::COM_PR_REAL) {
+        int decimals = 2;
+        try { decimals = std::stoi(rcol.getPrec()); } catch (...) {}
 
-    // ── Вещественные числа ───────────────────────────────────────────────────
-    // DisplayRole И EditRole → одна и та же отформатированная строка.
-    // Пользователь видит "3.14" в ячейке и то же самое видит в редакторе.
-    // Сортировка идёт по Qt::UserRole (raw double)
-    if (raw.type() == QVariant::Double) {
-        const auto info = getColumnEditorInfo(col);
-        if (info.editorType == ColumnEditorInfo::Type::Numeric)
-            return QString::number(raw.toDouble(), 'f', info.decimals);
+        // Проверяем именно monostate, а не isValid() —
+        // raw.isValid() == true даже для double(0.0)
+        const bool isEmpty = std::holds_alternative<std::monostate>(
+            m_rdata->pnparray_->Get(row, col));
+
+        if (role == Qt::DisplayRole) {
+            if (isEmpty) return QString(); // пустая ячейка — ничего не показываем
+            return QString::number(raw.toDouble(), 'f', decimals);
+        }
+
+        // EditRole
+        if (isEmpty) return QString();
+        return QString::number(raw.toDouble(), 'f', decimals);
     }
     return raw;
 }
@@ -316,9 +323,17 @@ bool RModel::setData(const QModelIndex& index, const QVariant& value, int role)
         case RCol::_en_data::DATA_STR:
             vd = value.toString().toStdString();
             break;
-        case RCol::_en_data::DATA_DBL:
-            vd = value.toDouble();
+        case RCol::_en_data::DATA_DBL: {
+            const QString str = value.toString().trimmed();
+            if (str.isEmpty()) {
+                vd = 0.0;
+            } else {
+                QString normalized = str;
+                normalized.replace(',', '.');
+                vd = normalized.toDouble();
+            }
             break;
+        }
         default:
             return false;
         }
@@ -326,20 +341,20 @@ bool RModel::setData(const QModelIndex& index, const QVariant& value, int role)
 
     // Единственная точка записи — репозиторий.
     // emit dataChanged не вызываем: плагин сгенерирует хинт →
-    // RTDM обновит блок → sig_dataChanged → slot_DataChanged → View.
-    m_repo->setValue(tname, colName, row, vd);
+    // RTDA обновит блок → sig_dataChanged → slot_DataChanged → View.
+    m_tables->setValue(tname, colName, row, vd);
     return true;
 }
 
 bool RModel::addRow(size_t count, const QModelIndex&)
 {
-    m_repo->addRows(m_rdata->t_name_, count);
+    m_tables->addRows(m_rdata->t_name_, count);
     return true;
 }
 
 bool RModel::duplicateRow(int row, const QModelIndex&)
 {
-    m_repo->duplicateRow(m_rdata->t_name_, row);
+    m_tables->duplicateRow(m_rdata->t_name_, row);
     // После DuplicateRow плагин сгенерирует InsertRow-хинт →
     // handleInsertRow вставит пустую строку в pnparray_.
     // DuplicateRow в QDenseDataBlock копирует данные из исходной строки в новую
@@ -349,19 +364,19 @@ bool RModel::duplicateRow(int row, const QModelIndex&)
 
 bool RModel::insertRows(int row, int count, const QModelIndex&)
 {
-    m_repo->insertRows(m_rdata->t_name_, row, count);
+    m_tables->insertRows(m_rdata->t_name_, row, count);
     return true;
 }
 
 bool RModel::removeRows(int row, int count, const QModelIndex&)
 {
-    const long sz = m_repo->tableSize(m_rdata->t_name_);
+    const long sz = m_tables->tableSize(m_rdata->t_name_);
     // НЕ вызываем beginRemoveRows здесь —
     // это сделает slot_BeginRemoveRows через цепочку хинтов
     if (static_cast<long>(count) == sz)
-        m_repo->setTableSize(m_rdata->t_name_, 0);
+        m_tables->setTableSize(m_rdata->t_name_, 0);
     else
-        m_repo->deleteRows(m_rdata->t_name_, row, count);
+        m_tables->deleteRows(m_rdata->t_name_, row, count);
     return true;
 }
 
@@ -438,11 +453,11 @@ void RModel::slot_EndRemoveRows(const std::string& tName)
 
 void RModel::slot_RefTableChanged(const std::string& tname)
 {
-    // Если изменилась наша же таблица — RTDM уже послал ChangeTable/ChangeAll,
+    // Если изменилась наша же таблица — RTDA уже послал ChangeTable/ChangeAll,
     // не нужно дублировать.
     if (m_rdata->t_name_ == tname) return;
     // Перестраиваем только затронутые записи кеша
-    std::vector<size_t> updated = m_cache.rebuildRefsFrom(tname, *m_rdata, m_repo);
+    std::vector<size_t> updated = m_cache.rebuildRefsFrom(tname, *m_rdata, m_tables);
     if (updated.empty()) return;
     // Обновляем m_editorInfoCache для затронутых колонок
     for (size_t col : updated)
@@ -653,9 +668,8 @@ RCol* RModel::getRCol(int col) const
 
 int RModel::getIndexCol(const std::string& col) const
 {
-    for (int i = 0; i < columnCount(); ++i)
-        if (getRCol(i)->getColName() == col) return i;
-    return -1;
+    auto it = m_rdata->mCols_.find(col);
+    return it != m_rdata->mCols_.end() ? it->second : -1;
 }
 
 RData* RModel::getRdata()
@@ -665,5 +679,5 @@ RData* RModel::getRdata()
 
 std::vector<long> RModel::getRowsBySelection(const std::string& selection) const
 {
-    return m_repo->rowsBySelection(m_rdata->t_name_, selection);
+    return m_tables->rowsBySelection(m_rdata->t_name_, selection);
 }

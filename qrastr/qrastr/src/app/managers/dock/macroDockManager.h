@@ -6,7 +6,7 @@
 namespace ads { class CDockManager; class CDockWidget; }
 class McrWnd;
 class PyHlp;
-class QAstra;
+class ILogEvents;
 class QWidget;
 
 /**
@@ -23,7 +23,7 @@ public:
     explicit MacroDockManager(
         ads::CDockManager*      dockManager,
         std::shared_ptr<PyHlp>  pyHlp,
-        std::shared_ptr<QAstra> qastra,
+        std::shared_ptr<ILogEvents> logEvents,
         QWidget*                parent = nullptr);
 
     /// Открыть или поднять окно макросов.
@@ -42,7 +42,7 @@ signals:
 private:
     ads::CDockManager*      m_dockManager;
     std::shared_ptr<PyHlp>  m_pyHlp;
-    std::shared_ptr<QAstra> m_qastra;
+    std::shared_ptr<ILogEvents> m_logEvents;
     QWidget*                m_parentWidget;
 
     QPointer<ads::CDockWidget> m_dockWidget;

@@ -1,11 +1,12 @@
 #pragma once
 
 #include <QWidget>
+#include <QMap>
 
 class QListWidgetItem;
 class QLineEdit;
 class QListWidget;
-
+class QMenu;
 
 /// @class Виджет поиска по пунктам меню
 /// Добавляется на тулбар. При вводе текста показывает popup

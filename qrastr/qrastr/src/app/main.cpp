@@ -7,6 +7,8 @@
 #include <QProgressBar>
 #include "mainwindow.h"
 #include "app.h"
+#include "engineContext.h"
+
 #ifdef Q_OS_UNIX
 #include <csignal>
 #include <cstring>
@@ -142,9 +144,7 @@ int main(int argc, char *argv[]) {
     updateSplash(85, QObject::tr("Инициализация интерфейса..."));
 
     w.initialize(
-        app.getQAstraPtr(),
-        app.getQTIPtr(),
-        app.getQBarsMDPPtr(),
+        app.buildEngineContext(),
         app.getForms());
 
     updateSplash(100, QObject::tr("Готово"));

@@ -1,7 +1,7 @@
 #include "calculationController.h"
-#include "qastra.h"
-#include "qti.h"
-#include "qbarsmdp.h"
+#include "calculation/ICalculationEngine.h"
+#include "ti/ITIEngine.h"
+#include "bars/IBarsMDPEngine.h"
 #include <QTimer>
 #include <spdlog/spdlog.h>
 #include <ctime>
@@ -15,23 +15,23 @@ KzParameters::KzParameters()
 {}
 
 CalculationController::CalculationController(
-    std::shared_ptr<QAstra> qastra,
-    std::shared_ptr<QTI> qti,
-    std::shared_ptr<QBarsMDP> qbarsmdp,
+    std::shared_ptr<ICalculationEngine> calcEngine,
+    std::shared_ptr<ITIEngine>          ti,
+    std::shared_ptr<IBarsMDPEngine>     barsMDP,
     QObject* parent
 )
     : QObject(parent)
-    , m_qastra(qastra)
-    , m_qti(qti)
-    , m_qbarsmdp(qbarsmdp)
+    , m_calcEngine(calcEngine)
+    , m_qti(ti)
+    , m_qbarsmdp(barsMDP)
 {
-    assert(m_qastra != nullptr);
+    assert(m_calcEngine != nullptr);
 }
 
 void CalculationController::executeRgm(const QString& parameters) {
     beginCalculation("RGM");
     
-    eASTCode code = m_qastra->Rgm(parameters.toStdString());
+    eASTCode code = m_calcEngine->Rgm(parameters.toStdString());
     
     std::string str_msg;
     bool success = false;
@@ -50,7 +50,7 @@ void CalculationController::executeRgm(const QString& parameters) {
 void CalculationController::executeKdd(const QString& parameters) {
     beginCalculation("KDD");
     
-    eASTCode code = m_qastra->Kdd(parameters.toStdString());
+    eASTCode code = m_calcEngine->Kdd(parameters.toStdString());
     
     std::string str_msg;
     bool success = false;
@@ -69,7 +69,7 @@ void CalculationController::executeKdd(const QString& parameters) {
 void CalculationController::executeOPF(const QString& parameters) {
     beginCalculation("OPF");
     
-    eASTCode code = m_qastra->Opf(parameters.toStdString());
+    eASTCode code = m_calcEngine->Opf(parameters.toStdString());
     
     std::string str_msg;
     bool success = false;
@@ -96,7 +96,7 @@ void CalculationController::executeSMZUtst(const QString& parameters) {
         params = QString::number(ptm_now->tm_mday);
     }
     
-    eASTCode code = m_qastra->SMZU(params.toStdString());
+    eASTCode code = m_calcEngine->SMZU(params.toStdString());
     
     std::string str_msg;
     bool success = false;
@@ -109,21 +109,13 @@ void CalculationController::executeSMZUtst(const QString& parameters) {
         success = false;
     }
     
-    // Дополнительное логирование в Rastr
-    _log_data log_data;
-    log_data.lmt = success ? LogMessageTypes::Info : LogMessageTypes::Error;
-    log_data.str_msg = str_msg;
-    log_data.n_indx = -1;
-    log_data.n_stage_id = -1;
-    m_qastra->onRastrLog(log_data);
-    
     endCalculation(success, QString::fromStdString(str_msg));
 }
 
 void CalculationController::executeTkz(const KzParameters& params) {
     beginCalculation("KZ");
     
-    const eASTCode code = m_qastra->Kz(
+    const eASTCode code = m_calcEngine->Kz(
         params.parameters.toStdString(),
         params.nonsym,
         params.p1, params.p2, params.p3,

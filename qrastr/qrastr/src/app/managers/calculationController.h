@@ -2,9 +2,9 @@
 #include <memory>
 #include <QObject>
 
-class QAstra;
-class QTI;
-class QBarsMDP;
+class ICalculationEngine;
+class ITIEngine;
+class IBarsMDPEngine;
 enum class eASTCode;
 enum class eNonsym;
 
@@ -29,9 +29,9 @@ class CalculationController : public QObject {
     
 public:
     explicit CalculationController(
-        std::shared_ptr<QAstra> qastra,
-        std::shared_ptr<QTI> qti,
-        std::shared_ptr<QBarsMDP> qbarsmdp,
+        std::shared_ptr<ICalculationEngine> calcEngine,
+        std::shared_ptr<ITIEngine>          ti,
+        std::shared_ptr<IBarsMDPEngine>     barsMDP,
         QObject* parent = nullptr
     );
     ~CalculationController() = default;
@@ -93,9 +93,9 @@ signals:
                              const QString& params = "");  
 private:
     // ========== Зависимости ==========
-    std::shared_ptr<QAstra> m_qastra;
-    std::shared_ptr<QTI> m_qti;
-    std::shared_ptr<QBarsMDP> m_qbarsmdp;
+    std::shared_ptr<ICalculationEngine> m_calcEngine;
+    std::shared_ptr<ITIEngine> m_qti;
+    std::shared_ptr<IBarsMDPEngine> m_qbarsmdp;
     
     // ========== Состояние ==========
     bool m_isCalculating = false;

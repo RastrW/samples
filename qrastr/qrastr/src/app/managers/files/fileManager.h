@@ -1,16 +1,11 @@
 #pragma once
 #include <memory>
 #include <QObject>
+#include "recentFilesManager.h"
 
-
-class QAstra;
 enum class eLoadCode;
-enum class IPlainRastrRetCode;
+class IFileOperations;
 
-struct RecentFileEntry {
-    QString file;
-    QString tmpl;  // может быть пустым
-};
 
 /// @class Менеджер файловых операций
 class FileManager : public QObject {
@@ -18,22 +13,20 @@ class FileManager : public QObject {
     
 public:
     explicit FileManager(
-        std::shared_ptr<QAstra> qastra,
+        std::shared_ptr<IFileOperations> fileOps,
         QWidget* parent = nullptr
     );
     ~FileManager() = default;
     
     // ========== Основные операции ==========
     /// @brief Создать новый файл с выбором шаблонов
-    bool newFile();
-    
+    bool newFile(); 
     /**
      * @brief Открыть файлы через диалог
      * @return количество успешно открытых файлов
      * @note Поддерживает выбор нескольких файлов
      */
-    int openFiles();
-    
+    int openFiles(); 
     /**
      * @brief Открыть конкретный файл
      * @param filePath путь к файлу
@@ -41,7 +34,6 @@ public:
      */
     bool openFile(const QString& filePath,
                   const QString& templatePath = "");
-    
     /// @brief Сохранить текущий файл
     bool save();
     /// @brief Сохранить файл с новым именем
@@ -57,50 +49,46 @@ public:
     QString currentFile() const { return m_currentFile; }
     /// @brief Получить текущую директорию
     QString currentDirectory() const { return m_currentDir; }
-    
     /**
      * @brief Получить карту ВСЕХ загруженных файлов
      * @return map<template, file>
      */
-    const std::map<QString, QString>& loadedFiles() const { return m_loadedFiles; }
+    const std::unordered_map<QString, QString>& loadedFiles() const { return m_loadedFiles; }
     /// @brief Установить текущий файл И добавить в карту загруженных
     void setCurrentFile(const QString& fileName, const QString& templatePath = "");
     
     // ========== Недавние файлы ==========
-    /// @brief Добавить файл в список недавних
-    void addToRecentFiles(const QString& filePath,
-                          const QString& templatePath);
-    void saveRecentFiles(const QList<RecentFileEntry>& entries);
-    QList<RecentFileEntry> loadRecentFiles() const;
     /// @brief Получить список недавних файлов
+    [[nodiscard]]
     QList<RecentFileEntry> getRecentFiles() const;
     /// @brief Открыть файл из списка недавних
-    void openRecentFile(const QString& filePath,
-                        const QString& templatePath);
+    void openRecentFile(const QString& filePath, const QString& templatePath);
 signals:
     /// @brief Файл успешно открыт
-    void fileOpened(const QString& filePath);
+    void sig_fileOpened(const QString& filePath);
     
     /**
      * @brief Несколько файлов открыто
      * @param count количество файлов
      */
-    void filesOpened(int count);
+    void sig_filesOpened(int count);
     /// @brief Файл успешно сохранён
-    void fileSaved(const QString& filePath);
+    void sig_fileSaved(const QString& filePath);
     /// @brief Ошибка при загрузке файла
-    void fileLoadError(const QString& error);
+    void sig_fileLoadError(const QString& error);
     /// @brief Текущий файл изменился
-    void currentFileChanged(const QString& filePath);   
+    void sig_currentFileChanged(const QString& filePath);
 private:
+    static constexpr const char* k_noTemplateFilter = "No template (*)";
     // ========== Зависимости ==========
-    std::shared_ptr<QAstra> m_qastra;
+    std::shared_ptr<IFileOperations> m_fileOps;
     QWidget* m_parentWidget;
     
     // ========== Состояние файлов ==========
     QString m_currentFile;
     QString m_currentDir;
-    std::map<QString, QString> m_loadedFiles;
+    std::unordered_map<QString, QString> m_loadedFiles; // key=templatePath, value=filePath
+    RecentFilesManager               m_recentFiles;
     // ========== Вспомогательные методы ==========
     /**
      * @brief Показать диалог открытия файлов
@@ -121,7 +109,6 @@ private:
     QString findTemplateByExtension(const QString& filePath) const;
     /// @brief Показать диалог выбора шаблонов для нового файла
     bool showNewFileDialog(QStringList& selectedTemplates);
-
     void registerStartupFile(const QString& fileName,
                              const QString& templatePath);
 };

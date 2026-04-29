@@ -10,7 +10,7 @@ class ExportCSVdialog : public QDialog
 {
     Q_OBJECT
 public:
-    explicit ExportCSVdialog(ITableRepository* repo,
+    explicit ExportCSVdialog(std::shared_ptr<ITableRepository> tables,
                              const std::string& tableName,
                              const std::string& defaultCols,
                              QWidget* parent = nullptr);
@@ -21,7 +21,7 @@ private slots:
     void accept() override;
 
 private:
-    ITableRepository*              m_repo;
+    std::shared_ptr<ITableRepository>              m_tables;
     std::string   m_path;
     QLineEdit*    m_lePath;
     QLineEdit*    m_leTable;

@@ -6,8 +6,6 @@
 #include "rdata.h"
 #include "table/backgroundCache.h"
 
-class QAstra;
-class RTablesDataManager;
 class CUIForm;
 class RData;
 class RCol;
@@ -32,8 +30,8 @@ signals:
     void sig_nameRefUpdated(std::vector<size_t> updatedCols);
 
 public slots:
-    ///@brief Уведомление от RTDM:
-    /// плагин генерирует хинт → RTDM ловит → испускает сигнал → слот вызывает beginInsertRows / endInsertRows у Qt
+    ///@brief Уведомление от RTDA:
+    /// плагин генерирует хинт → RTDA ловит → испускает сигнал → слот вызывает beginInsertRows / endInsertRows у Qt
     void slot_DataChanged(const std::string& tName, int rowFrom, int colFrom,
                           int rowTo, int colTo);
     void slot_BeginResetModel(const std::string& tName);
@@ -69,17 +67,15 @@ public:
     /**
      * @param repo  Невладеющий указатель на ITableRepository.
      *              Время жизни репозитория гарантируется RtabController.
-     *              QAstra* больше не нужен — все обращения к плагину
-     *              идут через repo.
      */
-    explicit RModel(QObject* parent, ITableRepository* repo);
+    explicit RModel(QObject* parent, std::shared_ptr<ITableRepository>        tables);
 
     void setForm(CUIForm* pUIForm) { m_UIform = pUIForm; }
 
     /**
      * Перестроение структуры данных модели.
      * Вызывается при первом открытии и при slot_EndResetModel.
-     * Запрашивает схему у репозитория — QAstra* не нужен.
+     * Запрашивает схему у репозитория
      */
     bool populateDataFromRastr();
 
@@ -116,7 +112,7 @@ public:
 
 private:
     // ── Данные ───────────────────────────────────────────────────────────────
-    ITableRepository*  m_repo;// m_repo — единственная точка входа к плагину.
+    std::shared_ptr<ITableRepository> m_tables;
     CUIForm*           m_UIform  {nullptr};
 
     std::unique_ptr<RData> m_rdata;

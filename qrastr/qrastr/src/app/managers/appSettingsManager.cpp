@@ -76,9 +76,9 @@ QByteArray AppSettingsManager::getSettings(const QString& name){
     return m_settings.value(name).toByteArray();
 }
 
-void AppSettingsManager::showFormSettings(std::shared_ptr<QAstra> qastra) {
+void AppSettingsManager::showFormSettings() {
     SettingsDialog* pformSettings = new SettingsDialog();
-    pformSettings->init(qastra);
+    pformSettings->init();
     pformSettings->setAttribute(Qt::WA_DeleteOnClose);
     pformSettings->show();
 }

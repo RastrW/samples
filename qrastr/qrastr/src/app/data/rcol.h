@@ -1,10 +1,7 @@
 #pragma once
 
 #include "astra_shared.h"
-#include "rtablesdatamanager.h"
-
-using WrapperExceptionType = std::runtime_error;
-class QAstra;
+#include "table/ITableRepository.h"
 
 /// @brief Метаданные и вспомогательные операции для одной колонки таблицы Rastr.
 class RCol

@@ -56,12 +56,12 @@ int RData::AddCol(const RCol& rcol)
     return static_cast<int>(size());
 }
 
-void RData::populateBlock(ITableRepository* repo)
+void RData::populateBlock(std::shared_ptr<ITableRepository> tables)
 {
     // repo — невладеющий указатель, время жизни гарантировано RtabController.
     // getBlock возвращает shared_ptr — счётчик ссылок увеличивается,
     // данные не копируются.
-    pnparray_ = repo->getBlock(t_name_, m_str_cols);
+    pnparray_ = tables->getBlock(t_name_, m_str_cols);
 }
 
 std::string RData::getCommaSeparatedFieldNames() const

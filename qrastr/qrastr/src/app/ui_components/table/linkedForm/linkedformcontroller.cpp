@@ -1,8 +1,8 @@
 #include "linkedformcontroller.h"
 
-#include "rtabController.h"
-#include "rtabshell.h"
-#include "rtablesdatamanager.h"
+#include "table/rtabcontroller.h"
+#include "table/rtabshell.h"
+#include "table/rTablesDataAdapter.h"
 #include "rmodel.h"
 #include "rdata.h"
 #include "qmcr/pyhlp.h"
@@ -17,88 +17,42 @@
 
 #include <fmt/format.h>
 #include <spdlog/spdlog.h>
-#include "ITableRepository.h"
+#include "table/ITableRepository.h"
+#include "dock/tableDockManager.h"
 
 LinkedFormController::LinkedFormController(
-    QAstra*                  qastra,
-    RTablesDataManager*      pRTDM,
-    ads::CDockManager*       dockManager,
-    Qtitan::GridTableView*   view,
-    RModel*                  model,
-    const CUIForm&           form,
-    RtabController*          parentController)
+ std::shared_ptr<ITableRepository> tables,
+        std::shared_ptr<ITableEvents>     tableEvents,
+        TableDockManager*        tableDockManager,
+        Qtitan::GridTableView*   view,
+        RModel*                  model,
+        const CUIForm&           form,
+        RtabController*          parentController)
     : QObject(parentController)
-    , m_qastra(qastra)
-    , m_rtdm(pRTDM)
-    , m_dockManager(dockManager)
+    , m_tables(tables)
+    , m_tableEvents(tableEvents)
     , m_view(view)
     , m_model(model)
     , m_form(form)
     , m_parentController(parentController)
+    , m_tableDockManager(tableDockManager)
 {}
-void LinkedFormController::disconnectAll()
-{
-    // Отключаем соединения focusRowChanged → child
-    for (auto& conn : m_lf.vconn)
-        QObject::disconnect(conn);
-    m_lf.vconn.clear();
 
-    // Дочерний dock закроется сам при удалении CDockManager.
-    m_childDockWidget = nullptr;
+void LinkedFormController::clearFilter()
+{
+    if (!m_view || !m_view->filter()) return;
+    m_view->filter()->setActive(false);
+    // Снимаем панель фильтра чтобы пользователь видел, что фильтр неактивен
+    m_view->hideFilterPanel();
+    spdlog::info("LinkedFormController: filter cleared (parent table closed)");
 }
 
 void LinkedFormController::openLinkedForm(LinkedForm lf)
 {
-    CUIForm* pUIForm = m_rtdm->getForm(lf.linkedform);
-    if (!pUIForm) return;
-    // Создаём дочерний виджет — он заведёт собственный LinkedFormController
-    auto* child = new RtabController(
-        m_qastra,
-        *pUIForm,
-        m_rtdm,
-        m_dockManager,
-        nullptr); //parent для QObject, dock управляет временем жизни
+    lf.pbaseform = m_parentController;
 
-    if (m_pyHlp)
-        child->setPyHlp(m_pyHlp);
-    // смена фокусной строки в НАШЕМ view => обновление дочерней формы.
-    // Соединение сохраняем в lf.vconn, который потом уйдёт в child->m_lf
-    // и будет отключён при закрытии дочернего виджета.
-    lf.vconn.push_back(
-        connect(m_view, &Qtitan::GridTableView::focusRowChanged,
-                child, [parentView = m_view, child](int, int) {
-                    GridRow row = parentView->focusedRow();
-                    if (!row.isValid()) return;
-                    const int modelRow = row.modelIndex().row();
-                    if (modelRow >= 0)
-                        child->notifyParentRowChanged(modelRow);
-                }));
-
-    child->applyLinkedFormFromController(lf);
-
-    m_childDockWidget = new ads::CDockWidget(
-        stringutils::MkToUtf8(pUIForm->Name()).c_str(), nullptr);
-
-    m_childDockWidget->setWidget(child->createShell(false)); // false = без тулбара
-    m_childDockWidget->setFeature(ads::CDockWidget::DockWidgetDeleteOnClose, true);
-
-    // Когда дочерний dock закрывается пользователем — зануляем указатель
-    connect(m_childDockWidget, &ads::CDockWidget::closed,
-            this, [this]() { m_childDockWidget = nullptr; });
-
-    // Когда дочерний dock закрывается — вызываем slot_close у child
-    connect(m_childDockWidget, &ads::CDockWidget::closed,
-            child, &RtabController::slot_close);
-
-    // Когда РОДИТЕЛЬСКИЙ контроллер уничтожается — закрываем дочерний dock.
-    // Используем destroyed (не closed) — это безопасно: сигнал из деструктора,
-    // не из цепочки закрытия dock.
-    connect(m_parentController, &QObject::destroyed,
-            m_childDockWidget, [dw = m_childDockWidget]() {
-                dw->closeDockWidget();
-            });
-
-    m_dockManager->addDockWidgetTab(ads::BottomAutoHideArea, m_childDockWidget);
+    // Вся логика создания dock + bond теперь в TableDockManager
+    m_tableDockManager->openLinkedForm(lf, m_view, m_parentController);
 }
 
 void LinkedFormController::openLinkedMacro(LinkedMacro lm, int contextRow)
@@ -171,7 +125,7 @@ void LinkedFormController::openLinkedMacro(LinkedMacro lm, int contextRow)
 
 void LinkedFormController::buildLinkedFormsMenu(int contextRow, QMenu* menu)
 {
-    auto table = m_rtdm->getBlock("formcontext", "");
+    auto table = m_tables->getBlock("formcontext", "");
 
     for (int irow = 0; irow < table->RowsCount(); ++irow) {
         const std::string formName = std::get<std::string>(table->Get(irow, 0));
@@ -198,7 +152,7 @@ void LinkedFormController::buildLinkedFormsMenu(int contextRow, QMenu* menu)
 
 void LinkedFormController::buildLinkedMacroMenu(int contextRow, QMenu* menu)
 {
-    auto table = m_rtdm->getBlock("macrocontext", "");
+    auto table = m_tables->getBlock("macrocontext", "");
 
     for (int irow = 0; irow < table->RowsCount(); ++irow) {
         const std::string formName = std::visit(ToString(), table->Get(irow, 0));
@@ -232,7 +186,7 @@ void LinkedFormController::applyLinkedForm(LinkedForm lf)
     const std::string tname     = m_model->getRdata()->t_name_;
     const std::string selection = lf.get_selection_result();
 
-    const std::vector<long> indices = m_rtdm->rowsBySelection(tname, selection);
+    const std::vector<long> indices = m_tables->rowsBySelection(tname, selection);
 
     //Создаём CustomFilterCondition для QTitan Grid с этими индексами
     auto* groupCondition = new GridFilterGroupCondition(m_view->filter());

@@ -1,9 +1,9 @@
 #pragma once
+#include "engineContext.h"
 #include <memory>
 #include <QObject>
 #include <QSet>
 
-class QAstra;
 class RtabController;
 class CUIForm;
 class PyHlp;
@@ -19,6 +19,8 @@ namespace ads {
     class CDockWidget;
 }
 
+struct EngineContext;
+
 /**
  * @class Координатор всех dock-виджетов рабочей области.
  *
@@ -33,7 +35,7 @@ class FormManager : public QObject {
 
 public:
     explicit FormManager(
-        std::shared_ptr<QAstra> qastra,
+        const EngineContext& ctx,
         ads::CDockManager*      dockManager,
         LogManager*             logManager,
         QWidget*                parent = nullptr);
@@ -107,7 +109,7 @@ public slots:
 
 private:
     // ── Зависимости ──────────────────────────────────────────────────────────
-    std::shared_ptr<QAstra> m_qastra;
+    EngineContext           m_ctx;
     ads::CDockManager*      m_dockManager;
     QWidget*                m_parentWidget;
 

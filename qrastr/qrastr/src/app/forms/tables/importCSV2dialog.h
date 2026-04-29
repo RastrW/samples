@@ -10,7 +10,7 @@ class ImportCSV2dialog : public QDialog
 {
     Q_OBJECT
 public:
-    explicit ImportCSV2dialog(ITableRepository*  repo,
+    explicit ImportCSV2dialog(std::shared_ptr<ITableRepository> tables,
                               const std::string& tableName,
                               const std::string& defaultCols,
                               QWidget*           parent = nullptr);
@@ -20,7 +20,7 @@ private slots:
     void on_buttonBox_accepted();
 
 private:
-    ITableRepository* m_repo;
+    std::shared_ptr<ITableRepository> m_tables;
 
     QLineEdit*    m_leFile;
     QLineEdit*    m_leTname;

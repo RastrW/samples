@@ -8,7 +8,8 @@
 #include "UIForms.h"
 #include "QtitanGrid.h"
 
-class QAstra;
+class ITableRepository;
+class ITableEvents;
 class RGrid;
 class RModel;
 class RCol;
@@ -20,8 +21,8 @@ class CondFormatController;
 class PyHlp;
 class LinkedForm;
 struct FilterRule;
+class TableDockManager;
 
-class RTablesDataManager;
 namespace ads { class CDockManager; }
 namespace Qtitan { class GridTableView; }
 
@@ -33,13 +34,21 @@ class RtabController : public QObject
 {
     Q_OBJECT
 public:
-    explicit RtabController(QAstra*             pqastra,
+    explicit RtabController(std::shared_ptr<ITableRepository> tables,
+                            std::shared_ptr<ITableEvents>     tableEvents,
                             CUIForm             UIForm,
-                            RTablesDataManager* pRTDM,
                             ads::CDockManager*  pDockManager,
+                            TableDockManager*   tableDockManager,
                             QObject*            parent = nullptr);
     ~RtabController() override;
 
+    struct CommonTableActions {
+        QAction* addRow       = nullptr;
+        QAction* insertRow    = nullptr;
+        QAction* deleteRow    = nullptr;
+        QAction* duplicateRow = nullptr;
+        QAction* groupCorr    = nullptr;
+    };
     /**
      * @brief Создаёт и возвращает RtabShell — видимую оболочку для CDockWidget.
      * Можно вызвать только один раз: повторный вызов вернёт nullptr и залогирует ошибку.
@@ -55,13 +64,13 @@ public:
     void setPyHlp(std::shared_ptr<PyHlp> pPyHlp);
 
     /// Регистрирует шорткаты Ctrl+I/A/R/D на grid.
-    /// Вызывается из RtabShell (только когда withToolbar = true).
-    /// Функция сделана статической, потому что шорткаты создаются в `RtabShell`,
-    /// а не в контроллере.
-    static void setupShortcuts(RtabController* target, RGrid* grid);
-public slots:
-    void slot_close();
+    /// Вызывается только когда withToolbar = true.
+    void setupShortcuts(RGrid* grid);
+    const CommonTableActions& actions() const { return m_comTabAct; }
 
+    /// Снять фильтр связанной формы (вызывается при закрытии родительской таблицы)
+    void clearLinkedFilter();
+public slots:
     // ── Строки ──────────────────────────────────────────────────────────────
     void slot_addRow();
     void slot_insertRow();
@@ -90,21 +99,22 @@ public slots:
 
 private slots:
     void slot_contextMenu(ContextMenuEventArgs* args);
-    void slot_beginResetModel(std::string tname);
-    void slot_endResetModel(std::string tname);
+    void slot_beginResetModel(const std::string& tname);
+    void slot_endResetModel(const std::string& tname);
 
 private:
     /** @brief
      * a) создаёт RModel, вызывает setForm/populateDataFromRastr;
-     * b) подключает сигналы RTDM к слотам RModel (обновления данных);
+     * b) подключает сигналы RTDA к слотам RModel (обновления данных);
      * c) устанавливает редакторы колонок (SetEditors);
      * d) восстанавливает условное форматирование из JSON.
     */
-    void createModel(QAstra* pqastra);
+    void createModel(std::shared_ptr<ITableRepository> tables);
     void applyAllColumnEditors();
     void applyColumnEditor(int colIndex);
     void setTableView(int multiplier = 10);
     void setupConnections();
+    void createCommonTableActions();
 
     Qtitan::GridTableColumn* getColumnByIndex(int index) const;
     // ── Компоненты (данные) ─────────────────────────────────────────────────
@@ -113,19 +123,20 @@ private:
     std::unique_ptr<LinkedFormController> m_linkedFormCtrl;
     std::unique_ptr<ContextMenuBuilder>   m_menuBuilder;
     std::unique_ptr<CondFormatController> m_condFormatCtrl;
-
+    std::shared_ptr<ITableRepository>     m_tables;
+    std::shared_ptr<ITableEvents>     m_tableEvents;
     // ── Грид (создан здесь, передан в RtabShell) ────────────────────────────
     RGrid*                 m_grid  {nullptr};
     Qtitan::GridTableView* m_view  {nullptr};
 
     // ── Конфигурация ────────────────────────────────────────────────────────
     CUIForm              m_UIForm;
-    RTablesDataManager*  m_pRTDM       {nullptr};
     ads::CDockManager*   m_DockManager {nullptr};
-    std::shared_ptr<PyHlp> pPyHlp_;
 
     std::unordered_map<QString, bool> m_columnsVisible;
 
     /// Защита от повторного вызова createShell()
     bool m_shellCreated {false};
+    CommonTableActions m_comTabAct;
+    TableDockManager* m_tableDockManager;
 };

@@ -1,6 +1,7 @@
 #pragma once
 #include <QString>
 #include <QWidget>
+#include <QToolButton>
 #include "filterRule.h"
 
 class QLineEdit;

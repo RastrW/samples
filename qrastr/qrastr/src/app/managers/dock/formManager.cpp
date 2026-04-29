@@ -2,34 +2,31 @@
 
 #include <DockWidget.h>
 #include <DockManager.h>
-#include "qastra.h"
 #include "tableDockManager.h"
 #include "web/graphWebManager.h"
 #include "sdl/graphSDLManager.h"
 #include "macroDockManager.h"
 #include "qmcr/pyhlp.h"
 #include "logManager.h"
+#include "table/rtabcontroller.h"
 
 FormManager::FormManager(
-    std::shared_ptr<QAstra> qastra,
+    const EngineContext&    ctx,
     ads::CDockManager*      dockManager,
     LogManager*             logManager,
     QWidget*                parent)
     : QObject(parent)
-    , m_qastra(qastra)
+    , m_ctx(ctx)
     , m_dockManager(dockManager)
     , m_parentWidget(parent)
-    , m_logManager(logManager)
-{
-    assert(m_qastra      != nullptr);
-    assert(m_dockManager != nullptr);
-    assert(m_logManager  != nullptr);
+    , m_logManager(logManager){
 
-    m_pPyHlp    = std::make_shared<PyHlp>(*m_qastra->getRastr().get());
+
+    m_pPyHlp = std::make_shared<PyHlp>(*ctx.rawRastr);
 
     // ── Таблицы ───────────────────────────────────────────────────────────────
     m_tableDockManager = new TableDockManager(
-        m_qastra, m_dockManager, m_pPyHlp, m_parentWidget);
+        m_ctx.tables, m_ctx.tableEvents, m_dockManager, m_pPyHlp, m_parentWidget);
 
     connect(m_tableDockManager, &TableDockManager::windowOpened,
             this,               &FormManager::registerDockWidget);
@@ -44,16 +41,16 @@ FormManager::FormManager(
 
     // ── Макросы ───────────────────────────────────────────────────────────────
     m_macroDockManager = new MacroDockManager(
-        m_dockManager, m_pPyHlp, m_qastra, m_parentWidget);
+        m_dockManager, m_pPyHlp, ctx.logEvents, m_parentWidget);
 
     connect(m_macroDockManager, &MacroDockManager::windowOpened,
             this,               &FormManager::registerDockWidget);
 
     // ── Графика ───────────────────────────────────────────────────────────────
     m_graphSDLManager = new GraphSDLManager(
-        m_dockManager, m_parentWidget, m_qastra->getRastr().get(), this);
+        m_dockManager, m_parentWidget, ctx.rawRastr, this);
     m_graphWebManager = new GraphWebManager(
-        m_dockManager, m_parentWidget, m_qastra->getRastr().get(), this);
+        m_dockManager, m_parentWidget, ctx.rawRastr, this);
 
     for (IGraphManager* mgr : {m_graphSDLManager, m_graphWebManager}) {
         connect(mgr,  &IGraphManager::windowOpened,

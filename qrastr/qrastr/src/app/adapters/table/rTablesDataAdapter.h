@@ -3,6 +3,7 @@
 #include <QObject>
 #include "astra/IPlainRastr.h"
 #include "ITableRepository.h"
+#include "ITableEvents.h"
 
 class QAstra;
 class CUIForm;
@@ -23,16 +24,16 @@ class _hint_data;
  * Время жизни QDataBlock:
  *   Блок удаляется из кеша при следующем вызове get(), если use_count() == 1.
  */
-class RTablesDataManager : public QObject, public ITableRepository
+class RTablesDataAdapter : public ITableEvents,
+                           public ITableRepository
 {
     Q_OBJECT
 public:
-    RTablesDataManager(std::shared_ptr<QAstra> _pqastra);
-    void setForms ( std::list<CUIForm>* _lstUIForms);
-    ///< Обработчик событий от Rastr
-    void onRastrHint(const _hint_data& hint_data);
+    RTablesDataAdapter(std::shared_ptr<QAstra> _pqastra);
 
-    virtual TableSchema getSchema(const std::string& tname) override;
+    void setForms (const std::list<CUIForm>& forms) override;
+    TableSchema getSchema(const std::string& tname) override;
+    void getDynamicForms(std::vector<CUIForm>& out) override;
     // ── Данные ───────────────────────────────────────────────────────────────
     /**
      * Получить (или создать) QDataBlock для таблицы tname.
@@ -103,29 +104,13 @@ public:
                      eCSVCode           mode) override;
     void setLockEvent(bool lock) override;
     CUIForm* getForm (const std::string& name) override;
-signals:
-    ///< изменены данные в диапазоне
-    void sig_dataChanged(const std::string& tname,int row_from ,
-                         int col_from , int row_to, int col_to);
-    ///< перестроение модели
-    void sig_BeginResetModel(const std::string& tname);
-    void sig_EndResetModel(const std::string& tname);
-    ///< вставка строки
-    void sig_BeginInsertRow(const std::string& tname,int first,int last);
-    void sig_EndInsertRow(const std::string& tname);
-    ///< удаление строк
-    void sig_BeginRemoveRows(const std::string& tname,int first,int last);
-    void sig_EndRemoveRows(const std::string& tname);
-    ///< обновление представлений
-    void sig_UpdateModel(const std::string& tname);
-    void sig_UpdateView(const std::string& tname);
-    void sig_ResetModel(const std::string& tname);
-    /// Строки таблицы tname были добавлены/удалены —
-    /// все NAMEREF/SUPERENUM, ссылающиеся на неё, должны обновить кеш.
-    void sig_ReferenceChanged(const std::string& tname);
+    bool tableExists(const std::string& tname) override;
+private slots:
+    ///< Обработчик событий от Rastr
+    void slot_rastrHint(const _hint_data& hint_data);
 private:
     std::shared_ptr<QAstra> m_pqastra;
-    std::list<CUIForm>* m_plstUIForms;
+    std::list<CUIForm> m_plstUIForms;
 
      /* Хранилище данных для моделей
       * 1:n то есть на 10 окон узлы -> 1 DataBlock

@@ -1,30 +1,30 @@
 #include "tableDockManager.h"
-using WrapperExceptionType = std::runtime_error;
-#include "astra/IPlainRastrWrappers.h"
-#include "qastra.h"
 #include "table/rtabcontroller.h"
 #include "table/rtabshell.h"
 #include <QFileInfo>
 #include <DockManager.h>
 #include <QMenu>
 #include "utils.h"
+#include "table/linkedForm/linkedFormBond.h"
+
 
 TableDockManager::TableDockManager(
-    std::shared_ptr<QAstra> qastra,
-    ads::CDockManager*      dockManager,
-    std::shared_ptr<PyHlp>  pyHlp,
-    QWidget*                parent)
+    std::shared_ptr<ITableRepository> tables,
+    std::shared_ptr<ITableEvents>     tableEvents,
+    ads::CDockManager*                dockManager,
+    std::shared_ptr<PyHlp>            pyHlp,
+    QWidget*                          parent)
     : QObject(parent)
-    , m_qastra(qastra)
+    , m_tables(tables)
+    , m_tableEvents(tableEvents)
     , m_dockManager(dockManager)
     , m_pyHlp(pyHlp)
     , m_parentWidget(parent)
-    , m_rtdm(std::make_unique<RTablesDataManager>(m_qastra))
 {}
 
 void TableDockManager::setForms(const std::list<CUIForm>& forms){
     m_forms = forms;
-    m_rtdm->setForms(&m_forms);
+    m_tables->setForms(m_forms);
 
     int index = 0;
     for (const auto& form : m_forms) {
@@ -34,35 +34,43 @@ void TableDockManager::setForms(const std::list<CUIForm>& forms){
     }
 }
 
-void TableDockManager::openForm(const CUIForm& form)
+std::pair<ads::CDockWidget*, RtabController*>
+TableDockManager::openForm(const CUIForm& form,
+                           std::optional<LinkedForm> linkedFilter)
 {
     try {
-        IRastrTablesPtr tablesx{ m_qastra->getRastr()->Tables() };
-        IRastrPayload   res    { tablesx->FindIndex(form.TableName()) };
-        const int t_ind = res.Value();
-
-        if (t_ind < 0) {
-            spdlog::info("Таблица [{}] - [{}] не существует!",
-                         form.Name(), form.TableName());
-            return;
+        if (!m_tables->tableExists(form.TableName())) {
+            spdlog::info("Таблица [{}] не существует!", form.TableName());
+            return {nullptr, nullptr};
         }
-
-        spdlog::info("Прочитана таблица [{}] - [{}]",
-                     form.Name(), form.TableName());
         // ── Dock-виджет ───────────────────────────────────────────────────────
-        const QString qName = QString::fromStdString(form.Name());
-
-        auto* dw = new ads::CDockWidget(qName, m_parentWidget);
-        dw->setObjectName(qName);
+        auto* dw = new ads::CDockWidget(
+            QString::fromStdString(form.Name()), m_parentWidget);
+        dw->setObjectName(QString::fromStdString(form.Name()));
         dw->setFeature(ads::CDockWidget::DockWidgetDeleteOnClose, true);
+
+        const bool withToolbar = !linkedFilter.has_value();
         // ── Виджет таблицы ────────────────────────────────────────────────────
         auto* ctrl = new RtabController(
-            m_qastra.get(), form, m_rtdm.get(), m_dockManager, dw);
+            m_tables, m_tableEvents, form, m_dockManager, this, dw);
 
+        auto* shell = ctrl->createShell(withToolbar);
+        Q_ASSERT_X(shell, "openForm", "createShell returned nullptr");
+        if (!shell) {
+            dw->deleteLater();
+            return {nullptr, nullptr};
+        }
         // true (по умолчанию) = с тулбаром и шорткатами
-        dw->setWidget(ctrl->createShell());
+        dw->setWidget(shell);
 
-        m_dockManager->addDockWidgetTab(ads::TopDockWidgetArea, dw);
+        if (linkedFilter.has_value())
+            ctrl->applyLinkedFormFromController(*linkedFilter);
+
+        if (linkedFilter.has_value())
+            m_dockManager->addDockWidgetTab(ads::BottomAutoHideArea, dw);
+        else
+            m_dockManager->addDockWidgetTab(ads::TopDockWidgetArea, dw);
+
         ctrl->setPyHlp(m_pyHlp);
         // Добавляем в список открытых форм
         // Сигналы будут передаваться через onCalculationStarted/Finished
@@ -72,25 +80,24 @@ void TableDockManager::openForm(const CUIForm& form)
         emit windowOpened(dw);
 
         connect(dw, &ads::CDockWidget::closed,
-                ctrl, &RtabController::slot_close);
-
-        connect(dw, &ads::CDockWidget::closed,
                 this, [this, ctrl, name = form.Name()]() {
                     m_openForms.removeOne(ctrl);
-                    if (m_activeForm == ctrl)
-                        m_activeForm = nullptr;
+                    if (m_activeForm == ctrl) m_activeForm = nullptr;
                     emit formClosed(QString::fromStdString(name));
                 });
 
-        emit formOpened(qName);
+        emit formOpened(QString::fromStdString(form.Name()));
         emit activeFormChanged(ctrl);
 
+        return {dw, ctrl};
     } catch (const std::exception& ex) {
         spdlog::error("TableDockManager::openForm('{}') threw: {}",
                       form.Name(), ex.what());
+        return {nullptr, nullptr};
     } catch (...) {
         spdlog::error("TableDockManager::openForm('{}') threw unknown exception",
                       form.Name());
+        return {nullptr, nullptr};
     }
 }
 
@@ -123,6 +130,33 @@ void TableDockManager::openFormByName(const QString& formName)
 void TableDockManager::slot_calculationStarted(){}
 
 void TableDockManager::slot_calculationFinished(){}
+
+RtabController* TableDockManager::openLinkedForm(
+    const LinkedForm&      lf,
+    Qtitan::GridTableView* parentView,
+    RtabController*        parentCtrl)
+{
+    CUIForm* pUIForm = m_tables->getForm(lf.linkedform);
+    if (!pUIForm) {
+        spdlog::error("TableDockManager::openLinkedForm: form '{}' not found",
+                      lf.linkedform);
+        return nullptr;
+    }
+
+    // Копия с конвертацией имени — аналогично openFormByIndex
+    CUIForm formCopy = *pUIForm;
+    formCopy.SetName(stringutils::MkToUtf8(formCopy.Name()));
+
+    // Создаём dock и контроллер через openForm с фильтром
+    // openForm регистрирует dock в FormManager через windowOpened
+    auto [childDock, childCtrl] = openForm(formCopy, lf);
+    if (!childCtrl) return nullptr;
+
+    // Создаём bond — он сам управляет временем жизни связи
+    // parent = parentCtrl: bond удалится вместе с родительским контроллером
+    new LinkedFormBond(parentCtrl, parentView, childCtrl, childDock);
+    return childCtrl;
+}
 
 void TableDockManager::buildFormsMenu(QMenu* parentMenu,
                                       QMenu* calcParametersMenu)
@@ -207,38 +241,14 @@ void TableDockManager::generateDynamicForms(QMenu* menu)
     // Очищаем меню перед обновлением
     menu->clear();
 
-    IRastrTablesPtr tablesx{ m_qastra->getRastr()->Tables() };
-    IRastrPayload   cnt    { tablesx->Count() };
+    // Вся COM-логика скрыта за интерфейсом
+    std::vector<CUIForm> dynamicForms;
+    m_tables->getDynamicForms(dynamicForms);
 
-    for (int i = 0; i < cnt.Value(); ++i) {
-        IRastrTablePtr  table     { tablesx->Item(i) };
-        IRastrPayload   tab_name  { table->Name() };
-        IRastrPayload   templ_name{ table->TemplateName() };
-        IRastrPayload   tab_desc  { table->Description() };
-
-        const std::string str_templ = templ_name.Value();
-        // Проверяем, что шаблон таблицы - это .form файл
-        if (QFileInfo(QString::fromStdString(str_templ)).suffix() != "form")
-            continue;
-        // Создаём динамическую форму
-        CUIForm form;
-        form.SetName(tab_desc.Value());
-        form.SetTableName(tab_name.Value());
-        // Определяем вертикальность (если 1 строка)
-        IRastrColumnsPtr columns{ table->Columns() };
-        const size_t nrows = IRastrPayload{ table->Size()          }.Value();
-        const size_t ncols = IRastrPayload{ columns->Count()       }.Value();
-
-        if (nrows == 1)
-            form.SetVertical(true);
-        // Добавляем поля из колонок
-        for (size_t j = 0; j < ncols; ++j) {
-            IRastrColumnPtr col     { columns->Item(j) };
-            IRastrPayload   col_name{ col->Name()       };
-            form.Fields().emplace_back(col_name.Value());
-        }
+    for (const CUIForm& form : dynamicForms) {
         // Добавляем действие в меню
-        QAction* action = menu->addAction(QString::fromStdString(form.Name()));
+        QAction* action = menu->addAction(
+            QString::fromStdString(form.Name()));
         // При клике - открываем динамическую форму
         connect(action, &QAction::triggered,
                 this,   [this, form]() { openForm(form); });
