@@ -17,19 +17,11 @@ find_package(Qt${QT_VERSION_MAJOR} COMPONENTS
 # ============================================================================
 # Output Directories
 # ============================================================================
-# Получаем PLUGIN_OUTPUT_DIR из родительского проекта, если уже определена
-if(NOT PLUGIN_OUTPUT_DIR)
-    set(PLUGIN_OUTPUT_DIR "${CMAKE_SOURCE_DIR}/../${CMAKE_BUILD_TYPE}/plugins")
-endif()
-
-# Нормализуем путь (убираем /../)
-cmake_path(NORMAL_PATH PLUGIN_OUTPUT_DIR)
-
 set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY "${PLUGIN_OUTPUT_DIR}")
 set(CMAKE_LIBRARY_OUTPUT_DIRECTORY "${PLUGIN_OUTPUT_DIR}")
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY "${PLUGIN_OUTPUT_DIR}")
 
-message(STATUS "Plugin ${PROJECT_NAME} output dir: ${PLUGIN_OUTPUT_DIR}")
+message(STATUS "PLUGIN_OUTPUT_DIR rastr: ${PLUGIN_OUTPUT_DIR}")
 # ============================================================================
 # Получаем THIRDPARTY_DIR из главного проекта
 # ============================================================================

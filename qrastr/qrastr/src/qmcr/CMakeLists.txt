@@ -138,30 +138,6 @@ if(MSVC)
     endif()
     target_link_libraries(qmcr PRIVATE ${SCINTILLA_EDIT_LIB})
 
-    # Копируем ScintillaEdit5.dll
-    set(_sci_dll "${SCINTILLA_DIR}/lib/ScintillaEdit5.dll")
-    if(EXISTS "${_sci_dll}")
-        add_custom_command(TARGET qmcr POST_BUILD
-            COMMAND ${CMAKE_COMMAND} -E copy_if_different
-                "${_sci_dll}" "$<TARGET_FILE_DIR:qmcr>/"
-            COMMENT "Copying ScintillaEdit5.dll"
-        )
-    else()
-        message(FATAL_ERROR "ScintillaEdit5.dll not found at ${_sci_dll}")
-    endif()
-
-    # Копируем lexilla5.dll (динамическая загрузка через QLibrary)
-    set(_lex_dll "${LEXILLA_DIR}/bin/lexilla5.dll")
-    if(EXISTS "${_lex_dll}")
-        add_custom_command(TARGET qmcr POST_BUILD
-            COMMAND ${CMAKE_COMMAND} -E copy_if_different
-                "${_lex_dll}" "$<TARGET_FILE_DIR:qmcr>/"
-            COMMENT "Copying lexilla5.dll"
-        )
-    else()
-        message(FATAL_ERROR "lexilla5.dll not found at ${_lex_dll}")
-    endif()
-
 elseif(UNIX)
     find_library(SCINTILLA_EDIT_LIB
         NAMES ScintillaEdit libScintillaEdit
@@ -169,21 +145,9 @@ elseif(UNIX)
         NO_DEFAULT_PATH
     )
     if(NOT SCINTILLA_EDIT_LIB)
-        message(FATAL_ERROR "ScintillaEdit library not found in ${SCINTILLA_DIR}/lib")
+        message(FATAL_ERROR "ScintillaEdit library not found in ${SCINTILLA_DIR}/lib}")
     endif()
     target_link_libraries(qmcr PRIVATE ${SCINTILLA_EDIT_LIB})
-
-    # Копируем liblexilla.so (динамическая загрузка через QLibrary)
-    set(_lex_so "${LEXILLA_DIR}/lib/liblexilla.so")
-    if(EXISTS "${_lex_so}")
-        add_custom_command(TARGET qmcr POST_BUILD
-            COMMAND ${CMAKE_COMMAND} -E copy_if_different
-                "${_lex_so}" "$<TARGET_FILE_DIR:qmcr>/"
-            COMMENT "Copying liblexilla.so"
-        )
-    else()
-        message(FATAL_ERROR "liblexilla.so not found at ${_lex_so}")
-    endif()
 
     set_target_properties(qmcr PROPERTIES
         INSTALL_RPATH "$ORIGIN"
