@@ -13,7 +13,7 @@
 #include "tables/groupCorrectionDialog.h"
 #include "tables/exportCSVdialog.h"
 #include "tables/importCSV2dialog.h"
-#include "customEditors/searchableComboEditorTwo/searchableComboRepositoryTwo.h"
+#include "customEditors/searchableComboEditor/searchableComboRepository.h"
 #include <QContextMenuEvent>
 #include "QtitanBase.h"
 #include <QShortcut>
@@ -349,7 +349,7 @@ void RtabController::setupConnections()
                 for (size_t i : cols) {
                     auto* column_qt = getColumnByIndex(i);
                     if (!column_qt) continue;
-                    auto* repo = static_cast<SearchableComboRepositoryTwo*>(
+                    auto* repo = static_cast<SearchableComboRepository*>(
                         column_qt->editorRepository());
                     if (!repo) continue;
                     repo->updateItems(
@@ -430,7 +430,7 @@ void RtabController::applyColumnEditor(int colIndex)
     }
     case ColumnEditorInfo::Type::NameRef: {
         column_qt->setProperty("isNumeric", true);
-        auto* repo = new SearchableComboRepositoryTwo(info.nameRefData, m_grid);
+        auto* repo = new SearchableComboRepository(info.nameRefData, m_grid);
         column_qt->setEditorRepository(repo);
         break;
     }
