@@ -129,7 +129,7 @@ void LinkedFormController::buildLinkedFormsMenu(int contextRow, QMenu* menu)
 
     for (int irow = 0; irow < table->RowsCount(); ++irow) {
         const std::string formName = std::get<std::string>(table->Get(irow, 0));
-        if (m_form.Name() != formName) continue;
+        if (m_form.DisplayName() != formName) continue;
 
         LinkedForm lf;
         lf.linkedform = std::visit(ToString(), table->Get(irow, 1));
@@ -156,7 +156,7 @@ void LinkedFormController::buildLinkedMacroMenu(int contextRow, QMenu* menu)
 
     for (int irow = 0; irow < table->RowsCount(); ++irow) {
         const std::string formName = std::visit(ToString(), table->Get(irow, 0));
-        if (m_form.Name() != formName) continue;
+        if (m_form.DisplayName() != formName) continue;
 
         const long formType    = std::visit(ToLong(), table->Get(irow, 6));
         const long defAppendix = std::visit(ToLong(), table->Get(irow, 4));

@@ -385,7 +385,7 @@ bool App::deserializeForms(){
     return true;
 }
 
-std::list<CUIForm>& App::getForms() const {
+std::vector<CUIForm>& App::getForms() const {
     assert(nullptr!=upCUIFormsCollection_);
     return upCUIFormsCollection_->Forms();
 }

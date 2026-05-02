@@ -151,7 +151,7 @@ RtabController::RtabController( std::shared_ptr<ITableRepository> tables,
 
 RtabController::~RtabController()
 {
-    spdlog::info("RtabController::~RtabController [{}]", m_UIForm.Name());
+    spdlog::info("RtabController::~RtabController [{}]", m_UIForm.DisplayName());
 
     if (m_tableEvents) {
         disconnect(m_tableEvents.get(), nullptr, m_model.get(), nullptr);
@@ -258,7 +258,7 @@ void RtabController::createModel(std::shared_ptr<ITableRepository> tables)
             tr("Ошибка открытия таблицы"),
             tr("Таблица \"%1\" недоступна.\n"
                "Убедитесь, что файл данных загружен.")
-                .arg(QString::fromStdString(m_UIForm.Name())));
+                .arg(QString::fromStdString(m_UIForm.DisplayName())));
         return;   // m_model валиден, но пуст — Grid не инициализируем
     }
     m_view->beginUpdate();

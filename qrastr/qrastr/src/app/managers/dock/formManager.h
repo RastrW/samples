@@ -50,8 +50,7 @@ public:
 
     // ── Таблицы (проброс в TableDockManager) ─────────────────────────────────
 
-    void setForms(const std::list<CUIForm>& forms);
-
+    void setForms(const std::vector<CUIForm>& forms);
     void buildFormsMenu    (QMenu* parentMenu,
                         QMenu* calcParametersMenu = nullptr);
     void buildPropertiesMenu(QMenu* propertiesMenu);

@@ -39,7 +39,7 @@ public:
      */
     void initialize(
         const EngineContext& engCtxt,
-        const std::list<CUIForm>& forms);
+        const std::vector<CUIForm>& forms);
 
     std::shared_ptr<spdlog::sinks::sink> getProtocolLogSink() const;
 signals:
