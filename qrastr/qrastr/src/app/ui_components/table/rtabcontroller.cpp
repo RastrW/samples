@@ -75,6 +75,7 @@ RtabController::RtabController( std::shared_ptr<ITableRepository> tables,
         m_view->tableOptions().setRowSizingEnabled(true);
         //Высота строки подстраивается под контент
         //m_view->options().setRowAutoHeight(true);
+        m_view->options().setRowAutoHeight(false);
     }else{
         m_view->tableOptions().setRowFrozenButtonVisible(true);
         m_view->tableOptions().setFrozenPlaceQuickSelection(true);
@@ -129,7 +130,6 @@ RtabController::RtabController( std::shared_ptr<ITableRepository> tables,
 
     setupConnections();
 
-
     //dumpShortcuts(m_grid, "before clear");
     // Снимаем F5/Delete со встроенных action-ов QTitan
     auto& acts = m_view->actions();
@@ -159,7 +159,7 @@ RtabController::~RtabController()
     }
 }
 
-RtabShell* RtabController::createShell(bool withToolbar)
+RtabShell* RtabController::createShell(const TableProperties& tabProp)
 {
     if (m_shellCreated) {
         spdlog::error("RtabController::createShell called twice for table [{}]",
@@ -171,7 +171,7 @@ RtabShell* RtabController::createShell(bool withToolbar)
     auto* shell = new RtabShell(
         m_grid, m_view, m_model.get(),
         m_filterManager.get(), this,
-        withToolbar,
+        tabProp,
         nullptr);   // владелец — CDockWidget, не контроллер
 
     // Статусбар shell'а обновляем при сбросе модели
@@ -264,20 +264,21 @@ void RtabController::createModel(std::shared_ptr<ITableRepository> tables)
     m_view->beginUpdate();
     m_view->setModel(m_model.get());
 
-    applyAllColumnEditors();
-
     //Порядок колонок как в форме
     int vi = 0;
-    for (const auto& f : m_UIForm.Fields()){
-        for (const RCol& rcol : *m_model->getRdata()){
-            if (f.Name() == rcol.getColName()){
-                auto* column_qt =
-                    getColumnByIndex(rcol.getIndex());
-                column_qt->setVisualIndex(vi++);
+    for (const auto& f : m_UIForm.Fields()) {
+        for (const RCol& rcol : *m_model->getRdata()) {
+            if (f.Name() == rcol.getColName()) {
+                auto* col = getColumnByIndex(rcol.getIndex());
+                col->setVisualIndex(vi++);
                 break;
             }
         }
     }
+
+    // Редакторы и видимость — всё внутри одного update-блока
+    applyAllColumnEditors();
+
     m_view->endUpdate();
 
     // ── Применяем ширины из бэка при первом открытии ──
@@ -356,10 +357,10 @@ void RtabController::setupConnections()
                         m_model->getColumnEditorInfo(static_cast<int>(i)).nameRefData);
                 }
             });
-    //QTitan
-    //Connect Grid's context menu handler.
-    connect(m_view, &GridTableView::contextMenu,
-            this, &RtabController::slot_contextMenu);
+    if (!m_UIForm.Vertical()){
+        connect(m_view, &GridTableView::contextMenu,
+                this, &RtabController::slot_contextMenu);
+    }
 }
 
 void RtabController::applyAllColumnEditors(){
@@ -643,8 +644,9 @@ void RtabController::setTableView(int multiplier  )
     m_view->tableOptions().setColumnAutoWidth(false);
     // Выравнивание
     for (auto [idx, width] : m_model->columnsWidth()) {
-        m_view->getColumn(idx)->setWidth(width * multiplier);
-        m_view->getColumn(idx)->setTextAlignment(Qt::AlignLeft);
+        auto* col = m_view->getColumn(idx);
+        col->setWidth(width * multiplier);
+        col->setTextAlignment(Qt::AlignLeft);
     }
     m_view->endUpdate();
 }

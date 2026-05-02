@@ -39,56 +39,52 @@ TableDockManager::openForm(const CUIForm& form,
                            std::optional<LinkedForm> linkedFilter)
 {
     try {
+        TableProperties tabProp;
+        tabProp.formQName   = QString::fromStdString(form.Name());
+        tabProp.isLinked    = linkedFilter.has_value();
+        tabProp.isVertical  = form.Vertical();
+        tabProp.withToolbar = !tabProp.isLinked && !tabProp.isVertical;
+
         if (!m_tables->tableExists(form.TableName())) {
             spdlog::info("Таблица [{}] не существует!", form.TableName());
             return {nullptr, nullptr};
         }
         // ── Dock-виджет ───────────────────────────────────────────────────────
-        auto* dw = new ads::CDockWidget(
-            QString::fromStdString(form.Name()), m_parentWidget);
-        dw->setObjectName(QString::fromStdString(form.Name()));
+        auto* dw = new ads::CDockWidget(tabProp.formQName, m_parentWidget);
+        dw->setObjectName(tabProp.formQName);
         dw->setFeature(ads::CDockWidget::DockWidgetDeleteOnClose, true);
-
-        const bool withToolbar = !linkedFilter.has_value();
         // ── Виджет таблицы ────────────────────────────────────────────────────
         auto* ctrl = new RtabController(
             m_tables, m_tableEvents, form, m_dockManager, this, dw);
 
-        auto* shell = ctrl->createShell(withToolbar);
-        Q_ASSERT_X(shell, "openForm", "createShell returned nullptr");
-        if (!shell) {
-            dw->deleteLater();
-            return {nullptr, nullptr};
-        }
+        auto* shell = ctrl->createShell(tabProp);
+        if (!shell) { dw->deleteLater(); return {nullptr, nullptr}; }
         // true (по умолчанию) = с тулбаром и шорткатами
         dw->setWidget(shell);
 
-        if (linkedFilter.has_value())
+        if (tabProp.isLinked) {
             ctrl->applyLinkedFormFromController(*linkedFilter);
-
-        if (linkedFilter.has_value())
             m_dockManager->addDockWidgetTab(ads::BottomAutoHideArea, dw);
-        else
+        } else {
             m_dockManager->addDockWidgetTab(ads::TopDockWidgetArea, dw);
+        }
 
         ctrl->setPyHlp(m_pyHlp);
         // Добавляем в список открытых форм
-        // Сигналы будут передаваться через onCalculationStarted/Finished
         m_openForms.append(ctrl);
         m_activeForm = ctrl;
         // Уведомляем FormManager о новом dock-виджете
         emit windowOpened(dw);
 
         connect(dw, &ads::CDockWidget::closed,
-                this, [this, ctrl, name = form.Name()]() {
+                this, [this, ctrl, formQName = tabProp.formQName]() {
                     m_openForms.removeOne(ctrl);
                     if (m_activeForm == ctrl) m_activeForm = nullptr;
-                    emit formClosed(QString::fromStdString(name));
+                    emit formClosed(formQName);
                 });
 
-        emit formOpened(QString::fromStdString(form.Name()));
+        emit formOpened(tabProp.formQName);
         emit activeFormChanged(ctrl);
-
         return {dw, ctrl};
     } catch (const std::exception& ex) {
         spdlog::error("TableDockManager::openForm('{}') threw: {}",

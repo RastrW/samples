@@ -33,7 +33,7 @@ public:
                        RModel*                model,
                        FilterManager*         filterManager,
                        RtabController*        controller,
-                       bool                   withToolbar,
+                       const TableProperties& tabProp,
                        QWidget*               parent = nullptr);
 
 public slots:

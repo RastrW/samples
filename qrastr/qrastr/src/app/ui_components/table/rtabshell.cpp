@@ -20,7 +20,7 @@ RtabShell::RtabShell(RGrid*                 grid,
                      RModel*                model,
                      FilterManager*         filterManager,
                      RtabController*        controller,
-                     bool                   withToolbar,
+                     const TableProperties& tabProp,
                      QWidget*               parent)
     : QWidget(parent)
     , m_grid(grid)
@@ -28,13 +28,15 @@ RtabShell::RtabShell(RGrid*                 grid,
     , m_model(model)
     , m_filterManager(filterManager)
 {
-    if (withToolbar) {
+    if (tabProp.withToolbar) {
         buildToolbar(controller->actions(), controller);
-        //  Горячие клавиши
+    }
+
+    if (tabProp.isVertical) {
         controller->setupShortcuts(m_grid);
     }
 
-    buildLayout(withToolbar);
+    buildLayout(tabProp.withToolbar);
 
     // Синхронизация ширины строки автофильтра при изменении ширины колонок
     if (auto* viewH = qobject_cast<RGridTableView*>(m_view)) {
