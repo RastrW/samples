@@ -42,16 +42,19 @@ bool RModel::populateDataFromRastr()
 
 int RModel::rowCount   (const QModelIndex&) const
 {
+    if (!isReady()) return 0;
     return static_cast<int>(m_rdata->pnparray_->RowsCount());
 }
 
 int RModel::columnCount(const QModelIndex&) const
 {
+    if (!isReady()) return 0;
     return static_cast<int>(m_rdata->pnparray_->ColumnsCount());
 }
 
 QVariant RModel::headerData(int section, Qt::Orientation orientation, int role) const
 {
+    if (!isReady()) return {};
     if (role != Qt::DisplayRole) return {};
     if (orientation == Qt::Horizontal)
         return QString::fromStdString(m_rdata->at(section).getTitle());
@@ -69,6 +72,7 @@ Qt::ItemFlags RModel::flags(const QModelIndex& index) const
 
 QVariant RModel::data(const QModelIndex& index, int role) const
 {
+    if (!isReady()) return {};
     const int col = index.column();
     const int row = index.row();
 
@@ -687,4 +691,9 @@ RData* RModel::getRdata()
 std::vector<long> RModel::getRowsBySelection(const std::string& selection) const
 {
     return m_tables->rowsBySelection(m_rdata->t_name_, selection);
+}
+
+bool RModel::isReady() const noexcept
+{
+    return m_rdata != nullptr && m_rdata->pnparray_ != nullptr;
 }

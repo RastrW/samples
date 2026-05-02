@@ -106,6 +106,7 @@ public slots:
 
 private slots:
     void slot_contextMenu(ContextMenuEventArgs* args);
+    void slot_contextMenuVertical(ContextMenuEventArgs* args);
     void slot_beginResetModel(const std::string& tname);
     void slot_endResetModel(const std::string& tname);
 

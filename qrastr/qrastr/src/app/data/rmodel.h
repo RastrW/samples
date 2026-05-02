@@ -131,4 +131,6 @@ private:
     // Функции получения редактора из кеша и вычисление редактора для колонки в кеш
     ColumnEditorInfo buildColumnEditorInfo(int colIndex) const;
     void             buildEditorInfoCache();
+    //Guard для неинициализированной модели
+    bool isReady() const noexcept;
 };

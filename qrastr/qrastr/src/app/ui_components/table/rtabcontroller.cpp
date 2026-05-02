@@ -122,31 +122,33 @@ RtabController::RtabController( std::shared_ptr<ITableRepository> tables,
     m_filterManager = std::make_unique<FilterManager>(m_view, m_model.get(),
                                                       m_grid);
 
-    createCommonTableActions();
-
+    if (!m_UIForm.Vertical()) {
+        createCommonTableActions();
+    }
     m_menuBuilder = std::make_unique<ContextMenuBuilder>(
         m_view, m_linkedFormCtrl.get(), m_comTabAct, this);
-    m_menuBuilder->initMenu(m_grid);
+    m_menuBuilder->initMenu(m_grid, m_UIForm.Vertical());
 
     setupConnections();
 
-    //dumpShortcuts(m_grid, "before clear");
-    // Снимаем F5/Delete со встроенных action-ов QTitan
+    dumpShortcuts(m_grid, "before clear");
     auto& acts = m_view->actions();
 
-    // удалить shortcut у DeleteRowAction
-    if (acts.contains(Qtitan::GridViewBase::DeleteRowAction)) {
-        acts[Qtitan::GridViewBase::DeleteRowAction]->setShortcut(QKeySequence());
-    }
-
-    // если F5 где-то используется (например Find/Refresh)
-    for (auto it = acts.begin(); it != acts.end(); ++it) {
-        if (it.value()->shortcut() == QKeySequence(Qt::Key_F5)) {
+    if (m_UIForm.Vertical()) {
+        // Для вертикальных — снимаем вообще все шорткаты QTitan
+        for (auto it = acts.begin(); it != acts.end(); ++it)
             it.value()->setShortcut(QKeySequence());
-        }
+    } else {
+        // Для горизонтальных — только конфликтующие Del и F5
+        if (acts.contains(Qtitan::GridViewBase::DeleteRowAction))
+            acts[Qtitan::GridViewBase::DeleteRowAction]->setShortcut(QKeySequence());
+
+        for (auto it = acts.begin(); it != acts.end(); ++it)
+            if (it.value()->shortcut() == QKeySequence(Qt::Key_F5))
+                it.value()->setShortcut(QKeySequence());
     }
 
-    //dumpShortcuts(m_grid, "after clear");
+    dumpShortcuts(m_grid, "after clear");
 }
 
 RtabController::~RtabController()
@@ -181,36 +183,28 @@ RtabShell* RtabController::createShell(const TableProperties& tabProp)
     return shell;
 }
 
-void RtabController::createCommonTableActions(){
+void RtabController::createCommonTableActions()
+{
     m_comTabAct.addRow = new QAction(
         QIcon(":/images/Rastr3_grid_addrow_16x16.png"),
         tr("Добавить строку (Ctrl+A)"), this);
-    m_comTabAct.addRow->setShortcut(Qt::CTRL | Qt::Key_A);
-    m_comTabAct.addRow->setShortcutContext(Qt::WidgetWithChildrenShortcut);
 
     m_comTabAct.insertRow = new QAction(
         QIcon(":/images/Rastr3_grid_insrow_16x16.png"),
         tr("Вставить строку (Ctrl+I)"), this);
-    m_comTabAct.insertRow->setShortcut(Qt::CTRL | Qt::Key_I);
-    m_comTabAct.insertRow->setShortcutContext(Qt::WidgetWithChildrenShortcut);
 
     m_comTabAct.deleteRow = new QAction(
         QIcon(":/images/Rastr3_grid_delrow_16x16.png"),
         tr("Удалить строку (Ctrl+D)"), this);
-    m_comTabAct.deleteRow->setShortcut(Qt::CTRL | Qt::Key_D);
-    m_comTabAct.deleteRow->setShortcutContext(Qt::WidgetWithChildrenShortcut);
 
     m_comTabAct.duplicateRow = new QAction(
         QIcon(":/images/Rastr3_grid_duprow_16x161.png"),
         tr("Дублировать строку (Ctrl+R)"), this);
-    m_comTabAct.duplicateRow->setShortcut(Qt::CTRL | Qt::Key_R);
-    m_comTabAct.duplicateRow->setShortcutContext(Qt::WidgetWithChildrenShortcut);
 
     m_comTabAct.groupCorr = new QAction(
         QIcon(":/images/column_edit.png"),
         tr("Групповая корректировка"), this);
 
-    // Подключаем к слотам контроллера — единственное место подключения
     connect(m_comTabAct.addRow,       &QAction::triggered,
             this, &RtabController::slot_addRow);
     connect(m_comTabAct.insertRow,    &QAction::triggered,
@@ -325,23 +319,25 @@ void RtabController::setupConnections()
     connect(ev, &ITableEvents::sig_EndResetModel,this,
             &RtabController::slot_endResetModel);
     //ContextMenuBuilder -> RtabController
-    connect(m_menuBuilder.get(), &ContextMenuBuilder::sig_colProp,
-            this, &RtabController::slot_openColProp);
     connect(m_menuBuilder.get(), &ContextMenuBuilder::sig_exportCsv,
             this, &RtabController::slot_openExportCSVForm);
     connect(m_menuBuilder.get(), &ContextMenuBuilder::sig_importCsv,
             this, &RtabController::slot_openImportCSVForm);
-    connect(m_menuBuilder.get(), &ContextMenuBuilder::sig_widthByTemplate,
-            this, &RtabController::slot_widthByTemplate);
-    connect(m_menuBuilder.get(), &ContextMenuBuilder::sig_widthByData,
-            this, &RtabController::slot_widthByData);
-    connect(m_menuBuilder.get(), &ContextMenuBuilder::sig_directCodeToggle,
-            this, &RtabController::slot_directCodeToggle);
-    connect(m_menuBuilder.get(), &ContextMenuBuilder::sig_condFormatsEdit,
-            this, &RtabController::slot_condFormatsEdit);
-
-    connect(m_menuBuilder.get(), &ContextMenuBuilder::sig_selection,
-            m_filterManager.get(), &FilterManager::slot_openSelection);
+    // Остальные сигналы ContextMenuBuilder — только для горизонтальных
+    if (!m_UIForm.Vertical()) {
+        connect(m_menuBuilder.get(), &ContextMenuBuilder::sig_colProp,
+                this, &RtabController::slot_openColProp);
+        connect(m_menuBuilder.get(), &ContextMenuBuilder::sig_widthByTemplate,
+                this, &RtabController::slot_widthByTemplate);
+        connect(m_menuBuilder.get(), &ContextMenuBuilder::sig_widthByData,
+                this, &RtabController::slot_widthByData);
+        connect(m_menuBuilder.get(), &ContextMenuBuilder::sig_directCodeToggle,
+                this, &RtabController::slot_directCodeToggle);
+        connect(m_menuBuilder.get(), &ContextMenuBuilder::sig_condFormatsEdit,
+                this, &RtabController::slot_condFormatsEdit);
+        connect(m_menuBuilder.get(), &ContextMenuBuilder::sig_selection,
+                m_filterManager.get(), &FilterManager::slot_openSelection);
+    }
     // Обновление ссылочных справочников при изменении строк в других таблицах
     connect(ev,  &ITableEvents::sig_ReferenceChanged,
             m_model.get(), &RModel::slot_RefTableChanged);
@@ -360,6 +356,9 @@ void RtabController::setupConnections()
     if (!m_UIForm.Vertical()){
         connect(m_view, &GridTableView::contextMenu,
                 this, &RtabController::slot_contextMenu);
+    }else{
+        connect(m_view, &GridTableView::contextMenu,
+                this, &RtabController::slot_contextMenuVertical);
     }
 }
 
@@ -402,8 +401,6 @@ void RtabController::applyColumnEditor(int colIndex)
         GridModelDataBinding* binding = m_view->getDataBinding(column_qt);
         if (binding)
             binding->setSortRole(Qt::UserRole);
-
-        column_qt->setProperty("isNumeric", true);
         break;
     }
     case ColumnEditorInfo::Type::DateTime: {
@@ -496,27 +493,24 @@ void RtabController::slot_duplicateRow(){
         m_view->setFocusedRowIndex(dup.rowIndex());
 }
 
-void RtabController::slot_deleteRow(){
+void RtabController::slot_deleteRow()
+{
     QModelIndexList selected = m_view->selection()->selectedRowIndexes();
     if (selected.isEmpty()) return;
 
-    // Собираем уникальные строки (selectedRowIndexes может дублировать при MultiCell)
-    QSet<int> rowSet;
+    // std::set<int, greater> — сразу в порядке убывания,
+    // чтобы индексы вышестоящих строк не смещались
+    std::set<int, std::greater<int>> rows;
     for (const QModelIndex& mi : selected)
-        rowSet.insert(mi.row());
+        rows.insert(mi.row());
 
-    if (rowSet.size() > 1) {
+    if (rows.size() > 1) {
         auto btn = QMessageBox::question(
             m_grid, tr("Подтверждение"),
-            tr("Удалить %1 записей?").arg(rowSet.size()),
+            tr("Удалить %1 записей?").arg(rows.size()),
             QMessageBox::Yes | QMessageBox::Cancel);
         if (btn != QMessageBox::Yes) return;
     }
-
-    // Сортируем по убыванию — удаляем снизу вверх,
-    // чтобы индексы вышестоящих строк не смещались
-    QList<int> rows(rowSet.begin(), rowSet.end());
-    std::sort(rows.begin(), rows.end(), std::greater<int>());
 
     m_view->beginUpdate();
     for (int row : rows)
@@ -524,7 +518,7 @@ void RtabController::slot_deleteRow(){
     m_view->endUpdate();
 
     // Фокус на строку, ближайшую к удалённому диапазону
-    const int topRow  = rows.last(); // наименьший (список убывающий)
+    const int topRow  = *rows.rbegin(); // наименьший индекс
     const int newFocus = std::min(topRow, m_model->rowCount() - 1);
     if (newFocus >= 0) {
         GridRow r = m_view->getRow(m_model->index(newFocus, 0));
@@ -721,6 +715,14 @@ void RtabController::slot_contextMenu(ContextMenuEventArgs* args)
 
     MenuContext ctx { column, row_model, col };
     m_menuBuilder->prepareForShow(ctx, args->contextMenu());
+}
+
+void RtabController::slot_contextMenuVertical(ContextMenuEventArgs* args)
+{
+    QMenu* menu = args->contextMenu();
+    menu->clear();
+    menu->addAction(m_menuBuilder->actionExport());
+    menu->addAction(m_menuBuilder->actionImport());
 }
 
 int RtabController::getLongValue(const std::string& key, long row){

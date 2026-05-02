@@ -25,8 +25,11 @@ public:
                                 const RtabController::CommonTableActions& actions,
                                 QObject*                 parent = nullptr);
 
+    QAction* actionExport() const { return m_actExport; }
+    QAction* actionImport() const { return m_actImport; }
+
     /// Строит персистентный QMenu и все статичные QAction.
-    void initMenu(QWidget* menuParent);
+    void initMenu(QWidget* menuParent, bool isVertical);
     /// Меню ячейки: строковые операции, экспорт/импорт, выборка, связанные формы.
     void prepareForShow(const MenuContext& ctx, QMenu* qtitanMenu);
 

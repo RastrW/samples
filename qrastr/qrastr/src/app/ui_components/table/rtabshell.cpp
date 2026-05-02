@@ -32,7 +32,7 @@ RtabShell::RtabShell(RGrid*                 grid,
         buildToolbar(controller->actions(), controller);
     }
 
-    if (tabProp.isVertical) {
+    if (!tabProp.isVertical) {
         controller->setupShortcuts(m_grid);
     }
 
