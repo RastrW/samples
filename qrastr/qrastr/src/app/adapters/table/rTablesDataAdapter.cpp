@@ -16,14 +16,14 @@ RTablesDataAdapter::RTablesDataAdapter(std::shared_ptr<QAstra> _pqastra) :
 
 void RTablesDataAdapter::setForms (const std::vector<CUIForm>& forms)
 {
-    m_plstUIForms = forms;
+    m_pForms = &forms;
 }
 
-CUIForm* RTablesDataAdapter::getForm(const std::string& name) {
-    for (CUIForm& form : m_plstUIForms) {
+const CUIForm* RTablesDataAdapter::getForm(const std::string& name) {
+    if (!m_pForms) return nullptr;
+    for (const CUIForm& form : *m_pForms)
         if (form.DisplayName() == name)
             return &form;
-    }
     return nullptr;
 }
 

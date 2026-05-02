@@ -23,16 +23,11 @@ TableDockManager::TableDockManager(
 {}
 
 void TableDockManager::setForms(const std::vector<CUIForm>& forms) {
-    m_forms = forms;
-
-    // Заполняем DisplayName_ один раз для всех форм
-    for (auto& f : m_forms)
-        f.SetDisplayName(stringutils::MkToUtf8(f.Name()));
-
-    m_tables->setForms(m_forms);  // RTablesDataAdapter получает формы уже с DisplayName_
+    m_pForms = &forms;
+    m_tables->setForms(forms);
 
     int index = 0;
-    for (const auto& form : m_forms) {
+    for (const auto& form : forms) {
         const QString qName = QString::fromStdString(form.DisplayName());
         m_formNameToIndex[qName] = index++;
     }
@@ -102,11 +97,11 @@ TableDockManager::openForm(const CUIForm& form,
 }
 
 void TableDockManager::openFormByIndex(int index) {
-    if (index < 0 || index >= static_cast<int>(m_forms.size())) {
+    if (index < 0 || index >= static_cast<int>(m_pForms->size())) {
         spdlog::error("TableDockManager: invalid form index {}", index);
         return;
     }
-    openForm(m_forms[index]);
+    openForm((*m_pForms)[index]);
 }
 
 void TableDockManager::openFormByName(const QString& formName)
@@ -129,7 +124,7 @@ RtabController* TableDockManager::openLinkedForm(
     Qtitan::GridTableView* parentView,
     RtabController*        parentCtrl)
 {
-    CUIForm* pUIForm = m_tables->getForm(lf.linkedform);
+    const CUIForm* pUIForm = m_tables->getForm(lf.linkedform);
     if (!pUIForm) {
         spdlog::error("TableDockManager::openLinkedForm: form '{}' not found",
                       lf.linkedform);
@@ -155,7 +150,7 @@ void TableDockManager::buildFormsMenu(QMenu* parentMenu,
     std::unordered_map<QString, QMenu*> menuMap;
     int index = 0;
 
-    for (const auto& form : m_forms) {
+    for (const auto& form : *m_pForms) {
          // --- Подготовка данных ---
         const std::string pathUtf8 = stringutils::MkToUtf8(form.MenuPath());
         const QString     qName    = QString::fromStdString(form.DisplayName());
@@ -205,8 +200,8 @@ void TableDockManager::buildFormsMenu(QMenu* parentMenu,
 
 void TableDockManager::slot_formMenuTriggered(QAction* action) {
     const int index = action->data().toInt();
-    if (index < 0 || index >= static_cast<int>(m_forms.size())) return;
-    openForm(m_forms[index]);
+    if (index < 0 || index >= static_cast<int>(m_pForms->size())) return;
+    openForm((*m_pForms)[index]);
 }
 
 void TableDockManager::buildPropertiesMenu(QMenu* propertiesMenu)

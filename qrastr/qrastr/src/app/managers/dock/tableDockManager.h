@@ -98,7 +98,7 @@ private:
     QWidget*                            m_parentWidget;
 
     // ── Состояние ────────────────────────────────────────────────────────────
-    std::vector<CUIForm>         m_forms;
+    const std::vector<CUIForm>* m_pForms = nullptr;
     std::map<QString, int>     m_formNameToIndex;  ///< Быстрый поиск по имени
     QList<RtabController*>         m_openForms;
     RtabController*                m_activeForm {nullptr};

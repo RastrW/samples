@@ -32,6 +32,7 @@ public:
     RTablesDataAdapter(std::shared_ptr<QAstra> _pqastra);
 
     void setForms (const std::vector<CUIForm>& forms) override;
+    const CUIForm* getForm (const std::string& name) override;
     TableSchema getSchema(const std::string& tname) override;
     void getDynamicForms(std::vector<CUIForm>& out) override;
     // ── Данные ───────────────────────────────────────────────────────────────
@@ -103,14 +104,13 @@ public:
                      const std::string& byDefault,
                      eCSVCode           mode) override;
     void setLockEvent(bool lock) override;
-    CUIForm* getForm (const std::string& name) override;
     bool tableExists(const std::string& tname) override;
 private slots:
     ///< Обработчик событий от Rastr
     void slot_rastrHint(const _hint_data& hint_data);
 private:
     std::shared_ptr<QAstra> m_pqastra;
-    std::vector<CUIForm> m_plstUIForms;
+    const std::vector<CUIForm>* m_pForms = nullptr;
 
     /* Хранилище данных для моделей
       * 1:n то есть на 10 окон узлы -> 1 DataBlock
