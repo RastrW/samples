@@ -13,7 +13,7 @@ namespace Qtitan{ class GridTableView; }
 struct MenuContext {
     int   column = -1;
     int   row    = -1;
-    RCol* col    = nullptr;   ///< указатель действителен на время показа меню
+    const RCol* col    = nullptr;   ///< указатель действителен на время показа меню
 };
 
 class ContextMenuBuilder : public QObject
@@ -35,7 +35,7 @@ public:
 
     /// Меню заголовка колонки: описание, сумма, выравнивание, CF, прямой ввод.
     /// @param col  указатель на RCol (действителен на время показа меню)
-    void prepareForHeader(int column, RCol* col, QMenu* menu);
+    void prepareForHeader(int column, const RCol* col, QMenu* menu);
 signals:
     // Сигналы для операций со строками
     void sig_selection(int col);

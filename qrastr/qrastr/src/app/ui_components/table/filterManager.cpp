@@ -89,7 +89,7 @@ void FilterManager::rebuildCombinedFilter(){
 
 void FilterManager::slot_openSelection(int col)
 {
-    RCol* prcol = m_model->getRCol(col);
+    const auto* prcol = m_model->getRCol(col);
     std::string colName = prcol ? prcol->getColName() : "";
 
     auto* selectionDialog = new SelectionDialog(m_selection, colName, m_parentWidget);

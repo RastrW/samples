@@ -261,7 +261,7 @@ void RtabController::createModel(std::shared_ptr<ITableRepository> tables)
     //Порядок колонок как в форме
     int vi = 0;
     for (const auto& f : m_UIForm.Fields()) {
-        for (const RCol& rcol : *m_model->getRdata()) {
+        for (const RCol& rcol : m_model->getRdata()) {
             if (f.Name() == rcol.getColName()) {
                 auto* col = getColumnByIndex(rcol.getIndex());
                 col->setVisualIndex(vi++);
@@ -529,7 +529,7 @@ void RtabController::slot_deleteRow()
 
 void RtabController::slot_groupCorrection(){
     const int col = m_view->selection()->cell().columnIndex();
-    RCol* prcol = m_model->getRCol(col);
+    const auto* prcol = m_model->getRCol(col);
     if (!prcol){
         return;
     }
@@ -547,7 +547,7 @@ void RtabController::slot_beginResetModel(const std::string& tname){
 
     // Сохраняем видимость по имени колонки (не по caption — он может меняться)
     m_columnsVisible.clear();
-    for (const RCol& rcol : *m_model->getRdata()) {
+    for (const RCol& rcol : m_model->getRdata()) {
         auto* col = getColumnByIndex(rcol.getIndex());
         m_columnsVisible[QString::fromStdString(rcol.getColName())]
             = col ? col->isVisible() : true;
@@ -560,7 +560,7 @@ void RtabController::slot_endResetModel(const std::string& tname){
     // Восстанавливаем видимость и переназначаем редакторы.
     // К этому моменту RModel::slot_EndResetModel уже вызвал
     // populateDataFromRastr() — новые RData/RCol уже готовы.
-    for (const RCol& rcol : *m_model->getRdata()) {
+    for (const RCol& rcol : m_model->getRdata()) {
         auto* col = getColumnByIndex(rcol.getIndex());
         if (!col) continue;
 
@@ -610,9 +610,7 @@ void RtabController::slot_openColProp(int col)
 
 void RtabController::slot_directCodeToggle(std::size_t column)
 {
-    RCol* prcol = m_model->getRCol(column);
-    if (!prcol) return;
-    prcol->invertDirectCodeStatus();
+    m_model->invertDirectCode(column);
 
     m_view->beginUpdate();
     applyColumnEditor(column);
@@ -672,7 +670,7 @@ void RtabController::slot_openExportCSVForm()
     auto* dlg = new ExportCSVdialog(
         m_tables,
         m_UIForm.TableName(),
-        m_model->getRdata()->get_cols(),
+        m_model->getRdata().get_cols(),
         m_grid);
     dlg->setAttribute(Qt::WA_DeleteOnClose);
     dlg->show();
@@ -683,7 +681,7 @@ void RtabController::slot_openImportCSVForm()
     auto* dlg = new ImportCSV2dialog(
         m_tables,
         m_UIForm.TableName(),
-        m_model->getRdata()->get_cols(),
+        m_model->getRdata().get_cols(),
         m_grid);
     dlg->setAttribute(Qt::WA_DeleteOnClose);
     dlg->show();
@@ -703,14 +701,14 @@ void RtabController::slot_contextMenu(ContextMenuEventArgs* args)
 
     // ── Меню заголовка
     if (isHeader) {
-        RCol* col = m_model->getRCol(column);   // может быть nullptr — prepareForHeader это учитывает
+        const auto* col = m_model->getRCol(column);   // может быть nullptr — prepareForHeader это учитывает
         m_menuBuilder->prepareForHeader(column, col, args->contextMenu());
         return;
     }
     // ── Меню ячейки
     const int row = hit.row().rowIndex();
     const int row_model = hit.row().modelIndex().row();
-    RCol* col = m_model->getRCol(column);
+    const auto* col = m_model->getRCol(column);
     if (!col) return;
 
     MenuContext ctx { column, row_model, col };
@@ -726,8 +724,8 @@ void RtabController::slot_contextMenuVertical(ContextMenuEventArgs* args)
 }
 
 int RtabController::getLongValue(const std::string& key, long row){
-    int col = m_model->getRdata()->mCols_.at(key);
-    return std::visit(ToLong(), m_model->getRdata()->pnparray_->Get(row,col));
+    int col = m_model->getRdata().mCols_.at(key);
+    return std::visit(ToLong(), m_model->getRdata().pnparray_->Get(row,col));
 }
 
 void RtabController::clearLinkedFilter()

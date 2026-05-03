@@ -83,13 +83,15 @@ public:
     const std::vector<CondFormat>& getCondFormats(int column) const;
 
     // ── Утилиты ───────────────────────────────────────────────────────────
-    std::vector<std::tuple<int,int>> columnsWidth() const;
-    RCol*             getRCol    (int col) const;
-    int               getIndexCol(const std::string& col) const;
-    RData*            getRdata   ();
-    std::vector<long> getRowsBySelection(const std::string& selection) const;
-    ColumnEditorInfo  getColumnEditorInfo(int colIndex) const;
-
+    std::vector<std::tuple<int,int>>
+        columnsWidth() const;
+    const RCol* getRCol    (int col) const;
+    const RData& getRdata ();
+    std::vector<long>
+        getRowsBySelection(const std::string& selection) const;
+    ColumnEditorInfo
+        getColumnEditorInfo(int colIndex) const;
+    void invertDirectCode(int col);
 private:
     // ── Данные ───────────────────────────────────────────────────────────────
     std::shared_ptr<ITableRepository> m_tables;

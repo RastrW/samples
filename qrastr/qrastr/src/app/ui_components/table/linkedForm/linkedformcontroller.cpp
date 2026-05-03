@@ -183,7 +183,7 @@ void LinkedFormController::applyLinkedForm(LinkedForm lf)
 {
     m_lf = lf;
 
-    const std::string tname     = m_model->getRdata()->t_name_;
+    const std::string tname     = m_model->getRdata().t_name_;
     const std::string selection = lf.get_selection_result();
 
     const std::vector<long> indices = m_tables->rowsBySelection(tname, selection);
@@ -217,13 +217,12 @@ int LinkedFormController::getLongValue(const std::string& col, long row)
 {
     // Читаем значение напрямую из кешированного DataBlock модели.
     // Используется только при построении меню (начальное заполнение vbindvals).
-    const int colIdx = m_model->getRdata()->mCols_.at(col);
+    const int colIdx = m_model->getRdata().mCols_.at(col);
     return std::visit(ToLong(),
-                      m_model->getRdata()->pnparray_->Get(row, colIdx));
+                      m_model->getRdata().pnparray_->Get(row, colIdx));
 }
 
 void LinkedFormController::setPyHlp(std::shared_ptr<PyHlp> pyHlp)
 {
     m_pyHlp = pyHlp;
 }
-

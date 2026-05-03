@@ -64,7 +64,7 @@ QVariant RModel::headerData(int section, Qt::Orientation orientation, int role) 
 Qt::ItemFlags RModel::flags(const QModelIndex& index) const
 {
     Qt::ItemFlags f = QAbstractTableModel::flags(index); // уже содержит Enabled|Selectable
-    const RCol* col = getRCol(index.column());
+    const auto* col = getRCol(index.column());
     if (col && col->getFF() == "1")
         return f & ~Qt::ItemIsEditable; // убираем только редактирование, Enabled оставляем
     return f | Qt::ItemIsEditable;
@@ -657,7 +657,8 @@ QVariant RModel::getMatchingCondFormat(size_t row, size_t column,
     return {};
 }
 
-std::vector<std::tuple<int,int>> RModel::columnsWidth() const
+std::vector<std::tuple<int,int>>
+    RModel::columnsWidth() const
 {
     std::vector<std::tuple<int,int>> cw;
     if (!m_rdata) return cw;
@@ -670,22 +671,23 @@ std::vector<std::tuple<int,int>> RModel::columnsWidth() const
     return cw;
 }
 
-RCol* RModel::getRCol(int col) const
+void RModel::invertDirectCode(int col)
+{
+    if (!m_rdata || col < 0 || col >= static_cast<int>(m_rdata->size()))
+        return;
+    (m_rdata->begin() + col)->invertDirectCodeStatus();
+}
+
+const RCol* RModel::getRCol(int col) const
 {
     if (!m_rdata || col < 0 || col >= static_cast<int>(m_rdata->size()))
         return nullptr;
     return &(*(m_rdata->begin() + col));
 }
 
-int RModel::getIndexCol(const std::string& col) const
+const RData& RModel::getRdata()
 {
-    auto it = m_rdata->mCols_.find(col);
-    return it != m_rdata->mCols_.end() ? it->second : -1;
-}
-
-RData* RModel::getRdata()
-{
-    return m_rdata.get();
+    return *m_rdata;
 }
 
 std::vector<long> RModel::getRowsBySelection(const std::string& selection) const

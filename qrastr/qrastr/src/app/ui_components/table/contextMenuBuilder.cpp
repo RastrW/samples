@@ -86,7 +86,7 @@ void ContextMenuBuilder::initMenu(QWidget* menuParent, bool isVertical)
             this, [this]() { emit sig_condFormatsEdit(m_currentCol); });
 }
 
-void ContextMenuBuilder::prepareForHeader(int column, RCol* col, QMenu* menu)
+void ContextMenuBuilder::prepareForHeader(int column, const RCol* col, QMenu* menu)
 {
     m_currentCol = column;
 
