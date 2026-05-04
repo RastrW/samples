@@ -6,8 +6,6 @@
 
 class QLineEdit;
 inline constexpr int kRowHeight = 25;
-// смещение от левого края виджета до первой колонки
-inline constexpr int kBorderX   = 57;
 
 /// @brief Небольшая ячейка автофильтра: кнопка оператора + поле значения.
 /// Для bool — только кнопка с popup.
@@ -35,7 +33,7 @@ signals:
 private slots:
     void slotTextChanged(const QString& text);
     void showOpMenu();
-
+    void slotBoolCycle();
 private:
     QString opText(FilterRule::Op op) const;
     void updateUi();

@@ -25,8 +25,12 @@ FilterCell::FilterCell(bool isNumeric, bool isBool, QWidget* parent)
     m_opBtn->setAutoRaise(false);
     m_opBtn->setToolButtonStyle(Qt::ToolButtonTextOnly);
     m_opBtn->setFixedHeight(kRowHeight - 2);
-    // Убрали жёсткую ширину — будет устанавливаться динамически
-    connect(m_opBtn, &QToolButton::clicked, this, &FilterCell::showOpMenu);
+    // Ширина будет устанавливаться динамически
+    if (m_isBool) {
+        connect(m_opBtn, &QToolButton::clicked, this, &FilterCell::slotBoolCycle);
+    } else {
+        connect(m_opBtn, &QToolButton::clicked, this, &FilterCell::showOpMenu);
+    }
     lay->addWidget(m_opBtn, 0);
 
     if (!m_isBool) {
@@ -137,7 +141,7 @@ QString FilterCell::opText(FilterRule::Op op) const
     case FilterRule::Op::Le:        return QStringLiteral("≤");
     case FilterRule::Op::Gt:        return QStringLiteral(">");
     case FilterRule::Op::Ge:        return QStringLiteral("≥");
-    case FilterRule::Op::Contains:   return QStringLiteral("⊃");
+    case FilterRule::Op::Contains:  return QStringLiteral("⊃");
     case FilterRule::Op::Like:      return QStringLiteral("~");
     case FilterRule::Op::NotLike:   return QStringLiteral("¬~");
     case FilterRule::Op::StartsWith:return QStringLiteral("^");
@@ -196,6 +200,24 @@ void FilterCell::applyRule(const FilterRule& rule, bool emitSignal)
 
     if (emitSignal)
         emit sig_filterChanged(m_rule);
+}
+
+void FilterCell::slotBoolCycle()
+{
+    FilterRule r{};
+    if (!m_rule.isActive()) {          // None → true
+        r.op        = FilterRule::Op::Eq;
+        r.isBool    = true;
+        r.boolValue = true;
+        r.value     = QStringLiteral("1");
+    } else if (m_rule.boolValue) {     // true → false
+        r.op        = FilterRule::Op::Eq;
+        r.isBool    = true;
+        r.boolValue = false;
+        r.value     = QStringLiteral("0");
+    }
+    // else false → None (r остаётся default FilterRule{})
+    applyRule(r, /*emitSignal=*/true);
 }
 
 void FilterCell::slotTextChanged(const QString& text)

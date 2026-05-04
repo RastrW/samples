@@ -134,8 +134,7 @@ QVariant RModel::dataForDisplayEdit(int row, int col, const RCol& rcol,
     }
     // TIME: секунды от эпохи плагина → QDateTime
     if (rcol.getComPropTT() == enComPropTT::COM_PR_TIME) {
-        QString qstr = QString::fromStdString(
-            std::visit(ToString(), m_rdata->pnparray_->Get(row, col)));
+        QString qstr = raw.toString();
         // Отрезаем суффикс "--7199", если он есть
         int dashPos = qstr.indexOf("--");
         if (dashPos >= 0) qstr = qstr.left(dashPos);
@@ -144,7 +143,13 @@ QVariant RModel::dataForDisplayEdit(int row, int col, const RCol& rcol,
     }
     // COLOR: упакованный RGB long → QColor
     if (rcol.getComPropTT() == enComPropTT::COM_PR_COLOR) {
-        long packed = std::visit(ToLong(), m_rdata->pnparray_->Get(row, col));
+        // Если raw действительно содержит число и не было изменено
+        bool ok;
+        long packed = raw.toLongLong(&ok);
+        if (!ok) {
+            spdlog::warn("Ошибка при преобразовании QVariant для цвета через toLongLong [{},{}]", row, col);
+            packed = std::visit(ToLong(), m_rdata->pnparray_->Get(row, col));
+        }
         return QColor(packed & 0xFF, (packed >> 8) & 0xFF, (packed >> 16) & 0xFF);
     }
 
@@ -410,7 +415,7 @@ bool RModel::insertColumns(int column, int count, const QModelIndex& parent)
 void RModel::slot_DataChanged(const std::string& tName, int rowFrom, int colFrom,
                               int rowTo, int colTo)
 {
-    if (m_rdata->t_name_ != tName) return;
+    if (isReady() && m_rdata->t_name_ != tName) return;
     // инвалидируем затронутые строки
     m_bgCache.invalidateRows(rowFrom, rowTo);
     emit dataChanged(index(rowFrom, colFrom), index(rowTo, colTo));

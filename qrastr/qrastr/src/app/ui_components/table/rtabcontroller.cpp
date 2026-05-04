@@ -92,7 +92,7 @@ RtabController::RtabController( std::shared_ptr<ITableRepository> tables,
     // Drag отключаем — он конкурирует с rubber-band
     m_view->options().setDragEnabled(false);
     // Sets the value that indicates whether the filter panel can automatically hide or not.
-    m_view->options().setFilterAutoHide(true);
+    m_view->options().setFilterAutoHide(false);
     // Sets the painting the doted frame around the cell with focus to the enabled. By default frame is enabled.
     //m_view->options().setFocusFrameEnabled(true);
     // Sets the visibility status of the grid grouping panel to groupsHeader.
@@ -159,6 +159,16 @@ RtabController::~RtabController()
         disconnect(m_tableEvents.get(), nullptr, m_model.get(), nullptr);
         disconnect(m_tableEvents.get(), nullptr, this, nullptr);
     }
+
+    // Отсоединяем грид от модели ДО уничтожения модели.
+    // Иначе GridModelController::modelDestroyed попытается обратиться
+    // к PersistentRow в уже разрушающейся модели.
+    if (m_view) {
+        m_view->setModel(nullptr); // или m_grid->setModel(nullptr)
+    }
+
+    // unique_ptr-ы уничтожаются в порядке объявления:
+    // m_model уничтожается последним среди данных
 }
 
 RtabShell* RtabController::createShell(const TableProperties& tabProp)

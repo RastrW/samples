@@ -6,6 +6,9 @@
 #include <QtitanGrid.h>
 #include "filterCell.h"
 
+// смещение от левого края виджета до первой колонки
+inline constexpr int kBorderX   = 57;
+
 AutoFilterWidget::AutoFilterWidget(GridTableView* view, QWidget* parent)
     : QWidget(parent)
     , m_view(view)
@@ -43,13 +46,15 @@ AutoFilterWidget::AutoFilterWidget(GridTableView* view, QWidget* parent)
     // Когда видимость колонки меняется — пересоздаём ячейки
     connect(m_view, &GridViewBase::columnVisibleChanged,
             this, [this](GridColumnBase*, bool) {
-                rebuild();;
+                rebuild();
             });
 
     // Горизонтальный скролл
     connect(m_view->horizontalScrollBar(), &QScrollBar::valueChanged,
             this, &AutoFilterWidget::slot_scrollChanged);
-
+    // подписаться на изменение видимости vscrollbar
+    //connect(m_view->verticalScrollBar(), &QScrollBar::rangeChanged,
+    //        this, [this](int, int) { slot_syncLayout(); });
     rebuild();
 }
 
@@ -157,5 +162,5 @@ void AutoFilterWidget::slot_syncLayout()
         xOffset += e.width;
     }
 
-    m_content->setFixedSize(xOffset > 0 ? xOffset : 1, kRowHeight);
+    m_content->setFixedSize(xOffset, kRowHeight);
 }
