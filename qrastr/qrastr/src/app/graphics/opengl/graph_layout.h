@@ -3,12 +3,28 @@
 #include <vector>
 #include <optional>
 
-struct ViewBox { float x, y, width, height; };
+struct BranchLabel {
+    int slot;
+    std::string anchor;
+    std::string transform;   // "translate(x,y) rotate(a)"
+    std::string text;        // "120->", "<-85"
+};
 
-struct VoltageStyle {
-    std::string css_class;   // "u110", "u-off", ...
-    std::string stroke;      // "#4699CC"
-    float stroke_width;
+struct BranchFigure {
+    std::string symbol_id;   // "2tr", "atr", ...
+    std::string transform;
+    std::string voltage_class_end; //цвет второго кружка (сторона iq)
+};
+
+struct BranchData {
+    int id;
+    int vbeg, vend;
+    std::string voltage_class;
+    std::string voltage_class_end; // для tip=1: класс напряжения стороны iq
+    std::vector<std::vector<float>> segments;  // полилинии
+    std::optional<BranchFigure> figure;
+    std::vector<BranchLabel> labels;
+    int state;
 };
 
 struct NodeFigure {
@@ -29,29 +45,14 @@ struct NodeData {
     std::vector<NodeFigure> figures;
 };
 
-struct BranchLabel {
-    int slot;
-    std::string anchor;
-    std::string transform;   // "translate(x,y) rotate(a)"
-    std::string text;        // "120->", "<-85"
+
+struct VoltageStyle {
+    std::string css_class;   // "u110", "u-off", ...
+    std::string stroke;      // "#4699CC"
+    float stroke_width;
 };
 
-struct BranchFigure {
-    std::string symbol_id;   // "2tr", "atr", ...
-    std::string transform;
-    std::string voltage_class_end; // для tip=1: класс напряжения стороны iq
-};
-
-struct BranchData {
-    int id;
-    int vbeg, vend;
-    std::string voltage_class;
-    std::string voltage_class_end;
-    std::vector<std::vector<float>> segments;  // полилинии
-    std::optional<BranchFigure> figure;
-    std::vector<BranchLabel> labels;
-    int state;
-};
+struct ViewBox { float x, y, width, height; };
 
 struct GraphLayout {
     ViewBox view_box;
