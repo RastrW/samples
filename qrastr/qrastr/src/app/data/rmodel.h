@@ -41,7 +41,7 @@ public slots:
     void slot_EndInsertRow(const std::string& tName);
     void slot_BeginRemoveRows(const std::string& tName, int first, int last);
     void slot_EndRemoveRows(const std::string& tName);
-    void slot_RefTableChanged(const std::string& tname);
+    void slot_RefTableChanged(const std::string& tName);
 
 public:
     /**
@@ -85,10 +85,8 @@ public:
     // ── Утилиты ───────────────────────────────────────────────────────────
     std::vector<std::tuple<int,int>>
         columnsWidth() const;
-    const RCol* getRCol    (int col) const;
+    const RCol* getRCol   (int col) const;
     const RData& getRdata ();
-    std::vector<long>
-        getRowsBySelection(const std::string& selection) const;
     ColumnEditorInfo
         getColumnEditorInfo(int colIndex) const;
     void invertDirectCode(int col);
@@ -135,4 +133,5 @@ private:
     void             buildEditorInfoCache();
     //Guard для неинициализированной модели
     bool isReady() const noexcept;
+    bool isMyTable(const std::string& tName) const noexcept;
 };

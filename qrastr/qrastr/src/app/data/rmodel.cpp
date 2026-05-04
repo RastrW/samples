@@ -164,13 +164,9 @@ QVariant RModel::dataForDisplayEdit(int row, int col, const RCol& rcol,
             m_rdata->pnparray_->Get(row, col));
         if (isEmpty) return QVariant(); // невалидный QVariant — ячейка пуста
 
-        if (role == Qt::DisplayRole) {
-            // DisplayRole и EditRole — оба double
-            // Qtitan вызовет convertToText() для отображения
-            return raw.toDouble();
-        }
-        //Для EditRole число целиком
-        return QString::number(raw.toDouble());
+        // DisplayRole и EditRole — оба double
+        // Qtitan вызовет convertToText() для отображения
+        return raw.toDouble();
     }
     return raw;
 }
@@ -420,12 +416,13 @@ void RModel::slot_DataChanged(const std::string& tName, int rowFrom, int colFrom
 
 void RModel::slot_BeginResetModel(const std::string& tName)
 {
-    if (m_rdata->t_name_ == tName) beginResetModel();
+    if (!isMyTable(tName)){ return;}
+    beginResetModel();
 }
 
 void RModel::slot_EndResetModel(const std::string& tName)
 {
-    if (m_rdata->t_name_ != tName) return;
+    if (!isMyTable(tName)){ return;}
     ///@note при сборсе обязательно целиком пересоздавать data
     /// populateDataFromRastr() вызывается МЕЖДУ beginResetModel и endResetModel.
     /// В этот момент View не обращается к модели — безопасно полностью
@@ -437,7 +434,7 @@ void RModel::slot_EndResetModel(const std::string& tName)
 void RModel::slot_BeginInsertRow(const std::string& tName,
                                  int first, int last)
 {
-    if (m_rdata->t_name_ != tName) return;
+    if (!isMyTable(tName)){ return;}
     // сдвиг форматирования перед вставкой
     m_bgCache.shiftRowsDown(first, last - first + 1);
     beginInsertRows({}, first, last);
@@ -445,32 +442,33 @@ void RModel::slot_BeginInsertRow(const std::string& tName,
 
 void RModel::slot_EndInsertRow(const std::string& tName)
 {
-    if (m_rdata->t_name_ == tName) endInsertRows();
+    if (!isMyTable(tName)){ return;}
+    endInsertRows();
 }
 
 void RModel::slot_BeginRemoveRows(const std::string& tName,
                                   int first, int last)
 {
-    if (m_rdata->t_name_ != tName) return;
+    if (!isMyTable(tName)){ return;}
     beginRemoveRows({}, first, last);
 }
 
 void RModel::slot_EndRemoveRows(const std::string& tName)
 {
-    if (m_rdata->t_name_ != tName) return;
+    if (!isMyTable(tName)){ return;}
     // Определяем диапазон через beginRemoveRows/endRemoveRows не передаёт параметры,
     // поэтому проще инвалидировать весь кеш при удалении (операция редкая).
     m_bgCache.clear();
     endRemoveRows();
 }
 
-void RModel::slot_RefTableChanged(const std::string& tname)
+void RModel::slot_RefTableChanged(const std::string& tName)
 {
     // Если изменилась наша же таблица — RTDA уже послал ChangeTable/ChangeAll,
     // не нужно дублировать.
-    if (m_rdata->t_name_ == tname) return;
+    if (isMyTable(tName)) return;
     // Перестраиваем только затронутые записи кеша
-    std::vector<size_t> updated = m_cache.rebuildRefsFrom(tname, *m_rdata, m_tables);
+    std::vector<size_t> updated = m_cache.rebuildRefsFrom(tName, *m_rdata, m_tables);
     if (updated.empty()) return;
     // Обновляем m_editorInfoCache для затронутых колонок
     for (size_t col : updated)
@@ -692,12 +690,12 @@ const RData& RModel::getRdata()
     return *m_rdata;
 }
 
-std::vector<long> RModel::getRowsBySelection(const std::string& selection) const
-{
-    return m_tables->rowsBySelection(m_rdata->t_name_, selection);
-}
-
 bool RModel::isReady() const noexcept
 {
     return m_rdata != nullptr && m_rdata->pnparray_ != nullptr;
+}
+
+bool RModel::isMyTable(const std::string& tName) const noexcept
+{
+    return m_rdata->t_name_ == tName;
 }
