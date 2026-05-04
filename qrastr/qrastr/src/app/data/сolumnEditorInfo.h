@@ -10,7 +10,7 @@ struct ColumnEditorInfo {
 
     Type        editorType = Type::None;
     QStringList comboItems;
-    int         decimals   = 2;
+    int         decimals   = 0;
     double      minVal     = -1e6;
     double      maxVal     =  1e6;
 

@@ -407,7 +407,7 @@ void RtabController::applyColumnEditor(int colIndex)
         column_qt->setProperty("isNumeric", true);
         column_qt->setEditorRepository(repo);
 
-        // Сортировка по UserRole (raw double), не по DisplayRole (QString)
+
         GridModelDataBinding* binding = m_view->getDataBinding(column_qt);
         if (binding)
             binding->setSortRole(Qt::UserRole);

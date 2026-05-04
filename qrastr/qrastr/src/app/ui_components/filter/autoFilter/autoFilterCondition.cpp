@@ -9,9 +9,9 @@ bool AutoFilterCondition::isTrue(const QModelIndex& index) {
     for (const auto& [colIdx, rule] : m_rules) {
         if (!rule.isActive()) continue;
 
-        // Bool columns: use UserRole to get the raw value,
-        // bypassing CheckBox editor transformations that may
-        // return a QVariant with type != Bool for qlonglong(0/1).
+        // Столбцы Bool: UserRole для получения необработанного значения,
+        // обходя преобразования редактора флажков, которые могут
+        // возвращать QVariant с типом != Bool для qlonglong(0/1).
         const Qt::ItemDataRole fetchRole =
             rule.isBool ? Qt::UserRole : Qt::EditRole;
 

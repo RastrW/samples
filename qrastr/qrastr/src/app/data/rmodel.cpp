@@ -158,22 +158,19 @@ QVariant RModel::dataForDisplayEdit(int row, int col, const RCol& rcol,
             return resolved;
     }
     if (rcol.getComPropTT() == enComPropTT::COM_PR_REAL) {
-        int decimals = 2;
-        try { decimals = std::stoi(rcol.getPrec()); } catch (...) {}
-
         // Проверяем именно monostate, а не isValid() —
         // raw.isValid() == true даже для double(0.0)
         const bool isEmpty = std::holds_alternative<std::monostate>(
             m_rdata->pnparray_->Get(row, col));
+        if (isEmpty) return QVariant(); // невалидный QVariant — ячейка пуста
 
         if (role == Qt::DisplayRole) {
-            if (isEmpty) return QString(); // пустая ячейка — ничего не показываем
-            return QString::number(raw.toDouble(), 'f', decimals);
+            // DisplayRole и EditRole — оба double
+            // Qtitan вызовет convertToText() для отображения
+            return raw.toDouble();
         }
-
-        // EditRole
-        if (isEmpty) return QString();
-        return QString::number(raw.toDouble(), 'f', decimals);
+        //Для EditRole число целиком
+        return QString::number(raw.toDouble());
     }
     return raw;
 }

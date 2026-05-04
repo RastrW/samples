@@ -12,3 +12,13 @@ DoubleEditorRepository::DoubleEditorRepository(int    decimals,
     // Выравнивание по правому краю — стандарт для чисел
     setAlignment(Qt::AlignRight | Qt::AlignVCenter);
 }
+
+QString DoubleEditorRepository::convertToText(const QVariant& value)
+{
+    if (!value.isValid() || value.isNull())
+        return {};
+    bool ok = false;
+    const double d = value.toDouble(&ok);
+    if (!ok) return value.toString();
+    return QString::number(d, 'f', m_decimals);
+}

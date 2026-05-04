@@ -117,7 +117,7 @@ void AutoFilterWidget::slot_scrollChanged(int value){
 
 void AutoFilterWidget::slot_syncLayout()
 {
-    if (!m_view)
+    if (!isVisible() || !m_view)
         return;
 
     const int iw = kBorderX;
