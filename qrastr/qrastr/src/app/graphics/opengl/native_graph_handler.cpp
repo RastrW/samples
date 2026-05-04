@@ -8,29 +8,48 @@
 #include <map>
 #include <set>
 
-//  Таблица цветов уровней напряжения
-// RGB → HEX: (R,G,B) → #RRGGBB
+// ─────────────────────────────────────────────────────────────────────────────
+//  Цвета уровней напряжения — ГОСТ Р 59919-2021, Таблица 5.1
+//  RGB → HEX: (R,G,B) → #RRGGBB
+// ─────────────────────────────────────────────────────────────────────────────
+// Особые состояния — требуют проверки доп. полей rastr:
+//   Заземлено:  #FF9900  (255:153:0)  — sta==2 или признак заземления
+//   Перегрузка: #FF0000  (255:0:0)    — по результатам расчёта (i_zag > 100)
+//   Неизвестно: #8C8C8C  (140:140:140)— нет данных расчёта
 static const std::map<int,std::string> kVoltageColors = {
-    {1150, "#CD8AFF"},
-    { 750, "#4141F0"},
-    { 500, "#B80000"},
-    { 400, "#87FDC2"},
-    { 330, "#00CC00"},
-    { 220, "#CCCC00"},
-    { 150, "#AA9600"},
-    { 110, "#4699CC"},
-    {  60, "#C25A5A"},
-    {  35, "#C25A5A"},
-    {  27, "#C25A5A"},
-    {  20, "#A464A4"},
+    {1150, "#CD8AFF"},  // 205:138:255
+    { 750, "#4141F0"},  // 65:65:240   (800 кВ ППТ)
+    { 500, "#B80000"},  // 184:0:0
+    { 400, "#87FDC2"},  // 135:253:194 (ЛЭП, цепи ППТ)
+    { 330, "#00CC00"},  // 0:204:0
+    { 220, "#CCCC00"},  // 204:204:0
+    { 150, "#AA9600"},  // 170:150:0
+    { 110, "#4699CC"},  // 70:153:204
+    {  60, "#C25A5A"},  // 194:90:90   (27–60 кВ)
+    {  35, "#C25A5A"},  // 194:90:90
+    {  27, "#C25A5A"},  // 194:90:90
+    {  20, "#A464A4"},  // 164:100:164 (6–24 кВ)
     {  15, "#A464A4"},
     {  10, "#A464A4"},
     {   6, "#A464A4"},
-    {   0, "#CCCCCC"},
+    {   0, "#CCCCCC"},  // 204:204:204 — Без напряжения
+};
+
+// Символ трансформатора по типу (из макроса AddLineVH)
+// Используется при расширении: tip=1 всегда даёт "2tr", остальные — при tip узла.
+static const std::map<int,std::string> kTransSymbol = {
+    {0, "atr"  },
+    {1, "3tr"  },
+    {2, "2tr"  },
+    {3, "3tr"  },
+    {4, "atr-r"},
+    {5, "atr"  },
     };
 
-NativeGraphHandler::NativeGraphHandler(ITableRepository* pRepo,
-                                       QObject* parent)
+// Значения slb/sle, которые не нужно показывать (нулевые)
+static const std::set<std::string> kZeroVals = {"0", "0.0", "0,0"};
+
+NativeGraphHandler::NativeGraphHandler(ITableRepository* pRepo, QObject* parent)
     : QObject(parent), m_pRepo(pRepo)
 {}
 
@@ -63,10 +82,11 @@ GraphLayout NativeGraphHandler::emptyLayout()
 std::string NativeGraphHandler::voltageColor(int uhom)
 {
     auto it = kVoltageColors.find(uhom);
-    if (it != kVoltageColors.end()) return it->second;
+    if (it != kVoltageColors.end())
+        return it->second;
 
     // ближайший ключ
-    int best = 0;
+    int best    = 0;
     int bestDist = INT_MAX;
     for (auto& [k, v] : kVoltageColors) {
         int d = std::abs(k - uhom);
@@ -87,35 +107,38 @@ std::pair<float,float> NativeGraphHandler::connPoint(
         else
             return {sx, sy - nprb * SCALE};
     }
-    // Трансформатор: MVP — подключаем в центр узла
+    // Трансформатор: GetTransPos — сложная логика ориентации.
+    // MVP: подключаем в центр узла.
     return {sx, sy};
 }
 
 std::tuple<float,float,float> NativeGraphHandler::labelPos(
     const QDataBlock& gt, int gtSize, int gtIdx,
-    int colWx, int colWy, int colUgol,
+    long colWx, long colWy, long colUgol,
     float cx, float cy)
 {
-    //Позиция подписи ветви из таблицы graph_text.
-    //Возвращает (x, y, angle_deg).
-    //Смещения w_x/w_y хранятся в условных единицах: 32 субпикселя = 1 пиксель → сдвиг на 1 ед.
+    // Позиция подписи ветви из таблицы graph_text.
+    // Возвращает (x, y, angle_deg).
+    // Смещения w_x/w_y хранятся в условных единицах:
+    //   32 субпикселя = 1 пиксель → сдвиг на 1 ед.
     if (gtIdx < 0 || gtIdx >= gtSize)
         return {cx, cy, 0.f};
 
-    float rawX = getDouble(gt, gtIdx, colWx) * SCALE;
-    float rawY = getDouble(gt, gtIdx, colWy) * SCALE;
+    float rawX = static_cast<float>(getDouble(gt, gtIdx, colWx)) * SCALE;
+    float rawY = static_cast<float>(getDouble(gt, gtIdx, colWy)) * SCALE;
     int   ox   = (static_cast<int>(rawX) / 32 + 1) / 2;
     int   oy   = (static_cast<int>(rawY) / 32 + 1) / 2;
     float ang  = static_cast<float>(getDouble(gt, gtIdx, colUgol));
-    return {cx + ox, cy + oy, ang};
+    return {cx + static_cast<float>(ox), cy + static_cast<float>(oy), ang};
 }
 
 std::string NativeGraphHandler::buildLabelTransform(
     const QDataBlock& gt, int gtSize, int gtIdx,
-    int colWx, int colWy, int colUgol,
+    long colWx, long colWy, long colUgol,
     float cx, float cy)
 {
-    //SVG transform строка для подписи: 'translate(x,y)' или 'translate(x,y) rotate(a)'
+    // SVG transform строка для подписи:
+    //   "translate(x,y)" или "translate(x,y) rotate(a)"
     auto [lx, ly, ang] = labelPos(gt, gtSize, gtIdx,
                                   colWx, colWy, colUgol, cx, cy);
     char buf[128];
@@ -134,21 +157,20 @@ GraphLayout NativeGraphHandler::getLayout(
     bool metadataOnly,
     bool autoCenter)
 {
-    //Этапы построения схемы:
-    //1. graph_node → вычислить начало координат (wx, wy), полный viewBox
-    //2. Ранний выход при metadata_only=True (только viewBox + voltage_styles)
-    //3. Читать электрические таблицы: node, ATtrans, graph_figur, graph_text, graph_settext
-    //4. Построить список узлов: SVG-позиция, тип, фигуры оборудования, сдвиг подписи
-    //5. Читать таблицы маршрутов: graph_vetv, vetv
-    //6. Построить список ветвей: полилинии, символы трансформаторов, подписи токов
-    //7. Собрать voltage_styles и вернуть GraphLayout
+    // Этапы построения схемы:
+    //   1. graph_node → вычислить начало координат (wx, wy), полный viewBox
+    //   2. Ранний выход при metadataOnly=true (только viewBox + voltageStyles)
+    //   3. Читать электрические таблицы: node, ATtrans, graph_figur, graph_text, graph_settext
+    //   4. Построить список узлов: SVG-позиция, тип, фигуры оборудования, сдвиг подписи
+    //   5. Читать таблицы маршрутов: graph_vetv, vetv
+    //   6. Построить список ветвей: полилинии, символы трансформаторов, подписи токов
+    //   7. Собрать voltage_styles и вернуть GraphLayout
 
-    // ── 1. graph_node: координаты узлов ─────────────────────────────────────
+    // ── 1. graph_node: координаты и параметры отображения ────────────────────
     auto gnBlock = m_pRepo->getBlock("graph_node", "ny,k_x,k_y,npri,ind_fig,ind_text");
     const QDataBlock& gn = *gnBlock;
     const int gnSize = static_cast<int>(gn.RowsCount());
 
-    // Индексы колонок graph_node
     const long gnNy      = m_pRepo->columnIndex("graph_node", "ny");
     const long gnKx      = m_pRepo->columnIndex("graph_node", "k_x");
     const long gnKy      = m_pRepo->columnIndex("graph_node", "k_y");
@@ -169,7 +191,7 @@ GraphLayout NativeGraphHandler::getLayout(
     }
 
     // Полный viewBox — вычисляем по ВСЕМ узлам до применения bbox-фильтра.
-    // Нужен для auto_center и для корректного viewBox при bbox-запросах.
+    // Нужен для autoCenter и для корректного viewBox при bbox-запросах.
     float minX = FLT_MAX, minY = FLT_MAX, maxX = -FLT_MAX, maxY = -FLT_MAX;
     for (int i = 0; i < gnSize; i++) {
         float sx = static_cast<float>((getLong(gn, i, gnKx) - wx) * SCALE);
@@ -177,73 +199,58 @@ GraphLayout NativeGraphHandler::getLayout(
         minX = std::min(minX, sx); maxX = std::max(maxX, sx);
         minY = std::min(minY, sy); maxY = std::max(maxY, sy);
     }
-    ViewBox fullViewBox {
+    ViewBox fullViewBox{
         minX - 100.f, minY - 100.f,
         maxX - minX + 200.f, maxY - minY + 200.f
     };
 
-    // auto_center: сервер сам выбирает центральный bbox (50% схемы)
+    // autoCenter: вычислить центральный bbox на сервере (центр 50% схемы)
     if (autoCenter && !bbox.has_value()) {
         float cx = fullViewBox.x + fullViewBox.width  * 0.5f;
         float cy = fullViewBox.y + fullViewBox.height * 0.5f;
         float bw = fullViewBox.width  * 0.5f;
         float bh = fullViewBox.height * 0.5f;
-        bbox = {cx - bw/2, cy - bh/2, cx + bw/2, cy + bh/2};
+        bbox = {cx - bw/2.f, cy - bh/2.f, cx + bw/2.f, cy + bh/2.f};
     }
 
-    // ── 2. metadata_only — быстрый путь (только viewBox + voltageStyles) ────
+    // ── 2. metadataOnly — быстрый путь: только viewBox + voltageStyles ────────
+    // Читаем только 2 таблицы вместо 8+.
     if (metadataOnly) {
-        auto ndBlock = m_pRepo->getBlock("node", "uhom");
-        const QDataBlock& nd = *ndBlock;
-        const long ndUhom = m_pRepo->columnIndex("node", "uhom");
-        const int  ndSize = static_cast<int>(nd.RowsCount());
+        auto ndBlock2 = m_pRepo->getBlock("node", "uhom");
+        const QDataBlock& nd2 = *ndBlock2;
+        const long ndUhom2 = m_pRepo->columnIndex("node", "uhom");
+        const int  ndSize2 = static_cast<int>(nd2.RowsCount());
 
+        // sorted(unique_uhom, reverse=True) → std::set + реверсный обход
         std::set<int> uhoms;
-        for (int i = 0; i < ndSize; i++)
-            uhoms.insert(static_cast<int>(getLong(nd, i, ndUhom)));
+        for (int i = 0; i < ndSize2; i++)
+            uhoms.insert(static_cast<int>(getLong(nd2, i, ndUhom2)));
 
         GraphLayout layout;
         layout.view_box = fullViewBox;
-        for (int u : uhoms){
-            layout.voltage_styles.push_back({"u" + std::to_string(u),
-                                             voltageColor(u), 1.f});
-        }
+        for (auto it = uhoms.rbegin(); it != uhoms.rend(); ++it)
+            layout.voltage_styles.push_back({"u" + std::to_string(*it),
+                                             voltageColor(*it), 1.f});
         layout.voltage_styles.push_back({"u-off",      "#CCCCCC", 1.f});
         layout.voltage_styles.push_back({"u-unknown",  "#8C8C8C", 1.f});
         layout.voltage_styles.push_back({"u-overload", "#FF0000", 2.f});
+        layout.layers.push_back({0, "Основная схема"});
         return layout;
     }
 
-    // ── 3. Читаем электрические таблицы ─────────────────────────────────────
-    auto ndBlock = m_pRepo->getBlock("node",        "ny,sta,uhom,name,vras,pg,bsh");
-    auto gfBlock = m_pRepo->getBlock("graph_figur", "size,zapret,npr");
-    auto gtBlock = m_pRepo->getBlock("graph_text",  "w_x,w_y,ugol");
+    // ── 3. Читаем электрические таблицы ──────────────────────────────────────
 
+    // node: электрические данные
+    auto ndBlock = m_pRepo->getBlock("node", "ny,sta,uhom,name,vras,pg,bsh");
     const QDataBlock& nd = *ndBlock;
-    const QDataBlock& gf = *gfBlock;
-    const QDataBlock& gt = *gtBlock;
-
     const int ndSize = static_cast<int>(nd.RowsCount());
-    const int gfSize = static_cast<int>(gf.RowsCount());
-    const int gtSize = static_cast<int>(gt.RowsCount());
 
-    // Индексы колонок node
     const long ndNy   = m_pRepo->columnIndex("node", "ny");
     const long ndSta  = m_pRepo->columnIndex("node", "sta");
     const long ndUhom = m_pRepo->columnIndex("node", "uhom");
     const long ndName = m_pRepo->columnIndex("node", "name");
     const long ndPg   = m_pRepo->columnIndex("node", "pg");
     const long ndBsh  = m_pRepo->columnIndex("node", "bsh");
-
-    // Индексы колонок graph_figur
-    const long gfSize_ = m_pRepo->columnIndex("graph_figur", "size");
-    const long gfZapr  = m_pRepo->columnIndex("graph_figur", "zapret");
-    const long gfNpr   = m_pRepo->columnIndex("graph_figur", "npr");
-
-    // Индексы колонок graph_text
-    const long gtWx   = m_pRepo->columnIndex("graph_text", "w_x");
-    const long gtWy   = m_pRepo->columnIndex("graph_text", "w_y");
-    const long gtUgol = m_pRepo->columnIndex("graph_text", "ugol");
 
     // node_by_ny: ny → индекс строки в таблице node
     std::unordered_map<int,int> nodeByNy;
@@ -262,7 +269,7 @@ GraphLayout NativeGraphHandler::getLayout(
             const long atType  = m_pRepo->columnIndex("ATtrans", "Type");
             for (int i = 0; i < atSize; i++) {
                 int t = static_cast<int>(getLong(at, i, atType));
-                if (t != 2)   // 2 = вторичная обмотка — не рисуем отдельно
+                if (t != 2)  // 2 = вторичная обмотка, не рисуем отдельно
                     atByNy[static_cast<int>(getLong(at, i, atNZero))] = t;
             }
         } catch (const std::exception& e) {
@@ -270,9 +277,29 @@ GraphLayout NativeGraphHandler::getLayout(
         }
     }
 
-    //graph_fiqur
-    //graph_text
-    // graph_settext: смещение слота подписи "name"
+    // graph_figur: фигуры (генераторы, реакторы, шунты)
+    std::shared_ptr<QDataBlock> gfBlock;
+    int gfSize = 0;
+    long gfSizeCol = 0, gfZapr = 0, gfNpr = 0;
+    try {
+        gfBlock  = m_pRepo->getBlock("graph_figur", "size,zapret,npr");
+        gfSize   = static_cast<int>(gfBlock->RowsCount());
+        gfSizeCol = m_pRepo->columnIndex("graph_figur", "size");
+        gfZapr   = m_pRepo->columnIndex("graph_figur", "zapret");
+        gfNpr    = m_pRepo->columnIndex("graph_figur", "npr");
+    } catch (const std::exception& e) {
+        spdlog::warn("NativeGraphHandler: graph_figur недоступна: {}", e.what());
+    }
+
+    // graph_text: позиции меток узлов и ветвей
+    auto gtBlock = m_pRepo->getBlock("graph_text", "w_x,w_y,ugol");
+    const QDataBlock& gt = *gtBlock;
+    const int gtSize = static_cast<int>(gt.RowsCount());
+    const long gtWx   = m_pRepo->columnIndex("graph_text", "w_x");
+    const long gtWy   = m_pRepo->columnIndex("graph_text", "w_y");
+    const long gtUgol = m_pRepo->columnIndex("graph_text", "ugol");
+
+    // graph_settext: какой слот соответствует колонке "name"
     int nameGtOffset = 0;
     if (m_pRepo->tableExists("graph_settext")) {
         try {
@@ -290,23 +317,24 @@ GraphLayout NativeGraphHandler::getLayout(
                 }
             }
         } catch (const std::exception& e) {
-            spdlog::warn("NativeGraphHandler: graph_settext error: {}", e.what());
+            spdlog::warn("NativeGraphHandler: graph_settext недоступна: {}", e.what());
         }
     }
 
-    // ── bbox-фильтр → rastr-координаты ──────────────────────────────────────
+    // ── Bbox-фильтр: конвертировать SVG coords → rastr coords ────────────────
+    // svg_x = (k_x - wx) * SCALE  →  k_x = svg_x / SCALE + wx
     int bkxMin = INT_MIN, bkxMax = INT_MAX;
     int bkyMin = INT_MIN, bkyMax = INT_MAX;
     if (bbox.has_value()) {
-        float x0 = (*bbox)[0], y0 = (*bbox)[1],
-            x1 = (*bbox)[2], y1 = (*bbox)[3];
+        float x0 = (*bbox)[0], y0 = (*bbox)[1];
+        float x1 = (*bbox)[2], y1 = (*bbox)[3];
         bkxMin = static_cast<int>(x0 / SCALE) + wx - 1;
         bkxMax = static_cast<int>(x1 / SCALE) + wx + 1;
         bkyMin = static_cast<int>(y0 / SCALE) + wy - 1;
         bkyMax = static_cast<int>(y1 / SCALE) + wy + 1;
     }
 
-    // ── 4. Строим список узлов ───────────────────────────────────────────────
+    // ── 4. Построить список узлов ─────────────────────────────────────────────
     GraphLayout layout;
     layout.view_box = fullViewBox;
 
@@ -322,35 +350,39 @@ GraphLayout NativeGraphHandler::getLayout(
 
         if (!nodeByNy.count(ny)) continue;
 
-        // bbox-фильтр
+        // Применить bbox-фильтр
         if (kx < bkxMin || kx > bkxMax || ky < bkyMin || ky > bkyMax)
             continue;
 
-        float sx = static_cast<float>((kx - wx) * SCALE);
-        float sy = static_cast<float>((ky - wy) * SCALE);
-        nodePos[ny] = {sx, sy};
+        float svgX = static_cast<float>((kx - wx) * SCALE);
+        float svgY = static_cast<float>((ky - wy) * SCALE);
+        nodePos[ny] = {svgX, svgY};
 
         int ndIdx   = nodeByNy[ny];
         int sta     = static_cast<int>(getLong(nd, ndIdx, ndSta));
         int uhom    = static_cast<int>(getLong(nd, ndIdx, ndUhom));
-        int nodType = atByNy.count(ny) ? atByNy[ny] : -1;
+        int nodType = atByNy.count(ny) ? atByNy.at(ny) : -1;
 
-        // Смещение подписи
+        // Имя узла и смещение подписи
         std::string nameStr = getString(nd, ndIdx, ndName);
-        float nameDx = 2.f, nameDy = -3.f;
+        float nameDx = 2.f, nameDy = -3.f, nameAngle = 0.f;
         if (!nameStr.empty()) {
             int indTxt = static_cast<int>(getLong(gn, i, gnIndText)) + nameGtOffset;
             if (indTxt >= 0 && indTxt < gtSize) {
-                float rawX = getDouble(gt, indTxt, gtWx) * SCALE;
-                float rawY = getDouble(gt, indTxt, gtWy) * SCALE;
-                nameDx = static_cast<float>((static_cast<int>(rawX) / 32 + 1) / 2);
-                nameDy = static_cast<float>((static_cast<int>(rawY) / 32 + 1) / 2);
+                float rawX = static_cast<float>(getDouble(gt, indTxt, gtWx)) * SCALE;
+                float rawY = static_cast<float>(getDouble(gt, indTxt, gtWy)) * SCALE;
+                nameDx    = static_cast<float>((static_cast<int>(rawX) / 32 + 1) / 2);
+                nameDy    = static_cast<float>((static_cast<int>(rawY) / 32 + 1) / 2);
+                nameAngle = static_cast<float>(getDouble(gt, indTxt, gtUgol));
             }
         }
 
-        // Фигуры оборудования (генераторы, реакторы, шунты) — только если узел включён
+        // Фигуры оборудования на шине (генераторы, реакторы, шунты)
+        // nf=0 — генератор (кружок с кривой): не отображать если pg не задано
+        // nf=1 — реактор/БСК: bsh>0 → реактор (symbol 4, nf=2), bsh<0 → БСК (symbol 5, nf=3)
         std::vector<NodeFigure> figures;
-        if (sta == 0) {
+        if (sta == 0 && gfBlock) {
+            const QDataBlock& gf = *gfBlock;
             double pg  = getDouble(nd, ndIdx, ndPg);
             double bsh = getDouble(nd, ndIdx, ndBsh);
             int indFig = static_cast<int>(getLong(gn, i, gnIndFig));
@@ -361,52 +393,48 @@ GraphLayout NativeGraphHandler::getLayout(
                 if (getLong(gf, idx, gfZapr) == 1) continue;
                 // nf==1 — генератор: не показывать если pg==0
                 if (nf == 1 && pg == 0.0) continue;
-                // nf==2 — реактор/БСК: bsh>=0 → реактор, bsh<0 → БСК
+                // nf==2 — реактор/БСК: bsh>=0 → реактор (actualNf=2), bsh<0 → БСК (actualNf=3)
                 int actualNf = nf;
                 if (nf == 2) actualNf = (bsh >= 0.0) ? 2 : 3;
                 figures.push_back({
                     actualNf,
                     static_cast<int>(getLong(gf, idx, gfNpr)),
-                    static_cast<int>(getLong(gf, idx, gfSize_))
+                    static_cast<int>(getLong(gf, idx, gfSizeCol))
                 });
             }
         }
 
         NodeData node;
-        node.id       = ny;
-        node.x        = sx;
-        node.y        = sy;
-        node.uhom     = uhom;
-        node.nod_type = nodType;
-        node.npri     = npri;
-        node.sta      = sta;
-        node.name     = std::move(nameStr);
-        node.name_dx  = nameDx;
-        node.name_dy  = nameDy;
-        node.figures  = std::move(figures);
+        node.id         = ny;
+        node.x          = svgX;
+        node.y          = svgY;
+        node.uhom       = uhom;
+        node.nod_type   = nodType;
+        node.npri       = npri;
+        node.sta        = sta;
+        node.name       = std::move(nameStr);
+        node.name_dx    = nameDx;
+        node.name_dy    = nameDy;
+        node.name_angle = nameAngle;
+        node.figures    = std::move(figures);
         layout.nodes.push_back(std::move(node));
     }
 
     if (nodePos.empty()) {
-        spdlog::warn("NativeGraphHandler: ни один узел не найден — файл не загружен?");
+        spdlog::warn("NativeGraphHandler: ни один узел graph_node не найден в node — файл не загружен?");
         return emptyLayout();
     }
 
-    // ── 5. Читаем таблицы ветвей ─────────────────────────────────────────────
-    //graph_vetv: маршрут ветвей
+    // ── 5. Читаем таблицы маршрутов ───────────────────────────────────────────
+
+    // graph_vetv: маршрут ветвей
     auto gvBlock = m_pRepo->getBlock("graph_vetv",
-                             "ip,iq,nizg,nprb,npre,tip,ind_text,"
-                             "izg1_x,izg1_y,izg2_x,izg2_y,"
-                             "izg3_x,izg3_y,izg4_x,izg4_y");
-    auto vtBlock = m_pRepo->getBlock("vetv", "ip,iq,slb,sle,sta,i_zag,signP");
-
+                                     "ip,iq,nizg,nprb,npre,tip,ind_text,"
+                                     "izg1_x,izg1_y,izg2_x,izg2_y,"
+                                     "izg3_x,izg3_y,izg4_x,izg4_y");
     const QDataBlock& gv = *gvBlock;
-    const QDataBlock& vt = *vtBlock;
-
     const int gvSize = static_cast<int>(gv.RowsCount());
-    const int vtSize = static_cast<int>(vt.RowsCount());
 
-    // Индексы колонок graph_vetv
     const long gvIp     = m_pRepo->columnIndex("graph_vetv", "ip");
     const long gvIq     = m_pRepo->columnIndex("graph_vetv", "iq");
     const long gvNizg   = m_pRepo->columnIndex("graph_vetv", "nizg");
@@ -414,16 +442,24 @@ GraphLayout NativeGraphHandler::getLayout(
     const long gvNpre   = m_pRepo->columnIndex("graph_vetv", "npre");
     const long gvTip    = m_pRepo->columnIndex("graph_vetv", "tip");
     const long gvIndTxt = m_pRepo->columnIndex("graph_vetv", "ind_text");
-    const long gvIzg1x  = m_pRepo->columnIndex("graph_vetv", "izg1_x");
-    const long gvIzg1y  = m_pRepo->columnIndex("graph_vetv", "izg1_y");
-    const long gvIzg2x  = m_pRepo->columnIndex("graph_vetv", "izg2_x");
-    const long gvIzg2y  = m_pRepo->columnIndex("graph_vetv", "izg2_y");
-    const long gvIzg3x  = m_pRepo->columnIndex("graph_vetv", "izg3_x");
-    const long gvIzg3y  = m_pRepo->columnIndex("graph_vetv", "izg3_y");
-    const long gvIzg4x  = m_pRepo->columnIndex("graph_vetv", "izg4_x");
-    const long gvIzg4y  = m_pRepo->columnIndex("graph_vetv", "izg4_y");
+    const long izg_x[]  = {
+        m_pRepo->columnIndex("graph_vetv", "izg1_x"),
+        m_pRepo->columnIndex("graph_vetv", "izg2_x"),
+        m_pRepo->columnIndex("graph_vetv", "izg3_x"),
+        m_pRepo->columnIndex("graph_vetv", "izg4_x"),
+    };
+    const long izg_y[] = {
+        m_pRepo->columnIndex("graph_vetv", "izg1_y"),
+        m_pRepo->columnIndex("graph_vetv", "izg2_y"),
+        m_pRepo->columnIndex("graph_vetv", "izg3_y"),
+        m_pRepo->columnIndex("graph_vetv", "izg4_y"),
+    };
 
-    //vetv: электрические данные ветвей
+    // vetv: электрические данные ветвей
+    auto vtBlock = m_pRepo->getBlock("vetv", "ip,iq,slb,sle,sta,i_zag,signP");
+    const QDataBlock& vt = *vtBlock;
+    const int vtSize = static_cast<int>(vt.RowsCount());
+
     const long vtIp    = m_pRepo->columnIndex("vetv", "ip");
     const long vtIq    = m_pRepo->columnIndex("vetv", "iq");
     const long vtSlb   = m_pRepo->columnIndex("vetv", "slb");
@@ -432,11 +468,7 @@ GraphLayout NativeGraphHandler::getLayout(
     const long vtIZag  = m_pRepo->columnIndex("vetv", "i_zag");
     const long vtSignP = m_pRepo->columnIndex("vetv", "signP");
 
-    // Имена колонок изгибов (порядок соответствует индексам gvIzg*x/y)
-    const long izg_x[] = {gvIzg1x, gvIzg2x, gvIzg3x, gvIzg4x};
-    const long izg_y[] = {gvIzg1y, gvIzg2y, gvIzg3y, gvIzg4y};
-
-    // vetv_idx: (ip,iq) → строка
+    // vetv_idx: (ip,iq) → строка в vetv
     std::map<std::pair<int,int>,int> vetvIdx;
     for (int i = 0; i < vtSize; i++) {
         auto key = std::make_pair(
@@ -445,10 +477,7 @@ GraphLayout NativeGraphHandler::getLayout(
         if (!vetvIdx.count(key)) vetvIdx[key] = i;
     }
 
-    // Значения slb/sle, которые не надо показывать
-    static const std::set<std::string> kZeroVals = {"0","0.0","0,0"};
-
-    // ── 6. Строим список ветвей ───────────────────────────────────────────────
+    // ── 6. Построить список ветвей ────────────────────────────────────────────
     for (int i = 0; i < gvSize; i++) {
         int ip = static_cast<int>(getLong(gv, i, gvIp));
         int iq = static_cast<int>(getLong(gv, i, gvIq));
@@ -457,7 +486,7 @@ GraphLayout NativeGraphHandler::getLayout(
 
         // Ищем запись в vetv (возможно в обратном порядке)
         bool reversedVetv = false;
-        int vi = -1;
+        int  vi = -1;
         auto it = vetvIdx.find({ip, iq});
         if (it != vetvIdx.end()) {
             vi = it->second;
@@ -476,14 +505,16 @@ GraphLayout NativeGraphHandler::getLayout(
 
         auto [connBx, connBy] = connPoint(bx, by,
                                           npriByNy.count(ip) ? npriByNy[ip] : 0,
-                                          nprb, atByNy.count(ip) ? atByNy[ip] : -1);
+                                          nprb,
+                                          atByNy.count(ip) ? atByNy[ip] : -1);
         auto [connEx, connEy] = connPoint(ex, ey,
                                           npriByNy.count(iq) ? npriByNy[iq] : 0,
-                                          npre, atByNy.count(iq) ? atByNy[iq] : -1);
+                                          npre,
+                                          atByNy.count(iq) ? atByNy[iq] : -1);
 
-        // ── Строим полилинию ─────────────────────────────────────────────────
-        // По макросу: первые nizg-1 точек — смещения от conn_start,
-        // последняя — смещение от conn_end.
+        // ── Строим полилинию ──────────────────────────────────────────────────
+        // По макросу (AddLine): первые nizg-1 точек — смещения от conn_start,
+        // последняя точка — смещение от conn_end.
         std::vector<float> pts = {connBx, connBy};
         int capped = std::min(nizg, 4);
 
@@ -502,9 +533,10 @@ GraphLayout NativeGraphHandler::getLayout(
         pts.push_back(connEx);
         pts.push_back(connEy);
 
-        // ── Метки тока ───────────────────────────────────────────────────────
+        // ── Метки (slb/sle из vetv), позиции из graph_text ───────────────────
         std::string slbRaw = getString(vt, vi, vtSlb);
         std::string sleRaw = getString(vt, vi, vtSle);
+        // Если vetv записана в обратном порядке — меняем местами
         if (reversedVetv) std::swap(slbRaw, sleRaw);
 
         int indTxt = static_cast<int>(getLong(gv, i, gvIndTxt));
@@ -514,48 +546,55 @@ GraphLayout NativeGraphHandler::getLayout(
         auto [x2txt, y2txt, eang] = labelPos(gt, gtSize, indTxt + 1,
                                              gtWx, gtWy, gtUgol, connEx, connEy);
 
-        int signPRaw  = static_cast<int>(getLong(vt, vi, vtSignP));
-        int plbBase   = signPRaw ^ (reversedVetv ? 1 : 0);
+        // Направление стрелок — алгоритм VBA-макроса "Экспорт в SVG.rbs".
+        // signP=0 → ip-источник ("text->"), signP=1 → iq-источник ("<-text").
+        // При reversedVetv signP инвертируется (в vetv ip/iq переставлены).
+        // Геометрика:
+        //   ветвь вправо (x2>=x1) или вверх (y2<=y1) → инвертировать plb
+        //   ветвь влево (x2<x1) или вниз (y2>y1) → поменять anchor (не инвертировать)
+        int signPRaw = static_cast<int>(getLong(vt, vi, vtSignP));
+        // Корректируем signP для перевёрнутых записей в vetv
+        int plbBase = signPRaw ^ (reversedVetv ? 1 : 0);
 
         std::vector<BranchLabel> labels;
 
-        // slb (slot 0)
+        // slb (slot 0): исходный anchor=start
         if (!slbRaw.empty() && !kZeroVals.count(slbRaw)) {
-            int plb0 = plbBase;
+            int         plb0  = plbBase;
             std::string cvizb = "start";
-            if (bang >= 0) {
-                if (x2txt < x1txt) cvizb = "end";
-                else                plb0 = 1 - plb0;
-            } else {
-                if (y2txt > y1txt) cvizb = "end";
-                else                plb0 = 1 - plb0;
+            if (bang >= 0) {                     // горизонтальная подпись
+                if (x2txt < x1txt) cvizb = "end";  // влево → меняем anchor, plb без изменений
+                else               plb0 = 1 - plb0; // вправо → инвертируем plb
+            } else {                             // вертикальная подпись
+                if (y2txt > y1txt) cvizb = "end";   // вниз → меняем anchor, plb без изменений
+                else               plb0 = 1 - plb0;  // вверх → инвертируем plb
             }
             std::string tf   = buildLabelTransform(gt, gtSize, indTxt,
                                                  gtWx, gtWy, gtUgol, connBx, connBy);
             std::string text = plb0 ? ("<-" + slbRaw) : (slbRaw + "->");
-            labels.push_back({0, cvizb, tf, text});
+            labels.push_back({0, cvizb, std::move(tf), std::move(text)});
         }
 
-        // sle (slot 1)
+        // sle (slot 1): исходный anchor=end, plb сбрасывается
         if (!sleRaw.empty() && !kZeroVals.count(sleRaw)) {
-            int plb1 = plbBase;
+            int         plb1  = plbBase;
             std::string cvize = "end";
-            if (eang >= 0) {
-                if (x2txt < x1txt) cvize = "start";
-                else                plb1 = 1 - plb1;
-            } else {
-                if (y2txt > y1txt) cvize = "start";
-                else                plb1 = 1 - plb1;
+            if (eang >= 0) {                      // горизонтальная подпись
+                if (x2txt < x1txt) cvize = "start"; // влево → меняем anchor, plb без изменений
+                else               plb1 = 1 - plb1;  // вправо → инвертируем plb
+            } else {                              // вертикальная подпись
+                if (y2txt > y1txt) cvize = "start";  // вниз → меняем anchor, plb без изменений
+                else               plb1 = 1 - plb1;   // вверх → инвертируем plb
             }
             std::string tf   = buildLabelTransform(gt, gtSize, indTxt + 1,
                                                  gtWx, gtWy, gtUgol, connEx, connEy);
             std::string text = plb1 ? ("<-" + sleRaw) : (sleRaw + "->");
-            labels.push_back({1, cvize, tf, text});
+            labels.push_back({1, cvize, std::move(tf), std::move(text)});
         }
 
-        // ── Класс напряжения / особое состояние ─────────────────────────────
-        int    staV   = static_cast<int>(getLong(vt, vi, vtSta));
-        double iZagV  = getDouble(vt, vi, vtIZag);
+        // ── Класс напряжения / особое состояние ──────────────────────────────
+        int    staV  = static_cast<int>(getLong(vt, vi, vtSta));
+        double iZagV = getDouble(vt, vi, vtIZag);
 
         std::string vcls, vclsEnd;
         if (staV != 0) {
@@ -574,10 +613,13 @@ GraphLayout NativeGraphHandler::getLayout(
             vclsEnd = "u" + std::to_string(uhomIq);
         }
 
-        // ── Фигура трансформатора (tip == 1) ─────────────────────────────────
+        // ── Фигура трансформатора (tip==1) ────────────────────────────────────
+        // Трансформатор размещается на «среднем» сегменте ветви.
+        //   nizg=0,1 → сегмент pts[0:2]→pts[2:4]
+        //   nizg>=2  → сегмент pts[2:4]→pts[4:6]
         int tip = static_cast<int>(getLong(gv, i, gvTip));
-        std::optional<BranchFigure> figure;
-        std::vector<std::vector<float>> segments = {pts};
+        std::optional<BranchFigure>      figure;
+        std::vector<std::vector<float>>  segments = {pts};
 
         if (tip == 1) {
             int   splitIdx;
@@ -593,20 +635,21 @@ GraphLayout NativeGraphHandler::getLayout(
                 ex2 = pts[2]; ey2 = pts[3];
             }
 
-            float midX = (sx2 + ex2) * 0.5f;
-            float midY = (sy2 + ey2) * 0.5f;
-            float bdx  = ex2 - sx2;
-            float bdy  = ey2 - sy2;
-            float angleDeg = std::atan2(bdy, bdx) * 180.f / M_PI;
+            float midX     = (sx2 + ex2) * 0.5f;
+            float midY     = (sy2 + ey2) * 0.5f;
+            float bdx      = ex2 - sx2;
+            float bdy      = ey2 - sy2;
+            float angleDeg = std::atan2(bdy, bdx) * 180.f / static_cast<float>(M_PI);
 
+            // Единичный вектор вдоль ветви
             float segLen = std::sqrt(bdx*bdx + bdy*bdy);
             float cosA = 1.f, sinA = 0.f;
             if (segLen > 0.f) { cosA = bdx/segLen; sinA = bdy/segLen; }
 
-            // Края кружков (r=3.5, центры -2.5 и +2.6 от mid)
-            float pIpX = midX - 6.f * cosA;
+            // Линии заканчиваются у краёв кружков (r=3.5, центры -2.5 и +2.6 от mid)
+            float pIpX = midX - 6.f * cosA;  // ближний край кружка ip-стороны
             float pIpY = midY - 6.f * sinA;
-            float pIqX = midX + 6.1f * cosA;
+            float pIqX = midX + 6.1f * cosA; // ближний край кружка iq-стороны
             float pIqY = midY + 6.1f * sinA;
 
             char tfBuf[128];
@@ -616,7 +659,7 @@ GraphLayout NativeGraphHandler::getLayout(
 
             figure = BranchFigure{"2tr", tfBuf, vclsEnd};
 
-            // Разбить на два сегмента: до и после трансформатора
+            // Разбить pts на два сегмента: до и после трансформатора
             std::vector<float> seg1(pts.begin(), pts.begin() + splitIdx);
             seg1.push_back(pIpX); seg1.push_back(pIpY);
 
@@ -630,7 +673,7 @@ GraphLayout NativeGraphHandler::getLayout(
         branch.id                = i;
         branch.vbeg              = ip;
         branch.vend              = iq;
-        branch.voltage_class     = vcls;
+        branch.voltage_class     = std::move(vcls);
         branch.voltage_class_end = (tip == 1) ? vclsEnd : "";
         branch.segments          = std::move(segments);
         branch.figure            = std::move(figure);
@@ -639,16 +682,20 @@ GraphLayout NativeGraphHandler::getLayout(
         layout.branches.push_back(std::move(branch));
     }
 
-    // ── 7. Стили напряжений ──────────────────────────────────────────────────
+    // ── 7. Стили напряжений из уникальных uhom + особые состояния ────────────
+    // sorted(unique_uhom, reverse=True) → std::set + реверсный обход
     std::set<int> uhomSet;
     for (int i = 0; i < ndSize; i++)
         uhomSet.insert(static_cast<int>(getLong(nd, i, ndUhom)));
-    for (int u : uhomSet)
-        layout.voltage_styles.push_back({"u" + std::to_string(u),
-                                         voltageColor(u), 1.f});
-    layout.voltage_styles.push_back({"u-off",      "#CCCCCC", 1.f});
-    layout.voltage_styles.push_back({"u-unknown",  "#8C8C8C", 1.f});
-    layout.voltage_styles.push_back({"u-overload", "#FF0000", 2.f});
+    for (auto it = uhomSet.rbegin(); it != uhomSet.rend(); ++it)
+        layout.voltage_styles.push_back({"u" + std::to_string(*it),
+                                         voltageColor(*it), 1.f});
+    layout.voltage_styles.push_back({"u-off",      "#CCCCCC", 1.f}); // Без напряжения
+    layout.voltage_styles.push_back({"u-unknown",  "#8C8C8C", 1.f}); // Неизвестно
+    layout.voltage_styles.push_back({"u-overload", "#FF0000", 2.f}); // Перегрузка
+
+    // Слои в rastr не хранятся в стандартной таблице — возвращаем один дефолтный
+    layout.layers.push_back({0, "Основная схема"});
 
     if (bbox.has_value()) {
         char buf[128];
@@ -664,6 +711,8 @@ GraphLayout NativeGraphHandler::getLayout(
 
 void NativeGraphHandler::moveNode(int nodeId, float x, float y)
 {
+    // Записывает новую позицию в graph_node.k_x / k_y.
+    // Нет оптимизатора — позиция сохраняется точно как указана.
     auto gnBlock = m_pRepo->getBlock("graph_node", "ny,k_x,k_y");
     const QDataBlock& gn = *gnBlock;
     const int gnSize = static_cast<int>(gn.RowsCount());
