@@ -31,8 +31,6 @@ class RTablesDataAdapter : public ITableEvents,
 public:
     RTablesDataAdapter(std::shared_ptr<QAstra> _pqastra);
 
-    void setForms (const std::vector<CUIForm>& forms) override;
-    const CUIForm* getForm (const std::string& name) override;
     TableSchema getSchema(const std::string& tname) override;
     void getDynamicForms(std::vector<CUIForm>& out) override;
     // ── Данные ───────────────────────────────────────────────────────────────
@@ -110,7 +108,6 @@ private slots:
     void slot_rastrHint(const _hint_data& hint_data);
 private:
     std::shared_ptr<QAstra> m_pqastra;
-    const std::vector<CUIForm>* m_pForms = nullptr;
 
     /* Хранилище данных для моделей
       * 1:n то есть на 10 окон узлы -> 1 DataBlock

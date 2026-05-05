@@ -6,25 +6,13 @@ using WrapperExceptionType = std::runtime_error;
 #include "QDataBlocks.h"
 #include <memory>
 #include <QFileInfo>
+#include <QElapsedTimer>
 
 RTablesDataAdapter::RTablesDataAdapter(std::shared_ptr<QAstra> _pqastra) :
     m_pqastra(_pqastra)
 {
     connect(m_pqastra.get(), &QAstra::onRastrHint,
             this, &RTablesDataAdapter::slot_rastrHint);
-}
-
-void RTablesDataAdapter::setForms (const std::vector<CUIForm>& forms)
-{
-    m_pForms = &forms;
-}
-
-const CUIForm* RTablesDataAdapter::getForm(const std::string& name) {
-    if (!m_pForms) return nullptr;
-    for (const CUIForm& form : *m_pForms)
-        if (form.DisplayName() == name)
-            return &form;
-    return nullptr;
 }
 
 void RTablesDataAdapter::getDynamicForms(std::vector<CUIForm>& out)
@@ -91,6 +79,9 @@ RTablesDataAdapter::slot_rastrHint(const _hint_data& hint_data)
 std::shared_ptr<QDataBlock>
 RTablesDataAdapter::getBlock(const std::string& tname, const std::string& cols)
 {
+    QElapsedTimer t; t.start();
+    spdlog::info("[PERF] begin getBlock: {} ms", t.restart());
+
     /*
      * Перед получением таблицы из RTDA удалим таблицы на которые никто не ссылается,
      * например если таблицу открыли, а потом закрыли, тогда она остается в RTDA со счетчиком ссылок (use_count()) = 1
@@ -105,11 +96,15 @@ RTablesDataAdapter::getBlock(const std::string& tname, const std::string& cols)
             ++it;
         }
     }
+    spdlog::info("[PERF] before insert mpTables: {} ms", t.restart());
 
     auto [it, inserted] = mpTables.emplace(tname, nullptr);
     if (inserted) {
+
         it->second = std::make_shared<QDataBlock>();
-        fillBlock(tname, *it->second, cols);  // одна функция
+        spdlog::info("[PERF] make QDataBlock: {} ms", t.restart());
+        fillBlock(tname, *it->second, cols);
+        spdlog::info("[PERF] fillBlock QDataBlock: {} ms", t.restart());
         spdlog::debug("RTDA: add Table {}", tname.c_str());
     }
     return it->second;
@@ -117,7 +112,7 @@ RTablesDataAdapter::getBlock(const std::string& tname, const std::string& cols)
 
 std::vector<long>
 RTablesDataAdapter::rowsBySelection(const std::string& tname,
-                                                         const std::string& selection)
+                                    const std::string& selection)
 {
     std::vector<long> indices;
     if (selection.empty()) return indices;
@@ -188,6 +183,7 @@ void RTablesDataAdapter::fillBlock(const std::string& tname,
                                       const std::string& cols,
                                       std::optional<FieldDataOptions> opts)
 {
+    QElapsedTimer t; t.start();
     // Дефолтные опции — те же, что раньше были во всех перегрузках
     FieldDataOptions options;
     if (opts.has_value()) {
@@ -197,6 +193,7 @@ void RTablesDataAdapter::fillBlock(const std::string& tname,
         options.SetSuperEnumAsInt(TriBool::True);
         options.SetUseChangedIndices(true);
     }
+    spdlog::info("[PERF] create FieldDataOptions: {} ms", t.restart());
 
     // Если список колонок не задан — берём все колонки таблицы
     const std::string& actualCols = cols.empty() ? getTCols(tname) : cols;
@@ -204,6 +201,7 @@ void RTablesDataAdapter::fillBlock(const std::string& tname,
     IRastrTablesPtr tablesx{ m_pqastra->getRastr()->Tables() };
     IRastrTablePtr  table  { tablesx->Item(tname) };
     IRastrResultVerify(table->DataBlock(actualCols, qdb, options));
+    spdlog::info("[PERF] fill QDataBlock: {} ms", t.restart());
 }
 
 std::string RTablesDataAdapter::getTCols(const std::string& tname)

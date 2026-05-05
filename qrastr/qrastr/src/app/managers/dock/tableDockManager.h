@@ -106,4 +106,5 @@ private:
     // ── Вспомогательные методы ───────────────────────────────────────────────
     /// Генерировать пункты меню «Свойства» из таблиц с .form-шаблонами.
     void generateDynamicForms(QMenu* menu);
+    const CUIForm* findForm(const std::string& name) const;
 };

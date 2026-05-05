@@ -1,5 +1,5 @@
 #include "rtabcontroller.h"
-
+#include <QElapsedTimer>
 #include "rtabshell.h"
 #include "filterManager.h"
 #include "rmodel.h"
@@ -249,8 +249,11 @@ void RtabController::setupShortcuts(RGrid* grid)
 
 void RtabController::createModel(std::shared_ptr<ITableRepository> tables)
 {
+    QElapsedTimer t; t.start();
     m_model = std::make_unique<RModel>(this, tables);
     m_model->setForm(&m_UIForm);
+    spdlog::info("[PERF] make RModel: {} ms", t.restart());
+
     if (!m_model->populateDataFromRastr())
     {
         // Таблица не найдена в плагине (файл не загружен или имя неверно).
@@ -265,8 +268,11 @@ void RtabController::createModel(std::shared_ptr<ITableRepository> tables)
                 .arg(QString::fromStdString(m_UIForm.DisplayName())));
         return;   // m_model валиден, но пуст — Grid не инициализируем
     }
+    spdlog::info("[PERF] populateDataFromRastr: {} ms", t.restart());
+
     m_view->beginUpdate();
     m_view->setModel(m_model.get());
+    spdlog::info("[PERF] setModel: {} ms", t.restart());
 
     //Порядок колонок как в форме
     int vi = 0;
@@ -279,17 +285,19 @@ void RtabController::createModel(std::shared_ptr<ITableRepository> tables)
             }
         }
     }
-
+    spdlog::info("[PERF] setVisualIndex loop: {} ms", t.restart());
     // Редакторы и видимость — всё внутри одного update-блока
     applyAllColumnEditors();
+    spdlog::info("[PERF] applyAllColumnEditors: {} ms", t.restart());
 
     m_view->endUpdate();
-
+    spdlog::info("[PERF] first endUpdate (render): {} ms", t.restart());
     // ── Применяем ширины из бэка при первом открытии ──
     // setTableView отключает columnAutoWidth и выставляет ширины из RCol::getWidth()
     if (!m_UIForm.Vertical()){
         setTableView();
     }
+    spdlog::info("[PERF] setTableView: {} ms", t.restart());
 
     m_linkedFormCtrl = std::make_unique<LinkedFormController>(
         tables,
@@ -299,10 +307,12 @@ void RtabController::createModel(std::shared_ptr<ITableRepository> tables)
         m_model.get(),
         m_UIForm,
         this);
+    spdlog::info("[PERF] make LinkedFormController: {} ms", t.restart());
 
     m_condFormatCtrl = std::make_unique<CondFormatController>(
         m_model.get(), m_view, m_grid);
     m_condFormatCtrl->loadFromJson();
+    spdlog::info("[PERF] make CondFormatController: {} ms", t.restart());
 }
 
 void RtabController::setupConnections()

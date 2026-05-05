@@ -2,7 +2,7 @@
 #include <QBrush>
 #include <spdlog/spdlog.h>
 #include "QtitanGrid.h"
-
+#include <QElapsedTimer>
 #include "rdata.h"
 #include "table/QDataBlocks.h"
 #include "UIForms.h"
@@ -11,7 +11,7 @@
 #include "condFormat.h"
 #include "сolumnEditorInfo.h"
 
-RModel::RModel(QObject* parent, std::shared_ptr<ITableRepository>        tables)
+RModel::RModel(QObject* parent, std::shared_ptr<ITableRepository> tables)
     : QAbstractTableModel(parent)
     , m_tables(tables)
 {}
@@ -19,19 +19,26 @@ RModel::RModel(QObject* parent, std::shared_ptr<ITableRepository>        tables)
 bool RModel::populateDataFromRastr()
 {
     try {
+        QElapsedTimer t; t.start();
         // Схема запрашивается у репозитория — единственный вызов
         // который обращается к плагину на этапе построения модели.
         // RData и RCol не знают про плагин вообще.
         auto schema = m_tables->getSchema(m_UIform->TableName());
+        spdlog::info("[PERF]   getSchema: {} ms", t.restart());
 
         // schema передаётся по const& в конструктор RData —
         // объект схемы не копируется, строки копируются по одному разу.
         m_rdata = std::make_unique<RData>(schema, *m_UIform);
+        spdlog::info("[PERF]   make RData: {} ms", t.restart());
         m_rdata->populateBlock(m_tables);
+        spdlog::info("[PERF]   populateBlock: {} ms", t.restart());
+
         m_cache.rebuild(*m_rdata, m_tables);
+        spdlog::info("[PERF]   cache.rebuild: {} ms", t.restart());
         // заполняем кеш после перестройки структуры
         m_bgCache.clear();
         buildEditorInfoCache();
+        spdlog::info("[PERF]   buildEditorInfoCache: {} ms", t.restart());
     } catch (...) {
         spdlog::critical("populateDataFromRastr failed: {}",
                          m_rdata ? m_rdata->t_name_ : "<null>");
@@ -410,7 +417,7 @@ bool RModel::insertColumns(int column, int count, const QModelIndex& parent)
 void RModel::slot_DataChanged(const std::string& tName, int rowFrom, int colFrom,
                               int rowTo, int colTo)
 {
-    if (!isReady() && m_rdata->t_name_ != tName) return;
+    if (!isMyTable(tName)) {return;}
     // инвалидируем затронутые строки
     m_bgCache.invalidateRows(rowFrom, rowTo);
     emit dataChanged(index(rowFrom, colFrom), index(rowTo, colTo));
@@ -701,5 +708,5 @@ bool RModel::isReady() const noexcept
 
 bool RModel::isMyTable(const std::string& tName) const noexcept
 {
-    return m_rdata->t_name_ == tName;
+    return m_rdata && m_rdata->t_name_ == tName;
 }

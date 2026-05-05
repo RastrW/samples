@@ -24,7 +24,6 @@ TableDockManager::TableDockManager(
 
 void TableDockManager::setForms(const std::vector<CUIForm>& forms) {
     m_pForms = &forms;
-    m_tables->setForms(forms);
 
     int index = 0;
     for (const auto& form : forms) {
@@ -124,7 +123,7 @@ RtabController* TableDockManager::openLinkedForm(
     Qtitan::GridTableView* parentView,
     RtabController*        parentCtrl)
 {
-    const CUIForm* pUIForm = m_tables->getForm(lf.linkedform);
+    const CUIForm* pUIForm = findForm(lf.linkedform);
     if (!pUIForm) {
         spdlog::error("TableDockManager::openLinkedForm: form '{}' not found",
                       lf.linkedform);
@@ -211,6 +210,15 @@ void TableDockManager::buildPropertiesMenu(QMenu* propertiesMenu)
             this, [this, propertiesMenu]() {
                 generateDynamicForms(propertiesMenu);
             });
+}
+
+const CUIForm* TableDockManager::findForm(const std::string& name) const
+{
+    if (!m_pForms) return nullptr;
+    const QString qName = QString::fromStdString(name);
+    const auto it = m_formNameToIndex.find(qName);
+    if (it == m_formNameToIndex.end()) return nullptr;
+    return &(*m_pForms)[it->second];
 }
 
 void TableDockManager::generateDynamicForms(QMenu* menu)
