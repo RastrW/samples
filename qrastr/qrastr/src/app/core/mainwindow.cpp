@@ -81,7 +81,7 @@ void MainWindow::initialize(
     m_fileManager = std::make_unique<FileManager>(engCtxt.fileOps, this);
 
     m_calcController = std::make_unique<CalculationController>(
-        engCtxt.calcEngine, engCtxt.ti, engCtxt.barsMDP, this);
+        engCtxt.calcEngine, engCtxt.ti, engCtxt.barsMDP, engCtxt.PGDriver, this);
     m_formManager = std::make_unique<FormManager>(
         engCtxt, m_dockManager, m_logManager, this);
     m_formManager->setForms(forms);

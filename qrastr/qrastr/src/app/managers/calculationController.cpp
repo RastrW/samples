@@ -2,6 +2,7 @@
 #include "calculation/ICalculationEngine.h"
 #include "ti/ITIEngine.h"
 #include "bars/IBarsMDPEngine.h"
+#include "pgdriver/IPGDriverEngine.h"
 #include <QTimer>
 #include <spdlog/spdlog.h>
 #include <ctime>
@@ -18,12 +19,14 @@ CalculationController::CalculationController(
     std::shared_ptr<ICalculationEngine> calcEngine,
     std::shared_ptr<ITIEngine>          ti,
     std::shared_ptr<IBarsMDPEngine>     barsMDP,
+    std::shared_ptr<IPGDriverEngine>    PGDriver,
     QObject* parent
 )
     : QObject(parent)
     , m_calcEngine(calcEngine)
     , m_qti(ti)
     , m_qbarsmdp(barsMDP)
+    , m_qpgdriver(PGDriver)
 {
     assert(m_calcEngine != nullptr);
 }
@@ -255,7 +258,7 @@ void CalculationController::filtrTI() {
     endCalculation(success, QString::fromStdString(str_msg));
 }
 
-void CalculationController::prepareBarsMDP(const QString& sections) {
+void CalculationController::prepareBarsMDP( const QString& sections) {
     if (!checkBarsMDPAvailable()) {
         return;
     }
@@ -294,6 +297,37 @@ void CalculationController::prepareBarsMDP(const QString& sections) {
     
     endCalculation(success, QString::fromStdString(str_msg));
 }
+/*
+void CalculationController::PG_All_R2SQL() {
+    if (!checkPGDriverAvailable()) {
+        return;
+    }
+
+    beginCalculation("All_R2SQL");
+    Timer t_all_r2sql;
+
+    std::string str_msg;
+    bool success = true;
+
+    try {
+       // m_qpgdriver->Init();
+        //m_qpgdriver->All_R2SQL("");
+
+        str_msg = fmt::format("Запись данных в БД выполнена за {} мс.",
+                              t_all_r2sql.seconds());
+    }
+    catch (const std::exception& ex) {
+        success = false;
+        str_msg = fmt::format("Ошибка в ходе подготовки для расчета МДП для сечений: {}", ex.what());
+    }
+    catch (...) {
+        success = false;
+        str_msg = fmt::format("Неизвестная ошибка в ходе записи данных в БД ");
+    }
+
+    endCalculation(success, QString::fromStdString(str_msg));
+}
+*/
 
 void CalculationController::beginCalculation(const QString& name) {
     m_isCalculating = true;
@@ -357,6 +391,17 @@ bool CalculationController::checkTIAvailable() {
 bool CalculationController::checkBarsMDPAvailable() {
     if (m_qbarsmdp == nullptr) {
         QString error = "Plugin BarsMDP not initialized! Function is unavailable.";
+        spdlog::warn("{}", error.toStdString());
+        emit calculationError(error);
+        emit statusMessage(error, 5000);
+        return false;
+    }
+    return true;
+}
+
+bool CalculationController::checkPGDriverAvailable() {
+    if (m_qpgdriver == nullptr) {
+        QString error = "Plugin PGDriver not initialized! Function is unavailable.";
         spdlog::warn("{}", error.toStdString());
         emit calculationError(error);
         emit statusMessage(error, 5000);

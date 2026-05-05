@@ -5,6 +5,7 @@
 class ICalculationEngine;
 class ITIEngine;
 class IBarsMDPEngine;
+class IPGDriverEngine;
 enum class eASTCode;
 enum class eNonsym;
 
@@ -32,6 +33,7 @@ public:
         std::shared_ptr<ICalculationEngine> calcEngine,
         std::shared_ptr<ITIEngine>          ti,
         std::shared_ptr<IBarsMDPEngine>     barsMDP,
+        std::shared_ptr<IPGDriverEngine>    PGDriver,
         QObject* parent = nullptr
     );
     ~CalculationController() = default;
@@ -64,6 +66,10 @@ public:
      * @param sections номера сечений (если пустое - запрос у пользователя)
      */
     void prepareBarsMDP(const QString& sections = "");
+
+    // ========== PostgreSQL ==========
+    /// @brief Инициализация по таблице SQL_settings
+   // void PG_All_R2SQL();
     
     // ========== ДИАЛОГОВЫЕ РАСЧЁТЫ ==========
     
@@ -96,6 +102,7 @@ private:
     std::shared_ptr<ICalculationEngine> m_calcEngine;
     std::shared_ptr<ITIEngine> m_qti;
     std::shared_ptr<IBarsMDPEngine> m_qbarsmdp;
+    std::shared_ptr<IPGDriverEngine> m_qpgdriver;
     
     // ========== Состояние ==========
     bool m_isCalculating = false;
@@ -110,4 +117,5 @@ private:
     
     bool checkTIAvailable();
     bool checkBarsMDPAvailable();
+    bool checkPGDriverAvailable();
 };

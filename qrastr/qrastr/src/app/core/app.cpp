@@ -463,5 +463,8 @@ EngineContext App::buildEngineContext() {
     if (m_sp_qbarsmdp)
         ctx.barsMDP = std::make_shared<BarsMDPAdapter>(m_sp_qbarsmdp);
 
+    if (m_sp_qpgdriver)
+        ctx.PGDriver = std::make_shared<PGDriverAdapter>(m_sp_qpgdriver);
+
     return ctx;
 }
