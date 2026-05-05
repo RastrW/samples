@@ -15,7 +15,7 @@ std::shared_ptr<IPlainPGDriver> plugin_pgdriver::getIPlainPGDriverPtr(){
     try{
         const char* pch_name_plain_factory_fun {"PlainPGDriverFactory"};
         QDir dir(QCoreApplication::applicationDirPath());
-        QString qstr_path_comck = dir.filePath("plugins/COMCK.dll");
+        QString qstr_path_comck = dir.filePath("plugins/COMCK");
         QLibrary qlCOMCK{qstr_path_comck};
         if(qlCOMCK.load()){
             const QFunctionPointer pfn{ qlCOMCK.resolve(pch_name_plain_factory_fun) };
