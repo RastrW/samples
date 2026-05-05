@@ -19,7 +19,6 @@
 #include <QShortcut>
 #include <QMessageBox>
 #include <QCloseEvent>
-#include "table/QDataBlocks.h"
 #include <spdlog/spdlog.h>
 #include "table/ITableEvents.h"
 #include "table/ITableRepository.h"
