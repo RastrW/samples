@@ -273,15 +273,17 @@ void RtabController::createModel(std::shared_ptr<ITableRepository> tables)
     m_view->setModel(m_model.get());
     spdlog::info("[PERF] setModel: {} ms", t.restart());
 
-    //Порядок колонок как в форме
+    // Порядок колонок как в форме
     int vi = 0;
     for (const auto& f : m_UIForm.Fields()) {
+        int modelPos = 0;                              // ← счётчик позиции в RData
         for (const RCol& rcol : m_model->getRdata()) {
             if (f.Name() == rcol.getColName()) {
-                auto* col = getColumnByIndex(rcol.getIndex());
-                col->setVisualIndex(vi++);
+                auto* col = getColumnByIndex(modelPos); // ← model position, не rcol.getIndex()
+                if (col) col->setVisualIndex(vi++);
                 break;
             }
+            ++modelPos;
         }
     }
     spdlog::info("[PERF] setVisualIndex loop: {} ms", t.restart());
@@ -654,9 +656,13 @@ void RtabController::setTableView(int multiplier)
 {
     m_view->beginUpdate();
     m_view->tableOptions().setColumnAutoWidth(false);
-    // Выравнивание
+
     for (auto [idx, width] : m_model->columnsWidth()) {
         auto* col = m_view->getColumn(idx);
+        if (!col) {                          // ← guard на случай рассинхронизации
+            spdlog::warn("setTableView: column {} not found", idx);
+            continue;
+        }
         col->setWidth(width * multiplier);
         col->setTextAlignment(Qt::AlignLeft);
     }
@@ -764,6 +770,8 @@ void RtabController::notifyParentRowChanged(int modelRow) {
     m_linkedFormCtrl->onParentRowChanged(modelRow);
 }
 
-Qtitan::GridTableColumn* RtabController::getColumnByIndex(int index) const {
-    return static_cast<Qtitan::GridTableColumn*>(m_view->getColumn(index));
+Qtitan::GridTableColumn* RtabController::getColumnByIndex(int index) const
+{
+    if (index < 0 || index >= m_model->columnCount()) return nullptr;
+    return qobject_cast<Qtitan::GridTableColumn*>(m_view->getColumn(index));
 }

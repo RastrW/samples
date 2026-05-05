@@ -46,16 +46,17 @@ bool RModel::populateDataFromRastr()
     return true;
 }
 
-int RModel::rowCount   (const QModelIndex&) const
+int RModel::rowCount(const QModelIndex&) const
 {
-    if (!isReady()) return 0;
+    if (!m_rdata || !m_rdata->isReadry()) return 0;
     return static_cast<int>(m_rdata->getRowsCount());
 }
 
 int RModel::columnCount(const QModelIndex&) const
 {
-    if (!isReady()) return 0;
-    return static_cast<int>(m_rdata->getColumnsCount());
+    // Всегда по размеру RData, а не блока.
+    // Блок — частичный кеш; модель всегда экспонирует все 117 колонок QTitan'у.
+    return m_rdata ? static_cast<int>(m_rdata->size()) : 0;
 }
 
 QVariant RModel::headerData(int section, Qt::Orientation orientation, int role) const
@@ -95,8 +96,10 @@ QVariant RModel::data(const QModelIndex& index, int role) const
         return dataForComboBox(rcol);
 
     // Lazy load если колонка ещё не в блоке
-    if (m_rdata->blockColIndex(col) < 0)
+    if (m_rdata->blockColIndex(col) < 0){
+        spdlog::info("Добавление новой колонки [{},{}]", row, col);
         const_cast<RModel*>(this)->lazyLoadColumn(col);
+    }
 
     // Читаем через getCell — он знает про local_index
     const QVariant raw = std::visit(ToQVariant(), m_rdata->getCell(col, row));
@@ -675,17 +678,21 @@ QVariant RModel::getMatchingCondFormat(size_t row, size_t column,
 }
 
 std::vector<std::tuple<int,int>>
-    RModel::columnsWidth() const
+RModel::columnsWidth() const
 {
-    std::vector<std::tuple<int,int>> cw;
-    if (!m_rdata) return cw;
-    int i = 0;
-    for (const RCol& col : *m_rdata) {
-        try { cw.emplace_back(i, std::stoi(col.getWidth())); }
-        catch (...) { cw.emplace_back(i, 10); }
-        ++i;
+    std::vector<std::tuple<int,int>> result;
+    if (!m_rdata) return result;
+
+    int modelPos = 0;
+    for (const RCol& rcol : *m_rdata) {
+        int width = 0;
+        try { width = std::stoi(rcol.getWidth()); }
+        catch (...) { width = 10; }           // fallback
+
+        result.emplace_back(modelPos, width); //model position
+        ++modelPos;
     }
-    return cw;
+    return result;
 }
 
 void RModel::invertDirectCode(int col)
