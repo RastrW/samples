@@ -1,30 +1,17 @@
-#ifndef PLUGIN_PGDRIVER_H
-#define PLUGIN_PGDRIVER_H
+#pragma once
 
-#include <QGenericPlugin>
+#include <QObject>
+#include <QtPlugin>
+#include "plugin_pgdriver_interfaces.h"
 
-class IPlainPGDriver;
-namespace spdlog{ class logger;}
-class InterfacePGDriver{
-public:
-    virtual ~InterfacePGDriver() = default;
-    virtual void setLoggerPtr(std::shared_ptr<spdlog::logger> spLoger)=0;
-    virtual std::shared_ptr<IPlainPGDriver> getIPlainPGDriverPtr()=0;
-};
-
-class plugin_pgdriver : public QGenericPlugin, InterfacePGDriver
-{
+class plugin_pgdriver :
+      public QObject
+    , InterfacePGDriver {
     Q_OBJECT
-    Q_PLUGIN_METADATA(IID QGenericPluginFactoryInterface_iid FILE "pgdriver.json")
-
+    Q_PLUGIN_METADATA(IID InterfacePGDriver_iid FILE "pgdriver.json")
+    Q_INTERFACES(InterfacePGDriver)
 public:
-    explicit plugin_pgdriver(QObject *parent = nullptr);
-
     typedef IPlainPGDriver* (*_ppgdriverf)() ;
     virtual void setLoggerPtr(std::shared_ptr<spdlog::logger> spLoger) override;
     virtual std::shared_ptr<IPlainPGDriver> getIPlainPGDriverPtr() override;
-private:
-    QObject *create(const QString &name, const QString &spec) override;
 };
-
-#endif // PLUGIN_PGDRIVER_H

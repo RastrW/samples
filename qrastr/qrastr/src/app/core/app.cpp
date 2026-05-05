@@ -4,18 +4,20 @@
 #include <QString>
 #include <QMessageBox>
 #include <QPluginLoader>
-#include <QPluginLoader>
 #include "common_qrastr.h"
 #include <spdlog/sinks/stdout_color_sinks.h>
 #include <spdlog/sinks/rotating_file_sink.h>
 #include <spdlog/sinks/qt_sinks.h>
+
 #include "rastrParameters.h"
 #include "plugins/rastr/plugin_interfaces.h"
 #include "plugins/ti/plugin_ti_interfaces.h"
 #include "plugins/barsmdp/plugin_barsmdp_interfaces.h"
+#include "plugins/pgdriver/plugin_pgdriver_interfaces.h"
 #include "qastra.h"
 #include "qti.h"
 #include "qbarsmdp.h"
+#include "qpgdriver.h"
 #include "UIForms.h"
 #include "startupLoader.h"
 #include "engineContext.h"
@@ -25,6 +27,8 @@
 #include "table/rTablesDataAdapter.h"
 #include "ti/tiAdapter.h"
 #include "bars/barsMDPAdapter.h"
+#include "pgdriver/pgdriveradapter.h"
+
 
 class QtSink : public spdlog::sinks::base_sink<std::mutex>
 {
@@ -341,6 +345,42 @@ bool App::loadPlugins(){
                     exclog();
                 }
                 spdlog::info("it is BarsMDP.test.finished");
+            }
+            if (auto* iPGDriver = qobject_cast<InterfacePGDriver*>(plugin)) {
+                if (!m_sp_qastra) {
+                    spdlog::error("PGDriver plugin requires Rastr to be loaded first — "
+                                  "check plugin load order");
+                    continue;   // не фатально: PGDriver необязателен
+                }
+                try {
+                    spdlog::info("it is PGDriver" );
+                    const std::shared_ptr<spdlog::logger> sp_logger =
+                        spdlog::default_logger();
+                    iPGDriver->setLoggerPtr( sp_logger );
+                    const std::shared_ptr<IPlainPGDriver> PGDriver =
+                        iPGDriver->getIPlainPGDriverPtr();
+                    if(PGDriver == nullptr){
+                        spdlog::info("PGDriver==null" );
+                        continue;
+                    }
+
+                    auto rastrPtr = m_sp_qastra->getRastr().get();
+                    if (rastrPtr == nullptr) {
+                        spdlog::critical("Rastr pointer: {}", (void*)rastrPtr);
+                        continue;
+                    }
+
+                    PGDriver->Set_Rastr(m_sp_qastra->getRastr().get());
+                    m_sp_qpgdriver = std::make_shared<QPGDriver>();
+                    m_sp_qpgdriver->setPGDriver(PGDriver);
+
+                }catch(const std::exception& ex){
+                    exclog(ex);
+                }catch(...){
+                    exclog();
+                }
+                spdlog::info("it is PGDriiver.test.finished");
+                continue;
             }
         }else{
             spdlog::warn("Plugin instance is NULL for {}", fileName.toStdString());

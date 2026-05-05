@@ -5,16 +5,6 @@
 #include "plugin_pgdriver.h"
 #include "IPlainPGDriver.h"
 
-plugin_pgdriver::plugin_pgdriver(QObject *parent)
-    : QGenericPlugin(parent)
-{}
-
-QObject *plugin_pgdriver::create(const QString &name, const QString &spec)
-{
-    //static_assert(false, "You need to implement this function");
-    return nullptr;
-}
-
 void plugin_pgdriver::setLoggerPtr(std::shared_ptr<spdlog::logger> spLoger){
     spdlog::set_default_logger(spLoger);
     spdlog::info("RastrPlugin get logger");

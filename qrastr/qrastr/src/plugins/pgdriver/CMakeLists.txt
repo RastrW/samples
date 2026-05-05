@@ -30,6 +30,7 @@ add_library(pgdriver SHARED
   plugin_pgdriver.cpp
   plugin_pgdriver.h
   pgdriver.json
+  plugin_pgdriver_interfaces.h
 )
 target_include_directories(pgdriver PRIVATE ${INCLUDES})
 

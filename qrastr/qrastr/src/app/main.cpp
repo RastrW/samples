@@ -105,7 +105,10 @@ int main(int argc, char *argv[]) {
         "QProgressBar { background: #1a2a3a; border: 1px solid #3a5a7a; }"
         "QProgressBar::chunk { background: #4a9adf; }");
 
+#ifdef NDEBUG
+    // В DEBUG окно мешает отладке кода на этапе старта
     splash->show();
+#endif
     QApplication::processEvents();
 
     auto updateSplash = [&](int pct, const QString& msg) {

@@ -5,6 +5,7 @@
 class QAstra;
 class QTI;
 class QBarsMDP;
+class QPGDriver;
 class CUIFormsCollection;
 class CUIForm;
 class EngineContext;
@@ -56,6 +57,7 @@ private:
     std::shared_ptr<QAstra> m_sp_qastra;
     std::shared_ptr<QTI> m_sp_qti;
     std::shared_ptr<QBarsMDP> m_sp_qbarsmdp;
+    std::shared_ptr<QPGDriver> m_sp_qpgdriver;
     std::shared_ptr<IFileOperations> m_fileOps;
     // Коллекция форм для отображения данных
     std::unique_ptr<CUIFormsCollection>
