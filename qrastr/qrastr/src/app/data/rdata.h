@@ -29,9 +29,7 @@ public:
      */
     void populateBlock(std::shared_ptr<ITableRepository> tables);
 
-    int         AddCol(const RCol& rcol);
     std::string get_cols(bool visible = true) const;
-    std::string getCommaSeparatedFieldNames() const;
 
     std::string t_name_;
     std::string t_title_;

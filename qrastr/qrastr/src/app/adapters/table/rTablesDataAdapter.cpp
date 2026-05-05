@@ -69,8 +69,8 @@ void
 RTablesDataAdapter::slot_rastrHint(const _hint_data& hint_data)
 {
     long row = hint_data.n_indx;
-    std::string cname = hint_data.str_column;
-    std::string tname = hint_data.str_table;
+    const auto&  cname = hint_data.str_column;
+    const auto&  tname = hint_data.str_table;
 
     switch (hint_data.hint)
     {
@@ -98,10 +98,10 @@ RTablesDataAdapter::getBlock(const std::string& tname, const std::string& cols)
     */
     for (auto it = mpTables.begin(); it != mpTables.end(); ) {
         if (it->second.use_count() == 1) {
-            spdlog::info ("RTDA: delete table with use_count() = 1 -> {}", it->first.c_str());
+            spdlog::debug ("RTDA: delete table with use_count() = 1 -> {}", it->first.c_str());
             it = mpTables.erase(it);
         } else {
-            spdlog::info("RTDA: {} use_count() =  {}", it->first.c_str(), it->second.use_count());
+            spdlog::debug("RTDA: {} use_count() =  {}", it->first.c_str(), it->second.use_count());
             ++it;
         }
     }
@@ -110,7 +110,7 @@ RTablesDataAdapter::getBlock(const std::string& tname, const std::string& cols)
     if (inserted) {
         it->second = std::make_shared<QDataBlock>();
         fillBlock(tname, *it->second, cols);  // одна функция
-        spdlog::info("RTDA: add Table {}", tname.c_str());
+        spdlog::debug("RTDA: add Table {}", tname.c_str());
     }
     return it->second;
 }
@@ -175,14 +175,12 @@ long RTablesDataAdapter::columnIndex(const std::string& tname,
                                      const std::string& colName)
 {
     IRastrTablesPtr tablesx{ m_pqastra->getRastr()->Tables() };
-    IRastrPayload tindex{tablesx->FindIndex(tname)};
-    if ( tindex.Value() < 0 ){
-        return -1;
-    }
-    IRastrTablePtr table{ tablesx->Item(tname) };
+    const long tindex = IRastrPayload{ tablesx->FindIndex(tname) }.Value();
+    if (tindex < 0) return -1;
+
+    IRastrTablePtr   table  { tablesx->Item(tindex) };
     IRastrColumnsPtr columns{ table->Columns() };
-    IRastrPayload res{columns->FindIndex(colName)};
-    return res.Value();
+    return IRastrPayload{ columns->FindIndex(colName) }.Value();
 }
 
 void RTablesDataAdapter::fillBlock(const std::string& tname,
@@ -208,27 +206,22 @@ void RTablesDataAdapter::fillBlock(const std::string& tname,
     IRastrResultVerify(table->DataBlock(actualCols, qdb, options));
 }
 
-std::string
-RTablesDataAdapter::getTCols(const std::string& tname)
+std::string RTablesDataAdapter::getTCols(const std::string& tname)
 {
-    std::string str_cols_ = "";
-    IRastrTablesPtr tablesx{ m_pqastra->getRastr()->Tables() };
-    IRastrTablePtr table{ tablesx->Item(tname) };
-    IRastrColumnsPtr columns{ table->Columns() };
-    IRastrPayload ColumnsCount{ columns->Count() };
+    IRastrTablesPtr  tablesx { m_pqastra->getRastr()->Tables() };
+    IRastrTablePtr   table   { tablesx->Item(tname) };
+    IRastrColumnsPtr columns { table->Columns() };
+    const long       count   = IRastrPayload{ columns->Count() }.Value();
 
+    std::string result;
+    result.reserve(static_cast<size_t>(count) * 5); // примерный размер
     // Берем все колонки таблицы
-    for (long index{ 0 }; index < ColumnsCount.Value(); index++){
-        IRastrColumnPtr col     { columns->Item(index) };
-        std::string     col_Name = IRastrPayload(col->Name()).Value();
-        str_cols_.append(col_Name);
-        str_cols_.append(",");
+    for (long i = 0; i < count; ++i) {
+        if (i > 0) result += ',';
+        IRastrColumnPtr col     { columns->Item(i) };
+        result += IRastrPayload{ col->Name() }.Value();
     }
-
-    if (!str_cols_.empty()){
-        str_cols_.pop_back();
-    }
-    return str_cols_;
+    return result;
 }
 
 long

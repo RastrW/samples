@@ -131,7 +131,7 @@ RtabController::RtabController( std::shared_ptr<ITableRepository> tables,
 
     setupConnections();
 
-    dumpShortcuts(m_grid, "before clear");
+    //dumpShortcuts(m_grid, "before clear");
     auto& acts = m_view->actions();
 
     if (m_UIForm.Vertical()) {
@@ -148,7 +148,7 @@ RtabController::RtabController( std::shared_ptr<ITableRepository> tables,
                 it.value()->setShortcut(QKeySequence());
     }
 
-    dumpShortcuts(m_grid, "after clear");
+    //dumpShortcuts(m_grid, "after clear");
 }
 
 RtabController::~RtabController()
@@ -352,15 +352,16 @@ void RtabController::setupConnections()
     connect(ev,  &ITableEvents::sig_ReferenceChanged,
             m_model.get(), &RModel::slot_RefTableChanged);
     connect(m_model.get(), &RModel::sig_nameRefUpdated,
-            this, [this](std::vector<size_t> cols) {
+            this, [this](const std::vector<size_t>& cols) {
                 for (size_t i : cols) {
-                    auto* column_qt = getColumnByIndex(i);
+                    auto* column_qt = getColumnByIndex(static_cast<int>(i));
                     if (!column_qt) continue;
                     auto* repo = static_cast<SearchableComboRepository*>(
                         column_qt->editorRepository());
                     if (!repo) continue;
-                    repo->updateItems(
-                        m_model->getColumnEditorInfo(static_cast<int>(i)).nameRefData);
+                    // getColumnEditorInfo теперь возвращает const& — копии нет
+                    const auto& info = m_model->getColumnEditorInfo(static_cast<int>(i));
+                    repo->updateItems(info.nameRefData);
                 }
             });
     if (!m_UIForm.Vertical()){
@@ -390,7 +391,7 @@ void RtabController::applyColumnEditor(int colIndex)
     column_qt->setProperty("isNumeric", false);
     column_qt->setProperty("isBool",    false);
 
-    const auto info = m_model->getColumnEditorInfo(colIndex);
+    const auto& info = m_model->getColumnEditorInfo(colIndex);
 
     switch (info.editorType)
     {

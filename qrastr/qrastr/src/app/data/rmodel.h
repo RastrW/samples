@@ -28,7 +28,7 @@ class RModel : public QAbstractTableModel
 
 signals:
     void editCompleted(const QString&);
-    void sig_nameRefUpdated(std::vector<size_t> updatedCols);
+    void sig_nameRefUpdated(const std::vector<size_t>& updatedCols);
 
 public slots:
     ///@brief Уведомление от RTDA:
@@ -87,7 +87,7 @@ public:
         columnsWidth() const;
     const RCol* getRCol   (int col) const;
     const RData& getRdata ();
-    ColumnEditorInfo
+    const ColumnEditorInfo&
         getColumnEditorInfo(int colIndex) const;
     void invertDirectCode(int col);
 private:

@@ -175,7 +175,9 @@ QVariant RModel::dataForBackground (int row, int col,
                                    const RCol& rcol, const QVariant& raw) const{
     // COLOR-ячейки: фон = сам цвет, условные форматы не нужны
     if (rcol.getComPropTT() == enComPropTT::COM_PR_COLOR) {
-        long packed = std::visit(ToLong(), m_rdata->pnparray_->Get(row, col));
+        bool ok;
+        const long packed = raw.toLongLong(&ok);
+        if (!ok) return {};
         // COLORREF хранит каналы в порядке **BGR** (`0x00BBGGRR`), а `QColor::fromRgb` ожидает **RGB**.
         return QColor(packed & 0xFF, (packed >> 8) & 0xFF, (packed >> 16) & 0xFF);
     }
@@ -408,7 +410,7 @@ bool RModel::insertColumns(int column, int count, const QModelIndex& parent)
 void RModel::slot_DataChanged(const std::string& tName, int rowFrom, int colFrom,
                               int rowTo, int colTo)
 {
-    if (isReady() && m_rdata->t_name_ != tName) return;
+    if (!isReady() && m_rdata->t_name_ != tName) return;
     // инвалидируем затронутые строки
     m_bgCache.invalidateRows(rowFrom, rowTo);
     emit dataChanged(index(rowFrom, colFrom), index(rowTo, colTo));
@@ -492,11 +494,13 @@ void RModel::buildEditorInfoCache()
         m_editorInfoCache[i] = buildColumnEditorInfo(i);
 }
 
-ColumnEditorInfo RModel::getColumnEditorInfo(int colIndex) const
+const ColumnEditorInfo&
+RModel::getColumnEditorInfo(int colIndex) const
 {
+    static const ColumnEditorInfo s_empty;
     if (colIndex >= 0 && colIndex < static_cast<int>(m_editorInfoCache.size()))
         return m_editorInfoCache[colIndex];
-    return {};
+    return s_empty;
 }
 
 ColumnEditorInfo RModel::buildColumnEditorInfo(int colIndex) const
