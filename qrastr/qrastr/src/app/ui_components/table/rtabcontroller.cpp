@@ -745,7 +745,7 @@ void RtabController::slot_contextMenuVertical(ContextMenuEventArgs* args)
 
 int RtabController::getLongValue(const std::string& key, long row){
     int col = m_model->getRdata().mCols_.at(key);
-    return std::visit(ToLong(), m_model->getRdata().pnparray_->Get(row,col));
+    return std::visit(ToLong(), m_model->getRdata().datablock->Get(row,col));
 }
 
 void RtabController::clearLinkedFilter()

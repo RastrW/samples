@@ -49,13 +49,13 @@ bool RModel::populateDataFromRastr()
 int RModel::rowCount   (const QModelIndex&) const
 {
     if (!isReady()) return 0;
-    return static_cast<int>(m_rdata->pnparray_->RowsCount());
+    return static_cast<int>(m_rdata->datablock->RowsCount());
 }
 
 int RModel::columnCount(const QModelIndex&) const
 {
     if (!isReady()) return 0;
-    return static_cast<int>(m_rdata->pnparray_->ColumnsCount());
+    return static_cast<int>(m_rdata->datablock->ColumnsCount());
 }
 
 QVariant RModel::headerData(int section, Qt::Orientation orientation, int role) const
@@ -97,7 +97,7 @@ QVariant RModel::data(const QModelIndex& index, int role) const
         return dataForComboBox(rcol);
 
     // Читаем данные из блока только тогда, когда они реально нужны
-    const QVariant raw = std::visit(ToQVariant(), m_rdata->pnparray_->Get(row, col));
+    const QVariant raw = std::visit(ToQVariant(), m_rdata->datablock->Get(row, col));
 
     switch (role) {
     case Qt::DisplayRole:
@@ -106,7 +106,7 @@ QVariant RModel::data(const QModelIndex& index, int role) const
     case Qt::UserRole:
         if (rcol.getComPropTT() == enComPropTT::COM_PR_REAL) {
             const bool isEmpty = std::holds_alternative<std::monostate>(
-                m_rdata->pnparray_->Get(row, col));
+                m_rdata->datablock->Get(row, col));
             return isEmpty ? 0.0 : raw;
         }
         return raw;
@@ -154,7 +154,7 @@ QVariant RModel::dataForDisplayEdit(int row, int col, const RCol& rcol,
         long packed = raw.toLongLong(&ok);
         if (!ok) {
             spdlog::warn("Ошибка при преобразовании QVariant для цвета через toLongLong [{},{}]", row, col);
-            packed = std::visit(ToLong(), m_rdata->pnparray_->Get(row, col));
+            packed = std::visit(ToLong(), m_rdata->datablock->Get(row, col));
         }
         return QColor(packed & 0xFF, (packed >> 8) & 0xFF, (packed >> 16) & 0xFF);
     }
@@ -167,7 +167,7 @@ QVariant RModel::dataForDisplayEdit(int row, int col, const RCol& rcol,
         // Проверяем именно monostate, а не isValid() —
         // raw.isValid() == true даже для double(0.0)
         const bool isEmpty = std::holds_alternative<std::monostate>(
-            m_rdata->pnparray_->Get(row, col));
+            m_rdata->datablock->Get(row, col));
         if (isEmpty) return QVariant(); // невалидный QVariant — ячейка пуста
 
         // DisplayRole и EditRole — оба double
@@ -195,7 +195,7 @@ QVariant RModel::dataForBackground (int row, int col,
         return *cached;// QVariant() → нет формата, тоже ок
 
     const QString val = QString::fromStdString(
-        std::visit(ToString(), m_rdata->pnparray_->Get(row, col)));
+        std::visit(ToString(), m_rdata->datablock->Get(row, col)));
     QVariant fmt = getMatchingCondFormat(row, col, val, Qt::BackgroundRole);
     m_bgCache.put(row, col, fmt);
     return fmt;
@@ -205,14 +205,14 @@ QVariant RModel::dataForDecoration (int row, int col,
                                    const RCol& rcol, const QVariant& raw) const{
     // COLOR: упакованный RGB long → QColor
     if (rcol.getComPropTT() == enComPropTT::COM_PR_COLOR) {
-        long packed = std::visit(ToLong(), m_rdata->pnparray_->Get(row, col));
+        long packed = std::visit(ToLong(), m_rdata->datablock->Get(row, col));
         QPixmap px(16, 16);
         px.fill(QColor::fromRgb(static_cast<QRgb>(packed)));
         return px;
     }
     const size_t pluginIdx = static_cast<size_t>(rcol.getIndex());
     if (const auto* pics = m_cache.pictureEnum(pluginIdx)) {
-        int v = std::visit(ToLong(), m_rdata->pnparray_->Get(row, col));
+        int v = std::visit(ToLong(), m_rdata->datablock->Get(row, col));
         if (v >= 0 && v < pics->size()) return (*pics)[v].image;
     }
     return {};
@@ -282,7 +282,7 @@ bool RModel::setData(const QModelIndex& index, const QVariant& value, int role)
                   value.toString().toStdString(),
                   value.typeName());// покажет "QString", "int", "double"...
     //Проверяем, если значение не изменилось, то не записываем лишний раз в базу данных
-    QVariant raw = std::visit(ToQVariant(), m_rdata->pnparray_->Get(row, col));
+    QVariant raw = std::visit(ToQVariant(), m_rdata->datablock->Get(row, col));
     if (raw == value) {
         spdlog::debug("setData: значение не изменилось");
         return true;
@@ -373,9 +373,9 @@ bool RModel::duplicateRow(int row, const QModelIndex&)
 {
     m_tables->duplicateRow(m_rdata->t_name_, row);
     // После DuplicateRow плагин сгенерирует InsertRow-хинт →
-    // handleInsertRow вставит пустую строку в pnparray_.
+    // handleInsertRow вставит пустую строку в datablock.
     // DuplicateRow в QDenseDataBlock копирует данные из исходной строки в новую
-    m_rdata->pnparray_->DuplicateRow(row);
+    m_rdata->datablock->DuplicateRow(row);
     return true;
 }
 
@@ -635,7 +635,7 @@ QVariant RModel::getMatchingCondFormat(size_t row, size_t column,
         for (const std::string& colName : sb.Check()) {
             auto it = m_rdata->mCols_.find(colName);
             if (it != m_rdata->mCols_.end()) {
-                double v = std::visit(ToDouble(), m_rdata->pnparray_->Get(row, it->second));
+                double v = std::visit(ToDouble(), m_rdata->datablock->Get(row, it->second));
                 sb.replace(colName, std::to_string(v));
             } else {
                 // Имя не найдено — условие не может быть вычислено
@@ -702,7 +702,7 @@ const RData& RModel::getRdata()
 
 bool RModel::isReady() const noexcept
 {
-    return m_rdata != nullptr && m_rdata->pnparray_ != nullptr;
+    return m_rdata != nullptr && m_rdata->datablock != nullptr;
 }
 
 bool RModel::isMyTable(const std::string& tName) const noexcept

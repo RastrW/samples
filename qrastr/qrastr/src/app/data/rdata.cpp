@@ -33,7 +33,7 @@ RData::RData(const ITableRepository::TableSchema& schema,
     }
 
     // Скрываем колонки, не входящие в форму.
-    // Скрытые колонки присутствуют в pnparray_ — просто не показываются в UI.
+    // Скрытые колонки присутствуют в datablock — просто не показываются в UI.
     std::unordered_set<std::string> formCols;
     for (const auto& f : form.Fields())
         formCols.insert(f.Name());
@@ -53,7 +53,7 @@ void RData::populateBlock(std::shared_ptr<ITableRepository> tables)
     // repo — невладеющий указатель, время жизни гарантировано RtabController.
     // getBlock возвращает shared_ptr — счётчик ссылок увеличивается,
     // данные не копируются.
-    pnparray_ = tables->getBlock(t_name_, m_str_cols);
+    datablock = tables->getBlock(t_name_, m_str_cols);
 }
 
 std::string RData::get_cols(bool visible) const
