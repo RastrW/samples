@@ -129,6 +129,23 @@ RTablesDataAdapter::rowsBySelection(const std::string& tname,
     return indices;
 }
 
+void RTablesDataAdapter::ensureColumn(const std::string& tname,
+                                      const std::string& colName)
+{
+    auto it = mpTables.find(tname);
+    if (it == mpTables.end()) return;       // таблица не кеширована
+
+    QDataBlock& block = *it->second;
+    if (block.localColumnIndex(colName) >= 0) return; // уже есть
+
+    spdlog::debug("RTDA: lazy-load column '{}' for table '{}'", colName, tname);
+    QDataBlock colBlock;
+    fillBlock(tname, colBlock, colName);    // 1 колонка × N строк
+    block.mergeColumn(colName, colBlock);
+
+    // Карта индексов в RData обновится в lazyLoadColumn (RModel)
+}
+
 void RTablesDataAdapter::setValue(const std::string&      tname,
                                   const std::string&      cname,
                                   long                    row,
@@ -245,26 +262,22 @@ RTablesDataAdapter::findCachedBlock(const std::string& tname)
 
 void RTablesDataAdapter::handleChangeAll()
 {
-    spdlog::debug("handleChangeAll");
     // Все таблицы изменились — типично при загрузке нового файла расчёта.
-    /// @note сигналы (sig_BeginResetModel/sig_EndResetModel) могут изменять mpTables,
-    /// поэтому только копирование сначала собираем список ключей:
+    spdlog::debug("handleChangeAll");
     std::vector<std::string> keys;
-    for (auto& [k, v] : mpTables){
+    for (auto& [k, v] : mpTables)
         //только живые таблицы
-        if (v.use_count() > 1){
-            keys.push_back(k);
-        }
-    }
+        if (v.use_count() > 1) {keys.push_back(k);}
     // Сбрасываем и перечитываем каждый кешированный блок.
     for (const auto& tname : keys) {
         auto it = mpTables.find(tname);
-        if (it == mpTables.end()){continue;}
+        if (it == mpTables.end()) continue;
+
+        const std::string prevCols = it->second->Columns(); // что было загружено
         emit sig_BeginResetModel(tname);
-
         it->second->Clear();
-        fillBlock(tname, *it->second);
-
+        if (!prevCols.empty())
+            fillBlock(tname, *it->second, prevCols);        // только то же самое
         emit sig_EndResetModel(tname);
     }
 }
@@ -272,16 +285,15 @@ void RTablesDataAdapter::handleChangeAll()
 void RTablesDataAdapter::handleChangeTable(const std::string& tname)
 {
     spdlog::debug("handleChangeTable tname={}", tname);
+    auto it = mpTables.find(tname);
+    if (it == mpTables.end()) return;
 
-    QDataBlock* pqdb = findCachedBlock(tname);
-    if (!pqdb) return;
-
+    const std::string prevCols = it->second->Columns();
     emit sig_BeginResetModel(tname);
-
     // Перезагружаем данные И структуру
-    pqdb->Clear();
-    fillBlock(tname, *pqdb); // читает всё заново из плагина
-
+    it->second->Clear();
+    if (!prevCols.empty())
+        fillBlock(tname, *it->second, prevCols); // читает всё заново из плагина
     emit sig_EndResetModel(tname);
 }
 
@@ -292,20 +304,22 @@ void RTablesDataAdapter::handleChangeColumn(const std::string& tname,
     QDataBlock* pqdb = findCachedBlock(tname);
     if (!pqdb) return;
 
-    const long colIdx = getColIndex(tname, cname);
-    if (colIdx < 0) return;
+    const long localIdx  = pqdb->localColumnIndex(cname); // индекс В блоке
+    if (localIdx < 0) return;  // колонка не загружена — обновление не нужно
 
-    // Один вызов вместо N — плагин сам копирует колонку блоком
+    const long pluginIdx = getColIndex(tname, cname); // model col index для сигнала
+    if (pluginIdx < 0) return;
+
     QDataBlock colBlock;
     // все колонки, но только одна строка
     fillBlock(tname, colBlock, cname);
 
     const long nRows = static_cast<long>(pqdb->RowsCount());
     for (long row = 0; row < nRows; ++row)
-        pqdb->Set(row, colIdx, colBlock.Get(row, 0));   // копируем из временного блока
+        pqdb->Set(row, localIdx, colBlock.Get(row, 0)); // копируем из временного блока
     //Обновляем все строки только одного столбца
     if (nRows > 0)
-        emit sig_dataChanged(tname, 0, colIdx, nRows - 1, colIdx);
+        emit sig_dataChanged(tname, 0, pluginIdx, nRows - 1, pluginIdx);
 }
 
 void RTablesDataAdapter::handleChangeRow(const std::string& tname, long row)
@@ -315,18 +329,18 @@ void RTablesDataAdapter::handleChangeRow(const std::string& tname, long row)
     QDataBlock* pqdb = findCachedBlock(tname);
     if (!pqdb) return;
 
-    // Формируем строку из всех колонок таблицы
-    const std::string cols = getTCols(tname);
-
+    // Читаем только то, что загружено
+    const std::string loadedCols = pqdb->Columns();
     QDataBlock rowBlock;
     // все колонки, но только одна строка
-    fillBlock(tname, rowBlock, cols);
+    fillBlock(tname, rowBlock, loadedCols);
     // Копируем только нужную строку
     const long ncols = static_cast<long>(pqdb->ColumnsCount());
-    for (long i = 0; i < ncols; ++i)
-        pqdb->Set(row, i, rowBlock.Get(row, i));
-    // изменились все колонки только одной строка row
-    emit sig_dataChanged(tname, row, 0, row, ncols - 1);
+    for (long localCol = 0; localCol < ncols; ++localCol)
+        pqdb->Set(row, localCol, rowBlock.Get(row, localCol));
+
+    // INT_MAX: slot_DataChanged ограничит до реального columnCount()
+    emit sig_dataChanged(tname, row, 0, row, std::numeric_limits<int>::max());
 }
 
 void RTablesDataAdapter::handleChangeData(const std::string& tname,
@@ -335,18 +349,19 @@ void RTablesDataAdapter::handleChangeData(const std::string& tname,
 {
     spdlog::debug("handleChangeData tname={} col={} row={}", tname, cname, row);
     QDataBlock* pqdb = findCachedBlock(tname);
-    if (!pqdb){ return;}
+    if (!pqdb) return;
 
-    const long colIdx = getColIndex(tname, cname);
-    if (colIdx < 0 || colIdx >= static_cast<long>(pqdb->ColumnsCount())){return;}
-    if (row  < 0 || row  >= static_cast<long>(pqdb->RowsCount())){return;}
+    const long localIdx  = pqdb->localColumnIndex(cname);
+    const long pluginIdx = getColIndex(tname, cname);
+    if (pluginIdx < 0) return;
 
-    ///@note устанавливаем значение только для конкретной ячейки, т.к.
-    /// Ранее была установка DataBlock("", VDB) с пустым списком колонок, он падает сразу после AddRow.
-    pqdb->Set(row, colIdx, m_pqastra->GetVal(tname, cname, row));
-
-    ///@note добавлен вызов сигнала, уведомляющий об изменении по аналогии
-    emit sig_dataChanged(tname, row, colIdx, row, colIdx);
+    if (localIdx >= 0) {  // загружена — обновляем
+        if (row >= 0 && row < static_cast<long>(pqdb->RowsCount()))
+            pqdb->Set(row, localIdx, m_pqastra->GetVal(tname, cname, row));
+    }
+    // Если не загружена — пропускаем запись в блок,
+    // но сигнал всё равно шлём: View перечитает через lazy load
+    emit sig_dataChanged(tname, row, pluginIdx, row, pluginIdx);
     emit sig_ReferenceChanged(tname);
 }
 

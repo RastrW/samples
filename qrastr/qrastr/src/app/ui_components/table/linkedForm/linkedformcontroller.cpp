@@ -219,7 +219,7 @@ int LinkedFormController::getLongValue(const std::string& col, long row)
     // Используется только при построении меню (начальное заполнение vbindvals).
     const int colIdx = m_model->getRdata().mCols_.at(col);
     return std::visit(ToLong(),
-                      m_model->getRdata().datablock->Get(row, colIdx));
+                      m_model->getRdata().getCell(colIdx, row));
 }
 
 void LinkedFormController::setPyHlp(std::shared_ptr<PyHlp> pyHlp)

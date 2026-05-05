@@ -650,7 +650,7 @@ void RtabController::slot_condFormatsEdit(std::size_t column){
     m_condFormatCtrl->editCondFormats(column);
 }
 
-void RtabController::setTableView(int multiplier  )
+void RtabController::setTableView(int multiplier)
 {
     m_view->beginUpdate();
     m_view->tableOptions().setColumnAutoWidth(false);
@@ -745,7 +745,7 @@ void RtabController::slot_contextMenuVertical(ContextMenuEventArgs* args)
 
 int RtabController::getLongValue(const std::string& key, long row){
     int col = m_model->getRdata().mCols_.at(key);
-    return std::visit(ToLong(), m_model->getRdata().datablock->Get(row,col));
+    return std::visit(ToLong(), m_model->getRdata().getCell(col, row));
 }
 
 void RtabController::clearLinkedFilter()

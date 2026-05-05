@@ -54,7 +54,10 @@ public:
     virtual std::vector<long>
         rowsBySelection(const std::string& tname,
                         const std::string& selection) = 0;
-
+    /// Гарантирует, что colName присутствует в кешированном блоке таблицы.
+    /// Если нет — дозагружает из плагина.
+    virtual void ensureColumn(const std::string& tname,
+                              const std::string& colName) = 0;
     // ── Запись ───────────────────────────────────────────────────────────────
     virtual void setValue(const std::string&      tname,
                           const std::string&      colName,

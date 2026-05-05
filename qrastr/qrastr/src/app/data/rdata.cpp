@@ -50,10 +50,33 @@ RData::RData(const ITableRepository::TableSchema& schema,
 
 void RData::populateBlock(std::shared_ptr<ITableRepository> tables)
 {
-    // repo — невладеющий указатель, время жизни гарантировано RtabController.
-    // getBlock возвращает shared_ptr — счётчик ссылок увеличивается,
-    // данные не копируются.
-    datablock = tables->getBlock(t_name_, m_str_cols);
+    const std::string visCols = get_cols(/*visible=*/true); // только не-hidden
+    datablock = tables->getBlock(t_name_, visCols);
+    rebuildBlockIndexMap();
+}
+
+void RData::rebuildBlockIndexMap()
+{
+    m_blockColIdx.assign(size(), -1);
+    if (!datablock) return;
+    for (int i = 0; i < static_cast<int>(size()); ++i)
+        m_blockColIdx[i] =
+            static_cast<int>(datablock->localColumnIndex((*this)[i].getColName()));
+}
+
+int RData::blockColIndex(int rdataPos) const noexcept
+{
+    if (rdataPos < 0 || rdataPos >= static_cast<int>(m_blockColIdx.size()))
+        return -1;
+    return m_blockColIdx[rdataPos];
+}
+
+FieldVariantData
+RData::getCell(int rdataPos, int row) const
+{
+    const int blockCol = blockColIndex(rdataPos);
+    if (blockCol < 0) return {};          // не загружена
+    return datablock->Get(row, blockCol);
 }
 
 std::string RData::get_cols(bool visible) const

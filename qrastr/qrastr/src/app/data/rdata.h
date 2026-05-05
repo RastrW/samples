@@ -26,8 +26,29 @@ public:
      * Получает общий QDataBlock из репозитория.
      * После вызова datablock указывает на тот же объект,
      * что и у других открытых окон этой таблицы.
+     * Загружаем только колонки формы
      */
     void populateBlock(std::shared_ptr<ITableRepository> tables);
+    /// Перестроить карту rdata_pos → local_index.
+    /// Вызывать после любого изменения состава колонок блока.
+    void rebuildBlockIndexMap();
+    /// Единая точка чтения ячейки: скрывает перевод индексов.
+    /// Возвращает std::monostate если колонка не загружена.
+    FieldVariantData getCell(int rdataPos, int row) const;
+    /// Local index в блоке для позиции rdataPos, или -1 если не загружена.
+    int blockColIndex(int rdataPos) const noexcept;
+    int getRowsCount() const{
+        return static_cast<int>(datablock->RowsCount());
+    }
+    int getColumnsCount() const{
+        return static_cast<int>(datablock->ColumnsCount());
+    }
+    void duplicateRow(int row){
+        datablock->DuplicateRow(row);
+    }
+    bool isReadry(){
+        return datablock != nullptr;
+    }
 
     std::string get_cols(bool visible = true) const;
 
@@ -35,8 +56,9 @@ public:
     std::string t_title_;
 
     std::vector<std::string>          vCols_; ///< вектор имён колонок в порядке следования.
-    std::shared_ptr<QDataBlock>       datablock;
     std::unordered_map<std::string, int> mCols_; ///< unordered_map<имя_колонки, индекс> для быстрого поиска колонки по имени.
 private:
+    std::shared_ptr<QDataBlock>       datablock;
+    std::vector<int> m_blockColIdx; ///< rdata_pos → local block index
     std::string m_str_cols; ///< vCols_ в виде строки имен столбцов ex: "ny,pn,qn,vras"
 };

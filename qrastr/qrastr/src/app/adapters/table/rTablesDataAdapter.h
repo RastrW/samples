@@ -55,6 +55,8 @@ public:
     std::vector<long>
     rowsBySelection(const std::string& tname,
                     const std::string& selection) override;
+    void ensureColumn(const std::string& tname,
+                      const std::string& colName) override;
     // ── Запись ───────────────────────────────────────────────────────────────
     /** @brief Централизованная запись в плагин.
     * RModel::setData больше НЕ вызывает emit dataChanged вручную —

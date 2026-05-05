@@ -90,6 +90,7 @@ public:
     const ColumnEditorInfo&
         getColumnEditorInfo(int colIndex) const;
     void invertDirectCode(int col);
+    void lazyLoadColumn(int rdataPos);
 private:
     // ── Данные ───────────────────────────────────────────────────────────────
     std::shared_ptr<ITableRepository> m_tables;
