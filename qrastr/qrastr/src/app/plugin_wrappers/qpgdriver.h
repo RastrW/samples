@@ -1,6 +1,6 @@
 #pragma once
 
-//#include <memory>
+#include <memory>
 #include <QObject>
 #include <comck/IPlainPGDriver.h>
 
