@@ -78,15 +78,18 @@ QVariant RModel::data(const QModelIndex& index, int role) const
 
     const RCol& rcol = *(m_rdata->begin() + col);
 
-    // Ранние ветки — до чтения raw, чтобы не читать блок вхолостую
-    if (role == Qt::ToolTipRole)
-        return QString("[%1, %2]").arg(row + 1).arg(col + 1);
-
     if (role == Qtitan::ComboBoxRole) //Выпадающий popup ComboBox
         return dataForComboBox(rcol);
 
     // Читаем данные из блока только тогда, когда они реально нужны
     const QVariant raw = std::visit(ToQVariant(), m_rdata->pnparray_->Get(row, col));
+
+    // Ранние ветки — до чтения raw, чтобы не читать блок вхолостую
+    // upd: Бывает значение полностью не помещается в ячейку , а его нужно увидеть.
+    // Например при вертикальных таблицах - колонки не расширяются, а настройки бывают длинными.
+    // Также бывает полезным посмотреть чистое значение без ограничения точности после запятой.
+    if (role == Qt::ToolTipRole)
+        return QString("[%1, %2] [%3]").arg(row + 1).arg(col + 1).arg(raw.toString());
 
     switch (role) {
     case Qt::DisplayRole:

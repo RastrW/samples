@@ -297,7 +297,7 @@ void CalculationController::prepareBarsMDP( const QString& sections) {
     
     endCalculation(success, QString::fromStdString(str_msg));
 }
-/*
+
 void CalculationController::PG_All_R2SQL() {
     if (!checkPGDriverAvailable()) {
         return;
@@ -310,8 +310,8 @@ void CalculationController::PG_All_R2SQL() {
     bool success = true;
 
     try {
-       // m_qpgdriver->Init();
-        //m_qpgdriver->All_R2SQL("");
+        int ret = m_qpgdriver->Init();
+        ret = m_qpgdriver->All_R2SQL("");
 
         str_msg = fmt::format("Запись данных в БД выполнена за {} мс.",
                               t_all_r2sql.seconds());
@@ -327,7 +327,7 @@ void CalculationController::PG_All_R2SQL() {
 
     endCalculation(success, QString::fromStdString(str_msg));
 }
-*/
+
 
 void CalculationController::beginCalculation(const QString& name) {
     m_isCalculating = true;

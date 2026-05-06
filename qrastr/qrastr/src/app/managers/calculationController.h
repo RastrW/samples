@@ -69,7 +69,7 @@ public:
 
     // ========== PostgreSQL ==========
     /// @brief Инициализация по таблице SQL_settings
-   // void PG_All_R2SQL();
+    void PG_All_R2SQL();
     
     // ========== ДИАЛОГОВЫЕ РАСЧЁТЫ ==========
     

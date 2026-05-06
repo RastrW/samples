@@ -248,6 +248,12 @@ void MainWindow::setupConnections() {
                 m_calcController->prepareBarsMDP("");
             });
 
+    // Работа с БД PG
+    connect(m_uiBuilder->actionByName("saveAllPG"), &QAction::triggered,
+            m_calcController.get(), [this]() {
+                m_calcController->PG_All_R2SQL();
+            });
+
     // События расчётов
     connect(m_calcController.get(), &CalculationController::calculationStarted,
             this, [this](const QString& type) {
