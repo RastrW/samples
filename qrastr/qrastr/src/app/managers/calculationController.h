@@ -68,8 +68,10 @@ public:
     void prepareBarsMDP(const QString& sections = "");
 
     // ========== PostgreSQL ==========
-    /// @brief Инициализация по таблице SQL_settings
+    /// @brief Запись рабочей области(всех таблиц) в БД PG
     void PG_All_R2SQL();
+    /// @brief Чтение рабочей области(всех таблиц) из БД PG
+    void PG_All_SQL2R();
     
     // ========== ДИАЛОГОВЫЕ РАСЧЁТЫ ==========
     

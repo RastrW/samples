@@ -253,6 +253,10 @@ void MainWindow::setupConnections() {
             m_calcController.get(), [this]() {
                 m_calcController->PG_All_R2SQL();
             });
+    connect(m_uiBuilder->actionByName("loadAllPG"), &QAction::triggered,
+            m_calcController.get(), [this]() {
+                m_calcController->PG_All_SQL2R();
+            });
 
     // События расчётов
     connect(m_calcController.get(), &CalculationController::calculationStarted,

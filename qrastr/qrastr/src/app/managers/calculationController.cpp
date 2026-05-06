@@ -319,11 +319,42 @@ void CalculationController::PG_All_R2SQL() {
     }
     catch (const std::exception& ex) {
         success = false;
-        str_msg = fmt::format("Ошибка в ходе подготовки для расчета МДП для сечений: {}", ex.what());
+        str_msg = fmt::format("Ошибка в ходе записи данных в БД PG: {}", ex.what());
     }
     catch (...) {
         success = false;
-        str_msg = fmt::format("Неизвестная ошибка в ходе записи данных в БД ");
+        str_msg = fmt::format("Неизвестная ошибка в ходе записи данных в БД PG ");
+    }
+
+    endCalculation(success, QString::fromStdString(str_msg));
+}
+
+void CalculationController::PG_All_SQL2R() {
+    if (!checkPGDriverAvailable()) {
+        return;
+    }
+
+    beginCalculation("All_SQL2R");
+    Timer t_all_r2sql;
+
+    std::string str_msg;
+    bool success = true;
+
+    try {
+        int ret = m_qpgdriver->Init();
+        ret = m_qpgdriver->Connect();
+        ret = m_qpgdriver->All_SQL2R("");
+
+        str_msg = fmt::format("Чтение данных из БД выполнена за {} мс.",
+                              t_all_r2sql.seconds());
+    }
+    catch (const std::exception& ex) {
+        success = false;
+        str_msg = fmt::format("Ошибка в ходе чтения данных из БД PG: {}", ex.what());
+    }
+    catch (...) {
+        success = false;
+        str_msg = fmt::format("Неизвестная ошибка в ходе чтения данных из БД PG ");
     }
 
     endCalculation(success, QString::fromStdString(str_msg));
