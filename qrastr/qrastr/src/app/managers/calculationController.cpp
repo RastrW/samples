@@ -311,6 +311,7 @@ void CalculationController::PG_All_R2SQL() {
 
     try {
         int ret = m_qpgdriver->Init();
+        ret = m_qpgdriver->Connect();
         ret = m_qpgdriver->All_R2SQL("");
 
         str_msg = fmt::format("Запись данных в БД выполнена за {} мс.",
