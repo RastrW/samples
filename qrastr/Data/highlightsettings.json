@@ -1,6 +1,20 @@
 {
  "condformat": {
   "node": {
+   "delta": [
+    {
+     "bgColor": "#004586",
+     "fgColor": "#000000",
+     "filter": "<0"
+    }
+   ],
+   "pn": [
+    {
+     "bgColor": "#55aa00",
+     "fgColor": "#000000",
+     "filter": ">qn"
+    }
+   ],
    "vras": [
     {
      "bgColor": "#ff55ff",

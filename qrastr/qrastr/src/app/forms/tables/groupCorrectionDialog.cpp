@@ -29,7 +29,10 @@ GroupCorrectionDialog::GroupCorrectionDialog(std::shared_ptr<ITableRepository> t
         par.append(col.getColName()).append("[").append(col.getTitle()).append("]");
         cbParameters->addItem(par.c_str());
     }
-    cbParameters->setCurrentIndex(m_prcol->getIndex());
+    cbParameters->setCurrentIndex(
+        m_prdata.mCols_.count(m_prcol->getColName())
+            ? m_prdata.mCols_.at(m_prcol->getColName())
+            : 0);
 
     QHBoxLayout* row1 = new QHBoxLayout();
     row1->addWidget(new QLabel(tr("Параметр")));
@@ -75,11 +78,11 @@ GroupCorrectionDialog::GroupCorrectionDialog(std::shared_ptr<ITableRepository> t
 
 void GroupCorrectionDialog::on_buttonBox_accepted()
 {
-    m_selection  = m_leExpression->text().toStdString();
-    m_expression = m_leExpression->text().toStdString();
+    m_expression = m_leExpression->text().toStdString(); // формула
+    m_selection  = m_leSelection->text().toStdString();
     m_tables->calcColumn(m_prdata.t_name_,
-                       m_prcol->getColName(),
-                       m_expression,
-                       m_selection);
+                         m_prcol->getColName(),
+                         m_expression,
+                         m_selection);
     close();
 }

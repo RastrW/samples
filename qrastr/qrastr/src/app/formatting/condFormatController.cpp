@@ -28,15 +28,17 @@ void CondFormatController::saveToJson()
 {
     const auto& rdata = m_model->getRdata();
 
-    // Собираем актуальное состояние из модели (не из локальной копии).
+    // Ключ snapshot — rdata position, совпадает с тем что хранит m_condFmt
+    // и с тем что принимает getCondFormats()
     std::unordered_map<int, std::vector<CondFormat>> snapshot;
-    for (const RCol& rcol : rdata) {
-        int idx = rcol.getIndex();
-        const auto& vec = m_model->getCondFormats(idx);
-        if (!vec.empty())
-            snapshot[idx] = vec;
-    }
 
+    int rdataPos = 0;
+    for (const RCol& rcol : rdata) {
+        const auto& vec = m_model->getCondFormats(rdataPos); // rdata pos
+        if (!vec.empty())
+            snapshot[rdataPos] = vec;
+        ++rdataPos;
+    }
     // статический вызов, данные передаются явно.
     CondFormatJson::save(rdata.t_name_, rdata.vCols_, snapshot);
 }
