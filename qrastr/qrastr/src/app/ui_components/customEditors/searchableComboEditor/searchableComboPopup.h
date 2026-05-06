@@ -16,7 +16,7 @@ public:
     explicit SearchableComboPopup(QWidget* parent = nullptr);
 
     /// Заполнить список (key → отображаемое имя)
-    void setItems(const ColumnEditorInfo::NameRefData& nrd);
+    void setItems(const std::shared_ptr<ColumnEditorInfo::NameRefData>& nrd);
     /// Выделить строку с заданным ключом и очистить фильтры
     void setCurrentKey(int key);
 

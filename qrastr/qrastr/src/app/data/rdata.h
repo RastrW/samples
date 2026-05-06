@@ -37,6 +37,12 @@ public:
     FieldVariantData getCell(int rdataPos, int row) const;
     /// Local index в блоке для позиции rdataPos, или -1 если не загружена.
     int blockColIndex(int rdataPos) const noexcept;
+    /// Ленивая загрузка одной колонки в блок. Вызывается из const-контекста.
+    /// Возвращает новый local index или -1 при ошибке.
+    int ensureBlockCol(int rdataPos,
+                       std::shared_ptr<ITableRepository> tables) const;
+    /// Обновить индекс только для одной позиции (после lazy load).
+    void updateBlockIndex(int rdataPos) const noexcept;
     int getRowsCount() const{
         return static_cast<int>(datablock->RowsCount());
     }
@@ -46,7 +52,7 @@ public:
     void duplicateRow(int row){
         datablock->DuplicateRow(row);
     }
-    bool isReadry(){
+    bool isReady() const{
         return datablock != nullptr;
     }
 
@@ -59,6 +65,5 @@ public:
     std::unordered_map<std::string, int> mCols_; ///< unordered_map<имя_колонки, индекс> для быстрого поиска колонки по имени.
 private:
     std::shared_ptr<QDataBlock>       datablock;
-    std::vector<int> m_blockColIdx; ///< rdata_pos → local block index
-    std::string m_str_cols; ///< vCols_ в виде строки имен столбцов ex: "ny,pn,qn,vras"
+    mutable std::vector<int> m_blockColIdx; ///< rdata_pos → local block index
 };

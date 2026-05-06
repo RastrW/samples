@@ -88,64 +88,14 @@ void BackInfoCache::loadNameref(const RCol& rcol,
                                 std::shared_ptr<ITableRepository> tables)
 {
     if (rcol.getNameRef().empty() || !tables) return;
-
     const auto parts = parseNamerefStr(rcol.getNameRef());
     if (!parts) return;
 
     const size_t idx = static_cast<size_t>(rcol.getIndex());
-    const std::string& srcTable = parts->srcTable;
-
-    ColumnEditorInfo::NameRefData nrd;
-
-    if (kFullColumnTables.count(srcTable)) {
-        // Режим "все колонки" — graphikIT / graphik2
-        // Запрашиваем схему, чтобы узнать все колонки
-        auto schema = tables->getSchema(srcTable);
-        std::string allCols = parts->keyCol;
-        for (const auto& cs : schema.columns)
-            if (cs.name != parts->keyCol)
-                allCols += "," + cs.name;
-
-        QDataBlock qdb;
-        tables->fillBlock(srcTable, qdb, allCols);
-
-        // Заголовки (кроме ключевой)
-        for (size_t ci = 1; ci < schema.columns.size(); ++ci)
-            nrd.columns.push_back({ QString::fromStdString(schema.columns[ci].title) });
-
-        for (int row = 0; row < qdb.RowsCount(); ++row) {
-            ColumnEditorInfo::NameRefData::Row r;
-            r.key = static_cast<size_t>(std::visit(ToLong(), qdb.Get(row, 0)));
-            for (int c = 1; c < static_cast<int>(schema.columns.size()); ++c)
-                r.values.push_back(std::visit(ToString(), qdb.Get(row, c)));
-            nrd.rows.push_back(std::move(r));
-        }
-    } else {
-        // Обычный режим: ключ + name (если есть) или только ключ
-        const long nameColIdx = tables->columnIndex(srcTable, "name");
-        const bool hasName = (nameColIdx >= 0);
-        const std::string valueCols = hasName
-                                          ? parts->keyCol + ",name"
-                                          : parts->keyCol;
-
-        QDataBlock qdb;
-        tables->fillBlock(srcTable, qdb, valueCols);
-
-        if (hasName)
-            nrd.columns.push_back({"Название"});
-        // если нет name — columns пустой, popup покажет только ключ
-
-        for (int row = 0; row < qdb.RowsCount(); ++row) {
-            ColumnEditorInfo::NameRefData::Row r;
-            r.key = static_cast<size_t>(std::visit(ToLong(), qdb.Get(row, 0)));
-            if (hasName)
-                r.values.push_back(std::visit(ToString(), qdb.Get(row, 1)));
-            nrd.rows.push_back(std::move(r)); // дубли ключей сохраняются!
-        }
-    }
-
-    m_nameref.emplace(idx, std::move(nrd));
-    m_namerefSources[srcTable].push_back(idx);
+    // Храним shared_ptr, чтобы ColumnEditorInfo не копировал данные
+    m_nameref.emplace(idx,
+                      buildNamerefData(parts->srcTable, parts->keyCol, tables));
+    m_namerefSources[parts->srcTable].push_back(idx);
 }
 
 void BackInfoCache::loadEnpic(const RCol& rcol)
@@ -214,48 +164,8 @@ std::vector<size_t> BackInfoCache::rebuildRefsFrom(const std::string& srcTable,
     auto rebuildNameref = [&](size_t pluginIdx, const RCol& rcol) -> bool {
         const auto parts = BackInfoCache::parseNamerefStr(rcol.getNameRef());
         if (!parts) return false;
-
-        ColumnEditorInfo::NameRefData nrd;
-        const std::string& src = parts->srcTable;
-        const long nameIdx = tables->columnIndex(src, "name");
-
-        if (kFullColumnTables.count(src)) {
-            // полный режим — аналогично loadNameref
-            auto schema = tables->getSchema(src);
-            std::string allCols = parts->keyCol;
-            for (const auto& cs : schema.columns)
-                if (cs.name != parts->keyCol)
-                    allCols += "," + cs.name;
-            QDataBlock qdb;
-            tables->fillBlock(src, qdb, allCols);
-            for (size_t ci = 1; ci < schema.columns.size(); ++ci)
-                nrd.columns.push_back({ QString::fromStdString(schema.columns[ci].title) });
-            for (int row = 0; row < qdb.RowsCount(); ++row) {
-                ColumnEditorInfo::NameRefData::Row r;
-                r.key = static_cast<size_t>(std::visit(ToLong(), qdb.Get(row, 0)));
-                for (int c = 1; c < static_cast<int>(schema.columns.size()); ++c)
-                    r.values.push_back(std::visit(ToString(), qdb.Get(row, c)));
-                nrd.rows.push_back(std::move(r));
-            }
-        } else {
-            const bool hasName = (nameIdx >= 0);
-            const std::string valueCols = hasName
-                                              ? parts->keyCol + ",name"
-                                              : parts->keyCol;
-            QDataBlock qdb;
-            tables->fillBlock(src, qdb, valueCols);
-            if (hasName)
-                nrd.columns.push_back({"Название"});
-            for (int row = 0; row < qdb.RowsCount(); ++row) {
-                ColumnEditorInfo::NameRefData::Row r;
-                r.key = static_cast<size_t>(std::visit(ToLong(), qdb.Get(row, 0)));
-                if (hasName)
-                    r.values.push_back(std::visit(ToString(), qdb.Get(row, 1)));
-                nrd.rows.push_back(std::move(r));
-            }
-        }
-
-        m_nameref[pluginIdx] = std::move(nrd);
+        m_nameref[pluginIdx] =
+            buildNamerefData(parts->srcTable, parts->keyCol, tables);
         return true;
     };
 
@@ -292,10 +202,11 @@ std::vector<size_t> BackInfoCache::rebuildRefsFrom(const std::string& srcTable,
     return updatedCols;
 }
 
-BackInfoCache::RefMap BackInfoCache::buildIdNameMap(std::shared_ptr<ITableRepository> tables,
-                                                    const std::string& srcTable,
-                                                    const std::string& keyCol,
-                                                    const std::string& valueCol)
+BackInfoCache::RefMap
+BackInfoCache::buildIdNameMap(std::shared_ptr<ITableRepository> tables,
+                              const std::string& srcTable,
+                              const std::string& keyCol,
+                              const std::string& valueCol)
 {
     RefMap result;
 
@@ -311,6 +222,60 @@ BackInfoCache::RefMap BackInfoCache::buildIdNameMap(std::shared_ptr<ITableReposi
     }
 
     return result;
+}
+
+std::shared_ptr<ColumnEditorInfo::NameRefData>
+BackInfoCache::buildNamerefData (const std::string& srcTable,
+                                 const std::string& keyCol,
+                                 std::shared_ptr<ITableRepository> tables)
+{
+    const std::shared_ptr<ColumnEditorInfo::NameRefData>
+        nrd = std::make_shared<ColumnEditorInfo::NameRefData>();
+    if (!tables) return nrd;
+
+    if (kFullColumnTables.count(srcTable)) {
+        // Режим "все колонки" — graphikIT / graphik2
+        // Запрашиваем схему, чтобы узнать все колонки
+        auto schema = tables->getSchema(srcTable);
+        std::string allCols = keyCol;
+        for (const auto& cs : schema.columns)
+            if (cs.name != keyCol)
+                allCols += "," + cs.name;
+
+        QDataBlock qdb;
+        tables->fillBlock(srcTable, qdb, allCols);
+        // Заголовки (кроме ключевой)
+        for (size_t ci = 1; ci < schema.columns.size(); ++ci)
+            nrd->columns.push_back({QString::fromStdString(schema.columns[ci].title)});
+
+        for (int row = 0; row < qdb.RowsCount(); ++row) {
+            ColumnEditorInfo::NameRefData::Row r;
+            r.key = static_cast<size_t>(std::visit(ToLong(), qdb.Get(row, 0)));
+            for (int c = 1; c < static_cast<int>(schema.columns.size()); ++c)
+                r.values.push_back(std::visit(ToString(), qdb.Get(row, c)));
+            nrd->rows.push_back(std::move(r));
+        }
+    } else {
+        // Обычный режим: ключ + name (если есть) или только ключ
+        const long nameColIdx = tables->columnIndex(srcTable, "name");
+        const bool hasName = (nameColIdx >= 0);
+        const std::string valueCols = hasName ? keyCol + ",name" : keyCol;
+
+        QDataBlock qdb;
+        tables->fillBlock(srcTable, qdb, valueCols);
+
+        if (hasName)
+            nrd->columns.push_back({"Название"});
+        // если нет name — columns пустой, popup покажет только ключ
+        for (int row = 0; row < qdb.RowsCount(); ++row) {
+            ColumnEditorInfo::NameRefData::Row r;
+            r.key = static_cast<size_t>(std::visit(ToLong(), qdb.Get(row, 0)));
+            if (hasName)
+                r.values.push_back(std::visit(ToString(), qdb.Get(row, 1)));
+            nrd->rows.push_back(std::move(r)); // дубли ключей сохраняются!
+        }
+    }
+    return nrd;
 }
 
 std::optional<BackInfoCache::NamerefParts>
@@ -352,10 +317,11 @@ const BackInfoCache::RefMap* BackInfoCache::superenumMap(size_t colIdx) const
     return it != m_superenum.end() ? &it->second : nullptr;
 }
 
-const ColumnEditorInfo::NameRefData* BackInfoCache::namerefData(size_t colIdx) const
+const std::shared_ptr<ColumnEditorInfo::NameRefData>
+BackInfoCache::namerefData(size_t colIdx) const
 {
     auto it = m_nameref.find(colIdx);
-    return it != m_nameref.end() ? &it->second : nullptr;
+    return (it != m_nameref.end()) ? it->second : nullptr;
 }
 
 const BackInfoCache::PictureList* BackInfoCache::pictureEnum(size_t pluginIdx) const

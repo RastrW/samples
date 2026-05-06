@@ -143,7 +143,7 @@ void RTablesDataAdapter::ensureColumn(const std::string& tname,
     fillBlock(tname, colBlock, colName);    // 1 колонка × N строк
     block.mergeColumn(colName, colBlock);
 
-    // Карта индексов в RData обновится в lazyLoadColumn (RModel)
+    // Карта индексов в RData обновится
 }
 
 void RTablesDataAdapter::setValue(const std::string&      tname,

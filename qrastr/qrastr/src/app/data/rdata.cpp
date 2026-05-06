@@ -17,21 +17,15 @@ RData::RData(const ITableRepository::TableSchema& schema,
     reserve(n_reserve);
     // reserve() вызван ДО push_back, иначе при reallocation
     // итераторы инвалидируются и RCol теряют данные.
-
-    m_str_cols.clear();
-
+    int rdataPos = 0;
     for (const auto& cs : schema.columns) {
-        // initialize() принимает const& — объект ColumnSchema не копируется.
         vCols_.push_back(cs.name);
-        m_str_cols += cs.name + ",";
-
         RCol rc;
         rc.initialize(cs);
         emplace_back(std::move(rc));
-
-        mCols_.try_emplace(cs.name, static_cast<int>(cs.index));
+        mCols_.try_emplace(cs.name, rdataPos);
+        ++rdataPos;
     }
-
     // Скрываем колонки, не входящие в форму.
     // Скрытые колонки присутствуют в datablock — просто не показываются в UI.
     std::unordered_set<std::string> formCols;
@@ -41,9 +35,6 @@ RData::RData(const ITableRepository::TableSchema& schema,
     for (RCol& rc : *this)
         if (formCols.count(rc.getColName()))
             rc.setHidden(false);
-
-    if (!m_str_cols.empty())
-        m_str_cols.pop_back();
 
     spdlog::debug("RData: table={} columns={}", t_name_, schema.columns.size());
 }
@@ -71,6 +62,25 @@ int RData::blockColIndex(int rdataPos) const noexcept
     return m_blockColIdx[rdataPos];
 }
 
+int RData::ensureBlockCol(int rdataPos,
+                          std::shared_ptr<ITableRepository> tables) const
+{
+    if (rdataPos < 0 || rdataPos >= static_cast<int>(size())) return -1;
+    const std::string& colName = (*this)[rdataPos].getColName();
+    tables->ensureColumn(t_name_, colName);
+    updateBlockIndex(rdataPos);
+    return m_blockColIdx[rdataPos];
+}
+
+void RData::updateBlockIndex(int rdataPos) const noexcept
+{
+    if (!datablock) return;
+    if (rdataPos < 0 || rdataPos >= static_cast<int>(m_blockColIdx.size()))
+        return;
+    m_blockColIdx[rdataPos] =
+        static_cast<int>(datablock->localColumnIndex((*this)[rdataPos].getColName()));
+}
+
 FieldVariantData
 RData::getCell(int rdataPos, int row) const
 {
@@ -79,14 +89,16 @@ RData::getCell(int rdataPos, int row) const
     return datablock->Get(row, blockCol);
 }
 
-std::string RData::get_cols(bool visible) const
-{
+std::string RData::get_cols(bool visible) const{
+    // Резервируем примерный размер: N колонок × ~5 символов + запятые
     std::string ret;
+    ret.reserve(size() * 6);
+
     for (const RCol& rc : *this) {
-        if (!visible || !rc.isHidden())
-            ret += rc.getColName() + ",";
+        if (!visible || !rc.isHidden()) {
+            if (!ret.empty()) ret += ',';
+            ret += rc.getColName();        // без временной строки
+        }
     }
-    if (!ret.empty())
-        ret.pop_back();
     return ret;
 }

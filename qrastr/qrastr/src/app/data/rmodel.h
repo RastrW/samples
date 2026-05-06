@@ -90,7 +90,6 @@ public:
     const ColumnEditorInfo&
         getColumnEditorInfo(int colIndex) const;
     void invertDirectCode(int col);
-    void lazyLoadColumn(int rdataPos);
 private:
     // ── Данные ───────────────────────────────────────────────────────────────
     std::shared_ptr<ITableRepository> m_tables;
@@ -114,7 +113,9 @@ private:
                                 const QVariant& raw, int role) const;
     // ── BackgroundRole (Фон ячейки) ──────────────────────────────────────────
     QVariant dataForBackground (int row, int col,
-                               const RCol& rcol, const QVariant& raw) const;
+                                const RCol& rcol,
+                                const FieldVariantData& fvd,
+                                const QVariant& raw) const;
     // ── DecorationRole (Иконка слева от текста)───────────────────────────────
     QVariant dataForDecoration (int row, int col,
                                const RCol& rcol, const QVariant& raw) const;

@@ -570,7 +570,8 @@ void RtabController::slot_beginResetModel(const std::string& tname){
     // Сохраняем видимость по имени колонки (не по caption — он может меняться)
     m_columnsVisible.clear();
     for (const RCol& rcol : m_model->getRdata()) {
-        auto* col = getColumnByIndex(rcol.getIndex());
+        const int pos = rdataPosOf(rcol.getColName()); // rdata position
+        auto* col = getColumnByIndex(pos);
         m_columnsVisible[QString::fromStdString(rcol.getColName())]
             = col ? col->isVisible() : true;
     }
@@ -583,7 +584,10 @@ void RtabController::slot_endResetModel(const std::string& tname){
     // К этому моменту RModel::slot_EndResetModel уже вызвал
     // populateDataFromRastr() — новые RData/RCol уже готовы.
     for (const RCol& rcol : m_model->getRdata()) {
-        auto* col = getColumnByIndex(rcol.getIndex());
+        const int pos = rdataPosOf(rcol.getColName()); // rdata position
+        if (pos < 0) continue;
+
+        auto* col = getColumnByIndex(pos);
         if (!col) continue;
 
         // Восстанавливаем видимость
@@ -594,8 +598,7 @@ void RtabController::slot_endResetModel(const std::string& tname){
         // Синхронизируем caption с обновлённым заголовком модели.
         // Qtitan кеширует caption независимо от headerData() — нужно
         // обновить вручную после сброса.
-        QVariant title = m_model->headerData(
-            rcol.getIndex(), Qt::Horizontal, Qt::DisplayRole);
+        QVariant title = m_model->headerData(pos, Qt::Horizontal, Qt::DisplayRole);
         if (title.isValid())
             col->setCaption(title.toString());
     }
@@ -696,7 +699,7 @@ void RtabController::slot_openExportCSVForm()
     auto* dlg = new ExportCSVdialog(
         m_tables,
         m_UIForm.TableName(),
-        m_model->getRdata().get_cols(),
+        m_model->getRdata().get_cols(), //Только видимые
         m_grid);
     dlg->setAttribute(Qt::WA_DeleteOnClose);
     dlg->show();
@@ -707,7 +710,7 @@ void RtabController::slot_openImportCSVForm()
     auto* dlg = new ImportCSV2dialog(
         m_tables,
         m_UIForm.TableName(),
-        m_model->getRdata().get_cols(),
+        m_model->getRdata().get_cols(), //Только видимые
         m_grid);
     dlg->setAttribute(Qt::WA_DeleteOnClose);
     dlg->show();
@@ -774,4 +777,12 @@ Qtitan::GridTableColumn* RtabController::getColumnByIndex(int index) const
 {
     if (index < 0 || index >= m_model->columnCount()) return nullptr;
     return qobject_cast<Qtitan::GridTableColumn*>(m_view->getColumn(index));
+}
+
+int RtabController::rdataPosOf(const std::string& colName) const
+{
+    if (!m_model) return -1;
+    const RData& rd = m_model->getRdata();
+    auto it = rd.mCols_.find(colName);
+    return (it != rd.mCols_.end()) ? it->second : -1;
 }

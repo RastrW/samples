@@ -123,6 +123,8 @@ private:
     void setTableView(int multiplier = 10);
     void setupConnections();
     void createCommonTableActions();
+    /// Возвращает позицию колонки в RData по имени, или -1.
+    int rdataPosOf(const std::string& colName) const;
 
     Qtitan::GridTableColumn* getColumnByIndex(int index) const;
     // ── Компоненты (данные) ─────────────────────────────────────────────────

@@ -48,7 +48,7 @@ bool RModel::populateDataFromRastr()
 
 int RModel::rowCount(const QModelIndex&) const
 {
-    if (!m_rdata || !m_rdata->isReadry()) return 0;
+    if (!m_rdata || !m_rdata->isReady()) return 0;
     return static_cast<int>(m_rdata->getRowsCount());
 }
 
@@ -96,13 +96,15 @@ QVariant RModel::data(const QModelIndex& index, int role) const
         return dataForComboBox(rcol);
 
     // Lazy load если колонка ещё не в блоке
-    if (m_rdata->blockColIndex(col) < 0){
-        spdlog::info("Добавление новой колонки [{},{}]", row, col);
-        const_cast<RModel*>(this)->lazyLoadColumn(col);
+    int blockCol = m_rdata->blockColIndex(col);
+    if (blockCol < 0){
+        blockCol = m_rdata->ensureBlockCol(col, m_tables); // const, mutable внутри
     }
+    if (blockCol < 0) return {}; // колонка недоступна даже после попытки
 
     // Читаем через getCell — он знает про local_index
-    const QVariant raw = std::visit(ToQVariant(), m_rdata->getCell(col, row));
+    const FieldVariantData fvd = m_rdata->getCell(col, row);
+    const QVariant raw = std::visit(ToQVariant(), fvd);
 
     switch (role) {
     case Qt::DisplayRole:
@@ -111,12 +113,12 @@ QVariant RModel::data(const QModelIndex& index, int role) const
     case Qt::UserRole:
         if (rcol.getComPropTT() == enComPropTT::COM_PR_REAL) {
             const bool isEmpty =
-                std::holds_alternative<std::monostate>(m_rdata->getCell(col, row));
+                std::holds_alternative<std::monostate>(fvd);
             return isEmpty ? 0.0 : raw;
         }
         return raw;
     case Qt::BackgroundRole:
-        return dataForBackground(row, col, rcol, raw);
+        return dataForBackground(row, col, rcol, fvd, raw);
     case Qt::DecorationRole:
         return dataForDecoration(row, col, rcol, raw);
     default:
@@ -183,7 +185,9 @@ QVariant RModel::dataForDisplayEdit(int row, int col, const RCol& rcol,
 }
 
 QVariant RModel::dataForBackground (int row, int col,
-                                   const RCol& rcol, const QVariant& raw) const{
+                                   const RCol& rcol,
+                                   const FieldVariantData& fvd,
+                                   const QVariant& raw) const{
     // COLOR-ячейки: фон = сам цвет, условные форматы не нужны
     if (rcol.getComPropTT() == enComPropTT::COM_PR_COLOR) {
         bool ok;
@@ -199,8 +203,7 @@ QVariant RModel::dataForBackground (int row, int col,
     if (const QVariant* cached = m_bgCache.get(row, col))
         return *cached;// QVariant() → нет формата, тоже ок
 
-    const QString val = QString::fromStdString(
-        std::visit(ToString(), m_rdata->getCell(col, row)));
+    const QString val = QString::fromStdString(std::visit(ToString(), fvd));
     QVariant fmt = getMatchingCondFormat(row, col, val, Qt::BackgroundRole);
     m_bgCache.put(row, col, fmt);
     return fmt;
@@ -216,9 +219,10 @@ QVariant RModel::dataForDecoration (int row, int col,
         return px;
     }
     const size_t pluginIdx = static_cast<size_t>(rcol.getIndex());
-    if (const auto* pics = m_cache.pictureEnum(pluginIdx)) {
-        int v = std::visit(ToLong(), m_rdata->getCell(col, row));
-        if (v >= 0 && v < pics->size()) return (*pics)[v].image;
+    if (const auto* pics = m_cache.pictureEnum(pluginIdx)) { 
+        const long v = std::visit(ToLong(), m_rdata->getCell(col, row));
+        if (v >= 0 && v < static_cast<long>(pics->size()))
+            return (*pics)[static_cast<int>(v)].image;
     }
     return {};
 }
@@ -238,7 +242,7 @@ QVariant RModel::dataForComboBox(const RCol& rcol) const
     if (const auto* enums = m_cache.enumItems(pluginIdx)){
         list = *enums;
     }
-    else if (const auto* nrd = m_cache.namerefData(pluginIdx)){
+    else if (const auto nrd = m_cache.namerefData(pluginIdx)){
         for (const auto& row : nrd->rows){
             if (!row.values.empty()){
                 list.append(QString::fromStdString(row.values[0]));
@@ -259,13 +263,13 @@ QString RModel::resolveDisplayText(int col, const RCol& rcol,
     const size_t pluginIdx = static_cast<size_t>(rcol.getIndex()); // единый ключ
 
     if (const auto* pics = m_cache.pictureEnum(pluginIdx)) {
-        int v = raw.toInt();
-        if (v >= 0 && v < pics->size()) return (*pics)[v].label;
+        const int v = raw.toInt();
+        if (v >= 0 && v < static_cast<int>(pics->size()))  return (*pics)[v].label;
         return {};
     }
     if (const auto* enums = m_cache.enumItems(pluginIdx)) {
-        int v = raw.toInt();
-        if (v >= 0 && v < enums->size()) return (*enums)[v];
+        const int v = raw.toInt();
+        if (v >= 0 && v < static_cast<int>(enums->size())) return (*enums)[v];
         return {};
     }
     if (const auto* senum = m_cache.superenumMap(pluginIdx)) {
@@ -330,7 +334,7 @@ bool RModel::setData(const QModelIndex& index, const QVariant& value, int role)
                     for (const auto& [k, v] : *senum)
                         if (v == value.toString().toStdString())
                         { val = static_cast<long>(k); break; }
-                } else if (const auto* nrd = m_cache.namerefData(pluginIdx)) {
+                } else if (const auto nrd = m_cache.namerefData(pluginIdx)) {
                     // value содержит числовой ключ (int), установленный getContextValue()
                     val = value.toLongLong();
                 } else {
@@ -558,9 +562,9 @@ ColumnEditorInfo RModel::buildColumnEditorInfo(int colIndex) const
 
     case enComPropTT::COM_PR_INT:
         if (!col->isDirectCode() && !col->getNameRef().empty()) {
-            if (const auto* nrd = m_cache.namerefData(pluginIdx)) {
+            if (const auto nrd = m_cache.namerefData(pluginIdx)) {
                 info.editorType  = ColumnEditorInfo::Type::NameRef;
-                info.nameRefData = *nrd;   // копируем всю структуру
+                info.nameRefData = nrd;
                 break;
             }
         }
@@ -678,8 +682,7 @@ QVariant RModel::getMatchingCondFormat(size_t row, size_t column,
 }
 
 std::vector<std::tuple<int,int>>
-RModel::columnsWidth() const
-{
+RModel::columnsWidth() const{
     std::vector<std::tuple<int,int>> result;
     if (!m_rdata) return result;
 
@@ -695,40 +698,26 @@ RModel::columnsWidth() const
     return result;
 }
 
-void RModel::invertDirectCode(int col)
-{
+void RModel::invertDirectCode(int col){
     if (!m_rdata || col < 0 || col >= static_cast<int>(m_rdata->size()))
         return;
     (m_rdata->begin() + col)->invertDirectCodeStatus();
 }
 
-const RCol* RModel::getRCol(int col) const
-{
+const RCol* RModel::getRCol(int col) const{
     if (!m_rdata || col < 0 || col >= static_cast<int>(m_rdata->size()))
         return nullptr;
     return &(*(m_rdata->begin() + col));
 }
 
-const RData& RModel::getRdata()
-{
+const RData& RModel::getRdata(){
     return *m_rdata;
 }
 
-bool RModel::isReady() const noexcept
-{
-    return m_rdata != nullptr && m_rdata->isReadry();
+bool RModel::isReady() const noexcept{
+    return m_rdata != nullptr && m_rdata->isReady();
 }
 
-bool RModel::isMyTable(const std::string& tName) const noexcept
-{
+bool RModel::isMyTable(const std::string& tName) const noexcept{
     return m_rdata && m_rdata->t_name_ == tName;
-}
-
-void RModel::lazyLoadColumn(int rdataPos)
-{
-    // data() — const, поэтому вызываем отсюда (non-const)
-    if (rdataPos < 0 || rdataPos >= static_cast<int>(m_rdata->size())) return;
-    const std::string& colName = (m_rdata->begin() + rdataPos)->getColName();
-    m_tables->ensureColumn(m_rdata->t_name_, colName);
-    m_rdata->rebuildBlockIndexMap(); // синхронизируем карту
 }

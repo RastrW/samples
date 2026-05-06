@@ -8,7 +8,7 @@ class SearchableComboRepository : public Qtitan::GridEditorRepository
     Q_OBJECT
 public:
     explicit SearchableComboRepository(
-        const ColumnEditorInfo::NameRefData& nrd,
+        const std::shared_ptr<ColumnEditorInfo::NameRefData>& nrd,
         QWidget* gridWidget)
         : Qtitan::GridEditorRepository()
         , m_nrd(nrd)
@@ -18,20 +18,22 @@ public:
     Qtitan::GridEditor* createEditor() override;
 
     /// Доступ к данным для popup
-    const ColumnEditorInfo::NameRefData& nameRefData() const { return m_nrd; }
+    const std::shared_ptr<ColumnEditorInfo::NameRefData>& nameRefData() const {
+        return m_nrd;
+    }
 
     /// Совместимость: gridWidget нужен в showPopup() для позиционирования
     QWidget* gridWidget() const { return m_gridWidget; }
 
     QString nameByKey(int key) const {
-        return m_nrd.nameByKey(key);
+        return m_nrd->nameByKey(key);
     }
 
-    void updateItems(const ColumnEditorInfo::NameRefData& nrd) {
+    void updateItems(const std::shared_ptr<ColumnEditorInfo::NameRefData>& nrd) {
         m_nrd = nrd;
     }
 
 private:
-    ColumnEditorInfo::NameRefData m_nrd;
+    std::shared_ptr<ColumnEditorInfo::NameRefData> m_nrd;
     QWidget*                      m_gridWidget;
 };
