@@ -2,7 +2,6 @@
 #include <algorithm>
 #include "IDataBlocksWrappers.h"
 
-constexpr const char *cszDef = "[def]"; // "пустое" значение для разреженного режима
 
 template<typename T>
 class MyDenseDataBlock : public IDataBlockBaseT<T>

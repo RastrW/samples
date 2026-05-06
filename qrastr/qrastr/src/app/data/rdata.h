@@ -29,9 +29,6 @@ public:
      * Загружаем только колонки формы
      */
     void populateBlock(std::shared_ptr<ITableRepository> tables);
-    /// Перестроить карту rdata_pos → local_index.
-    /// Вызывать после любого изменения состава колонок блока.
-    void rebuildBlockIndexMap();
     /// Единая точка чтения ячейки: скрывает перевод индексов.
     /// Возвращает std::monostate если колонка не загружена.
     FieldVariantData getCell(int rdataPos, int row) const;
@@ -41,8 +38,6 @@ public:
     /// Возвращает новый local index или -1 при ошибке.
     int ensureBlockCol(int rdataPos,
                        std::shared_ptr<ITableRepository> tables) const;
-    /// Обновить индекс только для одной позиции (после lazy load).
-    void updateBlockIndex(int rdataPos) const noexcept;
     int getRowsCount() const{
         return static_cast<int>(datablock->RowsCount());
     }
@@ -60,10 +55,14 @@ public:
 
     std::string t_name_;
     std::string t_title_;
-
     std::vector<std::string>          vCols_; ///< вектор имён колонок в порядке следования.
     std::unordered_map<std::string, int> mCols_; ///< unordered_map<имя_колонки, индекс> для быстрого поиска колонки по имени.
 private:
+    /// Обновить индекс только для одной позиции (после lazy load).
+    void updateBlockIndex(int rdataPos) const noexcept;
+    /// Перестроить карту rdata_pos → local_index.
+    /// Вызывать после любого изменения состава колонок блока.
+    void rebuildBlockIndexMap();
     std::shared_ptr<QDataBlock>       datablock;
     mutable std::vector<int> m_blockColIdx; ///< rdata_pos → local block index
 };

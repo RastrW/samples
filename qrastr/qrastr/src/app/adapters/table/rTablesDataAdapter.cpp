@@ -311,7 +311,7 @@ void RTablesDataAdapter::handleChangeColumn(const std::string& tname,
     if (pluginIdx < 0) return;
 
     QDataBlock colBlock;
-    // все колонки, но только одна строка
+    // все строки одной колонки
     fillBlock(tname, colBlock, cname);
 
     const long nRows = static_cast<long>(pqdb->RowsCount());
@@ -332,7 +332,6 @@ void RTablesDataAdapter::handleChangeRow(const std::string& tname, long row)
     // Читаем только то, что загружено
     const std::string loadedCols = pqdb->Columns();
     QDataBlock rowBlock;
-    // все колонки, но только одна строка
     fillBlock(tname, rowBlock, loadedCols);
     // Копируем только нужную строку
     const long ncols = static_cast<long>(pqdb->ColumnsCount());

@@ -55,7 +55,6 @@ int RModel::rowCount(const QModelIndex&) const
 int RModel::columnCount(const QModelIndex&) const
 {
     // Всегда по размеру RData, а не блока.
-    // Блок — частичный кеш; модель всегда экспонирует все 117 колонок QTitan'у.
     return m_rdata ? static_cast<int>(m_rdata->size()) : 0;
 }
 

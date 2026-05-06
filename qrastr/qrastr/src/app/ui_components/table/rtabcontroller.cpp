@@ -291,14 +291,15 @@ void RtabController::createModel(std::shared_ptr<ITableRepository> tables)
     applyAllColumnEditors();
     spdlog::info("[PERF] applyAllColumnEditors: {} ms", t.restart());
 
-    m_view->endUpdate();
-    spdlog::info("[PERF] first endUpdate (render): {} ms", t.restart());
     // ── Применяем ширины из бэка при первом открытии ──
     // setTableView отключает columnAutoWidth и выставляет ширины из RCol::getWidth()
     if (!m_UIForm.Vertical()){
-        setTableView();
+        setTableView(false);
     }
     spdlog::info("[PERF] setTableView: {} ms", t.restart());
+
+    m_view->endUpdate();
+    spdlog::info("[PERF] first endUpdate (render): {} ms", t.restart());
 
     m_linkedFormCtrl = std::make_unique<LinkedFormController>(
         tables,
@@ -397,7 +398,15 @@ void RtabController::applyColumnEditor(int colIndex)
     const RCol* col = m_model->getRCol(colIndex);
     if (!col) return;
 
-    column_qt->setVisible(!col->isHidden());
+    const bool hidden = col->isHidden();
+    column_qt->setVisible(!hidden);
+
+    // Не настраиваем редакторы для скрытых колонок:
+    // QTitan при setEditorType/setEditorRepository вызывает data() на ячейках,
+    // что триггерит lazy-load для колонок, которых нет в блоке.
+    // Когда колонку сделают видимой — applyColumnEditor будет вызван снова.
+    if (hidden) return;
+
     // Сбрасываем флаги перед переназначением
     column_qt->setProperty("isNumeric", false);
     column_qt->setProperty("isBool",    false);
@@ -655,21 +664,26 @@ void RtabController::slot_condFormatsEdit(std::size_t column){
     m_condFormatCtrl->editCondFormats(column);
 }
 
-void RtabController::setTableView(int multiplier)
+void RtabController::setTableView(bool update, int multiplier)
 {
-    m_view->beginUpdate();
+    if (update){m_view->beginUpdate();}
     m_view->tableOptions().setColumnAutoWidth(false);
 
     for (auto [idx, width] : m_model->columnsWidth()) {
+        // Не трогаем скрытые колонки: setWidth на скрытой колонке
+        // вызывает data() при пересчёте layout в endUpdate.
+        const RCol* rcol = m_model->getRCol(idx);
+        if (!rcol || rcol->isHidden()) continue;
+
         auto* col = m_view->getColumn(idx);
-        if (!col) {                          // ← guard на случай рассинхронизации
+        if (!col) { // guard на случай рассинхронизации
             spdlog::warn("setTableView: column {} not found", idx);
             continue;
         }
         col->setWidth(width * multiplier);
         col->setTextAlignment(Qt::AlignLeft);
     }
-    m_view->endUpdate();
+    if (update){m_view->endUpdate();}
 }
 
 void RtabController::slot_widthByTemplate(){

@@ -120,7 +120,7 @@ private:
     void createModel(std::shared_ptr<ITableRepository> tables);
     void applyAllColumnEditors();
     void applyColumnEditor(int colIndex);
-    void setTableView(int multiplier = 10);
+    void setTableView(bool update = true, int multiplier = 10);
     void setupConnections();
     void createCommonTableActions();
     /// Возвращает позицию колонки в RData по имени, или -1.
