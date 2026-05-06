@@ -2,7 +2,6 @@
 #include <algorithm>
 #include "IDataBlocksWrappers.h"
 
-
 template<typename T>
 class MyDenseDataBlock : public IDataBlockBaseT<T>
 {

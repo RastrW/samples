@@ -29,8 +29,12 @@ RData::RData(const ITableRepository::TableSchema& schema,
     // Скрываем колонки, не входящие в форму.
     // Скрытые колонки присутствуют в datablock — просто не показываются в UI.
     std::unordered_set<std::string> formCols;
-    for (const auto& f : form.Fields())
+
+    for (const auto& f : form.Fields()) {
+        //if ((t_name_ == "vetv" && f.Name() == "name"))
+            //continue; // игнорируем только для vetv
         formCols.insert(f.Name());
+    }
 
     for (RCol& rc : *this)
         if (formCols.count(rc.getColName()))
@@ -44,6 +48,13 @@ void RData::populateBlock(std::shared_ptr<ITableRepository> tables)
     const std::string visCols = get_cols(/*visible=*/true); // только не-hidden
     datablock = tables->getBlock(t_name_, visCols);
     rebuildBlockIndexMap();
+
+    auto* db = datablock.get();
+
+    spdlog::info("[PERF] rows = {}", db->RowsCount());
+    spdlog::info("[PERF] cols = {}", db->ColumnsCount());
+    spdlog::info("[PERF] datasize = {}", db->DataSize());
+    spdlog::info("[PERF] bytes = {}", db->DataSize() * sizeof(FieldVariantData));
 }
 
 void RData::rebuildBlockIndexMap()

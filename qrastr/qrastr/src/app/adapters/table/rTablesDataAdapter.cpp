@@ -201,7 +201,7 @@ void RTablesDataAdapter::fillBlock(const std::string& tname,
                                       std::optional<FieldDataOptions> opts)
 {
     QElapsedTimer t; t.start();
-    // Дефолтные опции — те же, что раньше были во всех перегрузках
+    // Дефолтные опции
     FieldDataOptions options;
     if (opts.has_value()) {
         options = opts.value();
