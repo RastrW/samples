@@ -10,7 +10,7 @@ using WrapperExceptionType = std::runtime_error;
 // и вот тут мы наследуемся от базовых классов датаблоков, чтобы решать свои задачи
 
 struct ToString {
-    std::string operator()(std::monostate) { return { "def" }; }
+    std::string operator()(std::monostate) { return { "" }; }
     std::string operator()(const long& value) { return std::to_string(value); }
     std::string operator()(const uint64_t& value) { return std::to_string(value); }
     std::string operator()(const double& value) { return std::to_string(value); }

@@ -5,7 +5,7 @@ class RModel;
 class AutoFilterWidget;
 class AutoFilterCondition;
 struct FilterRule;
-namespace Qtitan { class GridTableView; }
+namespace Qtitan { class GridTableView; class GridFilterCondition;}
 
 /// @brief Управляет выборкой и автофильтром, пересобирает общий фильтр грида.
 class FilterManager : public QObject
@@ -43,7 +43,7 @@ private:
     QWidget*               m_parentWidget;
     AutoFilterWidget*    m_autoFilter    {nullptr};
     AutoFilterCondition* m_autoFilterCond{nullptr};
+    Qtitan::GridFilterCondition* m_builtinCondition {nullptr};
 
-    QString     m_selectionFilter;  // последняя строка выборки
     std::string m_selection;        // Текущая выборка
 };

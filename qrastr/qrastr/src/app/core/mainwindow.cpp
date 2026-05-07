@@ -71,7 +71,7 @@ MainWindow::~MainWindow() = default;
 
 void MainWindow::initialize(
     const EngineContext& engCtxt,
-    const std::list<CUIForm>& forms)
+    const std::vector<CUIForm>& forms)
 {
     m_calcEngine = engCtxt.calcEngine;
     // ========== СОЗДАНИЕ КОМПОНЕНТОВ ==========

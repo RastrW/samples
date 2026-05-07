@@ -28,9 +28,6 @@ public:
     void clearRule(int colIndex);
     void clearAll();
     bool hasActiveRules() const;
-
-    const QMap<int, FilterRule>& rules() const { return m_rules; }
-
 private:
-    QMap<int, FilterRule> m_rules; // colIndex → правило
+    std::unordered_map<int, FilterRule> m_rules; // colIndex → правило
 };

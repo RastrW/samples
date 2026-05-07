@@ -57,6 +57,7 @@ class CUIForm
 {
 protected:
     std::string Name_;                      // Имя формы (для меню)
+    std::string DisplayName_;               // UTF-8 для Qt, заполняется снаружи
     std::string TableName_;                 // Имя таблицы в Rastr
     std::string Collection_;                // Коллекция
     std::string Query_;                     // Запрос для выборки
@@ -66,16 +67,18 @@ protected:
     bool HasDetailForm_ = false;            // Наличие детальной формы
     int AddToMenuIndex_ = 0;                // Индекс в меню
     bool Vertical_ = false;                 // Вертикальная ориентация
-    std::list<CUIFormField> Fields_;        // Поля для отображения
+    std::vector<CUIFormField> Fields_;        // Поля для отображения
 public:
 
 	CUIForm() = default;
 	//! Конструктор по имени формы
-	CUIForm(const std::string_view Name) : Name_(Name) {}
 	CUIForm(const CUIForm& Form) = default;
 
 	// геттеры атрибутов
 	const std::string& Name() const { return Name_; }
+    const std::string& DisplayName() const {
+        return DisplayName_.empty() ? Name_ : DisplayName_;
+    }
 	const std::string& TableName() const { return TableName_; }
 	const std::string& Collection() const { return Collection_; }
 	const std::string& Query() const { return Query_; }
@@ -90,6 +93,7 @@ public:
 
 	// сеттеры атрибутов
 	void SetName(const std::string_view Name) { Name_ = Name; }
+    void SetDisplayName(const std::string_view v) { DisplayName_ = v; }
 	void SetTableName(const std::string_view TableName) { TableName_ = TableName; }
 	void SetCollection(const std::string_view Collection) { Collection_ = Collection; }
 	void SetQuery(const std::string_view Query) { Query_ = Query; }
@@ -105,7 +109,7 @@ public:
 class CUIFormsCollection
 {
 protected:
-	std::list<CUIForm> Forms_;
+    std::vector<CUIForm> Forms_;
 public:
 	//! Доступ к const коллекции форм 
 	const auto& Forms() const { return Forms_; }
@@ -218,6 +222,7 @@ public:
 			std::int32_t FormsCount{ ReadInt32(formstream) };
 
 			Forms.Forms().clear();
+            Forms.Forms().reserve(FormsCount);
 			while (FormsCount--)
 				DeserializeForm(Forms.Forms().emplace_back(), formstream);
 		}
@@ -330,6 +335,7 @@ protected:
 		Form.SetVertical(ReadInt32(formstream));
 
 		std::int32_t FieldsCount{ ReadInt32(formstream) };
+        Form.Fields().reserve(FieldsCount);
 		while (FieldsCount--)
 			DeserializeField(Form.Fields().emplace_back(), formstream);
 	}

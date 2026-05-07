@@ -1,94 +1,148 @@
 #include "searchableComboEditor.h"
 #include "searchableComboRepository.h"
 #include "searchableComboPopup.h"
+#include <QHBoxLayout>
 #include <QVBoxLayout>
 #include <QApplication>
+#include <QLineEdit>
+#include <QToolButton>
 
 void SearchableComboEditor::createEditModeContext()
 {
-    m_selectedIdx = -1;  // сброс при каждом открытии
+    QWidget* parentWidget = site() ? site()->parent() : nullptr;
 
-    const auto* repo = static_cast<SearchableComboRepository*>(editorRepository());
-    int idx = getContextValue().toInt();
-    m_current = (idx >= 0 && idx < repo->items().size())
-                    ? repo->items().at(idx)
-                    : QString{};
-    showPopup();
+    m_container = new QWidget(parentWidget);
+    auto* layout = new QHBoxLayout(m_container);
+    layout->setContentsMargins(0, 0, 0, 0);
+    layout->setSpacing(0);
+
+    m_lineEdit = new QLineEdit(m_container);
+    m_lineEdit->setReadOnly(true);
+    m_lineEdit->setFrame(false);
+
+    m_button = new QToolButton(m_container);
+    m_button->setText("...");
+    m_button->setFixedWidth(20);
+
+    layout->addWidget(m_lineEdit);
+    layout->addWidget(m_button);
+
+    QObject::connect(m_button, &QToolButton::clicked,
+                     [this]() { showPopup(); });
+
 }
 
 void SearchableComboEditor::destroyEditModeContext()
 {
-    // возвращаем поведение по умолчанию
-    editorRepository()->setImmediatePost(true);
     if (m_popup) {
         m_popup->hide();
         m_popup->deleteLater();
         m_popup = nullptr;
     }
+
+    // Удаляем явно — Qtitan удаляет m_editor (GridEditorBase),
+    // но не m_container, у которого другой Qt-parent (GridEditorWidgetContainer)
+    if (m_container) {
+        delete m_container;   // дочерние m_lineEdit и m_button удалятся автоматически
+        m_container = nullptr;
+    }
+
+    m_lineEdit = nullptr;
+    m_button   = nullptr;
+}
+
+void SearchableComboEditor::setValueToWidget(const QVariant& value)
+{
+    m_currentKey  = value.toInt();
+    m_selectedKey = -1;
+    m_clearChosen = false;
+    updateDisplayText();
 }
 
 QVariant SearchableComboEditor::getContextValue() const
 {
-    if (m_selectedIdx >= 0) {
-        const auto* repo = static_cast<SearchableComboRepository*>(editorRepository());
-        if (m_selectedIdx < repo->items().size())
-            return repo->items().at(m_selectedIdx);  // ← строка, не индекс
-    }
+    if (m_clearChosen)
+        return QVariant(0);
+
+    if (m_selectedKey >= 0)
+        return QVariant(m_selectedKey);  // возвращаем ключ напрямую
+
     return Qtitan::GridEditorBase::getContextValue();
 }
 
 bool SearchableComboEditor::isContextModified()
 {
-    return m_selectedIdx >= 0
-               ? true
-               : Qtitan::GridEditorBase::isContextModified();
+    if (m_clearChosen || m_selectedKey >= 0)
+        return true;
+    return Qtitan::GridEditorBase::isContextModified();
 }
 
-void SearchableComboEditor::setValueToWidget(const QVariant& value)
+void SearchableComboEditor::updateDisplayText()
 {
-    const auto* repo = static_cast<SearchableComboRepository*>(editorRepository());
-    int idx = value.toInt();
-    if (idx >= 0 && idx < repo->items().size())
-        m_current = repo->items().at(idx);
-    else
-        m_current = value.toString();
-
-    if (m_popup)
-        m_popup->setCurrentText(m_current);
+    if (!m_lineEdit) return;
+    auto* repo = static_cast<SearchableComboRepository*>(editorRepository());
+    if (!repo) {
+        m_lineEdit->clear();
+        return;
+    }
+    // nameByKey вернёт пустую строку если values пустой —
+    // в этом случае показываем сам ключ
+    QString text = repo->nameByKey(m_currentKey);
+    if (text.isEmpty() && m_currentKey > 0)
+        text = QString::number(m_currentKey);
+    m_lineEdit->setText(text);
 }
 
 void SearchableComboEditor::showPopup()
 {
-    auto* repo       = static_cast<SearchableComboRepository*>(editorRepository());
-    auto* gridWidget = repo->gridWidget();
-    if (!gridWidget) return;
+    // m_popup либо nullptr (закрыт), либо жив (открыт повторно).
+    // Если жив — просто поднимаем на передний план.
+    if (m_popup) {
+        m_popup->show();
+        return;
+    }
 
-    editorRepository()->setImmediatePost(false);
+    auto* repo = static_cast<SearchableComboRepository*>(editorRepository());
+    if (!repo) return;
 
-    m_popup = new SearchableComboPopup(gridWidget->window());
-    m_popup->setItems(repo->items());
-    m_popup->setCurrentText(m_current);
+    QWidget* topLevel = repo->gridWidget()->window();
+    m_popup = new SearchableComboPopup(topLevel);
+    m_popup->setItems(repo->nameRefData());
+    m_popup->setCurrentKey(m_currentKey);
+    // Позиционируем под контейнером
+    const QPoint globalPos = m_container
+                                 ? m_container->mapToGlobal(QPoint(0, m_container->height()))
+                                 : QCursor::pos();
+    const int minW = m_container ? std::max(m_container->width(), 320) : 320;
 
-    const QPoint cursorPos = QCursor::pos();
-    m_popup->move(cursorPos.x(), cursorPos.y() + 4);
-    m_popup->setFixedWidth(qMax(site()->geometry().width(), 250));
+    m_popup->setMinimumWidth(minW);
+    m_popup->move(globalPos);
     m_popup->show();
     m_popup->setFocus();
 
     QObject::connect(m_popup, &SearchableComboPopup::itemSelected,
-                     [this, repo](const QString& text) {
-                         // Сохраняем ДО того как попап закрывается
-                         // и QTitan начинает читать getContextValue()
-                         m_selectedIdx = repo->items().indexOf(text);
+                     [this, repo](int key) {
+                         m_selectedKey = key;
+                         m_clearChosen = false;
+                         if (m_lineEdit)
+                             m_lineEdit->setText(repo->nameByKey(key));
                          setContextModified(true);
+                         editorRepository()->view()->postEditor();
+                     });
 
-                         // postEditor читает getContextValue() — там уже m_selectedIdx
+    QObject::connect(m_popup, &SearchableComboPopup::clearSelected,
+                     [this]() {
+                         m_clearChosen = true;
+                         m_selectedKey = -1;
+                         if (m_lineEdit) m_lineEdit->clear();
+                         setContextModified(true);
                          editorRepository()->view()->postEditor();
                      });
 
     QObject::connect(m_popup, &SearchableComboPopup::editingCancelled,
                      [this]() {
-                         m_selectedIdx = -1;
+                         m_selectedKey = -1;
+                         m_clearChosen = false;
                          editorRepository()->view()->hideEditor();
                      });
 }

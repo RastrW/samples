@@ -1,5 +1,5 @@
 #include "rtabcontroller.h"
-
+#include <QElapsedTimer>
 #include "rtabshell.h"
 #include "filterManager.h"
 #include "rmodel.h"
@@ -13,13 +13,12 @@
 #include "tables/groupCorrectionDialog.h"
 #include "tables/exportCSVdialog.h"
 #include "tables/importCSV2dialog.h"
-#include "customEditors/searchableComboEditorTwo/searchableComboRepositoryTwo.h"
+#include "customEditors/searchableComboEditor/searchableComboRepository.h"
 #include <QContextMenuEvent>
 #include "QtitanBase.h"
 #include <QShortcut>
 #include <QMessageBox>
 #include <QCloseEvent>
-#include "table/QDataBlocks.h"
 #include <spdlog/spdlog.h>
 #include "table/ITableEvents.h"
 #include "table/ITableRepository.h"
@@ -75,6 +74,7 @@ RtabController::RtabController( std::shared_ptr<ITableRepository> tables,
         m_view->tableOptions().setRowSizingEnabled(true);
         //Высота строки подстраивается под контент
         //m_view->options().setRowAutoHeight(true);
+        m_view->options().setRowAutoHeight(false);
     }else{
         m_view->tableOptions().setRowFrozenButtonVisible(true);
         m_view->tableOptions().setFrozenPlaceQuickSelection(true);
@@ -91,7 +91,7 @@ RtabController::RtabController( std::shared_ptr<ITableRepository> tables,
     // Drag отключаем — он конкурирует с rubber-band
     m_view->options().setDragEnabled(false);
     // Sets the value that indicates whether the filter panel can automatically hide or not.
-    m_view->options().setFilterAutoHide(true);
+    m_view->options().setFilterAutoHide(false);
     // Sets the painting the doted frame around the cell with focus to the enabled. By default frame is enabled.
     //m_view->options().setFocusFrameEnabled(true);
     // Sets the visibility status of the grid grouping panel to groupsHeader.
@@ -121,29 +121,30 @@ RtabController::RtabController( std::shared_ptr<ITableRepository> tables,
     m_filterManager = std::make_unique<FilterManager>(m_view, m_model.get(),
                                                       m_grid);
 
-    createCommonTableActions();
-
+    if (!m_UIForm.Vertical()) {
+        createCommonTableActions();
+    }
     m_menuBuilder = std::make_unique<ContextMenuBuilder>(
         m_view, m_linkedFormCtrl.get(), m_comTabAct, this);
-    m_menuBuilder->initMenu(m_grid);
+    m_menuBuilder->initMenu(m_grid, m_UIForm.Vertical());
 
     setupConnections();
 
-
     //dumpShortcuts(m_grid, "before clear");
-    // Снимаем F5/Delete со встроенных action-ов QTitan
     auto& acts = m_view->actions();
 
-    // удалить shortcut у DeleteRowAction
-    if (acts.contains(Qtitan::GridViewBase::DeleteRowAction)) {
-        acts[Qtitan::GridViewBase::DeleteRowAction]->setShortcut(QKeySequence());
-    }
-
-    // если F5 где-то используется (например Find/Refresh)
-    for (auto it = acts.begin(); it != acts.end(); ++it) {
-        if (it.value()->shortcut() == QKeySequence(Qt::Key_F5)) {
+    if (m_UIForm.Vertical()) {
+        // Для вертикальных — снимаем вообще все шорткаты QTitan
+        for (auto it = acts.begin(); it != acts.end(); ++it)
             it.value()->setShortcut(QKeySequence());
-        }
+    } else {
+        // Для горизонтальных — только конфликтующие Del и F5
+        if (acts.contains(Qtitan::GridViewBase::DeleteRowAction))
+            acts[Qtitan::GridViewBase::DeleteRowAction]->setShortcut(QKeySequence());
+
+        for (auto it = acts.begin(); it != acts.end(); ++it)
+            if (it.value()->shortcut() == QKeySequence(Qt::Key_F5))
+                it.value()->setShortcut(QKeySequence());
     }
 
     //dumpShortcuts(m_grid, "after clear");
@@ -151,15 +152,25 @@ RtabController::RtabController( std::shared_ptr<ITableRepository> tables,
 
 RtabController::~RtabController()
 {
-    spdlog::info("RtabController::~RtabController [{}]", m_UIForm.Name());
+    spdlog::info("RtabController::~RtabController [{}]", m_UIForm.DisplayName());
 
     if (m_tableEvents) {
         disconnect(m_tableEvents.get(), nullptr, m_model.get(), nullptr);
         disconnect(m_tableEvents.get(), nullptr, this, nullptr);
     }
+
+    // Отсоединяем грид от модели ДО уничтожения модели.
+    // Иначе GridModelController::modelDestroyed попытается обратиться
+    // к PersistentRow в уже разрушающейся модели.
+    if (m_view) {
+        m_view->setModel(nullptr); // или m_grid->setModel(nullptr)
+    }
+
+    // unique_ptr-ы уничтожаются в порядке объявления:
+    // m_model уничтожается последним среди данных
 }
 
-RtabShell* RtabController::createShell(bool withToolbar)
+RtabShell* RtabController::createShell(const TableProperties& tabProp)
 {
     if (m_shellCreated) {
         spdlog::error("RtabController::createShell called twice for table [{}]",
@@ -171,7 +182,7 @@ RtabShell* RtabController::createShell(bool withToolbar)
     auto* shell = new RtabShell(
         m_grid, m_view, m_model.get(),
         m_filterManager.get(), this,
-        withToolbar,
+        tabProp,
         nullptr);   // владелец — CDockWidget, не контроллер
 
     // Статусбар shell'а обновляем при сбросе модели
@@ -181,36 +192,28 @@ RtabShell* RtabController::createShell(bool withToolbar)
     return shell;
 }
 
-void RtabController::createCommonTableActions(){
+void RtabController::createCommonTableActions()
+{
     m_comTabAct.addRow = new QAction(
         QIcon(":/images/Rastr3_grid_addrow_16x16.png"),
         tr("Добавить строку (Ctrl+A)"), this);
-    m_comTabAct.addRow->setShortcut(Qt::CTRL | Qt::Key_A);
-    m_comTabAct.addRow->setShortcutContext(Qt::WidgetWithChildrenShortcut);
 
     m_comTabAct.insertRow = new QAction(
         QIcon(":/images/Rastr3_grid_insrow_16x16.png"),
         tr("Вставить строку (Ctrl+I)"), this);
-    m_comTabAct.insertRow->setShortcut(Qt::CTRL | Qt::Key_I);
-    m_comTabAct.insertRow->setShortcutContext(Qt::WidgetWithChildrenShortcut);
 
     m_comTabAct.deleteRow = new QAction(
         QIcon(":/images/Rastr3_grid_delrow_16x16.png"),
         tr("Удалить строку (Ctrl+D)"), this);
-    m_comTabAct.deleteRow->setShortcut(Qt::CTRL | Qt::Key_D);
-    m_comTabAct.deleteRow->setShortcutContext(Qt::WidgetWithChildrenShortcut);
 
     m_comTabAct.duplicateRow = new QAction(
         QIcon(":/images/Rastr3_grid_duprow_16x161.png"),
         tr("Дублировать строку (Ctrl+R)"), this);
-    m_comTabAct.duplicateRow->setShortcut(Qt::CTRL | Qt::Key_R);
-    m_comTabAct.duplicateRow->setShortcutContext(Qt::WidgetWithChildrenShortcut);
 
     m_comTabAct.groupCorr = new QAction(
         QIcon(":/images/column_edit.png"),
         tr("Групповая корректировка"), this);
 
-    // Подключаем к слотам контроллера — единственное место подключения
     connect(m_comTabAct.addRow,       &QAction::triggered,
             this, &RtabController::slot_addRow);
     connect(m_comTabAct.insertRow,    &QAction::triggered,
@@ -245,8 +248,11 @@ void RtabController::setupShortcuts(RGrid* grid)
 
 void RtabController::createModel(std::shared_ptr<ITableRepository> tables)
 {
+    QElapsedTimer t; t.start();
     m_model = std::make_unique<RModel>(this, tables);
     m_model->setForm(&m_UIForm);
+    spdlog::info("[PERF] make RModel: {} ms", t.restart());
+
     if (!m_model->populateDataFromRastr())
     {
         // Таблица не найдена в плагине (файл не загружен или имя неверно).
@@ -258,33 +264,39 @@ void RtabController::createModel(std::shared_ptr<ITableRepository> tables)
             tr("Ошибка открытия таблицы"),
             tr("Таблица \"%1\" недоступна.\n"
                "Убедитесь, что файл данных загружен.")
-                .arg(QString::fromStdString(m_UIForm.Name())));
+                .arg(QString::fromStdString(m_UIForm.DisplayName())));
         return;   // m_model валиден, но пуст — Grid не инициализируем
     }
+    spdlog::info("[PERF] populateDataFromRastr: {} ms", t.restart());
+
     m_view->beginUpdate();
     m_view->setModel(m_model.get());
-
-    applyAllColumnEditors();
+    spdlog::info("[PERF] setModel: {} ms", t.restart());
 
     //Порядок колонок как в форме
     int vi = 0;
-    for (const auto& f : m_UIForm.Fields()){
-        for (const RCol& rcol : *m_model->getRdata()){
-            if (f.Name() == rcol.getColName()){
-                auto* column_qt =
-                    getColumnByIndex(rcol.getIndex());
-                column_qt->setVisualIndex(vi++);
+    for (const auto& f : m_UIForm.Fields()) {
+        for (const RCol& rcol : m_model->getRdata()) {
+            if (f.Name() == rcol.getColName()) {
+                auto* col = getColumnByIndex(rcol.getIndex());
+                col->setVisualIndex(vi++);
                 break;
             }
         }
     }
-    m_view->endUpdate();
+    spdlog::info("[PERF] setVisualIndex loop: {} ms", t.restart());
+    // Редакторы и видимость — всё внутри одного update-блока
+    applyAllColumnEditors();
+    spdlog::info("[PERF] applyAllColumnEditors: {} ms", t.restart());
 
+    m_view->endUpdate();
+    spdlog::info("[PERF] first endUpdate (render): {} ms", t.restart());
     // ── Применяем ширины из бэка при первом открытии ──
     // setTableView отключает columnAutoWidth и выставляет ширины из RCol::getWidth()
     if (!m_UIForm.Vertical()){
         setTableView();
     }
+    spdlog::info("[PERF] setTableView: {} ms", t.restart());
 
     m_linkedFormCtrl = std::make_unique<LinkedFormController>(
         tables,
@@ -294,10 +306,12 @@ void RtabController::createModel(std::shared_ptr<ITableRepository> tables)
         m_model.get(),
         m_UIForm,
         this);
+    spdlog::info("[PERF] make LinkedFormController: {} ms", t.restart());
 
     m_condFormatCtrl = std::make_unique<CondFormatController>(
         m_model.get(), m_view, m_grid);
     m_condFormatCtrl->loadFromJson();
+    spdlog::info("[PERF] make CondFormatController: {} ms", t.restart());
 }
 
 void RtabController::setupConnections()
@@ -324,42 +338,48 @@ void RtabController::setupConnections()
     connect(ev, &ITableEvents::sig_EndResetModel,this,
             &RtabController::slot_endResetModel);
     //ContextMenuBuilder -> RtabController
-    connect(m_menuBuilder.get(), &ContextMenuBuilder::sig_colProp,
-            this, &RtabController::slot_openColProp);
     connect(m_menuBuilder.get(), &ContextMenuBuilder::sig_exportCsv,
             this, &RtabController::slot_openExportCSVForm);
     connect(m_menuBuilder.get(), &ContextMenuBuilder::sig_importCsv,
             this, &RtabController::slot_openImportCSVForm);
-    connect(m_menuBuilder.get(), &ContextMenuBuilder::sig_widthByTemplate,
-            this, &RtabController::slot_widthByTemplate);
-    connect(m_menuBuilder.get(), &ContextMenuBuilder::sig_widthByData,
-            this, &RtabController::slot_widthByData);
-    connect(m_menuBuilder.get(), &ContextMenuBuilder::sig_directCodeToggle,
-            this, &RtabController::slot_directCodeToggle);
-    connect(m_menuBuilder.get(), &ContextMenuBuilder::sig_condFormatsEdit,
-            this, &RtabController::slot_condFormatsEdit);
-
-    connect(m_menuBuilder.get(), &ContextMenuBuilder::sig_selection,
-            m_filterManager.get(), &FilterManager::slot_openSelection);
+    // Остальные сигналы ContextMenuBuilder — только для горизонтальных
+    if (!m_UIForm.Vertical()) {
+        connect(m_menuBuilder.get(), &ContextMenuBuilder::sig_colProp,
+                this, &RtabController::slot_openColProp);
+        connect(m_menuBuilder.get(), &ContextMenuBuilder::sig_widthByTemplate,
+                this, &RtabController::slot_widthByTemplate);
+        connect(m_menuBuilder.get(), &ContextMenuBuilder::sig_widthByData,
+                this, &RtabController::slot_widthByData);
+        connect(m_menuBuilder.get(), &ContextMenuBuilder::sig_directCodeToggle,
+                this, &RtabController::slot_directCodeToggle);
+        connect(m_menuBuilder.get(), &ContextMenuBuilder::sig_condFormatsEdit,
+                this, &RtabController::slot_condFormatsEdit);
+        connect(m_menuBuilder.get(), &ContextMenuBuilder::sig_selection,
+                m_filterManager.get(), &FilterManager::slot_openSelection);
+    }
     // Обновление ссылочных справочников при изменении строк в других таблицах
     connect(ev,  &ITableEvents::sig_ReferenceChanged,
             m_model.get(), &RModel::slot_RefTableChanged);
     connect(m_model.get(), &RModel::sig_nameRefUpdated,
-            this, [this](std::vector<size_t> cols) {
+            this, [this](const std::vector<size_t>& cols) {
                 for (size_t i : cols) {
-                    auto* column_qt = getColumnByIndex(i);
+                    auto* column_qt = getColumnByIndex(static_cast<int>(i));
                     if (!column_qt) continue;
-                    auto* repo = static_cast<SearchableComboRepositoryTwo*>(
+                    auto* repo = static_cast<SearchableComboRepository*>(
                         column_qt->editorRepository());
                     if (!repo) continue;
-                    repo->updateItems(
-                        m_model->getColumnEditorInfo(static_cast<int>(i)).nameRefData.items);
+                    // getColumnEditorInfo теперь возвращает const& — копии нет
+                    const auto& info = m_model->getColumnEditorInfo(static_cast<int>(i));
+                    repo->updateItems(info.nameRefData);
                 }
             });
-    //QTitan
-    //Connect Grid's context menu handler.
-    connect(m_view, &GridTableView::contextMenu,
-            this, &RtabController::slot_contextMenu);
+    if (!m_UIForm.Vertical()){
+        connect(m_view, &GridTableView::contextMenu,
+                this, &RtabController::slot_contextMenu);
+    }else{
+        connect(m_view, &GridTableView::contextMenu,
+                this, &RtabController::slot_contextMenuVertical);
+    }
 }
 
 void RtabController::applyAllColumnEditors(){
@@ -380,32 +400,30 @@ void RtabController::applyColumnEditor(int colIndex)
     column_qt->setProperty("isNumeric", false);
     column_qt->setProperty("isBool",    false);
 
-    const auto info = m_model->getColumnEditorInfo(colIndex);
+    const auto& info = m_model->getColumnEditorInfo(colIndex);
 
     switch (info.editorType)
     {
-    case RModel::ColumnEditorInfo::Type::CheckBox:
+    case ColumnEditorInfo::Type::CheckBox:
         column_qt->setProperty("isBool", true);
         column_qt->setEditorType(GridEditor::CheckBox);
         static_cast<Qtitan::GridCheckBoxEditorRepository*>(
             column_qt->editorRepository())
             ->setAppearance(GridCheckBox::StyledAppearance);
         break;
-    case RModel::ColumnEditorInfo::Type::Numeric: {
+    case ColumnEditorInfo::Type::Numeric: {
         auto* repo = new DoubleEditorRepository(
             info.decimals, info.minVal, info.maxVal);
         column_qt->setProperty("isNumeric", true);
         column_qt->setEditorRepository(repo);
 
-        // Сортировка по UserRole (raw double), не по DisplayRole (QString)
+
         GridModelDataBinding* binding = m_view->getDataBinding(column_qt);
         if (binding)
             binding->setSortRole(Qt::UserRole);
-
-        column_qt->setProperty("isNumeric", true);
         break;
     }
-    case RModel::ColumnEditorInfo::Type::DateTime: {
+    case ColumnEditorInfo::Type::DateTime: {
         column_qt->setEditorType(GridEditor::DateTime);
         auto* repo = static_cast<Qtitan::GridDateTimeEditorRepository*>(
             column_qt->editorRepository());
@@ -415,11 +433,11 @@ void RtabController::applyColumnEditor(int colIndex)
         repo->setCalendarPopup(false);
         break;
     }
-    case RModel::ColumnEditorInfo::Type::Color:{
+    case ColumnEditorInfo::Type::Color:{
         column_qt->setEditorType(GridEditor::Color);
         break;
     }
-    case RModel::ColumnEditorInfo::Type::ComboBox: {
+    case ColumnEditorInfo::Type::ComboBox: {
         column_qt->setProperty("isNumeric", true);
         column_qt->setEditorType(GridEditor::ComboBox);
 
@@ -428,13 +446,13 @@ void RtabController::applyColumnEditor(int colIndex)
                                                        (Qt::ItemDataRole)Qtitan::ComboBoxRole);
         break;
     }
-    case RModel::ColumnEditorInfo::Type::NameRef: {
+    case ColumnEditorInfo::Type::NameRef: {
         column_qt->setProperty("isNumeric", true);
-        auto* repo = new SearchableComboRepositoryTwo(info.nameRefData.items, m_grid);
+        auto* repo = new SearchableComboRepository(info.nameRefData, m_grid);
         column_qt->setEditorRepository(repo);
         break;
     }
-    case RModel::ColumnEditorInfo::Type::ComboBoxPicture:
+    case ColumnEditorInfo::Type::ComboBoxPicture:
     {
         column_qt->setProperty("isNumeric", true);
         column_qt->setEditorType(GridEditor::ComboBox);
@@ -442,7 +460,7 @@ void RtabController::applyColumnEditor(int colIndex)
                      info.picItems.size());
         break;
     }
-    case RModel::ColumnEditorInfo::Type::None:
+    case ColumnEditorInfo::Type::None:
     default:
         break;
     }
@@ -495,27 +513,24 @@ void RtabController::slot_duplicateRow(){
         m_view->setFocusedRowIndex(dup.rowIndex());
 }
 
-void RtabController::slot_deleteRow(){
+void RtabController::slot_deleteRow()
+{
     QModelIndexList selected = m_view->selection()->selectedRowIndexes();
     if (selected.isEmpty()) return;
 
-    // Собираем уникальные строки (selectedRowIndexes может дублировать при MultiCell)
-    QSet<int> rowSet;
+    // std::set<int, greater> — сразу в порядке убывания,
+    // чтобы индексы вышестоящих строк не смещались
+    std::set<int, std::greater<int>> rows;
     for (const QModelIndex& mi : selected)
-        rowSet.insert(mi.row());
+        rows.insert(mi.row());
 
-    if (rowSet.size() > 1) {
+    if (rows.size() > 1) {
         auto btn = QMessageBox::question(
             m_grid, tr("Подтверждение"),
-            tr("Удалить %1 записей?").arg(rowSet.size()),
+            tr("Удалить %1 записей?").arg(rows.size()),
             QMessageBox::Yes | QMessageBox::Cancel);
         if (btn != QMessageBox::Yes) return;
     }
-
-    // Сортируем по убыванию — удаляем снизу вверх,
-    // чтобы индексы вышестоящих строк не смещались
-    QList<int> rows(rowSet.begin(), rowSet.end());
-    std::sort(rows.begin(), rows.end(), std::greater<int>());
 
     m_view->beginUpdate();
     for (int row : rows)
@@ -523,7 +538,7 @@ void RtabController::slot_deleteRow(){
     m_view->endUpdate();
 
     // Фокус на строку, ближайшую к удалённому диапазону
-    const int topRow  = rows.last(); // наименьший (список убывающий)
+    const int topRow  = *rows.rbegin(); // наименьший индекс
     const int newFocus = std::min(topRow, m_model->rowCount() - 1);
     if (newFocus >= 0) {
         GridRow r = m_view->getRow(m_model->index(newFocus, 0));
@@ -534,7 +549,7 @@ void RtabController::slot_deleteRow(){
 
 void RtabController::slot_groupCorrection(){
     const int col = m_view->selection()->cell().columnIndex();
-    RCol* prcol = m_model->getRCol(col);
+    const auto* prcol = m_model->getRCol(col);
     if (!prcol){
         return;
     }
@@ -552,7 +567,7 @@ void RtabController::slot_beginResetModel(const std::string& tname){
 
     // Сохраняем видимость по имени колонки (не по caption — он может меняться)
     m_columnsVisible.clear();
-    for (const RCol& rcol : *m_model->getRdata()) {
+    for (const RCol& rcol : m_model->getRdata()) {
         auto* col = getColumnByIndex(rcol.getIndex());
         m_columnsVisible[QString::fromStdString(rcol.getColName())]
             = col ? col->isVisible() : true;
@@ -565,7 +580,7 @@ void RtabController::slot_endResetModel(const std::string& tname){
     // Восстанавливаем видимость и переназначаем редакторы.
     // К этому моменту RModel::slot_EndResetModel уже вызвал
     // populateDataFromRastr() — новые RData/RCol уже готовы.
-    for (const RCol& rcol : *m_model->getRdata()) {
+    for (const RCol& rcol : m_model->getRdata()) {
         auto* col = getColumnByIndex(rcol.getIndex());
         if (!col) continue;
 
@@ -615,9 +630,7 @@ void RtabController::slot_openColProp(int col)
 
 void RtabController::slot_directCodeToggle(std::size_t column)
 {
-    RCol* prcol = m_model->getRCol(column);
-    if (!prcol) return;
-    prcol->invertDirectCodeStatus();
+    m_model->invertDirectCode(column);
 
     m_view->beginUpdate();
     applyColumnEditor(column);
@@ -643,8 +656,9 @@ void RtabController::setTableView(int multiplier  )
     m_view->tableOptions().setColumnAutoWidth(false);
     // Выравнивание
     for (auto [idx, width] : m_model->columnsWidth()) {
-        m_view->getColumn(idx)->setWidth(width * multiplier);
-        m_view->getColumn(idx)->setTextAlignment(Qt::AlignLeft);
+        auto* col = m_view->getColumn(idx);
+        col->setWidth(width * multiplier);
+        col->setTextAlignment(Qt::AlignLeft);
     }
     m_view->endUpdate();
 }
@@ -676,7 +690,7 @@ void RtabController::slot_openExportCSVForm()
     auto* dlg = new ExportCSVdialog(
         m_tables,
         m_UIForm.TableName(),
-        m_model->getRdata()->get_cols(),
+        m_model->getRdata().get_cols(),
         m_grid);
     dlg->setAttribute(Qt::WA_DeleteOnClose);
     dlg->show();
@@ -687,7 +701,7 @@ void RtabController::slot_openImportCSVForm()
     auto* dlg = new ImportCSV2dialog(
         m_tables,
         m_UIForm.TableName(),
-        m_model->getRdata()->get_cols(),
+        m_model->getRdata().get_cols(),
         m_grid);
     dlg->setAttribute(Qt::WA_DeleteOnClose);
     dlg->show();
@@ -707,23 +721,31 @@ void RtabController::slot_contextMenu(ContextMenuEventArgs* args)
 
     // ── Меню заголовка
     if (isHeader) {
-        RCol* col = m_model->getRCol(column);   // может быть nullptr — prepareForHeader это учитывает
+        const auto* col = m_model->getRCol(column);   // может быть nullptr — prepareForHeader это учитывает
         m_menuBuilder->prepareForHeader(column, col, args->contextMenu());
         return;
     }
     // ── Меню ячейки
     const int row = hit.row().rowIndex();
     const int row_model = hit.row().modelIndex().row();
-    RCol* col = m_model->getRCol(column);
+    const auto* col = m_model->getRCol(column);
     if (!col) return;
 
     MenuContext ctx { column, row_model, col };
     m_menuBuilder->prepareForShow(ctx, args->contextMenu());
 }
 
+void RtabController::slot_contextMenuVertical(ContextMenuEventArgs* args)
+{
+    QMenu* menu = args->contextMenu();
+    menu->clear();
+    menu->addAction(m_menuBuilder->actionExport());
+    menu->addAction(m_menuBuilder->actionImport());
+}
+
 int RtabController::getLongValue(const std::string& key, long row){
-    int col = m_model->getRdata()->mCols_.at(key);
-    return std::visit(ToLong(), m_model->getRdata()->pnparray_->Get(row,col));
+    int col = m_model->getRdata().mCols_.at(key);
+    return std::visit(ToLong(), m_model->getRdata().datablock->Get(row,col));
 }
 
 void RtabController::clearLinkedFilter()

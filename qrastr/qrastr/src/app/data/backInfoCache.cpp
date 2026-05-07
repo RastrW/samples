@@ -1,9 +1,15 @@
 #include "backInfoCache.h"
+#include <unordered_set>
 #include "table/rTablesDataAdapter.h"
 #include "rdata.h"
 #include "table/QDataBlocks.h"
 #include "utils.h"
 #include <spdlog/spdlog.h>
+#include "сolumnEditorInfo.h"
+
+static const std::unordered_set<std::string> kFullColumnTables = {
+    "graphikIT", "graphik2"
+};
 
 void BackInfoCache::clear()
 {
@@ -87,14 +93,59 @@ void BackInfoCache::loadNameref(const RCol& rcol,
     if (!parts) return;
 
     const size_t idx = static_cast<size_t>(rcol.getIndex());
-    const long nameIdx = tables->columnIndex(parts->srcTable, "name");
-    //если колонке не "name", то описание в nameref нет, в редакторе одна колонка
-    //если ссылка на таблицу `graphikIT`, `graphik2`, то в редакторе должны демонстрироваться все колонки этой таблицы.
-    const std::string valueCol = (nameIdx > -1) ? "name" : parts->keyCol;
+    const std::string& srcTable = parts->srcTable;
 
-    m_nameref.emplace(idx, buildIdNameMap(tables, parts->srcTable,
-                                          parts->keyCol, valueCol));
-    m_namerefSources[parts->srcTable].push_back(idx);
+    ColumnEditorInfo::NameRefData nrd;
+
+    if (kFullColumnTables.count(srcTable)) {
+        // Режим "все колонки" — graphikIT / graphik2
+        // Запрашиваем схему, чтобы узнать все колонки
+        auto schema = tables->getSchema(srcTable);
+        std::string allCols = parts->keyCol;
+        for (const auto& cs : schema.columns)
+            if (cs.name != parts->keyCol)
+                allCols += "," + cs.name;
+
+        QDataBlock qdb;
+        tables->fillBlock(srcTable, qdb, allCols);
+
+        // Заголовки (кроме ключевой)
+        for (size_t ci = 1; ci < schema.columns.size(); ++ci)
+            nrd.columns.push_back({ QString::fromStdString(schema.columns[ci].title) });
+
+        for (int row = 0; row < qdb.RowsCount(); ++row) {
+            ColumnEditorInfo::NameRefData::Row r;
+            r.key = static_cast<size_t>(std::visit(ToLong(), qdb.Get(row, 0)));
+            for (int c = 1; c < static_cast<int>(schema.columns.size()); ++c)
+                r.values.push_back(std::visit(ToString(), qdb.Get(row, c)));
+            nrd.rows.push_back(std::move(r));
+        }
+    } else {
+        // Обычный режим: ключ + name (если есть) или только ключ
+        const long nameColIdx = tables->columnIndex(srcTable, "name");
+        const bool hasName = (nameColIdx >= 0);
+        const std::string valueCols = hasName
+                                          ? parts->keyCol + ",name"
+                                          : parts->keyCol;
+
+        QDataBlock qdb;
+        tables->fillBlock(srcTable, qdb, valueCols);
+
+        if (hasName)
+            nrd.columns.push_back({"Название"});
+        // если нет name — columns пустой, popup покажет только ключ
+
+        for (int row = 0; row < qdb.RowsCount(); ++row) {
+            ColumnEditorInfo::NameRefData::Row r;
+            r.key = static_cast<size_t>(std::visit(ToLong(), qdb.Get(row, 0)));
+            if (hasName)
+                r.values.push_back(std::visit(ToString(), qdb.Get(row, 1)));
+            nrd.rows.push_back(std::move(r)); // дубли ключей сохраняются!
+        }
+    }
+
+    m_nameref.emplace(idx, std::move(nrd));
+    m_namerefSources[srcTable].push_back(idx);
 }
 
 void BackInfoCache::loadEnpic(const RCol& rcol)
@@ -163,9 +214,48 @@ std::vector<size_t> BackInfoCache::rebuildRefsFrom(const std::string& srcTable,
     auto rebuildNameref = [&](size_t pluginIdx, const RCol& rcol) -> bool {
         const auto parts = BackInfoCache::parseNamerefStr(rcol.getNameRef());
         if (!parts) return false;
-        const long nameIdx = tables->columnIndex(srcTable, "name");
-        const std::string valueCol = (nameIdx > -1) ? "name" : parts->keyCol;
-        m_nameref[pluginIdx] = buildIdNameMap(tables, srcTable, parts->keyCol, valueCol);
+
+        ColumnEditorInfo::NameRefData nrd;
+        const std::string& src = parts->srcTable;
+        const long nameIdx = tables->columnIndex(src, "name");
+
+        if (kFullColumnTables.count(src)) {
+            // полный режим — аналогично loadNameref
+            auto schema = tables->getSchema(src);
+            std::string allCols = parts->keyCol;
+            for (const auto& cs : schema.columns)
+                if (cs.name != parts->keyCol)
+                    allCols += "," + cs.name;
+            QDataBlock qdb;
+            tables->fillBlock(src, qdb, allCols);
+            for (size_t ci = 1; ci < schema.columns.size(); ++ci)
+                nrd.columns.push_back({ QString::fromStdString(schema.columns[ci].title) });
+            for (int row = 0; row < qdb.RowsCount(); ++row) {
+                ColumnEditorInfo::NameRefData::Row r;
+                r.key = static_cast<size_t>(std::visit(ToLong(), qdb.Get(row, 0)));
+                for (int c = 1; c < static_cast<int>(schema.columns.size()); ++c)
+                    r.values.push_back(std::visit(ToString(), qdb.Get(row, c)));
+                nrd.rows.push_back(std::move(r));
+            }
+        } else {
+            const bool hasName = (nameIdx >= 0);
+            const std::string valueCols = hasName
+                                              ? parts->keyCol + ",name"
+                                              : parts->keyCol;
+            QDataBlock qdb;
+            tables->fillBlock(src, qdb, valueCols);
+            if (hasName)
+                nrd.columns.push_back({"Название"});
+            for (int row = 0; row < qdb.RowsCount(); ++row) {
+                ColumnEditorInfo::NameRefData::Row r;
+                r.key = static_cast<size_t>(std::visit(ToLong(), qdb.Get(row, 0)));
+                if (hasName)
+                    r.values.push_back(std::visit(ToString(), qdb.Get(row, 1)));
+                nrd.rows.push_back(std::move(r));
+            }
+        }
+
+        m_nameref[pluginIdx] = std::move(nrd);
         return true;
     };
 
@@ -262,7 +352,7 @@ const BackInfoCache::RefMap* BackInfoCache::superenumMap(size_t colIdx) const
     return it != m_superenum.end() ? &it->second : nullptr;
 }
 
-const BackInfoCache::RefMap* BackInfoCache::namerefMap(size_t colIdx) const
+const ColumnEditorInfo::NameRefData* BackInfoCache::namerefData(size_t colIdx) const
 {
     auto it = m_nameref.find(colIdx);
     return it != m_nameref.end() ? &it->second : nullptr;

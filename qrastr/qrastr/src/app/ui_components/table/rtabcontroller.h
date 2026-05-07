@@ -26,6 +26,13 @@ class TableDockManager;
 namespace ads { class CDockManager; }
 namespace Qtitan { class GridTableView; }
 
+struct TableProperties{
+    bool isLinked {false};
+    bool isVertical {false};
+    bool withToolbar {true};
+    QString formQName;
+};
+
 /**
  * @brief Контроллер таблицы Rastr — управляет данными и
  * отображает одну таблицу Rastr в QTitan Grid.
@@ -54,7 +61,7 @@ public:
      * Можно вызвать только один раз: повторный вызов вернёт nullptr и залогирует ошибку.
      * @param withToolbar  false для связанных форм (без тулбара и шорткатов).
      */
-    RtabShell* createShell(bool withToolbar = true);
+    RtabShell* createShell(const TableProperties& tabProp);
 
     // ── Public API (данные) ──────────────────────────────────────────────────
     int  getLongValue(const std::string& key, long row);
@@ -99,6 +106,7 @@ public slots:
 
 private slots:
     void slot_contextMenu(ContextMenuEventArgs* args);
+    void slot_contextMenuVertical(ContextMenuEventArgs* args);
     void slot_beginResetModel(const std::string& tname);
     void slot_endResetModel(const std::string& tname);
 

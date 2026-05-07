@@ -39,9 +39,7 @@ public:
     // ── Формы ────────────────────────────────────────────────────────────────
 
     /// Установить список статических форм.
-    void setForms(const std::list<CUIForm>& forms);
-
-    const std::list<CUIForm>& forms() const { return m_forms; }
+    void setForms(const std::vector<CUIForm>& forms);
 
     std::pair<ads::CDockWidget*, RtabController*>
     openForm(const CUIForm& form,
@@ -100,7 +98,7 @@ private:
     QWidget*                            m_parentWidget;
 
     // ── Состояние ────────────────────────────────────────────────────────────
-    std::list<CUIForm>         m_forms;
+    const std::vector<CUIForm>* m_pForms = nullptr;
     std::map<QString, int>     m_formNameToIndex;  ///< Быстрый поиск по имени
     QList<RtabController*>         m_openForms;
     RtabController*                m_activeForm {nullptr};
@@ -108,4 +106,5 @@ private:
     // ── Вспомогательные методы ───────────────────────────────────────────────
     /// Генерировать пункты меню «Свойства» из таблиц с .form-шаблонами.
     void generateDynamicForms(QMenu* menu);
+    const CUIForm* findForm(const std::string& name) const;
 };

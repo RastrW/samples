@@ -32,13 +32,23 @@ void ContextMenuBuilder::removeUnwantedBuiltins(QMenu* menu)
     }
 }
 
-void ContextMenuBuilder::initMenu(QWidget* menuParent)
+void ContextMenuBuilder::initMenu(QWidget* menuParent, bool isVertical)
 {
+    // ── Экспорт / Импорт
+    m_actExport = new QAction(tr("Экспорт CSV"), this);
+    m_actImport = new QAction(tr("Импорт CSV"), this);
+    connect(m_actExport, &QAction::triggered,
+            this, &ContextMenuBuilder::sig_exportCsv);
+    connect(m_actImport, &QAction::triggered,
+            this, &ContextMenuBuilder::sig_importCsv);
+
+    if (isVertical)
+        return; // для вертикальных — только экспорт/импорт, всё остальное не нужно
+
     // Подменю связанных форм/макросов парентим к menuParent (виджет-хозяин),
     // чтобы они жили независимо от конкретного QMenu Qtitan
     m_linkedFormsMenu  = new QMenu(tr("Связанные формы"), menuParent);
     m_linkedMacrosMenu = new QMenu(tr("Макрос"),          menuParent);
-
     // ── Динамические (парентим к this, живут между вызовами меню) ──────
     m_actDesc = new QAction(this);
     connect(m_actDesc, &QAction::triggered,
@@ -51,30 +61,24 @@ void ContextMenuBuilder::initMenu(QWidget* menuParent)
     m_actDirect->setCheckable(true);
     connect(m_actDirect, &QAction::triggered,
             this, [this]() { emit sig_directCodeToggle(m_currentCol); });
-
     // ── Строковые операции ──────────────────────────────────────────────
     menuParent->addAction(m_comTabAct.insertRow);
     menuParent->addAction(m_comTabAct.addRow);
     menuParent->addAction(m_comTabAct.duplicateRow);
     menuParent->addAction(m_comTabAct.deleteRow);
     menuParent->addAction(m_comTabAct.groupCorr);
-
     // ── Выравнивание ────────────────────────────────────────────────────
     m_actTmpl = new QAction(tr("Выравнивание: по шаблону"), this);
     m_actData = new QAction(tr("Выравнивание: по данным"),  this);
-    connect(m_actTmpl, &QAction::triggered, this, &ContextMenuBuilder::sig_widthByTemplate);
-    connect(m_actData, &QAction::triggered, this, &ContextMenuBuilder::sig_widthByData);
+    connect(m_actTmpl, &QAction::triggered,
+            this, &ContextMenuBuilder::sig_widthByTemplate);
+    connect(m_actData, &QAction::triggered,
+            this, &ContextMenuBuilder::sig_widthByData);
 
-    // ── Экспорт / Импорт / Выборка ──────────────────────────────────────
-    m_actExport = new QAction(tr("Экспорт CSV"), this);
-    m_actImport = new QAction(tr("Импорт CSV"), this);
-    m_actSel    = new QAction(tr("Выборка"),    this);
-    connect(m_actExport, &QAction::triggered, this, &ContextMenuBuilder::sig_exportCsv);
-    connect(m_actImport, &QAction::triggered, this, &ContextMenuBuilder::sig_importCsv);
+    m_actSel = new QAction(tr("Выборка"), this);
     // Передаём текущую колонку вместе с сигналом ─ исправляет баг «неверная колонка»
     connect(m_actSel, &QAction::triggered,
             this, [this]() { emit sig_selection(m_currentCol); });
-
     // ── Условное форматирование ─────────────────────────────────────────
     m_actCF = new QAction(QIcon(":/icons/edit_cond_formats"),
                           tr("Условное форматирование"), this);
@@ -82,7 +86,7 @@ void ContextMenuBuilder::initMenu(QWidget* menuParent)
             this, [this]() { emit sig_condFormatsEdit(m_currentCol); });
 }
 
-void ContextMenuBuilder::prepareForHeader(int column, RCol* col, QMenu* menu)
+void ContextMenuBuilder::prepareForHeader(int column, const RCol* col, QMenu* menu)
 {
     m_currentCol = column;
 

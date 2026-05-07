@@ -24,20 +24,18 @@ public:
 
     /**
      * Получает общий QDataBlock из репозитория.
-     * После вызова pnparray_ указывает на тот же объект,
+     * После вызова datablock указывает на тот же объект,
      * что и у других открытых окон этой таблицы.
      */
     void populateBlock(std::shared_ptr<ITableRepository> tables);
 
-    int         AddCol(const RCol& rcol);
     std::string get_cols(bool visible = true) const;
-    std::string getCommaSeparatedFieldNames() const;
 
     std::string t_name_;
     std::string t_title_;
 
     std::vector<std::string>          vCols_; ///< вектор имён колонок в порядке следования.
-    std::shared_ptr<QDataBlock>       pnparray_;
+    std::shared_ptr<QDataBlock>       datablock;
     std::unordered_map<std::string, int> mCols_; ///< unordered_map<имя_колонки, индекс> для быстрого поиска колонки по имени.
 private:
     std::string m_str_cols; ///< vCols_ в виде строки имен столбцов ex: "ny,pn,qn,vras"

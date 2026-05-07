@@ -89,7 +89,7 @@ void FormManager::prepareForClose()
 }
 
 // Делегаты — таблицы
-void FormManager::setForms(const std::list<CUIForm>& forms){
+void FormManager::setForms(const std::vector<CUIForm>& forms){
     m_tableDockManager->setForms(forms);
 }
 

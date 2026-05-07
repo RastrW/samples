@@ -76,7 +76,19 @@ struct FilterRule {
 
         if (isBool) {
             bool ok = false;
-            const bool cellBool = variantToBool(cellVal, &ok);
+            bool cellBool = variantToBool(cellVal, &ok);
+
+            // Пустое/невалидное значение в bool-колонке = false по умолчанию
+            if (!ok) {
+                if (!cellVal.isValid() ||
+                    cellVal.isNull() ||
+                    cellVal.toString().trimmed().isEmpty())
+                {
+                    cellBool = false;
+                    ok = true;
+                }
+            }
+
             if (!ok)
                 return false;
 

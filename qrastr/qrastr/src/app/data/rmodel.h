@@ -10,6 +10,7 @@ class CUIForm;
 class RData;
 class RCol;
 class CondFormat;
+struct ColumnEditorInfo;
 
 struct ToQVariant {
     QVariant operator()(std::monostate) { return { QVariant() }; }
@@ -20,14 +21,14 @@ struct ToQVariant {
     QVariant operator()(const std::string& value) { return std::string(value).c_str(); }
 };
 
-///@brief Qt модель для связи QDataBlock с QTableView/QTitan Grid
+///@brief Qt модель для связи плагина с QTableView/QTitan Grid
 class RModel : public QAbstractTableModel
 {
     Q_OBJECT
 
 signals:
     void editCompleted(const QString&);
-    void sig_nameRefUpdated(std::vector<size_t> updatedCols);
+    void sig_nameRefUpdated(const std::vector<size_t>& updatedCols);
 
 public slots:
     ///@brief Уведомление от RTDA:
@@ -40,30 +41,9 @@ public slots:
     void slot_EndInsertRow(const std::string& tName);
     void slot_BeginRemoveRows(const std::string& tName, int first, int last);
     void slot_EndRemoveRows(const std::string& tName);
-    void slot_RefTableChanged(const std::string& tname);
+    void slot_RefTableChanged(const std::string& tName);
 
 public:
-    struct ColumnEditorInfo {
-        enum class Type {
-            None, Numeric, CheckBox, ComboBox,
-            ComboBoxPicture, DateTime, Color, NameRef
-        };
-
-        Type        editorType = Type::None;
-        QStringList comboItems;
-        int         decimals   = 2;
-        double      minVal     = -1e6;
-        double      maxVal     =  1e6;
-
-        struct NameRefData {
-            std::unordered_map<size_t, std::string> items;
-        };
-        NameRefData nameRefData;
-
-        struct PicItem { QPixmap image; QString label; };
-        QList<PicItem> picItems;
-    };
-
     /**
      * @param repo  Невладеющий указатель на ITableRepository.
      *              Время жизни репозитория гарантируется RtabController.
@@ -103,13 +83,13 @@ public:
     const std::vector<CondFormat>& getCondFormats(int column) const;
 
     // ── Утилиты ───────────────────────────────────────────────────────────
-    std::vector<std::tuple<int,int>> columnsWidth() const;
-    RCol*             getRCol    (int col) const;
-    int               getIndexCol(const std::string& col) const;
-    RData*            getRdata   ();
-    std::vector<long> getRowsBySelection(const std::string& selection) const;
-    ColumnEditorInfo  getColumnEditorInfo(int colIndex) const;
-
+    std::vector<std::tuple<int,int>>
+        columnsWidth() const;
+    const RCol* getRCol   (int col) const;
+    const RData& getRdata ();
+    const ColumnEditorInfo&
+        getColumnEditorInfo(int colIndex) const;
+    void invertDirectCode(int col);
 private:
     // ── Данные ───────────────────────────────────────────────────────────────
     std::shared_ptr<ITableRepository> m_tables;
@@ -151,4 +131,7 @@ private:
     // Функции получения редактора из кеша и вычисление редактора для колонки в кеш
     ColumnEditorInfo buildColumnEditorInfo(int colIndex) const;
     void             buildEditorInfoCache();
+    //Guard для неинициализированной модели
+    bool isReady() const noexcept;
+    bool isMyTable(const std::string& tName) const noexcept;
 };

@@ -27,15 +27,13 @@ RData::RData(const ITableRepository::TableSchema& schema,
 
         RCol rc;
         rc.initialize(cs);
+        emplace_back(std::move(rc));
 
-        AddCol(rc);
-
-        if (mCols_.find(cs.name) == mCols_.end())
-            mCols_.insert({cs.name, static_cast<int>(cs.index)});
+        mCols_.try_emplace(cs.name, static_cast<int>(cs.index));
     }
 
     // Скрываем колонки, не входящие в форму.
-    // Скрытые колонки присутствуют в pnparray_ — просто не показываются в UI.
+    // Скрытые колонки присутствуют в datablock — просто не показываются в UI.
     std::unordered_set<std::string> formCols;
     for (const auto& f : form.Fields())
         formCols.insert(f.Name());
@@ -50,28 +48,12 @@ RData::RData(const ITableRepository::TableSchema& schema,
     spdlog::debug("RData: table={} columns={}", t_name_, schema.columns.size());
 }
 
-int RData::AddCol(const RCol& rcol)
-{
-    emplace_back(rcol);
-    return static_cast<int>(size());
-}
-
 void RData::populateBlock(std::shared_ptr<ITableRepository> tables)
 {
     // repo — невладеющий указатель, время жизни гарантировано RtabController.
     // getBlock возвращает shared_ptr — счётчик ссылок увеличивается,
     // данные не копируются.
-    pnparray_ = tables->getBlock(t_name_, m_str_cols);
-}
-
-std::string RData::getCommaSeparatedFieldNames() const
-{
-    std::string ret;
-    for (const RCol& rc : *this)
-        ret += rc.getColName() + ",";
-    if (!ret.empty())
-        ret.pop_back();
-    return ret;
+    datablock = tables->getBlock(t_name_, m_str_cols);
 }
 
 std::string RData::get_cols(bool visible) const

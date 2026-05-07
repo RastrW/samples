@@ -6,7 +6,7 @@
 #   - AstraLinux 1.8 (gcc)
 #
 # Все платформы  используют библиотеки из thirdparty
-# ===============================================a=============================
+# ============================================================================
 
 cmake_minimum_required(VERSION 3.23)
 message(STATUS "CMake version: ${CMAKE_VERSION}")
@@ -30,9 +30,14 @@ set(CMAKE_AUTOMOC ON)
 set(CMAKE_AUTORCC ON)
 
 # Output directories - все бинарники идут в ../Debug или ../Release
-set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY "${CMAKE_SOURCE_DIR}/../${CMAKE_BUILD_TYPE}")
-set(CMAKE_LIBRARY_OUTPUT_DIRECTORY "${CMAKE_SOURCE_DIR}/../${CMAKE_BUILD_TYPE}")
-set(CMAKE_RUNTIME_OUTPUT_DIRECTORY "${CMAKE_SOURCE_DIR}/../${CMAKE_BUILD_TYPE}")
+# При использовании Visual Studio cmake generator используем переменные OUTPUT_DIRECTORY_<CONFIG>
+foreach(CONFIG Debug Release)
+    set(CMAKE_RUNTIME_OUTPUT_DIRECTORY_${CONFIG} "${CMAKE_SOURCE_DIR}/../${CONFIG}")
+    set(CMAKE_LIBRARY_OUTPUT_DIRECTORY_${CONFIG} "${CMAKE_SOURCE_DIR}/../${CONFIG}")
+    set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY_${CONFIG} "${CMAKE_SOURCE_DIR}/../${CONFIG}")
+endforeach()
+
+message(STATUS "CMake generator: ${CMAKE_GENERATOR}")
 
 # ============================================================================
 # Compile Definitions
@@ -203,13 +208,14 @@ message(STATUS "Qt found: ${QT_VERSION} at ${Qt${QT_VERSION_MAJOR}_DIR}")
 # ============================================================================
 # Plugins (ASTRA-dependent)
 # ============================================================================
-set(PLUGIN_OUTPUT_DIR "${CMAKE_SOURCE_DIR}/../${CMAKE_BUILD_TYPE}/plugins")
+# Для сообщений используем генератор выражения
+set(PLUGIN_OUTPUT_DIR "${CMAKE_SOURCE_DIR}/../$<CONFIG>/plugins")
 
 add_subdirectory(${SRC_DIR}/plugins/rastr)
 add_subdirectory(${SRC_DIR}/plugins/ti)
 add_subdirectory(${SRC_DIR}/plugins/barsmdp)
 
-message(STATUS "Plugins output directory: ${PLUGIN_OUTPUT_DIR}")
+message(STATUS "Plugins configured to output to: ${PLUGIN_OUTPUT_DIR}")
 
 # qmcr subdirectory
 set(DEPENDENCIES_LOCATION "${THIRDPARTY_DIR}")
@@ -350,6 +356,12 @@ else()
     )
 endif()
 
+# Явно установить выходную папку для исполняемого файла
+# Иначе Visual Studio компилирует в build/<config>/<CONFIG>/
+set_target_properties(${PROJECT_NAME} PROPERTIES
+    RUNTIME_OUTPUT_DIRECTORY_DEBUG "${CMAKE_SOURCE_DIR}/../Debug"
+    RUNTIME_OUTPUT_DIRECTORY_RELEASE "${CMAKE_SOURCE_DIR}/../Release"
+)
 # ============================================================================
 # Link Libraries - линковка библиотек к исполняемому файлу
 # ============================================================================
@@ -494,7 +506,79 @@ function(copy_runtime_file_if_exists target src comment)
         copy_runtime_file(${target} "${src}" "${comment}")
     endif()
 endfunction()
+# ============================================================================
+# Post-build copy of dependencies for both Debug and Release
+# ============================================================================
 
+# Определяем CONFIG_SUFFIX для путей к библиотекам
+if(CMAKE_BUILD_TYPE STREQUAL "Debug")
+    set(CONFIG_SUFFIX "Debug")
+else()
+    set(CONFIG_SUFFIX "Release")
+endif()
+
+# Копируем qmcr (библиотека - DLL на Windows, SO на Linux)
+add_custom_command(TARGET qrastr POST_BUILD
+    COMMAND ${CMAKE_COMMAND} -E copy_if_different
+        "$<TARGET_FILE:qmcr>" "$<TARGET_FILE_DIR:qrastr>/"
+    COMMENT "Copying qmcr library"
+)
+
+if(WIN32)
+    # Windows - копируем DLL файлы
+
+    # Копируем lexilla5.dll
+    set(_lex_dll "${DEPENDENCIES_LOCATION}/compile/lexilla/${PLATFORM_DIR}/${CONFIG_SUFFIX}/bin/lexilla5.dll")
+    if(EXISTS "${_lex_dll}")
+        add_custom_command(TARGET qrastr POST_BUILD
+            COMMAND ${CMAKE_COMMAND} -E copy_if_different
+                "${_lex_dll}" "$<TARGET_FILE_DIR:qrastr>/"
+            COMMENT "Copying lexilla5.dll"
+        )
+    else()
+        message(WARNING "lexilla5.dll not found at ${_lex_dll}")
+    endif()
+
+    # Копируем ScintillaEdit5.dll
+    set(_sci_dll "${DEPENDENCIES_LOCATION}/compile/ScintillaEdit/${PLATFORM_DIR}/${CONFIG_SUFFIX}/lib/ScintillaEdit5.dll")
+    if(EXISTS "${_sci_dll}")
+        add_custom_command(TARGET qrastr POST_BUILD
+            COMMAND ${CMAKE_COMMAND} -E copy_if_different
+                "${_sci_dll}" "$<TARGET_FILE_DIR:qrastr>/"
+            COMMENT "Copying ScintillaEdit5.dll"
+        )
+    else()
+        message(WARNING "ScintillaEdit5.dll not found at ${_sci_dll}")
+    endif()
+
+elseif(UNIX)
+    # Linux - копируем SO файлы
+
+    # Копируем liblexilla.so
+    set(_lex_so "${DEPENDENCIES_LOCATION}/compile/lexilla/${PLATFORM_DIR}/${CONFIG_SUFFIX}/lib/liblexilla.so")
+    if(EXISTS "${_lex_so}")
+        add_custom_command(TARGET qrastr POST_BUILD
+            COMMAND ${CMAKE_COMMAND} -E copy_if_different
+                "${_lex_so}" "$<TARGET_FILE_DIR:qrastr>/"
+            COMMENT "Copying liblexilla.so"
+        )
+    else()
+        message(WARNING "liblexilla.so not found at ${_lex_so}")
+    endif()
+
+    # Копируем libScintillaEdit.so
+    set(_sci_so "${DEPENDENCIES_LOCATION}/compile/ScintillaEdit/${PLATFORM_DIR}/${CONFIG_SUFFIX}/lib/libScintillaEdit.so")
+    if(EXISTS "${_sci_so}")
+        add_custom_command(TARGET qrastr POST_BUILD
+            COMMAND ${CMAKE_COMMAND} -E copy_if_different
+                "${_sci_so}" "$<TARGET_FILE_DIR:qrastr>/"
+            COMMENT "Copying libScintillaEdit.so"
+        )
+    else()
+        message(WARNING "libScintillaEdit.so not found at ${_sci_so}")
+    endif()
+
+endif()
 # Временное решение ввиду отсутствия .so сборок
 if(WIN32)
 copy_runtime_file(${PROJECT_NAME} "${SVG_DLL_FILE}" "Copying SVGgenerator (${CONFIG_DIR})")

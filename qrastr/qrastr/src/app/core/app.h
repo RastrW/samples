@@ -29,7 +29,7 @@ public:
     bool init(); // Инициализация логирования
     bool start(); // Загрузка плагинов и данных
     // Геттеры для доступа к плагинам
-    std::list<CUIForm>& getForms() const;
+    std::vector<CUIForm>& getForms() const;
     std::shared_ptr<QAstra> getQAstraPtr(){ return m_sp_qastra;}
     std::shared_ptr<QTI> getQTIPtr(){ return m_sp_qti;}
     std::shared_ptr<QBarsMDP> getQBarsMDPPtr(){ return m_sp_qbarsmdp;}

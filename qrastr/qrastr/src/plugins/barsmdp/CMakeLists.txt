@@ -21,7 +21,7 @@ set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY "${PLUGIN_OUTPUT_DIR}")
 set(CMAKE_LIBRARY_OUTPUT_DIRECTORY "${PLUGIN_OUTPUT_DIR}")
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY "${PLUGIN_OUTPUT_DIR}")
 
-message("PLUGIN_OUTPUT_DIR barsmdp:        ${PLUGIN_OUTPUT_DIR}")
+message(STATUS "PLUGIN_OUTPUT_DIR barsmdp: ${PLUGIN_OUTPUT_DIR}")
 # ============================================================================
 # Получаем THIRDPARTY_DIR из главного проекта
 # ============================================================================

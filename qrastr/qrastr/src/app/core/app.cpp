@@ -393,9 +393,10 @@ bool App::loadPlugins(){
 
 bool App::deserializeForms(){
     try {
-        const QDir& formsDir = RastrParameters::get_instance()->getDirForms();
+        const auto& params = RastrParameters::get_instance();
+        const QDir& formsDir = params->getDirForms();
 
-        for (const auto& form : RastrParameters::get_instance()->getStartLoadForms()) {
+        for (const auto& form : params->getStartLoadForms()) {
             const QString fullPath =
                 formsDir.filePath(QString::fromUtf8(form.c_str()));
 
@@ -415,6 +416,8 @@ bool App::deserializeForms(){
             for (auto& uiform : tmp.Forms())
                 dest.emplace_back(std::move(uiform));
         }
+        for (auto& f : upCUIFormsCollection_->Forms())
+            f.SetDisplayName(stringutils::MkToUtf8(f.Name()));
     } catch (const std::exception& ex) {
         exclog(ex);
         return false;
@@ -425,7 +428,7 @@ bool App::deserializeForms(){
     return true;
 }
 
-std::list<CUIForm>& App::getForms() const {
+std::vector<CUIForm>& App::getForms() const {
     assert(nullptr!=upCUIFormsCollection_);
     return upCUIFormsCollection_->Forms();
 }

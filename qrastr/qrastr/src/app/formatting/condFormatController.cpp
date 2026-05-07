@@ -15,11 +15,10 @@ CondFormatController::CondFormatController(RModel*                model,
 
 void CondFormatController::loadFromJson()
 {
-    RData* rdata = m_model->getRdata();
-    if (!rdata) return;
+    const auto& rdata = m_model->getRdata();
 
     // грузим прямо в модель
-    auto loaded = CondFormatJson::load(rdata->t_name_, rdata->vCols_);
+    auto loaded = CondFormatJson::load(rdata.t_name_, rdata.vCols_);
 
     for (auto& [col, vec] : loaded)
         m_model->setCondFormats(static_cast<size_t>(col), vec);
@@ -27,12 +26,11 @@ void CondFormatController::loadFromJson()
 
 void CondFormatController::saveToJson()
 {
-    RData* rdata = m_model->getRdata();
-    if (!rdata) return;
+    const auto& rdata = m_model->getRdata();
 
     // Собираем актуальное состояние из модели (не из локальной копии).
     std::unordered_map<int, std::vector<CondFormat>> snapshot;
-    for (const RCol& rcol : *rdata) {
+    for (const RCol& rcol : rdata) {
         int idx = rcol.getIndex();
         const auto& vec = m_model->getCondFormats(idx);
         if (!vec.empty())
@@ -40,7 +38,7 @@ void CondFormatController::saveToJson()
     }
 
     // статический вызов, данные передаются явно.
-    CondFormatJson::save(rdata->t_name_, rdata->vCols_, snapshot);
+    CondFormatJson::save(rdata.t_name_, rdata.vCols_, snapshot);
 }
 
 void CondFormatController::editCondFormats(std::size_t column)
