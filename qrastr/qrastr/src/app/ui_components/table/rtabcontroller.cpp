@@ -574,19 +574,25 @@ void RtabController::slot_groupCorrection(){
 void RtabController::slot_beginResetModel(const std::string& tname) {
     if (m_UIForm.TableName() != tname) return;
     m_view->beginUpdate();
-
     // Сохраняем пользовательский порядок: colName → visualIndex
     m_columnsVisible.clear();
     m_columnVisualOrder.clear();
 
-    for (int logIdx = 0; logIdx < m_view->getColumnCount(); ++logIdx) {
-        auto* col = getColumnByIndex(logIdx);
+    const RData& rdata = m_model->getRdata();
+
+    // Итерируемся по RData — rdataPos == modelColumn для каждой колонки.
+    for (const RCol& rcol : rdata) {
+        auto it = rdata.mCols_.find(rcol.getColName());
+        if (it == rdata.mCols_.end()) continue;
+        const int rdataPos = it->second; // == modelColumn
+
+        auto* col = qobject_cast<Qtitan::GridTableColumn*>(
+            m_view->getColumnByModelColumn(rdataPos));
         if (!col) continue;
-        // Получаем имя через headerData модели (до сброса модель ещё жива)
-        QString name = QString::fromStdString(
-            m_model->getRdata()[logIdx].getColName());
+
+        QString name = QString::fromStdString(rcol.getColName());
         m_columnsVisible[name]    = col->isVisible();
-        m_columnVisualOrder[name] = col->visualIndex(); // сохраняем реальный visualIndex
+        m_columnVisualOrder[name] = col->visualIndex();
     }
 
     int check = 0;
@@ -745,29 +751,37 @@ void RtabController::slot_openImportCSVForm()
 
 void RtabController::slot_contextMenu(ContextMenuEventArgs* args)
 {
-    const auto& hit    = args->hitInfo();
-    const int   column = hit.columnIndex();
+    const auto& hit = args->hitInfo();
+    // клик вне колонок (пустое место справа)
+    if (hit.columnIndex() < 0) return;
 
-    if (column < 0) return; // клик вне колонок (пустое место справа)
-    // ── Определяем тип области
+    // Получаем GridColumnBase через view и columnIndex
+    GridViewBase* view = hit.view();
+    if (!view) return;
+    GridColumnBase* gridColBase = view->getColumn(hit.columnIndex());
+    if (!gridColBase) return;
+
+    auto* binding = view->getDataBinding(gridColBase);
+    if (!binding) return;
+    const int modelCol = binding->column();
+
+    // Определяем тип области
     const auto type = hit.info();
-    const bool isHeader =
-        type == GridHitInfo::Column ||
-        type == GridHitInfo::Band;
+    const bool isHeader = (type == GridHitInfo::Column || type == GridHitInfo::Band);
 
-    // ── Меню заголовка
+    // Меню заголовка
     if (isHeader) {
-        const auto* col = m_model->getRCol(column);   // может быть nullptr — prepareForHeader это учитывает
-        m_menuBuilder->prepareForHeader(column, col, args->contextMenu());
+        const auto* col = m_model->getRCol(modelCol);
+        m_menuBuilder->prepareForHeader(modelCol, col, args->contextMenu());
         return;
     }
-    // ── Меню ячейки
-    const int row = hit.row().rowIndex();
+
+    // Меню ячейки
     const int row_model = hit.row().modelIndex().row();
-    const auto* col = m_model->getRCol(column);
+    const auto* col = m_model->getRCol(modelCol);
     if (!col) return;
 
-    MenuContext ctx { column, row_model, col };
+    MenuContext ctx { modelCol, row_model, col };
     m_menuBuilder->prepareForShow(ctx, args->contextMenu());
 }
 
@@ -802,7 +816,8 @@ void RtabController::notifyParentRowChanged(int modelRow) {
 
 Qtitan::GridTableColumn* RtabController::getColumnByIndex(int index) const
 {
-    if (index < 0 || index >= m_model->columnCount()) return nullptr;
+    if (index < 0 || index >= m_model->columnCount())
+        return nullptr;
     // getColumnByModelColumn ищет колонку по индексу модели (rdataPos),
     // а не по позиции в m_columnslist — корректно после любого reset.
     return qobject_cast<Qtitan::GridTableColumn*>(
