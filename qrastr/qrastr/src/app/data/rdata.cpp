@@ -32,21 +32,12 @@ RData::RData(const ITableRepository::TableSchema& schema,
     for (const auto& f : form.Fields()) {
         //if ((t_name_ == "vetv" && f.Name() == "name"))
             //continue; // игнорируем только для vetv
-        spdlog::info("form.Fields = {}",
-                     f.Name());
         formCols.insert(f.Name());
     }
 
     for (RCol& rc : *this)
         if (formCols.count(rc.getColName()))
             rc.setHidden(false);
-
-    int iterPos =0;
-    for (const RCol& rcol : *this) {
-        spdlog::info("col '{}' rdataPos={} plugin_index={}",
-                     rcol.getColName(), /* позиция в цикле */ iterPos, rcol.getIndex());
-        ++iterPos;
-    }
     spdlog::debug("RData: table={} columns={}", t_name_, schema.columns.size());
 }
 
