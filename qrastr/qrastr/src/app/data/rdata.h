@@ -52,10 +52,10 @@ public:
     }
 
     std::string get_cols(bool visible = true) const;
+    const std::vector<std::string>&  colNames() const;
 
     std::string t_name_;
     std::string t_title_;
-    std::vector<std::string>          vCols_; ///< вектор имён колонок в порядке следования.
     std::unordered_map<std::string, int> mCols_; ///< unordered_map<имя_колонки, индекс> для быстрого поиска колонки по имени.
 private:
     /// Обновить индекс только для одной позиции (после lazy load).

@@ -19,7 +19,6 @@ RData::RData(const ITableRepository::TableSchema& schema,
     // итераторы инвалидируются и RCol теряют данные.
     int rdataPos = 0;
     for (const auto& cs : schema.columns) {
-        vCols_.push_back(cs.name);
         RCol rc;
         rc.initialize(cs);
         emplace_back(std::move(rc));
@@ -113,3 +112,12 @@ std::string RData::get_cols(bool visible) const{
     }
     return ret;
 }
+
+const std::vector<std::string>& RData::colNames() const {
+    static std::vector<std::string> names;
+    names.reserve(size());
+    for (const RCol& rc : *this)
+        names.push_back(rc.getColName());
+    return names;
+}
+

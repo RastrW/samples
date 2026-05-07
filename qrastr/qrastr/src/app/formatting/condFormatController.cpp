@@ -17,30 +17,33 @@ void CondFormatController::loadFromJson()
 {
     const auto& rdata = m_model->getRdata();
 
-    // грузим прямо в модель
-    auto loaded = CondFormatJson::load(rdata.t_name_, rdata.vCols_);
+    // Загружаем по имени колонки — без привязки к позиции
+    auto loaded = CondFormatJson::load(rdata.t_name_);
 
-    for (auto& [col, vec] : loaded)
-        m_model->setCondFormats(static_cast<size_t>(col), vec);
+    // Преобразуем имя → rdataPos через mCols_
+    for (auto& [colName, vec] : loaded) {
+        auto it = rdata.mCols_.find(colName);
+        if (it == rdata.mCols_.end()) continue; // колонка удалена или переименована
+        m_model->setCondFormats(static_cast<size_t>(it->second), std::move(vec));
+    }
 }
 
 void CondFormatController::saveToJson()
 {
     const auto& rdata = m_model->getRdata();
 
-    // Ключ snapshot — rdata position, совпадает с тем что хранит m_condFmt
-    // и с тем что принимает getCondFormats()
-    std::unordered_map<int, std::vector<CondFormat>> snapshot;
+    // Снапшот: имя колонки → форматы
+    std::unordered_map<std::string, std::vector<CondFormat>> snapshot;
 
     int rdataPos = 0;
     for (const RCol& rcol : rdata) {
-        const auto& vec = m_model->getCondFormats(rdataPos); // rdata pos
+        const auto& vec = m_model->getCondFormats(rdataPos);
         if (!vec.empty())
-            snapshot[rdataPos] = vec;
+            snapshot[rcol.getColName()] = vec;
         ++rdataPos;
     }
-    // статический вызов, данные передаются явно.
-    CondFormatJson::save(rdata.t_name_, rdata.vCols_, snapshot);
+
+    CondFormatJson::save(rdata.t_name_, snapshot);
 }
 
 void CondFormatController::editCondFormats(std::size_t column)

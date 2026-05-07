@@ -8,11 +8,11 @@
      "filter": "<0"
     }
    ],
-   "pn": [
+   "qn": [
     {
-     "bgColor": "#55aa00",
+     "bgColor": "#5555ff",
      "fgColor": "#000000",
-     "filter": ">qn"
+     "filter": ">0"
     }
    ],
    "vras": [
