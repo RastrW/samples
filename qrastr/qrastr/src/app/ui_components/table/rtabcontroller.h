@@ -51,14 +51,7 @@ struct TableProperties{
  *                  Порядковый номер колонки в RData (0..size-1).
  *                  Определяется порядком колонок в схеме конкретного файла —
  *                  может отличаться между файлами для одной и той же колонки.
- *                  После setModel() совпадает с modelColumn в QTitan:
- *                    m_columnslist[rdataPos].dataBinding()->column() == rdataPos
- *                  Используется в:
- *                    - RModel::data(index)        → index.column() == rdataPos
- *                    - RModel::headerData(section) → section == rdataPos
- *                    - RModel::getRCol(col)        → col == rdataPos
- *                    - getColumnByIndex(rdataPos)  → m_columnslist[rdataPos]
- *
+
  *  local_index   = позиция колонки внутри QDataBlock
  *                  Хранится в RData::m_blockColIdx[rdataPos].
  *                  Используется только внутри RData::getCell() — снаружи не нужен.
@@ -70,10 +63,6 @@ struct TableProperties{
  *  listIndex     = GridColumnBase::m_listIndex = позиция в m_columnslist
  *                  После setModel() == rdataPos. После перетаскивания колонок
  *                  listIndex не меняется, меняется только visualIndex.
- */
-/**
- * @brief Контроллер таблицы Rastr — управляет данными и
- * отображает одну таблицу Rastr в QTitan Grid.
  */
 class RtabController : public QObject
 {

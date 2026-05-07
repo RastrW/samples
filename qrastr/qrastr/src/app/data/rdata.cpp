@@ -32,6 +32,8 @@ RData::RData(const ITableRepository::TableSchema& schema,
     for (const auto& f : form.Fields()) {
         //if ((t_name_ == "vetv" && f.Name() == "name"))
             //continue; // игнорируем только для vetv
+        spdlog::info("form.Fields = {}",
+                     f.Name());
         formCols.insert(f.Name());
     }
 
@@ -43,7 +45,6 @@ RData::RData(const ITableRepository::TableSchema& schema,
     for (const RCol& rcol : *this) {
         spdlog::info("col '{}' rdataPos={} plugin_index={}",
                      rcol.getColName(), /* позиция в цикле */ iterPos, rcol.getIndex());
-        if (iterPos > 20) break; // только первые 20
         ++iterPos;
     }
     spdlog::debug("RData: table={} columns={}", t_name_, schema.columns.size());

@@ -585,43 +585,53 @@ void RtabController::slot_beginResetModel(const std::string& tname)
 
     m_view->beginUpdate();
 
-    // Сохраняем до сброса — биндинги ещё валидны на этот момент.
-    // binding->column() == -1 уже здесь (Qt сбросил модель до нас),
-    // но getColumnByIndex(pi) работает корректно пока m_columnslist не изменился.
     const RData& rdata = m_model->getRdata();
-    spdlog::debug("[BeginReset][{}] RData.size()={} getColumnCount()={}",
-                  tname, rdata.size(), m_view->getColumnCount());
-    for (const RCol& rcol : rdata) {
-        const int   pi   = rcol.getIndex();
 
-        auto* col = getColumnByIndex(rcol.getIndex());
-        if (!col) {
-            spdlog::warn("[BeginReset][{}] getColumnByIndex({}) == nullptr для '{}'",
-                         tname, pi, rcol.getColName());
-            continue;
-        }
+    // Итерируем по rdataPos, а не по plugin_index
+    for (int rdataPos = 0; rdataPos < static_cast<int>(rdata.size()); ++rdataPos) {
+        const RCol& rcol = rdata[rdataPos];
 
-        auto* binding    = m_view->getDataBinding(col);
-        const int bc     = binding ? binding->column() : -1;
-        const int vi     = col->visualIndex();
-        const bool vis   = col->isVisible();
-
-        // Проверяем что plugin_index совпадает с binding->column()
-        if (bc != pi) {
-            spdlog::error("[BeginReset][{}] РАССИНХРОН '{}': plugin_index={} binding={}",
-                          tname, rcol.getColName(), pi, bc);
-        }
+        // getColumnByModelColumn ищет по binding->column() == rdataPos
+        auto* col = qobject_cast<Qtitan::GridTableColumn*>(
+            m_view->getColumnByModelColumn(rdataPos));  // <-- rdataPos, не plugin_index
+        if (!col) continue;
 
         QString qname = QString::fromStdString(rcol.getColName());
         m_columnsVisible[qname]    = col->isVisible();
         m_columnVisualOrder[qname] = col->visualIndex();
 
-        spdlog::debug("[BeginReset][{}]   '{}' pi={} binding={} vi={} vis={}",
-                      tname, rcol.getColName(), pi, bc, vi, vis);
+        spdlog::debug("[BeginReset][{}] '{}' rdataPos={} plugin_index={} vi={} vis={}",
+                      tname, rcol.getColName(), rdataPos, rcol.getIndex(),
+                      col->visualIndex(), col->isVisible());
     }
 
+    // Логируем итоговый порядок колонок по visualIndex
+    {
+        std::vector<std::pair<int, QString>> orderedColumns;
+        orderedColumns.reserve(m_columnVisualOrder.size());
+
+        for (const auto& [name, visualIndex] : m_columnVisualOrder) {
+            orderedColumns.emplace_back(visualIndex, name);
+        }
+
+        std::sort(orderedColumns.begin(), orderedColumns.end(),
+                  [](const auto& a, const auto& b) {
+                      return a.first < b.first;
+                  });
+
+        QStringList orderLog;
+        for (const auto& [visualIndex, name] : orderedColumns) {
+            orderLog << QString("%1(%2)").arg(name).arg(visualIndex);
+        }
+
+        spdlog::debug(
+            "[BeginReset][{}] Следующий visual order: {}",
+            tname,
+            orderLog.join(" -> ").toStdString()
+            );
+    }
     spdlog::debug("[BeginReset][{}] Сохранено {} записей", tname, m_columnVisualOrder.size());
-    spdlog::info("[PERF]   slot_beginResetModel: {} ms", t.restart());
+    spdlog::info("[PERF] slot_beginResetModel: {} ms", t.restart());
 }
 
 void RtabController::slot_endResetModel(const std::string& tname)
