@@ -571,74 +571,100 @@ void RtabController::slot_groupCorrection(){
     fgc->show();
 }
 
-void RtabController::slot_beginResetModel(const std::string& tname) {
+void RtabController::slot_beginResetModel(const std::string& tname)
+{
     if (m_UIForm.TableName() != tname) return;
-    m_view->beginUpdate();
-    // Сохраняем пользовательский порядок: colName → visualIndex
+    QElapsedTimer t; t.start();
+    // beginUpdate не вызываем — пара begin/endUpdate живёт целиком в slot_endResetModel,
+    // так как там мы делаем setModel(nullptr)+setModel(), что требует единого блока.
+
     m_columnsVisible.clear();
     m_columnVisualOrder.clear();
 
     const RData& rdata = m_model->getRdata();
 
-    // Итерируемся по RData — rdataPos == modelColumn для каждой колонки.
+    // Инвариант: до сброса модели listIndex == rdataPos == modelColumn,
+    // поэтому getColumnByIndex(iterPos) возвращает правильную колонку.
+    int iterPos = 0;
     for (const RCol& rcol : rdata) {
-        auto it = rdata.mCols_.find(rcol.getColName());
-        if (it == rdata.mCols_.end()) continue;
-        const int rdataPos = it->second; // == modelColumn
-
-        auto* col = getColumnByIndex(rdataPos);
-        if (!col) continue;
-
-        QString name = QString::fromStdString(rcol.getColName());
-        m_columnsVisible[name]    = col->isVisible();
-        m_columnVisualOrder[name] = col->visualIndex();
-    }
-
-    int check = 0;
-}
-
-void RtabController::slot_endResetModel(const std::string& tname) {
-    if (m_UIForm.TableName() != tname) return;
-
-    const RData& rdata = m_model->getRdata();
-
-    // Восстанавливаем видимость и переназначаем редакторы.
-    for (const RCol& rcol : rdata) {
-        auto it = rdata.mCols_.find(rcol.getColName());
-        if (it == rdata.mCols_.end()) continue;
-        const int pos = it->second;
-        auto* col = getColumnByIndex(pos);
-        if (!col) continue;
+        auto* col = getColumnByIndex(iterPos);
+        if (!col) { ++iterPos; continue; }
 
         QString qname = QString::fromStdString(rcol.getColName());
+        m_columnsVisible[qname]    = col->isVisible();
+        m_columnVisualOrder[qname] = col->visualIndex();
+        ++iterPos;
+    }
+    spdlog::info("[PERF]   slot_beginResetModel: {} ms", t.restart());
+}
 
-        // Видимость
-        auto visIt = m_columnsVisible.find(qname);
-        col->setVisible(visIt != m_columnsVisible.end()
-                            ? visIt->second : !rcol.isHidden());
+void RtabController::slot_endResetModel(const std::string& tname)
+{
+    if (m_UIForm.TableName() != tname) return;
+    QElapsedTimer t; t.start();
+    const RData& rdata = m_model->getRdata();
 
-        // Восстанавливаем пользовательский visualIndex (уже не по порядку из CUIForm)
+    // ── Шаг 1: переподключаем модель БЕЗ beginUpdate ─────────────────────────
+    // setModel сам по себе делает внутренний begin/endUpdate.
+    // Держать его внутри нашего beginUpdate бессмысленно и вредно:
+    // layout откладывается, но setVisible/setCaption ниже всё равно
+    // дёргают requestUpdateLayout каждый раз.
+    m_view->setModel(nullptr);
+    spdlog::info("[PERF] setModel nullptr: {} ms", t.restart());
+    m_view->setModel(m_model.get());
+    spdlog::info("[PERF] setModel: {} ms", t.restart());
+
+    // ── Шаг 2..3: настраиваем колонки — тоже БЕЗ beginUpdate ─────────────────
+    // QTitan внутри setVisible/setCaption вызывает requestUpdateLayout,
+    // но реальный рендер происходит только при beginUpdate/endUpdate или
+    // при обработке событий Qt. Пока мы в слоте (стек вызовов не вернулся
+    // в event loop) — рендера нет, накладных расходов нет.
+
+    // Шаг 2: visualIndex
+    struct ColEntry { int savedVI; int rdataPos; Qtitan::GridColumnBase* col; };
+    std::vector<ColEntry> known;
+    std::vector<ColEntry> fresh;
+    known.reserve(rdata.size());
+
+    int iterPos = 0;
+    for (const RCol& rcol : rdata) {
+        auto* col = getColumnByIndex(iterPos);
+        if (!col) { ++iterPos; continue; }
+
+        QString qname = QString::fromStdString(rcol.getColName());
         auto ordIt = m_columnVisualOrder.find(qname);
         if (ordIt != m_columnVisualOrder.end())
-            col->setVisualIndex(ordIt->second);
-        // Если колонка новая (появилась во втором файле) — ставим в конец
-
-        // Синхронизируем caption с обновлённым заголовком модели.
-        // Qtitan кеширует caption независимо от headerData() — нужно
-        // обновить вручную после сброса.
-        QVariant title = m_model->headerData(pos, Qt::Horizontal,
-                                             Qt::DisplayRole);
-        if (title.isValid())
-            col->setCaption(title.toString());
+            known.push_back({ ordIt->second, iterPos, col });
+        else
+            fresh.push_back({ -1, iterPos, col });
+        ++iterPos;
     }
-    // Пересоздаём репозитории — данные nameref
-    m_view->beginUpdate();	//← открываем внутренний для applyAllColumnEditors
-    applyAllColumnEditors();
-    m_view->endUpdate();	//← закрываем внутренний
 
-    m_view->endUpdate(); // ← закрываем внешний из slot_beginResetModel
+    std::sort(known.begin(), known.end(),
+              [](const ColEntry& a, const ColEntry& b){ return a.savedVI < b.savedVI; });
+    spdlog::info("[PERF] sort known: {} ms", t.restart());
+
+    int vi = 0;
+    for (auto& e : known) { e.col->setVisualIndex(vi++); }
+    for (auto& e : fresh) { e.col->setVisualIndex(vi++); }
+    spdlog::info("[PERF] endReset step2 visualIndex: {} ms", t.restart());
+
+    // ── Шаг 4..5: финальный рендер в одном beginUpdate/endUpdate ─────────────
+    // Теперь beginUpdate блокирует именно то, что нужно: applyAllColumnEditors
+    // (каждый setEditorRepository дёргает data()) и setTableView (setWidth).
+    // endUpdate делает ровно один layout pass.
+    m_view->beginUpdate();
+    spdlog::info("[PERF] beginUpdate: {} ms", t.restart());
+    applyAllColumnEditors();
+    spdlog::info("[PERF] endReset step4a applyAllColumnEditors: {} ms", t.restart());
+    if (!m_UIForm.Vertical())
+        setTableView(false);
+    spdlog::info("[PERF] endReset step4b setTableView: {} ms", t.restart());
+    m_view->endUpdate();
+    spdlog::info("[PERF] endReset step5 endUpdate: {} ms", t.restart());
 
     m_filterManager->resetAfterModelReset();
+    spdlog::info("[PERF] endReset step6 filterManager: {} ms", t.restart());
 }
 
 void RtabController::setPyHlp(std::shared_ptr<PyHlp> pPyHlp){
