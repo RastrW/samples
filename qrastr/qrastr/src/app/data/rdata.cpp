@@ -39,6 +39,13 @@ RData::RData(const ITableRepository::TableSchema& schema,
         if (formCols.count(rc.getColName()))
             rc.setHidden(false);
 
+    int iterPos =0;
+    for (const RCol& rcol : *this) {
+        spdlog::info("col '{}' rdataPos={} plugin_index={}",
+                     rcol.getColName(), /* позиция в цикле */ iterPos, rcol.getIndex());
+        if (iterPos > 20) break; // только первые 20
+        ++iterPos;
+    }
     spdlog::debug("RData: table={} columns={}", t_name_, schema.columns.size());
 }
 

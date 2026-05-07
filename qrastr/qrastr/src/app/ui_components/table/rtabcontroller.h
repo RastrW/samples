@@ -32,7 +32,45 @@ struct TableProperties{
     bool withToolbar {true};
     QString formQName;
 };
-
+/**
+ * @brief Контроллер таблицы Rastr — управляет данными и
+ * отображает одну таблицу Rastr в QTitan Grid.
+ *
+ * ── Карта индексов ────────────────────────────────────────────────────────────
+ *
+ * В системе одновременно существует несколько пространств индексов.
+ * Путаница между ними — типичный источник ошибок.
+ *
+ *  plugin_index  = RCol::m_index
+ *                  Порядковый номер колонки в плагине Rastr (0..N-1).
+ *                  Стабилен для данной колонки независимо от загруженного файла.
+ *                  Используется как ключ в BackInfoCache (справочники ENUM/NAMEREF/…).
+ *                  НЕ совпадает с rdataPos в общем случае.
+ *
+ *  rdataPos      = позиция в vector<RCol> = mCols_[colName]
+ *                  Порядковый номер колонки в RData (0..size-1).
+ *                  Определяется порядком колонок в схеме конкретного файла —
+ *                  может отличаться между файлами для одной и той же колонки.
+ *                  После setModel() совпадает с modelColumn в QTitan:
+ *                    m_columnslist[rdataPos].dataBinding()->column() == rdataPos
+ *                  Используется в:
+ *                    - RModel::data(index)        → index.column() == rdataPos
+ *                    - RModel::headerData(section) → section == rdataPos
+ *                    - RModel::getRCol(col)        → col == rdataPos
+ *                    - getColumnByIndex(rdataPos)  → m_columnslist[rdataPos]
+ *
+ *  local_index   = позиция колонки внутри QDataBlock
+ *                  Хранится в RData::m_blockColIdx[rdataPos].
+ *                  Используется только внутри RData::getCell() — снаружи не нужен.
+ *
+ *  visualIndex   = GridColumnBase::visualIndex()
+ *                  Порядок отображения колонки на экране (может менять пользователь).
+ *                  Не связан ни с rdataPos, ни с plugin_index.
+ *
+ *  listIndex     = GridColumnBase::m_listIndex = позиция в m_columnslist
+ *                  После setModel() == rdataPos. После перетаскивания колонок
+ *                  listIndex не меняется, меняется только visualIndex.
+ */
 /**
  * @brief Контроллер таблицы Rastr — управляет данными и
  * отображает одну таблицу Rastr в QTitan Grid.
