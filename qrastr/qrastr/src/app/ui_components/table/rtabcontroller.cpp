@@ -586,8 +586,7 @@ void RtabController::slot_beginResetModel(const std::string& tname) {
         if (it == rdata.mCols_.end()) continue;
         const int rdataPos = it->second; // == modelColumn
 
-        auto* col = qobject_cast<Qtitan::GridTableColumn*>(
-            m_view->getColumnByModelColumn(rdataPos));
+        auto* col = getColumnByIndex(rdataPos);
         if (!col) continue;
 
         QString name = QString::fromStdString(rcol.getColName());
@@ -816,12 +815,8 @@ void RtabController::notifyParentRowChanged(int modelRow) {
 
 Qtitan::GridTableColumn* RtabController::getColumnByIndex(int index) const
 {
-    if (index < 0 || index >= m_model->columnCount())
-        return nullptr;
-    // getColumnByModelColumn ищет колонку по индексу модели (rdataPos),
-    // а не по позиции в m_columnslist — корректно после любого reset.
-    return qobject_cast<Qtitan::GridTableColumn*>(
-        m_view->getColumnByModelColumn(index));
+    ///@note проверка диапазона предусмотрена внутри функции
+    return qobject_cast<Qtitan::GridTableColumn*>(m_view->getColumn(index));
 }
 
 int RtabController::rdataPosOf(const std::string& colName) const
