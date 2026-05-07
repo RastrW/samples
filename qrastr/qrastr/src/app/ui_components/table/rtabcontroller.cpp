@@ -571,54 +571,67 @@ void RtabController::slot_groupCorrection(){
     fgc->show();
 }
 
-void RtabController::slot_beginResetModel(const std::string& tname){
+void RtabController::slot_beginResetModel(const std::string& tname) {
     if (m_UIForm.TableName() != tname) return;
+    m_view->beginUpdate();
 
-    m_view->beginUpdate(); // ← открываем внешний блок
-
-    // Сохраняем видимость по имени колонки (не по caption — он может меняться)
+    // Сохраняем пользовательский порядок: colName → visualIndex
     m_columnsVisible.clear();
-    for (const RCol& rcol : m_model->getRdata()) {
-        const int pos = rdataPosOf(rcol.getColName()); // rdata position
-        auto* col = getColumnByIndex(pos);
-        m_columnsVisible[QString::fromStdString(rcol.getColName())]
-            = col ? col->isVisible() : true;
+    m_columnVisualOrder.clear();
+
+    for (int logIdx = 0; logIdx < m_view->getColumnCount(); ++logIdx) {
+        auto* col = getColumnByIndex(logIdx);
+        if (!col) continue;
+        // Получаем имя через headerData модели (до сброса модель ещё жива)
+        QString name = QString::fromStdString(
+            m_model->getRdata()[logIdx].getColName());
+        m_columnsVisible[name]    = col->isVisible();
+        m_columnVisualOrder[name] = col->visualIndex(); // сохраняем реальный visualIndex
     }
+
+    int check = 0;
 }
 
-void RtabController::slot_endResetModel(const std::string& tname){
+void RtabController::slot_endResetModel(const std::string& tname) {
     if (m_UIForm.TableName() != tname) return;
 
-    // Восстанавливаем видимость и переназначаем редакторы.
-    // К этому моменту RModel::slot_EndResetModel уже вызвал
-    // populateDataFromRastr() — новые RData/RCol уже готовы.
-    for (const RCol& rcol : m_model->getRdata()) {
-        const int pos = rdataPosOf(rcol.getColName()); // rdata position
-        if (pos < 0) continue;
+    const RData& rdata = m_model->getRdata();
 
+    // Восстанавливаем видимость и переназначаем редакторы.
+    for (const RCol& rcol : rdata) {
+        auto it = rdata.mCols_.find(rcol.getColName());
+        if (it == rdata.mCols_.end()) continue;
+        const int pos = it->second;
         auto* col = getColumnByIndex(pos);
         if (!col) continue;
 
-        // Восстанавливаем видимость
-        auto it = m_columnsVisible.find(
-            QString::fromStdString(rcol.getColName()));
-        col->setVisible(it != m_columnsVisible.end() ? it->second : true);
+        QString qname = QString::fromStdString(rcol.getColName());
+
+        // Видимость
+        auto visIt = m_columnsVisible.find(qname);
+        col->setVisible(visIt != m_columnsVisible.end()
+                            ? visIt->second : !rcol.isHidden());
+
+        // Восстанавливаем пользовательский visualIndex (уже не по порядку из CUIForm)
+        auto ordIt = m_columnVisualOrder.find(qname);
+        if (ordIt != m_columnVisualOrder.end())
+            col->setVisualIndex(ordIt->second);
+        // Если колонка новая (появилась во втором файле) — ставим в конец
 
         // Синхронизируем caption с обновлённым заголовком модели.
         // Qtitan кеширует caption независимо от headerData() — нужно
         // обновить вручную после сброса.
-        QVariant title = m_model->headerData(pos, Qt::Horizontal, Qt::DisplayRole);
+        QVariant title = m_model->headerData(pos, Qt::Horizontal,
+                                             Qt::DisplayRole);
         if (title.isValid())
             col->setCaption(title.toString());
     }
-
     // Пересоздаём репозитории — данные nameref
-    // (например, для SearchableComboPopupTwo)  могли смениться
-    m_view->beginUpdate();  //← открываем внутренний для applyAllColumnEditors
+    m_view->beginUpdate();	//← открываем внутренний для applyAllColumnEditors
     applyAllColumnEditors();
-    m_view->endUpdate();    //← закрываем внутренний
+    m_view->endUpdate();	//← закрываем внутренний
 
-    m_view->endUpdate();     // ← закрываем внешний из slot_beginResetModel
+    m_view->endUpdate(); // ← закрываем внешний из slot_beginResetModel
 
     m_filterManager->resetAfterModelReset();
 }
@@ -790,7 +803,10 @@ void RtabController::notifyParentRowChanged(int modelRow) {
 Qtitan::GridTableColumn* RtabController::getColumnByIndex(int index) const
 {
     if (index < 0 || index >= m_model->columnCount()) return nullptr;
-    return qobject_cast<Qtitan::GridTableColumn*>(m_view->getColumn(index));
+    // getColumnByModelColumn ищет колонку по индексу модели (rdataPos),
+    // а не по позиции в m_columnslist — корректно после любого reset.
+    return qobject_cast<Qtitan::GridTableColumn*>(
+        m_view->getColumnByModelColumn(index));
 }
 
 int RtabController::rdataPosOf(const std::string& colName) const

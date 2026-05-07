@@ -86,7 +86,7 @@ public:
     std::vector<std::tuple<int,int>>
         columnsWidth() const;
     const RCol* getRCol   (int col) const;
-    const RData& getRdata ();
+    const RData& getRdata () const;
     const ColumnEditorInfo&
         getColumnEditorInfo(int colIndex) const;
     void invertDirectCode(int col);

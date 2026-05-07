@@ -709,7 +709,7 @@ const RCol* RModel::getRCol(int col) const{
     return &(*(m_rdata->begin() + col));
 }
 
-const RData& RModel::getRdata(){
+const RData& RModel::getRdata() const{
     return *m_rdata;
 }
 

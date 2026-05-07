@@ -144,7 +144,7 @@ private:
     ads::CDockManager*   m_DockManager {nullptr};
 
     std::unordered_map<QString, bool> m_columnsVisible;
-
+    std::unordered_map<QString, int> m_columnVisualOrder;
     /// Защита от повторного вызова createShell()
     bool m_shellCreated {false};
     CommonTableActions m_comTabAct;
