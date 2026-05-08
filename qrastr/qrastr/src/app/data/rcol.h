@@ -31,7 +31,7 @@ public:
     void setHidden(bool v)                { m_hidden = v; }
 
     // ── Геттеры — только из кеша, возвращают const& ──────────────────────
-    long               getIndex()      const { return m_index; }
+    long               pluginIndex()   const { return m_index; }
     bool               isDirectCode()  const { return m_directcode; }
     bool               isHidden()      const { return m_hidden; }
     enComPropTT        getComPropTT()  const { return m_com_prop_tt; }

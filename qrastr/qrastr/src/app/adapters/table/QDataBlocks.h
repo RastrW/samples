@@ -2,8 +2,6 @@
 #include <algorithm>
 #include "IDataBlocksWrappers.h"
 
-constexpr const char *cszDef = "[def]"; // "пустое" значение для разреженного режима
-
 template<typename T>
 class MyDenseDataBlock : public IDataBlockBaseT<T>
 {
@@ -350,73 +348,49 @@ public :
             return IPlainRastrRetCode::Failed;
         }
     }
-
     IPlainRastrRetCode AddRow(IndexT count = 1) noexcept
     {
         try {
-            IndexT NewRowsCount_ = this->RowsCount() + count;
-            std::unique_ptr<T[]> NewData_ = std::make_unique<T[]>(NewRowsCount_ * this->ColumnsCount());
-            for (int row = 0 ; row < this->RowsCount() ; row++)
-            {
-                for (int col = 0 ; col < this->ColumnsCount() ; col++)
-                {
-                    size_t indx = row * this->ColumnsCount() + col;
-                    NewData_[indx]  = this->Data()[indx];
-                }
-            }
+            const IndexT newRows = this->RowsCount_ + count;
+            const IndexT cols    = static_cast<IndexT>(this->Columns_.size());
+            auto newData = std::make_unique<T[]>(
+                static_cast<size_t>(newRows) * cols);
 
-            //size_t sz_0 = sizeof(this->Data()[0]);
-            //std::memcpy(NewData_.get(),this->Data(),NewRowsCount_ * this->ColumnsCount() * 4);
-            //std::memmove(NewData_.get(),this->Data(),)
+            copyRows(newData.get(), this->Data_.get(),
+                     0, 0, this->RowsCount_, cols);   // копируем старые строки
 
-            //Нужно добавить индекс для еще одной строки
-            this->Indexes_.push_back(NewRowsCount_ - 1);
+            // новые строки value-initialized (нули/пустые варианты) — уже сделано make_unique
 
-            this->RowsCount_ = NewRowsCount_;
-            this->Data_ = std::move( NewData_);
+            for (IndexT i = 0; i < count; ++i)
+                this->Indexes_.push_back(this->RowsCount_ + i);
 
+            this->RowsCount_ = newRows;
+            this->Data_      = std::move(newData);
             return IPlainRastrRetCode::Ok;
-        } catch (...) {
-            return IPlainRastrRetCode::Failed;
-        }
+        } catch (...) { return IPlainRastrRetCode::Failed; }
     }
-
-    IPlainRastrRetCode InsertRow(IndexT insrow ) noexcept
+    IPlainRastrRetCode InsertRow(IndexT insrow) noexcept
     {
         try {
+            const IndexT oldRows = this->RowsCount_;
+            const IndexT cols    = static_cast<IndexT>(this->Columns_.size());
+            auto newData = std::make_unique<T[]>(
+                static_cast<size_t>(oldRows + 1) * cols);
 
-            IndexT NewRowsCount_ = this->RowsCount() + 1;
-            std::unique_ptr<T[]> NewData_ = std::make_unique<T[]>(NewRowsCount_ * this->ColumnsCount());
-            for (int row = 0 ; row < insrow ; row++)
-            {
-                for (int col = 0 ; col < this->ColumnsCount() ; col++)
-                {
-                    size_t indx = row * this->ColumnsCount() + col;
-                    NewData_[indx]  = this->Data()[indx];
-                }
-            }
+            copyRows(newData.get(), this->Data_.get(),
+                     0, 0, insrow, cols);              // строки до insrow
 
-            for (int row = insrow + 1 ; row < NewRowsCount_ ; row++)
-            {
-                for (int col = 0 ; col < this->ColumnsCount() ; col++)
-                {
-                    size_t indx_old = (row - 1) * this->ColumnsCount() + col;
-                    size_t indx_new = row * this->ColumnsCount() + col;
-                    NewData_[indx_new]  = this->Data()[indx_old];
-                }
-            }
+            // строка insrow — нулевая (value-init)
+
+            copyRows(newData.get(), this->Data_.get(),
+                     insrow + 1, insrow, oldRows - insrow, cols); // строки после
             //Нужно добавить индекс для еще одной строки
-            this->Indexes_.push_back(NewRowsCount_ - 1);
-
-            this->RowsCount_ = NewRowsCount_;
-            this->Data_ = std::move( NewData_);
-
+            this->Indexes_.push_back(oldRows);
+            this->RowsCount_ = oldRows + 1;
+            this->Data_      = std::move(newData);
             return IPlainRastrRetCode::Ok;
-        } catch (...) {
-            return IPlainRastrRetCode::Failed;
-        }
+        } catch (...) { return IPlainRastrRetCode::Failed; }
     }
-
     IPlainRastrRetCode DuplicateRow(IndexT duprow) noexcept
     {
         // К этому моменту handleInsertRow уже вставил пустую строку сверху от исходной.
@@ -432,40 +406,78 @@ public :
             return IPlainRastrRetCode::Failed;
         }
     }
-
-    IPlainRastrRetCode DeleteRow(IndexT delrow ) noexcept
+    IPlainRastrRetCode DeleteRow(IndexT delrow) noexcept
     {
         try {
-            IndexT NewRowsCount_ = this->RowsCount() - 1;
-            std::unique_ptr<T[]> NewData_ = std::make_unique<T[]>(NewRowsCount_ * this->ColumnsCount());
-            for (int row = 0 ; row < delrow ; row++)
-            {
-                for (int col = 0 ; col < this->ColumnsCount() ; col++)
-                {
-                    size_t indx = row * this->ColumnsCount() + col;
-                    NewData_[indx]  = this->Data()[indx];
-                }
-            }
+            const IndexT oldRows = this->RowsCount_;
+            const IndexT cols    = static_cast<IndexT>(this->Columns_.size());
+            auto newData = std::make_unique<T[]>(
+                static_cast<size_t>(oldRows - 1) * cols);
 
-            for (int row = delrow ; row < NewRowsCount_ ; row++)
-            {
-                for (int col = 0 ; col < this->ColumnsCount() ; col++)
-                {
-                    size_t indx_old = (row + 1) * this->ColumnsCount() + col;
-                    size_t indx_new = row * this->ColumnsCount() + col;
-                    NewData_[indx_new]  = this->Data()[indx_old];
-                }
-            }
+            copyRows(newData.get(), this->Data_.get(),
+                     0, 0, delrow, cols);                          // строки до
+            copyRows(newData.get(), this->Data_.get(),
+                     delrow, delrow + 1, oldRows - delrow - 1, cols); // строки после
             //Нужно удалить индекс последней строки
             this->Indexes_.pop_back();
-
-            this->RowsCount_ = NewRowsCount_;
-            this->Data_ = std::move( NewData_);
-
+            this->RowsCount_ = oldRows - 1;
+            this->Data_      = std::move(newData);
             return IPlainRastrRetCode::Ok;
-        } catch (...) {
+        } catch (...) { return IPlainRastrRetCode::Failed; }
+    }
+
+    /// Копирует строки [srcFrom, srcFrom+count) из src в dst начиная с dstFrom.
+    static void copyRows(T* dst, const T* src,
+                         IndexT dstFrom, IndexT srcFrom, IndexT count,
+                         IndexT cols) noexcept
+    {
+        std::copy(src  + srcFrom * cols,
+                  src  + (srcFrom + count) * cols,
+                  dst  + dstFrom * cols);
+    }
+    /// Дозагружает одну колонку из одноколоночного блока-источника.
+    /// Если колонка уже есть — ничего не делает.
+    IPlainRastrRetCode mergeColumn(const std::string& name,
+                                   const QDenseDataBlock<T>& src) noexcept
+    {
+        if (localColumnIndex(name) >= 0)
+            return IPlainRastrRetCode::Ok; // уже есть
+
+        if (src.RowsCount() != this->RowsCount_ && this->RowsCount_ > 0)
+            return IPlainRastrRetCode::Failed; // несовместимые размеры
+
+        try {
+            const IndexT oldCols = static_cast<IndexT>(this->Columns_.size());
+            const IndexT newCols = oldCols + 1;
+
+            auto newData = std::make_unique<T[]>(
+                static_cast<size_t>(this->RowsCount_) * newCols);
+
+            for (IndexT row = 0; row < this->RowsCount_; ++row) {
+                // Копируем старые колонки
+                for (IndexT col = 0; col < oldCols; ++col)
+                    newData[row * newCols + col] =
+                        std::move(this->Data_[row * oldCols + col]);
+                // Дописываем новую (src — одноколоночный блок)
+                newData[row * newCols + oldCols] = src.Data()[row];
+            }
+
+            this->Data_   = std::move(newData);
+            this->Columns_.push_back(name);
+            return IPlainRastrRetCode::Ok;
+        }
+        catch (...) {
             return IPlainRastrRetCode::Failed;
         }
+    }
+
+    /// Возвращает локальный индекс колонки в блоке по имени, -1 если нет
+    long localColumnIndex(const std::string& name) const noexcept
+    {
+        for (IndexT i = 0; i < static_cast<IndexT>(this->Columns_.size()); ++i)
+            if (this->Columns_[i] == name)
+                return static_cast<long>(i);
+        return -1;
     }
 };
 

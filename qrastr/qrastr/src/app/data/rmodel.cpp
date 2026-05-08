@@ -46,16 +46,16 @@ bool RModel::populateDataFromRastr()
     return true;
 }
 
-int RModel::rowCount   (const QModelIndex&) const
+int RModel::rowCount(const QModelIndex&) const
 {
-    if (!isReady()) return 0;
-    return static_cast<int>(m_rdata->datablock->RowsCount());
+    if (!m_rdata || !m_rdata->isReady()) return 0;
+    return static_cast<int>(m_rdata->getRowsCount());
 }
 
 int RModel::columnCount(const QModelIndex&) const
 {
-    if (!isReady()) return 0;
-    return static_cast<int>(m_rdata->datablock->ColumnsCount());
+    // Всегда по размеру RData, а не блока.
+    return m_rdata ? static_cast<int>(m_rdata->size()) : 0;
 }
 
 QVariant RModel::headerData(int section, Qt::Orientation orientation, int role) const
@@ -79,7 +79,7 @@ Qt::ItemFlags RModel::flags(const QModelIndex& index) const
 QVariant RModel::data(const QModelIndex& index, int role) const
 {
     if (!isReady()) return {};
-    const int col = index.column();
+    const int col = index.column(); // rdata_pos = model col index
     const int row = index.row();
 
     if (row < 0 || row >= rowCount() || col < 0 || col >= columnCount()) {
@@ -88,35 +88,38 @@ QVariant RModel::data(const QModelIndex& index, int role) const
     }
 
     const RCol& rcol = *(m_rdata->begin() + col);
-
+    // Ранние ветки — до чтения raw, чтобы не читать блок вхолостую
+    if (role == Qt::ToolTipRole)
+        return QString("[%1, %2]").arg(row + 1).arg(col + 1);
     if (role == Qtitan::ComboBoxRole) //Выпадающий popup ComboBox
         return dataForComboBox(rcol);
 
-    // Читаем данные из блока только тогда, когда они реально нужны
-    const QVariant raw = std::visit(ToQVariant(), m_rdata->datablock->Get(row, col));
+    // Lazy load если колонка ещё не в блоке
+    int blockCol = m_rdata->blockColIndex(col);
+    if (blockCol < 0){
+        blockCol = m_rdata->ensureBlockCol(col, m_tables); // const, mutable внутри
+    }
+    if (blockCol < 0) return {}; // колонка недоступна даже после попытки
 
-    // Ранние ветки — до чтения raw, чтобы не читать блок вхолостую
-    // upd: Бывает значение полностью не помещается в ячейку , а его нужно увидеть.
-    // Например при вертикальных таблицах - колонки не расширяются, а настройки бывают длинными.
-    // Также бывает полезным посмотреть чистое значение без ограничения точности после запятой.
-    if (role == Qt::ToolTipRole)
-        return QString("[%1, %2] [%3]").arg(row + 1).arg(col + 1).arg(raw.toString());
+    // Читаем через getCell — он знает про local_index
+    const FieldVariantData fvd = m_rdata->getCell(col, row);
+    const QVariant raw = std::visit(ToQVariant(), fvd);
 
     switch (role) {
     case Qt::DisplayRole:
     case Qt::EditRole:
-        return dataForDisplayEdit(row, col, rcol, raw, role);
+        return dataForDisplayEdit(row, col, rcol, raw, fvd, role);
     case Qt::UserRole:
         if (rcol.getComPropTT() == enComPropTT::COM_PR_REAL) {
-            const bool isEmpty = std::holds_alternative<std::monostate>(
-                m_rdata->datablock->Get(row, col));
+            const bool isEmpty =
+                std::holds_alternative<std::monostate>(fvd);
             return isEmpty ? 0.0 : raw;
         }
         return raw;
     case Qt::BackgroundRole:
-        return dataForBackground(row, col, rcol, raw);
+        return dataForBackground(row, col, rcol, fvd, raw);
     case Qt::DecorationRole:
-        return dataForDecoration(row, col, rcol, raw);
+        return dataForDecoration(row, col, fvd, rcol);
     default:
         return {};
     }
@@ -137,7 +140,9 @@ QVariant RModel::dataForInvalidCellEditRole(int col, const RCol& rcol) const
 }
 
 QVariant RModel::dataForDisplayEdit(int row, int col, const RCol& rcol,
-                                    const QVariant& raw, int role) const{
+                                    const QVariant& raw,
+                                    const FieldVariantData& fvd,
+                                    int role) const{
     if (!raw.isValid() && role == Qt::EditRole){
         return dataForInvalidCellEditRole(col, rcol);
     }
@@ -157,7 +162,7 @@ QVariant RModel::dataForDisplayEdit(int row, int col, const RCol& rcol,
         long packed = raw.toLongLong(&ok);
         if (!ok) {
             spdlog::warn("Ошибка при преобразовании QVariant для цвета через toLongLong [{},{}]", row, col);
-            packed = std::visit(ToLong(), m_rdata->datablock->Get(row, col));
+            packed = std::visit(ToLong(), fvd);
         }
         return QColor(packed & 0xFF, (packed >> 8) & 0xFF, (packed >> 16) & 0xFF);
     }
@@ -169,8 +174,7 @@ QVariant RModel::dataForDisplayEdit(int row, int col, const RCol& rcol,
     if (rcol.getComPropTT() == enComPropTT::COM_PR_REAL) {
         // Проверяем именно monostate, а не isValid() —
         // raw.isValid() == true даже для double(0.0)
-        const bool isEmpty = std::holds_alternative<std::monostate>(
-            m_rdata->datablock->Get(row, col));
+        const bool isEmpty = std::holds_alternative<std::monostate>(fvd);
         if (isEmpty) return QVariant(); // невалидный QVariant — ячейка пуста
 
         // DisplayRole и EditRole — оба double
@@ -181,7 +185,9 @@ QVariant RModel::dataForDisplayEdit(int row, int col, const RCol& rcol,
 }
 
 QVariant RModel::dataForBackground (int row, int col,
-                                   const RCol& rcol, const QVariant& raw) const{
+                                   const RCol& rcol,
+                                   const FieldVariantData& fvd,
+                                   const QVariant& raw) const{
     // COLOR-ячейки: фон = сам цвет, условные форматы не нужны
     if (rcol.getComPropTT() == enComPropTT::COM_PR_COLOR) {
         bool ok;
@@ -197,33 +203,34 @@ QVariant RModel::dataForBackground (int row, int col,
     if (const QVariant* cached = m_bgCache.get(row, col))
         return *cached;// QVariant() → нет формата, тоже ок
 
-    const QString val = QString::fromStdString(
-        std::visit(ToString(), m_rdata->datablock->Get(row, col)));
+    const QString val = QString::fromStdString(std::visit(ToString(), fvd));
     QVariant fmt = getMatchingCondFormat(row, col, val, Qt::BackgroundRole);
     m_bgCache.put(row, col, fmt);
     return fmt;
 }
 
 QVariant RModel::dataForDecoration (int row, int col,
-                                   const RCol& rcol, const QVariant& raw) const{
+                                    const FieldVariantData& fvd,
+                                    const RCol& rcol) const{
     // COLOR: упакованный RGB long → QColor
     if (rcol.getComPropTT() == enComPropTT::COM_PR_COLOR) {
-        long packed = std::visit(ToLong(), m_rdata->datablock->Get(row, col));
+        const long packed = std::visit(ToLong(), fvd);
         QPixmap px(16, 16);
         px.fill(QColor::fromRgb(static_cast<QRgb>(packed)));
         return px;
     }
-    const size_t pluginIdx = static_cast<size_t>(rcol.getIndex());
-    if (const auto* pics = m_cache.pictureEnum(pluginIdx)) {
-        int v = std::visit(ToLong(), m_rdata->datablock->Get(row, col));
-        if (v >= 0 && v < pics->size()) return (*pics)[v].image;
+    const size_t pluginIdx = static_cast<size_t>(rcol.pluginIndex());
+    if (const auto* pics = m_cache.pictureEnum(pluginIdx)) { 
+        const long v = std::visit(ToLong(), fvd);
+        if (v >= 0 && v < static_cast<long>(pics->size()))
+            return (*pics)[static_cast<int>(v)].image;
     }
     return {};
 }
 
 QVariant RModel::dataForComboBox(const RCol& rcol) const
 {
-    const size_t pluginIdx = static_cast<size_t>(rcol.getIndex());
+    const size_t pluginIdx = static_cast<size_t>(rcol.pluginIndex());
 
     if (const auto* pics = m_cache.pictureEnum(pluginIdx)) {
         QVariantList result;
@@ -236,7 +243,7 @@ QVariant RModel::dataForComboBox(const RCol& rcol) const
     if (const auto* enums = m_cache.enumItems(pluginIdx)){
         list = *enums;
     }
-    else if (const auto* nrd = m_cache.namerefData(pluginIdx)){
+    else if (const auto nrd = m_cache.namerefData(pluginIdx)){
         for (const auto& row : nrd->rows){
             if (!row.values.empty()){
                 list.append(QString::fromStdString(row.values[0]));
@@ -254,16 +261,16 @@ QVariant RModel::dataForComboBox(const RCol& rcol) const
 QString RModel::resolveDisplayText(int col, const RCol& rcol,
                                    const QVariant& raw) const
 {
-    const size_t pluginIdx = static_cast<size_t>(rcol.getIndex()); // единый ключ
+    const size_t pluginIdx = static_cast<size_t>(rcol.pluginIndex());
 
     if (const auto* pics = m_cache.pictureEnum(pluginIdx)) {
-        int v = raw.toInt();
-        if (v >= 0 && v < pics->size()) return (*pics)[v].label;
+        const int v = raw.toInt();
+        if (v >= 0 && v < static_cast<int>(pics->size()))  return (*pics)[v].label;
         return {};
     }
     if (const auto* enums = m_cache.enumItems(pluginIdx)) {
-        int v = raw.toInt();
-        if (v >= 0 && v < enums->size()) return (*enums)[v];
+        const int v = raw.toInt();
+        if (v >= 0 && v < static_cast<int>(enums->size())) return (*enums)[v];
         return {};
     }
     if (const auto* senum = m_cache.superenumMap(pluginIdx)) {
@@ -280,15 +287,18 @@ bool RModel::setData(const QModelIndex& index, const QVariant& value, int role)
     const int col = index.column();
     const int row = index.row();
 
-    spdlog::debug("setData [{},{}] role={} value='{}' type={}",
-                  row, col, role,
-                  value.toString().toStdString(),
-                  value.typeName());// покажет "QString", "int", "double"...
-    //Проверяем, если значение не изменилось, то не записываем лишний раз в базу данных
-    QVariant raw = std::visit(ToQVariant(), m_rdata->datablock->Get(row, col));
-    if (raw == value) {
-        spdlog::debug("setData: значение не изменилось");
-        return true;
+    const FieldVariantData currentFvd = m_rdata->getCell(col, row);
+
+    // Пропускаем запись если значение не изменилось.
+    // Сравниваем через visit, чтобы обойти особенности QVariant::operator==
+    // для невалидных/пустых вариантов (monostate → QVariant()).
+    const bool isEmpty = std::holds_alternative<std::monostate>(currentFvd);
+    if (!isEmpty) {
+        const QVariant currentRaw = std::visit(ToQVariant(), currentFvd);
+        if (currentRaw.isValid() && currentRaw == value) {
+            spdlog::debug("setData: value unchanged");
+            return true;
+        }
     }
 
     RData::iterator iter_col = m_rdata->begin() + col;
@@ -319,7 +329,7 @@ bool RModel::setData(const QModelIndex& index, const QVariant& value, int role)
             break;
         case RCol::_en_data::DATA_INT: {
             long val = 0;
-            const size_t pluginIdx = static_cast<size_t>(iter_col->getIndex());
+            const size_t pluginIdx = static_cast<size_t>(iter_col->pluginIndex());
             if (!iter_col->isDirectCode()) {
                 if (const auto* enums = m_cache.enumItems(pluginIdx)) {
                     for (int i = 0; i < enums->size(); ++i)
@@ -328,7 +338,7 @@ bool RModel::setData(const QModelIndex& index, const QVariant& value, int role)
                     for (const auto& [k, v] : *senum)
                         if (v == value.toString().toStdString())
                         { val = static_cast<long>(k); break; }
-                } else if (const auto* nrd = m_cache.namerefData(pluginIdx)) {
+                } else if (const auto nrd = m_cache.namerefData(pluginIdx)) {
                     // value содержит числовой ключ (int), установленный getContextValue()
                     val = value.toLongLong();
                 } else {
@@ -378,7 +388,7 @@ bool RModel::duplicateRow(int row, const QModelIndex&)
     // После DuplicateRow плагин сгенерирует InsertRow-хинт →
     // handleInsertRow вставит пустую строку в datablock.
     // DuplicateRow в QDenseDataBlock копирует данные из исходной строки в новую
-    m_rdata->datablock->DuplicateRow(row);
+    m_rdata->duplicateRow(row);
     return true;
 }
 
@@ -416,12 +426,17 @@ bool RModel::insertColumns(int column, int count, const QModelIndex& parent)
     return true;
 }
 
-void RModel::slot_DataChanged(const std::string& tName, int rowFrom, int colFrom,
-                              int rowTo, int colTo)
+void RModel::slot_DataChanged(const std::string& tName,
+                              int rowFrom, int colFrom,
+                              int rowTo,   int colTo)
 {
-    if (!isMyTable(tName)) {return;}
+    if (!isMyTable(tName)) return;
     // инвалидируем затронутые строки
     m_bgCache.invalidateRows(rowFrom, rowTo);
+    const int maxCol = columnCount() - 1;
+    if (maxCol < 0) return;
+    colTo   = std::min(colTo,   maxCol);
+    colFrom = std::min(colFrom, maxCol);
     emit dataChanged(index(rowFrom, colFrom), index(rowTo, colTo));
 }
 
@@ -519,7 +534,7 @@ ColumnEditorInfo RModel::buildColumnEditorInfo(int colIndex) const
     if (!col) return info;
     // pluginIdx — индекс колонки в плагине (стабилен, не зависит от визуального порядка).
     // Именно по нему BackInfoCache хранит все справочники.
-    const size_t pluginIdx = static_cast<size_t>(col->getIndex());
+    const size_t pluginIdx = static_cast<size_t>(col->pluginIndex());
     const auto   propTT    = col->getComPropTT();
 
     switch (propTT) {
@@ -551,9 +566,9 @@ ColumnEditorInfo RModel::buildColumnEditorInfo(int colIndex) const
 
     case enComPropTT::COM_PR_INT:
         if (!col->isDirectCode() && !col->getNameRef().empty()) {
-            if (const auto* nrd = m_cache.namerefData(pluginIdx)) {
+            if (const auto nrd = m_cache.namerefData(pluginIdx)) {
                 info.editorType  = ColumnEditorInfo::Type::NameRef;
-                info.nameRefData = *nrd;   // копируем всю структуру
+                info.nameRefData = nrd;
                 break;
             }
         }
@@ -638,7 +653,7 @@ QVariant RModel::getMatchingCondFormat(size_t row, size_t column,
         for (const std::string& colName : sb.Check()) {
             auto it = m_rdata->mCols_.find(colName);
             if (it != m_rdata->mCols_.end()) {
-                double v = std::visit(ToDouble(), m_rdata->datablock->Get(row, it->second));
+                double v = std::visit(ToDouble(), m_rdata->getCell(it->second, row));
                 sb.replace(colName, std::to_string(v));
             } else {
                 // Имя не найдено — условие не может быть вычислено
@@ -671,44 +686,42 @@ QVariant RModel::getMatchingCondFormat(size_t row, size_t column,
 }
 
 std::vector<std::tuple<int,int>>
-    RModel::columnsWidth() const
-{
-    std::vector<std::tuple<int,int>> cw;
-    if (!m_rdata) return cw;
-    int i = 0;
-    for (const RCol& col : *m_rdata) {
-        try { cw.emplace_back(i, std::stoi(col.getWidth())); }
-        catch (...) { cw.emplace_back(i, 10); }
-        ++i;
+RModel::columnsWidth() const{
+    std::vector<std::tuple<int,int>> result;
+    if (!m_rdata) return result;
+
+    int modelPos = 0;
+    for (const RCol& rcol : *m_rdata) {
+        int width = 0;
+        try { width = std::stoi(rcol.getWidth()); }
+        catch (...) { width = 10; }           // fallback
+
+        result.emplace_back(modelPos, width); //model position
+        ++modelPos;
     }
-    return cw;
+    return result;
 }
 
-void RModel::invertDirectCode(int col)
-{
+void RModel::invertDirectCode(int col){
     if (!m_rdata || col < 0 || col >= static_cast<int>(m_rdata->size()))
         return;
     (m_rdata->begin() + col)->invertDirectCodeStatus();
 }
 
-const RCol* RModel::getRCol(int col) const
-{
+const RCol* RModel::getRCol(int col) const{
     if (!m_rdata || col < 0 || col >= static_cast<int>(m_rdata->size()))
         return nullptr;
     return &(*(m_rdata->begin() + col));
 }
 
-const RData& RModel::getRdata()
-{
+const RData& RModel::getRdata() const{
     return *m_rdata;
 }
 
-bool RModel::isReady() const noexcept
-{
-    return m_rdata != nullptr && m_rdata->datablock != nullptr;
+bool RModel::isReady() const noexcept{
+    return m_rdata != nullptr && m_rdata->isReady();
 }
 
-bool RModel::isMyTable(const std::string& tName) const noexcept
-{
+bool RModel::isMyTable(const std::string& tName) const noexcept{
     return m_rdata && m_rdata->t_name_ == tName;
 }

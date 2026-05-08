@@ -28,7 +28,8 @@ public:
     // Lookup helpers — возвращают nullptr / end() если нет данных для колонки.
     const QStringList*      enumItems(size_t colIdx)     const;
     const RefMap*           superenumMap(size_t colIdx)  const;
-    const ColumnEditorInfo::NameRefData* namerefData(size_t colIdx) const;
+    const std::shared_ptr<ColumnEditorInfo::NameRefData>
+    namerefData(size_t colIdx) const;
     const PictureList*      pictureEnum(size_t pluginIdx) const;
 
     /// Перестраивает только nameref/superenum-записи, чьи данные берутся из srcTable.
@@ -40,10 +41,16 @@ private:
     static std::map<int, int> parseEnpicNameref(const std::string& nameref);
     static QPixmap        iconByIndex(int idx);
 
-    static RefMap  buildIdNameMap(std::shared_ptr<ITableRepository>        tables,
-                                 const std::string& srcTable,
-                                 const std::string& keyCol,
-                                 const std::string& valueCol);
+    static RefMap
+        buildIdNameMap(std::shared_ptr<ITableRepository> tables,
+                       const std::string& srcTable,
+                       const std::string& keyCol,
+                       const std::string& valueCol);
+    /// @brief Строит NameRefData из таблицы-источника.
+    static std::shared_ptr<ColumnEditorInfo::NameRefData>
+        buildNamerefData(const std::string& srcTable,
+                         const std::string& keyCol,
+                         std::shared_ptr<ITableRepository> tables);
     void loadEnum(const RCol& rcol);
     void loadSuperenum(const RCol& rcol, std::shared_ptr<ITableRepository>        tables);
     void loadNameref(const RCol& rcol, std::shared_ptr<ITableRepository>        tables);
@@ -67,7 +74,8 @@ private:
     // plugin-индекс → список строк: ex. "БАЗА|Ген|Нагр|Ген+"
     std::unordered_map<size_t, QStringList>            m_enum;
     // plugin-индекс → { ключ → отображаемое имя }: ex. RefCol → node[na]
-    std::unordered_map<size_t, ColumnEditorInfo::NameRefData> m_nameref;
+    std::unordered_map<size_t,
+                       std::shared_ptr<ColumnEditorInfo::NameRefData>> m_nameref;
     // plugin-индекс → { ключ → отображаемое имя }: ex. ti_prv.Name.Num
     std::unordered_map<size_t, RefMap>                 m_superenum;
     // plugin-индекс → список картинок

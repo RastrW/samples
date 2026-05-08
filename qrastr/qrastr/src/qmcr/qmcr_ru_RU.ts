@@ -137,60 +137,9 @@
     </message>
 </context>
 <context>
-    <name>ColPropForm</name>
-    <message>
-        <location filename="../../build/qrastr_autogen/include/ui_ColPropForm.h" line="104"/>
-        <location filename="../../out/build/Custom configure preset/qrastr_autogen/include/ui_ColPropForm.h" line="104"/>
-        <source>Имя</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="../../build/qrastr_autogen/include/ui_ColPropForm.h" line="105"/>
-        <location filename="../../out/build/Custom configure preset/qrastr_autogen/include/ui_ColPropForm.h" line="105"/>
-        <source>Название</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="../../build/qrastr_autogen/include/ui_ColPropForm.h" line="106"/>
-        <location filename="../../out/build/Custom configure preset/qrastr_autogen/include/ui_ColPropForm.h" line="106"/>
-        <source>Описание</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="../../build/qrastr_autogen/include/ui_ColPropForm.h" line="107"/>
-        <location filename="../../out/build/Custom configure preset/qrastr_autogen/include/ui_ColPropForm.h" line="107"/>
-        <source>Ширина</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="../../build/qrastr_autogen/include/ui_ColPropForm.h" line="108"/>
-        <location filename="../../out/build/Custom configure preset/qrastr_autogen/include/ui_ColPropForm.h" line="108"/>
-        <source>Точность</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="../../build/qrastr_autogen/include/ui_ColPropForm.h" line="109"/>
-        <location filename="../../out/build/Custom configure preset/qrastr_autogen/include/ui_ColPropForm.h" line="109"/>
-        <source>Формула</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="../../build/qrastr_autogen/include/ui_ColPropForm.h" line="110"/>
-        <location filename="../../out/build/Custom configure preset/qrastr_autogen/include/ui_ColPropForm.h" line="110"/>
-        <source>ОК</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="../../build/qrastr_autogen/include/ui_ColPropForm.h" line="111"/>
-        <location filename="../../out/build/Custom configure preset/qrastr_autogen/include/ui_ColPropForm.h" line="111"/>
-        <source>Отмена</source>
-        <translation type="unfinished"></translation>
-    </message>
-</context>
-<context>
     <name>CondFormatController</name>
     <message>
-        <location filename="../app/formatting/condFormatController.cpp" line="57"/>
+        <location filename="../app/formatting/condFormatController.cpp" line="60"/>
         <source>Conditional formats for &quot;%1&quot;</source>
         <translation type="unfinished"></translation>
     </message>
@@ -326,128 +275,107 @@
 <context>
     <name>CondFormatManager</name>
     <message>
-        <location filename="../../build/qrastr_autogen/include/ui_CondFormatManager.h" line="148"/>
-        <location filename="../../out/build/Custom configure preset/qrastr_autogen/include/ui_CondFormatManager.h" line="148"/>
+        <location filename="../../build/debug/qrastr_autogen/include/ui_CondFormatManager.h" line="148"/>
         <source>Conditional Format Manager</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../../build/qrastr_autogen/include/ui_CondFormatManager.h" line="149"/>
-        <location filename="../../out/build/Custom configure preset/qrastr_autogen/include/ui_CondFormatManager.h" line="149"/>
+        <location filename="../../build/debug/qrastr_autogen/include/ui_CondFormatManager.h" line="149"/>
         <source>This dialog allows creating and editing conditional formats. Each cell style will be selected by the first accomplished condition for that cell data. Conditional formats can be moved up and down, where those at higher rows take precedence over those at lower. Syntax for conditions is the same as for filters and an empty condition applies to all values.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../../build/qrastr_autogen/include/ui_CondFormatManager.h" line="151"/>
-        <location filename="../../out/build/Custom configure preset/qrastr_autogen/include/ui_CondFormatManager.h" line="151"/>
+        <location filename="../../build/debug/qrastr_autogen/include/ui_CondFormatManager.h" line="151"/>
         <source>Add new conditional format</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../../build/qrastr_autogen/include/ui_CondFormatManager.h" line="153"/>
-        <location filename="../../out/build/Custom configure preset/qrastr_autogen/include/ui_CondFormatManager.h" line="153"/>
+        <location filename="../../build/debug/qrastr_autogen/include/ui_CondFormatManager.h" line="153"/>
         <source>&amp;Add</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../../build/qrastr_autogen/include/ui_CondFormatManager.h" line="155"/>
-        <location filename="../../out/build/Custom configure preset/qrastr_autogen/include/ui_CondFormatManager.h" line="155"/>
+        <location filename="../../build/debug/qrastr_autogen/include/ui_CondFormatManager.h" line="155"/>
         <source>Remove selected conditional format</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../../build/qrastr_autogen/include/ui_CondFormatManager.h" line="157"/>
-        <location filename="../../out/build/Custom configure preset/qrastr_autogen/include/ui_CondFormatManager.h" line="157"/>
+        <location filename="../../build/debug/qrastr_autogen/include/ui_CondFormatManager.h" line="157"/>
         <source>&amp;Remove</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../../build/qrastr_autogen/include/ui_CondFormatManager.h" line="159"/>
-        <location filename="../../out/build/Custom configure preset/qrastr_autogen/include/ui_CondFormatManager.h" line="159"/>
+        <location filename="../../build/debug/qrastr_autogen/include/ui_CondFormatManager.h" line="159"/>
         <source>Move selected conditional format up</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../../build/qrastr_autogen/include/ui_CondFormatManager.h" line="161"/>
-        <location filename="../../out/build/Custom configure preset/qrastr_autogen/include/ui_CondFormatManager.h" line="161"/>
+        <location filename="../../build/debug/qrastr_autogen/include/ui_CondFormatManager.h" line="161"/>
         <source>Move &amp;up</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../../build/qrastr_autogen/include/ui_CondFormatManager.h" line="163"/>
-        <location filename="../../out/build/Custom configure preset/qrastr_autogen/include/ui_CondFormatManager.h" line="163"/>
+        <location filename="../../build/debug/qrastr_autogen/include/ui_CondFormatManager.h" line="163"/>
         <source>Move selected conditional format down</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../../build/qrastr_autogen/include/ui_CondFormatManager.h" line="165"/>
-        <location filename="../../out/build/Custom configure preset/qrastr_autogen/include/ui_CondFormatManager.h" line="165"/>
+        <location filename="../../build/debug/qrastr_autogen/include/ui_CondFormatManager.h" line="165"/>
         <source>Move &amp;down</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../../build/qrastr_autogen/include/ui_CondFormatManager.h" line="172"/>
-        <location filename="../../out/build/Custom configure preset/qrastr_autogen/include/ui_CondFormatManager.h" line="172"/>
+        <location filename="../../build/debug/qrastr_autogen/include/ui_CondFormatManager.h" line="172"/>
         <source>Foreground</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../../build/qrastr_autogen/include/ui_CondFormatManager.h" line="178"/>
-        <location filename="../../out/build/Custom configure preset/qrastr_autogen/include/ui_CondFormatManager.h" line="178"/>
+        <location filename="../../build/debug/qrastr_autogen/include/ui_CondFormatManager.h" line="178"/>
         <source>Text color</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../../build/qrastr_autogen/include/ui_CondFormatManager.h" line="171"/>
-        <location filename="../../out/build/Custom configure preset/qrastr_autogen/include/ui_CondFormatManager.h" line="171"/>
+        <location filename="../../build/debug/qrastr_autogen/include/ui_CondFormatManager.h" line="171"/>
         <source>Background</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../../build/qrastr_autogen/include/ui_CondFormatManager.h" line="177"/>
-        <location filename="../../out/build/Custom configure preset/qrastr_autogen/include/ui_CondFormatManager.h" line="177"/>
+        <location filename="../../build/debug/qrastr_autogen/include/ui_CondFormatManager.h" line="177"/>
         <source>Background color</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../../build/qrastr_autogen/include/ui_CondFormatManager.h" line="170"/>
-        <location filename="../../out/build/Custom configure preset/qrastr_autogen/include/ui_CondFormatManager.h" line="170"/>
+        <location filename="../../build/debug/qrastr_autogen/include/ui_CondFormatManager.h" line="170"/>
         <source>Font</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../../build/qrastr_autogen/include/ui_CondFormatManager.h" line="169"/>
-        <location filename="../../out/build/Custom configure preset/qrastr_autogen/include/ui_CondFormatManager.h" line="169"/>
+        <location filename="../../build/debug/qrastr_autogen/include/ui_CondFormatManager.h" line="169"/>
         <source>Size</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../../build/qrastr_autogen/include/ui_CondFormatManager.h" line="176"/>
-        <location filename="../../out/build/Custom configure preset/qrastr_autogen/include/ui_CondFormatManager.h" line="176"/>
+        <location filename="../../build/debug/qrastr_autogen/include/ui_CondFormatManager.h" line="176"/>
         <source>Bold</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../../build/qrastr_autogen/include/ui_CondFormatManager.h" line="175"/>
-        <location filename="../../out/build/Custom configure preset/qrastr_autogen/include/ui_CondFormatManager.h" line="175"/>
+        <location filename="../../build/debug/qrastr_autogen/include/ui_CondFormatManager.h" line="175"/>
         <source>Italic</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../../build/qrastr_autogen/include/ui_CondFormatManager.h" line="174"/>
-        <location filename="../../out/build/Custom configure preset/qrastr_autogen/include/ui_CondFormatManager.h" line="174"/>
+        <location filename="../../build/debug/qrastr_autogen/include/ui_CondFormatManager.h" line="174"/>
         <source>Underline</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../../build/qrastr_autogen/include/ui_CondFormatManager.h" line="168"/>
-        <location filename="../../out/build/Custom configure preset/qrastr_autogen/include/ui_CondFormatManager.h" line="168"/>
+        <location filename="../../build/debug/qrastr_autogen/include/ui_CondFormatManager.h" line="168"/>
         <source>Alignment</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../../build/qrastr_autogen/include/ui_CondFormatManager.h" line="167"/>
-        <location filename="../../out/build/Custom configure preset/qrastr_autogen/include/ui_CondFormatManager.h" line="167"/>
+        <location filename="../../build/debug/qrastr_autogen/include/ui_CondFormatManager.h" line="167"/>
         <source>Condition</source>
         <translation type="unfinished"></translation>
     </message>
@@ -455,52 +383,52 @@
 <context>
     <name>ContextMenuBuilder</name>
     <message>
-        <location filename="../app/ui_components/table/contextMenuBuilder.cpp" line="39"/>
+        <location filename="../app/ui_components/table/contextMenuBuilder.cpp" line="50"/>
         <source>Связанные формы</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../app/ui_components/table/contextMenuBuilder.cpp" line="40"/>
+        <location filename="../app/ui_components/table/contextMenuBuilder.cpp" line="51"/>
         <source>Макрос</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../app/ui_components/table/contextMenuBuilder.cpp" line="63"/>
+        <location filename="../app/ui_components/table/contextMenuBuilder.cpp" line="71"/>
         <source>Выравнивание: по шаблону</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../app/ui_components/table/contextMenuBuilder.cpp" line="64"/>
+        <location filename="../app/ui_components/table/contextMenuBuilder.cpp" line="72"/>
         <source>Выравнивание: по данным</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../app/ui_components/table/contextMenuBuilder.cpp" line="69"/>
+        <location filename="../app/ui_components/table/contextMenuBuilder.cpp" line="38"/>
         <source>Экспорт CSV</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../app/ui_components/table/contextMenuBuilder.cpp" line="70"/>
+        <location filename="../app/ui_components/table/contextMenuBuilder.cpp" line="39"/>
         <source>Импорт CSV</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../app/ui_components/table/contextMenuBuilder.cpp" line="71"/>
+        <location filename="../app/ui_components/table/contextMenuBuilder.cpp" line="78"/>
         <source>Выборка</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../app/ui_components/table/contextMenuBuilder.cpp" line="101"/>
+        <location filename="../app/ui_components/table/contextMenuBuilder.cpp" line="105"/>
         <source>(нет данных)</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../app/ui_components/table/contextMenuBuilder.cpp" line="50"/>
+        <location filename="../app/ui_components/table/contextMenuBuilder.cpp" line="60"/>
         <source>Прямой ввод кода</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../app/ui_components/table/contextMenuBuilder.cpp" line="80"/>
+        <location filename="../app/ui_components/table/contextMenuBuilder.cpp" line="84"/>
         <source>Условное форматирование</source>
         <translation type="unfinished"></translation>
     </message>
@@ -577,15 +505,11 @@
     <name>DlgFindRepl</name>
     <message>
         <location filename="forms/dlgfindrepl.ui" line="14"/>
-        <location filename="../../build/generated/qmcr/qmcr_autogen/include/ui_dlgfindrepl.h" line="45"/>
-        <location filename="../../out/build/Custom configure preset/generated/qmcr/qmcr_autogen/include/ui_dlgfindrepl.h" line="45"/>
         <source>Find </source>
         <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="forms/dlgfindrepl.ui" line="36"/>
-        <location filename="../../build/generated/qmcr/qmcr_autogen/include/ui_dlgfindrepl.h" line="46"/>
-        <location filename="../../out/build/Custom configure preset/generated/qmcr/qmcr_autogen/include/ui_dlgfindrepl.h" line="46"/>
         <source>Find</source>
         <translation type="unfinished"></translation>
     </message>
@@ -684,128 +608,6 @@
     </message>
 </context>
 <context>
-    <name>FormFileNew</name>
-    <message>
-        <location filename="../../build/qrastr_autogen/include/ui_formfilenew.h" line="53"/>
-        <location filename="../../out/build/Custom configure preset/qrastr_autogen/include/ui_formfilenew.h" line="53"/>
-        <source>New file by template</source>
-        <translation type="unfinished"></translation>
-    </message>
-</context>
-<context>
-    <name>FormProtocol</name>
-    <message>
-        <location filename="../../build/qrastr_autogen/include/ui_formprotocol.h" line="50"/>
-        <location filename="../../out/build/Custom configure preset/qrastr_autogen/include/ui_formprotocol.h" line="50"/>
-        <source>Form</source>
-        <translation type="unfinished"></translation>
-    </message>
-</context>
-<context>
-    <name>FormSelection</name>
-    <message>
-        <location filename="../../build/qrastr_autogen/include/ui_formselection.h" line="56"/>
-        <location filename="../../build/qrastr_autogen/include/ui_formselection.h" line="57"/>
-        <location filename="../../out/build/Custom configure preset/qrastr_autogen/include/ui_formselection.h" line="56"/>
-        <location filename="../../out/build/Custom configure preset/qrastr_autogen/include/ui_formselection.h" line="57"/>
-        <source>Выборка</source>
-        <translation type="unfinished"></translation>
-    </message>
-</context>
-<context>
-    <name>FormSettingsDatas</name>
-    <message>
-        <location filename="../../build/qrastr_autogen/include/ui_formsettingsdatas.h" line="54"/>
-        <location filename="../../out/build/Custom configure preset/qrastr_autogen/include/ui_formsettingsdatas.h" line="54"/>
-        <source>Form</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="../../build/qrastr_autogen/include/ui_formsettingsdatas.h" line="55"/>
-        <location filename="../../out/build/Custom configure preset/qrastr_autogen/include/ui_formsettingsdatas.h" line="55"/>
-        <source>Num items in &quot;Last&quot;</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="../../build/qrastr_autogen/include/ui_formsettingsdatas.h" line="56"/>
-        <location filename="../../out/build/Custom configure preset/qrastr_autogen/include/ui_formsettingsdatas.h" line="56"/>
-        <source>Restore...</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="../../build/qrastr_autogen/include/ui_formsettingsdatas.h" line="57"/>
-        <location filename="../../out/build/Custom configure preset/qrastr_autogen/include/ui_formsettingsdatas.h" line="57"/>
-        <source>Restore user directory</source>
-        <translation type="unfinished"></translation>
-    </message>
-</context>
-<context>
-    <name>FormSettingsForms</name>
-    <message>
-        <location filename="../../build/qrastr_autogen/include/ui_formsettingsforms.h" line="46"/>
-        <location filename="../../out/build/Custom configure preset/qrastr_autogen/include/ui_formsettingsforms.h" line="46"/>
-        <source>Form</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="../../build/qrastr_autogen/include/ui_formsettingsforms.h" line="47"/>
-        <location filename="../../out/build/Custom configure preset/qrastr_autogen/include/ui_formsettingsforms.h" line="47"/>
-        <source>Loaded forms</source>
-        <translation type="unfinished"></translation>
-    </message>
-</context>
-<context>
-    <name>FormSettingsOnLoadFiles</name>
-    <message>
-        <location filename="../../build/qrastr_autogen/include/ui_formsettingsonloadfiles.h" line="54"/>
-        <location filename="../../out/build/Custom configure preset/qrastr_autogen/include/ui_formsettingsonloadfiles.h" line="54"/>
-        <source>Form</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="../../build/qrastr_autogen/include/ui_formsettingsonloadfiles.h" line="55"/>
-        <location filename="../../out/build/Custom configure preset/qrastr_autogen/include/ui_formsettingsonloadfiles.h" line="55"/>
-        <source>Load file:</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="../../build/qrastr_autogen/include/ui_formsettingsonloadfiles.h" line="56"/>
-        <location filename="../../out/build/Custom configure preset/qrastr_autogen/include/ui_formsettingsonloadfiles.h" line="56"/>
-        <source>Template:</source>
-        <translation type="unfinished"></translation>
-    </message>
-</context>
-<context>
-    <name>FormSettingsOnLoadForms</name>
-    <message>
-        <location filename="../../build/qrastr_autogen/include/ui_formsettingsonloadforms.h" line="46"/>
-        <location filename="../../out/build/Custom configure preset/qrastr_autogen/include/ui_formsettingsonloadforms.h" line="46"/>
-        <source>Form</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="../../build/qrastr_autogen/include/ui_formsettingsonloadforms.h" line="47"/>
-        <location filename="../../out/build/Custom configure preset/qrastr_autogen/include/ui_formsettingsonloadforms.h" line="47"/>
-        <source>Применить</source>
-        <translation type="unfinished"></translation>
-    </message>
-</context>
-<context>
-    <name>FormSettingsOnLoadTemplates</name>
-    <message>
-        <location filename="../../build/qrastr_autogen/include/ui_formsettingsonloadtemplates.h" line="46"/>
-        <location filename="../../out/build/Custom configure preset/qrastr_autogen/include/ui_formsettingsonloadtemplates.h" line="46"/>
-        <source>Dialog</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="../../build/qrastr_autogen/include/ui_formsettingsonloadtemplates.h" line="47"/>
-        <location filename="../../out/build/Custom configure preset/qrastr_autogen/include/ui_formsettingsonloadtemplates.h" line="47"/>
-        <source>Применить</source>
-        <translation type="unfinished"></translation>
-    </message>
-</context>
-<context>
     <name>GraphSDLManager</name>
     <message>
         <location filename="../app/graphics/sdl/graphSDLManager.cpp" line="45"/>
@@ -829,22 +631,22 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../app/forms/tables/groupCorrectionDialog.cpp" line="35"/>
+        <location filename="../app/forms/tables/groupCorrectionDialog.cpp" line="38"/>
         <source>Параметр</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../app/forms/tables/groupCorrectionDialog.cpp" line="40"/>
+        <location filename="../app/forms/tables/groupCorrectionDialog.cpp" line="43"/>
         <source>Удалять строки</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../app/forms/tables/groupCorrectionDialog.cpp" line="43"/>
+        <location filename="../app/forms/tables/groupCorrectionDialog.cpp" line="46"/>
         <source>Формула расчета:</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../app/forms/tables/groupCorrectionDialog.cpp" line="58"/>
+        <location filename="../app/forms/tables/groupCorrectionDialog.cpp" line="61"/>
         <source>Выборка</source>
         <translation type="unfinished"></translation>
     </message>
@@ -1354,48 +1156,48 @@
 <context>
     <name>RtabController</name>
     <message>
-        <location filename="../app/ui_components/table/rtabcontroller.cpp" line="187"/>
+        <location filename="../app/ui_components/table/rtabcontroller.cpp" line="199"/>
         <source>Добавить строку (Ctrl+A)</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../app/ui_components/table/rtabcontroller.cpp" line="193"/>
+        <location filename="../app/ui_components/table/rtabcontroller.cpp" line="203"/>
         <source>Вставить строку (Ctrl+I)</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../app/ui_components/table/rtabcontroller.cpp" line="199"/>
+        <location filename="../app/ui_components/table/rtabcontroller.cpp" line="207"/>
         <source>Удалить строку (Ctrl+D)</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../app/ui_components/table/rtabcontroller.cpp" line="205"/>
+        <location filename="../app/ui_components/table/rtabcontroller.cpp" line="211"/>
         <source>Дублировать строку (Ctrl+R)</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../app/ui_components/table/rtabcontroller.cpp" line="211"/>
+        <location filename="../app/ui_components/table/rtabcontroller.cpp" line="215"/>
         <source>Групповая корректировка</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../app/ui_components/table/rtabcontroller.cpp" line="258"/>
+        <location filename="../app/ui_components/table/rtabcontroller.cpp" line="262"/>
         <source>Ошибка открытия таблицы</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../app/ui_components/table/rtabcontroller.cpp" line="259"/>
+        <location filename="../app/ui_components/table/rtabcontroller.cpp" line="263"/>
         <source>Таблица &quot;%1&quot; недоступна.
 Убедитесь, что файл данных загружен.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../app/ui_components/table/rtabcontroller.cpp" line="509"/>
+        <location filename="../app/ui_components/table/rtabcontroller.cpp" line="557"/>
         <source>Подтверждение</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../app/ui_components/table/rtabcontroller.cpp" line="510"/>
+        <location filename="../app/ui_components/table/rtabcontroller.cpp" line="558"/>
         <source>Удалить %1 записей?</source>
         <translation type="unfinished"></translation>
     </message>
@@ -1403,27 +1205,27 @@
 <context>
     <name>RtabShell</name>
     <message>
-        <location filename="../app/ui_components/table/rtabshell.cpp" line="82"/>
+        <location filename="../app/ui_components/table/rtabshell.cpp" line="84"/>
         <source>Показать/скрыть строку автофильтра</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../app/ui_components/table/rtabshell.cpp" line="83"/>
+        <location filename="../app/ui_components/table/rtabshell.cpp" line="85"/>
         <source>Поиск по колонке</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../app/ui_components/table/rtabshell.cpp" line="84"/>
+        <location filename="../app/ui_components/table/rtabshell.cpp" line="86"/>
         <source>Копировать таблицу в буфер обмена (Ctrl+C)</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../app/ui_components/table/rtabshell.cpp" line="123"/>
+        <location filename="../app/ui_components/table/rtabshell.cpp" line="125"/>
         <source>Строк: %1   Столбцов: %2</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../app/ui_components/table/rtabshell.cpp" line="223"/>
+        <location filename="../app/ui_components/table/rtabshell.cpp" line="225"/>
         <source>✓ Скопировано в буфер</source>
         <translation type="unfinished"></translation>
     </message>
@@ -1539,41 +1341,38 @@
 <context>
     <name>SearchableComboPopup</name>
     <message>
-        <location filename="../app/ui_components/customEditors/searchableComboEditor/searchableComboPopup.cpp" line="19"/>
-        <source>Поиск...</source>
-        <translation type="unfinished"></translation>
-    </message>
-</context>
-<context>
-    <name>SearchableComboPopupTwo</name>
-    <message>
-        <location filename="../app/ui_components/customEditors/searchableComboEditorTwo/searchableComboPopupTwo.cpp" line="24"/>
-        <source>Название</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="../app/ui_components/customEditors/searchableComboEditorTwo/searchableComboPopupTwo.cpp" line="24"/>
+        <location filename="../app/ui_components/customEditors/searchableComboEditor/searchableComboPopup.cpp" line="25"/>
         <source>Номер</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../app/ui_components/customEditors/searchableComboEditorTwo/searchableComboPopupTwo.cpp" line="34"/>
+        <location filename="../app/ui_components/customEditors/searchableComboEditor/searchableComboPopup.cpp" line="25"/>
+        <source>Название</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../app/ui_components/customEditors/searchableComboEditor/searchableComboPopup.cpp" line="35"/>
         <source>Фильтр по номеру...</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../app/ui_components/customEditors/searchableComboEditorTwo/searchableComboPopupTwo.cpp" line="38"/>
+        <location filename="../app/ui_components/customEditors/searchableComboEditor/searchableComboPopup.cpp" line="39"/>
         <source>Фильтр по названию...</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../app/ui_components/customEditors/searchableComboEditorTwo/searchableComboPopupTwo.cpp" line="58"/>
+        <location filename="../app/ui_components/customEditors/searchableComboEditor/searchableComboPopup.cpp" line="59"/>
         <source>Закрыть</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../app/ui_components/customEditors/searchableComboEditorTwo/searchableComboPopupTwo.cpp" line="59"/>
+        <location filename="../app/ui_components/customEditors/searchableComboEditor/searchableComboPopup.cpp" line="60"/>
         <source>Не задано</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../app/ui_components/customEditors/searchableComboEditor/searchableComboPopup.cpp" line="118"/>
+        <source>Ключ</source>
         <translation type="unfinished"></translation>
     </message>
 </context>
@@ -2155,262 +1954,6 @@
     <message>
         <location filename="../app/forms/workspaceSettings/workSpaceDialogBase.cpp" line="18"/>
         <source>Рабочая область</source>
-        <translation type="unfinished"></translation>
-    </message>
-</context>
-<context>
-    <name>formcalcidop</name>
-    <message>
-        <location filename="../../build/qrastr_autogen/include/ui_formcalcidop.h" line="114"/>
-        <source>Расчет I доп от Т</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="../../build/qrastr_autogen/include/ui_formcalcidop.h" line="115"/>
-        <source>Параметры</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="../../build/qrastr_autogen/include/ui_formcalcidop.h" line="116"/>
-        <source>Температура:</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="../../build/qrastr_autogen/include/ui_formcalcidop.h" line="117"/>
-        <source>25.0</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="../../build/qrastr_autogen/include/ui_formcalcidop.h" line="118"/>
-        <source>Аварийная загрузка (%):</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="../../build/qrastr_autogen/include/ui_formcalcidop.h" line="119"/>
-        <source>0</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="../../build/qrastr_autogen/include/ui_formcalcidop.h" line="120"/>
-        <source>Выборка:</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="../../build/qrastr_autogen/include/ui_formcalcidop.h" line="121"/>
-        <source>АС Метео</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="../../build/qrastr_autogen/include/ui_formcalcidop.h" line="122"/>
-        <source>Дата:</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="../../build/qrastr_autogen/include/ui_formcalcidop.h" line="123"/>
-        <source>Загрузить</source>
-        <translation type="unfinished"></translation>
-    </message>
-</context>
-<context>
-    <name>formexportcsv</name>
-    <message>
-        <location filename="../../build/qrastr_autogen/include/ui_formexportcsv.h" line="107"/>
-        <location filename="../../out/build/Custom configure preset/qrastr_autogen/include/ui_formexportcsv.h" line="107"/>
-        <source>Экспорт в формате CSV</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="../../build/qrastr_autogen/include/ui_formexportcsv.h" line="108"/>
-        <location filename="../../out/build/Custom configure preset/qrastr_autogen/include/ui_formexportcsv.h" line="108"/>
-        <source>Файл:</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="../../build/qrastr_autogen/include/ui_formexportcsv.h" line="109"/>
-        <location filename="../../out/build/Custom configure preset/qrastr_autogen/include/ui_formexportcsv.h" line="109"/>
-        <source>...</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="../../build/qrastr_autogen/include/ui_formexportcsv.h" line="110"/>
-        <location filename="../../out/build/Custom configure preset/qrastr_autogen/include/ui_formexportcsv.h" line="110"/>
-        <source>Переписать</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="../../build/qrastr_autogen/include/ui_formexportcsv.h" line="111"/>
-        <location filename="../../out/build/Custom configure preset/qrastr_autogen/include/ui_formexportcsv.h" line="111"/>
-        <source>Дополнить</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="../../build/qrastr_autogen/include/ui_formexportcsv.h" line="112"/>
-        <location filename="../../out/build/Custom configure preset/qrastr_autogen/include/ui_formexportcsv.h" line="112"/>
-        <source>Переписать (заголовки)</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="../../build/qrastr_autogen/include/ui_formexportcsv.h" line="113"/>
-        <location filename="../../out/build/Custom configure preset/qrastr_autogen/include/ui_formexportcsv.h" line="113"/>
-        <source>Таблица:</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="../../build/qrastr_autogen/include/ui_formexportcsv.h" line="114"/>
-        <location filename="../../out/build/Custom configure preset/qrastr_autogen/include/ui_formexportcsv.h" line="114"/>
-        <source>Параметры:</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="../../build/qrastr_autogen/include/ui_formexportcsv.h" line="115"/>
-        <location filename="../../out/build/Custom configure preset/qrastr_autogen/include/ui_formexportcsv.h" line="115"/>
-        <source>Выборка</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="../../build/qrastr_autogen/include/ui_formexportcsv.h" line="116"/>
-        <location filename="../../out/build/Custom configure preset/qrastr_autogen/include/ui_formexportcsv.h" line="116"/>
-        <source>Разделитель:</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="../../build/qrastr_autogen/include/ui_formexportcsv.h" line="117"/>
-        <location filename="../../out/build/Custom configure preset/qrastr_autogen/include/ui_formexportcsv.h" line="117"/>
-        <source>;</source>
-        <translation type="unfinished"></translation>
-    </message>
-</context>
-<context>
-    <name>formgroupcorrection</name>
-    <message>
-        <location filename="../../build/qrastr_autogen/include/ui_formgroupcorrection.h" line="81"/>
-        <location filename="../../out/build/Custom configure preset/qrastr_autogen/include/ui_formgroupcorrection.h" line="81"/>
-        <source>Групповая коррекция</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="../../build/qrastr_autogen/include/ui_formgroupcorrection.h" line="82"/>
-        <location filename="../../out/build/Custom configure preset/qrastr_autogen/include/ui_formgroupcorrection.h" line="82"/>
-        <source>Удалять строки</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="../../build/qrastr_autogen/include/ui_formgroupcorrection.h" line="83"/>
-        <location filename="../../out/build/Custom configure preset/qrastr_autogen/include/ui_formgroupcorrection.h" line="83"/>
-        <source>Формула расчета:</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="../../build/qrastr_autogen/include/ui_formgroupcorrection.h" line="84"/>
-        <location filename="../../out/build/Custom configure preset/qrastr_autogen/include/ui_formgroupcorrection.h" line="84"/>
-        <source>Выборка</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="../../build/qrastr_autogen/include/ui_formgroupcorrection.h" line="85"/>
-        <location filename="../../out/build/Custom configure preset/qrastr_autogen/include/ui_formgroupcorrection.h" line="85"/>
-        <source>Параметр</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="../../build/qrastr_autogen/include/ui_formgroupcorrection.h" line="86"/>
-        <location filename="../../out/build/Custom configure preset/qrastr_autogen/include/ui_formgroupcorrection.h" line="86"/>
-        <source>В таблице node</source>
-        <translation type="unfinished"></translation>
-    </message>
-</context>
-<context>
-    <name>formimportcsv2</name>
-    <message>
-        <location filename="../../build/qrastr_autogen/include/ui_formimportcsv2.h" line="122"/>
-        <location filename="../../out/build/Custom configure preset/qrastr_autogen/include/ui_formimportcsv2.h" line="122"/>
-        <source>Импорт из формата CSV</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="../../build/qrastr_autogen/include/ui_formimportcsv2.h" line="123"/>
-        <location filename="../../out/build/Custom configure preset/qrastr_autogen/include/ui_formimportcsv2.h" line="123"/>
-        <source>Файл</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="../../build/qrastr_autogen/include/ui_formimportcsv2.h" line="124"/>
-        <location filename="../../out/build/Custom configure preset/qrastr_autogen/include/ui_formimportcsv2.h" line="124"/>
-        <source>Присоеденить</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="../../build/qrastr_autogen/include/ui_formimportcsv2.h" line="125"/>
-        <location filename="../../out/build/Custom configure preset/qrastr_autogen/include/ui_formimportcsv2.h" line="125"/>
-        <source>Загрузить</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="../../build/qrastr_autogen/include/ui_formimportcsv2.h" line="126"/>
-        <location filename="../../out/build/Custom configure preset/qrastr_autogen/include/ui_formimportcsv2.h" line="126"/>
-        <source>Объеденить</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="../../build/qrastr_autogen/include/ui_formimportcsv2.h" line="127"/>
-        <location filename="../../out/build/Custom configure preset/qrastr_autogen/include/ui_formimportcsv2.h" line="127"/>
-        <source>Обновить</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="../../build/qrastr_autogen/include/ui_formimportcsv2.h" line="128"/>
-        <location filename="../../out/build/Custom configure preset/qrastr_autogen/include/ui_formimportcsv2.h" line="128"/>
-        <source>Загр (2)</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="../../build/qrastr_autogen/include/ui_formimportcsv2.h" line="129"/>
-        <location filename="../../out/build/Custom configure preset/qrastr_autogen/include/ui_formimportcsv2.h" line="129"/>
-        <source>...</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="../../build/qrastr_autogen/include/ui_formimportcsv2.h" line="130"/>
-        <location filename="../../out/build/Custom configure preset/qrastr_autogen/include/ui_formimportcsv2.h" line="130"/>
-        <source>Параметры:</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="../../build/qrastr_autogen/include/ui_formimportcsv2.h" line="131"/>
-        <location filename="../../out/build/Custom configure preset/qrastr_autogen/include/ui_formimportcsv2.h" line="131"/>
-        <source>;</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="../../build/qrastr_autogen/include/ui_formimportcsv2.h" line="132"/>
-        <location filename="../../out/build/Custom configure preset/qrastr_autogen/include/ui_formimportcsv2.h" line="132"/>
-        <source>Таблица:</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="../../build/qrastr_autogen/include/ui_formimportcsv2.h" line="133"/>
-        <location filename="../../out/build/Custom configure preset/qrastr_autogen/include/ui_formimportcsv2.h" line="133"/>
-        <source>Выборка:</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="../../build/qrastr_autogen/include/ui_formimportcsv2.h" line="134"/>
-        <location filename="../../out/build/Custom configure preset/qrastr_autogen/include/ui_formimportcsv2.h" line="134"/>
-        <source>По умолчанию:</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="../../build/qrastr_autogen/include/ui_formimportcsv2.h" line="135"/>
-        <location filename="../../out/build/Custom configure preset/qrastr_autogen/include/ui_formimportcsv2.h" line="135"/>
-        <source>Разделитель</source>
-        <translation type="unfinished"></translation>
-    </message>
-</context>
-<context>
-    <name>formsaveall</name>
-    <message>
-        <location filename="../../build/qrastr_autogen/include/ui_formsaveall.h" line="59"/>
-        <source>Сохранение файлов</source>
         <translation type="unfinished"></translation>
     </message>
 </context>

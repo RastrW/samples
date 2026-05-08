@@ -17,53 +17,106 @@ RData::RData(const ITableRepository::TableSchema& schema,
     reserve(n_reserve);
     // reserve() вызван ДО push_back, иначе при reallocation
     // итераторы инвалидируются и RCol теряют данные.
-
-    m_str_cols.clear();
-
+    int rdataPos = 0;
     for (const auto& cs : schema.columns) {
-        // initialize() принимает const& — объект ColumnSchema не копируется.
-        vCols_.push_back(cs.name);
-        m_str_cols += cs.name + ",";
-
         RCol rc;
         rc.initialize(cs);
         emplace_back(std::move(rc));
-
-        mCols_.try_emplace(cs.name, static_cast<int>(cs.index));
+        mCols_.try_emplace(cs.name, rdataPos);
+        ++rdataPos;
     }
-
     // Скрываем колонки, не входящие в форму.
     // Скрытые колонки присутствуют в datablock — просто не показываются в UI.
     std::unordered_set<std::string> formCols;
-    for (const auto& f : form.Fields())
+
+    for (const auto& f : form.Fields()) {
+        //if ((t_name_ == "vetv" && f.Name() == "name"))
+            //continue; // игнорируем только для vetv
         formCols.insert(f.Name());
+    }
 
     for (RCol& rc : *this)
         if (formCols.count(rc.getColName()))
             rc.setHidden(false);
-
-    if (!m_str_cols.empty())
-        m_str_cols.pop_back();
-
     spdlog::debug("RData: table={} columns={}", t_name_, schema.columns.size());
 }
 
 void RData::populateBlock(std::shared_ptr<ITableRepository> tables)
 {
-    // repo — невладеющий указатель, время жизни гарантировано RtabController.
-    // getBlock возвращает shared_ptr — счётчик ссылок увеличивается,
-    // данные не копируются.
-    datablock = tables->getBlock(t_name_, m_str_cols);
+    const std::string visCols = get_cols(/*visible=*/true); // только не-hidden
+    datablock = tables->getBlock(t_name_, visCols);
+    rebuildBlockIndexMap();
+
+    auto* db = datablock.get();
+
+    spdlog::info("[PERF] rows = {}", db->RowsCount());
+    spdlog::info("[PERF] cols = {}", db->ColumnsCount());
+    spdlog::info("[PERF] datasize = {}", db->DataSize());
+    spdlog::info("[PERF] bytes = {}", db->DataSize() * sizeof(FieldVariantData));
 }
 
-std::string RData::get_cols(bool visible) const
+void RData::rebuildBlockIndexMap()
 {
+    m_blockColIdx.assign(size(), -1);
+    if (!datablock) return;
+    for (int i = 0; i < static_cast<int>(size()); ++i)
+        m_blockColIdx[i] =
+            static_cast<int>(datablock->localColumnIndex((*this)[i].getColName()));
+}
+
+int RData::ensureBlockCol(int rdataPos,
+                          std::shared_ptr<ITableRepository> tables) const
+{
+    if (rdataPos < 0 || rdataPos >= static_cast<int>(size())) return -1;
+    const std::string& colName = (*this)[rdataPos].getColName();
+    tables->ensureColumn(t_name_, colName);
+    updateBlockIndex(rdataPos);
+    return m_blockColIdx[rdataPos];
+}
+
+void RData::updateBlockIndex(int rdataPos) const noexcept
+{
+    if (!datablock) return;
+    if (rdataPos < 0 || rdataPos >= static_cast<int>(m_blockColIdx.size()))
+        return;
+    m_blockColIdx[rdataPos] =
+        static_cast<int>(datablock->localColumnIndex((*this)[rdataPos].getColName()));
+}
+
+int RData::blockColIndex(int rdataPos) const noexcept
+{
+    if (rdataPos < 0 || rdataPos >= static_cast<int>(m_blockColIdx.size()))
+        return -1;
+    return m_blockColIdx[rdataPos];
+}
+
+FieldVariantData
+RData::getCell(int rdataPos, int row) const
+{
+    const int blockCol = blockColIndex(rdataPos);
+    if (blockCol < 0) return {};          // не загружена
+    return datablock->Get(row, blockCol);
+}
+
+std::string RData::get_cols(bool visible) const{
+    // Резервируем примерный размер: N колонок × ~5 символов + запятые
     std::string ret;
+    ret.reserve(size() * 6);
+
     for (const RCol& rc : *this) {
-        if (!visible || !rc.isHidden())
-            ret += rc.getColName() + ",";
+        if (!visible || !rc.isHidden()) {
+            if (!ret.empty()) ret += ',';
+            ret += rc.getColName();        // без временной строки
+        }
     }
-    if (!ret.empty())
-        ret.pop_back();
     return ret;
 }
+
+std::vector<std::string> RData::colNames() const {
+    static std::vector<std::string> names;
+    names.reserve(size());
+    for (const RCol& rc : *this)
+        names.push_back(rc.getColName());
+    return names;
+}
+

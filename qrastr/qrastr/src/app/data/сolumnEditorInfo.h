@@ -33,7 +33,7 @@ struct ColumnEditorInfo {
             return {};
         }
     };
-    NameRefData nameRefData;
+    std::shared_ptr<NameRefData> nameRefData;
 
     struct PicItem { QPixmap image; QString label; };
     QList<PicItem> picItems;

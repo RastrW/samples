@@ -1,5 +1,8 @@
 #pragma once
 #include "../QDataBlocks.h"
+#include "additionalDataBlocksWrappers.h"
+
+constexpr const char *cszDef = "[def]"; // "пустое" значение для разреженного режима
 
 // Переходим к разреженному блоку. Он почти такой же как и плотный, и
 // можно было бы его просто наследовать и игнорировать ненужные члены, но

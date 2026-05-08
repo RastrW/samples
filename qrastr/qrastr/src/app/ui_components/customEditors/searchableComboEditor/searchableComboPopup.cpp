@@ -105,9 +105,10 @@ SearchableComboPopup::SearchableComboPopup(QWidget* parent)
     resize(400, 300); // начальный размер
 }
 
-void SearchableComboPopup::setItems(const ColumnEditorInfo::NameRefData& nrd)
+void SearchableComboPopup::setItems
+    (const std::shared_ptr<ColumnEditorInfo::NameRefData>& nrd)
 {
-    const int nValueCols = static_cast<int>(nrd.columns.size());
+    const int nValueCols = static_cast<int>(nrd->columns.size());
     const int totalCols  = 1 + nValueCols; // ключ + значения
 
     m_model->clear();
@@ -115,7 +116,7 @@ void SearchableComboPopup::setItems(const ColumnEditorInfo::NameRefData& nrd)
 
     QStringList headers;
     headers << tr("Ключ");
-    for (const auto& cd : nrd.columns)
+    for (const auto& cd : nrd->columns)
         headers << cd.header;
     m_model->setHorizontalHeaderLabels(headers);
 
@@ -123,9 +124,9 @@ void SearchableComboPopup::setItems(const ColumnEditorInfo::NameRefData& nrd)
     // (упрощение: фильтруем по col 0 и col 1 как раньше,
     //  для 4 колонок можно добавить ещё поля)
 
-    m_model->setRowCount(static_cast<int>(nrd.rows.size()));
+    m_model->setRowCount(static_cast<int>(nrd->rows.size()));
     int r = 0;
-    for (const auto& row : nrd.rows) {
+    for (const auto& row : nrd->rows) {
         auto* keyItem = new QStandardItem(QString::number(row.key));
         keyItem->setData(static_cast<int>(row.key), Qt::UserRole);
         keyItem->setEditable(false);
