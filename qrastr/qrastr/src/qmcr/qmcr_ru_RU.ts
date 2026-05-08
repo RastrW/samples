@@ -139,7 +139,7 @@
 <context>
     <name>CondFormatController</name>
     <message>
-        <location filename="../app/formatting/condFormatController.cpp" line="57"/>
+        <location filename="../app/formatting/condFormatController.cpp" line="60"/>
         <source>Conditional formats for &quot;%1&quot;</source>
         <translation type="unfinished"></translation>
     </message>
@@ -383,52 +383,52 @@
 <context>
     <name>ContextMenuBuilder</name>
     <message>
-        <location filename="../app/ui_components/table/contextMenuBuilder.cpp" line="39"/>
+        <location filename="../app/ui_components/table/contextMenuBuilder.cpp" line="50"/>
         <source>Связанные формы</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../app/ui_components/table/contextMenuBuilder.cpp" line="40"/>
+        <location filename="../app/ui_components/table/contextMenuBuilder.cpp" line="51"/>
         <source>Макрос</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../app/ui_components/table/contextMenuBuilder.cpp" line="63"/>
+        <location filename="../app/ui_components/table/contextMenuBuilder.cpp" line="71"/>
         <source>Выравнивание: по шаблону</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../app/ui_components/table/contextMenuBuilder.cpp" line="64"/>
+        <location filename="../app/ui_components/table/contextMenuBuilder.cpp" line="72"/>
         <source>Выравнивание: по данным</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../app/ui_components/table/contextMenuBuilder.cpp" line="69"/>
+        <location filename="../app/ui_components/table/contextMenuBuilder.cpp" line="38"/>
         <source>Экспорт CSV</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../app/ui_components/table/contextMenuBuilder.cpp" line="70"/>
+        <location filename="../app/ui_components/table/contextMenuBuilder.cpp" line="39"/>
         <source>Импорт CSV</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../app/ui_components/table/contextMenuBuilder.cpp" line="71"/>
+        <location filename="../app/ui_components/table/contextMenuBuilder.cpp" line="78"/>
         <source>Выборка</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../app/ui_components/table/contextMenuBuilder.cpp" line="101"/>
+        <location filename="../app/ui_components/table/contextMenuBuilder.cpp" line="105"/>
         <source>(нет данных)</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../app/ui_components/table/contextMenuBuilder.cpp" line="50"/>
+        <location filename="../app/ui_components/table/contextMenuBuilder.cpp" line="60"/>
         <source>Прямой ввод кода</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../app/ui_components/table/contextMenuBuilder.cpp" line="80"/>
+        <location filename="../app/ui_components/table/contextMenuBuilder.cpp" line="84"/>
         <source>Условное форматирование</source>
         <translation type="unfinished"></translation>
     </message>
@@ -631,22 +631,22 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../app/forms/tables/groupCorrectionDialog.cpp" line="35"/>
+        <location filename="../app/forms/tables/groupCorrectionDialog.cpp" line="38"/>
         <source>Параметр</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../app/forms/tables/groupCorrectionDialog.cpp" line="40"/>
+        <location filename="../app/forms/tables/groupCorrectionDialog.cpp" line="43"/>
         <source>Удалять строки</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../app/forms/tables/groupCorrectionDialog.cpp" line="43"/>
+        <location filename="../app/forms/tables/groupCorrectionDialog.cpp" line="46"/>
         <source>Формула расчета:</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../app/forms/tables/groupCorrectionDialog.cpp" line="58"/>
+        <location filename="../app/forms/tables/groupCorrectionDialog.cpp" line="61"/>
         <source>Выборка</source>
         <translation type="unfinished"></translation>
     </message>
@@ -1156,48 +1156,48 @@
 <context>
     <name>RtabController</name>
     <message>
-        <location filename="../app/ui_components/table/rtabcontroller.cpp" line="187"/>
+        <location filename="../app/ui_components/table/rtabcontroller.cpp" line="199"/>
         <source>Добавить строку (Ctrl+A)</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../app/ui_components/table/rtabcontroller.cpp" line="193"/>
+        <location filename="../app/ui_components/table/rtabcontroller.cpp" line="203"/>
         <source>Вставить строку (Ctrl+I)</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../app/ui_components/table/rtabcontroller.cpp" line="199"/>
+        <location filename="../app/ui_components/table/rtabcontroller.cpp" line="207"/>
         <source>Удалить строку (Ctrl+D)</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../app/ui_components/table/rtabcontroller.cpp" line="205"/>
+        <location filename="../app/ui_components/table/rtabcontroller.cpp" line="211"/>
         <source>Дублировать строку (Ctrl+R)</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../app/ui_components/table/rtabcontroller.cpp" line="211"/>
+        <location filename="../app/ui_components/table/rtabcontroller.cpp" line="215"/>
         <source>Групповая корректировка</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../app/ui_components/table/rtabcontroller.cpp" line="258"/>
+        <location filename="../app/ui_components/table/rtabcontroller.cpp" line="262"/>
         <source>Ошибка открытия таблицы</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../app/ui_components/table/rtabcontroller.cpp" line="259"/>
+        <location filename="../app/ui_components/table/rtabcontroller.cpp" line="263"/>
         <source>Таблица &quot;%1&quot; недоступна.
 Убедитесь, что файл данных загружен.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../app/ui_components/table/rtabcontroller.cpp" line="509"/>
+        <location filename="../app/ui_components/table/rtabcontroller.cpp" line="557"/>
         <source>Подтверждение</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../app/ui_components/table/rtabcontroller.cpp" line="510"/>
+        <location filename="../app/ui_components/table/rtabcontroller.cpp" line="558"/>
         <source>Удалить %1 записей?</source>
         <translation type="unfinished"></translation>
     </message>
@@ -1205,27 +1205,27 @@
 <context>
     <name>RtabShell</name>
     <message>
-        <location filename="../app/ui_components/table/rtabshell.cpp" line="83"/>
+        <location filename="../app/ui_components/table/rtabshell.cpp" line="84"/>
         <source>Показать/скрыть строку автофильтра</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../app/ui_components/table/rtabshell.cpp" line="84"/>
+        <location filename="../app/ui_components/table/rtabshell.cpp" line="85"/>
         <source>Поиск по колонке</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../app/ui_components/table/rtabshell.cpp" line="85"/>
+        <location filename="../app/ui_components/table/rtabshell.cpp" line="86"/>
         <source>Копировать таблицу в буфер обмена (Ctrl+C)</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../app/ui_components/table/rtabshell.cpp" line="124"/>
+        <location filename="../app/ui_components/table/rtabshell.cpp" line="125"/>
         <source>Строк: %1   Столбцов: %2</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../app/ui_components/table/rtabshell.cpp" line="218"/>
+        <location filename="../app/ui_components/table/rtabshell.cpp" line="225"/>
         <source>✓ Скопировано в буфер</source>
         <translation type="unfinished"></translation>
     </message>
@@ -1341,41 +1341,38 @@
 <context>
     <name>SearchableComboPopup</name>
     <message>
-        <location filename="../app/ui_components/customEditors/searchableComboEditor/searchableComboPopup.cpp" line="19"/>
-        <source>Поиск...</source>
-        <translation type="unfinished"></translation>
-    </message>
-</context>
-<context>
-    <name>SearchableComboPopupTwo</name>
-    <message>
-        <location filename="../app/ui_components/customEditors/searchableComboEditorTwo/searchableComboPopupTwo.cpp" line="24"/>
-        <source>Название</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="../app/ui_components/customEditors/searchableComboEditorTwo/searchableComboPopupTwo.cpp" line="24"/>
+        <location filename="../app/ui_components/customEditors/searchableComboEditor/searchableComboPopup.cpp" line="25"/>
         <source>Номер</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../app/ui_components/customEditors/searchableComboEditorTwo/searchableComboPopupTwo.cpp" line="34"/>
+        <location filename="../app/ui_components/customEditors/searchableComboEditor/searchableComboPopup.cpp" line="25"/>
+        <source>Название</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../app/ui_components/customEditors/searchableComboEditor/searchableComboPopup.cpp" line="35"/>
         <source>Фильтр по номеру...</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../app/ui_components/customEditors/searchableComboEditorTwo/searchableComboPopupTwo.cpp" line="38"/>
+        <location filename="../app/ui_components/customEditors/searchableComboEditor/searchableComboPopup.cpp" line="39"/>
         <source>Фильтр по названию...</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../app/ui_components/customEditors/searchableComboEditorTwo/searchableComboPopupTwo.cpp" line="58"/>
+        <location filename="../app/ui_components/customEditors/searchableComboEditor/searchableComboPopup.cpp" line="59"/>
         <source>Закрыть</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../app/ui_components/customEditors/searchableComboEditorTwo/searchableComboPopupTwo.cpp" line="59"/>
+        <location filename="../app/ui_components/customEditors/searchableComboEditor/searchableComboPopup.cpp" line="60"/>
         <source>Не задано</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../app/ui_components/customEditors/searchableComboEditor/searchableComboPopup.cpp" line="118"/>
+        <source>Ключ</source>
         <translation type="unfinished"></translation>
     </message>
 </context>
