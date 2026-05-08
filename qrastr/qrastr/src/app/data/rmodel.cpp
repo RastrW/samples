@@ -219,7 +219,7 @@ QVariant RModel::dataForDecoration (int row, int col,
         px.fill(QColor::fromRgb(static_cast<QRgb>(packed)));
         return px;
     }
-    const size_t pluginIdx = static_cast<size_t>(rcol.getIndex());
+    const size_t pluginIdx = static_cast<size_t>(rcol.pluginIndex());
     if (const auto* pics = m_cache.pictureEnum(pluginIdx)) { 
         const long v = std::visit(ToLong(), fvd);
         if (v >= 0 && v < static_cast<long>(pics->size()))
@@ -230,7 +230,7 @@ QVariant RModel::dataForDecoration (int row, int col,
 
 QVariant RModel::dataForComboBox(const RCol& rcol) const
 {
-    const size_t pluginIdx = static_cast<size_t>(rcol.getIndex());
+    const size_t pluginIdx = static_cast<size_t>(rcol.pluginIndex());
 
     if (const auto* pics = m_cache.pictureEnum(pluginIdx)) {
         QVariantList result;
@@ -261,7 +261,7 @@ QVariant RModel::dataForComboBox(const RCol& rcol) const
 QString RModel::resolveDisplayText(int col, const RCol& rcol,
                                    const QVariant& raw) const
 {
-    const size_t pluginIdx = static_cast<size_t>(rcol.getIndex()); // единый ключ
+    const size_t pluginIdx = static_cast<size_t>(rcol.pluginIndex());
 
     if (const auto* pics = m_cache.pictureEnum(pluginIdx)) {
         const int v = raw.toInt();
@@ -329,7 +329,7 @@ bool RModel::setData(const QModelIndex& index, const QVariant& value, int role)
             break;
         case RCol::_en_data::DATA_INT: {
             long val = 0;
-            const size_t pluginIdx = static_cast<size_t>(iter_col->getIndex());
+            const size_t pluginIdx = static_cast<size_t>(iter_col->pluginIndex());
             if (!iter_col->isDirectCode()) {
                 if (const auto* enums = m_cache.enumItems(pluginIdx)) {
                     for (int i = 0; i < enums->size(); ++i)
@@ -534,7 +534,7 @@ ColumnEditorInfo RModel::buildColumnEditorInfo(int colIndex) const
     if (!col) return info;
     // pluginIdx — индекс колонки в плагине (стабилен, не зависит от визуального порядка).
     // Именно по нему BackInfoCache хранит все справочники.
-    const size_t pluginIdx = static_cast<size_t>(col->getIndex());
+    const size_t pluginIdx = static_cast<size_t>(col->pluginIndex());
     const auto   propTT    = col->getComPropTT();
 
     switch (propTT) {

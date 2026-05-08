@@ -54,7 +54,7 @@ void BackInfoCache::rebuild(const RData& rdata,
 
 void BackInfoCache::loadEnum(const RCol& rcol)
 {
-    const size_t idx = static_cast<size_t>(rcol.getIndex());
+    const size_t idx = static_cast<size_t>(rcol.pluginIndex());
     const auto& nameRef = rcol.getNameRef();
 
     QStringList list;
@@ -78,7 +78,7 @@ void BackInfoCache::loadSuperenum(const RCol& rcol,
         tables->columnIndex(parts->srcTable, parts->valueCol) < 0)
         return;
 
-    const size_t idx = static_cast<size_t>(rcol.getIndex());
+    const size_t idx = static_cast<size_t>(rcol.pluginIndex());
     m_superenum.emplace(idx, buildIdNameMap(tables, parts->srcTable,
                                             parts->keyCol, parts->valueCol));
     m_superenumSources[parts->srcTable].push_back(idx);
@@ -91,7 +91,7 @@ void BackInfoCache::loadNameref(const RCol& rcol,
     const auto parts = parseNamerefStr(rcol.getNameRef());
     if (!parts) return;
 
-    const size_t idx = static_cast<size_t>(rcol.getIndex());
+    const size_t idx = static_cast<size_t>(rcol.pluginIndex());
     // Храним shared_ptr, чтобы ColumnEditorInfo не копировал данные
     m_nameref.emplace(idx,
                       buildNamerefData(parts->srcTable, parts->keyCol, tables));
@@ -100,7 +100,7 @@ void BackInfoCache::loadNameref(const RCol& rcol,
 
 void BackInfoCache::loadEnpic(const RCol& rcol)
 {
-    const size_t idx = static_cast<size_t>(rcol.getIndex());
+    const size_t idx = static_cast<size_t>(rcol.pluginIndex());
     const auto& nameRef = rcol.getNameRef();
 
     const std::map<int, int> iconMap = parseEnpicNameref(nameRef);
@@ -142,7 +142,7 @@ std::vector<size_t> BackInfoCache::rebuildRefsFrom(const std::string& srcTable,
 
     size_t pos = 0;
     for (const RCol& rcol : rdata) {
-        const size_t pluginIdx = static_cast<size_t>(rcol.getIndex());
+        const size_t pluginIdx = static_cast<size_t>(rcol.pluginIndex());
         byPluginIdx.emplace(pluginIdx, &rcol);
         posByPluginIdx.emplace(pluginIdx, pos++);
     }

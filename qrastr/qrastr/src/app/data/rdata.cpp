@@ -64,13 +64,6 @@ void RData::rebuildBlockIndexMap()
             static_cast<int>(datablock->localColumnIndex((*this)[i].getColName()));
 }
 
-int RData::blockColIndex(int rdataPos) const noexcept
-{
-    if (rdataPos < 0 || rdataPos >= static_cast<int>(m_blockColIdx.size()))
-        return -1;
-    return m_blockColIdx[rdataPos];
-}
-
 int RData::ensureBlockCol(int rdataPos,
                           std::shared_ptr<ITableRepository> tables) const
 {
@@ -88,6 +81,13 @@ void RData::updateBlockIndex(int rdataPos) const noexcept
         return;
     m_blockColIdx[rdataPos] =
         static_cast<int>(datablock->localColumnIndex((*this)[rdataPos].getColName()));
+}
+
+int RData::blockColIndex(int rdataPos) const noexcept
+{
+    if (rdataPos < 0 || rdataPos >= static_cast<int>(m_blockColIdx.size()))
+        return -1;
+    return m_blockColIdx[rdataPos];
 }
 
 FieldVariantData
