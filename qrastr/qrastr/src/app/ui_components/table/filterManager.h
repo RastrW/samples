@@ -1,5 +1,6 @@
 #pragma once
 #include <QObject>
+#include "table/tableIndexTypes.h"
 
 class RModel;
 class AutoFilterWidget;
@@ -30,7 +31,7 @@ public:
     const std::string& currentSelection() const { return m_selection; }
 
 public slots:
-    void slot_openSelection(int col);
+    void slot_openSelection(RDataPos col);
 private slots:
     void slot_setFiltrForSelection(std::string selection);
 private:

@@ -3,7 +3,7 @@
 #include <vector>
 #include "condFormat.h"
 #include "table/tableIndexTypes.h"
-
+#include "table/tableIndexHash.h"
 ///@class Хранит unordered_map<col → [CondFormat]> для форматов по значению ячейки.
 /// Управляет добавлением и заменой правил.
 class CondFormatStorage

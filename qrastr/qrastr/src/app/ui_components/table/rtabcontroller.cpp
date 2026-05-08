@@ -297,7 +297,6 @@ void RtabController::setupColumnOrder()
     }
 }
 
-
 void RtabController::createLinkedFormController
     (std::shared_ptr<ITableRepository> tables){
 
@@ -365,15 +364,15 @@ void RtabController::setupConnections()
     connect(ev,  &ITableEvents::sig_ReferenceChanged,
             m_model.get(), &RModel::slot_RefTableChanged);
     connect(m_model.get(), &RModel::sig_nameRefUpdated,
-            this, [this](const std::vector<size_t>& cols) {
-                for (size_t i : cols) {
-                    auto* column_qt = getColumnByIndex(static_cast<int>(i));
+            this, [this](const std::vector<RDataPos>& cols) {
+                for (const auto i : cols) {
+                    auto* column_qt = columnByRDataPos(i);
                     if (!column_qt) continue;
                     auto* repo = static_cast<SearchableComboRepository*>(
                         column_qt->editorRepository());
                     if (!repo) continue;
                     // getColumnEditorInfo теперь возвращает const& — копии нет
-                    const auto& info = m_model->getColumnEditorInfo(static_cast<int>(i));
+                    const auto& info = m_model->getColumnEditorInfo(i);
                     repo->updateItems(info.nameRefData);
                 }
             });
@@ -408,9 +407,8 @@ void RtabController::applyColumnEditor(RDataPos rdataPos)
         m_view->getColumnByModelColumn(rdataPos.value));
     if (!column_qt) return;
 
-    const RCol* rcol = m_model->colAt(rdataPos);
+    const RCol* rcol = m_model->getRCol(rdataPos);
     if (!rcol) return;
-
     column_qt->setVisible(!rcol->isHidden());
     // Не настраиваем редакторы для скрытых колонок:
     // QTitan при setEditorType/setEditorRepository вызывает data() на ячейках,
@@ -422,8 +420,6 @@ void RtabController::applyColumnEditor(RDataPos rdataPos)
     column_qt->setProperty("isNumeric", false);
     column_qt->setProperty("isBool",    false);
 
-    // pluginIndex — ключ в BackInfoCache, не путать с rdataPos
-    const PluginIndex pi = rcol->pluginIndex();
     const auto& info = m_model->getColumnEditorInfo(rdataPos);
 
     switch (info.editorType)
@@ -480,7 +476,7 @@ void RtabController::applyColumnEditor(RDataPos rdataPos)
     {
         column_qt->setProperty("isNumeric", true);
         column_qt->setEditorType(GridEditor::ComboBox);
-        spdlog::info("applyColumnEditor ENPIC col={}, picItems={}", colIndex,
+        spdlog::info("applyColumnEditor ENPIC col={}, picItems={}", rdataPos.value,
                      info.picItems.size());
         break;
     }
@@ -572,13 +568,14 @@ void RtabController::slot_deleteRow()
 }
 
 void RtabController::slot_groupCorrection(){
-    const int col = m_view->selection()->cell().columnIndex();
-    const auto* prcol = m_model->getRCol(col);
-    if (!prcol){
-        return;
-    }
-    GroupCorrectionDialog* fgc =  new GroupCorrectionDialog(m_tables,
-                                                           m_model->getRdata(),prcol,m_grid);
+
+    const auto* prcol = m_model->getRCol
+                        (RDataPos{m_view->selection()->cell().columnIndex()});
+    if (!prcol){return;}
+
+    GroupCorrectionDialog* fgc =
+        new GroupCorrectionDialog(m_tables,
+                                  m_model->getRdata(),prcol,m_grid);
     fgc->setAttribute(Qt::WA_DeleteOnClose);
 
     fgc->show();
@@ -605,7 +602,7 @@ void RtabController::slot_beginResetModel(const std::string& tname)
 
         QString qname = QString::fromStdString(rdata[rdataPos].getColName());
         m_columnsVisible[qname]    = col->isVisible();
-        m_columnVisualOrder[qname] = col->visualIndex();
+        m_columnVisualOrder[qname] = VisualIndex{col->visualIndex()};
     }
 }
 
@@ -636,9 +633,13 @@ void RtabController::slot_endResetModel(const std::string& tname)
         if (!isVisible) continue;
 
         const bool hasVI = orderIt != m_columnVisualOrder.end();
+        const VisualIndex visualIdx = hasVI
+                                          ? VisualIndex{orderIt->second}  // явное преобразование
+                                          : VisualIndex{0};                // значение по умолчанию
+
         pending.push_back({
             rdataPos,
-            VisualIndex{ hasVI ? orderIt->second : 0 },
+            visualIdx,
             /*isNew=*/ !hasVI
         });
     }
@@ -667,38 +668,38 @@ void RtabController::setPyHlp(std::shared_ptr<PyHlp> pPyHlp){
     }
 }
 
-void RtabController::slot_openColProp(int col)
+void RtabController::slot_openColProp(RDataPos col)
 {
     // Получаем схему колонки через репозиторий
     const auto schema_full = m_tables->getSchema(m_UIForm.TableName());
-    if (col < 0 || col >= (int)schema_full.columns.size()) return;
+    if (!col.valid_in(schema_full.columns.size())) return;
 
-    const auto& colSchema = schema_full.columns[col];
+    const auto& colSchema = schema_full.columns[col.to_size()];
 
     auto* dlg = new ColPropDialog(m_tables, colSchema, m_view, m_grid);
     dlg->setAttribute(Qt::WA_DeleteOnClose);
     dlg->exec();
 }
 
-void RtabController::slot_directCodeToggle(std::size_t column)
+void RtabController::slot_directCodeToggle(RDataPos column)
 {
     m_model->invertDirectCode(column);
 
     m_view->beginUpdate();
-    applyColumnEditor(column);
+    applyColumnEditor(RDataPos{column});
     m_view->endUpdate();
 
     // Принудительно перерисовать всю колонку — DisplayRole изменился
     const int rows = m_model->rowCount();
     if (rows > 0) {
         emit m_model->dataChanged(
-            m_model->index(0,      static_cast<int>(column)),
-            m_model->index(rows-1, static_cast<int>(column)),
+            m_model->index(0,      column.value),
+            m_model->index(rows-1, column.value),
             {Qt::DisplayRole, Qt::EditRole});
     }
 }
 
-void RtabController::slot_condFormatsEdit(std::size_t column){
+void RtabController::slot_condFormatsEdit(RDataPos column){
     m_condFormatCtrl->editCondFormats(column);
 }
 
@@ -716,7 +717,7 @@ void RtabController::setTableView(bool update, int multiplier)
         if (!binding || binding->column() < 0) continue;
 
         const int rdataPos = binding->column();
-        const RCol* rcol = m_model->getRCol(rdataPos);
+        const RCol* rcol = m_model->getRCol(RDataPos{rdataPos});
         if (!rcol || rcol->isHidden()) continue;
 
         int width = 10;
@@ -788,7 +789,7 @@ void RtabController::slot_contextMenu(ContextMenuEventArgs* args)
 
     auto* binding = view->getDataBinding(gridColBase);
     if (!binding) return;
-    const int modelCol = binding->column();
+    RDataPos rdataPos {binding->column()};
 
     // Определяем тип области
     const auto type = hit.info();
@@ -796,17 +797,17 @@ void RtabController::slot_contextMenu(ContextMenuEventArgs* args)
 
     // Меню заголовка
     if (isHeader) {
-        const auto* col = m_model->getRCol(modelCol);
-        m_menuBuilder->prepareForHeader(modelCol, col, args->contextMenu());
+        const auto* col = m_model->getRCol(rdataPos);
+        m_menuBuilder->prepareForHeader(rdataPos, col, args->contextMenu());
         return;
     }
 
     // Меню ячейки
     const int row_model = hit.row().modelIndex().row();
-    const auto* col = m_model->getRCol(modelCol);
+    const auto* col = m_model->getRCol(rdataPos);
     if (!col) return;
 
-    MenuContext ctx { modelCol, row_model, col };
+    MenuContext ctx {rdataPos, row_model, col };
     m_menuBuilder->prepareForShow(ctx, args->contextMenu());
 }
 
@@ -819,7 +820,7 @@ void RtabController::slot_contextMenuVertical(ContextMenuEventArgs* args)
 }
 
 int RtabController::getLongValue(const std::string& key, long row){
-    int col = m_model->getRdata().mCols_.at(key);
+    auto col = m_model->getRdata().mCols_.at(key);
     return std::visit(ToLong(), m_model->getRdata().getCell(col, row));
 }
 
@@ -847,10 +848,10 @@ RtabController::columnByRDataPos(RDataPos pos)const
         m_view->getColumnByModelColumn(pos.value));
 }
 
-int RtabController::rdataPosOf(const std::string& colName) const
+RDataPos RtabController::rdataPosOf(const std::string& colName) const
 {
-    if (!m_model) return -1;
+    if (!m_model) return {};
     const RData& rd = m_model->getRdata();
     auto it = rd.mCols_.find(colName);
-    return (it != rd.mCols_.end()) ? it->second : -1;
+    return (it != rd.mCols_.end()) ? it->second : RDataPos{};
 }

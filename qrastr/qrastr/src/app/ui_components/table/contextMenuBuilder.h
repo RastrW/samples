@@ -11,7 +11,7 @@ namespace Qtitan{ class GridTableView; }
 
 /// Контекст одного показа меню.
 struct MenuContext {
-    int   column = -1;
+    RDataPos column;
     int   row    = -1;
     const RCol* col    = nullptr;   ///< указатель действителен на время показа меню
 };
@@ -35,19 +35,19 @@ public:
 
     /// Меню заголовка колонки: описание, сумма, выравнивание, CF, прямой ввод.
     /// @param col  указатель на RCol (действителен на время показа меню)
-    void prepareForHeader(int column, const RCol* col, QMenu* menu);
+    void prepareForHeader(RDataPos column, const RCol* col, QMenu* menu);
 signals:
     // Сигналы для операций со строками
-    void sig_selection(int col);
+    void sig_selection(RDataPos col);
     // Сигналы для вспомогательных форм
-    void sig_colProp(int col);
+    void sig_colProp(RDataPos col);
     void sig_exportCsv();
     void sig_importCsv();
     // Настройка отображения
     void sig_widthByTemplate();
     void sig_widthByData();
-    void sig_directCodeToggle(int col);
-    void sig_condFormatsEdit(int col);
+    void sig_directCodeToggle(RDataPos col);
+    void sig_condFormatsEdit(RDataPos col);
 
 private:
     /// Удаляет из menu нежелательные встроенные пункты Qtitan.
@@ -78,7 +78,7 @@ private:
     QAction* m_actSel       = nullptr;
     QAction* m_actCF        = nullptr;
     // ── Хранители для отсоединения сигналов ────────────────────────────
-    int      m_currentCol = -1;   ///< col при последнем вызове prepareForShow
+    RDataPos m_currentCol;   ///< col при последнем вызове prepareForShow
 
     RtabController::CommonTableActions m_comTabAct;
 };

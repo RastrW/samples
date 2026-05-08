@@ -29,8 +29,6 @@ public:
      * Загружаем только колонки формы
      */
     void populateBlock(std::shared_ptr<ITableRepository> tables);
-    /// Local index в блоке для позиции rdataPos, или -1 если не загружена.
-    int blockColIndex(int rdataPos) const noexcept;
     int getRowsCount() const{
         return static_cast<int>(datablock->RowsCount());
     }
@@ -65,7 +63,7 @@ public:
 
     std::string t_name_;
     std::string t_title_;
-    std::unordered_map<std::string, int> mCols_; ///< unordered_map<имя_колонки, индекс> для быстрого поиска колонки по имени.
+    std::unordered_map<std::string, RDataPos> mCols_; ///< unordered_map<имя_колонки, индекс> для быстрого поиска колонки по имени.
 private:
     /// Обновить индекс только для одной позиции (после lazy load).
     void updateBlockIndex(RDataPos pos) const noexcept;
@@ -73,5 +71,5 @@ private:
     /// Вызывать после любого изменения состава колонок блока.
     void rebuildBlockIndexMap();
     std::shared_ptr<QDataBlock>       datablock;
-    mutable std::vector<int> m_blockColIdx; /// rdata_pos → local_index
+    mutable std::vector<LocalIndex> m_blockColIdx; /// RDataPos → LocalIndex
 };

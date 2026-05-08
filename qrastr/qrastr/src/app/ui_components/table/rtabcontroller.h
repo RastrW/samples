@@ -33,36 +33,6 @@ struct TableProperties{
     bool withToolbar {true};
     QString formQName;
 };
-/**
- * ── Карта индексов ────────────────────────────────────────────────────────────
- *
- *  plugin_index  = RCol::m_index
- *                  Порядковый номер колонки в плагине Rastr (0..N-1).
- *                  Стабилен для данной колонки независимо от загруженного файла.
- *                  Используется как ключ в BackInfoCache (ENUM/NAMEREF/…).
- *                  НЕ совпадает с rdataPos в общем случае.
- *
- *  rdataPos      = позиция в vector<RCol> = mCols_[colName]
- *                  Порядковый номер колонки в RData (0..size-1).
- *                  Определяется порядком колонок в схеме конкретного файла(шаблона)  —
- *                  может отличаться между файлами для одной и той же колонки.
- *
- *  local_index   = позиция среди загруженных колонок внутри QDataBlock.
- *                  Хранится в RData::m_blockColIdx[rdataPos].
- *                  Блок содержит только запрошенные (видимые) колонки,
- *                  поэтому local_index != rdataPos в общем случае.
- *                  Получается через QDataBlock::localColumnIndex(colName).
- *                  Используется только внутри RData::getCell() — снаружи не нужен.
- *
- *  visualIndex   = GridColumnBase::visualIndex()
- *                  Порядок отображения на экране (меняет пользователь).
- *                  Не связан ни с rdataPos, ни с plugin_index.
- *
- *  listIndex     = позиция в m_columnslist (внутри QTitan).
- *                  После setModel() == rdataPos.
- *                  После перетаскивания колонок listIndex не меняется —
- *                  меняется только visualIndex.
- */
 
 /// @brief Контроллер таблицы Rastr — управляет данными и
 /// отображает одну таблицу Rastr в QTitan Grid.
@@ -115,10 +85,10 @@ public slots:
     void slot_groupCorrection();
 
     // ── Колонки ─────────────────────────────────────────────────────────────
-    void slot_directCodeToggle(std::size_t column);
-    void slot_condFormatsEdit(std::size_t column);
+    void slot_directCodeToggle(RDataPos column);
+    void slot_condFormatsEdit(RDataPos column);
      //  Формы инструментов
-    void slot_openColProp(int col);
+    void slot_openColProp(RDataPos col);
     // ширина по шаблону
     void slot_widthByTemplate();
     // ширина по контенту
@@ -157,7 +127,7 @@ private:
     void createLinkedFormController(std::shared_ptr<ITableRepository> tables);
     void createCondFormatController();
     /// Возвращает позицию колонки в RData по имени, или -1.
-    int rdataPosOf(const std::string& colName) const;
+    RDataPos rdataPosOf(const std::string& colName) const;
 
     Qtitan::GridTableColumn* columnByRDataPos(RDataPos pos)const;
     // ── Компоненты (данные) ─────────────────────────────────────────────────
@@ -177,7 +147,7 @@ private:
     ads::CDockManager*   m_DockManager {nullptr};
 
     std::unordered_map<QString, bool> m_columnsVisible;
-    std::unordered_map<QString, int> m_columnVisualOrder;
+    std::unordered_map<QString, VisualIndex> m_columnVisualOrder;
     /// Защита от повторного вызова createShell()
     bool m_shellCreated {false};
     CommonTableActions m_comTabAct;

@@ -17,7 +17,7 @@ RData::RData(const ITableRepository::TableSchema& schema,
     reserve(n_reserve);
     // reserve() вызван ДО push_back, иначе при reallocation
     // итераторы инвалидируются и RCol теряют данные.
-    int rdataPos = 0;
+    RDataPos rdataPos{0};
     for (const auto& cs : schema.columns) {
         RCol rc;
         rc.initialize(cs);
@@ -57,19 +57,20 @@ void RData::populateBlock(std::shared_ptr<ITableRepository> tables){
 
 void RData::rebuildBlockIndexMap()
 {
-    m_blockColIdx.assign(size(), -1);
+    m_blockColIdx.assign(size(), LocalIndex{});
     if (!datablock) return;
-    for (int i = 0; i < static_cast<int>(size()); ++i)
+    for (size_t i = 0; i < size(); ++i)
         m_blockColIdx[i] =
-            static_cast<int>(datablock->localColumnIndex((*this)[i].getColName()));
+            LocalIndex{datablock->localColumnIndex((*this)[i].getColName())};
 }
 
 LocalIndex
 RData::ensureLoaded(RDataPos pos,
                     std::shared_ptr<ITableRepository> tables) const
 {
-    if (pos.invalid() || pos.value >= static_cast<int>(size())) return {};
-    const std::string& name = (*this)[pos.value].getColName();
+    if (pos.valid_in(size())) return {};
+
+    const std::string& name = (*this)[pos.to_size()].getColName();
     tables->ensureColumn(t_name_, name);
     updateBlockIndex(pos);
     return localIndexOf(pos);
@@ -85,18 +86,11 @@ RData::getCell(RDataPos pos, int row) const
 
 void RData::updateBlockIndex(RDataPos pos) const noexcept
 {
-    if (!datablock || pos.invalid() ||
-        pos.value >= static_cast<int>(m_blockColIdx.size())) return;
-    const std::string& name = (*this)[pos.value].getColName();
-    m_blockColIdx[pos.value] =
-        static_cast<int>(datablock->localColumnIndex(name));
-}
+    if (!datablock || pos.valid_in(m_blockColIdx.size())) return;
 
-int RData::blockColIndex(int rdataPos) const noexcept
-{
-    if (rdataPos < 0 || rdataPos >= static_cast<int>(m_blockColIdx.size()))
-        return -1;
-    return m_blockColIdx[rdataPos];
+    const std::string& name = (*this)[pos.to_size()].getColName();
+    m_blockColIdx[pos.to_size()] =
+        LocalIndex{datablock->localColumnIndex(name)};
 }
 
 std::string RData::get_cols(bool visible) const{
@@ -127,17 +121,16 @@ RDataPos RData::rdataPosOf(const std::string& colName) const noexcept{
 }
 
 PluginIndex RData::pluginIndexOf(RDataPos pos) const noexcept{
-    if (pos.invalid() || pos.value >= static_cast<int>(size())) return {};
-    return (*this)[pos.value].pluginIndex();
+    if (!pos.valid_in(size())) return {};
+    return (*this)[pos.to_size()].pluginIndex();
 }
 
 LocalIndex RData::localIndexOf(RDataPos pos) const noexcept{
-    if (pos.invalid() || pos.value >= static_cast<int>(m_blockColIdx.size()))
-        return {};
-    return LocalIndex{m_blockColIdx[pos.value]};
+    if (!pos.valid_in(m_blockColIdx.size())) return {};
+    return LocalIndex{m_blockColIdx[pos.to_size()]};
 }
 
 const RCol* RData::colAt(RDataPos pos) const noexcept{
-    if (pos.invalid() || pos.value >= static_cast<int>(size())) return nullptr;
-    return &(*this)[pos.value];
+    if (!pos.valid_in(size())) return nullptr;
+    return &(*this)[pos.to_size()];
 }

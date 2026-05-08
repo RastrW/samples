@@ -5,6 +5,7 @@
 #include <optional>
 #include "сolumnEditorInfo.h"
 #include "table/tableIndexTypes.h"
+#include "table/tableIndexHash.h"
 
 class RData;
 class ITableRepository;
@@ -35,9 +36,9 @@ public:
 
     /// Перестраивает только nameref/superenum-записи, чьи данные берутся из srcTable.
     /// Возвращает список позиционных индексов колонок, которые были обновлены.
-    std::vector<PluginIndex> rebuildRefsFrom(const std::string&  srcTable,
-                                        const RData&        rdata,
-                                        std::shared_ptr<ITableRepository>        tables);
+    std::vector<RDataPos> rebuildRefsFrom(const std::string&  srcTable,
+                                          const RData&        rdata,
+                                          std::shared_ptr<ITableRepository>        tables);
 private:
     static std::map<int, int> parseEnpicNameref(const std::string& nameref);
     static QPixmap        iconByIndex(int idx);

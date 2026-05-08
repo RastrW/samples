@@ -70,7 +70,7 @@ QVariant RModel::headerData(int section, Qt::Orientation orientation, int role) 
 Qt::ItemFlags RModel::flags(const QModelIndex& index) const
 {
     Qt::ItemFlags f = QAbstractTableModel::flags(index); // уже содержит Enabled|Selectable
-    const auto* col = getRCol(index.column());
+    const auto* col = getRCol(RDataPos{index.column()});
     if (col && col->getFF() == "1")
         return f & ~Qt::ItemIsEditable; // убираем только редактирование, Enabled оставляем
     return f | Qt::ItemIsEditable;
@@ -84,8 +84,7 @@ QVariant RModel::data(const QModelIndex& index, int role) const
     const RDataPos rdataPos{ index.column() };
     const int      row     = index.row();
 
-    if (row < 0 || row >= rowCount() || rdataPos.invalid() ||
-        rdataPos.value >= columnCount())
+    if (row < 0 || row >= rowCount() || !rdataPos.valid_in(columnCount()) )
     {
         spdlog::error("RModel::data out of bounds [row={}, rdataPos={}]",
                       row, rdataPos.value);
@@ -168,7 +167,8 @@ QVariant RModel::dataForDisplayEdit(int row, RDataPos col, const RCol& rcol,
         bool ok;
         long packed = raw.toLongLong(&ok);
         if (!ok) {
-            spdlog::warn("Ошибка при преобразовании QVariant для цвета через toLongLong [{},{}]", row, col);
+            spdlog::warn("Ошибка при преобразовании QVariant для "
+                         "цвета через toLongLong [{},{}]", row, col.value);
             packed = std::visit(ToLong(), fvd);
         }
         return QColor(packed & 0xFF, (packed >> 8) & 0xFF, (packed >> 16) & 0xFF);
@@ -309,7 +309,7 @@ bool RModel::setData(const QModelIndex& index,
         }
     }
 
-    RData::iterator iter_col = m_rdata->begin() + rdataPos;
+    RData::iterator iter_col = m_rdata->begin() + rdataPos.to_size();
     const std::string& tname   = iter_col->getTableName();
     const std::string& colName = iter_col->getColName();
 
@@ -345,7 +345,7 @@ bool RModel::setData(const QModelIndex& index,
                 } else if (const auto* senum = m_cache.superenumMap(pluginIdx)) {
                     for (const auto& [k, v] : *senum)
                         if (v == value.toString().toStdString())
-                        { val = static_cast<long>(k); break; }
+                        { val = k.value; break; }
                 } else if (const auto nrd = m_cache.namerefData(pluginIdx)) {
                     // value содержит числовой ключ (int), установленный getContextValue()
                     val = value.toLongLong();
@@ -505,48 +505,51 @@ void RModel::slot_EndRemoveRows(const std::string& tName)
     endRemoveRows();
 }
 
-void RModel::slot_RefTableChanged(const std::string& tName)
-{
+void RModel::slot_RefTableChanged(const std::string& tName) {
     // Если изменилась наша же таблица — RTDA уже послал ChangeTable/ChangeAll,
     // не нужно дублировать.
     if (isMyTable(tName)) return;
     // Перестраиваем только затронутые записи кеша
-    std::vector<PluginIndex> updated =
+    std::vector<RDataPos> updated =
         m_cache.rebuildRefsFrom(tName, *m_rdata, m_tables);
     if (updated.empty()) return;
     // Обновляем m_editorInfoCache для затронутых колонок
-    for (PluginIndex col : updated)
-        if (col < m_editorInfoCache.size())
-            m_editorInfoCache[col] = buildColumnEditorInfo(col);
+    for (RDataPos col : updated) {
+        if (col.valid_in(m_editorInfoCache.size())){
+            m_editorInfoCache[col.to_size()] = buildColumnEditorInfo(col);
+        }
+    }
     // Просим View обновить ячейки во всех строках затронутых колонок
     const int nRows = rowCount();
-    if (nRows > 0)
-        for (PluginIndex col : updated){
-            emit dataChanged(index(0, static_cast<int>(col)),
-                             index(nRows - 1, static_cast<int>(col)));
+    if (nRows > 0) {
+        for (RDataPos col : updated) {
+            emit dataChanged(index(0, col.value),
+                             index(nRows - 1, col.value));
         }
+    }
     // Уведомляем контроллер — пусть обновит репозитории Qtitan
     emit sig_nameRefUpdated(updated);
 }
 
-void RModel::buildEditorInfoCache()
-{
+void RModel::buildEditorInfoCache() {
     const int n = columnCount();
     m_editorInfoCache.resize(n);
     for (int i = 0; i < n; ++i)
-        m_editorInfoCache[i] = buildColumnEditorInfo(i);
+        m_editorInfoCache[i] = buildColumnEditorInfo(RDataPos{i});
 }
 
 const ColumnEditorInfo&
-RModel::getColumnEditorInfo(PluginIndex colIndex) const
+RModel::getColumnEditorInfo(RDataPos colIndex) const
 {
     static const ColumnEditorInfo s_empty;
-    if (colIndex >= 0 && colIndex < static_cast<int>(m_editorInfoCache.size()))
-        return m_editorInfoCache[colIndex];
+
+    if (colIndex.valid_in(m_editorInfoCache.size()))
+        return m_editorInfoCache[colIndex.to_size()];
     return s_empty;
 }
 
-ColumnEditorInfo RModel::buildColumnEditorInfo(int colIndex) const
+ColumnEditorInfo
+RModel::buildColumnEditorInfo(RDataPos colIndex) const
 {
     ColumnEditorInfo info;
     const RCol* col = getRCol(colIndex);
@@ -624,28 +627,20 @@ ColumnEditorInfo RModel::buildColumnEditorInfo(int colIndex) const
     return info;
 }
 
-void RModel::addCondFormat(size_t column, const CondFormat& condFormat)
-{
-    m_condFmt.add(column, condFormat);
-    m_bgCache.clear();
-    emit layoutChanged();
-}
-
-void RModel::setCondFormats(size_t column, const std::vector<CondFormat>& condFormats)
+void RModel::setCondFormats(RDataPos column,
+                            const std::vector<CondFormat>& condFormats)
 {
     m_condFmt.set(column, condFormats);
-    m_bgCache.invalidateColumn(static_cast<int>(column));
-    // layoutChanged вызывается из контроллера после
-    // полной замены всех правил, не инкрементально.
+    m_bgCache.invalidateColumn(column);
+    // layoutChanged вызывается из контроллера после полной замены
 }
 
 const std::vector<CondFormat>&
-RModel::getCondFormats(int column) const
+RModel::getCondFormats(RDataPos column) const
 {
     // Если для колонки нет правил, возвращаем ссылку на статический пустой вектор.
-    // Это безопаснее, чем бросать исключение или возвращать указатель.
     static const std::vector<CondFormat> empty;
-    const auto* vec = m_condFmt.column(static_cast<size_t>(column));
+    const auto* vec = m_condFmt.column(column);
     return vec ? *vec : empty;
 }
 
@@ -722,16 +717,19 @@ RModel::columnsWidth() const{
     return result;
 }
 
-void RModel::invertDirectCode(int col){
-    if (!m_rdata || col < 0 || col >= static_cast<int>(m_rdata->size()))
+void RModel::invertDirectCode(RDataPos col){
+
+    if (!m_rdata || col.valid_in(m_rdata->size()))
         return;
-    (m_rdata->begin() + col)->invertDirectCodeStatus();
+    (m_rdata->begin() + col.to_size())->invertDirectCodeStatus();
 }
 
-const RCol* RModel::getRCol(int col) const{
-    if (!m_rdata || col < 0 || col >= static_cast<int>(m_rdata->size()))
+const RCol*
+RModel::getRCol(RDataPos col) const{
+
+    if (!m_rdata || !col.valid_in(m_rdata->size()))
         return nullptr;
-    return &(*(m_rdata->begin() + col));
+    return &(*(m_rdata->begin() + col.to_size()));
 }
 
 const RData& RModel::getRdata() const{

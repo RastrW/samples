@@ -5,6 +5,7 @@
 #include "condFormatStorage.h"
 #include "rdata.h"
 #include "table/backgroundCache.h"
+#include "table/tableIndexHash.h"
 
 class CUIForm;
 class RData;
@@ -28,7 +29,7 @@ class RModel : public QAbstractTableModel
 
 signals:
     void editCompleted(const QString&);
-    void sig_nameRefUpdated(const std::vector<PluginIndex>& updatedCols);
+    void sig_nameRefUpdated(const std::vector<RDataPos>& updatedCols);
 
 public slots:
     ///@brief Уведомление от RTDA:
@@ -78,19 +79,18 @@ public:
     bool removeColumns(int col,  int count, const QModelIndex& parent = {}) override;
 
     // ── Условное форматирование ───────────────────────────────────────────
-    void addCondFormat (size_t column, const CondFormat& condFormat);
-    void setCondFormats(size_t column, const std::vector<CondFormat>& condFormats);
+    void setCondFormats(RDataPos column, const std::vector<CondFormat>& condFormats);
     // Читать текущие правила колонки для CondFormatController
-    const std::vector<CondFormat>& getCondFormats(int column) const;
+    const std::vector<CondFormat>& getCondFormats(RDataPos column) const;
 
     // ── Утилиты ───────────────────────────────────────────────────────────
     std::vector<std::tuple<int,int>>
         columnsWidth() const;
-    const RCol* getRCol   (int col) const;
+    const RCol* getRCol   (RDataPos col) const;
     const RData& getRdata () const;
     const ColumnEditorInfo&
-        getColumnEditorInfo(PluginIndex colIndex) const;
-    void invertDirectCode(int col);
+        getColumnEditorInfo(RDataPos colIndex) const;
+    void invertDirectCode(RDataPos col);
 private:
     // ── Данные ───────────────────────────────────────────────────────────────
     std::shared_ptr<ITableRepository> m_tables;
@@ -135,7 +135,7 @@ private:
     // Данные отсутствуют (например, новая строка)
     QVariant dataForInvalidCellEditRole(const RCol& rcol) const;
     // Функции получения редактора из кеша и вычисление редактора для колонки в кеш
-    ColumnEditorInfo buildColumnEditorInfo(int colIndex) const;
+    ColumnEditorInfo buildColumnEditorInfo(RDataPos colIndex) const;
     void             buildEditorInfoCache();
     //Guard для неинициализированной модели
     bool isReady() const noexcept;

@@ -33,7 +33,7 @@ CondFormatStorage::formats() const
 {
     return m_condFormats;
 }
-// Удобный доступ к правилам одной колонки (возвращает nullptr, если колонки нет).
+
 const std::vector<CondFormat>*
 CondFormatStorage::column(RDataPos col) const
 {

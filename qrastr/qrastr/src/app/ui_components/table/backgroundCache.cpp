@@ -7,25 +7,25 @@ void BackgroundCache::invalidateRows(int from, int to) {
 
 void BackgroundCache::clear() { data.clear(); }
 
-void BackgroundCache::invalidateColumn(int col) {
+void BackgroundCache::invalidateColumn(RDataPos col) {
 	for (auto& [row, cols] : data)
 		cols.erase(col);
 }
 
 const QVariant* 
-BackgroundCache::get(int row, int col) const {
+BackgroundCache::get(int row, RDataPos col) const {
 	auto it = data.find(row);
 	if (it == data.end()) return nullptr;
 	auto jt = it->second.find(col);
 	return (jt != it->second.end()) ? &jt->second : nullptr;
 }
-void 
-BackgroundCache::put(int row, int col, QVariant v) {
+void
+BackgroundCache::put(int row, RDataPos col, QVariant v) {
 	data[row][col] = std::move(v);
 }
 
 void BackgroundCache::shiftRowsDown(int first, int count) {
-	std::unordered_map<int, std::unordered_map<int, QVariant>> shifted;
+    std::unordered_map<int, std::unordered_map<RDataPos, QVariant>> shifted;
 	for (auto& [row, cols] : data) {
 		const int newRow = (row >= first) ? row + count : row;
 		shifted[newRow] = std::move(cols);
@@ -34,7 +34,7 @@ void BackgroundCache::shiftRowsDown(int first, int count) {
 }
 
 void BackgroundCache::shiftRowsUp(int first, int count) {
-	std::unordered_map<int, std::unordered_map<int, QVariant>> shifted;
+    std::unordered_map<int, std::unordered_map<RDataPos, QVariant>> shifted;
 	for (auto& [row, cols] : data) {
 		if (row >= first && row < first + count) continue; // удалённые
 		const int newRow = (row >= first + count) ? row - count : row;

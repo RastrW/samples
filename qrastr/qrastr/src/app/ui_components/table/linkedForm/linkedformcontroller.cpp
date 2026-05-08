@@ -217,7 +217,7 @@ int LinkedFormController::getLongValue(const std::string& col, long row)
 {
     // Читаем значение напрямую из кешированного DataBlock модели.
     // Используется только при построении меню (начальное заполнение vbindvals).
-    const int colIdx = m_model->getRdata().mCols_.at(col);
+    const auto colIdx = m_model->getRdata().mCols_.at(col);
     return std::visit(ToLong(),
                       m_model->getRdata().getCell(colIdx, row));
 }

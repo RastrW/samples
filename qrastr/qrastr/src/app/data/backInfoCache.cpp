@@ -123,20 +123,20 @@ void BackInfoCache::loadEnpic(const RCol& rcol)
     m_pictureEnums.emplace(idx, std::move(items));
 }
 
-std::vector<PluginIndex>
+std::vector<RDataPos>
 BackInfoCache::rebuildRefsFrom(const std::string& srcTable,
-                                                   const RData& rdata,
-                                                   std::shared_ptr<ITableRepository> tables)
+                               const RData& rdata,
+                               std::shared_ptr<ITableRepository> tables)
 {
-    std::vector<PluginIndex> updatedCols;
+    std::vector<RDataPos> updatedCols;
     if (!tables || srcTable.empty())
         return updatedCols;
 
     // Быстрый доступ:
     // pluginIdx -> RCol*
-    // pluginIdx -> позиция в rdata (pos)
     std::unordered_map<PluginIndex, const RCol*> byPluginIdx;
-    std::unordered_map<PluginIndex, PluginIndex>      posByPluginIdx;
+    // pluginIdx -> позиция в rdata (pos)
+    std::unordered_map<PluginIndex, RDataPos> posByPluginIdx;
 
     byPluginIdx.reserve(rdata.size());
     posByPluginIdx.reserve(rdata.size());
@@ -155,7 +155,7 @@ BackInfoCache::rebuildRefsFrom(const std::string& srcTable,
         return (it != byPluginIdx.end()) ? it->second : nullptr;
     };
 
-    auto getPos = [&](PluginIndex pluginIdx) -> std::optional<PluginIndex> {
+    auto getPos = [&](PluginIndex pluginIdx) -> std::optional<RDataPos> {
         auto it = posByPluginIdx.find(pluginIdx);
         if (it == posByPluginIdx.end())
             return std::nullopt;
@@ -306,13 +306,15 @@ BackInfoCache::parseSuperenumStr(const std::string& nameref)
     return SuperenumParts{ parts[0], parts[2], parts[1] };
 }
 
-const QStringList* BackInfoCache::enumItems(PluginIndex colIdx) const
+const QStringList*
+BackInfoCache::enumItems(PluginIndex colIdx) const
 {
     auto it = m_enum.find(colIdx);
     return it != m_enum.end() ? &it->second : nullptr;
 }
 
-const BackInfoCache::RefMap* BackInfoCache::superenumMap(PluginIndex colIdx) const
+const BackInfoCache::RefMap*
+BackInfoCache::superenumMap(PluginIndex colIdx) const
 {
     auto it = m_superenum.find(colIdx);
     return it != m_superenum.end() ? &it->second : nullptr;
@@ -325,13 +327,15 @@ BackInfoCache::namerefData(PluginIndex colIdx) const
     return (it != m_nameref.end()) ? it->second : nullptr;
 }
 
-const BackInfoCache::PictureList* BackInfoCache::pictureEnum(PluginIndex pluginIdx) const
+const BackInfoCache::PictureList*
+BackInfoCache::pictureEnum(PluginIndex pluginIdx) const
 {
     auto it = m_pictureEnums.find(pluginIdx);
     return it != m_pictureEnums.end() ? &it->second : nullptr;
 }
 
-std::map<int, int> BackInfoCache::parseEnpicNameref(const std::string& nameref)
+std::map<int, int>
+BackInfoCache::parseEnpicNameref(const std::string& nameref)
 {
     std::map<int, int> result;
     QString s = QString::fromStdString(nameref).trimmed();
