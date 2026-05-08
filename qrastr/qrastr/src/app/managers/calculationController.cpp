@@ -312,10 +312,17 @@ void CalculationController::PG_All_R2SQL() {
     try {
         int ret = m_qpgdriver->Init();
         ret = m_qpgdriver->Connect();
-        ret = m_qpgdriver->All_R2SQL("");
-
-        str_msg = fmt::format("Запись данных в БД выполнена за {} мс.",
-                              t_all_r2sql.seconds());
+        if (ret < 0)
+        {
+            success = false;
+            str_msg = fmt::format("Библиотека <COMCK> собрана без модуля интеграции с БД PG <pqxx> взаимодействие невозможно");
+        }
+        else
+        {
+            ret = m_qpgdriver->All_R2SQL("");
+            str_msg = fmt::format("Запись данных в БД выполнена за {} мс.",
+                                  t_all_r2sql.seconds());
+        }
     }
     catch (const std::exception& ex) {
         success = false;
@@ -343,10 +350,17 @@ void CalculationController::PG_All_SQL2R() {
     try {
         int ret = m_qpgdriver->Init();
         ret = m_qpgdriver->Connect();
-        ret = m_qpgdriver->All_SQL2R("");
-
-        str_msg = fmt::format("Чтение данных из БД выполнена за {} мс.",
-                              t_all_r2sql.seconds());
+        if (ret < 0)
+        {
+            success = false;
+            str_msg = fmt::format("Библиотека <COMCK> собрана без модуля интеграции с БД PG <pqxx> взаимодействие невозможно");
+        }
+        else
+        {
+            ret = m_qpgdriver->All_SQL2R("");
+            str_msg = fmt::format("Чтение данных из БД выполнено за {} мс.",
+                                  t_all_r2sql.seconds());
+        }
     }
     catch (const std::exception& ex) {
         success = false;
