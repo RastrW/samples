@@ -108,7 +108,7 @@ QVariant RModel::data(const QModelIndex& index, int role) const
     switch (role) {
     case Qt::DisplayRole:
     case Qt::EditRole:
-        return dataForDisplayEdit(row, col, rcol, raw, role);
+        return dataForDisplayEdit(row, col, rcol, raw, fvd, role);
     case Qt::UserRole:
         if (rcol.getComPropTT() == enComPropTT::COM_PR_REAL) {
             const bool isEmpty =
@@ -119,7 +119,7 @@ QVariant RModel::data(const QModelIndex& index, int role) const
     case Qt::BackgroundRole:
         return dataForBackground(row, col, rcol, fvd, raw);
     case Qt::DecorationRole:
-        return dataForDecoration(row, col, rcol, raw);
+        return dataForDecoration(row, col, fvd, rcol);
     default:
         return {};
     }
@@ -140,7 +140,9 @@ QVariant RModel::dataForInvalidCellEditRole(int col, const RCol& rcol) const
 }
 
 QVariant RModel::dataForDisplayEdit(int row, int col, const RCol& rcol,
-                                    const QVariant& raw, int role) const{
+                                    const QVariant& raw,
+                                    const FieldVariantData& fvd,
+                                    int role) const{
     if (!raw.isValid() && role == Qt::EditRole){
         return dataForInvalidCellEditRole(col, rcol);
     }
@@ -160,7 +162,7 @@ QVariant RModel::dataForDisplayEdit(int row, int col, const RCol& rcol,
         long packed = raw.toLongLong(&ok);
         if (!ok) {
             spdlog::warn("Ошибка при преобразовании QVariant для цвета через toLongLong [{},{}]", row, col);
-            packed = std::visit(ToLong(), m_rdata->getCell(col, row));
+            packed = std::visit(ToLong(), fvd);
         }
         return QColor(packed & 0xFF, (packed >> 8) & 0xFF, (packed >> 16) & 0xFF);
     }
@@ -172,8 +174,7 @@ QVariant RModel::dataForDisplayEdit(int row, int col, const RCol& rcol,
     if (rcol.getComPropTT() == enComPropTT::COM_PR_REAL) {
         // Проверяем именно monostate, а не isValid() —
         // raw.isValid() == true даже для double(0.0)
-        const bool isEmpty = std::holds_alternative<std::monostate>(
-            m_rdata->getCell(col, row));
+        const bool isEmpty = std::holds_alternative<std::monostate>(fvd);
         if (isEmpty) return QVariant(); // невалидный QVariant — ячейка пуста
 
         // DisplayRole и EditRole — оба double
@@ -209,17 +210,18 @@ QVariant RModel::dataForBackground (int row, int col,
 }
 
 QVariant RModel::dataForDecoration (int row, int col,
-                                   const RCol& rcol, const QVariant& raw) const{
+                                    const FieldVariantData& fvd,
+                                    const RCol& rcol) const{
     // COLOR: упакованный RGB long → QColor
     if (rcol.getComPropTT() == enComPropTT::COM_PR_COLOR) {
-        long packed = std::visit(ToLong(), m_rdata->getCell(col, row));
+        const long packed = std::visit(ToLong(), fvd);
         QPixmap px(16, 16);
         px.fill(QColor::fromRgb(static_cast<QRgb>(packed)));
         return px;
     }
     const size_t pluginIdx = static_cast<size_t>(rcol.getIndex());
     if (const auto* pics = m_cache.pictureEnum(pluginIdx)) { 
-        const long v = std::visit(ToLong(), m_rdata->getCell(col, row));
+        const long v = std::visit(ToLong(), fvd);
         if (v >= 0 && v < static_cast<long>(pics->size()))
             return (*pics)[static_cast<int>(v)].image;
     }
@@ -285,15 +287,18 @@ bool RModel::setData(const QModelIndex& index, const QVariant& value, int role)
     const int col = index.column();
     const int row = index.row();
 
-    spdlog::debug("setData [{},{}] role={} value='{}' type={}",
-                  row, col, role,
-                  value.toString().toStdString(),
-                  value.typeName());// покажет "QString", "int", "double"...
-    //Проверяем, если значение не изменилось, то не записываем лишний раз в базу данных
-    QVariant raw = std::visit(ToQVariant(), m_rdata->getCell(col, row));
-    if (raw == value) {
-        spdlog::debug("setData: значение не изменилось");
-        return true;
+    const FieldVariantData currentFvd = m_rdata->getCell(col, row);
+
+    // Пропускаем запись если значение не изменилось.
+    // Сравниваем через visit, чтобы обойти особенности QVariant::operator==
+    // для невалидных/пустых вариантов (monostate → QVariant()).
+    const bool isEmpty = std::holds_alternative<std::monostate>(currentFvd);
+    if (!isEmpty) {
+        const QVariant currentRaw = std::visit(ToQVariant(), currentFvd);
+        if (currentRaw.isValid() && currentRaw == value) {
+            spdlog::debug("setData: value unchanged");
+            return true;
+        }
     }
 
     RData::iterator iter_col = m_rdata->begin() + col;

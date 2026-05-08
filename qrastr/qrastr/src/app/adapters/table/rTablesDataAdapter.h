@@ -111,11 +111,10 @@ private slots:
 private:
     std::shared_ptr<QAstra> m_pqastra;
 
-    /* Хранилище данных для моделей
-      * 1:n то есть на 10 окон узлы -> 1 DataBlock
-      * из overhead'а наверно только обновление данных если была открыта таблица , а потом
-      * все её экземляры закрыты, так как удаления из хранилища пока нет.
-      * */
+    // Кеш: имя_таблицы → общий блок данных.
+    // Один QDataBlock на таблицу, независимо от числа открытых окон (1:N).
+    // Блоки с use_count()==1 (никем не используемые) вытесняются "лениво"
+    // в начале следующего вызова getBlock().
     std::unordered_map<std::string,std::shared_ptr<QDataBlock>> mpTables;
 
     // =========================================================================
@@ -173,8 +172,9 @@ private:
     // =========================================================================
     /// @brief Найти кешированный блок или вернуть nullptr
     QDataBlock* findCachedBlock(const std::string& tname);
-
     std::string getTCols(const std::string& tname);
     long getColIndex(const std::string& tname,
                      const std::string& cname);
+    void reloadBlock(const std::string& tname,
+                     std::shared_ptr<QDataBlock>& block);
 };

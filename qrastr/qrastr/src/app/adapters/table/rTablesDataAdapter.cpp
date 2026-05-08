@@ -252,8 +252,7 @@ RTablesDataAdapter::getColIndex(const std::string& tname,
 }
 
 QDataBlock*
-RTablesDataAdapter::findCachedBlock(const std::string& tname)
-{
+RTablesDataAdapter::findCachedBlock(const std::string& tname){
     // Вспомогательный метод: все handle* вызывают его первым.
     // Если таблица не кешируется (не была открыта) — ничего обновлять не нужно.
     auto it = mpTables.find(tname);
@@ -273,28 +272,15 @@ void RTablesDataAdapter::handleChangeAll()
         auto it = mpTables.find(tname);
         if (it == mpTables.end()) continue;
 
-        const std::string prevCols = it->second->Columns(); // что было загружено
-        emit sig_BeginResetModel(tname);
-        it->second->Clear();
-        if (!prevCols.empty())
-            fillBlock(tname, *it->second, prevCols);        // только то же самое
-        emit sig_EndResetModel(tname);
+        reloadBlock(tname, it->second);
     }
 }
 
-void RTablesDataAdapter::handleChangeTable(const std::string& tname)
-{
+void RTablesDataAdapter::handleChangeTable(const std::string& tname){
     spdlog::debug("handleChangeTable tname={}", tname);
     auto it = mpTables.find(tname);
     if (it == mpTables.end()) return;
-
-    const std::string prevCols = it->second->Columns();
-    emit sig_BeginResetModel(tname);
-    // Перезагружаем данные И структуру
-    it->second->Clear();
-    if (!prevCols.empty())
-        fillBlock(tname, *it->second, prevCols); // читает всё заново из плагина
-    emit sig_EndResetModel(tname);
+    reloadBlock(tname, it->second);
 }
 
 void RTablesDataAdapter::handleChangeColumn(const std::string& tname,
@@ -570,4 +556,19 @@ bool RTablesDataAdapter::tableExists(const std::string& tname) {
     IRastrTablesPtr tablesx{ m_pqastra->getRastr()->Tables() };
     IRastrPayload   res    { tablesx->FindIndex(tname) };
     return res.Value() >= 0;
+}
+
+void RTablesDataAdapter::reloadBlock(const std::string& tname,
+                                     std::shared_ptr<QDataBlock>& block)
+{
+    // что было загружено
+    const std::string prevCols = block->Columns();
+    emit sig_BeginResetModel(tname);
+    block->Clear();
+    // Перезагружаем данные И структуру
+    if (!prevCols.empty()){
+         // только то же самое
+        fillBlock(tname, *block, prevCols);
+    }
+    emit sig_EndResetModel(tname);
 }

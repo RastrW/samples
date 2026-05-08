@@ -33,37 +33,38 @@ struct TableProperties{
     QString formQName;
 };
 /**
- * @brief Контроллер таблицы Rastr — управляет данными и
- * отображает одну таблицу Rastr в QTitan Grid.
- *
  * ── Карта индексов ────────────────────────────────────────────────────────────
- *
- * В системе одновременно существует несколько пространств индексов.
- * Путаница между ними — типичный источник ошибок.
  *
  *  plugin_index  = RCol::m_index
  *                  Порядковый номер колонки в плагине Rastr (0..N-1).
  *                  Стабилен для данной колонки независимо от загруженного файла.
- *                  Используется как ключ в BackInfoCache (справочники ENUM/NAMEREF/…).
+ *                  Используется как ключ в BackInfoCache (ENUM/NAMEREF/…).
  *                  НЕ совпадает с rdataPos в общем случае.
  *
  *  rdataPos      = позиция в vector<RCol> = mCols_[colName]
  *                  Порядковый номер колонки в RData (0..size-1).
- *                  Определяется порядком колонок в схеме конкретного файла —
+ *                  Определяется порядком колонок в схеме конкретного файла(шаблона)  —
  *                  может отличаться между файлами для одной и той же колонки.
-
- *  local_index   = позиция колонки внутри QDataBlock
+ *
+ *  local_index   = позиция среди загруженных колонок внутри QDataBlock.
  *                  Хранится в RData::m_blockColIdx[rdataPos].
+ *                  Блок содержит только запрошенные (видимые) колонки,
+ *                  поэтому local_index != rdataPos в общем случае.
+ *                  Получается через QDataBlock::localColumnIndex(colName).
  *                  Используется только внутри RData::getCell() — снаружи не нужен.
  *
  *  visualIndex   = GridColumnBase::visualIndex()
- *                  Порядок отображения колонки на экране (может менять пользователь).
+ *                  Порядок отображения на экране (меняет пользователь).
  *                  Не связан ни с rdataPos, ни с plugin_index.
  *
- *  listIndex     = GridColumnBase::m_listIndex = позиция в m_columnslist
- *                  После setModel() == rdataPos. После перетаскивания колонок
- *                  listIndex не меняется, меняется только visualIndex.
+ *  listIndex     = позиция в m_columnslist (внутри QTitan).
+ *                  После setModel() == rdataPos.
+ *                  После перетаскивания колонок listIndex не меняется —
+ *                  меняется только visualIndex.
  */
+
+/// @brief Контроллер таблицы Rastr — управляет данными и
+/// отображает одну таблицу Rastr в QTitan Grid.
 class RtabController : public QObject
 {
     Q_OBJECT
@@ -150,6 +151,10 @@ private:
     void setTableView(bool update = true, int multiplier = 10);
     void setupConnections();
     void createCommonTableActions();
+
+    void setupColumnOrder();
+    void createLinkedFormController(std::shared_ptr<ITableRepository> tables);
+    void createCondFormatController();
     /// Возвращает позицию колонки в RData по имени, или -1.
     int rdataPosOf(const std::string& colName) const;
 

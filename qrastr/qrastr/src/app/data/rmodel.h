@@ -110,7 +110,9 @@ private:
                                    const QString& value, int role) const;
     // ── DisplayRole / EditRole (Текст для отображения/Значение для редактора)─
     QVariant dataForDisplayEdit(int row, int col, const RCol& rcol,
-                                const QVariant& raw, int role) const;
+                                const QVariant& raw,
+                                const FieldVariantData& fvd,
+                                int role) const;
     // ── BackgroundRole (Фон ячейки) ──────────────────────────────────────────
     QVariant dataForBackground (int row, int col,
                                 const RCol& rcol,
@@ -118,7 +120,8 @@ private:
                                 const QVariant& raw) const;
     // ── DecorationRole (Иконка слева от текста)───────────────────────────────
     QVariant dataForDecoration (int row, int col,
-                               const RCol& rcol, const QVariant& raw) const;
+                                const FieldVariantData& fvd,
+                                const RCol& rcol) const;
     // ── ComboBoxRole (popup для ComboBox)─────────────────────────────────────
     ///@note Строит список элементов для ComboBox/ComboBoxPicture.
     /// Не зависит от raw-значения — возвращает одно и то же для валидных и невалидных ячеек.

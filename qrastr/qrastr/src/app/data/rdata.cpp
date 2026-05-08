@@ -112,7 +112,7 @@ std::string RData::get_cols(bool visible) const{
     return ret;
 }
 
-const std::vector<std::string>& RData::colNames() const {
+std::vector<std::string> RData::colNames() const {
     static std::vector<std::string> names;
     names.reserve(size());
     for (const RCol& rc : *this)

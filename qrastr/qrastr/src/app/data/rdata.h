@@ -52,7 +52,7 @@ public:
     }
 
     std::string get_cols(bool visible = true) const;
-    const std::vector<std::string>&  colNames() const;
+    std::vector<std::string>  colNames() const;
 
     std::string t_name_;
     std::string t_title_;

@@ -249,72 +249,71 @@ void RtabController::setupShortcuts(RGrid* grid)
 void RtabController::createModel(std::shared_ptr<ITableRepository> tables)
 {
     QElapsedTimer t; t.start();
+
     m_model = std::make_unique<RModel>(this, tables);
     m_model->setForm(&m_UIForm);
     spdlog::info("[PERF] make RModel: {} ms", t.restart());
 
-    if (!m_model->populateDataFromRastr())
-    {
+    if (!m_model->populateDataFromRastr()) {
         // Таблица не найдена в плагине (файл не загружен или имя неверно).
         // Модель пуста — показываем сообщение и прекращаем инициализацию.
-        spdlog::error("RtabWidget: populateDataFromRastr failed for table [{}]",
+        spdlog::error("RtabController: populateDataFromRastr failed [{}]",
                       m_UIForm.TableName());
-        QMessageBox::warning(
-            m_grid,
-            tr("Ошибка открытия таблицы"),
-            tr("Таблица \"%1\" недоступна.\n"
-               "Убедитесь, что файл данных загружен.")
-                .arg(QString::fromStdString(m_UIForm.DisplayName())));
-        return;   // m_model валиден, но пуст — Grid не инициализируем
+        QMessageBox::warning(m_grid, tr("Ошибка открытия таблицы"),
+                             tr("Таблица \"%1\" недоступна.\nУбедитесь, что файл данных загружен.")
+                                 .arg(QString::fromStdString(m_UIForm.DisplayName())));
+        return;
     }
     spdlog::info("[PERF] populateDataFromRastr: {} ms", t.restart());
 
     m_view->beginUpdate();
     m_view->setModel(m_model.get());
-    spdlog::info("[PERF] setModel: {} ms", t.restart());
-
-    // Порядок колонок как в форме
-    int vi = 0;
-    for (const auto& f : m_UIForm.Fields()) {
-        int modelPos = 0;                              // ← счётчик позиции в RData
-        for (const RCol& rcol : m_model->getRdata()) {
-            if (f.Name() == rcol.getColName()) {
-                auto* col = getColumnByIndex(modelPos); // ← model position, не rcol.getIndex()
-                if (col) col->setVisualIndex(vi++);
-                break;
-            }
-            ++modelPos;
-        }
-    }
-    spdlog::info("[PERF] setVisualIndex loop: {} ms", t.restart());
+    setupColumnOrder();
+    spdlog::info("[PERF] setupColumnOrder: {} ms", t.restart());
     // Редакторы и видимость — всё внутри одного update-блока
     applyAllColumnEditors();
     spdlog::info("[PERF] applyAllColumnEditors: {} ms", t.restart());
-
     // ── Применяем ширины из бэка при первом открытии ──
     // setTableView отключает columnAutoWidth и выставляет ширины из RCol::getWidth()
-    if (!m_UIForm.Vertical()){
+    if (!m_UIForm.Vertical())
         setTableView(false);
-    }
-    spdlog::info("[PERF] setTableView: {} ms", t.restart());
-
     m_view->endUpdate();
-    spdlog::info("[PERF] first endUpdate (render): {} ms", t.restart());
+    spdlog::info("[PERF] view ready: {} ms", t.restart());
+    createLinkedFormController(tables);
+    spdlog::info("[PERF] make LinkedFormController: {} ms", t.restart());
+    createCondFormatController();
+    spdlog::info("[PERF] controllers: {} ms", t.restart());
+}
+
+void RtabController::setupColumnOrder(){
+    // Расставляем визуальные индексы по порядку из формы
+    int vi = 0;
+    for (const auto& field : m_UIForm.Fields()) {
+        int rdataPos = 0;
+        for (const RCol& rcol : m_model->getRdata()) {
+            if (field.Name() == rcol.getColName()) {
+                if (auto* col = getColumnByIndex(rdataPos))
+                    col->setVisualIndex(vi++);
+                break;
+            }
+            ++rdataPos;
+        }
+    }
+}
+
+void RtabController::createLinkedFormController
+    (std::shared_ptr<ITableRepository> tables){
 
     m_linkedFormCtrl = std::make_unique<LinkedFormController>(
-        tables,
-        m_tableEvents,
-        m_tableDockManager,
-        m_view,
-        m_model.get(),
-        m_UIForm,
-        this);
-    spdlog::info("[PERF] make LinkedFormController: {} ms", t.restart());
+        tables, m_tableEvents, m_tableDockManager,
+        m_view, m_model.get(), m_UIForm, this);
+}
+
+void RtabController::createCondFormatController(){
 
     m_condFormatCtrl = std::make_unique<CondFormatController>(
         m_model.get(), m_view, m_grid);
     m_condFormatCtrl->loadFromJson();
-    spdlog::info("[PERF] make CondFormatController: {} ms", t.restart());
 }
 
 void RtabController::setupConnections()
@@ -567,8 +566,8 @@ void RtabController::slot_deleteRow()
     m_view->endUpdate();
 
     // Фокус на строку, ближайшую к удалённому диапазону
-    const int topRow  = *rows.rbegin(); // наименьший индекс
-    const int newFocus = std::min(topRow, m_model->rowCount() - 1);
+    const int minRow  = *rows.rbegin(); // наименьший индекс
+    const int newFocus = std::min(minRow, m_model->rowCount() - 1);
     if (newFocus >= 0) {
         GridRow r = m_view->getRow(m_model->index(newFocus, 0));
         if (r.isValid())
@@ -618,62 +617,50 @@ void RtabController::slot_endResetModel(const std::string& tname)
 {
     if (m_UIForm.TableName() != tname) return;
     const RData& rdata = m_model->getRdata();
-
     // Удаляем все колонки и пересоздаём нужные
     m_view->removeColumns();
 
-    struct VisibleCol {
-        int modelColumn;
-        int wantedVI;
+    struct ColEntry {
+        int  rdataPos;
+        int  savedVI;       // сохранённый visualIndex, или INT_MAX для новых
+        bool isNew;         // новая колонка — ставим в конец
     };
-    std::vector<VisibleCol> visibleCols;
+    std::vector<ColEntry> visible;
 
     for (int rdataPos = 0; rdataPos < static_cast<int>(rdata.size()); ++rdataPos) {
-        const RCol& rcol = rdata[rdataPos];
-        QString qname = QString::fromStdString(rcol.getColName());
-
+        const RCol& rcol   = rdata[rdataPos];
+        const QString name = QString::fromStdString(rcol.getColName());
         // Определяем видимость
-        auto visIt = m_columnsVisible.find(qname);
-        bool isVisible;
-        if (visIt != m_columnsVisible.end()) {
-            // Колонка была в предыдущей таблице — берём сохранённое значение
-            isVisible = visIt->second;
-        } else {
-            // Новая колонка (есть в новом шаблоне, не было в старом)
-            // Показываем только если она входит в форму
-            isVisible = !rcol.isHidden();
-        }
+        auto visIt   = m_columnsVisible.find(name);
+        auto orderIt = m_columnVisualOrder.find(name);
 
+        const bool known     = (visIt != m_columnsVisible.end());
+        const bool isVisible = known ? visIt->second : !rcol.isHidden();
         if (!isVisible) continue;
 
-        int savedVI = rdataPos; // fallback
-        auto orderIt = m_columnVisualOrder.find(qname);
-        if (orderIt != m_columnVisualOrder.end()) {
-            savedVI = orderIt->second;
-        } else {
-            // Новая колонка из формы — ставим в конец видимых
-            savedVI = INT_MAX - rdataPos; // чтобы новые шли после старых
-        }
-
-        visibleCols.push_back({rdataPos, savedVI});
+        const bool hasOrder = (orderIt != m_columnVisualOrder.end());
+        visible.push_back({
+            rdataPos,
+            hasOrder ? orderIt->second : 0,
+            !hasOrder
+        });
     }
 
-    std::sort(visibleCols.begin(), visibleCols.end(),
-              [](const VisibleCol& a, const VisibleCol& b) {
-                  return a.wantedVI < b.wantedVI;
-              });
+    // Сначала колонки с известным порядком (по savedVI),
+    // потом новые (в порядке rdataPos среди них).
+    std::stable_sort(visible.begin(), visible.end(),
+                     [](const ColEntry& a, const ColEntry& b) {
+                         if (a.isNew != b.isNew) return !a.isNew; // известные — раньше
+                         if (!a.isNew)           return a.savedVI < b.savedVI;
+                         return a.rdataPos < b.rdataPos;           // новые — по rdataPos
+                     });
 
-    for (const auto& vc : visibleCols) {
-        m_view->addColumn(vc.modelColumn);
-    }
+    for (const auto& e : visible)
+        m_view->addColumn(e.rdataPos);
 
     applyAllColumnEditors();
-
-    if (!m_UIForm.Vertical())
-        setTableView(false);
-
-    m_view->endUpdate(); // парный к beginUpdate из slot_beginResetModel
-
+    if (!m_UIForm.Vertical()) setTableView(false);
+    m_view->endUpdate();
     m_filterManager->resetAfterModelReset();
 }
 
