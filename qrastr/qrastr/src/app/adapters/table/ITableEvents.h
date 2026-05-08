@@ -11,10 +11,14 @@ public:
     virtual ~ITableEvents() = default;
 
 signals:
-    ///< изменены данные в диапазоне
-    void sig_dataChanged      (const std::string& tname,
-                               int row_from, int col_from,
-                               int row_to,   int col_to);
+    /**
+     * Данные изменились в прямоугольнике [rowFrom..rowTo] × [colFrom..colTo].
+     * @param colFrom  имя колонки начала диапазона; пустая строка = с первой
+     * @param colTo    имя колонки конца диапазона;  пустая строка = до последней
+     */
+    void sig_dataChanged(const std::string& tname,
+                         int rowFrom, const std::string& colFrom,
+                         int rowTo,   const std::string& colTo);
     ///< перестроение модели
     void sig_BeginResetModel  (const std::string& tname);
     void sig_EndResetModel    (const std::string& tname);

@@ -285,21 +285,18 @@ void RtabController::createModel(std::shared_ptr<ITableRepository> tables)
     spdlog::info("[PERF] controllers: {} ms", t.restart());
 }
 
-void RtabController::setupColumnOrder(){
+void RtabController::setupColumnOrder()
+{
     // Расставляем визуальные индексы по порядку из формы
-    int vi = 0;
+    VisualIndex vi{0};
     for (const auto& field : m_UIForm.Fields()) {
-        int rdataPos = 0;
-        for (const RCol& rcol : m_model->getRdata()) {
-            if (field.Name() == rcol.getColName()) {
-                if (auto* col = getColumnByIndex(rdataPos))
-                    col->setVisualIndex(vi++);
-                break;
-            }
-            ++rdataPos;
-        }
+        const RDataPos pos = m_model->getRdata().rdataPosOf(field.Name());
+        if (pos.invalid()) continue;
+        if (auto* col = columnByRDataPos(pos))
+            col->setVisualIndex(vi.value++);
     }
 }
+
 
 void RtabController::createLinkedFormController
     (std::shared_ptr<ITableRepository> tables){
@@ -392,43 +389,42 @@ void RtabController::setupConnections()
 void RtabController::applyAllColumnEditors()
 {
     const int count = m_view->getColumnCount();
-    for (int i = 0; i < count; ++i) {
-        auto* col = qobject_cast<Qtitan::GridTableColumn*>(m_view->getColumn(i));
+    for (int listIdx = 0; listIdx < count; ++listIdx) {
+        auto* col = qobject_cast<Qtitan::GridTableColumn*>(
+            m_view->getColumn(listIdx));       // getColumn(listIdx) — по listIndex
         if (!col) continue;
+
         auto* binding = m_view->getDataBinding(col);
         if (!binding || binding->column() < 0) continue;
-        applyColumnEditor(binding->column()); // передаём rdataPos, не listIndex
+
+        // binding->column() — это rdataPos (задаётся через addColumn(rdataPos))
+        applyColumnEditor(RDataPos{binding->column()});
     }
 }
 
-void RtabController::applyColumnEditor(int colIndex)
+void RtabController::applyColumnEditor(RDataPos rdataPos)
 {
-    // Ищем по rdataPos через getColumnByModelColumn
     auto* column_qt = qobject_cast<Qtitan::GridTableColumn*>(
-        m_view->getColumnByModelColumn(colIndex));
+        m_view->getColumnByModelColumn(rdataPos.value));
     if (!column_qt) return;
 
-    auto* binding = m_view->getDataBinding(column_qt);
-    if (!binding) return;
+    const RCol* rcol = m_model->colAt(rdataPos);
+    if (!rcol) return;
 
-    const int modelCol = binding->column(); // == colIndex == rdataPos
-    const RCol* col = m_model->getRCol(modelCol);
-    if (!col) return;
-
-    const bool hidden = col->isHidden();      // для видимых всегда false
-    column_qt->setVisible(!hidden);
-
+    column_qt->setVisible(!rcol->isHidden());
     // Не настраиваем редакторы для скрытых колонок:
     // QTitan при setEditorType/setEditorRepository вызывает data() на ячейках,
     // что триггерит lazy-load для колонок, которых нет в блоке.
     // Когда колонку сделают видимой — applyColumnEditor будет вызван снова.
-    if (hidden) return;
+    if (rcol->isHidden()) return;
 
     // Сбрасываем флаги перед переназначением
     column_qt->setProperty("isNumeric", false);
     column_qt->setProperty("isBool",    false);
 
-    const auto& info = m_model->getColumnEditorInfo(colIndex);
+    // pluginIndex — ключ в BackInfoCache, не путать с rdataPos
+    const PluginIndex pi = rcol->pluginIndex();
+    const auto& info = m_model->getColumnEditorInfo(rdataPos);
 
     switch (info.editorType)
     {
@@ -620,43 +616,44 @@ void RtabController::slot_endResetModel(const std::string& tname)
     // Удаляем все колонки и пересоздаём нужные
     m_view->removeColumns();
 
-    struct ColEntry {
-        int  rdataPos;
-        int  savedVI;       // сохранённый visualIndex, или INT_MAX для новых
-        bool isNew;         // новая колонка — ставим в конец
+    struct PendingCol {
+        RDataPos    rdataPos;   // model column — именно его addColumn принимает
+        VisualIndex savedVI;    // откуда восстанавливаем порядок
+        bool        isNew;      // не было до сброса — ставим в конец
     };
-    std::vector<ColEntry> visible;
+    std::vector<PendingCol> pending;
 
-    for (int rdataPos = 0; rdataPos < static_cast<int>(rdata.size()); ++rdataPos) {
-        const RCol& rcol   = rdata[rdataPos];
-        const QString name = QString::fromStdString(rcol.getColName());
+    for (int i = 0; i < static_cast<int>(rdata.size()); ++i) {
+        const RDataPos rdataPos{i};
+        const RCol&    rcol  = *rdata.colAt(rdataPos);
+        const QString  qname = QString::fromStdString(rcol.getColName());
         // Определяем видимость
-        auto visIt   = m_columnsVisible.find(name);
-        auto orderIt = m_columnVisualOrder.find(name);
+        auto visIt   = m_columnsVisible.find(qname);
+        auto orderIt = m_columnVisualOrder.find(qname);
 
-        const bool known     = (visIt != m_columnsVisible.end());
+        const bool known     = visIt != m_columnsVisible.end();
         const bool isVisible = known ? visIt->second : !rcol.isHidden();
         if (!isVisible) continue;
 
-        const bool hasOrder = (orderIt != m_columnVisualOrder.end());
-        visible.push_back({
+        const bool hasVI = orderIt != m_columnVisualOrder.end();
+        pending.push_back({
             rdataPos,
-            hasOrder ? orderIt->second : 0,
-            !hasOrder
+            VisualIndex{ hasVI ? orderIt->second : 0 },
+            /*isNew=*/ !hasVI
         });
     }
 
-    // Сначала колонки с известным порядком (по savedVI),
-    // потом новые (в порядке rdataPos среди них).
-    std::stable_sort(visible.begin(), visible.end(),
-                     [](const ColEntry& a, const ColEntry& b) {
-                         if (a.isNew != b.isNew) return !a.isNew; // известные — раньше
-                         if (!a.isNew)           return a.savedVI < b.savedVI;
-                         return a.rdataPos < b.rdataPos;           // новые — по rdataPos
+    // Известные колонки — по сохранённому visualIndex.
+    // Новые колонки — в конец, в порядке rdataPos.
+    std::stable_sort(pending.begin(), pending.end(),
+                     [](const PendingCol& a, const PendingCol& b) {
+                         if (a.isNew != b.isNew) return !a.isNew;      // известные раньше
+                         return a.isNew ? (a.rdataPos < b.rdataPos)    // новые: по rdataPos
+                                        : (a.savedVI  < b.savedVI);    // известные: по VI
                      });
 
-    for (const auto& e : visible)
-        m_view->addColumn(e.rdataPos);
+    for (const auto& pc : pending)
+        m_view->addColumn(pc.rdataPos.value); // addColumn принимает rdataPos
 
     applyAllColumnEditors();
     if (!m_UIForm.Vertical()) setTableView(false);
@@ -842,11 +839,12 @@ void RtabController::notifyParentRowChanged(int modelRow) {
     m_linkedFormCtrl->onParentRowChanged(modelRow);
 }
 
-Qtitan::GridTableColumn* RtabController::getColumnByIndex(int index) const
+Qtitan::GridTableColumn*
+RtabController::columnByRDataPos(RDataPos pos)const
 {
     ///@note проверка диапазона предусмотрена внутри функции
-    return qobject_cast<Qtitan::GridTableColumn*>
-        (m_view->getColumnByModelColumn(index));
+    return qobject_cast<Qtitan::GridTableColumn*>(
+        m_view->getColumnByModelColumn(pos.value));
 }
 
 int RtabController::rdataPosOf(const std::string& colName) const

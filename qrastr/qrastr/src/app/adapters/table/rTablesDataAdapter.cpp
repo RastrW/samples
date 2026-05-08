@@ -7,6 +7,7 @@ using WrapperExceptionType = std::runtime_error;
 #include <memory>
 #include <QFileInfo>
 #include <QElapsedTimer>
+#include "tableIndexTypes.h"
 
 RTablesDataAdapter::RTablesDataAdapter(std::shared_ptr<QAstra> _pqastra) :
     m_pqastra(_pqastra)
@@ -286,15 +287,13 @@ void RTablesDataAdapter::handleChangeTable(const std::string& tname){
 void RTablesDataAdapter::handleChangeColumn(const std::string& tname,
                                             const std::string& cname)
 {
-    spdlog::debug("handleChangeColumn tname={} cname={}", tname, cname);
+    spdlog::debug("handleChangeRow tname={} cname={}", tname, cname);
     QDataBlock* pqdb = findCachedBlock(tname);
     if (!pqdb) return;
 
-    const long localIdx  = pqdb->localColumnIndex(cname); // индекс В блоке
-    if (localIdx < 0) return;  // колонка не загружена — обновление не нужно
-
-    const long pluginIdx = getColIndex(tname, cname); // model col index для сигнала
-    if (pluginIdx < 0) return;
+    // LocalIndex — только чтобы проверить, загружена ли колонка
+    const LocalIndex li{ pqdb->localColumnIndex(cname) };
+    if (li.invalid()) return;  // не загружена — обновление не нужно
 
     QDataBlock colBlock;
     // все строки одной колонки
@@ -302,10 +301,11 @@ void RTablesDataAdapter::handleChangeColumn(const std::string& tname,
 
     const long nRows = static_cast<long>(pqdb->RowsCount());
     for (long row = 0; row < nRows; ++row)
-        pqdb->Set(row, localIdx, colBlock.Get(row, 0)); // копируем из временного блока
-    //Обновляем все строки только одного столбца
+        pqdb->Set(row, li.value, colBlock.Get(row, 0));
+
+    // Передаём имя колонки — RModel сам найдёт rdataPos
     if (nRows > 0)
-        emit sig_dataChanged(tname, 0, pluginIdx, nRows - 1, pluginIdx);
+        emit sig_dataChanged(tname, 0, cname, static_cast<int>(nRows - 1), cname);
 }
 
 void RTablesDataAdapter::handleChangeRow(const std::string& tname, long row)
@@ -314,18 +314,19 @@ void RTablesDataAdapter::handleChangeRow(const std::string& tname, long row)
     // Изменились все колонки одной строки.
     QDataBlock* pqdb = findCachedBlock(tname);
     if (!pqdb) return;
-
     // Читаем только то, что загружено
     const std::string loadedCols = pqdb->Columns();
     QDataBlock rowBlock;
     fillBlock(tname, rowBlock, loadedCols);
     // Копируем только нужную строку
-    const long ncols = static_cast<long>(pqdb->ColumnsCount());
-    for (long localCol = 0; localCol < ncols; ++localCol)
-        pqdb->Set(row, localCol, rowBlock.Get(row, localCol));
+    const int ncols = static_cast<int>(pqdb->ColumnsCount());
+    for (int li = 0; li < ncols; ++li)     // li — LocalIndex (итерация по блоку)
+        pqdb->Set(row, li, rowBlock.Get(row, li));
 
-    // INT_MAX: slot_DataChanged ограничит до реального columnCount()
-    emit sig_dataChanged(tname, row, 0, row, std::numeric_limits<int>::max());
+    // Пустые строки = "все колонки" — RModel интерпретирует сам
+    emit sig_dataChanged(tname,
+                         static_cast<int>(row), /*colFrom=*/"",
+                         static_cast<int>(row), /*colTo=*/"");
 }
 
 void RTablesDataAdapter::handleChangeData(const std::string& tname,
@@ -336,17 +337,17 @@ void RTablesDataAdapter::handleChangeData(const std::string& tname,
     QDataBlock* pqdb = findCachedBlock(tname);
     if (!pqdb) return;
 
-    const long localIdx  = pqdb->localColumnIndex(cname);
-    const long pluginIdx = getColIndex(tname, cname);
-    if (pluginIdx < 0) return;
+    // LocalIndex нужен только чтобы записать в блок
+    const LocalIndex li{ pqdb->localColumnIndex(cname) };
+    // если загружена — обновляем
+    if (li.valid() && row >= 0 && row < static_cast<long>(pqdb->RowsCount()))
+        pqdb->Set(row, li.value, m_pqastra->GetVal(tname, cname, row));
 
-    if (localIdx >= 0) {  // загружена — обновляем
-        if (row >= 0 && row < static_cast<long>(pqdb->RowsCount()))
-            pqdb->Set(row, localIdx, m_pqastra->GetVal(tname, cname, row));
-    }
     // Если не загружена — пропускаем запись в блок,
     // но сигнал всё равно шлём: View перечитает через lazy load
-    emit sig_dataChanged(tname, row, pluginIdx, row, pluginIdx);
+    emit sig_dataChanged(tname,
+                         static_cast<int>(row), cname,
+                         static_cast<int>(row), cname);
     emit sig_ReferenceChanged(tname);
 }
 

@@ -7,6 +7,7 @@
 #include <memory>
 #include "UIForms.h"
 #include "QtitanGrid.h"
+#include "table/tableIndexTypes.h"
 
 class ITableRepository;
 class ITableEvents;
@@ -147,7 +148,7 @@ private:
     */
     void createModel(std::shared_ptr<ITableRepository> tables);
     void applyAllColumnEditors();
-    void applyColumnEditor(int colIndex);
+    void applyColumnEditor(RDataPos rdataPos);
     void setTableView(bool update = true, int multiplier = 10);
     void setupConnections();
     void createCommonTableActions();
@@ -158,7 +159,7 @@ private:
     /// Возвращает позицию колонки в RData по имени, или -1.
     int rdataPosOf(const std::string& colName) const;
 
-    Qtitan::GridTableColumn* getColumnByIndex(int index) const;
+    Qtitan::GridTableColumn* columnByRDataPos(RDataPos pos)const;
     // ── Компоненты (данные) ─────────────────────────────────────────────────
     std::unique_ptr<RModel>               m_model;
     std::unique_ptr<FilterManager>        m_filterManager;

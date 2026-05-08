@@ -2,6 +2,7 @@
 
 #include "astra_shared.h"
 #include "table/ITableRepository.h"
+#include "table/tableIndexTypes.h"
 
 /// @brief Метаданные и вспомогательные операции для одной колонки таблицы Rastr.
 class RCol
@@ -31,7 +32,7 @@ public:
     void setHidden(bool v)                { m_hidden = v; }
 
     // ── Геттеры — только из кеша, возвращают const& ──────────────────────
-    long               pluginIndex()   const { return m_index; }
+    PluginIndex pluginIndex() const noexcept { return PluginIndex{m_index}; }
     bool               isDirectCode()  const { return m_directcode; }
     bool               isHidden()      const { return m_hidden; }
     enComPropTT        getComPropTT()  const { return m_com_prop_tt; }
