@@ -315,7 +315,18 @@ void CalculationController::PG_All_R2SQL() {
         if (ret < 0)
         {
             success = false;
-            str_msg = fmt::format("Библиотека <COMCK> собрана без модуля интеграции с БД PG <pqxx> взаимодействие невозможно");
+            switch (ret)
+            {
+                case -4:
+                    str_msg = fmt::format("Библиотека <COMCK> собрана без модуля интеграции с БД PG <pqxx> взаимодействие невозможно");
+                    break;
+                case -800:
+                    str_msg = fmt::format("Невозможно установить связь с сервером БД PG");
+                    break;
+                default:
+                    str_msg = fmt::format("Ошибка соединения с сервером БД PG");
+                    break;
+            }
         }
         else
         {
