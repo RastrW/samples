@@ -568,9 +568,11 @@ void RtabController::slot_deleteRow()
 }
 
 void RtabController::slot_groupCorrection(){
-
-    const auto* prcol = m_model->getRCol
-                        (RDataPos{m_view->selection()->cell().columnIndex()});
+    auto* gridCol = m_view->getColumn(
+        m_view->selection()->cell().columnIndex());
+    auto* binding = m_view->getDataBinding(gridCol);
+    if (!binding || binding->column() < 0) return;
+    const auto* prcol = m_model->getRCol(RDataPos{binding->column()});
     if (!prcol){return;}
 
     GroupCorrectionDialog* fgc =
@@ -592,15 +594,14 @@ void RtabController::slot_beginResetModel(const std::string& tname)
 
     const RData& rdata = m_model->getRdata();
 
-    // Итерируем по rdataPos (позиция в m_columnslist совпадает с rdataPos
-    // до любого сброса — m_columnslist не менялся с момента setModel)
-    for (int rdataPos = 0; rdataPos < static_cast<int>(rdata.size()); ++rdataPos) {
-        // getColumn(rdataPos) — по позиции в m_columnslist, не зависит от биндинга
-        auto* col = qobject_cast<Qtitan::GridTableColumn*>(
-            m_view->getColumn(rdataPos));
+    for (int listIdx = 0; listIdx < m_view->getColumnCount(); ++listIdx) {
+        auto* col = qobject_cast<Qtitan::GridTableColumn*>(m_view->getColumn(listIdx));
         if (!col) continue;
-
-        QString qname = QString::fromStdString(rdata[rdataPos].getColName());
+        auto* binding = m_view->getDataBinding(col);
+        if (!binding || binding->column() < 0) continue;
+        const RCol* rcol = rdata.colAt(RDataPos{binding->column()});
+        if (!rcol) continue;
+        const QString qname = QString::fromStdString(rcol->getColName());
         m_columnsVisible[qname]    = col->isVisible();
         m_columnVisualOrder[qname] = VisualIndex{col->visualIndex()};
     }

@@ -292,6 +292,8 @@ QString RModel::resolveDisplayText(const RCol& rcol,
 bool RModel::setData(const QModelIndex& index,
                      const QVariant& value, int role)
 {
+    if (role != Qt::EditRole) return false;
+
     const RDataPos rdataPos{ index.column() };
     const int row = index.row();
 
@@ -719,8 +721,7 @@ RModel::columnsWidth() const{
 
 void RModel::invertDirectCode(RDataPos col){
 
-    if (!m_rdata || col.valid_in(m_rdata->size()))
-        return;
+    if (!m_rdata || col.valid_in(m_rdata->size())) return;
     (m_rdata->begin() + col.to_size())->invertDirectCodeStatus();
 }
 

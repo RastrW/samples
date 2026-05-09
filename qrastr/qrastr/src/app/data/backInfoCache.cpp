@@ -148,8 +148,6 @@ BackInfoCache::rebuildRefsFrom(const std::string& srcTable,
         posByPluginIdx.emplace(pluginIdx, pos++);
     }
 
-    const long nameIdx = tables->columnIndex(srcTable, "name");
-
     auto findRCol = [&](PluginIndex pluginIdx) -> const RCol* {
         auto it = byPluginIdx.find(pluginIdx);
         return (it != byPluginIdx.end()) ? it->second : nullptr;

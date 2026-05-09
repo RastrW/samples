@@ -68,7 +68,7 @@ LocalIndex
 RData::ensureLoaded(RDataPos pos,
                     std::shared_ptr<ITableRepository> tables) const
 {
-    if (pos.valid_in(size())) return {};
+    if (!pos.valid_in(size())) return {};
 
     const std::string& name = (*this)[pos.to_size()].getColName();
     tables->ensureColumn(t_name_, name);
@@ -86,7 +86,7 @@ RData::getCell(RDataPos pos, int row) const
 
 void RData::updateBlockIndex(RDataPos pos) const noexcept
 {
-    if (!datablock || pos.valid_in(m_blockColIdx.size())) return;
+    if (!datablock || !pos.valid_in(m_blockColIdx.size())) return;
 
     const std::string& name = (*this)[pos.to_size()].getColName();
     m_blockColIdx[pos.to_size()] =
@@ -108,7 +108,7 @@ std::string RData::get_cols(bool visible) const{
 }
 
 std::vector<std::string> RData::colNames() const {
-    static std::vector<std::string> names;
+    std::vector<std::string> names;
     names.reserve(size());
     for (const RCol& rc : *this)
         names.push_back(rc.getColName());
