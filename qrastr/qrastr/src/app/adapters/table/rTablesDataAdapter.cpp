@@ -303,7 +303,6 @@ void RTablesDataAdapter::handleChangeColumn(const std::string& tname,
     for (long row = 0; row < nRows; ++row)
         pqdb->Set(row, li.value, colBlock.Get(row, 0));
 
-    // Передаём имя колонки — RModel сам найдёт rdataPos
     if (nRows > 0)
         emit sig_dataChanged(tname, 0, cname, static_cast<int>(nRows - 1), cname);
 }

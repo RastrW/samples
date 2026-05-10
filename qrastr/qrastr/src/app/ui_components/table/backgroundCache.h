@@ -11,14 +11,14 @@ class QVariant;
 /// чтобы не запускать STRING_BOOL повторно.
 struct BackgroundCache {
 	// row → col → результат (valid или invalid QVariant)
-    std::unordered_map<int, std::unordered_map<RDataPos, QVariant>> data;
+    std::unordered_map<int, std::unordered_map<ModelColumn, QVariant>> data;
 
 	void invalidateRows(int from, int to);
 	void clear();
 
-    void invalidateColumn(RDataPos col);
-    const QVariant* get(int row, RDataPos col) const;
-    void put(int row, RDataPos col, QVariant v);
+    void invalidateColumn(ModelColumn col);
+    const QVariant* get(int row, ModelColumn col) const;
+    void put(int row, ModelColumn col, QVariant v);
 	// Освободить место для вставки строк [first..last]:
 	// строки >= first сдвигаются вниз на count позиций.
 	void shiftRowsDown(int first, int count);

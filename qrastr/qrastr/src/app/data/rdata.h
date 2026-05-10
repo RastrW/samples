@@ -42,34 +42,34 @@ public:
         return datablock != nullptr;
     }
     // ── Конвертация между пространствами индексов ────────────────────────
-    /// colName → RDataPos. O(1) через mCols_. Возвращает invalid() если нет.
-    RDataPos rdataPosOf(const std::string& colName) const noexcept;
-    /// RDataPos → PluginIndex (через метаданные RCol).
-    PluginIndex pluginIndexOf(RDataPos pos) const noexcept;
-    /// RDataPos → LocalIndex в QDataBlock. -1 если колонка не загружена.
-    LocalIndex localIndexOf(RDataPos pos) const noexcept;
-    /// RCol по RDataPos — безопасный доступ.
-    const RCol* colAt(RDataPos pos) const noexcept;
+    /// colName → ModelColumn. O(1) через mCols_. Возвращает invalid() если нет.
+    ModelColumn modelColumnOf(const std::string& colName) const noexcept;
+    /// ModelColumn → AstraIndex (через метаданные RCol).
+    AstraIndex astraIndexOf(ModelColumn pos) const noexcept;
+    /// ModelColumn → LocalIndex в QDataBlock. -1 если колонка не загружена.
+    LocalIndex localIndexOf(ModelColumn pos) const noexcept;
+    /// RCol по ModelColumn — безопасный доступ.
+    const RCol* colAt(ModelColumn pos) const noexcept;
     // ── Загрузка и чтение ─────────────────────────────────────────────────
     /// Ленивая загрузка колонки в блок. Возвращает LocalIndex или invalid().
-    LocalIndex ensureLoaded(RDataPos pos,
+    LocalIndex ensureLoaded(ModelColumn pos,
                             std::shared_ptr<ITableRepository> tables) const;
     /// Единственная точка чтения ячейки.
-    /// Принимает RDataPos — снаружи local_index не нужен.
-    FieldVariantData getCell(RDataPos pos, int row) const;
+    /// Принимает ModelColumn — снаружи local_index не нужен.
+    FieldVariantData getCell(ModelColumn pos, int row) const;
 
     std::string get_cols(bool visible = true) const;
     std::vector<std::string> colNames() const;
 
     std::string t_name_;
     std::string t_title_;
-    std::unordered_map<std::string, RDataPos> mCols_; ///< unordered_map<имя_колонки, индекс> для быстрого поиска колонки по имени.
+    std::unordered_map<std::string, ModelColumn> mCols_; ///< unordered_map<имя_колонки, индекс> для быстрого поиска колонки по имени.
 private:
     /// Обновить индекс только для одной позиции (после lazy load).
-    void updateBlockIndex(RDataPos pos) const noexcept;
+    void updateBlockIndex(ModelColumn pos) const noexcept;
     /// Перестроить карту rdata_pos → local_index.
     /// Вызывать после любого изменения состава колонок блока.
     void rebuildBlockIndexMap();
     std::shared_ptr<QDataBlock>       datablock;
-    mutable std::vector<LocalIndex> m_blockColIdx; /// RDataPos → LocalIndex
+    mutable std::vector<LocalIndex> m_blockColIdx; /// ModelColumn → LocalIndex
 };

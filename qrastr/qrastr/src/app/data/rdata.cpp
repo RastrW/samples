@@ -17,13 +17,13 @@ RData::RData(const ITableRepository::TableSchema& schema,
     reserve(n_reserve);
     // reserve() вызван ДО push_back, иначе при reallocation
     // итераторы инвалидируются и RCol теряют данные.
-    RDataPos rdataPos{0};
+    ModelColumn col{0};
     for (const auto& cs : schema.columns) {
         RCol rc;
         rc.initialize(cs);
         emplace_back(std::move(rc));
-        mCols_.try_emplace(cs.name, rdataPos);
-        ++rdataPos;
+        mCols_.try_emplace(cs.name, col);
+        ++col;
     }
     // Скрываем колонки, не входящие в форму.
     // Скрытые колонки присутствуют в datablock — просто не показываются в UI.
@@ -65,7 +65,7 @@ void RData::rebuildBlockIndexMap()
 }
 
 LocalIndex
-RData::ensureLoaded(RDataPos pos,
+RData::ensureLoaded(ModelColumn pos,
                     std::shared_ptr<ITableRepository> tables) const
 {
     if (!pos.valid_in(size())) return {};
@@ -77,14 +77,14 @@ RData::ensureLoaded(RDataPos pos,
 }
 
 FieldVariantData
-RData::getCell(RDataPos pos, int row) const
+RData::getCell(ModelColumn pos, int row) const
 {
     const LocalIndex li = localIndexOf(pos);
     if (li.invalid()) return {};
     return datablock->Get(row, li.value);
 }
 
-void RData::updateBlockIndex(RDataPos pos) const noexcept
+void RData::updateBlockIndex(ModelColumn pos) const noexcept
 {
     if (!datablock || !pos.valid_in(m_blockColIdx.size())) return;
 
@@ -115,22 +115,25 @@ std::vector<std::string> RData::colNames() const {
     return names;
 }
 
-RDataPos RData::rdataPosOf(const std::string& colName) const noexcept{
+ModelColumn
+RData::modelColumnOf(const std::string& colName) const noexcept{
     auto it = mCols_.find(colName);
-    return it != mCols_.end() ? RDataPos{it->second} : RDataPos{};
+    return it != mCols_.end() ? ModelColumn{it->second} : ModelColumn{};
 }
 
-PluginIndex RData::pluginIndexOf(RDataPos pos) const noexcept{
+AstraIndex
+RData::astraIndexOf(ModelColumn pos) const noexcept{
     if (!pos.valid_in(size())) return {};
-    return (*this)[pos.to_size()].pluginIndex();
+    return (*this)[pos.to_size()].astraIndex();
 }
 
-LocalIndex RData::localIndexOf(RDataPos pos) const noexcept{
+LocalIndex
+RData::localIndexOf(ModelColumn pos) const noexcept{
     if (!pos.valid_in(m_blockColIdx.size())) return {};
     return LocalIndex{m_blockColIdx[pos.to_size()]};
 }
 
-const RCol* RData::colAt(RDataPos pos) const noexcept{
+const RCol* RData::colAt(ModelColumn pos) const noexcept{
     if (!pos.valid_in(size())) return nullptr;
     return &(*this)[pos.to_size()];
 }

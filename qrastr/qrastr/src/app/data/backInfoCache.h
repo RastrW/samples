@@ -21,22 +21,22 @@ public:
         QPixmap image;
     };
 
-    using RefMap = std::unordered_map<PluginIndex, std::string>;
+    using RefMap = std::unordered_map<AstraIndex, std::string>;
     using PictureList = QList<PictureItem>;
 
     void rebuild(const RData& rdata, std::shared_ptr<ITableRepository>        tables);
     void clear();
 
     // Lookup helpers — возвращают nullptr / end() если нет данных для колонки.
-    const QStringList*      enumItems(PluginIndex colIdx)     const;
-    const RefMap*           superenumMap(PluginIndex colIdx)  const;
+    const QStringList*      enumItems(AstraIndex colIdx)     const;
+    const RefMap*           superenumMap(AstraIndex colIdx)  const;
     const std::shared_ptr<ColumnEditorInfo::NameRefData>
-        namerefData(PluginIndex colIdx) const;
-    const PictureList*      pictureEnum(PluginIndex pluginIdx) const;
+        namerefData(AstraIndex colIdx) const;
+    const PictureList*      pictureEnum(AstraIndex idx) const;
 
     /// Перестраивает только nameref/superenum-записи, чьи данные берутся из srcTable.
     /// Возвращает список позиционных индексов колонок, которые были обновлены.
-    std::vector<RDataPos> rebuildRefsFrom(const std::string&  srcTable,
+    std::vector<ModelColumn> rebuildRefsFrom(const std::string&  srcTable,
                                           const RData&        rdata,
                                           std::shared_ptr<ITableRepository>        tables);
 private:
@@ -73,22 +73,22 @@ private:
     static std::optional<SuperenumParts> parseSuperenumStr
         (const std::string& nameref);
 
-    // plugin-индекс → список строк: ex. "БАЗА|Ген|Нагр|Ген+"
-    std::unordered_map<PluginIndex, QStringList>
+    // astra-индекс → список строк: ex. "БАЗА|Ген|Нагр|Ген+"
+    std::unordered_map<AstraIndex, QStringList>
         m_enum;
-    // plugin-индекс → { ключ → отображаемое имя }: ex. RefCol → node[na]
-    std::unordered_map<PluginIndex,
+    // astra-индекс → { ключ → отображаемое имя }: ex. RefCol → node[na]
+    std::unordered_map<AstraIndex,
                        std::shared_ptr<ColumnEditorInfo::NameRefData>>
         m_nameref;
-    // plugin-индекс → { ключ → отображаемое имя }: ex. ti_prv.Name.Num
-    std::unordered_map<PluginIndex, RefMap>
+    // astra-индекс → { ключ → отображаемое имя }: ex. ti_prv.Name.Num
+    std::unordered_map<AstraIndex, RefMap>
         m_superenum;
-    // plugin-индекс → список картинок
-    std::unordered_map<PluginIndex, PictureList>
+    // astra-индекс → список картинок
+    std::unordered_map<AstraIndex, PictureList>
         m_pictureEnums;
 
-    std::unordered_map<std::string, std::vector<PluginIndex>>
+    std::unordered_map<std::string, std::vector<AstraIndex>>
         m_namerefSources;   // srcTable → {colIdx}
-    std::unordered_map<std::string, std::vector<PluginIndex>>
+    std::unordered_map<std::string, std::vector<AstraIndex>>
         m_superenumSources;  // srcTable → {colIdx}
 };

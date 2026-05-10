@@ -70,7 +70,7 @@ QVariant RModel::headerData(int section, Qt::Orientation orientation, int role) 
 Qt::ItemFlags RModel::flags(const QModelIndex& index) const
 {
     Qt::ItemFlags f = QAbstractTableModel::flags(index); // уже содержит Enabled|Selectable
-    const auto* col = getRCol(RDataPos{index.column()});
+    const auto* col = getRCol(ModelColumn{index.column()});
     if (col && col->getFF() == "1")
         return f & ~Qt::ItemIsEditable; // убираем только редактирование, Enabled оставляем
     return f | Qt::ItemIsEditable;
@@ -80,41 +80,40 @@ QVariant RModel::data(const QModelIndex& index, int role) const
 {
     if (!isReady()) return {};
 
-    // index.column() — это всегда rdataPos в нашей модели
-    const RDataPos rdataPos{ index.column() };
+    const ModelColumn col{ index.column() };
     const int      row     = index.row();
 
-    if (row < 0 || row >= rowCount() || !rdataPos.valid_in(columnCount()) )
+    if (row < 0 || row >= rowCount() || !col.valid_in(columnCount()) )
     {
-        spdlog::error("RModel::data out of bounds [row={}, rdataPos={}]",
-                      row, rdataPos.value);
+        spdlog::error("RModel::data out of bounds [row={}, col={}]",
+                      row, col.value);
         return {};
     }
 
-    const RCol& rcol = *m_rdata->colAt(rdataPos);
+    const RCol& rcol = *m_rdata->colAt(col);
     // Ранние ветки — до чтения raw, чтобы не читать блок вхолостую
     if (role == Qt::ToolTipRole)
-        return QStringLiteral("[%1, %2]").arg(row + 1).arg(rdataPos.value + 1);
+        return QStringLiteral("[%1, %2]").arg(row + 1).arg(col.value + 1);
     if (role == Qtitan::ComboBoxRole) //Выпадающий popup ComboBox
         return dataForComboBox(rcol);
 
     // Lazy load если колонка ещё не в блоке
-    LocalIndex li = m_rdata->localIndexOf(rdataPos);
+    LocalIndex li = m_rdata->localIndexOf(col);
     if (li.invalid()){
         // const, mutable внутри
-        li = m_rdata->ensureLoaded(rdataPos, m_tables);
+        li = m_rdata->ensureLoaded(col, m_tables);
     }
     // колонка недоступна даже после попытки
     if (li.invalid()) return {};
 
     // Единственное чтение ячейки; getCell скрывает LocalIndex
-    const FieldVariantData fvd = m_rdata->getCell(rdataPos, row);
+    const FieldVariantData fvd = m_rdata->getCell(col, row);
     const QVariant         raw = std::visit(ToQVariant(), fvd);
 
     switch (role) {
     case Qt::DisplayRole:
     case Qt::EditRole:
-        return dataForDisplayEdit(row, rdataPos, rcol, raw, fvd, role);
+        return dataForDisplayEdit(row, col, rcol, raw, fvd, role);
     case Qt::UserRole:
         if (rcol.getComPropTT() == enComPropTT::COM_PR_REAL) {
             const bool isEmpty =
@@ -123,9 +122,9 @@ QVariant RModel::data(const QModelIndex& index, int role) const
         }
         return raw;
     case Qt::BackgroundRole:
-        return dataForBackground(row, rdataPos, rcol, fvd, raw);
+        return dataForBackground(row, col, rcol, fvd, raw);
     case Qt::DecorationRole:
-        return dataForDecoration(row, rdataPos, fvd, rcol);
+        return dataForDecoration(row, col, fvd, rcol);
     default:
         return {};
     }
@@ -145,7 +144,7 @@ QVariant RModel::dataForInvalidCellEditRole(const RCol& rcol) const
     return QVariant(QString());
 }
 
-QVariant RModel::dataForDisplayEdit(int row, RDataPos col, const RCol& rcol,
+QVariant RModel::dataForDisplayEdit(int row, ModelColumn col, const RCol& rcol,
                                     const QVariant& raw,
                                     const FieldVariantData& fvd,
                                     int role) const{
@@ -191,7 +190,7 @@ QVariant RModel::dataForDisplayEdit(int row, RDataPos col, const RCol& rcol,
     return raw;
 }
 
-QVariant RModel::dataForBackground (int row, RDataPos col,
+QVariant RModel::dataForBackground (int row, ModelColumn col,
                                    const RCol& rcol,
                                    const FieldVariantData& fvd,
                                    const QVariant& raw) const{
@@ -216,7 +215,7 @@ QVariant RModel::dataForBackground (int row, RDataPos col,
     return fmt;
 }
 
-QVariant RModel::dataForDecoration (int row, RDataPos col,
+QVariant RModel::dataForDecoration (int row, ModelColumn col,
                                     const FieldVariantData& fvd,
                                     const RCol& rcol) const{
     // COLOR: упакованный RGB long → QColor
@@ -226,8 +225,8 @@ QVariant RModel::dataForDecoration (int row, RDataPos col,
         px.fill(QColor::fromRgb(static_cast<QRgb>(packed)));
         return px;
     }
-    const auto pluginIdx = rcol.pluginIndex();
-    if (const auto* pics = m_cache.pictureEnum(pluginIdx)) { 
+    const auto idx = rcol.astraIndex();
+    if (const auto* pics = m_cache.pictureEnum(idx)) {
         const long v = std::visit(ToLong(), fvd);
         if (v >= 0 && v < static_cast<long>(pics->size()))
             return (*pics)[static_cast<int>(v)].image;
@@ -237,9 +236,9 @@ QVariant RModel::dataForDecoration (int row, RDataPos col,
 
 QVariant RModel::dataForComboBox(const RCol& rcol) const
 {
-    const auto pluginIdx = rcol.pluginIndex();
+    const auto idx = rcol.astraIndex();
 
-    if (const auto* pics = m_cache.pictureEnum(pluginIdx)) {
+    if (const auto* pics = m_cache.pictureEnum(idx)) {
         QVariantList result;
         result.reserve(pics->size());
         for (const auto& p : *pics) result << p.image;
@@ -247,17 +246,17 @@ QVariant RModel::dataForComboBox(const RCol& rcol) const
     }
 
     QStringList list;
-    if (const auto* enums = m_cache.enumItems(pluginIdx)){
+    if (const auto* enums = m_cache.enumItems(idx)){
         list = *enums;
     }
-    else if (const auto nrd = m_cache.namerefData(pluginIdx)){
+    else if (const auto nrd = m_cache.namerefData(idx)){
         for (const auto& row : nrd->rows){
             if (!row.values.empty()){
                 list.append(QString::fromStdString(row.values[0]));
             }
         }
     }
-    else if (const auto* senum = m_cache.superenumMap(pluginIdx)){
+    else if (const auto* senum = m_cache.superenumMap(idx)){
         for (const auto& [k, v] : *senum){
             list.append(QString::fromStdString(v));
         }
@@ -268,20 +267,20 @@ QVariant RModel::dataForComboBox(const RCol& rcol) const
 QString RModel::resolveDisplayText(const RCol& rcol,
                                    const QVariant& raw) const
 {
-    const auto pluginIdx = rcol.pluginIndex();
+    const auto idx = rcol.astraIndex();
 
-    if (const auto* pics = m_cache.pictureEnum(pluginIdx)) {
+    if (const auto* pics = m_cache.pictureEnum(idx)) {
         const int v = raw.toInt();
         if (v >= 0 && v < static_cast<int>(pics->size()))  return (*pics)[v].label;
         return {};
     }
-    if (const auto* enums = m_cache.enumItems(pluginIdx)) {
+    if (const auto* enums = m_cache.enumItems(idx)) {
         const int v = raw.toInt();
         if (v >= 0 && v < static_cast<int>(enums->size())) return (*enums)[v];
         return {};
     }
-    if (const auto* senum = m_cache.superenumMap(pluginIdx)) {
-        auto it = senum->find(static_cast<PluginIndex>(raw.toInt()));
+    if (const auto* senum = m_cache.superenumMap(idx)) {
+        auto it = senum->find(static_cast<AstraIndex>(raw.toInt()));
         if (it != senum->end()) return QString::fromStdString(it->second);
         return {};
     }
@@ -294,10 +293,10 @@ bool RModel::setData(const QModelIndex& index,
 {
     if (role != Qt::EditRole) return false;
 
-    const RDataPos rdataPos{ index.column() };
+    const ModelColumn col{ index.column() };
     const int row = index.row();
 
-    const FieldVariantData currentFvd = m_rdata->getCell(rdataPos, row);
+    const FieldVariantData currentFvd = m_rdata->getCell(col, row);
 
     // Пропускаем запись если значение не изменилось.
     // Сравниваем через visit, чтобы обойти особенности QVariant::operator==
@@ -311,7 +310,7 @@ bool RModel::setData(const QModelIndex& index,
         }
     }
 
-    RData::iterator iter_col = m_rdata->begin() + rdataPos.to_size();
+    RData::iterator iter_col = m_rdata->begin() + col.to_size();
     const std::string& tname   = iter_col->getTableName();
     const std::string& colName = iter_col->getColName();
 
@@ -339,16 +338,16 @@ bool RModel::setData(const QModelIndex& index,
             break;
         case RCol::_en_data::DATA_INT: {
             long val = 0;
-            const auto pluginIdx = iter_col->pluginIndex();
+            const auto idx = iter_col->astraIndex();
             if (!iter_col->isDirectCode()) {
-                if (const auto* enums = m_cache.enumItems(pluginIdx)) {
+                if (const auto* enums = m_cache.enumItems(idx)) {
                     for (int i = 0; i < enums->size(); ++i)
                         if ((*enums)[i] == value) { val = i; break; }
-                } else if (const auto* senum = m_cache.superenumMap(pluginIdx)) {
+                } else if (const auto* senum = m_cache.superenumMap(idx)) {
                     for (const auto& [k, v] : *senum)
                         if (v == value.toString().toStdString())
                         { val = k.value; break; }
-                } else if (const auto nrd = m_cache.namerefData(pluginIdx)) {
+                } else if (const auto nrd = m_cache.namerefData(idx)) {
                     // value содержит числовой ключ (int), установленный getContextValue()
                     val = value.toLongLong();
                 } else {
@@ -444,14 +443,14 @@ void RModel::slot_DataChanged(const std::string& tName,
     // инвалидируем затронутые строки
     m_bgCache.invalidateRows(rowFrom, rowTo);
 
-    // Конвертируем имена → RDataPos. Пустое имя = весь диапазон.
-    const RDataPos from = colNameFrom.empty()
-                              ? RDataPos{0}
-                              : m_rdata->rdataPosOf(colNameFrom);
+    // Конвертируем имена → ModelColumn. Пустое имя = весь диапазон.
+    const ModelColumn from = colNameFrom.empty()
+                              ? ModelColumn{0}
+                              : m_rdata->modelColumnOf(colNameFrom);
 
-    const RDataPos to = colNameTo.empty()
-                            ? RDataPos{columnCount() - 1}
-                            : m_rdata->rdataPosOf(colNameTo);
+    const ModelColumn to = colNameTo.empty()
+                            ? ModelColumn{columnCount() - 1}
+                            : m_rdata->modelColumnOf(colNameTo);
 
     // Колонка не в нашей RData (не загружена в форме) — пропускаем
     if (from.invalid() || to.invalid()) return;
@@ -512,11 +511,11 @@ void RModel::slot_RefTableChanged(const std::string& tName) {
     // не нужно дублировать.
     if (isMyTable(tName)) return;
     // Перестраиваем только затронутые записи кеша
-    std::vector<RDataPos> updated =
+    std::vector<ModelColumn> updated =
         m_cache.rebuildRefsFrom(tName, *m_rdata, m_tables);
     if (updated.empty()) return;
     // Обновляем m_editorInfoCache для затронутых колонок
-    for (RDataPos col : updated) {
+    for (ModelColumn col : updated) {
         if (col.valid_in(m_editorInfoCache.size())){
             m_editorInfoCache[col.to_size()] = buildColumnEditorInfo(col);
         }
@@ -524,7 +523,7 @@ void RModel::slot_RefTableChanged(const std::string& tName) {
     // Просим View обновить ячейки во всех строках затронутых колонок
     const int nRows = rowCount();
     if (nRows > 0) {
-        for (RDataPos col : updated) {
+        for (ModelColumn col : updated) {
             emit dataChanged(index(0, col.value),
                              index(nRows - 1, col.value));
         }
@@ -537,11 +536,11 @@ void RModel::buildEditorInfoCache() {
     const int n = columnCount();
     m_editorInfoCache.resize(n);
     for (int i = 0; i < n; ++i)
-        m_editorInfoCache[i] = buildColumnEditorInfo(RDataPos{i});
+        m_editorInfoCache[i] = buildColumnEditorInfo(ModelColumn{i});
 }
 
 const ColumnEditorInfo&
-RModel::getColumnEditorInfo(RDataPos colIndex) const
+RModel::getColumnEditorInfo(ModelColumn colIndex) const
 {
     static const ColumnEditorInfo s_empty;
 
@@ -551,15 +550,15 @@ RModel::getColumnEditorInfo(RDataPos colIndex) const
 }
 
 ColumnEditorInfo
-RModel::buildColumnEditorInfo(RDataPos colIndex) const
+RModel::buildColumnEditorInfo(ModelColumn colIndex) const
 {
     ColumnEditorInfo info;
     const RCol* col = getRCol(colIndex);
     if (!col) return info;
-    // pluginIdx — индекс колонки в плагине (стабилен, не зависит от визуального порядка).
+    // astra — индекс колонки в astra (стабилен, не зависит от визуального порядка).
     // Именно по нему BackInfoCache хранит все справочники.
-    const auto pluginIdx = col->pluginIndex();
-    const auto   propTT  = col->getComPropTT();
+    const auto idx = col->astraIndex();
+    const auto propTT  = col->getComPropTT();
 
     switch (propTT) {
     case enComPropTT::COM_PR_BOOL:
@@ -579,7 +578,7 @@ RModel::buildColumnEditorInfo(RDataPos colIndex) const
 
     case enComPropTT::COM_PR_ENUM:
         if (!col->isDirectCode()) {
-            if (const auto* enums = m_cache.enumItems(pluginIdx)) {
+            if (const auto* enums = m_cache.enumItems(idx)) {
                 info.editorType = ColumnEditorInfo::Type::ComboBox;
                 info.comboItems = *enums;
                 break;
@@ -590,7 +589,7 @@ RModel::buildColumnEditorInfo(RDataPos colIndex) const
 
     case enComPropTT::COM_PR_INT:
         if (!col->isDirectCode() && !col->getNameRef().empty()) {
-            if (const auto nrd = m_cache.namerefData(pluginIdx)) {
+            if (const auto nrd = m_cache.namerefData(idx)) {
                 info.editorType  = ColumnEditorInfo::Type::NameRef;
                 info.nameRefData = nrd;
                 break;
@@ -601,7 +600,7 @@ RModel::buildColumnEditorInfo(RDataPos colIndex) const
 
     case enComPropTT::COM_PR_SUPERENUM:
         if (!col->isDirectCode() && !col->getNameRef().empty()) {
-            if (const auto* senum = m_cache.superenumMap(pluginIdx)) {
+            if (const auto* senum = m_cache.superenumMap(idx)) {
                 info.editorType = ColumnEditorInfo::Type::ComboBox;
                 for (const auto& [k, v] : *senum)
                     info.comboItems.append(QString::fromStdString(v));
@@ -613,7 +612,7 @@ RModel::buildColumnEditorInfo(RDataPos colIndex) const
 
     case enComPropTT::COM_PR_ENPIC:
         if (!col->isDirectCode()) {
-            if (const auto* pics = m_cache.pictureEnum(pluginIdx)) {
+            if (const auto* pics = m_cache.pictureEnum(idx)) {
                 info.editorType = ColumnEditorInfo::Type::ComboBoxPicture;
                 for (const auto& p : *pics)
                     info.picItems.append({p.image, p.label});
@@ -629,7 +628,7 @@ RModel::buildColumnEditorInfo(RDataPos colIndex) const
     return info;
 }
 
-void RModel::setCondFormats(RDataPos column,
+void RModel::setCondFormats(ModelColumn column,
                             const std::vector<CondFormat>& condFormats)
 {
     m_condFmt.set(column, condFormats);
@@ -638,7 +637,7 @@ void RModel::setCondFormats(RDataPos column,
 }
 
 const std::vector<CondFormat>&
-RModel::getCondFormats(RDataPos column) const
+RModel::getCondFormats(ModelColumn column) const
 {
     // Если для колонки нет правил, возвращаем ссылку на статический пустой вектор.
     static const std::vector<CondFormat> empty;
@@ -646,7 +645,7 @@ RModel::getCondFormats(RDataPos column) const
     return vec ? *vec : empty;
 }
 
-QVariant RModel::getMatchingCondFormat(size_t row, RDataPos column,
+QVariant RModel::getMatchingCondFormat(size_t row, ModelColumn column,
                                        const QString& value, int role) const
 {
     const auto* vec = m_condFmt.column(column);
@@ -719,14 +718,14 @@ RModel::columnsWidth() const{
     return result;
 }
 
-void RModel::invertDirectCode(RDataPos col){
+void RModel::invertDirectCode(ModelColumn col){
 
     if (!m_rdata || col.valid_in(m_rdata->size())) return;
     (m_rdata->begin() + col.to_size())->invertDirectCodeStatus();
 }
 
 const RCol*
-RModel::getRCol(RDataPos col) const{
+RModel::getRCol(ModelColumn col) const{
 
     if (!m_rdata || !col.valid_in(m_rdata->size()))
         return nullptr;

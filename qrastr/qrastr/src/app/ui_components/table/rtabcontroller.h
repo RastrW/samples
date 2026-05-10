@@ -85,10 +85,10 @@ public slots:
     void slot_groupCorrection();
 
     // ── Колонки ─────────────────────────────────────────────────────────────
-    void slot_directCodeToggle(RDataPos column);
-    void slot_condFormatsEdit(RDataPos column);
+    void slot_directCodeToggle(ModelColumn column);
+    void slot_condFormatsEdit(ModelColumn column);
      //  Формы инструментов
-    void slot_openColProp(RDataPos col);
+    void slot_openColProp(ModelColumn col);
     // ширина по шаблону
     void slot_widthByTemplate();
     // ширина по контенту
@@ -118,7 +118,7 @@ private:
     */
     void createModel(std::shared_ptr<ITableRepository> tables);
     void applyAllColumnEditors();
-    void applyColumnEditor(RDataPos rdataPos);
+    void applyColumnEditor(ModelColumn col);
     void setTableView(bool update = true, int multiplier = 10);
     void setupConnections();
     void createCommonTableActions();
@@ -127,9 +127,11 @@ private:
     void createLinkedFormController(std::shared_ptr<ITableRepository> tables);
     void createCondFormatController();
     /// Возвращает позицию колонки в RData по имени, или -1.
-    RDataPos rdataPosOf(const std::string& colName) const;
+    ModelColumn modelColumnOf(const std::string& colName) const;
+    //колонка → binding → ModelColumn
+    ModelColumn modelColumnFromListIndex(int listIdx) const;
 
-    Qtitan::GridTableColumn* columnByRDataPos(RDataPos pos)const;
+    Qtitan::GridTableColumn* columnByModelColumn(ModelColumn pos)const;
     // ── Компоненты (данные) ─────────────────────────────────────────────────
     std::unique_ptr<RModel>               m_model;
     std::unique_ptr<FilterManager>        m_filterManager;

@@ -2,32 +2,65 @@
 
 /**
  * Сильные типы для пространств индексов таблицы Rastr.
- * Компилятор не даст случайно передать PluginIndex туда, где ждут RDataPos.
  *
- * ── Карта индексов ────────────────────────────────────────────────────
+ * ── ЗАЧЕМ это нужно ──────────────────────────────────────────────────
+ *  Без сильных типов компилятор не отличает:
+ *      getCell(modelColumn, row)   — правильно
+ *      getCell(localIndex, row) — молча сломано (читает не ту колонку)
+ *      getCell(astraIndex, row)— молча сломано (индекс из другого пространства)
+ *  Ошибки проявляются только в рантайме, при редких сочетаниях видимых колонок.
+ *  StrongIndex делает такие ошибки ошибками компиляции.
  *
- *  PluginIndex  = RCol::m_index
- *                 Номер колонки в плагине Rastr. Стабилен для данной
- *                 колонки независимо от загруженного файла.
+ * ── КАРТА ИНДЕКСОВ ───────────────────────────────────────────────────
+ *
+ *  AstraIndex  = RCol::m_index
+ *                 Номер колонки в COM-плагине Rastr.
+ *                 Стабилен для данного типа таблицы, не зависит от файла.
  *                 Ключ в BackInfoCache (ENUM / NAMEREF / ENPIC / …).
- *                 НЕ совпадает с RDataPos в общем случае.
+ *                 Источник: schema.index при getSchema().
+ *                 НЕ совпадает с ModelColumn в общем случае.
  *
- *  RDataPos     = позиция в vector<RCol>  =  mCols_[colName]
- *                 Номер колонки в RData (0..size-1).
+ *  ModelColumn  = позиция в vector<RCol>  =  mCols_[colName]
+ *                 Номер колонки в QAbstractTableModel: QModelIndex::column(),
+ *                 binding->column(), addColumn(n).
  *                 Определяется порядком колонок в схеме конкретного файла(шаблона).
- *                 После setModel() совпадает с listIndex в QTitan.
- *                 Используется как «model column» в QAbstractTableModel::index().
+ *                 Диапазон: [0, RData::size()).
  *
  *  LocalIndex   = позиция среди ЗАГРУЖЕННЫХ колонок внутри QDataBlock.
- *                 Хранится в RData::m_blockColIdx[rdataPos].
+ *                 Хранится в RData::m_blockColIdx[modelColumn].
  *                 Блок содержит только запрошенные (видимые) колонки,
- *                 поэтому LocalIndex != RDataPos в общем случае.
- *                 Используется только внутри RData::getCell() — снаружи не нужен.
+ *                 поэтому LocalIndex != ModelColumn в общем случае.
+ *                 ИСПОЛЬЗУЕТСЯ ТОЛЬКО внутри RData::getCell() — наружу не выходит.
  *
- *  VisualIndex  = GridColumnBase::int visualIndex()
- *                 Порядок отображения на экране (меняет пользователь).
- *                 Не связан ни с RDataPos, ни с PluginIndex.
- * ─────────────────────────────────────────────────────────────────────
+ *  VisualIndex  = GridColumnBase::visualIndex()
+ *                 Порядок отображения на экране (меняет пользователь drag-n-drop).
+ *                 Не связан ни с ModelColumn, ни с AstraIndex.
+ *                 Хранится только в RtabController для восстановления после сброса.
+ *
+ * ── ПРАВИЛА РАБОТЫ НА ГРАНИЦАХ ───────────────────────────────────────
+ *
+ *  QAbstractTableModel → ModelColumn:
+ *      ModelColumn col{ index.column() };   // из QModelIndex
+ *
+ *  QTitan binding → ModelColumn:
+ *      ModelColumn col{ binding->column() }; // binding->column() == model column
+ *
+ *  ModelColumn → Qt/QTitan (требует int):
+ *      emit dataChanged(index(row, col.value), ...);  // .value — только на стыке с Qt
+ *      m_view->getColumnByModelColumn(col.value);
+ *
+ *  ModelColumn → контейнер (требует size_t):
+ *      (*this)[col.to_size()]          // to_size() — только для operator[]
+ *      m_blockColIdx[col.to_size()]
+ *
+ *  ModelColumn → AstraIndex (через метаданные, НЕ напрямую):
+ *      AstraIndex pi = rdata.colAt(col)->astraIndex();
+ *
+ *  LocalIndex НИКОГДА не покидает RData:
+ *      // Снаружи: rdata.getCell(col, row) — не getCell(localIdx, row)
+ *
+ *  VisualIndex НИКОГДА не используется как ключ в данных:
+ *      // Только col->setVisualIndex(vi.value) и col->visualIndex()
  */
 template<typename Tag, typename T>
 struct StrongIndex {
@@ -81,12 +114,12 @@ struct StrongIndex {
     constexpr StrongIndex& operator-=(T offset) noexcept { value -= offset; return *this; }
 };
 
-struct PluginIndexTag{};
-struct RDataPosTag{};
+struct AstraIndexTag{};
+struct ModelColumnTag{};
 struct LocalIndexTag{};
 struct VisualIndexTag{};
 
-using PluginIndex = StrongIndex<PluginIndexTag, long>;
-using RDataPos    = StrongIndex<RDataPosTag, int>;
+using AstraIndex = StrongIndex<AstraIndexTag, long>;
+using ModelColumn    = StrongIndex<ModelColumnTag, int>;
 using LocalIndex  = StrongIndex<LocalIndexTag, long>;
 using VisualIndex = StrongIndex<VisualIndexTag, int>;

@@ -13,17 +13,17 @@ public:
     // Добавить или обновить одно правило для колонки column.
     // Условные правила идут в начало вектора (приоритет выше),
     // безусловные (пустой фильтр) — в конец.
-    void add(RDataPos column, const CondFormat& condFormat);
+    void add(ModelColumn column, const CondFormat& condFormat);
     // Полностью заменить список правил для колонки column.
-    void set(RDataPos column, const std::vector<CondFormat>& condFormats);
+    void set(ModelColumn column, const std::vector<CondFormat>& condFormats);
 
     // Прямой доступ для чтения
-    const std::unordered_map<RDataPos, std::vector<CondFormat>>& formats() const;
+    const std::unordered_map<ModelColumn, std::vector<CondFormat>>& formats() const;
     // Удобный доступ к правилам одной колонки (возвращает nullptr, если колонки нет).
-    const std::vector<CondFormat>* column(RDataPos col) const;
+    const std::vector<CondFormat>* column(ModelColumn col) const;
 private:
-    static void addToMap(std::unordered_map<RDataPos, std::vector<CondFormat>>& map,
-                         RDataPos column, const CondFormat& condFormat);
+    static void addToMap(std::unordered_map<ModelColumn, std::vector<CondFormat>>& map,
+                         ModelColumn column, const CondFormat& condFormat);
 
-    std::unordered_map<RDataPos, std::vector<CondFormat>> m_condFormats;
+    std::unordered_map<ModelColumn, std::vector<CondFormat>> m_condFormats;
 };

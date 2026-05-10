@@ -93,7 +93,7 @@ void FilterManager::rebuildCombinedFilter()
     m_view->filter()->setActive(true);
 }
 
-void FilterManager::slot_openSelection(RDataPos col)
+void FilterManager::slot_openSelection(ModelColumn col)
 {
     const auto* prcol = m_model->getRCol(col);
     std::string colName = prcol ? prcol->getColName() : "";
