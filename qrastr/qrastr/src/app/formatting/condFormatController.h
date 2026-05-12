@@ -23,7 +23,7 @@ public:
     void loadFromJson();
 
     /// Открывает диалог редактирования форматов для колонки column.
-    void editCondFormats(ModelColumn column);
+    void editCondFormats(ModelIndex column);
 
 private:
     void saveToJson(); ///< Сериализует текущее состояние RModel → JSON

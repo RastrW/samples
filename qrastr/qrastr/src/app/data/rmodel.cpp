@@ -70,7 +70,7 @@ QVariant RModel::headerData(int section, Qt::Orientation orientation, int role) 
 Qt::ItemFlags RModel::flags(const QModelIndex& index) const
 {
     Qt::ItemFlags f = QAbstractTableModel::flags(index); // уже содержит Enabled|Selectable
-    const auto* col = getRCol(ModelColumn{index.column()});
+    const auto* col = getRCol(ModelIndex{index.column()});
     if (col && col->getFF() == "1")
         return f & ~Qt::ItemIsEditable; // убираем только редактирование, Enabled оставляем
     return f | Qt::ItemIsEditable;
@@ -80,7 +80,8 @@ QVariant RModel::data(const QModelIndex& index, int role) const
 {
     if (!isReady()) return {};
 
-    const ModelColumn col{ index.column() };
+
+    const ModelIndex col{ index.column() };
     const int      row     = index.row();
 
     if (row < 0 || row >= rowCount() || !col.valid_in(columnCount()) )
@@ -96,6 +97,12 @@ QVariant RModel::data(const QModelIndex& index, int role) const
         return QStringLiteral("[%1, %2]").arg(row + 1).arg(col.value + 1);
     if (role == Qtitan::ComboBoxRole) //Выпадающий popup ComboBox
         return dataForComboBox(rcol);
+
+    // Не читаем данные для скрытых колонок — они не нужны для отображения.
+    // Field chooser вызывает data() для получения заголовка (DisplayRole на row=-1
+    // обрабатывается через headerData), но иногда запрашивает и данные ячеек.
+    // Lazy-load скрытых колонок здесь не нужен и не должен происходить.
+    if (rcol.isHidden()) return {};
 
     // Lazy load если колонка ещё не в блоке
     LocalIndex li = m_rdata->localIndexOf(col);
@@ -144,7 +151,7 @@ QVariant RModel::dataForInvalidCellEditRole(const RCol& rcol) const
     return QVariant(QString());
 }
 
-QVariant RModel::dataForDisplayEdit(int row, ModelColumn col, const RCol& rcol,
+QVariant RModel::dataForDisplayEdit(int row, ModelIndex col, const RCol& rcol,
                                     const QVariant& raw,
                                     const FieldVariantData& fvd,
                                     int role) const{
@@ -190,7 +197,7 @@ QVariant RModel::dataForDisplayEdit(int row, ModelColumn col, const RCol& rcol,
     return raw;
 }
 
-QVariant RModel::dataForBackground (int row, ModelColumn col,
+QVariant RModel::dataForBackground (int row, ModelIndex col,
                                    const RCol& rcol,
                                    const FieldVariantData& fvd,
                                    const QVariant& raw) const{
@@ -215,7 +222,7 @@ QVariant RModel::dataForBackground (int row, ModelColumn col,
     return fmt;
 }
 
-QVariant RModel::dataForDecoration (int row, ModelColumn col,
+QVariant RModel::dataForDecoration (int row, ModelIndex col,
                                     const FieldVariantData& fvd,
                                     const RCol& rcol) const{
     // COLOR: упакованный RGB long → QColor
@@ -293,7 +300,7 @@ bool RModel::setData(const QModelIndex& index,
 {
     if (role != Qt::EditRole) return false;
 
-    const ModelColumn col{ index.column() };
+    const ModelIndex col{ index.column() };
     const int row = index.row();
 
     const FieldVariantData currentFvd = m_rdata->getCell(col, row);
@@ -443,14 +450,14 @@ void RModel::slot_DataChanged(const std::string& tName,
     // инвалидируем затронутые строки
     m_bgCache.invalidateRows(rowFrom, rowTo);
 
-    // Конвертируем имена → ModelColumn. Пустое имя = весь диапазон.
-    const ModelColumn from = colNameFrom.empty()
-                              ? ModelColumn{0}
-                              : m_rdata->modelColumnOf(colNameFrom);
+    // Конвертируем имена → ModelIndex. Пустое имя = весь диапазон.
+    const ModelIndex from = colNameFrom.empty()
+                              ? ModelIndex{0}
+                              : m_rdata->modelIndexOf(colNameFrom);
 
-    const ModelColumn to = colNameTo.empty()
-                            ? ModelColumn{columnCount() - 1}
-                            : m_rdata->modelColumnOf(colNameTo);
+    const ModelIndex to = colNameTo.empty()
+                            ? ModelIndex{columnCount() - 1}
+                            : m_rdata->modelIndexOf(colNameTo);
 
     // Колонка не в нашей RData (не загружена в форме) — пропускаем
     if (from.invalid() || to.invalid()) return;
@@ -511,11 +518,11 @@ void RModel::slot_RefTableChanged(const std::string& tName) {
     // не нужно дублировать.
     if (isMyTable(tName)) return;
     // Перестраиваем только затронутые записи кеша
-    std::vector<ModelColumn> updated =
+    std::vector<ModelIndex> updated =
         m_cache.rebuildRefsFrom(tName, *m_rdata, m_tables);
     if (updated.empty()) return;
     // Обновляем m_editorInfoCache для затронутых колонок
-    for (ModelColumn col : updated) {
+    for (ModelIndex col : updated) {
         if (col.valid_in(m_editorInfoCache.size())){
             m_editorInfoCache[col.to_size()] = buildColumnEditorInfo(col);
         }
@@ -523,7 +530,7 @@ void RModel::slot_RefTableChanged(const std::string& tName) {
     // Просим View обновить ячейки во всех строках затронутых колонок
     const int nRows = rowCount();
     if (nRows > 0) {
-        for (ModelColumn col : updated) {
+        for (ModelIndex col : updated) {
             emit dataChanged(index(0, col.value),
                              index(nRows - 1, col.value));
         }
@@ -536,11 +543,11 @@ void RModel::buildEditorInfoCache() {
     const int n = columnCount();
     m_editorInfoCache.resize(n);
     for (int i = 0; i < n; ++i)
-        m_editorInfoCache[i] = buildColumnEditorInfo(ModelColumn{i});
+        m_editorInfoCache[i] = buildColumnEditorInfo(ModelIndex{i});
 }
 
 const ColumnEditorInfo&
-RModel::getColumnEditorInfo(ModelColumn colIndex) const
+RModel::getColumnEditorInfo(ModelIndex colIndex) const
 {
     static const ColumnEditorInfo s_empty;
 
@@ -550,7 +557,7 @@ RModel::getColumnEditorInfo(ModelColumn colIndex) const
 }
 
 ColumnEditorInfo
-RModel::buildColumnEditorInfo(ModelColumn colIndex) const
+RModel::buildColumnEditorInfo(ModelIndex colIndex) const
 {
     ColumnEditorInfo info;
     const RCol* col = getRCol(colIndex);
@@ -628,7 +635,7 @@ RModel::buildColumnEditorInfo(ModelColumn colIndex) const
     return info;
 }
 
-void RModel::setCondFormats(ModelColumn column,
+void RModel::setCondFormats(ModelIndex column,
                             const std::vector<CondFormat>& condFormats)
 {
     m_condFmt.set(column, condFormats);
@@ -637,7 +644,7 @@ void RModel::setCondFormats(ModelColumn column,
 }
 
 const std::vector<CondFormat>&
-RModel::getCondFormats(ModelColumn column) const
+RModel::getCondFormats(ModelIndex column) const
 {
     // Если для колонки нет правил, возвращаем ссылку на статический пустой вектор.
     static const std::vector<CondFormat> empty;
@@ -645,7 +652,7 @@ RModel::getCondFormats(ModelColumn column) const
     return vec ? *vec : empty;
 }
 
-QVariant RModel::getMatchingCondFormat(size_t row, ModelColumn column,
+QVariant RModel::getMatchingCondFormat(size_t row, ModelIndex column,
                                        const QString& value, int role) const
 {
     const auto* vec = m_condFmt.column(column);
@@ -718,14 +725,14 @@ RModel::columnsWidth() const{
     return result;
 }
 
-void RModel::invertDirectCode(ModelColumn col){
+void RModel::invertDirectCode(ModelIndex col){
 
     if (!m_rdata || col.valid_in(m_rdata->size())) return;
     (m_rdata->begin() + col.to_size())->invertDirectCodeStatus();
 }
 
 const RCol*
-RModel::getRCol(ModelColumn col) const{
+RModel::getRCol(ModelIndex col) const{
 
     if (!m_rdata || !col.valid_in(m_rdata->size()))
         return nullptr;

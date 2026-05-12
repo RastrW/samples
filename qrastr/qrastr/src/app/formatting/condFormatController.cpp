@@ -33,7 +33,7 @@ void CondFormatController::saveToJson()
     const auto& rdata = m_model->getRdata();
     // Снапшот: имя колонки → форматы
     std::unordered_map<std::string, std::vector<CondFormat>> snapshot;
-    ModelColumn col {0};
+    ModelIndex col {0};
     for (const RCol& rcol : rdata) {
         const auto& vec = m_model->getCondFormats(col);
         if (!vec.empty())
@@ -43,7 +43,7 @@ void CondFormatController::saveToJson()
     CondFormatJson::save(rdata.t_name_, snapshot);
 }
 
-void CondFormatController::editCondFormats(ModelColumn column)
+void CondFormatController::editCondFormats(ModelIndex column)
 {
     // берём из модели — единственного источника истины.
     const std::vector<CondFormat>& current = m_model->getCondFormats(column);

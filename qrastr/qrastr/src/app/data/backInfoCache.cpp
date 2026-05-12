@@ -123,12 +123,12 @@ void BackInfoCache::loadEnpic(const RCol& rcol)
     m_pictureEnums.emplace(idx, std::move(items));
 }
 
-std::vector<ModelColumn>
+std::vector<ModelIndex>
 BackInfoCache::rebuildRefsFrom(const std::string& srcTable,
                                const RData& rdata,
                                std::shared_ptr<ITableRepository> tables)
 {
-    std::vector<ModelColumn> updatedCols;
+    std::vector<ModelIndex> updatedCols;
     if (!tables || srcTable.empty())
         return updatedCols;
 
@@ -136,7 +136,7 @@ BackInfoCache::rebuildRefsFrom(const std::string& srcTable,
     // astraIdx -> RCol*
     std::unordered_map<AstraIndex, const RCol*> byAstraIdx;
     // astraIdx -> позиция в rdata (pos)
-    std::unordered_map<AstraIndex, ModelColumn> posByAstraIdx;
+    std::unordered_map<AstraIndex, ModelIndex> posByAstraIdx;
 
     byAstraIdx.reserve(rdata.size());
     posByAstraIdx.reserve(rdata.size());
@@ -153,7 +153,7 @@ BackInfoCache::rebuildRefsFrom(const std::string& srcTable,
         return (it != byAstraIdx.end()) ? it->second : nullptr;
     };
 
-    auto getPos = [&](AstraIndex idx) -> std::optional<ModelColumn> {
+    auto getPos = [&](AstraIndex idx) -> std::optional<ModelIndex> {
         auto it = posByAstraIdx.find(idx);
         if (it == posByAstraIdx.end())
             return std::nullopt;

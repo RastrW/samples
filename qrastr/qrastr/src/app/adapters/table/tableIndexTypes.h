@@ -5,7 +5,7 @@
  *
  * ── ЗАЧЕМ это нужно ──────────────────────────────────────────────────
  *  Без сильных типов компилятор не отличает:
- *      getCell(modelColumn, row)   — правильно
+ *      getCell(modelIndex, row)   — правильно
  *      getCell(localIndex, row) — молча сломано (читает не ту колонку)
  *      getCell(astraIndex, row)— молча сломано (индекс из другого пространства)
  *  Ошибки проявляются только в рантайме, при редких сочетаниях видимых колонок.
@@ -18,42 +18,42 @@
  *                 Стабилен для данного типа таблицы, не зависит от файла.
  *                 Ключ в BackInfoCache (ENUM / NAMEREF / ENPIC / …).
  *                 Источник: schema.index при getSchema().
- *                 НЕ совпадает с ModelColumn в общем случае.
+ *                 НЕ совпадает с ModelIndex в общем случае.
  *
- *  ModelColumn  = позиция в vector<RCol>  =  mCols_[colName]
+ *  ModelIndex  = позиция в vector<RCol>  =  mCols_[colName]
  *                 Номер колонки в QAbstractTableModel: QModelIndex::column(),
  *                 binding->column(), addColumn(n).
  *                 Определяется порядком колонок в схеме конкретного файла(шаблона).
  *                 Диапазон: [0, RData::size()).
  *
  *  LocalIndex   = позиция среди ЗАГРУЖЕННЫХ колонок внутри QDataBlock.
- *                 Хранится в RData::m_blockColIdx[modelColumn].
+ *                 Хранится в RData::m_blockColIdx[modelIndex].
  *                 Блок содержит только запрошенные (видимые) колонки,
- *                 поэтому LocalIndex != ModelColumn в общем случае.
+ *                 поэтому LocalIndex != ModelIndex в общем случае.
  *                 ИСПОЛЬЗУЕТСЯ ТОЛЬКО внутри RData::getCell() — наружу не выходит.
  *
  *  VisualIndex  = GridColumnBase::visualIndex()
  *                 Порядок отображения на экране (меняет пользователь drag-n-drop).
- *                 Не связан ни с ModelColumn, ни с AstraIndex.
+ *                 Не связан ни с ModelIndex, ни с AstraIndex.
  *                 Хранится только в RtabController для восстановления после сброса.
  *
  * ── ПРАВИЛА РАБОТЫ НА ГРАНИЦАХ ───────────────────────────────────────
  *
- *  QAbstractTableModel → ModelColumn:
- *      ModelColumn col{ index.column() };   // из QModelIndex
+ *  QAbstractTableModel → ModelIndex:
+ *      ModelIndex col{ index.column() };   // из QModelIndex
  *
- *  QTitan binding → ModelColumn:
- *      ModelColumn col{ binding->column() }; // binding->column() == model column
+ *  QTitan binding → ModelIndex:
+ *      ModelIndex col{ binding->column() }; // binding->column() == model column
  *
- *  ModelColumn → Qt/QTitan (требует int):
+ *  ModelIndex → Qt/QTitan (требует int):
  *      emit dataChanged(index(row, col.value), ...);  // .value — только на стыке с Qt
- *      m_view->getColumnByModelColumn(col.value);
+ *      m_view->getColumnByModelIndex(col.value);
  *
- *  ModelColumn → контейнер (требует size_t):
+ *  ModelIndex → контейнер (требует size_t):
  *      (*this)[col.to_size()]          // to_size() — только для operator[]
  *      m_blockColIdx[col.to_size()]
  *
- *  ModelColumn → AstraIndex (через метаданные, НЕ напрямую):
+ *  ModelIndex → AstraIndex (через метаданные, НЕ напрямую):
  *      AstraIndex pi = rdata.colAt(col)->astraIndex();
  *
  *  LocalIndex НИКОГДА не покидает RData:
@@ -115,11 +115,11 @@ struct StrongIndex {
 };
 
 struct AstraIndexTag{};
-struct ModelColumnTag{};
+struct ModelIndexTag{};
 struct LocalIndexTag{};
 struct VisualIndexTag{};
 
 using AstraIndex = StrongIndex<AstraIndexTag, long>;
-using ModelColumn    = StrongIndex<ModelColumnTag, int>;
+using ModelIndex    = StrongIndex<ModelIndexTag, int>;
 using LocalIndex  = StrongIndex<LocalIndexTag, long>;
 using VisualIndex = StrongIndex<VisualIndexTag, int>;

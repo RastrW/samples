@@ -86,7 +86,7 @@ void ContextMenuBuilder::initMenu(QWidget* menuParent, bool isVertical)
             this, [this]() { emit sig_condFormatsEdit(m_currentCol); });
 }
 
-void ContextMenuBuilder::prepareForHeader(ModelColumn column, const RCol* col, QMenu* menu)
+void ContextMenuBuilder::prepareForHeader(ModelIndex column, const RCol* col, QMenu* menu)
 {
     m_currentCol = column;
 
@@ -133,7 +133,7 @@ void ContextMenuBuilder::prepareForHeader(ModelColumn column, const RCol* col, Q
 
 void ContextMenuBuilder::prepareForShow(const MenuContext& ctx, QMenu* menu)
 {
-    m_currentCol = ModelColumn{ctx.column};
+    m_currentCol = ModelIndex{ctx.column};
     // Сносим ВСЕ встроенные пункты Qtitan — для меню ячейки они не нужны.
     // Qtitan владеет объектами, clear() их не удаляет.
     menu->clear();

@@ -31,7 +31,7 @@ public:
     const std::string& currentSelection() const { return m_selection; }
 
 public slots:
-    void slot_openSelection(ModelColumn col);
+    void slot_openSelection(ModelIndex col);
 private slots:
     void slot_setFiltrForSelection(std::string selection);
 private:

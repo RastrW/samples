@@ -36,7 +36,7 @@ public:
 
     /// Перестраивает только nameref/superenum-записи, чьи данные берутся из srcTable.
     /// Возвращает список позиционных индексов колонок, которые были обновлены.
-    std::vector<ModelColumn> rebuildRefsFrom(const std::string&  srcTable,
+    std::vector<ModelIndex> rebuildRefsFrom(const std::string&  srcTable,
                                           const RData&        rdata,
                                           std::shared_ptr<ITableRepository>        tables);
 private:

@@ -29,7 +29,7 @@ class RModel : public QAbstractTableModel
 
 signals:
     void editCompleted(const QString&);
-    void sig_nameRefUpdated(const std::vector<ModelColumn>& updatedCols);
+    void sig_nameRefUpdated(const std::vector<ModelIndex>& updatedCols);
 
 public slots:
     ///@brief Уведомление от RTDA:
@@ -79,18 +79,18 @@ public:
     bool removeColumns(int col,  int count, const QModelIndex& parent = {}) override;
 
     // ── Условное форматирование ───────────────────────────────────────────
-    void setCondFormats(ModelColumn column, const std::vector<CondFormat>& condFormats);
+    void setCondFormats(ModelIndex column, const std::vector<CondFormat>& condFormats);
     // Читать текущие правила колонки для CondFormatController
-    const std::vector<CondFormat>& getCondFormats(ModelColumn column) const;
+    const std::vector<CondFormat>& getCondFormats(ModelIndex column) const;
 
     // ── Утилиты ───────────────────────────────────────────────────────────
     std::vector<std::tuple<int,int>>
         columnsWidth() const;
-    const RCol* getRCol   (ModelColumn col) const;
+    const RCol* getRCol   (ModelIndex col) const;
     const RData& getRdata () const;
     const ColumnEditorInfo&
-        getColumnEditorInfo(ModelColumn colIndex) const;
-    void invertDirectCode(ModelColumn col);
+        getColumnEditorInfo(ModelIndex colIndex) const;
+    void invertDirectCode(ModelIndex col);
 private:
     // ── Данные ───────────────────────────────────────────────────────────────
     std::shared_ptr<ITableRepository> m_tables;
@@ -107,20 +107,20 @@ private:
     mutable std::vector<ColumnEditorInfo> m_editorInfoCache;
 
     // ── Условное форматирование ────────────────────────────
-    QVariant getMatchingCondFormat(size_t row, ModelColumn col,
+    QVariant getMatchingCondFormat(size_t row, ModelIndex col,
                                    const QString& value, int role) const;
     // ── DisplayRole / EditRole (Текст для отображения/Значение для редактора)─
-    QVariant dataForDisplayEdit(int row, ModelColumn col, const RCol& rcol,
+    QVariant dataForDisplayEdit(int row, ModelIndex col, const RCol& rcol,
                                 const QVariant& raw,
                                 const FieldVariantData& fvd,
                                 int role) const;
     // ── BackgroundRole (Фон ячейки) ──────────────────────────────────────────
-    QVariant dataForBackground (int row, ModelColumn col,
+    QVariant dataForBackground (int row, ModelIndex col,
                                 const RCol& rcol,
                                 const FieldVariantData& fvd,
                                 const QVariant& raw) const;
     // ── DecorationRole (Иконка слева от текста)───────────────────────────────
-    QVariant dataForDecoration (int row, ModelColumn col,
+    QVariant dataForDecoration (int row, ModelIndex col,
                                 const FieldVariantData& fvd,
                                 const RCol& rcol) const;
     // ── ComboBoxRole (popup для ComboBox)─────────────────────────────────────
@@ -135,7 +135,7 @@ private:
     // Данные отсутствуют (например, новая строка)
     QVariant dataForInvalidCellEditRole(const RCol& rcol) const;
     // Функции получения редактора из кеша и вычисление редактора для колонки в кеш
-    ColumnEditorInfo buildColumnEditorInfo(ModelColumn colIndex) const;
+    ColumnEditorInfo buildColumnEditorInfo(ModelIndex colIndex) const;
     void             buildEditorInfoCache();
     //Guard для неинициализированной модели
     bool isReady() const noexcept;

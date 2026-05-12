@@ -23,6 +23,7 @@ class PyHlp;
 class LinkedForm;
 struct FilterRule;
 class TableDockManager;
+class RData;
 
 namespace ads { class CDockManager; }
 namespace Qtitan { class GridTableView; }
@@ -85,10 +86,10 @@ public slots:
     void slot_groupCorrection();
 
     // ── Колонки ─────────────────────────────────────────────────────────────
-    void slot_directCodeToggle(ModelColumn column);
-    void slot_condFormatsEdit(ModelColumn column);
+    void slot_directCodeToggle(ModelIndex column);
+    void slot_condFormatsEdit(ModelIndex column);
      //  Формы инструментов
-    void slot_openColProp(ModelColumn col);
+    void slot_openColProp(ModelIndex col);
     // ширина по шаблону
     void slot_widthByTemplate();
     // ширина по контенту
@@ -118,20 +119,22 @@ private:
     */
     void createModel(std::shared_ptr<ITableRepository> tables);
     void applyAllColumnEditors();
-    void applyColumnEditor(ModelColumn col);
+    void applyColumnEditor(ModelIndex col);
     void setTableView(bool update = true, int multiplier = 10);
     void setupConnections();
     void createCommonTableActions();
+    void restoreColumnOrder(const RData& rdata);
+    void restoreColumnVisibility(const RData& rdata);
 
     void setupColumnOrder();
     void createLinkedFormController(std::shared_ptr<ITableRepository> tables);
     void createCondFormatController();
     /// Возвращает позицию колонки в RData по имени, или -1.
-    ModelColumn modelColumnOf(const std::string& colName) const;
-    //колонка → binding → ModelColumn
-    ModelColumn modelColumnFromListIndex(int listIdx) const;
+    ModelIndex modelIndexOf(const std::string& colName) const;
+    //колонка → binding → ModelIndex
+    ModelIndex modelIndexFromListIndex(int listIdx) const;
 
-    Qtitan::GridTableColumn* columnByModelColumn(ModelColumn pos)const;
+    Qtitan::GridTableColumn* columnByModelIndex(ModelIndex pos)const;
     // ── Компоненты (данные) ─────────────────────────────────────────────────
     std::unique_ptr<RModel>               m_model;
     std::unique_ptr<FilterManager>        m_filterManager;

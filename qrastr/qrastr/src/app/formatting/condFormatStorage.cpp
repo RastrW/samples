@@ -2,8 +2,8 @@
 #include "condFormat.h"
 
 void CondFormatStorage::addToMap(
-    std::unordered_map<ModelColumn, std::vector<CondFormat>>& map,
-    ModelColumn column,
+    std::unordered_map<ModelIndex, std::vector<CondFormat>>& map,
+    ModelIndex column,
     const CondFormat& condFormat)
 {
     auto& vec = map[column];
@@ -20,23 +20,23 @@ void CondFormatStorage::addToMap(
     }
 }
 
-void CondFormatStorage::add(ModelColumn column, const CondFormat& condFormat){
+void CondFormatStorage::add(ModelIndex column, const CondFormat& condFormat){
     addToMap(m_condFormats, column, condFormat);
 }
 
-void CondFormatStorage::set(ModelColumn column,
+void CondFormatStorage::set(ModelIndex column,
                             const std::vector<CondFormat>& condFormats){
     m_condFormats[column] = condFormats;
 }
 
-const std::unordered_map<ModelColumn, std::vector<CondFormat>>&
+const std::unordered_map<ModelIndex, std::vector<CondFormat>>&
 CondFormatStorage::formats() const
 {
     return m_condFormats;
 }
 
 const std::vector<CondFormat>*
-CondFormatStorage::column(ModelColumn col) const
+CondFormatStorage::column(ModelIndex col) const
 {
     auto it = m_condFormats.find(col);
     return (it != m_condFormats.end()) ? &it->second : nullptr;
