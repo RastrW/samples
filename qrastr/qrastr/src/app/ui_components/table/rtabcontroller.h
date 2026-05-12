@@ -134,6 +134,7 @@ private:
     void setupColumnOrder();
     void createLinkedFormController(std::shared_ptr<ITableRepository> tables);
     void createCondFormatController();
+    std::string getVisibleColsFromGrid() const;
     /// Возвращает позицию колонки в RData по имени, или -1.
     ModelIndex modelIndexOf(const std::string& colName) const;
     //колонка → binding → ModelIndex

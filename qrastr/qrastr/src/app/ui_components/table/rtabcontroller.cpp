@@ -760,21 +760,19 @@ void RtabController::slot_setFiltrForSelection(std::string selection){
 
 void RtabController::slot_openExportCSVForm()
 {
-    auto* dlg = new ExportCSVdialog(
-        m_tables,
-        m_UIForm.TableName(),
-        m_model->getRdata().get_cols(), //Только видимые
-        m_grid);
+    std::string visCols = getVisibleColsFromGrid(); //Только видимые
+    auto* dlg = new ExportCSVdialog(m_tables, m_UIForm.TableName(), visCols, m_grid);
     dlg->setAttribute(Qt::WA_DeleteOnClose);
     dlg->show();
 }
 
 void RtabController::slot_openImportCSVForm()
 {
+    std::string visCols = getVisibleColsFromGrid(); //Только видимые
     auto* dlg = new ImportCSV2dialog(
         m_tables,
         m_UIForm.TableName(),
-        m_model->getRdata().get_cols(), //Только видимые
+        visCols,
         m_grid);
     dlg->setAttribute(Qt::WA_DeleteOnClose);
     dlg->show();
@@ -867,4 +865,20 @@ ModelIndex RtabController::modelIndexFromListIndex(int listIdx) const {
     auto* binding = m_view->getDataBinding(col);
     if (!binding || binding->column() < 0) return {};
     return ModelIndex{binding->column()};
+}
+
+std::string
+RtabController::getVisibleColsFromGrid() const
+{
+    std::string result;
+    const int count = m_view->getColumnCount();
+    for (int i = 0; i < count; ++i) {
+        auto* gridCol = m_view->getColumn(i);
+        if (!gridCol || !gridCol->isVisible()) continue;
+        const RCol* rcol = m_model->getRCol(modelIndexFromListIndex(i));
+        if (!rcol) continue;
+        if (!result.empty()) result += ',';
+        result += rcol->getColName();
+    }
+    return result;
 }

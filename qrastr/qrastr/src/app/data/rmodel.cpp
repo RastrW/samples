@@ -470,9 +470,6 @@ void RModel::slot_EndResetModel(const std::string& tName)
 {
     if (!isMyTable(tName)){ return;}
     ///@note при сборсе обязательно целиком пересоздавать data
-    /// populateDataFromRastr() вызывается МЕЖДУ beginResetModel и endResetModel.
-    /// В этот момент View не обращается к модели — безопасно полностью
-    ///пересоздать RData.
     populateDataFromRastr();
     endResetModel();
 }
