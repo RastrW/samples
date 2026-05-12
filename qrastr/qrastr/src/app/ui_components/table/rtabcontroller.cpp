@@ -400,9 +400,9 @@ void RtabController::applyColumnEditor(ModelIndex col)
     // Проверяем целевую видимость из сохранённого состояния,
     // а не текущую column_qt->isVisible() — она ещё не восстановлена.
     const QString qname = QString::fromStdString(rcol->getColName());
-    const auto visIt = m_columnsVisible.find(qname);
-    const bool targetVisible = (visIt != m_columnsVisible.end())
-                                   ? visIt->second
+    const auto it = m_columnState.find(qname);
+    const bool targetVisible = (it != m_columnState.end())
+                                   ? it->second.visible
                                    : !rcol->isHiddenByForm();
     // Редакторы не настраиваем для скрытых колонок:
     // QTitan при setEditorType/setEditorRepository вызывает data() на ячейках,
@@ -571,8 +571,7 @@ void RtabController::slot_beginResetModel(const std::string& tname)
     if (m_UIForm.TableName() != tname) return;
     QElapsedTimer t; t.start();
 
-    m_columnsVisible.clear();
-    m_columnVisualOrder.clear();
+    m_columnState.clear();
 
     // getColumnCount() возвращает все добавленные через addColumn(),
     // в т.ч. скрытые через setVisible(false).
@@ -586,8 +585,7 @@ void RtabController::slot_beginResetModel(const std::string& tname)
         if (!rcol) continue;
 
         const QString qname = QString::fromStdString(rcol->getColName());
-        m_columnsVisible[qname]    = gridCol->isVisible();
-        m_columnVisualOrder[qname] = VisualIndex{gridCol->visualIndex()};
+        m_columnState[qname] = {gridCol->isVisible(), VisualIndex{gridCol->visualIndex()}};
     }
 
     spdlog::debug("[PERF] slot_beginResetModel: {} ms", t.restart());
@@ -631,9 +629,9 @@ void RtabController::restoreColumnOrder(const RData& rdata)
         const RCol* rcol = rdata.colAt(ModelIndex{i});
         if (!rcol) continue;
         const QString qname = QString::fromStdString(rcol->getColName());
-        auto it = m_columnVisualOrder.find(qname);
-        if (it != m_columnVisualOrder.end())
-            known.push_back({ModelIndex{i}, it->second.value});
+        auto it = m_columnState.find(qname);
+        if (it != m_columnState.end() && it->second.vi.value >= 0)
+            known.push_back({ModelIndex{i}, it->second.vi.value});
         else
             unknown.push_back(ModelIndex{i});
     }
@@ -665,9 +663,9 @@ void RtabController::restoreColumnVisibility(const RData& rdata)
         const RCol* rcol = rdata.colAt(col);
         if (!rcol) continue;
         const QString qname = QString::fromStdString(rcol->getColName());
-        auto visIt = m_columnsVisible.find(qname);
-        const bool isVisible = (visIt != m_columnsVisible.end())
-                                   ? visIt->second
+        auto it = m_columnState.find(qname);
+        const bool isVisible = (it != m_columnState.end())
+                                   ? it->second.visible
                                    : !rcol->isHiddenByForm();
         // Guard от лишних вызовов: после setModel все колонки visible=true.
         bool gridVis = gridCol->isVisible();

@@ -722,7 +722,7 @@ RModel::columnsWidth() const{
 
 void RModel::invertDirectCode(ModelIndex col){
 
-    if (!m_rdata || col.valid_in(m_rdata->size())) return;
+    if (!m_rdata || !col.valid_in(m_rdata->size())) return;
     (m_rdata->begin() + col.to_size())->invertDirectCodeStatus();
 }
 

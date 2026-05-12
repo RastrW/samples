@@ -119,6 +119,11 @@ private:
     */
     void createModel(std::shared_ptr<ITableRepository> tables);
     void applyAllColumnEditors();
+    /** @note QTitan берёт ownership переданного репозитория:
+     * GridColumn::setEditorRepository удаляет предыдущий объект перед заменой,
+     * GridColumn::~GridColumn удаляет текущий при уничтожении колонки.
+     * Повторный вызов applyColumnEditor безопасен — утечки нет.
+    */
     void applyColumnEditor(ModelIndex col);
     void setTableView(bool update = true, int multiplier = 10);
     void setupConnections();
@@ -150,9 +155,11 @@ private:
     // ── Конфигурация ────────────────────────────────────────────────────────
     CUIForm              m_UIForm;
     ads::CDockManager*   m_DockManager {nullptr};
-
-    std::unordered_map<QString, bool> m_columnsVisible;
-    std::unordered_map<QString, VisualIndex> m_columnVisualOrder;
+    struct ColumnState {
+        bool      visible  = true;
+        VisualIndex vi     = VisualIndex{-1}; // -1 = не задан
+    };
+    std::unordered_map<QString, ColumnState> m_columnState;
     /// Защита от повторного вызова createShell()
     bool m_shellCreated {false};
     CommonTableActions m_comTabAct;
