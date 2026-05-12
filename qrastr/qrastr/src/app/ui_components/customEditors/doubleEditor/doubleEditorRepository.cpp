@@ -9,8 +9,7 @@ DoubleEditorRepository::DoubleEditorRepository(int    decimals,
 {
     auto* val = new PermissiveDoubleValidator(minVal, maxVal, decimals, this);
     setValidator(val);
-    // Выравнивание по правому краю — стандарт для чисел
-    setAlignment(Qt::AlignRight | Qt::AlignVCenter);
+    setAlignment(Qt::AlignLeft);
 }
 
 QString DoubleEditorRepository::convertToText(const QVariant& value)

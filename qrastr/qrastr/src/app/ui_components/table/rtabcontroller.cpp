@@ -252,7 +252,6 @@ void RtabController::createModel(std::shared_ptr<ITableRepository> tables)
 
     m_model = std::make_unique<RModel>(this, tables);
     m_model->setForm(&m_UIForm);
-    spdlog::info("[PERF] make RModel: {} ms", t.restart());
 
     if (!m_model->populateDataFromRastr()) {
         // Таблица не найдена в плагине (файл не загружен или имя неверно).
@@ -264,29 +263,22 @@ void RtabController::createModel(std::shared_ptr<ITableRepository> tables)
                                  .arg(QString::fromStdString(m_UIForm.DisplayName())));
         return;
     }
-    spdlog::info("[PERF] populateDataFromRastr: {} ms", t.restart());
 
     m_view->beginUpdate();
     m_view->setModel(m_model.get());
     setupColumnOrder();
-    spdlog::info("[PERF] setupColumnOrder: {} ms", t.restart());
 
     if (!m_UIForm.Vertical())
         setTableView(false);
 
-    spdlog::info("[PERF] view ready: {} ms", t.restart());
-
-    restoreColumnVisibility(m_model->getRdata());
-    spdlog::info("[PERF] restoreColumnVisibility: {} ms", t.restart());
-
     applyAllColumnEditors();
-    spdlog::info("[PERF] applyAllColumnEditors: {} ms", t.restart());
+    restoreColumnVisibility(m_model->getRdata());
+
     m_view->endUpdate();
 
     createLinkedFormController(tables);
-    spdlog::info("[PERF] make LinkedFormController: {} ms", t.restart());
     createCondFormatController();
-    spdlog::info("[PERF] controllers: {} ms", t.restart());
+    spdlog::debug("[PERF] createModel: {} ms", t.restart());
 }
 
 void RtabController::setupColumnOrder()
@@ -412,14 +404,12 @@ void RtabController::applyColumnEditor(ModelIndex col)
     const auto visIt = m_columnsVisible.find(qname);
     const bool targetVisible = (visIt != m_columnsVisible.end())
                                    ? visIt->second
-                                   : !rcol->isHidden();
+                                   : !rcol->isHiddenByForm();
     // Редакторы не настраиваем для скрытых колонок:
     // QTitan при setEditorType/setEditorRepository вызывает data() на ячейках,
     // что провоцирует lazy-load для незагруженных колонок.
     // При показе колонки applyColumnEditor будет вызван повторно.
     if (!targetVisible) return;
-
-    spdlog::info("[PERF] applyColumnEditor: {}", col.value);
 
     column_qt->setProperty("isNumeric", false);
     column_qt->setProperty("isBool",    false);
@@ -601,7 +591,7 @@ void RtabController::slot_beginResetModel(const std::string& tname)
         m_columnVisualOrder[qname] = VisualIndex{gridCol->visualIndex()};
     }
 
-    spdlog::info("[PERF] slot_beginResetModel: {} ms", t.restart());
+    spdlog::debug("[PERF] slot_beginResetModel: {} ms", t.restart());
 }
 
 void RtabController::slot_endResetModel(const std::string& tname)
@@ -615,22 +605,15 @@ void RtabController::slot_endResetModel(const std::string& tname)
 
     m_view->beginUpdate();
     m_view->setModel(m_model.get());
-    spdlog::info("[PERF] setModel: {} ms", t.restart());
-
     restoreColumnOrder(rdata);
-    spdlog::info("[PERF] restoreColumnOrder: {} ms", t.restart());
-
-    applyAllColumnEditors(); // редакторы только для видимых
-    spdlog::info("[PERF] applyAllColumnEditors: {} ms", t.restart());
-
     restoreColumnVisibility(rdata);
-    spdlog::info("[PERF] restoreColumnVisibility: {} ms", t.restart());
+    applyAllColumnEditors();
 
     m_view->endUpdate(); // layout строится один раз, только для видимых колонок
-    spdlog::info("[PERF] endUpdate: {} ms", t.restart());
 
     m_filterManager = std::make_unique<FilterManager>(m_view, m_model.get(),
                                                       m_grid);
+    spdlog::debug("[PERF] slot_endResetModel: {} ms", t.restart());
 }
 
 void RtabController::restoreColumnOrder(const RData& rdata)
@@ -669,13 +652,11 @@ void RtabController::restoreColumnVisibility(const RData& rdata)
         auto visIt = m_columnsVisible.find(qname);
         const bool isVisible = (visIt != m_columnsVisible.end())
                                    ? visIt->second
-                                   : !rcol->isHidden();
+                                   : !rcol->isHiddenByForm();
         // Guard от лишних вызовов: после setModel все колонки visible=true.
         bool gridVis = gridCol->isVisible();
         if ( gridVis != isVisible){
-            spdlog::info("Change visibility for {}, {} ms", col.value, t.restart());
             gridCol->setVisible(isVisible);
-            spdlog::info("After setVisible");
         }
     }
 }
@@ -729,7 +710,7 @@ void RtabController::setTableView(bool update, int multiplier)
     const int count = m_view->getColumnCount();
     for (int i = 0; i < count; ++i) {
         const RCol* rcol = m_model->getRCol(modelIndexFromListIndex(i) );
-        if (!rcol || rcol->isHidden()) continue;
+        if (!rcol || rcol->isHiddenByForm()) continue;
         int width = 10;
         try { width = std::stoi(rcol->getWidth()); }
         catch (...) {}

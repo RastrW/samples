@@ -23,21 +23,21 @@ bool RModel::populateDataFromRastr()
         // который обращается к плагину на этапе построения модели.
         // RData и RCol не знают про плагин вообще.
         auto schema = m_tables->getSchema(m_UIform->TableName());
-        spdlog::info("[PERF]   getSchema: {} ms", t.restart());
+        spdlog::debug("[PERF]   getSchema: {} ms", t.restart());
 
         // schema передаётся по const& в конструктор RData —
         // объект схемы не копируется, строки копируются по одному разу.
         m_rdata = std::make_unique<RData>(schema, *m_UIform);
-        spdlog::info("[PERF]   make RData: {} ms", t.restart());
+        spdlog::debug("[PERF]   make RData: {} ms", t.restart());
         m_rdata->populateBlock(m_tables);
-        spdlog::info("[PERF]   populateBlock: {} ms", t.restart());
+        spdlog::debug("[PERF]   populateBlock: {} ms", t.restart());
 
         m_cache.rebuild(*m_rdata, m_tables);
-        spdlog::info("[PERF]   cache.rebuild: {} ms", t.restart());
+        spdlog::debug("[PERF]   cache.rebuild: {} ms", t.restart());
         // заполняем кеш после перестройки структуры
         m_bgCache.clear();
         buildEditorInfoCache();
-        spdlog::info("[PERF]   buildEditorInfoCache: {} ms", t.restart());
+        spdlog::debug("[PERF]   buildEditorInfoCache: {} ms", t.restart());
     } catch (...) {
         spdlog::critical("populateDataFromRastr failed: {}",
                          m_rdata ? m_rdata->t_name_ : "<null>");
@@ -80,7 +80,6 @@ QVariant RModel::data(const QModelIndex& index, int role) const
 {
     if (!isReady()) return {};
 
-
     const ModelIndex col{ index.column() };
     const int      row     = index.row();
 
@@ -98,17 +97,13 @@ QVariant RModel::data(const QModelIndex& index, int role) const
     if (role == Qtitan::ComboBoxRole) //Выпадающий popup ComboBox
         return dataForComboBox(rcol);
 
-    // Не читаем данные для скрытых колонок — они не нужны для отображения.
-    // Field chooser вызывает data() для получения заголовка (DisplayRole на row=-1
-    // обрабатывается через headerData), но иногда запрашивает и данные ячеек.
-    // Lazy-load скрытых колонок здесь не нужен и не должен происходить.
-    if (rcol.isHidden()) return {};
-
     // Lazy load если колонка ещё не в блоке
     LocalIndex li = m_rdata->localIndexOf(col);
     if (li.invalid()){
         // const, mutable внутри
         li = m_rdata->ensureLoaded(col, m_tables);
+        spdlog::info("Добавление новой колонки: {}", col.value);
+
     }
     // колонка недоступна даже после попытки
     if (li.invalid()) return {};

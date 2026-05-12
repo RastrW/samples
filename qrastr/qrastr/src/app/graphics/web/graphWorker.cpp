@@ -72,7 +72,7 @@ void GraphWorker::slot_process() {
     spdlog::info("slot_process: calling m_fnInit (will block?)");
 
 	m_fnInit(m_rastr,
-			 graphLibsPath.toStdString().c_str(),
+             graphLibsPath.toStdString().c_str(),
 			 "127.0.0.1", 8081,
              GraphServer::staticCallback);   // подключение к либе
 

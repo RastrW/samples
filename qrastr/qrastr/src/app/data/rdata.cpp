@@ -37,7 +37,7 @@ RData::RData(const ITableRepository::TableSchema& schema,
 
     for (RCol& rc : *this)
         if (formCols.count(rc.getColName()))
-            rc.setHidden(false);
+            rc.setHiddenByForm(false);
     spdlog::debug("RData: table={} columns={}", t_name_, schema.columns.size());
 }
 
@@ -49,10 +49,10 @@ void RData::populateBlock(std::shared_ptr<ITableRepository> tables){
 
     auto* db = datablock.get();
 
-    spdlog::info("[PERF] rows = {}", db->RowsCount());
-    spdlog::info("[PERF] cols = {}", db->ColumnsCount());
-    spdlog::info("[PERF] datasize = {}", db->DataSize());
-    spdlog::info("[PERF] bytes = {}", db->DataSize() * sizeof(FieldVariantData));
+    spdlog::debug("[PERF] rows = {}", db->RowsCount());
+    spdlog::debug("[PERF] cols = {}", db->ColumnsCount());
+    spdlog::debug("[PERF] datasize = {}", db->DataSize());
+    spdlog::debug("[PERF] bytes = {}", db->DataSize() * sizeof(FieldVariantData));
 }
 
 void RData::rebuildBlockIndexMap()
@@ -68,8 +68,6 @@ LocalIndex
 RData::ensureLoaded(ModelIndex pos,
                     std::shared_ptr<ITableRepository> tables) const
 {
-    spdlog::info("[PERF] ensureLoaded col={} '{}'", pos.value,
-                 (*this)[pos.to_size()].getColName());
     if (!pos.valid_in(size())) return {};
 
     const std::string& name = (*this)[pos.to_size()].getColName();
@@ -101,7 +99,7 @@ std::string RData::get_cols(bool visible) const{
     ret.reserve(size() * 6);
 
     for (const RCol& rc : *this) {
-        if (!visible || !rc.isHidden()) {
+        if (!visible || !rc.isHiddenByForm()) {
             if (!ret.empty()) ret += ',';
             ret += rc.getColName();        // без временной строки
         }

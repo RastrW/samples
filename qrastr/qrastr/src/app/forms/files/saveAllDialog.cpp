@@ -97,9 +97,9 @@ void SaveAllDialog::slot_buttonBoxAccepted()
             QFileInfo qshablinfo;
             qshablinfo.setFile(m_dirShabl, ptwi_shabl->text());
 
-            std::string sfile  = qfileinfo.absoluteFilePath().toStdString().c_str();
+            std::string sfile  = qfileinfo.absoluteFilePath().toStdString();
             std::string sshabl = qshablinfo.isFile()
-                                     ? qshablinfo.absoluteFilePath().toStdString().c_str()
+                                     ? qshablinfo.absoluteFilePath().toStdString()
                                      : "";
 
             m_fileOps->Save(sfile, sshabl);

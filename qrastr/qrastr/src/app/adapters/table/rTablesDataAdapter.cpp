@@ -81,8 +81,6 @@ std::shared_ptr<QDataBlock>
 RTablesDataAdapter::getBlock(const std::string& tname, const std::string& cols)
 {
     QElapsedTimer t; t.start();
-    spdlog::info("[PERF] begin getBlock: {} ms", t.restart());
-
     /*
      * Перед получением таблицы из RTDA удалим таблицы на которые никто не ссылается,
      * например если таблицу открыли, а потом закрыли, тогда она остается в RTDA со счетчиком ссылок (use_count()) = 1
@@ -90,23 +88,20 @@ RTablesDataAdapter::getBlock(const std::string& tname, const std::string& cols)
     */
     for (auto it = mpTables.begin(); it != mpTables.end(); ) {
         if (it->second.use_count() == 1) {
-            spdlog::debug ("RTDA: delete table with use_count() = 1 -> {}", it->first.c_str());
+            spdlog::debug ("RTDA: delete table with use_count() = 1 -> {}", it->first);
             it = mpTables.erase(it);
         } else {
-            spdlog::debug("RTDA: {} use_count() =  {}", it->first.c_str(), it->second.use_count());
+            spdlog::debug("RTDA: {} use_count() =  {}", it->first, it->second.use_count());
             ++it;
         }
     }
-    spdlog::info("[PERF] before insert mpTables: {} ms", t.restart());
 
     auto [it, inserted] = mpTables.emplace(tname, nullptr);
     if (inserted) {
 
         it->second = std::make_shared<QDataBlock>();
-        spdlog::info("[PERF] make QDataBlock: {} ms", t.restart());
         fillBlock(tname, *it->second, cols);
-        spdlog::info("[PERF] fillBlock QDataBlock: {} ms", t.restart());
-        spdlog::debug("RTDA: add Table {}", tname.c_str());
+        spdlog::info("RTDA: add Table {}", tname.c_str());
     }
     return it->second;
 }
@@ -211,7 +206,6 @@ void RTablesDataAdapter::fillBlock(const std::string& tname,
         options.SetSuperEnumAsInt(TriBool::True);
         options.SetUseChangedIndices(true);
     }
-    spdlog::info("[PERF] create FieldDataOptions: {} ms", t.restart());
 
     // Если список колонок не задан — берём все колонки таблицы
     const std::string& actualCols = cols.empty() ? getTCols(tname) : cols;
@@ -219,7 +213,7 @@ void RTablesDataAdapter::fillBlock(const std::string& tname,
     IRastrTablesPtr tablesx{ m_pqastra->getRastr()->Tables() };
     IRastrTablePtr  table  { tablesx->Item(tname) };
     IRastrResultVerify(table->DataBlock(actualCols, qdb, options));
-    spdlog::info("[PERF] fill QDataBlock: {} ms", t.restart());
+    spdlog::debug("[PERF] fill QDataBlock: {} ms", t.restart());
 }
 
 std::string RTablesDataAdapter::getTCols(const std::string& tname)

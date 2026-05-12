@@ -57,7 +57,7 @@ void LinkedFormController::openLinkedForm(LinkedForm lf)
 
 void LinkedFormController::openLinkedMacro(LinkedMacro lm, int contextRow)
 {
-    spdlog::info("LinkedFormController: run macro {}", lm.macrofile.c_str());
+    spdlog::info("LinkedFormController: run macro {}", lm.macrofile);
 
     // ── Путь к макросу ────────────────────────────────────────────
     const QString macroPath =
