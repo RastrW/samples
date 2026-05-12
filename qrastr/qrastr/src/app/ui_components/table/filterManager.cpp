@@ -10,8 +10,8 @@ FilterManager::FilterManager(Qtitan::GridTableView* view, RModel* model,
     : QObject(parentWidget), m_view(view), m_model(model), m_parentWidget(parentWidget){
 
     // ── Строка автофильтра (скрыта по умолчанию) ──
-    m_autoFilterCond = new AutoFilterCondition(m_view->filter());
-    m_autoFilter     = new AutoFilterWidget(m_view, parentWidget);
+    m_autoFilterCond = std::make_unique<AutoFilterCondition>(m_view->filter());
+    m_autoFilter     = std::make_unique<AutoFilterWidget>(m_view, nullptr);
     m_autoFilter->setVisible(false);
 
 }

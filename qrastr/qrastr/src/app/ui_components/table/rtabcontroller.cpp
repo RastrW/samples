@@ -101,7 +101,6 @@ RtabController::RtabController( std::shared_ptr<ITableRepository> tables,
     m_view->options().setScrollRowStyle(Qtitan::ScrollItemStyle::ScrollByPixel);
     // Enables or disables wait cursor if grid is busy for lengthy operations with data like sorting or grouping.
     m_view->options().setShowWaitCursor(true);
-    m_view->options().setAutoCreateColumns(false);
     m_view->tableOptions().setColumnsHeader(true);
     ///@todo (при отладки текст мельтешит, может быть в Release лучше) Эффект ускорения при быстром скролле
     //m_view->options().setFastScrollEffect(true);
@@ -271,20 +270,18 @@ void RtabController::createModel(std::shared_ptr<ITableRepository> tables)
     m_view->setModel(m_model.get());
     setupColumnOrder();
     spdlog::info("[PERF] setupColumnOrder: {} ms", t.restart());
-    applyAllColumnEditors();
-    spdlog::info("[PERF] applyAllColumnEditors: {} ms", t.restart());
+
     if (!m_UIForm.Vertical())
         setTableView(false);
 
     spdlog::info("[PERF] view ready: {} ms", t.restart());
 
-    // При первом открытии m_columnsVisible пуст →
-    // restoreColumnVisibility использует rcol->isHidden() как дефолт.
-    // Скрывает все колонки не из формы, не трогая visible=true для колонок формы.
     restoreColumnVisibility(m_model->getRdata());
-
-    m_view->endUpdate();
     spdlog::info("[PERF] restoreColumnVisibility: {} ms", t.restart());
+
+    applyAllColumnEditors();
+    spdlog::info("[PERF] applyAllColumnEditors: {} ms", t.restart());
+    m_view->endUpdate();
 
     createLinkedFormController(tables);
     spdlog::info("[PERF] make LinkedFormController: {} ms", t.restart());
@@ -421,6 +418,8 @@ void RtabController::applyColumnEditor(ModelIndex col)
     // что провоцирует lazy-load для незагруженных колонок.
     // При показе колонки applyColumnEditor будет вызван повторно.
     if (!targetVisible) return;
+
+    spdlog::info("[PERF] applyColumnEditor: {}", col.value);
 
     column_qt->setProperty("isNumeric", false);
     column_qt->setProperty("isBool",    false);
@@ -610,30 +609,28 @@ void RtabController::slot_endResetModel(const std::string& tname)
     if (m_UIForm.TableName() != tname) return;
     QElapsedTimer t; t.start();
     const RData& rdata = m_model->getRdata();
+    //Сбрасываем мендеджер фильтрации, т.к. он будет излишне перестраиваться
+    //при изменении видимости колонок постоянно
+    m_filterManager.reset();
 
     m_view->beginUpdate();
-    m_view->setModel(nullptr);
     m_view->setModel(m_model.get());
     spdlog::info("[PERF] setModel: {} ms", t.restart());
 
-    // Внутри update-блока: только порядок и видимые колонки.
-    // setVisible(false) сюда НЕ попадает — оно дорогое внутри beginUpdate.
     restoreColumnOrder(rdata);
     spdlog::info("[PERF] restoreColumnOrder: {} ms", t.restart());
 
     applyAllColumnEditors(); // редакторы только для видимых
     spdlog::info("[PERF] applyAllColumnEditors: {} ms", t.restart());
 
-    // После endUpdate: скрываем колонки.
-    // Layout уже построен — setVisible(false) только помечает колонку,
-    // не перестраивает весь список.
     restoreColumnVisibility(rdata);
     spdlog::info("[PERF] restoreColumnVisibility: {} ms", t.restart());
 
     m_view->endUpdate(); // layout строится один раз, только для видимых колонок
     spdlog::info("[PERF] endUpdate: {} ms", t.restart());
 
-    m_filterManager->resetAfterModelReset();
+    m_filterManager = std::make_unique<FilterManager>(m_view, m_model.get(),
+                                                      m_grid);
 }
 
 void RtabController::restoreColumnOrder(const RData& rdata)
@@ -660,6 +657,7 @@ void RtabController::restoreColumnOrder(const RData& rdata)
 
 void RtabController::restoreColumnVisibility(const RData& rdata)
 {
+    QElapsedTimer t; t.start();
     for (int i = 0; i < static_cast<int>(rdata.size()); ++i) {
         const ModelIndex col{i};
         auto* gridCol = qobject_cast<Qtitan::GridTableColumn*>(
@@ -673,11 +671,11 @@ void RtabController::restoreColumnVisibility(const RData& rdata)
                                    ? visIt->second
                                    : !rcol->isHidden();
         // Guard от лишних вызовов: после setModel все колонки visible=true.
-        // setVisible(true) бесплатно (guard внутри QTitan сработает).
-        // setVisible(false) теперь снаружи endUpdate — должно быть быстро.
-        if (gridCol->isVisible() != isVisible){
-            spdlog::info("Change visibility for {} ", col.value);
+        bool gridVis = gridCol->isVisible();
+        if ( gridVis != isVisible){
+            spdlog::info("Change visibility for {}, {} ms", col.value, t.restart());
             gridCol->setVisible(isVisible);
+            spdlog::info("After setVisible");
         }
     }
 }

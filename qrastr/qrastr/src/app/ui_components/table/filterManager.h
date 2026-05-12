@@ -17,7 +17,7 @@ public:
                            QWidget* parentWidget);
 
     /// Виджет строки фильтра — добавляется во внешний layout.
-    AutoFilterWidget* widget() const { return m_autoFilter; }
+    AutoFilterWidget* widget() const { return m_autoFilter.get(); }
 
     /// Вызывается из slot_toggleAutoFilter.
     void toggle(bool checked);
@@ -42,8 +42,8 @@ private:
     Qtitan::GridTableView* m_view;
     RModel*                m_model;
     QWidget*               m_parentWidget;
-    AutoFilterWidget*    m_autoFilter    {nullptr};
-    AutoFilterCondition* m_autoFilterCond{nullptr};
+    std::unique_ptr<AutoFilterWidget> m_autoFilter;
+    std::unique_ptr<AutoFilterCondition> m_autoFilterCond;
     Qtitan::GridFilterCondition* m_builtinCondition {nullptr};
 
     std::string m_selection;        // Текущая выборка
