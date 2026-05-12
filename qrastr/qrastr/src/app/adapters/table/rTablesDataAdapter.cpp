@@ -16,6 +16,77 @@ RTablesDataAdapter::RTablesDataAdapter(std::shared_ptr<QAstra> _pqastra) :
             this, &RTablesDataAdapter::slot_rastrHint);
 }
 
+std::shared_ptr<QDataBlock>
+RTablesDataAdapter::getBlock(const std::string& tname, const std::string& cols)
+{
+    QElapsedTimer t; t.start();
+    /*
+     * Перед получением таблицы из RTDA удалим таблицы на которые никто не ссылается,
+     * например если таблицу открыли, а потом закрыли, тогда она остается в RTDA со счетчиком ссылок (use_count()) = 1
+     * если не удалять, тогда при расчете УР придется обновлять данные, но необходимости в этом нет.
+    */
+    for (auto it = mpTables.begin(); it != mpTables.end(); ) {
+        if (it->second.use_count() == 1) {
+            spdlog::debug ("RTDA: delete table with use_count() = 1 -> {}", it->first);
+            it = mpTables.erase(it);
+        } else {
+            spdlog::debug("RTDA: {} use_count() =  {}", it->first, it->second.use_count());
+            ++it;
+        }
+    }
+
+    auto [it, inserted] = mpTables.emplace(tname, nullptr);
+    if (inserted) {
+
+        it->second = std::make_shared<QDataBlock>();
+        fillBlock(tname, *it->second, cols);
+        spdlog::info("RTDA: add Table {}", tname.c_str());
+    }
+    return it->second;
+}
+
+void RTablesDataAdapter::ensureColumn(const std::string& tname,
+                                      const std::string& colName)
+{
+    auto it = mpTables.find(tname);
+    if (it == mpTables.end()) return;       // таблица не кеширована
+
+    QDataBlock& block = *it->second;
+    if (block.localColumnIndex(colName) >= 0) return; // уже есть
+
+    spdlog::debug("RTDA: lazy-load column '{}' for table '{}'", colName, tname);
+    QDataBlock colBlock;
+    fillBlock(tname, colBlock, colName);    // 1 колонка × N строк
+    block.mergeColumn(colName, colBlock);
+
+    // Карта индексов в RData обновится
+}
+
+void RTablesDataAdapter::fillBlock(const std::string& tname,
+                                   QDataBlock& qdb,
+                                   const std::string& cols,
+                                   std::optional<FieldDataOptions> opts)
+{
+    QElapsedTimer t; t.start();
+    // Дефолтные опции
+    FieldDataOptions options;
+    if (opts.has_value()) {
+        options = opts.value();
+    } else {
+        options.SetEnumAsInt(TriBool::True);
+        options.SetSuperEnumAsInt(TriBool::True);
+        options.SetUseChangedIndices(true);
+    }
+
+    // Если список колонок не задан — берём все колонки таблицы
+    const std::string& actualCols = cols.empty() ? getTCols(tname) : cols;
+
+    IRastrTablesPtr tablesx{ m_pqastra->getRastr()->Tables() };
+    IRastrTablePtr  table  { tablesx->Item(tname) };
+    IRastrResultVerify(table->DataBlock(actualCols, qdb, options));
+    spdlog::debug("[PERF] fill QDataBlock: {} ms", t.restart());
+}
+
 void RTablesDataAdapter::getDynamicForms(std::vector<CUIForm>& out)
 {
     IRastrTablesPtr tablesx{ m_pqastra->getRastr()->Tables() };
@@ -77,35 +148,6 @@ RTablesDataAdapter::slot_rastrHint(const _hint_data& hint_data)
     }
 }
 
-std::shared_ptr<QDataBlock>
-RTablesDataAdapter::getBlock(const std::string& tname, const std::string& cols)
-{
-    QElapsedTimer t; t.start();
-    /*
-     * Перед получением таблицы из RTDA удалим таблицы на которые никто не ссылается,
-     * например если таблицу открыли, а потом закрыли, тогда она остается в RTDA со счетчиком ссылок (use_count()) = 1
-     * если не удалять, тогда при расчете УР придется обновлять данные, но необходимости в этом нет.
-    */
-    for (auto it = mpTables.begin(); it != mpTables.end(); ) {
-        if (it->second.use_count() == 1) {
-            spdlog::debug ("RTDA: delete table with use_count() = 1 -> {}", it->first);
-            it = mpTables.erase(it);
-        } else {
-            spdlog::debug("RTDA: {} use_count() =  {}", it->first, it->second.use_count());
-            ++it;
-        }
-    }
-
-    auto [it, inserted] = mpTables.emplace(tname, nullptr);
-    if (inserted) {
-
-        it->second = std::make_shared<QDataBlock>();
-        fillBlock(tname, *it->second, cols);
-        spdlog::info("RTDA: add Table {}", tname.c_str());
-    }
-    return it->second;
-}
-
 std::vector<long>
 RTablesDataAdapter::rowsBySelection(const std::string& tname,
                                     const std::string& selection)
@@ -123,23 +165,6 @@ RTablesDataAdapter::rowsBySelection(const std::string& tname,
 
     indices = variantBlock.IndexesVector();
     return indices;
-}
-
-void RTablesDataAdapter::ensureColumn(const std::string& tname,
-                                      const std::string& colName)
-{
-    auto it = mpTables.find(tname);
-    if (it == mpTables.end()) return;       // таблица не кеширована
-
-    QDataBlock& block = *it->second;
-    if (block.localColumnIndex(colName) >= 0) return; // уже есть
-
-    spdlog::debug("RTDA: lazy-load column '{}' for table '{}'", colName, tname);
-    QDataBlock colBlock;
-    fillBlock(tname, colBlock, colName);    // 1 колонка × N строк
-    block.mergeColumn(colName, colBlock);
-
-    // Карта индексов в RData обновится
 }
 
 void RTablesDataAdapter::setValue(const std::string&      tname,
@@ -189,31 +214,6 @@ long RTablesDataAdapter::columnIndex(const std::string& tname,
     IRastrTablePtr   table  { tablesx->Item(tindex) };
     IRastrColumnsPtr columns{ table->Columns() };
     return IRastrPayload{ columns->FindIndex(colName) }.Value();
-}
-
-void RTablesDataAdapter::fillBlock(const std::string& tname,
-                                      QDataBlock& qdb,
-                                      const std::string& cols,
-                                      std::optional<FieldDataOptions> opts)
-{
-    QElapsedTimer t; t.start();
-    // Дефолтные опции
-    FieldDataOptions options;
-    if (opts.has_value()) {
-        options = opts.value();
-    } else {
-        options.SetEnumAsInt(TriBool::True);
-        options.SetSuperEnumAsInt(TriBool::True);
-        options.SetUseChangedIndices(true);
-    }
-
-    // Если список колонок не задан — берём все колонки таблицы
-    const std::string& actualCols = cols.empty() ? getTCols(tname) : cols;
-
-    IRastrTablesPtr tablesx{ m_pqastra->getRastr()->Tables() };
-    IRastrTablePtr  table  { tablesx->Item(tname) };
-    IRastrResultVerify(table->DataBlock(actualCols, qdb, options));
-    spdlog::debug("[PERF] fill QDataBlock: {} ms", t.restart());
 }
 
 std::string RTablesDataAdapter::getTCols(const std::string& tname)

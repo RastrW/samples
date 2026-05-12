@@ -13,7 +13,9 @@ public:
         : Qtitan::GridEditorRepository()
         , m_nrd(nrd)
         , m_gridWidget(gridWidget)
-    {}
+    {
+        setAlignment(Qt::AlignLeft);
+    }
 
     Qtitan::GridEditor* createEditor() override;
 

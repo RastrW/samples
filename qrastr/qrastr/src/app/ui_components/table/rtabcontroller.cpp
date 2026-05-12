@@ -391,8 +391,7 @@ void RtabController::applyAllColumnEditors()
 
 void RtabController::applyColumnEditor(ModelIndex col)
 {
-    auto* column_qt = qobject_cast<Qtitan::GridTableColumn*>(
-        m_view->getColumnByModelColumn(col.value));
+    auto* column_qt = columnByModelIndex(col);
     if (!column_qt) return;
 
     const RCol* rcol = m_model->getRCol(col);
@@ -606,8 +605,11 @@ void RtabController::slot_endResetModel(const std::string& tname)
     m_view->beginUpdate();
     m_view->setModel(m_model.get());
     restoreColumnOrder(rdata);
-    restoreColumnVisibility(rdata);
+
+    if (!m_UIForm.Vertical())
+        setTableView(false);
     applyAllColumnEditors();
+    restoreColumnVisibility(rdata);
 
     m_view->endUpdate(); // layout строится один раз, только для видимых колонок
 
@@ -618,23 +620,38 @@ void RtabController::slot_endResetModel(const std::string& tname)
 
 void RtabController::restoreColumnOrder(const RData& rdata)
 {
-    VisualIndex maxVI{0};
-    for (const auto& [name, vi] : m_columnVisualOrder)
-        if (vi > maxVI) maxVI = vi;
+    const int totalCols = static_cast<int>(rdata.size());
 
-    for (int i = 0; i < static_cast<int>(rdata.size()); ++i) {
-        const ModelIndex col{i};
-        auto* gridCol = qobject_cast<Qtitan::GridTableColumn*>(
-            m_view->getColumnByModelColumn(col.value));
-        if (!gridCol) continue;
-        const RCol* rcol = rdata.colAt(col);
+    // Шаг 1: собрать все (name → желаемый VisualIndex) из сохранённого состояния,
+    // отфильтровав только те, что реально есть в новом rdata
+    std::vector<std::pair<ModelIndex /*modelIdx*/, int /*savedVI*/>> known;
+    std::vector<ModelIndex> unknown; // modelIdx без сохранённого порядка
+
+    for (int i = 0; i < totalCols; ++i) {
+        const RCol* rcol = rdata.colAt(ModelIndex{i});
         if (!rcol) continue;
         const QString qname = QString::fromStdString(rcol->getColName());
-        auto orderIt = m_columnVisualOrder.find(qname);
-        if (orderIt != m_columnVisualOrder.end())
-            gridCol->setVisualIndex(orderIt->second.value);
+        auto it = m_columnVisualOrder.find(qname);
+        if (it != m_columnVisualOrder.end())
+            known.push_back({ModelIndex{i}, it->second.value});
         else
-            gridCol->setVisualIndex((++maxVI).value);
+            unknown.push_back(ModelIndex{i});
+    }
+
+    // Шаг 2: нормализовать known — отсортировать по сохранённому VI,
+    // переназначить плотные индексы 0, 1, 2, ...
+    std::sort(known.begin(), known.end(),
+              [](const auto& a, const auto& b){ return a.second < b.second; });
+
+    int vi = 0;
+    for (const auto& [modelIdx, _] : known) {
+        auto* col = columnByModelIndex(modelIdx);
+        if (col) col->setVisualIndex(vi++);
+    }
+    // Шаг 3: новые колонки — в конец
+    for (const auto& modelIdx : unknown) {
+        auto* col = columnByModelIndex(modelIdx);
+        if (col) col->setVisualIndex(vi++);
     }
 }
 
@@ -643,8 +660,7 @@ void RtabController::restoreColumnVisibility(const RData& rdata)
     QElapsedTimer t; t.start();
     for (int i = 0; i < static_cast<int>(rdata.size()); ++i) {
         const ModelIndex col{i};
-        auto* gridCol = qobject_cast<Qtitan::GridTableColumn*>(
-            m_view->getColumnByModelColumn(col.value));
+        auto* gridCol = columnByModelIndex(col);
         if (!gridCol) continue;
         const RCol* rcol = rdata.colAt(col);
         if (!rcol) continue;
