@@ -735,6 +735,12 @@ const RData& RModel::getRdata() const{
     return *m_rdata;
 }
 
+std::vector<long>
+RModel::getRowsBySelection(const std::string& selection) const
+{
+    return m_tables->rowsBySelection(m_rdata->t_name_, selection);
+}
+
 bool RModel::isReady() const noexcept{
     return m_rdata != nullptr && m_rdata->isReady();
 }

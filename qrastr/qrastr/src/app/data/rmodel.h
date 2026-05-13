@@ -91,6 +91,7 @@ public:
     const ColumnEditorInfo&
         getColumnEditorInfo(ModelIndex colIndex) const;
     void invertDirectCode(ModelIndex col);
+    std::vector<long> getRowsBySelection(const std::string& selection) const;
 private:
     // ── Данные ───────────────────────────────────────────────────────────────
     std::shared_ptr<ITableRepository> m_tables;

@@ -29,11 +29,13 @@ public:
     void resetAfterModelReset();
 
     const std::string& currentSelection() const { return m_selection; }
-
 public slots:
     void slot_openSelection(ModelIndex col);
 private slots:
     void slot_setFiltrForSelection(std::string selection);
+    // Вызывается когда QTitan записал новое условие в историю.
+    // На этот момент filter()->condition() уже содержит новое встроенное условие.
+    void slot_onBuiltinFilterChanged();
 private:
     /// @brief Пересобирает общий фильтр (AND выборки + AND автофильтра) и
     ///        передаёт его в m_view->filter().
@@ -44,7 +46,12 @@ private:
     QWidget*               m_parentWidget;
     std::unique_ptr<AutoFilterWidget> m_autoFilter;
     std::unique_ptr<AutoFilterCondition> m_autoFilterCond;
-    Qtitan::GridFilterCondition* m_builtinCondition {nullptr};
+    // Клон последнего известного встроенного условия QTitan.
+    // Владеем им сами (delete при замене).
+    Qtitan::GridFilterCondition*      m_builtinCondition {nullptr};
+
+    // Защита от рекурсии: наш setCondition тоже триггерит history::changed
+    bool m_rebuildingFilter {false};
 
     std::string m_selection;        // Текущая выборка
 };

@@ -16,6 +16,62 @@ RTablesDataAdapter::RTablesDataAdapter(std::shared_ptr<QAstra> _pqastra) :
             this, &RTablesDataAdapter::slot_rastrHint);
 }
 
+ITableRepository::TableSchema
+RTablesDataAdapter::getSchema(const std::string& tname)
+{
+    TableSchema schema;
+    schema.name = tname;
+
+    IRastrTablesPtr  tablesx { m_pqastra->getRastr()->Tables() };
+    IRastrTablePtr   table   { tablesx->Item(tname) };
+    IRastrColumnsPtr columns { table->Columns() };
+
+    schema.title = IRastrPayload(table->Description()).Value();
+
+    const long count = IRastrPayload(columns->Count()).Value();
+    schema.columns.reserve(count);
+
+    auto prop = [&](IRastrColumnPtr& col, FieldProperties p) -> std::string {
+        return IRastrPayload(
+                   IRastrVariantPtr(col->Property(p))->String()
+                   ).Value();
+    };
+
+    for (long i = 0; i < count; ++i) {
+        IRastrColumnPtr col { columns->Item(i) };
+
+        ColumnSchema cs;
+        cs.tableName   = tname;
+        cs.index       = i;
+        cs.name        = IRastrPayload(col->Name()).Value();
+        cs.title       = prop(col, FieldProperties::Title);
+        cs.description = prop(col, FieldProperties::Description);
+        cs.unit        = prop(col, FieldProperties::Unit);
+        cs.width       = prop(col, FieldProperties::Width);
+        cs.prec        = prop(col, FieldProperties::Precision);
+        cs.expression  = prop(col, FieldProperties::Expression);
+        cs.nameRef     = prop(col, FieldProperties::NameRef);
+        cs.afor        = prop(col, FieldProperties::AFOR);
+        cs.ff          = prop(col, FieldProperties::IsActiveFormula);
+        cs.min         = prop(col, FieldProperties::Min);
+        cs.max         = prop(col, FieldProperties::Max);
+        cs.scale       = prop(col, FieldProperties::Scale);
+        cs.cache       = prop(col, FieldProperties::Cache);
+
+        try {
+            cs.comPropTT = static_cast<enComPropTT>(
+                std::stoi(prop(col, FieldProperties::Type)));
+        } catch (...) {
+            cs.comPropTT = enComPropTT::COM_PR_INT;
+            spdlog::warn("getSchema: не удалось разобрать Type для колонки {}", cs.name);
+        }
+
+        schema.columns.push_back(std::move(cs));
+    }
+
+    return schema;
+}
+
 std::shared_ptr<QDataBlock>
 RTablesDataAdapter::getBlock(const std::string& tname, const std::string& cols)
 {
@@ -125,29 +181,6 @@ void RTablesDataAdapter::getDynamicForms(std::vector<CUIForm>& out)
     }
 }
 
-void
-RTablesDataAdapter::slot_rastrHint(const _hint_data& hint_data)
-{
-    long row = hint_data.n_indx;
-    const auto&  cname = hint_data.str_column;
-    const auto&  tname = hint_data.str_table;
-
-    switch (hint_data.hint)
-    {
-    case EventHints::ChangeAll:    handleChangeAll();                    break;
-    case EventHints::ChangeTable:  handleChangeTable(tname);             break;
-    case EventHints::ChangeColumn: handleChangeColumn(tname, cname);     break;
-    case EventHints::ChangeRow:    handleChangeRow(tname, row);          break;
-    case EventHints::ChangeData:   handleChangeData(tname, cname, row);  break;
-    case EventHints::AddRow:       handleAddRow(tname, row);             break;
-    case EventHints::InsertRow:    handleInsertRow(tname, row);          break;
-    case EventHints::DeleteRow:    handleDeleteRow(tname, row);          break;
-    default:
-        spdlog::error("RTDA: unknown EventHint: {}", static_cast<int>(hint_data.hint));
-        break;
-    }
-}
-
 std::vector<long>
 RTablesDataAdapter::rowsBySelection(const std::string& tname,
                                     const std::string& selection)
@@ -252,6 +285,29 @@ RTablesDataAdapter::findCachedBlock(const std::string& tname){
     // Если таблица не кешируется (не была открыта) — ничего обновлять не нужно.
     auto it = mpTables.find(tname);
     return (it != mpTables.end()) ? it->second.get() : nullptr;
+}
+
+void
+RTablesDataAdapter::slot_rastrHint(const _hint_data& hint_data)
+{
+    long row = hint_data.n_indx;
+    const auto&  cname = hint_data.str_column;
+    const auto&  tname = hint_data.str_table;
+
+    switch (hint_data.hint)
+    {
+    case EventHints::ChangeAll:    handleChangeAll();                    break;
+    case EventHints::ChangeTable:  handleChangeTable(tname);             break;
+    case EventHints::ChangeColumn: handleChangeColumn(tname, cname);     break;
+    case EventHints::ChangeRow:    handleChangeRow(tname, row);          break;
+    case EventHints::ChangeData:   handleChangeData(tname, cname, row);  break;
+    case EventHints::AddRow:       handleAddRow(tname, row);             break;
+    case EventHints::InsertRow:    handleInsertRow(tname, row);          break;
+    case EventHints::DeleteRow:    handleDeleteRow(tname, row);          break;
+    default:
+        spdlog::error("RTDA: unknown EventHint: {}", static_cast<int>(hint_data.hint));
+        break;
+    }
 }
 
 void RTablesDataAdapter::handleChangeAll()
@@ -384,62 +440,6 @@ void RTablesDataAdapter::handleDeleteRow(const std::string& tname, long row)
     pqdb->DeleteRow(row);
     emit sig_EndRemoveRows(tname);
     emit sig_ReferenceChanged(tname);
-}
-
-ITableRepository::TableSchema
-RTablesDataAdapter::getSchema(const std::string& tname)
-{
-    TableSchema schema;
-    schema.name = tname;
-
-    IRastrTablesPtr  tablesx { m_pqastra->getRastr()->Tables() };
-    IRastrTablePtr   table   { tablesx->Item(tname) };
-    IRastrColumnsPtr columns { table->Columns() };
-
-    schema.title = IRastrPayload(table->Description()).Value();
-
-    const long count = IRastrPayload(columns->Count()).Value();
-    schema.columns.reserve(count);
-
-    auto prop = [&](IRastrColumnPtr& col, FieldProperties p) -> std::string {
-        return IRastrPayload(
-                   IRastrVariantPtr(col->Property(p))->String()
-                   ).Value();
-    };
-
-    for (long i = 0; i < count; ++i) {
-        IRastrColumnPtr col { columns->Item(i) };
-
-        ColumnSchema cs;
-        cs.tableName   = tname;
-        cs.index       = i;
-        cs.name        = IRastrPayload(col->Name()).Value();
-        cs.title       = prop(col, FieldProperties::Title);
-        cs.description = prop(col, FieldProperties::Description);
-        cs.unit        = prop(col, FieldProperties::Unit);
-        cs.width       = prop(col, FieldProperties::Width);
-        cs.prec        = prop(col, FieldProperties::Precision);
-        cs.expression  = prop(col, FieldProperties::Expression);
-        cs.nameRef     = prop(col, FieldProperties::NameRef);
-        cs.afor        = prop(col, FieldProperties::AFOR);
-        cs.ff          = prop(col, FieldProperties::IsActiveFormula);
-        cs.min         = prop(col, FieldProperties::Min);
-        cs.max         = prop(col, FieldProperties::Max);
-        cs.scale       = prop(col, FieldProperties::Scale);
-        cs.cache       = prop(col, FieldProperties::Cache);
-
-        try {
-            cs.comPropTT = static_cast<enComPropTT>(
-                std::stoi(prop(col, FieldProperties::Type)));
-        } catch (...) {
-            cs.comPropTT = enComPropTT::COM_PR_INT;
-            spdlog::warn("getSchema: не удалось разобрать Type для колонки {}", cs.name);
-        }
-
-        schema.columns.push_back(std::move(cs));
-    }
-
-    return schema;
 }
 
 void RTablesDataAdapter::setColumnProperty(const std::string& tname,

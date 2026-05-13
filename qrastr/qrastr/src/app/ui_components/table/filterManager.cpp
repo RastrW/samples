@@ -14,6 +14,17 @@ FilterManager::FilterManager(Qtitan::GridTableView* view, RModel* model,
     m_autoFilter     = std::make_unique<AutoFilterWidget>(m_view, nullptr);
     m_autoFilter->setVisible(false);
 
+    // Подписываемся на изменение истории фильтров QTitan.
+    // history::changed срабатывает когда встроенный фильтр (FilterDialog,
+    // FilterEditor) применяет новое условие через setCondition(..., true).
+    connect(m_view->filter()->history(), &Qtitan::GridFilterHistory::changed,
+            this, &FilterManager::slot_onBuiltinFilterChanged);
+
+    // Сигналы AutoFilterWidget → applyRule
+    connect(m_autoFilter.get(), &AutoFilterWidget::sig_filterChanged,
+            this, [this](int colIndex, const FilterRule& rule) {
+                applyRule(colIndex, rule);
+            });
 }
 
 void FilterManager::toggle(bool checked){
@@ -52,6 +63,24 @@ void FilterManager::resetAfterModelReset() {
     m_autoFilter->rebuild(); // пересоздаёт ячейки под новые колонки
 
     m_selection.clear();
+    m_builtinCondition = nullptr;
+    rebuildCombinedFilter();
+}
+
+void FilterManager::slot_onBuiltinFilterChanged()
+{
+    // Игнорируем, если это мы сами вызвали setCondition
+    if (m_rebuildingFilter)
+        return;
+
+    // Удаляем старый клон
+    delete m_builtinCondition;
+    m_builtinCondition = nullptr;
+
+    auto* current = m_view->filter()->condition();
+    if (current && current->conditionCount() > 0)
+        m_builtinCondition = current->clone();
+
     rebuildCombinedFilter();
 }
 
@@ -84,13 +113,26 @@ void FilterManager::rebuildCombinedFilter()
     if (hasBuiltin)
         group->addCondition(builtinCond->clone());
 
-    if (hasSelection) { /* … как раньше … */ }
+    if (hasSelection) {
+        // Обращаемся к модели — она сама знает имя таблицы и идёт через RTDA
+        const std::vector<long> indices =
+            m_model->getRowsBySelection(m_selection);
+        auto* selCond = new CustomFilterCondition(m_view->filter());
+        for (long idx : indices)
+            selCond->addRow(static_cast<int>(idx));
+        group->addCondition(selCond);
+    }
 
-    if (hasAutoFilter)
+    if (hasAutoFilter){
+        // clone() — QTitan владеет копией, мы сохраняем оригинал для изменений
         group->addCondition(m_autoFilterCond->clone());
+    }
 
-    m_view->filter()->setCondition(group, true);
+    // addToHistory = false — иначе это снова вызовет slot_onBuiltinFilterChanged
+    m_view->filter()->setCondition(group, /*addToHistory=*/false);
     m_view->filter()->setActive(true);
+
+    m_rebuildingFilter = false;
 }
 
 void FilterManager::slot_openSelection(ModelIndex col)
@@ -98,17 +140,16 @@ void FilterManager::slot_openSelection(ModelIndex col)
     const auto* prcol = m_model->getRCol(col);
     std::string colName = prcol ? prcol->getColName() : "";
 
-    auto* selectionDialog = new SelectionDialog(m_selection, colName, m_parentWidget);
-    selectionDialog->setAttribute(Qt::WA_DeleteOnClose);
+    auto* dlg = new SelectionDialog(m_selection, colName, m_parentWidget);
+    dlg->setAttribute(Qt::WA_DeleteOnClose);
 
-    connect(selectionDialog, &SelectionDialog::sig_selectionAccepted,
+    connect(dlg, &SelectionDialog::sig_selectionAccepted,
             this, &FilterManager::slot_setFiltrForSelection);
-
     // Закрываем диалог сразу после того, как пользователь принял выборку
-    connect(selectionDialog, &SelectionDialog::sig_selectionAccepted,
-            selectionDialog, &QDialog::close);
+    connect(dlg, &SelectionDialog::sig_selectionAccepted,
+            dlg, &QDialog::close);
 
-    selectionDialog->show();
+    dlg->show();
 }
 
 void FilterManager::slot_setFiltrForSelection(std::string selection){

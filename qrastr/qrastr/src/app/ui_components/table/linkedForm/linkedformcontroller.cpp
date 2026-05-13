@@ -186,7 +186,8 @@ void LinkedFormController::applyLinkedForm(LinkedForm lf)
     const std::string tname     = m_model->getRdata().t_name_;
     const std::string selection = lf.get_selection_result();
 
-    const std::vector<long> indices = m_tables->rowsBySelection(tname, selection);
+    const std::vector<long>
+        indices = m_tables->rowsBySelection(tname, selection);
 
     //Создаём CustomFilterCondition для QTitan Grid с этими индексами
     auto* groupCondition = new GridFilterGroupCondition(m_view->filter());
