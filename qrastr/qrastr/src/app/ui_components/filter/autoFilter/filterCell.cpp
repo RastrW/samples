@@ -5,6 +5,7 @@
 #include <QLineEdit>
 #include <QMenu>
 #include <QDoubleValidator>
+#include <QCheckBox>
 
 FilterCell::FilterCell(bool isNumeric, bool isBool, QWidget* parent)
     : QWidget(parent)
@@ -15,25 +16,33 @@ FilterCell::FilterCell(bool isNumeric, bool isBool, QWidget* parent)
     setSizePolicy(QSizePolicy::Ignored, QSizePolicy::Fixed);
 
     auto* lay = new QHBoxLayout(this);
-    // Убрали лишние отступы: был (1, 0, 1, 0) → (0, 0, 0, 0)
     lay->setContentsMargins(0, 0, 0, 0);
-    // Убрали spacing между кнопкой и полем: был 2 → 0
     lay->setSpacing(0);
 
-    m_opBtn = new QToolButton(this);
-    m_opBtn->setCursor(Qt::PointingHandCursor);
-    m_opBtn->setAutoRaise(false);
-    m_opBtn->setToolButtonStyle(Qt::ToolButtonTextOnly);
-    m_opBtn->setFixedHeight(kRowHeight - 2);
-    // Ширина будет устанавливаться динамически
     if (m_isBool) {
-        connect(m_opBtn, &QToolButton::clicked, this, &FilterCell::slotBoolCycle);
-    } else {
-        connect(m_opBtn, &QToolButton::clicked, this, &FilterCell::showOpMenu);
-    }
-    lay->addWidget(m_opBtn, 0);
+        // ── Трёхпозиционный чекбокс ──────────────────────────────────────
+        m_triCheck = new QCheckBox(this);
+        m_triCheck->setTristate(true);
+        // Промежуточное состояние = "показать все" (фильтр неактивен)
+        m_triCheck->setCheckState(Qt::PartiallyChecked);
+        m_triCheck->setFixedHeight(kRowHeight - 2);
+        m_triCheck->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Fixed);
+        // Без текстовой метки — размер минимален
+        m_triCheck->setText(QString());
+        lay->addWidget(m_triCheck);
 
-    if (!m_isBool) {
+        connect(m_triCheck, &QCheckBox::stateChanged,
+                this, &FilterCell::slotTriStateChanged);
+    } else {
+        // ── Кнопка оператора + поле ввода ────────────────────────────────
+        m_opBtn = new QToolButton(this);
+        m_opBtn->setCursor(Qt::PointingHandCursor);
+        m_opBtn->setAutoRaise(false);
+        m_opBtn->setToolButtonStyle(Qt::ToolButtonTextOnly);
+        m_opBtn->setFixedHeight(kRowHeight - 2);
+        connect(m_opBtn, &QToolButton::clicked, this, &FilterCell::showOpMenu);
+        lay->addWidget(m_opBtn, 0);
+
         m_edit = new QLineEdit(this);
         m_edit->setFrame(false);
         m_edit->setFixedHeight(kRowHeight - 2);
@@ -48,8 +57,9 @@ FilterCell::FilterCell(bool isNumeric, bool isBool, QWidget* parent)
 
         connect(m_edit, &QLineEdit::textChanged,
                 this, &FilterCell::slotTextChanged);
-
         lay->addWidget(m_edit, 1);
+
+        m_rule.op = FilterRule::Op::Eq;
     }
 
     setStyleSheet(
@@ -64,7 +74,7 @@ FilterCell::FilterCell(bool isNumeric, bool isBool, QWidget* parent)
         "  border: 1px solid palette(highlight);"
         "}"
         "QLineEdit {"
-        "  border: 1px solid palette(mid);"      // Добавили видимую границу
+        "  border: 1px solid palette(mid);" // видимая граница
         "  border-radius: 2px;"
         "  background: palette(base);"
         "  padding: 0 3px;"
@@ -75,9 +85,6 @@ FilterCell::FilterCell(bool isNumeric, bool isBool, QWidget* parent)
         "}"
         );
 
-    if (!m_isBool) {
-        m_rule.op = FilterRule::Op::Eq;
-    }
     updateUi();
 }
 
@@ -87,11 +94,17 @@ void FilterCell::setRule(const FilterRule& rule)
 {
     m_rule = rule;
 
+    if (m_triCheck) {
+        QSignalBlocker blk(m_triCheck);
+        if (!rule.isActive())
+            m_triCheck->setCheckState(Qt::PartiallyChecked);
+        else
+            m_triCheck->setCheckState(rule.boolValue ? Qt::Checked : Qt::Unchecked);
+    }
     if (m_edit) {
         QSignalBlocker blk(m_edit);
         m_edit->setText(rule.value);
     }
-
     updateUi();
 }
 
@@ -101,6 +114,10 @@ void FilterCell::clear()
     if (m_edit) {
         QSignalBlocker blk(m_edit);
         m_edit->clear();
+    }
+    if (m_triCheck) {
+        QSignalBlocker blk(m_triCheck);
+        m_triCheck->setCheckState(Qt::PartiallyChecked);
     }
     updateUi();
     emit sig_filterChanged(m_rule);
@@ -153,23 +170,16 @@ QString FilterCell::opText(FilterRule::Op op) const
 
 void FilterCell::updateUi()
 {
+    // Для bool — всё управление через m_triCheck, m_opBtn не используется
+    if (m_isBool)
+        return;
+
     if (!m_opBtn)
         return;
 
-    if (m_isBool) {
-        if (!m_rule.isActive()) {
-            m_opBtn->setText(QStringLiteral("bool"));
-        }
-        else {
-            m_opBtn->setText(m_rule.boolValue ? QStringLiteral("true")
-                                              : QStringLiteral("false"));
-        }
-    }
-    else {
-        m_opBtn->setText(opText(m_rule.op));
-        if (m_edit && m_edit->placeholderText() != m_placeholder)
-            m_edit->setPlaceholderText(m_placeholder);
-    }
+    m_opBtn->setText(opText(m_rule.op));
+    if (m_edit && m_edit->placeholderText() != m_placeholder)
+        m_edit->setPlaceholderText(m_placeholder);
 }
 
 void FilterCell::applyRule(const FilterRule& rule, bool emitSignal)
@@ -200,6 +210,31 @@ void FilterCell::applyRule(const FilterRule& rule, bool emitSignal)
 
     if (emitSignal)
         emit sig_filterChanged(m_rule);
+}
+
+void FilterCell::slotTriStateChanged(int state)
+{
+    FilterRule r{};
+    switch (state) {
+    case Qt::Checked:          // галочка = только true
+        r.op        = FilterRule::Op::Eq;
+        r.isBool    = true;
+        r.boolValue = true;
+        r.value     = QStringLiteral("1");
+        break;
+    case Qt::Unchecked:        // пустая = только false
+        r.op        = FilterRule::Op::Eq;
+        r.isBool    = true;
+        r.boolValue = false;
+        r.value     = QStringLiteral("0");
+        break;
+    case Qt::PartiallyChecked: // промежуточное = показать все
+    default:
+        // r остаётся default FilterRule{} — неактивное
+        break;
+    }
+    m_rule = r;
+    emit sig_filterChanged(m_rule);
 }
 
 void FilterCell::slotBoolCycle()
@@ -349,7 +384,9 @@ void FilterCell::showOpMenu()
 void FilterCell::resizeEvent(QResizeEvent* event)
 {
     QWidget::resizeEvent(event);
-    updateButtonWidth();
+    if (!m_isBool)
+        updateButtonWidth();
+    // Для bool QCheckBox растягивается сам через layout
 }
 
 void FilterCell::updateButtonWidth()
