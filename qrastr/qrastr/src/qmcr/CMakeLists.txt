@@ -53,7 +53,7 @@ message(STATUS "  LEXILLA_DIR: ${LEXILLA_DIR}")
 # ============================================================================
 # Project Sources
 # ============================================================================
-set(TS_FILES qmcr_ru_RU.ts)
+#set(TS_FILES qmcr_ru_RU.ts)
 
 set(PROJECT_SOURCES
     sciHlpBase.h
@@ -64,7 +64,7 @@ set(PROJECT_SOURCES
     sciLogViewer.cpp
     mcrwnd.h
     mcrwnd.cpp
-    ${TS_FILES}
+   # ${TS_FILES}
     forms/dlgfindrepl.h
     forms/dlgfindrepl.cpp
     pyhlp.h
@@ -94,14 +94,14 @@ if(${QT_VERSION_MAJOR} GREATER_EQUAL 6)
     else()
         qt_add_executable(qmcr MANUAL_FINALIZATION ${PROJECT_SOURCES})
     endif()
-    qt_create_translation(QM_FILES ${CMAKE_SOURCE_DIR} ${TS_FILES})
+   # qt_create_translation(QM_FILES ${CMAKE_SOURCE_DIR} ${TS_FILES})
 else()
     if(QRASTR_BUILD_WITH_MCR)
         add_library(qmcr SHARED ${PROJECT_SOURCES})
     else()
         add_executable(qmcr ${PROJECT_SOURCES})
     endif()
-    qt5_create_translation(QM_FILES ${CMAKE_SOURCE_DIR} ${TS_FILES})
+    #qt5_create_translation(QM_FILES ${CMAKE_SOURCE_DIR} ${TS_FILES})
 endif()
 # ============================================================================
 # Include Directories
