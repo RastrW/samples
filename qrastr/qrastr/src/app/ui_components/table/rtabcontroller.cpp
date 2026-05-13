@@ -687,7 +687,15 @@ void RtabController::slot_openColProp(ModelIndex col)
     const auto schema_full = m_tables->getSchema(m_UIForm.TableName());
     if (!col.valid_in(schema_full.columns.size())) return;
 
-    const auto& colSchema = schema_full.columns[col.to_size()];
+    const RCol* rcol = m_model->getRCol(col);
+    if (!rcol) return;
+
+    const auto it = std::find_if(
+        schema_full.columns.begin(), schema_full.columns.end(),
+        [&](const auto& cs){ return cs.name == rcol->getColName(); });
+
+    if (it == schema_full.columns.end()) return;
+    const auto& colSchema = *it;
 
     auto* dlg = new ColPropDialog(m_tables, colSchema, m_view, m_grid);
     dlg->setAttribute(Qt::WA_DeleteOnClose);

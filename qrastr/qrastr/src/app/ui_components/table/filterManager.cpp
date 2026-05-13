@@ -26,6 +26,7 @@ FilterManager::FilterManager(Qtitan::GridTableView* view, RModel* model,
                 applyRule(colIndex, rule);
             });
 }
+FilterManager::~FilterManager() = default;
 
 void FilterManager::toggle(bool checked){
 

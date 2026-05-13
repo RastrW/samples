@@ -1,5 +1,6 @@
 #pragma once
 #include <QObject>
+#include <memory>
 #include "table/tableIndexTypes.h"
 
 class RModel;
@@ -15,6 +16,7 @@ class FilterManager : public QObject
 public:
     explicit FilterManager(Qtitan::GridTableView* view, RModel* model,
                            QWidget* parentWidget);
+    ~FilterManager();
 
     /// Виджет строки фильтра — добавляется во внешний layout.
     AutoFilterWidget* widget() const { return m_autoFilter.get(); }

@@ -93,7 +93,6 @@ RTablesDataAdapter::getBlock(const std::string& tname, const std::string& cols)
 
     auto [it, inserted] = mpTables.emplace(tname, nullptr);
     if (inserted) {
-
         it->second = std::make_shared<QDataBlock>();
         fillBlock(tname, *it->second, cols);
         spdlog::info("RTDA: add Table {}", tname.c_str());
@@ -121,13 +120,13 @@ void RTablesDataAdapter::ensureColumn(const std::string& tname,
 void RTablesDataAdapter::fillBlock(const std::string& tname,
                                    QDataBlock& qdb,
                                    const std::string& cols,
-                                   std::optional<FieldDataOptions> opts)
+                                   const std::optional<FieldDataOptions>& opts)
 {
     QElapsedTimer t; t.start();
     // Дефолтные опции
     FieldDataOptions options;
-    if (opts.has_value()) {
-        options = opts.value();
+    if (opts) {
+        options = *opts;
     } else {
         options.SetEnumAsInt(TriBool::True);
         options.SetSuperEnumAsInt(TriBool::True);
@@ -337,7 +336,7 @@ void RTablesDataAdapter::handleChangeTable(const std::string& tname){
 void RTablesDataAdapter::handleChangeColumn(const std::string& tname,
                                             const std::string& cname)
 {
-    spdlog::debug("handleChangeRow tname={} cname={}", tname, cname);
+    spdlog::debug("handleChangeColumn tname={} cname={}", tname, cname);
     QDataBlock* pqdb = findCachedBlock(tname);
     if (!pqdb) return;
 
@@ -369,8 +368,14 @@ void RTablesDataAdapter::handleChangeRow(const std::string& tname, long row)
     fillBlock(tname, rowBlock, loadedCols);
     // Копируем только нужную строку
     const int ncols = static_cast<int>(pqdb->ColumnsCount());
-    for (int li = 0; li < ncols; ++li)     // li — LocalIndex (итерация по блоку)
-        pqdb->Set(row, li, rowBlock.Get(row, li));
+    for (int li = 0; li < ncols; ++li) {
+        // имя по локальному индексу в кеше
+        const std::string name = pqdb->columnName(li);
+         // ← индекс в rowBlock
+        const long srcLi = rowBlock.localColumnIndex(name);
+        if (srcLi < 0) continue;
+        pqdb->Set(row, li, rowBlock.Get(row, srcLi));
+    }
 
     // Пустые строки = "все колонки" — RModel интерпретирует сам
     emit sig_dataChanged(tname,
@@ -556,13 +561,13 @@ void RTablesDataAdapter::reloadBlock(const std::string& tname,
                                      std::shared_ptr<QDataBlock>& block)
 {
     // что было загружено
-    const std::string prevCols = block->Columns();
+    const std::string loadedCols = block->Columns();
     emit sig_BeginResetModel(tname);
     block->Clear();
     // Перезагружаем данные И структуру
-    if (!prevCols.empty()){
+    if (!loadedCols.empty()){
          // только то же самое
-        fillBlock(tname, *block, prevCols);
+        fillBlock(tname, *block, loadedCols);
     }
     emit sig_EndResetModel(tname);
 }

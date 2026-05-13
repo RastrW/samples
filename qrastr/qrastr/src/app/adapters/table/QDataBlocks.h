@@ -287,7 +287,7 @@ public :
     void QDump(long LimitRows = (std::numeric_limits<long>::max)() , long LimitCols = (std::numeric_limits<long>::max)())
     {
         // Нам в дампере пригодится возможность показывать тип
-        spdlog::debug("DataBlock dense [{}] x ", this->RowsCount(), this->ColumnsCount());
+        spdlog::debug("DataBlock dense [{},{}]", this->RowsCount(), this->ColumnsCount());
         if (this->Indexes_.size())
             spdlog::debug("#;");
         spdlog::debug("LimitRows = {}", LimitRows);
@@ -302,7 +302,7 @@ public :
             str_columns.append(";");
         }
 
-        spdlog::debug(str_columns.c_str());
+        spdlog::debug(str_columns);
 
         // Функции преобразования в строки я использую готовые
         for (IndexT row = 0; row < this->RowsCount() && row < LimitRows; row++)
@@ -316,7 +316,7 @@ public :
 
                 str_row_vals.append(std::visit(ToString(),this->Data()[row * this->ColumnsCount() + column]));
             }
-            spdlog::debug(str_row_vals.c_str());
+            spdlog::debug(str_row_vals);
         }
     }
 
@@ -478,6 +478,11 @@ public :
             if (this->Columns_[i] == name)
                 return static_cast<long>(i);
         return -1;
+    }
+    std::string columnName(IndexT li) const noexcept {
+        if (li < 0 || static_cast<size_t>(li) >= this->Columns_.size())
+            return {};
+        return this->Columns_[li];
     }
 };
 

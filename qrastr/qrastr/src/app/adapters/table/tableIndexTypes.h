@@ -1,5 +1,5 @@
 #pragma once
-
+#include <cstddef>
 /**
  * Сильные типы для пространств индексов таблицы Rastr.
  *
@@ -83,10 +83,6 @@ struct StrongIndex {
 
     constexpr bool valid()   const noexcept { return value >= 0; }
     constexpr bool invalid() const noexcept { return value <  0; }
-    // Проверка на валидность относительно размера контейнера
-    constexpr bool valid_in(T size) const noexcept {
-        return valid() && value < size;
-    }
     // Проверка с автоматическим приведением size_t (без warnings)
     constexpr bool valid_in(size_t container_size) const noexcept {
         return valid() && static_cast<size_t>(value) < container_size;
@@ -106,12 +102,6 @@ struct StrongIndex {
     constexpr StrongIndex  operator++(int) noexcept { auto tmp = *this; ++value; return tmp; }
     constexpr StrongIndex& operator--() noexcept { --value; return *this; }
     constexpr StrongIndex  operator--(int) noexcept { auto tmp = *this; --value; return tmp; }
-
-    constexpr StrongIndex operator+(T offset) const noexcept { return StrongIndex(value + offset); }
-    constexpr StrongIndex operator-(T offset) const noexcept { return StrongIndex(value - offset); }
-
-    constexpr StrongIndex& operator+=(T offset) noexcept { value += offset; return *this; }
-    constexpr StrongIndex& operator-=(T offset) noexcept { value -= offset; return *this; }
 };
 
 struct AstraIndexTag{};
