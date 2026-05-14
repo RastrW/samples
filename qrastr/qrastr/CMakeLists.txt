@@ -164,7 +164,9 @@ if(NOT QT_DIR)
     message(FATAL_ERROR "QT_DIR must be set in CMakePresets.json")
 endif()
 
-list(APPEND CMAKE_PREFIX_PATH "${QT_DIR}")
+if(NOT Qt5_DIR AND NOT QT_DIR)
+    message(FATAL_ERROR "Задайте Qt5_DIR или QT_DIR в CMakePresets.json")
+endif()
 
 if(WIN32)
     find_package(Qt6 REQUIRED CONFIG COMPONENTS Core)

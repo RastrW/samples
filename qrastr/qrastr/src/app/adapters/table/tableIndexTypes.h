@@ -1,5 +1,6 @@
 #pragma once
 #include <cstddef>
+
 /**
  * Сильные типы для пространств индексов таблицы Rastr.
  *
