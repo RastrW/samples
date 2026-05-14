@@ -41,8 +41,6 @@ bool FileManager::newFile() {
             return false;
         }
     }
-    // Новый файл - сбрасываем текущий путь
-    m_currentFile.clear();
     return true;
 }
 
@@ -135,21 +133,35 @@ bool FileManager::openFile(const QString& filePath, const QString& templatePath)
 }
 
 bool FileManager::save() {
-    if (m_currentFile.isEmpty())
+    if (m_loadedFiles.empty())
         return saveAs();
 
-    const std::string stdPath = m_currentFile.toStdString();
-    if (!m_fileOps->Save(stdPath, "")) {
-        const QString err = QString("Save failed: %1 — %2")
-                                .arg(m_currentFile, QString::fromStdString(m_fileOps->lastError()));
-        spdlog::error("{}", err.toStdString());
-        emit sig_fileLoadError(err);
-        return false;
-    }
+    bool allOk = true;
+    for (const auto& [templateKey, filePath] : m_loadedFiles) {
+        if (filePath.isEmpty())
+            continue;
 
-    spdlog::info("File saved: {}", stdPath);
-    emit sig_fileSaved(m_currentFile);
-    return true;
+        const std::string sfile  = filePath.toStdString();
+        const std::string sshabl = templateKey.isEmpty()
+                                       ? ""
+                                       : RastrParameters::get_instance()
+                                             ->getDirSHABLON()
+                                             .filePath(templateKey)
+                                             .toStdString();
+
+        if (!m_fileOps->Save(sfile, sshabl)) {
+            const QString err = QString("Save failed: %1 — %2")
+                                    .arg(filePath,
+                                         QString::fromStdString(m_fileOps->lastError()));
+            spdlog::error("{}", err.toStdString());
+            emit sig_fileLoadError(err);
+            allOk = false;
+        } else {
+            spdlog::info("File saved: {}", sfile);
+            emit sig_fileSaved(filePath);
+        }
+    }
+    return allOk;
 }
 
 bool FileManager::saveAs() {
@@ -187,17 +199,15 @@ bool FileManager::saveAll() {
 
     auto* dialog = new SaveAllDialog(m_fileOps, m_loadedFiles, m_parentWidget);
     dialog->setAttribute(Qt::WA_DeleteOnClose);
-    dialog->show();
+    dialog->exec();
     return true;
 }
 
 void FileManager::setCurrentFile(const QString& fileName,
                                  const QString& templatePath) {
-    // Обновляем текущий файл и директорию
-    m_currentFile               = fileName;
-    m_currentDir                = QFileInfo(fileName).absolutePath();
-    m_loadedFiles[templatePath] = fileName;
-    // Добавляем в недавние
+    const QString templateKey  = QFileInfo(templatePath).fileName();
+    m_loadedFiles[templateKey] = fileName;
+
     m_recentFiles.add(fileName, templatePath);
     emit sig_currentFileChanged(fileName);
     emit sig_fileOpened(fileName);
@@ -223,11 +233,8 @@ void FileManager::openRecentFile(const QString& filePath,
 
 void FileManager::registerStartupFile(const QString& fileName,
                                       const QString& templatePath) {
-    m_loadedFiles[templatePath] = fileName;
-    if (m_currentFile.isEmpty()) {
-        m_currentFile = fileName;
-        m_currentDir  = QFileInfo(fileName).absolutePath();
-    }
+    const QString templateKey  = QFileInfo(templatePath).fileName();
+    m_loadedFiles[templateKey] = fileName;
 }
 
 bool FileManager::showOpenDialog(QStringList& selectedFiles, QString& selectedFilter){
@@ -235,8 +242,10 @@ bool FileManager::showOpenDialog(QStringList& selectedFiles, QString& selectedFi
     QFileDialog dlg(m_parentWidget, tr("Open Rastr files"));
     dlg.setFileMode(QFileDialog::ExistingFiles);
     dlg.setNameFilter(buildFileFilter());
-    if (!m_currentDir.isEmpty())
-        dlg.setDirectory(m_currentDir);
+
+    const QString dir = currentDirectory();
+    if (!dir.isEmpty())
+        dlg.setDirectory(dir);
 
     if (dlg.exec() != QDialog::Accepted)
         return false;
@@ -253,8 +262,9 @@ QString FileManager::showSaveDialog() {
     dlg.setNameFilter(buildFileFilter());
     dlg.selectNameFilter("режим (*.rg2)");
     dlg.setFileMode(QFileDialog::AnyFile);
-    if (!m_currentDir.isEmpty())
-        dlg.setDirectory(m_currentDir);
+    const QString dir = currentDirectory();
+    if (!dir.isEmpty())
+        dlg.setDirectory(dir);
 
     if (dlg.exec() != QDialog::Accepted)
         return {};
@@ -300,4 +310,11 @@ bool FileManager::showNewFileDialog(QStringList& selectedTemplates) {
         selectedTemplates.append(QString::fromStdString(name));
 
     return !selectedTemplates.isEmpty();
+}
+
+QString FileManager::currentDirectory() const {
+    if (m_loadedFiles.empty())
+        return {};
+    // Берём путь любого файла из map — все в одной директории как правило
+    return QFileInfo(m_loadedFiles.begin()->second).absolutePath();
 }

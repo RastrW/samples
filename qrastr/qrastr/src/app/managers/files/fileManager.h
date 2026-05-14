@@ -34,21 +34,16 @@ public:
      */
     bool openFile(const QString& filePath,
                   const QString& templatePath = "");
-    /// @brief Сохранить текущий файл
-    bool save();
     /// @brief Сохранить файл с новым именем
     bool saveAs();
-    /**
-     * @brief Сохранить все загруженные файлы
-     * @note Передаёт m_loadedFiles в formsaveall
-     */
+    /// @brief Сохранить все загруженные файлы без диалога
+    bool save();
+    /// @brief Сохранить все загруженные файлы через диалог выбора
     bool saveAll();
     
     // ========== Управление загруженными файлами ==========
-    /// @brief Получить текущий активный файл
-    QString currentFile() const { return m_currentFile; }
     /// @brief Получить текущую директорию
-    QString currentDirectory() const { return m_currentDir; }
+    QString currentDirectory() const;
     /**
      * @brief Получить карту ВСЕХ загруженных файлов
      * @return map<template, file>
@@ -85,9 +80,9 @@ private:
     QWidget* m_parentWidget;
     
     // ========== Состояние файлов ==========
-    QString m_currentFile;
-    QString m_currentDir;
-    std::unordered_map<QString, QString> m_loadedFiles; // key=templatePath, value=filePath
+    std::unordered_map<QString, QString> m_loadedFiles;        // key=templatePath, value=filePath (стартовые)
+    std::unordered_map<QString, QString> m_userLoadedFiles;    // key=templatePath, value=filePath (открытые пользователем)
+
     RecentFilesManager               m_recentFiles;
     // ========== Вспомогательные методы ==========
     /**
