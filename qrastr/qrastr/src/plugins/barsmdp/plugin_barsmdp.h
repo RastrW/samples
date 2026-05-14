@@ -1,5 +1,3 @@
-#ifndef PLUGIN_BARSMDP_H
-#define PLUGIN_BARSMDP_H
 #pragma once
 
 #include <QObject>
@@ -17,6 +15,3 @@ public:
     virtual void setLoggerPtr(std::shared_ptr<spdlog::logger> spLoger) override;
     virtual std::shared_ptr<IPlainBarsMDP> getIPlainBarsMDPPtr() override;
 };
-
-#endif // PLUGIN_BARSMDP_H
-

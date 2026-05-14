@@ -1,9 +1,7 @@
 #pragma once
-#include <memory>
 #include <QObject>
 #include <QSettings>
 
-class QAstra;
 class QMainWindow;
 
 /// @class Менеджер настроек
@@ -20,7 +18,7 @@ public:
     bool saveAppearanceSettings(QMainWindow* window);
     // ========== Настройки форм ==========
     /// @brief Показать диалог настроек форм
-    void showFormSettings(std::shared_ptr<QAstra> qastra); 
+    void showFormSettings();
     QByteArray getSettings(const QString& name);
 
     QSettings* settings() { return &m_settings; }

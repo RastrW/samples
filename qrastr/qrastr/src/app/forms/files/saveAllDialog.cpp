@@ -6,12 +6,14 @@
 #include <QDialogButtonBox>
 #include <QVBoxLayout>
 #include <QCheckBox>
-#include "qastra.h"
+#include "files/IFileOperations.h"
 
-SaveAllDialog::SaveAllDialog(QAstra* pqastra, std::map<QString,QString> _mFilesLoad, QWidget *parent)
-    : CheckboxListDialog(static_cast<int>(_cols::save), parent),
-    m_pqastra(pqastra),
-    m_FilesLoad(_mFilesLoad)
+SaveAllDialog::SaveAllDialog(std::shared_ptr<IFileOperations> fileOps,
+                             std::unordered_map<QString,QString> filesLoad,
+                             QWidget *parent)
+    : CheckboxListDialog(static_cast<int>(_cols::save), parent)
+    , m_fileOps(fileOps)
+    , m_FilesLoad(filesLoad)
 {
     setWindowTitle(tr("Сохранение файлов"));
     setWindowModality(Qt::ApplicationModal);
@@ -95,12 +97,12 @@ void SaveAllDialog::slot_buttonBoxAccepted()
             QFileInfo qshablinfo;
             qshablinfo.setFile(m_dirShabl, ptwi_shabl->text());
 
-            std::string sfile  = qfileinfo.absoluteFilePath().toStdString().c_str();
+            std::string sfile  = qfileinfo.absoluteFilePath().toStdString();
             std::string sshabl = qshablinfo.isFile()
-                                     ? qshablinfo.absoluteFilePath().toStdString().c_str()
+                                     ? qshablinfo.absoluteFilePath().toStdString()
                                      : "";
 
-            m_pqastra->Save(sfile, sshabl);
+            m_fileOps->Save(sfile, sshabl);
         }
     }
 }

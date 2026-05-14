@@ -1,5 +1,6 @@
 #pragma once
 #include <QObject>
+#include "rtabcontroller.h"
 
 class RCol;
 class LinkedFormController;
@@ -10,9 +11,9 @@ namespace Qtitan{ class GridTableView; }
 
 /// Контекст одного показа меню.
 struct MenuContext {
-    int   column = -1;
+    ModelIndex column;
     int   row    = -1;
-    RCol* col    = nullptr;   ///< указатель действителен на время показа меню
+    const RCol* col    = nullptr;   ///< указатель действителен на время показа меню
 };
 
 class ContextMenuBuilder : public QObject
@@ -21,33 +22,32 @@ class ContextMenuBuilder : public QObject
 public:
     explicit ContextMenuBuilder(Qtitan::GridTableView*   view,
                                 LinkedFormController*    linkedFormCtrl,
+                                const RtabController::CommonTableActions& actions,
                                 QObject*                 parent = nullptr);
 
+    QAction* actionExport() const { return m_actExport; }
+    QAction* actionImport() const { return m_actImport; }
+
     /// Строит персистентный QMenu и все статичные QAction.
-    void initMenu(QWidget* menuParent);
+    void initMenu(QWidget* menuParent, bool isVertical);
     /// Меню ячейки: строковые операции, экспорт/импорт, выборка, связанные формы.
     void prepareForShow(const MenuContext& ctx, QMenu* qtitanMenu);
 
     /// Меню заголовка колонки: описание, сумма, выравнивание, CF, прямой ввод.
     /// @param col  указатель на RCol (действителен на время показа меню)
-    void prepareForHeader(int column, RCol* col, QMenu* menu);
+    void prepareForHeader(ModelIndex column, const RCol* col, QMenu* menu);
 signals:
     // Сигналы для операций со строками
-    void sig_addRow();
-    void sig_insertRow();
-    void sig_deleteRow();
-    void sig_duplicateRow();
-    void sig_groupCorrection();
-    void sig_selection(int col);
+    void sig_selection(ModelIndex col);
     // Сигналы для вспомогательных форм
-    void sig_colProp(int col);
+    void sig_colProp(ModelIndex col);
     void sig_exportCsv();
     void sig_importCsv();
     // Настройка отображения
     void sig_widthByTemplate();
     void sig_widthByData();
-    void sig_directCodeToggle(int col);
-    void sig_condFormatsEdit(int col);
+    void sig_directCodeToggle(ModelIndex col);
+    void sig_condFormatsEdit(ModelIndex col);
 
 private:
     /// Удаляет из menu нежелательные встроенные пункты Qtitan.
@@ -71,11 +71,6 @@ private:
     QMenu*   m_linkedMacrosMenu = nullptr;
 
     // Статические экшны
-    QAction* m_actInsert    = nullptr;
-    QAction* m_actAdd       = nullptr;
-    QAction* m_actDuplicate = nullptr;
-    QAction* m_actDelete    = nullptr;
-    QAction* m_actGroup     = nullptr;
     QAction* m_actTmpl      = nullptr;
     QAction* m_actData      = nullptr;
     QAction* m_actExport    = nullptr;
@@ -83,5 +78,7 @@ private:
     QAction* m_actSel       = nullptr;
     QAction* m_actCF        = nullptr;
     // ── Хранители для отсоединения сигналов ────────────────────────────
-    int      m_currentCol = -1;   ///< col при последнем вызове prepareForShow
+    ModelIndex m_currentCol;   ///< col при последнем вызове prepareForShow
+
+    RtabController::CommonTableActions m_comTabAct;
 };

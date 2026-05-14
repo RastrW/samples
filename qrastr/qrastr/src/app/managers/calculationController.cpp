@@ -1,7 +1,8 @@
 #include "calculationController.h"
-#include "qastra.h"
-#include "qti.h"
-#include "qbarsmdp.h"
+#include "calculation/ICalculationEngine.h"
+#include "ti/ITIEngine.h"
+#include "bars/IBarsMDPEngine.h"
+#include "pgdriver/IPGDriverEngine.h"
 #include <QTimer>
 #include <spdlog/spdlog.h>
 #include <ctime>
@@ -15,23 +16,25 @@ KzParameters::KzParameters()
 {}
 
 CalculationController::CalculationController(
-    std::shared_ptr<QAstra> qastra,
-    std::shared_ptr<QTI> qti,
-    std::shared_ptr<QBarsMDP> qbarsmdp,
+    std::shared_ptr<ICalculationEngine> calcEngine,
+    std::shared_ptr<ITIEngine>          ti,
+    std::shared_ptr<IBarsMDPEngine>     barsMDP,
+    std::shared_ptr<IPGDriverEngine>    PGDriver,
     QObject* parent
 )
     : QObject(parent)
-    , m_qastra(qastra)
-    , m_qti(qti)
-    , m_qbarsmdp(qbarsmdp)
+    , m_calcEngine(calcEngine)
+    , m_qti(ti)
+    , m_qbarsmdp(barsMDP)
+    , m_qpgdriver(PGDriver)
 {
-    assert(m_qastra != nullptr);
+    assert(m_calcEngine != nullptr);
 }
 
 void CalculationController::executeRgm(const QString& parameters) {
     beginCalculation("RGM");
     
-    eASTCode code = m_qastra->Rgm(parameters.toStdString());
+    eASTCode code = m_calcEngine->Rgm(parameters.toStdString());
     
     std::string str_msg;
     bool success = false;
@@ -50,7 +53,7 @@ void CalculationController::executeRgm(const QString& parameters) {
 void CalculationController::executeKdd(const QString& parameters) {
     beginCalculation("KDD");
     
-    eASTCode code = m_qastra->Kdd(parameters.toStdString());
+    eASTCode code = m_calcEngine->Kdd(parameters.toStdString());
     
     std::string str_msg;
     bool success = false;
@@ -69,7 +72,7 @@ void CalculationController::executeKdd(const QString& parameters) {
 void CalculationController::executeOPF(const QString& parameters) {
     beginCalculation("OPF");
     
-    eASTCode code = m_qastra->Opf(parameters.toStdString());
+    eASTCode code = m_calcEngine->Opf(parameters.toStdString());
     
     std::string str_msg;
     bool success = false;
@@ -96,7 +99,7 @@ void CalculationController::executeSMZUtst(const QString& parameters) {
         params = QString::number(ptm_now->tm_mday);
     }
     
-    eASTCode code = m_qastra->SMZU(params.toStdString());
+    eASTCode code = m_calcEngine->SMZU(params.toStdString());
     
     std::string str_msg;
     bool success = false;
@@ -109,21 +112,13 @@ void CalculationController::executeSMZUtst(const QString& parameters) {
         success = false;
     }
     
-    // Дополнительное логирование в Rastr
-    _log_data log_data;
-    log_data.lmt = success ? LogMessageTypes::Info : LogMessageTypes::Error;
-    log_data.str_msg = str_msg;
-    log_data.n_indx = -1;
-    log_data.n_stage_id = -1;
-    m_qastra->onRastrLog(log_data);
-    
     endCalculation(success, QString::fromStdString(str_msg));
 }
 
 void CalculationController::executeTkz(const KzParameters& params) {
     beginCalculation("KZ");
     
-    const eASTCode code = m_qastra->Kz(
+    const eASTCode code = m_calcEngine->Kz(
         params.parameters.toStdString(),
         params.nonsym,
         params.p1, params.p2, params.p3,
@@ -263,7 +258,7 @@ void CalculationController::filtrTI() {
     endCalculation(success, QString::fromStdString(str_msg));
 }
 
-void CalculationController::prepareBarsMDP(const QString& sections) {
+void CalculationController::prepareBarsMDP( const QString& sections) {
     if (!checkBarsMDPAvailable()) {
         return;
     }
@@ -282,7 +277,7 @@ void CalculationController::prepareBarsMDP(const QString& sections) {
     bool success = true;
     
     try {
-        m_qbarsmdp->Init(sections.toStdString().c_str());
+        m_qbarsmdp->Init(sections.toStdString());
         m_qbarsmdp->UpdateMDPFields();
         m_qbarsmdp->UpdateAUTOFields();
         
@@ -302,6 +297,94 @@ void CalculationController::prepareBarsMDP(const QString& sections) {
     
     endCalculation(success, QString::fromStdString(str_msg));
 }
+
+void CalculationController::PG_All_R2SQL() {
+    if (!checkPGDriverAvailable()) {
+        return;
+    }
+
+    beginCalculation("All_R2SQL");
+    Timer t_all_r2sql;
+
+    std::string str_msg;
+    bool success = true;
+
+    try {
+        int ret = m_qpgdriver->Init();
+        ret = m_qpgdriver->Connect();
+        if (ret < 0)
+        {
+            success = false;
+            switch (ret)
+            {
+                case -4:
+                    str_msg = fmt::format("Библиотека <COMCK> собрана без модуля интеграции с БД PG <pqxx> взаимодействие невозможно");
+                    break;
+                case -800:
+                    str_msg = fmt::format("Невозможно установить связь с сервером БД PG");
+                    break;
+                default:
+                    str_msg = fmt::format("Ошибка соединения с сервером БД PG");
+                    break;
+            }
+        }
+        else
+        {
+            ret = m_qpgdriver->All_R2SQL("");
+            str_msg = fmt::format("Запись данных в БД выполнена за {} мс.",
+                                  t_all_r2sql.seconds());
+        }
+    }
+    catch (const std::exception& ex) {
+        success = false;
+        str_msg = fmt::format("Ошибка в ходе записи данных в БД PG: {}", ex.what());
+    }
+    catch (...) {
+        success = false;
+        str_msg = fmt::format("Неизвестная ошибка в ходе записи данных в БД PG ");
+    }
+
+    endCalculation(success, QString::fromStdString(str_msg));
+}
+
+void CalculationController::PG_All_SQL2R() {
+    if (!checkPGDriverAvailable()) {
+        return;
+    }
+
+    beginCalculation("All_SQL2R");
+    Timer t_all_r2sql;
+
+    std::string str_msg;
+    bool success = true;
+
+    try {
+        int ret = m_qpgdriver->Init();
+        ret = m_qpgdriver->Connect();
+        if (ret < 0)
+        {
+            success = false;
+            str_msg = fmt::format("Библиотека <COMCK> собрана без модуля интеграции с БД PG <pqxx> взаимодействие невозможно");
+        }
+        else
+        {
+            ret = m_qpgdriver->All_SQL2R("");
+            str_msg = fmt::format("Чтение данных из БД выполнено за {} мс.",
+                                  t_all_r2sql.seconds());
+        }
+    }
+    catch (const std::exception& ex) {
+        success = false;
+        str_msg = fmt::format("Ошибка в ходе чтения данных из БД PG: {}", ex.what());
+    }
+    catch (...) {
+        success = false;
+        str_msg = fmt::format("Неизвестная ошибка в ходе чтения данных из БД PG ");
+    }
+
+    endCalculation(success, QString::fromStdString(str_msg));
+}
+
 
 void CalculationController::beginCalculation(const QString& name) {
     m_isCalculating = true;
@@ -365,6 +448,17 @@ bool CalculationController::checkTIAvailable() {
 bool CalculationController::checkBarsMDPAvailable() {
     if (m_qbarsmdp == nullptr) {
         QString error = "Plugin BarsMDP not initialized! Function is unavailable.";
+        spdlog::warn("{}", error.toStdString());
+        emit calculationError(error);
+        emit statusMessage(error, 5000);
+        return false;
+    }
+    return true;
+}
+
+bool CalculationController::checkPGDriverAvailable() {
+    if (m_qpgdriver == nullptr) {
+        QString error = "Plugin PGDriver not initialized! Function is unavailable.";
         spdlog::warn("{}", error.toStdString());
         emit calculationError(error);
         emit statusMessage(error, 5000);

@@ -7,6 +7,8 @@
 #include <QProgressBar>
 #include "mainwindow.h"
 #include "app.h"
+#include "engineContext.h"
+
 #ifdef Q_OS_UNIX
 #include <csignal>
 #include <cstring>
@@ -103,7 +105,10 @@ int main(int argc, char *argv[]) {
         "QProgressBar { background: #1a2a3a; border: 1px solid #3a5a7a; }"
         "QProgressBar::chunk { background: #4a9adf; }");
 
+#ifdef NDEBUG
+    // В DEBUG окно мешает отладке кода на этапе старта
     splash->show();
+#endif
     QApplication::processEvents();
 
     auto updateSplash = [&](int pct, const QString& msg) {
@@ -142,9 +147,7 @@ int main(int argc, char *argv[]) {
     updateSplash(85, QObject::tr("Инициализация интерфейса..."));
 
     w.initialize(
-        app.getQAstraPtr(),
-        app.getQTIPtr(),
-        app.getQBarsMDPPtr(),
+        app.buildEngineContext(),
         app.getForms());
 
     updateSplash(100, QObject::tr("Готово"));

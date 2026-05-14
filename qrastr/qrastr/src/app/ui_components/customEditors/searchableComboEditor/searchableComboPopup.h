@@ -1,33 +1,41 @@
 #pragma once
 #include <QFrame>
+#include "сolumnEditorInfo.h"
 
 class QLineEdit;
-class QListView;
-class QSortFilterProxyModel;
-class QStringListModel;
+class QTableView;
+class QStandardItemModel;
+class TwoColumnFilterProxy;
+class QPushButton;
 
-/// Всплывающий виджет: строка поиска + список
+// SearchableComboPopup — всплывающий виджет: таблица 2 столбца + фильтры
 class SearchableComboPopup : public QFrame
 {
     Q_OBJECT
 public:
     explicit SearchableComboPopup(QWidget* parent = nullptr);
-    void setItems(const QStringList& items);
-    void setCurrentText(const QString& text);
-    QString currentText() const;
+
+    /// Заполнить список (key → отображаемое имя)
+    void setItems(const std::shared_ptr<ColumnEditorInfo::NameRefData>& nrd);
+    /// Выделить строку с заданным ключом и очистить фильтры
+    void setCurrentKey(int key);
 
 signals:
-    void itemSelected(const QString& value);
-    void editingCancelled();
+    void itemSelected   (int key);  ///< пользователь выбрал строку
+    void clearSelected  ();         ///< пользователь нажал "Не задано"
+    void editingCancelled();        ///< пользователь нажал "Закрыть" или Escape
 
 protected:
     bool eventFilter(QObject* obj, QEvent* e) override;
 
 private:
-    QLineEdit*            m_search;
-    QListView*            m_list;
-    QSortFilterProxyModel* m_proxy;
-    QStringListModel*     m_model;
+    void onRowActivated(const QModelIndex& proxyIdx);
 
-    void applyFilter(const QString& text);
+    QLineEdit*            m_searchIndex;
+    QLineEdit*            m_searchName;
+    QTableView*           m_table;
+    QStandardItemModel*   m_model;
+    TwoColumnFilterProxy* m_proxy;
+    QPushButton*          m_btnClose;
+    QPushButton*          m_btnNotSet;
 };

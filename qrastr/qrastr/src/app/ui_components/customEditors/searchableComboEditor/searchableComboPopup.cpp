@@ -1,113 +1,209 @@
 #include "searchableComboPopup.h"
 #include <QVBoxLayout>
+#include <QStandardItemModel>
 #include <QLineEdit>
-#include <QStringListModel>
-#include <QSortFilterProxyModel>
-#include <QListView>
-#include <QApplication>
+#include <QTableView>
+#include <QPushButton>
+#include <QHeaderView>
+#include <QEvent>
 #include <QKeyEvent>
+#include <QApplication>
+#include <QSizeGrip>
+#include "twoColumnFilterProxy.h"
 
 SearchableComboPopup::SearchableComboPopup(QWidget* parent)
     : QFrame(parent, Qt::Popup | Qt::FramelessWindowHint)
 {
     setFrameShape(QFrame::StyledPanel);
-    auto* layout = new QVBoxLayout(this);
-    layout->setContentsMargins(2, 2, 2, 2);
-    layout->setSpacing(2);
 
-    m_search = new QLineEdit(this);
-    m_search->setPlaceholderText(tr("Поиск..."));
-    m_search->setClearButtonEnabled(true);
+    auto* mainLayout = new QVBoxLayout(this);
+    mainLayout->setContentsMargins(4, 4, 4, 4);
+    mainLayout->setSpacing(3);
 
-    m_model = new QStringListModel(this);
-    m_proxy = new QSortFilterProxyModel(this);
+    // ── Модель + прокси ──────────────────────────────────────────────────────
+    m_model = new QStandardItemModel(0, 2, this);
+    m_model->setHorizontalHeaderLabels({ tr("Номер"), tr("Название") });
+
+    m_proxy = new TwoColumnFilterProxy(this);
     m_proxy->setSourceModel(m_model);
-    m_proxy->setFilterCaseSensitivity(Qt::CaseInsensitive);
-    m_proxy->setFilterKeyColumn(0);
 
-    m_list = new QListView(this);
-    m_list->setModel(m_proxy);
-    m_list->setEditTriggers(QAbstractItemView::NoEditTriggers);
-    m_list->setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
+    // ── Строки фильтров ──────────────────────────────────────────────────────
+    auto* filterRow = new QHBoxLayout();
+    filterRow->setSpacing(2);
 
-    layout->addWidget(m_search);
-    layout->addWidget(m_list);
+    m_searchIndex = new QLineEdit(this);
+    m_searchIndex->setPlaceholderText(tr("Фильтр по номеру..."));
+    m_searchIndex->setClearButtonEnabled(true);
 
-    connect(m_search, &QLineEdit::textChanged,
-            this, &SearchableComboPopup::applyFilter);
+    m_searchName = new QLineEdit(this);
+    m_searchName->setPlaceholderText(tr("Фильтр по названию..."));
+    m_searchName->setClearButtonEnabled(true);
 
-    connect(m_list, &QListView::clicked,
-            this, [this](const QModelIndex& idx) {
-                emit itemSelected(m_proxy->data(idx).toString());
-                hide();
-            });
+    filterRow->addWidget(m_searchIndex, 1);
+    filterRow->addWidget(m_searchName,  3);
 
-    // Enter в списке подтверждает выбор
-    connect(m_list, &QListView::activated,
-            this, [this](const QModelIndex& idx) {
-                emit itemSelected(m_proxy->data(idx).toString());
-                hide();
-            });
+    // ── Таблица ──────────────────────────────────────────────────────────────
+    m_table = new QTableView(this);
+    m_table->setModel(m_proxy);
+    m_table->setSelectionMode(QAbstractItemView::SingleSelection);
+    m_table->setSelectionBehavior(QAbstractItemView::SelectRows);
+    m_table->setEditTriggers(QAbstractItemView::NoEditTriggers);
+    m_table->verticalHeader()->hide();
+    m_table->horizontalHeader()->setStretchLastSection(true);
+    m_table->setHorizontalScrollBarPolicy(Qt::ScrollBarAsNeeded);
+    m_table->setSortingEnabled(false);
+    m_table->setMinimumHeight(150);
 
-    m_search->installEventFilter(this);
-    m_list->installEventFilter(this);
+    // ── Кнопки внизу ─────────────────────────────────────────────────────────
+    auto* btnRow = new QHBoxLayout();
+    m_btnClose  = new QPushButton(tr("Закрыть"),  this);
+    m_btnNotSet = new QPushButton(tr("Не задано"), this);
+    btnRow->addWidget(m_btnClose);
+    btnRow->addStretch();
+    btnRow->addWidget(m_btnNotSet);
+
+    mainLayout->addLayout(filterRow);
+    mainLayout->addWidget(m_table);
+    mainLayout->addLayout(btnRow);
+
+    // ── Соединения ───────────────────────────────────────────────────────────
+    connect(m_searchIndex, &QLineEdit::textChanged,
+            m_proxy, &TwoColumnFilterProxy::setIndexFilter);
+    connect(m_searchName,  &QLineEdit::textChanged,
+            m_proxy, &TwoColumnFilterProxy::setNameFilter);
+
+    connect(m_table, &QTableView::clicked,
+            this, &SearchableComboPopup::onRowActivated);
+    connect(m_table, &QTableView::activated,
+            this, &SearchableComboPopup::onRowActivated);
+
+    connect(m_btnNotSet, &QPushButton::clicked, this, [this]() {
+        emit clearSelected();
+        hide();
+    });
+    connect(m_btnClose, &QPushButton::clicked, this, [this]() {
+        emit editingCancelled();
+        hide();
+    });
+
+    m_searchIndex->installEventFilter(this);
+    m_searchName->installEventFilter(this);
+    m_table->installEventFilter(this);
+
+    // ── Size grip ────────────────────────────────────────────────────────────
+    // Qt::Popup перехватывает события мыши, поэтому стандартный QSizeGrip
+    // работает корректно только если его добавить в layout.
+    auto* gripRow = new QHBoxLayout();
+    gripRow->addStretch();
+    auto* grip = new QSizeGrip(this);
+    gripRow->addWidget(grip);
+    gripRow->setContentsMargins(0, 0, 0, 0);
+    mainLayout->addLayout(gripRow);
+
+    // Минимальный размер чтобы grip был видимым
+    setMinimumSize(280, 200);
+    resize(400, 300); // начальный размер
 }
 
-void SearchableComboPopup::setItems(const QStringList& items)
+void SearchableComboPopup::setItems
+    (const std::shared_ptr<ColumnEditorInfo::NameRefData>& nrd)
 {
-    m_model->setStringList(items);
-    // Высота: не больше 10 строк
-    const int rowH    = m_list->sizeHintForRow(0);
-    const int visible = qMin(items.size(), 10);
-    m_list->setFixedHeight(rowH * visible + 4);
+    const int nValueCols = static_cast<int>(nrd->columns.size());
+    const int totalCols  = 1 + nValueCols; // ключ + значения
+
+    m_model->clear();
+    m_model->setColumnCount(totalCols);
+
+    QStringList headers;
+    headers << tr("Ключ");
+    for (const auto& cd : nrd->columns)
+        headers << cd.header;
+    m_model->setHorizontalHeaderLabels(headers);
+
+    // Пересоздаём фильтры под фактическое число колонок
+    // (упрощение: фильтруем по col 0 и col 1 как раньше,
+    //  для 4 колонок можно добавить ещё поля)
+
+    m_model->setRowCount(static_cast<int>(nrd->rows.size()));
+    int r = 0;
+    for (const auto& row : nrd->rows) {
+        auto* keyItem = new QStandardItem(QString::number(row.key));
+        keyItem->setData(static_cast<int>(row.key), Qt::UserRole);
+        keyItem->setEditable(false);
+        m_model->setItem(r, 0, keyItem);
+
+        for (int c = 0; c < nValueCols && c < static_cast<int>(row.values.size()); ++c) {
+            auto* valItem = new QStandardItem(
+                QString::fromStdString(row.values[c]));
+            valItem->setEditable(false);
+            m_model->setItem(r, 1 + c, valItem);
+        }
+        ++r;
+    }
+
+    m_table->resizeColumnToContents(0);
+    for (int c = 1; c < totalCols - 1; ++c)
+        m_table->resizeColumnToContents(c);
 }
 
-void SearchableComboPopup::setCurrentText(const QString& text)
+void SearchableComboPopup::setCurrentKey(int key)
 {
-    m_search->clear();
-    // Выделяем текущее значение в списке
-    const auto matches = m_proxy->match(
-        m_proxy->index(0, 0), Qt::DisplayRole, text, 1, Qt::MatchExactly);
-    if (!matches.isEmpty())
-        m_list->setCurrentIndex(matches.first());
+    // Сбрасываем фильтры, чтобы текущая запись точно была видна
+    m_searchIndex->clear();
+    m_searchName->clear();
+
+    for (int r = 0; r < m_proxy->rowCount(); ++r) {
+        const QModelIndex idx = m_proxy->index(r, 0);
+        if (m_proxy->data(idx, Qt::UserRole).toInt() == key) {
+            m_table->setCurrentIndex(idx);
+            m_table->scrollTo(idx, QAbstractItemView::PositionAtCenter);
+            return;
+        }
+    }
 }
 
-QString SearchableComboPopup::currentText() const
+void SearchableComboPopup::onRowActivated(const QModelIndex& proxyIdx)
 {
-    return m_list->currentIndex().isValid()
-               ? m_proxy->data(m_list->currentIndex()).toString()
-               : QString{};
-}
-
-void SearchableComboPopup::applyFilter(const QString& text)
-{
-    m_proxy->setFilterFixedString(text);
-    if (m_proxy->rowCount() > 0)
-        m_list->setCurrentIndex(m_proxy->index(0, 0));
+    if (!proxyIdx.isValid()) return;
+    // Берём ключ из первого столбца через UserRole
+    const QModelIndex srcIdx = m_proxy->mapToSource(
+        m_proxy->index(proxyIdx.row(), 0));
+    const int key = m_model->data(srcIdx, Qt::UserRole).toInt();
+    emit itemSelected(key);
+    hide();
 }
 
 bool SearchableComboPopup::eventFilter(QObject* obj, QEvent* e)
 {
     if (e->type() == QEvent::KeyPress) {
         auto* ke = static_cast<QKeyEvent*>(e);
+
+        // Escape — отмена
         if (ke->key() == Qt::Key_Escape) {
             emit editingCancelled();
             hide();
             return true;
         }
-        // Стрелки из строки поиска переходят в список
-        if (obj == m_search &&
+
+        // Стрелки вверх/вниз из любого фильтра → передаём в таблицу
+        if ((obj == m_searchIndex || obj == m_searchName) &&
             (ke->key() == Qt::Key_Down || ke->key() == Qt::Key_Up)) {
-            QApplication::sendEvent(m_list, e);
+            QApplication::sendEvent(m_table, e);
             return true;
         }
-        // Enter в строке поиска — подтверждает первый элемент
-        if (obj == m_search && ke->key() == Qt::Key_Return) {
-            if (m_proxy->rowCount() > 0) {
-                emit itemSelected(
-                    m_proxy->data(m_proxy->index(0, 0)).toString());
-                hide();
-            }
+
+        // Enter в фильтре → выбираем первую видимую строку
+        if ((obj == m_searchIndex || obj == m_searchName) &&
+            (ke->key() == Qt::Key_Return || ke->key() == Qt::Key_Enter)) {
+            if (m_proxy->rowCount() > 0)
+                onRowActivated(m_proxy->index(0, 0));
+            return true;
+        }
+
+        // Enter в таблице → подтверждаем выбранную строку
+        if (obj == m_table &&
+            (ke->key() == Qt::Key_Return || ke->key() == Qt::Key_Enter)) {
+            onRowActivated(m_table->currentIndex());
             return true;
         }
     }

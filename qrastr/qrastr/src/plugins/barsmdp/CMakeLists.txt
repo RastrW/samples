@@ -13,6 +13,15 @@ find_package(Qt${QT_VERSION_MAJOR} COMPONENTS
     Gui
     REQUIRED
 )
+
+# ============================================================================
+# Output Directories
+# ============================================================================
+set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY "${PLUGIN_OUTPUT_DIR}")
+set(CMAKE_LIBRARY_OUTPUT_DIRECTORY "${PLUGIN_OUTPUT_DIR}")
+set(CMAKE_RUNTIME_OUTPUT_DIRECTORY "${PLUGIN_OUTPUT_DIR}")
+
+message(STATUS "PLUGIN_OUTPUT_DIR barsmdp: ${PLUGIN_OUTPUT_DIR}")
 # ============================================================================
 # Получаем THIRDPARTY_DIR из главного проекта
 # ============================================================================
@@ -41,12 +50,6 @@ set(PROJECT_SOURCES
 )
 
 add_library(barsmdp SHARED ${PROJECT_SOURCES})
-set_target_properties(barsmdp PROPERTIES
-    RUNTIME_OUTPUT_DIRECTORY_DEBUG "${OUTPUT_BASE_DIR}/Debug/plugins"
-    RUNTIME_OUTPUT_DIRECTORY_RELEASE "${OUTPUT_BASE_DIR}/Release/plugins"
-    LIBRARY_OUTPUT_DIRECTORY "${OUTPUT_BASE_DIR}/Debug/plugins"
-    ARCHIVE_OUTPUT_DIRECTORY "${OUTPUT_BASE_DIR}/Debug/plugins"
-)
 target_include_directories(barsmdp PRIVATE ${INCLUDES})
 
 # ============================================================================

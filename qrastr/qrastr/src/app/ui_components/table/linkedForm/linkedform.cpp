@@ -1,0 +1,12 @@
+#include "linkedform.h"
+#include "table/rtabcontroller.h"
+
+void LinkedForm::fillBindVals(){
+
+    vbindvals.clear();
+    for (const auto& key : split( bind ,','))
+    {
+        long val = pbaseform->getLongValue(key, row);
+        vbindvals.push_back(val);
+    }
+}

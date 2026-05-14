@@ -17,11 +17,11 @@ find_package(Qt${QT_VERSION_MAJOR} COMPONENTS
 # ============================================================================
 # Output Directories
 # ============================================================================
-# Получаем PLUGIN_OUTPUT_DIR из родительского проекта, если уже определена
-if(NOT PLUGIN_OUTPUT_DIR)
-    set(PLUGIN_OUTPUT_DIR "${CMAKE_SOURCE_DIR}/../${CMAKE_BUILD_TYPE}/plugins")
-endif()
+set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY "${PLUGIN_OUTPUT_DIR}")
+set(CMAKE_LIBRARY_OUTPUT_DIRECTORY "${PLUGIN_OUTPUT_DIR}")
+set(CMAKE_RUNTIME_OUTPUT_DIRECTORY "${PLUGIN_OUTPUT_DIR}")
 
+message(STATUS "PLUGIN_OUTPUT_DIR rastr: ${PLUGIN_OUTPUT_DIR}")
 # ============================================================================
 # Получаем THIRDPARTY_DIR из главного проекта
 # ============================================================================
@@ -48,12 +48,6 @@ set(PROJECT_SOURCES
 )
 
 add_library(rastr SHARED ${PROJECT_SOURCES})
-set_target_properties(rastr PROPERTIES
-    RUNTIME_OUTPUT_DIRECTORY_DEBUG "${OUTPUT_BASE_DIR}/Debug/plugins"
-    RUNTIME_OUTPUT_DIRECTORY_RELEASE "${OUTPUT_BASE_DIR}/Release/plugins"
-    LIBRARY_OUTPUT_DIRECTORY "${OUTPUT_BASE_DIR}/Debug/plugins"
-    ARCHIVE_OUTPUT_DIRECTORY "${OUTPUT_BASE_DIR}/Debug/plugins"
-)
 target_include_directories(rastr PRIVATE ${INCLUDES})
 
 # ============================================================================

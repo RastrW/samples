@@ -1,12 +1,12 @@
 #pragma once
 #include <QString>
 #include <QWidget>
+#include <QToolButton>
 #include "filterRule.h"
 
 class QLineEdit;
+class QCheckBox;
 inline constexpr int kRowHeight = 25;
-// смещение от левого края виджета до первой колонки
-inline constexpr int kBorderX   = 57;
 
 /// @brief Небольшая ячейка автофильтра: кнопка оператора + поле значения.
 /// Для bool — только кнопка с popup.
@@ -34,7 +34,8 @@ signals:
 private slots:
     void slotTextChanged(const QString& text);
     void showOpMenu();
-
+    void slotBoolCycle();
+    void slotTriStateChanged(int state);
 private:
     QString opText(FilterRule::Op op) const;
     void updateUi();
@@ -44,6 +45,7 @@ private:
 private:
     QToolButton* m_opBtn = nullptr;
     QLineEdit*   m_edit  = nullptr;
+    QCheckBox*   m_triCheck = nullptr;
     FilterRule   m_rule;
     bool         m_isNumeric = false;
     bool         m_isBool = false;

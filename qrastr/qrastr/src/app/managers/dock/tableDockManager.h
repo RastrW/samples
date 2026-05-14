@@ -1,0 +1,110 @@
+#pragma once
+#include <QObject>
+#include "table/rTablesDataAdapter.h"
+#include "table/linkedForm/linkedform.h"
+
+namespace ads { class CDockManager; class CDockWidget; }
+namespace Qtitan   { class GridTableView; }
+
+class RtabController;
+class PyHlp;
+class CUIForm;
+class QAction;
+class QMenu;
+
+
+/**
+ * @class Управляет dock-виджетами таблиц (CUIForm).
+ *
+ * Отвечает за:
+ *  - хранение списка статических форм и быстрый поиск по имени
+ *  - создание dock-виджетов таблиц (openForm / openFormByName / openFormByIndex)
+ *  - построение меню «Открыть» и «Свойства»
+ *  - трансляцию сигналов расчёта всем открытым RtabWidget
+ *
+ * Аналог GraphSDLManager / GraphWebManager / MacroDockManager —
+ * испускает windowOpened() для регистрации в FormManager.
+*/
+class TableDockManager : public QObject {
+    Q_OBJECT
+
+public:
+    explicit TableDockManager(
+        std::shared_ptr<ITableRepository> tables,
+        std::shared_ptr<ITableEvents>     tableEvents,
+        ads::CDockManager*      dockManager,
+        std::shared_ptr<PyHlp>  pyHlp,
+        QWidget*                parent = nullptr);
+
+    // ── Формы ────────────────────────────────────────────────────────────────
+
+    /// Установить список статических форм.
+    void setForms(const std::vector<CUIForm>& forms);
+
+    std::pair<ads::CDockWidget*, RtabController*>
+    openForm(const CUIForm& form,
+             std::optional<LinkedForm> linkedFilter = std::nullopt);
+    void openFormByName  (const QString& formName);
+    void openFormByIndex (int index);
+    //Открыть связанную форму
+    RtabController* openLinkedForm(const LinkedForm&      lf,
+                                   Qtitan::GridTableView* parentView,
+                                   RtabController*        parentCtrl);
+
+    /// Все открытые RtabWidget (для трансляции calc-сигналов).
+    const QList<RtabController*>& openForms() const { return m_openForms; }
+
+    RtabController* activeForm() const { return m_activeForm; }
+
+    // ── Меню ─────────────────────────────────────────────────────────────────
+
+    /**
+     * @brief Построить меню «Открыть» из статических форм.
+     * @param parentMenu       — основное меню таблиц
+     * @param calcParametersMenu — необязательный подраздел параметров расчёта
+     */
+    void buildFormsMenu    (QMenu* parentMenu,
+                        QMenu* calcParametersMenu = nullptr);
+
+    /**
+     * @brief Подключить динамическую генерацию меню «Свойства».
+     * @note Меню перестраивается при каждом открытии (aboutToShow).
+     */
+    void buildPropertiesMenu(QMenu* propertiesMenu);
+
+signals:
+    /// Новый dock-виджет создан → FormManager::registerDockWidget.
+    void windowOpened (ads::CDockWidget* dw);
+
+    void formOpened   (const QString& formName);
+    void formClosed   (const QString& formName);
+    void activeFormChanged(RtabController* form);
+
+public slots:
+    /// Транслировать начало расчёта всем открытым RtabWidget.
+    void slot_calculationStarted();
+    /// Транслировать конец расчёта всем открытым RtabWidget.
+    void slot_calculationFinished();
+
+private slots:
+    void slot_formMenuTriggered(QAction* action);
+
+private:
+    // ── Зависимости ──────────────────────────────────────────────────────────
+    std::shared_ptr<ITableRepository> m_tables;
+    std::shared_ptr<ITableEvents>     m_tableEvents;
+    ads::CDockManager*                  m_dockManager;
+    std::shared_ptr<PyHlp>              m_pyHlp;
+    QWidget*                            m_parentWidget;
+
+    // ── Состояние ────────────────────────────────────────────────────────────
+    const std::vector<CUIForm>* m_pForms = nullptr;
+    std::map<QString, int>     m_formNameToIndex;  ///< Быстрый поиск по имени
+    QList<RtabController*>         m_openForms;
+    RtabController*                m_activeForm {nullptr};
+
+    // ── Вспомогательные методы ───────────────────────────────────────────────
+    /// Генерировать пункты меню «Свойства» из таблиц с .form-шаблонами.
+    void generateDynamicForms(QMenu* menu);
+    const CUIForm* findForm(const std::string& name) const;
+};

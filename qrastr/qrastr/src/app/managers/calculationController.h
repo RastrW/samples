@@ -2,9 +2,10 @@
 #include <memory>
 #include <QObject>
 
-class QAstra;
-class QTI;
-class QBarsMDP;
+class ICalculationEngine;
+class ITIEngine;
+class IBarsMDPEngine;
+class IPGDriverEngine;
 enum class eASTCode;
 enum class eNonsym;
 
@@ -29,9 +30,10 @@ class CalculationController : public QObject {
     
 public:
     explicit CalculationController(
-        std::shared_ptr<QAstra> qastra,
-        std::shared_ptr<QTI> qti,
-        std::shared_ptr<QBarsMDP> qbarsmdp,
+        std::shared_ptr<ICalculationEngine> calcEngine,
+        std::shared_ptr<ITIEngine>          ti,
+        std::shared_ptr<IBarsMDPEngine>     barsMDP,
+        std::shared_ptr<IPGDriverEngine>    PGDriver,
         QObject* parent = nullptr
     );
     ~CalculationController() = default;
@@ -64,6 +66,12 @@ public:
      * @param sections номера сечений (если пустое - запрос у пользователя)
      */
     void prepareBarsMDP(const QString& sections = "");
+
+    // ========== PostgreSQL ==========
+    /// @brief Запись рабочей области(всех таблиц) в БД PG
+    void PG_All_R2SQL();
+    /// @brief Чтение рабочей области(всех таблиц) из БД PG
+    void PG_All_SQL2R();
     
     // ========== ДИАЛОГОВЫЕ РАСЧЁТЫ ==========
     
@@ -93,9 +101,10 @@ signals:
                              const QString& params = "");  
 private:
     // ========== Зависимости ==========
-    std::shared_ptr<QAstra> m_qastra;
-    std::shared_ptr<QTI> m_qti;
-    std::shared_ptr<QBarsMDP> m_qbarsmdp;
+    std::shared_ptr<ICalculationEngine> m_calcEngine;
+    std::shared_ptr<ITIEngine> m_qti;
+    std::shared_ptr<IBarsMDPEngine> m_qbarsmdp;
+    std::shared_ptr<IPGDriverEngine> m_qpgdriver;
     
     // ========== Состояние ==========
     bool m_isCalculating = false;
@@ -110,4 +119,5 @@ private:
     
     bool checkTIAvailable();
     bool checkBarsMDPAvailable();
+    bool checkPGDriverAvailable();
 };

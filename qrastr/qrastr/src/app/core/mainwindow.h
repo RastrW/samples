@@ -8,24 +8,22 @@ class CalculationController;
 class FormManager;
 class AppSettingsManager;
 class UIBuilder;
-class QAstra;
-class QTI;
-class QBarsMDP;
 class QMdiArea;
 class ProtocolLogWidget;
 class ProtocolWidget;
 class LogManager;
 class WorkspaceManager;
 
-class PyHlp;
 class CUIForm;
 class QAction;
 class McrWnd;
+class ICalculationEngine;
 
 namespace ads {
     class CDockManager;
     class CDockWidget;
 }
+struct EngineContext;
 
 /// @class Главное окно приложения
 class MainWindow : public QMainWindow {
@@ -40,10 +38,8 @@ public:
      * @param forms список форм
      */
     void initialize(
-        std::shared_ptr<QAstra> qastra,
-        std::shared_ptr<QTI> qti,
-        std::shared_ptr<QBarsMDP> qbarsmdp,
-        const std::list<CUIForm>& forms);
+        const EngineContext& engCtxt,
+        const std::vector<CUIForm>& forms);
 
     std::shared_ptr<spdlog::sinks::sink> getProtocolLogSink() const;
 signals:
@@ -95,11 +91,9 @@ private:
     LogManager* m_logManager = nullptr;
     std::unique_ptr<WorkspaceManager>
         m_workspaceManager;
-    // ========== ПЛАГИНЫ ==========
-    std::shared_ptr<QAstra> m_qastra;
-    std::shared_ptr<QTI> m_qti;
-    std::shared_ptr<QBarsMDP> m_qbarsmdp;
-    
+
+     std::shared_ptr<ICalculationEngine>
+        m_calcEngine;
     // ========== GUI ЭЛЕМЕНТЫ ==========
     ads::CDockManager* m_dockManager = nullptr;   // The main container for Advanced Docking System
 

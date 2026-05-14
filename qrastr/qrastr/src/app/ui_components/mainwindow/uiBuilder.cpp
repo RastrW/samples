@@ -72,6 +72,16 @@ void UIBuilder::createFileActions() {
               ":/images/new_style/save all.png",
               "",
               tr("Save all the document"));
+    addAction("saveAllPG",
+              tr("&Сохранить все в БД PG"),
+              ":/images/new_style/bold.png",
+              "",
+              tr("Save all the document into DataBase PG"));
+    addAction("loadAllPG",
+              tr("&Загрузить все из БД PG"),
+              ":/images/new_style/bold.png",
+              "",
+              tr("Load all the document from DataBase PG"));
     addAction("settings",
               tr("&Параметры"),
               ":/images/new_style/settings.png",
@@ -260,6 +270,8 @@ void UIBuilder::buildMenuBar() {
     m_menus["file"]->addAction(m_actions["save"]);
     m_menus["file"]->addAction(m_actions["saveAs"]);
     m_menus["file"]->addAction(m_actions["saveAll"]);
+    m_menus["file"]->addAction(m_actions["saveAllPG"]);
+    m_menus["file"]->addAction(m_actions["loadAllPG"]);
 
     // Подменю "Настройки программы"
     m_menus["programmProperties"] =

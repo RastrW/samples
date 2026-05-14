@@ -6,7 +6,7 @@
 #   - AstraLinux 1.8 (gcc)
 #
 # Все платформы  используют библиотеки из thirdparty
-# ===============================================a=============================
+# ============================================================================
 
 cmake_minimum_required(VERSION 3.23)
 message(STATUS "CMake version: ${CMAKE_VERSION}")
@@ -30,13 +30,14 @@ set(CMAKE_AUTOMOC ON)
 set(CMAKE_AUTORCC ON)
 
 # Output directories - все бинарники идут в ../Debug или ../Release
-set(OUTPUT_BASE_DIR "${CMAKE_SOURCE_DIR}/..")
+# При использовании Visual Studio cmake generator используем переменные OUTPUT_DIRECTORY_<CONFIG>
+foreach(CONFIG Debug Release)
+    set(CMAKE_RUNTIME_OUTPUT_DIRECTORY_${CONFIG} "${CMAKE_SOURCE_DIR}/../${CONFIG}")
+    set(CMAKE_LIBRARY_OUTPUT_DIRECTORY_${CONFIG} "${CMAKE_SOURCE_DIR}/../${CONFIG}")
+    set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY_${CONFIG} "${CMAKE_SOURCE_DIR}/../${CONFIG}")
+endforeach()
 
-set(CMAKE_RUNTIME_OUTPUT_DIRECTORY "${OUTPUT_BASE_DIR}")
-set(CMAKE_LIBRARY_OUTPUT_DIRECTORY "${OUTPUT_BASE_DIR}")
-set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY "${OUTPUT_BASE_DIR}")
-
-message(STATUS "CMAKE_RUNTIME_OUTPUT_DIRECTORY: ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}")
+message(STATUS "CMake generator: ${CMAKE_GENERATOR}")
 
 # ============================================================================
 # Compile Definitions
@@ -51,6 +52,7 @@ add_compile_definitions(FMT_HEADER_ONLY)
 add_compile_definitions(
     $<$<CONFIG:Debug>:q4_INLINE=0>  # Отключает inline функции в Debug
     $<$<CONFIG:Debug>:YYDEBUG>      # Включает отладочный вывод для yacc/bison парсеров
+    $<$<CONFIG:Debug>:_DEBUG>       # Чтобы на win/lin был одинаковый #define _DEBUG
 )
 
 if(MSVC)
@@ -102,8 +104,6 @@ endif()
 
 # Составляем CMAKE_PREFIX_PATH на базе ASTRA_ROOT
 list(APPEND CMAKE_PREFIX_PATH "${ASTRA_ROOT}/lib/cmake")
-
-message(STATUS ${ASTRA_ROOT}/lib/cmake)
 
 # Ищем конфигурацию ASTRA
 find_package(COMCK CONFIG REQUIRED)
@@ -208,13 +208,14 @@ message(STATUS "Qt found: ${QT_VERSION} at ${Qt${QT_VERSION_MAJOR}_DIR}")
 # ============================================================================
 # Plugins (ASTRA-dependent)
 # ============================================================================
-set(PLUGIN_OUTPUT_DIR "${OUTPUT_BASE_DIR}")
+# Для сообщений используем генератор выражения
+set(PLUGIN_OUTPUT_DIR "${CMAKE_SOURCE_DIR}/../$<CONFIG>/plugins")
 
 add_subdirectory(${SRC_DIR}/plugins/rastr)
 add_subdirectory(${SRC_DIR}/plugins/ti)
 add_subdirectory(${SRC_DIR}/plugins/barsmdp)
 
-message(STATUS "Plugins output directory: ${PLUGIN_OUTPUT_DIR}")
+message(STATUS "Plugins configured to output to: ${PLUGIN_OUTPUT_DIR}")
 
 # qmcr subdirectory
 set(DEPENDENCIES_LOCATION "${THIRDPARTY_DIR}")
@@ -265,6 +266,7 @@ set(PROJECT_INCLUDES
     ${APP_DIR}/ui_components/
     ${APP_DIR}/utilities/
     ${APP_DIR}/astra_headers
+    ${APP_DIR}/adapters/
 )
 
 # Добавляем header-only include directories
@@ -277,12 +279,11 @@ list(APPEND PROJECT_INCLUDES ${SPDLOG_INCLUDES})
 get_target_property(FMT_INCLUDES Fmt::fmt INTERFACE_INCLUDE_DIRECTORIES)
 list(APPEND PROJECT_INCLUDES ${FMT_INCLUDES})
 
-
 # Добавляем ASTRA include директории
 list(APPEND PROJECT_INCLUDES
     ${ASTRA_ROOT}/include
     ${ASTRA_ROOT}/include/comck
-    D:/rastr/RastrWin/ElGraphCtrl
+    ${EL_GRAPH_CTRL_DIR}/include
 )
 # ============================================================================
 # Source Files
@@ -312,6 +313,8 @@ file(GLOB_RECURSE PROJECT_SOURCES
     "${APP_DIR}/astra_headers/*.h"
     "${APP_DIR}/astra_headers/*.hpp"
     "${SRC_DIR}/plugins/rastr/plugin_interfaces.h"
+    "${APP_DIR}/adapters/*.cpp"
+    "${APP_DIR}/adapters/*.h"
     "${APP_DIR}/main.cpp"
 )
 
@@ -353,6 +356,12 @@ else()
     )
 endif()
 
+# Явно установить выходную папку для исполняемого файла
+# Иначе Visual Studio компилирует в build/<config>/<CONFIG>/
+set_target_properties(${PROJECT_NAME} PROPERTIES
+    RUNTIME_OUTPUT_DIRECTORY_DEBUG "${CMAKE_SOURCE_DIR}/../Debug"
+    RUNTIME_OUTPUT_DIRECTORY_RELEASE "${CMAKE_SOURCE_DIR}/../Release"
+)
 # ============================================================================
 # Link Libraries - линковка библиотек к исполняемому файлу
 # ============================================================================
@@ -453,16 +462,26 @@ else()
     set(ASTRA_FOLDER "lib")
 endif()
 
+add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
+    COMMAND ${CMAKE_COMMAND} -E copy_if_different
+        "${ASTRA_ROOT}/${ASTRA_FOLDER}/${LIB_PREFIX}astra${SHLIB_SUFFIX}"
+        "$<TARGET_FILE_DIR:${PROJECT_NAME}>/plugins/"
+    COMMAND ${CMAKE_COMMAND} -E copy_if_different
+        "${ASTRA_ROOT}/${ASTRA_FOLDER}/${LIB_PREFIX}COMCK${SHLIB_SUFFIX}"
+        "$<TARGET_FILE_DIR:${PROJECT_NAME}>/plugins/"
+    COMMENT "Copying ASTRA"
+)
+
 # ============================================================================
 # Копируем SVGgenerator, ElGraphCtrl, GraphClient
 # ============================================================================
 if(WIN32)
     set(SVG_PLATFORM_DIR "${SVG_DIR}/win")
-    set(SVG_DLL_FILE     "${SVG_PLATFORM_DIR}/SVGgenerator.dll")
+    set(SVG_DLL_FILE     "${SVG_PLATFORM_DIR}/${CONFIG_DIR}/SVGgenerator.dll")
     set(EGC_PLATFORM_DIR "${EL_GRAPH_CTRL_DIR}/win")
-    set(EGC_DLL_FILE     "D:/rastr/RastrWin/ElGraphCtrl/build/Debug/ElGraphCtrl.dll")
+    set(EGC_DLL_FILE     "${EGC_PLATFORM_DIR}/${CONFIG_DIR}/ElGraphCtrl.dll")
     set(GR_CTRL_CLIENT_PLATFORM_DIR "${GR_CTRL_CLIENT_DIR}/win")
-    set(GR_CTRL_CLIENT_DLL_FILE     "D:/rastr/RastrWin/GraphControlClient/build-client/Debug/GraphClient.dll")
+    set(GR_CTRL_CLIENT_DLL_FILE     "${GR_CTRL_CLIENT_PLATFORM_DIR}/${CONFIG_DIR}/GraphClient.dll")
 else()
     set(SVG_PLATFORM_DIR "${SVG_DIR}/linux")
     set(SVG_DLL_FILE     "${SVG_PLATFORM_DIR}/${CONFIG_DIR}/libSVGgenerator.so")
@@ -487,13 +506,95 @@ function(copy_runtime_file_if_exists target src comment)
         copy_runtime_file(${target} "${src}" "${comment}")
     endif()
 endfunction()
+# ============================================================================
+# Post-build copy of dependencies for both Debug and Release
+# ============================================================================
 
-message(STATUS "SVG_PLATFORM_DIR: ${SVG_PLATFORM_DIR}")
-message(STATUS "EGC_PLATFORM_DIR: ${EGC_PLATFORM_DIR}")
-message(STATUS "GR_CTRL_CLIENT_DIR: ${GR_CTRL_CLIENT_DIR}")
+# Определяем CONFIG_SUFFIX для путей к библиотекам
+if(CMAKE_BUILD_TYPE STREQUAL "Debug")
+    set(CONFIG_SUFFIX "Debug")
+else()
+    set(CONFIG_SUFFIX "Release")
+endif()
 
-message(STATUS "CONFIG_DIR: ${CONFIG_DIR}")
+# Копируем qmcr (библиотека - DLL на Windows, SO на Linux)
+add_custom_command(TARGET qrastr POST_BUILD
+    COMMAND ${CMAKE_COMMAND} -E copy_if_different
+        "$<TARGET_FILE:qmcr>" "$<TARGET_FILE_DIR:qrastr>/"
+    COMMENT "Copying qmcr library"
+)
 
+if(WIN32)
+    # Windows - копируем DLL файлы
+
+    # Копируем lexilla5.dll
+    set(_lex_dll "${DEPENDENCIES_LOCATION}/compile/lexilla/${PLATFORM_DIR}/${CONFIG_SUFFIX}/bin/lexilla5.dll")
+    if(EXISTS "${_lex_dll}")
+        add_custom_command(TARGET qrastr POST_BUILD
+            COMMAND ${CMAKE_COMMAND} -E copy_if_different
+                "${_lex_dll}" "$<TARGET_FILE_DIR:qrastr>/"
+            COMMENT "Copying lexilla5.dll"
+        )
+    else()
+        message(WARNING "lexilla5.dll not found at ${_lex_dll}")
+    endif()
+
+    # Копируем ScintillaEdit5.dll
+    set(_sci_dll "${DEPENDENCIES_LOCATION}/compile/ScintillaEdit/${PLATFORM_DIR}/${CONFIG_SUFFIX}/lib/ScintillaEdit5.dll")
+    if(EXISTS "${_sci_dll}")
+        add_custom_command(TARGET qrastr POST_BUILD
+            COMMAND ${CMAKE_COMMAND} -E copy_if_different
+                "${_sci_dll}" "$<TARGET_FILE_DIR:qrastr>/"
+            COMMENT "Copying ScintillaEdit5.dll"
+        )
+    else()
+        message(WARNING "ScintillaEdit5.dll not found at ${_sci_dll}")
+    endif()
+
+elseif(UNIX)
+    # Linux - копируем SO файлы
+
+    # Копируем liblexilla.so
+    set(_lex_so "${DEPENDENCIES_LOCATION}/compile/lexilla/${PLATFORM_DIR}/${CONFIG_SUFFIX}/lib/liblexilla.so")
+    if(EXISTS "${_lex_so}")
+        add_custom_command(TARGET qrastr POST_BUILD
+            COMMAND ${CMAKE_COMMAND} -E copy_if_different
+                "${_lex_so}" "$<TARGET_FILE_DIR:qrastr>/"
+            COMMENT "Copying liblexilla.so"
+        )
+    else()
+        message(WARNING "liblexilla.so not found at ${_lex_so}")
+    endif()
+
+    # Копируем libScintillaEdit.so
+    set(_sci_so "${DEPENDENCIES_LOCATION}/compile/ScintillaEdit/${PLATFORM_DIR}/${CONFIG_SUFFIX}/lib/libScintillaEdit.so")
+    if(EXISTS "${_sci_so}")
+        add_custom_command(TARGET qrastr POST_BUILD
+            COMMAND ${CMAKE_COMMAND} -E copy_if_different
+                "${_sci_so}" "$<TARGET_FILE_DIR:qrastr>/"
+            COMMENT "Copying libScintillaEdit.so"
+        )
+    else()
+        message(WARNING "libScintillaEdit.so not found at ${_sci_so}")
+    endif()
+
+endif()
+# Временное решение ввиду отсутствия .so сборок
+if(WIN32)
+copy_runtime_file(${PROJECT_NAME} "${SVG_DLL_FILE}" "Copying SVGgenerator (${CONFIG_DIR})")
+copy_runtime_file(${PROJECT_NAME} "${EGC_DLL_FILE}" "Copying ElGraphCtrl (${CONFIG_DIR})")
+copy_runtime_file(${PROJECT_NAME} "${GR_CTRL_CLIENT_DLL_FILE}" "Copying GrCtrlClient (${CONFIG_DIR})")
+endif()
+
+if(WIN32 AND CMAKE_BUILD_TYPE MATCHES Debug)
+    set(SVG_PDB_FILE "${SVG_PLATFORM_DIR}/${CONFIG_DIR}/SVGgenerator.pdb")
+    set(EGC_PDB_FILE "${EGC_PLATFORM_DIR}/${CONFIG_DIR}/ElGraphCtrl.pdb")
+    set(GR_CTRL_CLIENT_PDB_FILE "${GR_CTRL_CLIENT_PLATFORM_DIR}/${CONFIG_DIR}/GraphClient.pdb")
+
+    copy_runtime_file_if_exists(${PROJECT_NAME} "${SVG_PDB_FILE}" "Copying SVGgenerator PDB")
+    copy_runtime_file_if_exists(${PROJECT_NAME} "${EGC_PDB_FILE}" "Copying ElGraphCtrl PDB")
+    copy_runtime_file_if_exists(${PROJECT_NAME} "${GR_CTRL_CLIENT_PDB_FILE}" "Copying GrCtrlClient PDB")
+endif()
 
 # ============================================================================
 # Include Directories
@@ -507,9 +608,18 @@ target_include_directories(${PROJECT_NAME} PRIVATE
 # ============================================================================
 # Target Properties
 # ============================================================================
+# Гарантируем, что INSTALL_RPATH используется и при сборке
+set(CMAKE_BUILD_WITH_INSTALL_RPATH TRUE)
+# Не затирать RPATH после линковки
+set(CMAKE_SKIP_RPATH FALSE)
+set(CMAKE_SKIP_INSTALL_RPATH FALSE)
 # WIN32_EXECUTABLE создаёт GUI приложение на Windows (без консольного окна)
-set_target_properties(${PROJECT_NAME} PROPERTIES WIN32_EXECUTABLE TRUE)
-
+set_target_properties(${PROJECT_NAME} PROPERTIES
+    WIN32_EXECUTABLE TRUE
+    BUILD_RPATH      "\$ORIGIN/libs"
+    INSTALL_RPATH    "\$ORIGIN/libs"
+    BUILD_WITH_INSTALL_RPATH TRUE
+)
 # ============================================================================
 # Finalization
 # ============================================================================
@@ -520,3 +630,4 @@ if(QT_VERSION_MAJOR EQUAL 6)
     # - Добавление Windows manifest
     qt_finalize_executable(${PROJECT_NAME})
 endif()
+add_subdirectory(src/plugins/pgdriver)

@@ -1,15 +1,18 @@
 #include "contextMenuBuilder.h"
 #include <QtitanGrid.h>
 #include "rcol.h"
-#include "linkedformcontroller.h"
+#include "table/linkedForm/linkedformcontroller.h"
 #include <QElapsedTimer>
 
-ContextMenuBuilder::ContextMenuBuilder(Qtitan::GridTableView* view,
-                                       LinkedFormController*  linkedFormCtrl,
-                                       QObject*               parent)
+ContextMenuBuilder::ContextMenuBuilder(
+    Qtitan::GridTableView*          view,
+    LinkedFormController*           linkedFormCtrl,
+    const RtabController::CommonTableActions& actions,
+    QObject*                        parent)
     : QObject(parent)
     , m_view(view)
     , m_linkedFormCtrl(linkedFormCtrl)
+    , m_comTabAct(actions)
 {}
 
 void ContextMenuBuilder::removeUnwantedBuiltins(QMenu* menu)
@@ -29,13 +32,23 @@ void ContextMenuBuilder::removeUnwantedBuiltins(QMenu* menu)
     }
 }
 
-void ContextMenuBuilder::initMenu(QWidget* menuParent)
+void ContextMenuBuilder::initMenu(QWidget* menuParent, bool isVertical)
 {
+    // ── Экспорт / Импорт
+    m_actExport = new QAction(tr("Экспорт CSV"), this);
+    m_actImport = new QAction(tr("Импорт CSV"), this);
+    connect(m_actExport, &QAction::triggered,
+            this, &ContextMenuBuilder::sig_exportCsv);
+    connect(m_actImport, &QAction::triggered,
+            this, &ContextMenuBuilder::sig_importCsv);
+
+    if (isVertical)
+        return; // для вертикальных — только экспорт/импорт, всё остальное не нужно
+
     // Подменю связанных форм/макросов парентим к menuParent (виджет-хозяин),
     // чтобы они жили независимо от конкретного QMenu Qtitan
     m_linkedFormsMenu  = new QMenu(tr("Связанные формы"), menuParent);
     m_linkedMacrosMenu = new QMenu(tr("Макрос"),          menuParent);
-
     // ── Динамические (парентим к this, живут между вызовами меню) ──────
     m_actDesc = new QAction(this);
     connect(m_actDesc, &QAction::triggered,
@@ -48,41 +61,24 @@ void ContextMenuBuilder::initMenu(QWidget* menuParent)
     m_actDirect->setCheckable(true);
     connect(m_actDirect, &QAction::triggered,
             this, [this]() { emit sig_directCodeToggle(m_currentCol); });
-
     // ── Строковые операции ──────────────────────────────────────────────
-    m_actInsert    = new QAction(QIcon(":/images/Rastr3_grid_insrow_16x16.png"),  tr("Вставить"),            this);
-    m_actAdd       = new QAction(QIcon(":/images/Rastr3_grid_addrow_16x16.png"),  tr("Добавить"),            this);
-    m_actDuplicate = new QAction(QIcon(":/images/Rastr3_grid_duprow_16x161.png"), tr("Дублировать"),         this);
-    m_actDelete    = new QAction(QIcon(":/images/Rastr3_grid_delrow_16x16.png"),  tr("Удалить"),             this);
-    m_actGroup     = new QAction(QIcon(":/images/column_edit.png"),               tr("Групповая коррекция"), this);
-
-    m_actInsert   ->setShortcut(QKeySequence(Qt::CTRL | Qt::Key_I));
-    m_actAdd      ->setShortcut(QKeySequence(Qt::CTRL | Qt::Key_A));
-    m_actDuplicate->setShortcut(QKeySequence(Qt::CTRL | Qt::Key_R));
-    m_actDelete   ->setShortcut(QKeySequence(Qt::CTRL | Qt::Key_D));
-
-    connect(m_actInsert,    &QAction::triggered, this, &ContextMenuBuilder::sig_insertRow);
-    connect(m_actAdd,       &QAction::triggered, this, &ContextMenuBuilder::sig_addRow);
-    connect(m_actDuplicate, &QAction::triggered, this, &ContextMenuBuilder::sig_duplicateRow);
-    connect(m_actDelete,    &QAction::triggered, this, &ContextMenuBuilder::sig_deleteRow);
-    connect(m_actGroup,     &QAction::triggered, this, &ContextMenuBuilder::sig_groupCorrection);
-
+    menuParent->addAction(m_comTabAct.insertRow);
+    menuParent->addAction(m_comTabAct.addRow);
+    menuParent->addAction(m_comTabAct.duplicateRow);
+    menuParent->addAction(m_comTabAct.deleteRow);
+    menuParent->addAction(m_comTabAct.groupCorr);
     // ── Выравнивание ────────────────────────────────────────────────────
     m_actTmpl = new QAction(tr("Выравнивание: по шаблону"), this);
     m_actData = new QAction(tr("Выравнивание: по данным"),  this);
-    connect(m_actTmpl, &QAction::triggered, this, &ContextMenuBuilder::sig_widthByTemplate);
-    connect(m_actData, &QAction::triggered, this, &ContextMenuBuilder::sig_widthByData);
+    connect(m_actTmpl, &QAction::triggered,
+            this, &ContextMenuBuilder::sig_widthByTemplate);
+    connect(m_actData, &QAction::triggered,
+            this, &ContextMenuBuilder::sig_widthByData);
 
-    // ── Экспорт / Импорт / Выборка ──────────────────────────────────────
-    m_actExport = new QAction(tr("Экспорт CSV"), this);
-    m_actImport = new QAction(tr("Импорт CSV"), this);
-    m_actSel    = new QAction(tr("Выборка"),    this);
-    connect(m_actExport, &QAction::triggered, this, &ContextMenuBuilder::sig_exportCsv);
-    connect(m_actImport, &QAction::triggered, this, &ContextMenuBuilder::sig_importCsv);
+    m_actSel = new QAction(tr("Выборка"), this);
     // Передаём текущую колонку вместе с сигналом ─ исправляет баг «неверная колонка»
     connect(m_actSel, &QAction::triggered,
             this, [this]() { emit sig_selection(m_currentCol); });
-
     // ── Условное форматирование ─────────────────────────────────────────
     m_actCF = new QAction(QIcon(":/icons/edit_cond_formats"),
                           tr("Условное форматирование"), this);
@@ -90,7 +86,7 @@ void ContextMenuBuilder::initMenu(QWidget* menuParent)
             this, [this]() { emit sig_condFormatsEdit(m_currentCol); });
 }
 
-void ContextMenuBuilder::prepareForHeader(int column, RCol* col, QMenu* menu)
+void ContextMenuBuilder::prepareForHeader(ModelIndex column, const RCol* col, QMenu* menu)
 {
     m_currentCol = column;
 
@@ -137,18 +133,18 @@ void ContextMenuBuilder::prepareForHeader(int column, RCol* col, QMenu* menu)
 
 void ContextMenuBuilder::prepareForShow(const MenuContext& ctx, QMenu* menu)
 {
-    m_currentCol = ctx.column;
+    m_currentCol = ModelIndex{ctx.column};
     // Сносим ВСЕ встроенные пункты Qtitan — для меню ячейки они не нужны.
     // Qtitan владеет объектами, clear() их не удаляет.
     menu->clear();
 
     // ── Строковые операции ──────────────────────────────────────────────
     menu->addSeparator();
-    menu->addAction(m_actInsert);
-    menu->addAction(m_actAdd);
-    menu->addAction(m_actDuplicate);
-    menu->addAction(m_actDelete);
-    menu->addAction(m_actGroup);
+    menu->addAction(m_comTabAct.insertRow);
+    menu->addAction(m_comTabAct.addRow);
+    menu->addAction(m_comTabAct.duplicateRow);
+    menu->addAction(m_comTabAct.deleteRow);
+    menu->addAction(m_comTabAct.groupCorr);
     menu->addSeparator();
 
     // ── Экспорт / Импорт / Выборка ──────────────────────────────────────

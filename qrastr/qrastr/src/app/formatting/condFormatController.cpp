@@ -15,55 +15,47 @@ CondFormatController::CondFormatController(RModel*                model,
 
 void CondFormatController::loadFromJson()
 {
-    RData* rdata = m_model->getRdata();
-    if (!rdata) return;
+    const auto& rdata = m_model->getRdata();
 
-    // грузим прямо в модель
-    auto loaded = CondFormatJson::load(rdata->t_name_, rdata->vCols_);
+    // Загружаем по имени колонки — без привязки к позиции
+    auto loaded = CondFormatJson::load(rdata.t_name_);
 
-    for (auto& [col, vec] : loaded)
-        m_model->setCondFormats(static_cast<size_t>(col), vec);
+    // Преобразуем имя → col через mCols_
+    for (auto& [colName, vec] : loaded) {
+        auto it = rdata.mCols_.find(colName);
+        if (it == rdata.mCols_.end()) continue; // колонка удалена или переименована
+        m_model->setCondFormats(it->second, std::move(vec));
+    }
 }
 
 void CondFormatController::saveToJson()
 {
-    RData* rdata = m_model->getRdata();
-    if (!rdata) return;
-
-    // Собираем актуальное состояние из модели (не из локальной копии).
-    std::unordered_map<int, std::vector<CondFormat>> snapshot;
-    for (const RCol& rcol : *rdata) {
-        int idx = rcol.getIndex();
-        const auto& vec = m_model->getCondFormats(idx);
+    const auto& rdata = m_model->getRdata();
+    // Снапшот: имя колонки → форматы
+    std::unordered_map<std::string, std::vector<CondFormat>> snapshot;
+    ModelIndex col {0};
+    for (const RCol& rcol : rdata) {
+        const auto& vec = m_model->getCondFormats(col);
         if (!vec.empty())
-            snapshot[idx] = vec;
+            snapshot[rcol.getColName()] = vec;
+        ++col;
     }
-
-    // статический вызов, данные передаются явно.
-    CondFormatJson::save(rdata->t_name_, rdata->vCols_, snapshot);
+    CondFormatJson::save(rdata.t_name_, snapshot);
 }
 
-void CondFormatController::editCondFormats(std::size_t column)
+void CondFormatController::editCondFormats(ModelIndex column)
 {
-    const int col = static_cast<int>(column);
-
     // берём из модели — единственного источника истины.
-    const std::vector<CondFormat>& current = m_model->getCondFormats(col);
-
-    const QString title = m_model->headerData(
-                                     col, Qt::Horizontal, Qt::DisplayRole).toString();
-
+    const std::vector<CondFormat>& current = m_model->getCondFormats(column);
+    const QString title = m_model->headerData(column.value, Qt::Horizontal, Qt::DisplayRole).toString();
     CondFormatDialog dlg(current, "UTF-8", m_parentWidget);
     dlg.setWindowTitle(tr("Conditional formats for \"%1\"").arg(title));
-
     if (dlg.exec() == QDialog::Accepted) {
         // Пишем результат диалога сразу в модель — одно место, нет расхождения.
         m_model->setCondFormats(column, dlg.getCondFormats());
-
         // Обновляем отображение — layoutChanged не вызывается внутри setCondFormats,
         // чтобы не делать лишних перерисовок при пакетной загрузке из JSON.
         emit m_model->layoutChanged();
-
         saveToJson();
     }
 }

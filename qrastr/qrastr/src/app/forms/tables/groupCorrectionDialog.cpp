@@ -8,10 +8,10 @@
 #include "rdata.h"
 #include "rcol.h"
 
-GroupCorrectionDialog::GroupCorrectionDialog(ITableRepository* repo,
-                                             RData* prdata,
-                                             RCol* prcol, QWidget *parent)
-    : QDialog(parent), m_repo(repo), m_prdata(prdata), m_prcol(prcol)
+GroupCorrectionDialog::GroupCorrectionDialog(std::shared_ptr<ITableRepository> tables,
+                                             const RData& prdata,
+                                             const RCol* prcol, QWidget *parent)
+    : QDialog(parent), m_tables(tables), m_prdata(prdata), m_prcol(prcol)
 {
     setWindowTitle(tr("Групповая коррекция"));
 
@@ -19,17 +19,20 @@ GroupCorrectionDialog::GroupCorrectionDialog(ITableRepository* repo,
     QComboBox* cbParameters = new QComboBox();
     QLabel* lTable = new QLabel();
     QString str_lab3 = "в таблице ";
-    str_lab3.append(m_prdata->t_name_.c_str());
+    str_lab3.append(m_prdata.t_name_.c_str());
     lTable->setText(str_lab3);
 
-    std::string str_par = m_prdata->t_name_;
-    str_par.append("[").append(m_prdata->t_title_).append("]."); //node[Узлы].
-    for (auto& col : *m_prdata) {
+    std::string str_par = m_prdata.t_name_;
+    str_par.append("[").append(m_prdata.t_title_).append("]."); //node[Узлы].
+    for (const auto& col : m_prdata) {
         std::string par = str_par;
         par.append(col.getColName()).append("[").append(col.getTitle()).append("]");
         cbParameters->addItem(par.c_str());
     }
-    cbParameters->setCurrentIndex(m_prcol->getIndex());
+    cbParameters->setCurrentIndex(
+        m_prdata.mCols_.count(m_prcol->getColName())
+            ? m_prdata.mCols_.at(m_prcol->getColName()).value
+            : 0);
 
     QHBoxLayout* row1 = new QHBoxLayout();
     row1->addWidget(new QLabel(tr("Параметр")));
@@ -75,11 +78,11 @@ GroupCorrectionDialog::GroupCorrectionDialog(ITableRepository* repo,
 
 void GroupCorrectionDialog::on_buttonBox_accepted()
 {
-    m_selection  = m_leExpression->text().toStdString();
-    m_expression = m_leExpression->text().toStdString();
-    m_repo->calcColumn(m_prdata->t_name_,
-                       m_prcol->getColName(),
-                       m_expression,
-                       m_selection);
+    m_expression = m_leExpression->text().toStdString(); // формула
+    m_selection  = m_leSelection->text().toStdString();
+    m_tables->calcColumn(m_prdata.t_name_,
+                         m_prcol->getColName(),
+                         m_expression,
+                         m_selection);
     close();
 }

@@ -5,8 +5,8 @@
 #include <unordered_set>
 
 RData::RData(const ITableRepository::TableSchema& schema,
-             const CUIForm&                        form)
-{
+             const CUIForm&                        form){
+
     // schema передан по const& — объект не копируется.
     // Строки (name, title) копируются по одному разу в члены RData/RCol
 
@@ -17,71 +17,123 @@ RData::RData(const ITableRepository::TableSchema& schema,
     reserve(n_reserve);
     // reserve() вызван ДО push_back, иначе при reallocation
     // итераторы инвалидируются и RCol теряют данные.
-
-    m_str_cols.clear();
-
+    ModelIndex col{0};
     for (const auto& cs : schema.columns) {
-        // initialize() принимает const& — объект ColumnSchema не копируется.
-        vCols_.push_back(cs.name);
-        m_str_cols += cs.name + ",";
-
         RCol rc;
         rc.initialize(cs);
-
-        AddCol(rc);
-
-        if (mCols_.find(cs.name) == mCols_.end())
-            mCols_.insert({cs.name, static_cast<int>(cs.index)});
+        emplace_back(std::move(rc));
+        mCols_.try_emplace(cs.name, col);
+        ++col;
     }
-
     // Скрываем колонки, не входящие в форму.
-    // Скрытые колонки присутствуют в pnparray_ — просто не показываются в UI.
+    // Скрытые колонки присутствуют в datablock — просто не показываются в UI.
     std::unordered_set<std::string> formCols;
-    for (const auto& f : form.Fields())
+
+    for (const auto& f : form.Fields()) {
+        //if ((t_name_ == "vetv" && f.Name() == "name"))
+            //continue; // игнорируем только для vetv
         formCols.insert(f.Name());
+    }
 
     for (RCol& rc : *this)
         if (formCols.count(rc.getColName()))
-            rc.setHidden(false);
-
-    if (!m_str_cols.empty())
-        m_str_cols.pop_back();
-
+            rc.setHiddenByForm(false);
     spdlog::debug("RData: table={} columns={}", t_name_, schema.columns.size());
 }
 
-int RData::AddCol(const RCol& rcol)
-{
-    emplace_back(rcol);
-    return static_cast<int>(size());
+void RData::populateBlock(std::shared_ptr<ITableRepository> tables){
+
+    const std::string visCols = get_cols(/*visible=*/true); // только не-hidden
+    datablock = tables->getBlock(t_name_, visCols);
+    rebuildBlockIndexMap();
+
+    auto* db = datablock.get();
+
+    spdlog::debug("[PERF] rows = {}", db->RowsCount());
+    spdlog::debug("[PERF] cols = {}", db->ColumnsCount());
+    spdlog::debug("[PERF] datasize = {}", db->DataSize());
+    spdlog::debug("[PERF] bytes = {}", db->DataSize() * sizeof(FieldVariantData));
 }
 
-void RData::populateBlock(ITableRepository* repo)
+void RData::rebuildBlockIndexMap()
 {
-    // repo — невладеющий указатель, время жизни гарантировано RtabController.
-    // getBlock возвращает shared_ptr — счётчик ссылок увеличивается,
-    // данные не копируются.
-    pnparray_ = repo->getBlock(t_name_, m_str_cols);
+    m_blockColIdx.assign(size(), LocalIndex{});
+    if (!datablock) return;
+    for (size_t i = 0; i < size(); ++i)
+        m_blockColIdx[i] =
+            LocalIndex{datablock->localColumnIndex((*this)[i].getColName())};
 }
 
-std::string RData::getCommaSeparatedFieldNames() const
+LocalIndex
+RData::ensureLoaded(ModelIndex pos,
+                    std::shared_ptr<ITableRepository> tables) const
 {
+    if (!pos.valid_in(size())) return {};
+
+    const std::string& name = (*this)[pos.to_size()].getColName();
+    tables->ensureColumn(t_name_, name);
+    updateBlockIndex(pos);
+    return localIndexOf(pos);
+}
+
+FieldVariantData
+RData::getCell(ModelIndex pos, int row) const
+{
+    const LocalIndex li = localIndexOf(pos);
+    if (li.invalid()) return {};
+    return datablock->Get(row, li.value);
+}
+
+void RData::updateBlockIndex(ModelIndex pos) const noexcept
+{
+    if (!datablock || !pos.valid_in(m_blockColIdx.size())) return;
+
+    const std::string& name = (*this)[pos.to_size()].getColName();
+    m_blockColIdx[pos.to_size()] =
+        LocalIndex{datablock->localColumnIndex(name)};
+}
+
+std::string RData::get_cols(bool visible) const{
+    // Резервируем примерный размер: N колонок × ~5 символов + запятые
     std::string ret;
-    for (const RCol& rc : *this)
-        ret += rc.getColName() + ",";
-    if (!ret.empty())
-        ret.pop_back();
-    return ret;
-}
+    ret.reserve(size() * 6);
 
-std::string RData::get_cols(bool visible) const
-{
-    std::string ret;
     for (const RCol& rc : *this) {
-        if (!visible || !rc.isHidden())
-            ret += rc.getColName() + ",";
+        if (!visible || !rc.isHiddenByForm()) {
+            if (!ret.empty()) ret += ',';
+            ret += rc.getColName();        // без временной строки
+        }
     }
-    if (!ret.empty())
-        ret.pop_back();
     return ret;
+}
+
+std::vector<std::string> RData::colNames() const {
+    std::vector<std::string> names;
+    names.reserve(size());
+    for (const RCol& rc : *this)
+        names.push_back(rc.getColName());
+    return names;
+}
+
+ModelIndex
+RData::modelIndexOf(const std::string& colName) const noexcept{
+    auto it = mCols_.find(colName);
+    return it != mCols_.end() ? ModelIndex{it->second} : ModelIndex{};
+}
+
+AstraIndex
+RData::astraIndexOf(ModelIndex pos) const noexcept{
+    if (!pos.valid_in(size())) return {};
+    return (*this)[pos.to_size()].astraIndex();
+}
+
+LocalIndex
+RData::localIndexOf(ModelIndex pos) const noexcept{
+    if (!pos.valid_in(m_blockColIdx.size())) return {};
+    return LocalIndex{m_blockColIdx[pos.to_size()]};
+}
+
+const RCol* RData::colAt(ModelIndex pos) const noexcept{
+    if (!pos.valid_in(size())) return nullptr;
+    return &(*this)[pos.to_size()];
 }

@@ -1,7 +1,7 @@
 #pragma once
 
 #include "rcol.h"
-#include "rtablesdatamanager.h"
+#include "table/rTablesDataAdapter.h"
 
 class CUIForm;
 class QDataBlock;
@@ -24,21 +24,52 @@ public:
 
     /**
      * Получает общий QDataBlock из репозитория.
-     * После вызова pnparray_ указывает на тот же объект,
+     * После вызова datablock указывает на тот же объект,
      * что и у других открытых окон этой таблицы.
+     * Загружаем только колонки формы
      */
-    void populateBlock(ITableRepository* repo);
+    void populateBlock(std::shared_ptr<ITableRepository> tables);
+    int getRowsCount() const{
+        return static_cast<int>(datablock->RowsCount());
+    }
+    int getColumnsCount() const{
+        return static_cast<int>(datablock->ColumnsCount());
+    }
+    void duplicateRow(int row){
+        datablock->DuplicateRow(row);
+    }
+    bool isReady() const{
+        return datablock != nullptr;
+    }
+    // ── Конвертация между пространствами индексов ────────────────────────
+    /// colName → ModelIndex. O(1) через mCols_. Возвращает invalid() если нет.
+    ModelIndex modelIndexOf(const std::string& colName) const noexcept;
+    /// ModelIndex → AstraIndex (через метаданные RCol).
+    AstraIndex astraIndexOf(ModelIndex pos) const noexcept;
+    /// ModelIndex → LocalIndex в QDataBlock. -1 если колонка не загружена.
+    LocalIndex localIndexOf(ModelIndex pos) const noexcept;
+    /// RCol по ModelIndex — безопасный доступ.
+    const RCol* colAt(ModelIndex pos) const noexcept;
+    // ── Загрузка и чтение ─────────────────────────────────────────────────
+    /// Ленивая загрузка колонки в блок. Возвращает LocalIndex или invalid().
+    LocalIndex ensureLoaded(ModelIndex pos,
+                            std::shared_ptr<ITableRepository> tables) const;
+    /// Единственная точка чтения ячейки.
+    /// Принимает ModelIndex — снаружи local_index не нужен.
+    FieldVariantData getCell(ModelIndex pos, int row) const;
 
-    int         AddCol(const RCol& rcol);
     std::string get_cols(bool visible = true) const;
-    std::string getCommaSeparatedFieldNames() const;
+    std::vector<std::string> colNames() const;
 
     std::string t_name_;
     std::string t_title_;
-
-    std::vector<std::string>          vCols_; ///< вектор имён колонок в порядке следования.
-    std::shared_ptr<QDataBlock>       pnparray_;
-    std::unordered_map<std::string, int> mCols_; ///< unordered_map<имя_колонки, индекс> для быстрого поиска колонки по имени.
+    std::unordered_map<std::string, ModelIndex> mCols_; ///< unordered_map<имя_колонки, индекс> для быстрого поиска колонки по имени.
 private:
-    std::string m_str_cols; ///< vCols_ в виде строки имен столбцов ex: "ny,pn,qn,vras"
+    /// Обновить индекс только для одной позиции (после lazy load).
+    void updateBlockIndex(ModelIndex pos) const noexcept;
+    /// Перестроить карту rdata_pos → local_index.
+    /// Вызывать после любого изменения состава колонок блока.
+    void rebuildBlockIndexMap();
+    std::shared_ptr<QDataBlock>       datablock;
+    mutable std::vector<LocalIndex> m_blockColIdx; /// ModelIndex → LocalIndex
 };

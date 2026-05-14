@@ -3,7 +3,6 @@
 #include <QDialog>
 
 class QTreeWidgetItem;
-class QAstra;
 class QTreeWidget;
 class QStackedWidget;
 class SettingsStackedItemWidget;
@@ -15,7 +14,7 @@ public:
     explicit SettingsDialog(QWidget *parent = nullptr);
     ~SettingsDialog();
 
-    bool init(const std::shared_ptr<QAstra>& sp_qastra);
+    bool init();
     void closeEvent(QCloseEvent *event) override;
 
 public slots:
@@ -34,7 +33,6 @@ private:
     void setAppSettingsChanged();
     void setupUI();
 
-    std::shared_ptr<QAstra> m_qAstra;
     QPushButton* m_pbApplySettings {nullptr};
     QTreeWidget* m_twSections {nullptr};
     QStackedWidget* m_sw {nullptr};

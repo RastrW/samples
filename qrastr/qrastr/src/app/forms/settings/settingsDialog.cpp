@@ -7,8 +7,8 @@
 #include <QPushButton>
 #include <QMessageBox>
 #include <QCloseEvent>
+#include <spdlog/spdlog.h>
 
-#include "qastra.h"
 #include "rastrParameters.h"
 #include "dataSettingsWidget.h"
 #include "settingsOnLoadFilesWidget.h"
@@ -63,8 +63,7 @@ SettingsDialog::~SettingsDialog(){
     //spdlog::info("Delete object FormSettings");
 }
 
-bool SettingsDialog::init(const std::shared_ptr<QAstra>& sp_qastra) {
-    m_qAstra = sp_qastra;
+bool SettingsDialog::init() {
 
     if (!RastrParameters::get_instance()->readTemplates()) {
         spdlog::error("Не удалось прочитать шаблоны");

@@ -4,22 +4,31 @@
 #include <QString>
 #include <QMessageBox>
 #include <QPluginLoader>
-#include <QPluginLoader>
 #include "common_qrastr.h"
 #include <spdlog/sinks/stdout_color_sinks.h>
 #include <spdlog/sinks/rotating_file_sink.h>
 #include <spdlog/sinks/qt_sinks.h>
+
 #include "rastrParameters.h"
-using WrapperExceptionType = std::runtime_error;
-#include <astra/IPlainRastrWrappers.h>
 #include "plugins/rastr/plugin_interfaces.h"
 #include "plugins/ti/plugin_ti_interfaces.h"
 #include "plugins/barsmdp/plugin_barsmdp_interfaces.h"
+#include "plugins/pgdriver/plugin_pgdriver_interfaces.h"
 #include "qastra.h"
 #include "qti.h"
 #include "qbarsmdp.h"
+#include "qpgdriver.h"
 #include "UIForms.h"
 #include "startupLoader.h"
+#include "engineContext.h"
+#include "files/rastrFileAdapter.h"
+#include "calculation/rastrCalcAdapter.h"
+#include "log/rastrLogAdapter.h"
+#include "table/rTablesDataAdapter.h"
+#include "ti/tiAdapter.h"
+#include "bars/barsMDPAdapter.h"
+#include "pgdriver/pgdriveradapter.h"
+
 
 class QtSink : public spdlog::sinks::base_sink<std::mutex>
 {
@@ -161,24 +170,25 @@ bool App::readSettings(){
 
 bool App::start() {
     try {
-        auto* params = RastrParameters::get_instance();
-        QDir::setCurrent(params->getDirData().absolutePath());
+        QDir::setCurrent(RastrParameters::get_instance()->getDirData().absolutePath());
 
         emit sig_progressChanged(35, tr("Загрузка плагинов..."));
         if (!loadPlugins())
             return false;
 
-        // Загрузка стартовых шаблонов и файлов.
+        // Создаём адаптер один раз: он нужен StartupLoader прямо сейчас
+        assert(m_sp_qastra != nullptr);
+        m_fileOps = std::make_shared<RastrFileAdapter>(m_sp_qastra);
+
         emit sig_progressChanged(65, tr("Загрузка шаблонов..."));
-        StartupLoader loader(m_sp_qastra);
-        connect(&loader, &StartupLoader::loadWarning, [](const QString& msg) {
+        StartupLoader loader(m_fileOps);             // ← IFileOperations, не QAstra
+        connect(&loader, &StartupLoader::sig_loadWarning, [](const QString& msg) {
             spdlog::warn("{}", msg.toStdString());
         });
 
         if (!loader.load())
             return false;
 
-        spdlog::info("DeserializeForms: starting");
         emit sig_progressChanged(80, tr("Чтение форм..."));
         if (!deserializeForms()) {
             spdlog::error("Can't read forms");
@@ -266,7 +276,6 @@ bool App::loadPlugins(){
                 }
                 spdlog::info("it is Rastr.test.finished");
             }
-            auto iTI = qobject_cast<InterfaceTI *>(plugin);
             if (auto* iTI = qobject_cast<InterfaceTI*>(plugin)) {
                 //Rastr обязателен для TI
                 if (!m_sp_qastra) {
@@ -337,6 +346,42 @@ bool App::loadPlugins(){
                 }
                 spdlog::info("it is BarsMDP.test.finished");
             }
+            if (auto* iPGDriver = qobject_cast<InterfacePGDriver*>(plugin)) {
+                if (!m_sp_qastra) {
+                    spdlog::error("PGDriver plugin requires Rastr to be loaded first — "
+                                  "check plugin load order");
+                    continue;   // не фатально: PGDriver необязателен
+                }
+                try {
+                    spdlog::info("it is PGDriver" );
+                    const std::shared_ptr<spdlog::logger> sp_logger =
+                        spdlog::default_logger();
+                    iPGDriver->setLoggerPtr( sp_logger );
+                    const std::shared_ptr<IPlainPGDriver> PGDriver =
+                        iPGDriver->getIPlainPGDriverPtr();
+                    if(PGDriver == nullptr){
+                        spdlog::info("PGDriver==null" );
+                        continue;
+                    }
+
+                    auto rastrPtr = m_sp_qastra->getRastr().get();
+                    if (rastrPtr == nullptr) {
+                        spdlog::critical("Rastr pointer: {}", (void*)rastrPtr);
+                        continue;
+                    }
+
+                    PGDriver->Set_Rastr(m_sp_qastra->getRastr().get());
+                    m_sp_qpgdriver = std::make_shared<QPGDriver>();
+                    m_sp_qpgdriver->setPGDriver(PGDriver);
+
+                }catch(const std::exception& ex){
+                    exclog(ex);
+                }catch(...){
+                    exclog();
+                }
+                spdlog::info("it is PGDriiver.test.finished");
+                continue;
+            }
         }else{
             spdlog::warn("Plugin instance is NULL for {}", fileName.toStdString());
             return false;
@@ -348,14 +393,18 @@ bool App::loadPlugins(){
 
 bool App::deserializeForms(){
     try {
-        const QDir& formsDir = RastrParameters::get_instance()->getDirForms();
+        const auto& params = RastrParameters::get_instance();
+        const QDir& formsDir = params->getDirForms();
 
-        for (const auto& form : RastrParameters::get_instance()->getStartLoadForms()) {
+        for (const auto& form : params->getStartLoadForms()) {
             const QString fullPath =
                 formsDir.filePath(QString::fromUtf8(form.c_str()));
 
-            //только как локальная переменная для CUIFormCollectionSerializerBinary
+#ifdef Q_OS_WIN
             const fs::path path_form(fullPath.toStdWString());
+#else
+            const fs::path path_form(fullPath.toStdString());
+#endif
 
             CUIFormsCollection tmp;
             if (path_form.extension() == ".fm")
@@ -367,6 +416,8 @@ bool App::deserializeForms(){
             for (auto& uiform : tmp.Forms())
                 dest.emplace_back(std::move(uiform));
         }
+        for (auto& f : upCUIFormsCollection_->Forms())
+            f.SetDisplayName(stringutils::MkToUtf8(f.Name()));
     } catch (const std::exception& ex) {
         exclog(ex);
         return false;
@@ -377,7 +428,7 @@ bool App::deserializeForms(){
     return true;
 }
 
-std::list<CUIForm>& App::getForms() const {
+std::vector<CUIForm>& App::getForms() const {
     assert(nullptr!=upCUIFormsCollection_);
     return upCUIFormsCollection_->Forms();
 }
@@ -385,4 +436,38 @@ std::list<CUIForm>& App::getForms() const {
 void App::flushLogCache(std::shared_ptr<spdlog::sinks::sink> qt_sink) {
     m_v_cache_log.flushToSinks({qt_sink}); // только Qt, без дублей
     m_v_cache_log.clear();
+}
+
+EngineContext App::buildEngineContext() {
+    assert(m_sp_qastra != nullptr);  // Rastr обязателен
+
+    EngineContext ctx;
+
+    // Каждый адаптер держит shared_ptr<QAstra> и реализует свой интерфейс.
+    // QAstra не знает об адаптерах и не меняется.
+    ctx.fileOps    = m_fileOps;
+    ctx.calcEngine = std::make_shared<RastrCalcAdapter> (m_sp_qastra);
+    ctx.logEvents = std::make_shared<RastrLogAdapter>(m_sp_qastra);
+
+    // rtda реализует ОБА интерфейса — один объект, два shared_ptr на него.
+    // Используем конструктор псевдонимов в shared_ptr: оба указателя владеют одним объектом,
+    // счётчик ссылок общий — объект живёт пока жив хотя бы один из них.
+    auto rtda = std::make_shared<RTablesDataAdapter>(m_sp_qastra);
+    ctx.tables      = rtda;  // shared_ptr<ITableRepository>
+    ctx.tableEvents = rtda;  // shared_ptr<ITableEvents> — тот же объект
+
+    // getRastr() возвращает shared_ptr<IPlainRastr>, владение у QAstra.
+    // Сохраняем голый указатель — время жизни гарантировано временем жизни App.
+    ctx.rawRastr = m_sp_qastra->getRastr().get();
+
+    if (m_sp_qti)
+        ctx.ti = std::make_shared<TIAdapter>(m_sp_qti);
+
+    if (m_sp_qbarsmdp)
+        ctx.barsMDP = std::make_shared<BarsMDPAdapter>(m_sp_qbarsmdp);
+
+    if (m_sp_qpgdriver)
+        ctx.PGDriver = std::make_shared<PGDriverAdapter>(m_sp_qpgdriver);
+
+    return ctx;
 }

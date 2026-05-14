@@ -2,7 +2,7 @@
 #include "checkboxListDialog.h"
 #include <QDir>
 
-class QAstra;
+class IFileOperations;
 class QTableWidget;
 class QCheckBox;
 class QTableWidgetItem;
@@ -11,17 +11,18 @@ class SaveAllDialog : public CheckboxListDialog
 {
     Q_OBJECT
 public:
-    explicit SaveAllDialog(QAstra* pqastra, std::map<QString,QString> _mFilesLoad,
-                         QWidget *parent = nullptr);
+    explicit SaveAllDialog( std::shared_ptr<IFileOperations> fileOps,
+                            std::unordered_map<QString,QString> filesLoad,
+                            QWidget *parent = nullptr);
 
     void showEvent(QShowEvent* event) override;
 
 private slots:
     void slot_buttonBoxAccepted();
 private:
-    QAstra*               m_pqastra;
+    std::shared_ptr<IFileOperations> m_fileOps;
     QDir                  m_dirShabl;
-    std::map<QString,QString> m_FilesLoad;
+    std::unordered_map<QString,QString> m_FilesLoad;
 
     enum class _cols : int { save, templ, file, path };
 };

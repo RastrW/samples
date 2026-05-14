@@ -5,13 +5,13 @@
 #include "condFormatStorage.h"
 #include "rdata.h"
 #include "table/backgroundCache.h"
+#include "table/tableIndexHash.h"
 
-class QAstra;
-class RTablesDataManager;
 class CUIForm;
 class RData;
 class RCol;
 class CondFormat;
+struct ColumnEditorInfo;
 
 struct ToQVariant {
     QVariant operator()(std::monostate) { return { QVariant() }; }
@@ -22,64 +22,42 @@ struct ToQVariant {
     QVariant operator()(const std::string& value) { return std::string(value).c_str(); }
 };
 
-///@brief Qt модель для связи QDataBlock с QTableView/QTitan Grid
+///@brief Qt модель для связи плагина с QTableView/QTitan Grid
 class RModel : public QAbstractTableModel
 {
     Q_OBJECT
 
 signals:
     void editCompleted(const QString&);
-    void sig_nameRefUpdated(std::vector<size_t> updatedCols);
+    void sig_nameRefUpdated(const std::vector<ModelIndex>& updatedCols);
 
 public slots:
-    ///@brief Уведомление от RTDM:
-    /// плагин генерирует хинт → RTDM ловит → испускает сигнал → слот вызывает beginInsertRows / endInsertRows у Qt
-    void slot_DataChanged(const std::string& tName, int rowFrom, int colFrom,
-                          int rowTo, int colTo);
+    ///@brief Уведомление от RTDA:
+    /// плагин генерирует хинт → RTDA ловит → испускает сигнал → слот вызывает beginInsertRows / endInsertRows у Qt
+    void slot_DataChanged(const std::string& tName,
+                          int rowFrom, const std::string& colNameFrom,
+                          int rowTo,   const std::string& colNameTo);
     void slot_BeginResetModel(const std::string& tName);
     void slot_EndResetModel(const std::string& tName);
     void slot_BeginInsertRow(const std::string& tName, int first, int last);
     void slot_EndInsertRow(const std::string& tName);
     void slot_BeginRemoveRows(const std::string& tName, int first, int last);
     void slot_EndRemoveRows(const std::string& tName);
-    void slot_RefTableChanged(const std::string& tname);
+    void slot_RefTableChanged(const std::string& tName);
 
 public:
-    struct ColumnEditorInfo {
-        enum class Type {
-            None, Numeric, CheckBox, ComboBox,
-            ComboBoxPicture, DateTime, Color, NameRef
-        };
-
-        Type        editorType = Type::None;
-        QStringList comboItems;
-        int         decimals   = 2;
-        double      minVal     = -1e6;
-        double      maxVal     =  1e6;
-
-        struct NameRefData {
-            std::unordered_map<size_t, std::string> items;
-        };
-        NameRefData nameRefData;
-
-        struct PicItem { QPixmap image; QString label; };
-        QList<PicItem> picItems;
-    };
-
     /**
      * @param repo  Невладеющий указатель на ITableRepository.
      *              Время жизни репозитория гарантируется RtabController.
-     *              QAstra* больше не нужен — все обращения к плагину
-     *              идут через repo.
      */
-    explicit RModel(QObject* parent, ITableRepository* repo);
+    explicit RModel(QObject* parent, std::shared_ptr<ITableRepository>        tables);
 
     void setForm(CUIForm* pUIForm) { m_UIform = pUIForm; }
 
     /**
      * Перестроение структуры данных модели.
      * Вызывается при первом открытии и при slot_EndResetModel.
-     * Запрашивает схему у репозитория — QAstra* не нужен.
+     * Запрашивает схему у репозитория
      */
     bool populateDataFromRastr();
 
@@ -101,22 +79,22 @@ public:
     bool removeColumns(int col,  int count, const QModelIndex& parent = {}) override;
 
     // ── Условное форматирование ───────────────────────────────────────────
-    void addCondFormat (size_t column, const CondFormat& condFormat);
-    void setCondFormats(size_t column, const std::vector<CondFormat>& condFormats);
+    void setCondFormats(ModelIndex column, const std::vector<CondFormat>& condFormats);
     // Читать текущие правила колонки для CondFormatController
-    const std::vector<CondFormat>& getCondFormats(int column) const;
+    const std::vector<CondFormat>& getCondFormats(ModelIndex column) const;
 
     // ── Утилиты ───────────────────────────────────────────────────────────
-    std::vector<std::tuple<int,int>> columnsWidth() const;
-    RCol*             getRCol    (int col) const;
-    int               getIndexCol(const std::string& col) const;
-    RData*            getRdata   ();
+    std::vector<std::tuple<int,int>>
+        columnsWidth() const;
+    const RCol* getRCol   (ModelIndex col) const;
+    const RData& getRdata () const;
+    const ColumnEditorInfo&
+        getColumnEditorInfo(ModelIndex colIndex) const;
+    void invertDirectCode(ModelIndex col);
     std::vector<long> getRowsBySelection(const std::string& selection) const;
-    ColumnEditorInfo  getColumnEditorInfo(int colIndex) const;
-
 private:
     // ── Данные ───────────────────────────────────────────────────────────────
-    ITableRepository*  m_repo;// m_repo — единственная точка входа к плагину.
+    std::shared_ptr<ITableRepository> m_tables;
     CUIForm*           m_UIform  {nullptr};
 
     std::unique_ptr<RData> m_rdata;
@@ -130,17 +108,22 @@ private:
     mutable std::vector<ColumnEditorInfo> m_editorInfoCache;
 
     // ── Условное форматирование ────────────────────────────
-    QVariant getMatchingCondFormat(size_t row, size_t col,
+    QVariant getMatchingCondFormat(size_t row, ModelIndex col,
                                    const QString& value, int role) const;
     // ── DisplayRole / EditRole (Текст для отображения/Значение для редактора)─
-    QVariant dataForDisplayEdit(int row, int col, const RCol& rcol,
-                                const QVariant& raw, int role) const;
+    QVariant dataForDisplayEdit(int row, ModelIndex col, const RCol& rcol,
+                                const QVariant& raw,
+                                const FieldVariantData& fvd,
+                                int role) const;
     // ── BackgroundRole (Фон ячейки) ──────────────────────────────────────────
-    QVariant dataForBackground (int row, int col,
-                               const RCol& rcol, const QVariant& raw) const;
+    QVariant dataForBackground (int row, ModelIndex col,
+                                const RCol& rcol,
+                                const FieldVariantData& fvd,
+                                const QVariant& raw) const;
     // ── DecorationRole (Иконка слева от текста)───────────────────────────────
-    QVariant dataForDecoration (int row, int col,
-                               const RCol& rcol, const QVariant& raw) const;
+    QVariant dataForDecoration (int row, ModelIndex col,
+                                const FieldVariantData& fvd,
+                                const RCol& rcol) const;
     // ── ComboBoxRole (popup для ComboBox)─────────────────────────────────────
     ///@note Строит список элементов для ComboBox/ComboBoxPicture.
     /// Не зависит от raw-значения — возвращает одно и то же для валидных и невалидных ячеек.
@@ -148,11 +131,14 @@ private:
     // Текст для DisplayRole ячеек Enpic/ Enum / NameRef / SuperEnum
     // EditRole возвращает сырой числовой код, чтобы QTitan
     // использовал его при сортировке (числовое сравнение, не строковое).
-    QString  resolveDisplayText(int col, const RCol& rcol,
+    QString  resolveDisplayText(const RCol& rcol,
                                const QVariant& raw) const;
     // Данные отсутствуют (например, новая строка)
-    QVariant dataForInvalidCellEditRole(int col, const RCol& rcol) const;
+    QVariant dataForInvalidCellEditRole(const RCol& rcol) const;
     // Функции получения редактора из кеша и вычисление редактора для колонки в кеш
-    ColumnEditorInfo buildColumnEditorInfo(int colIndex) const;
+    ColumnEditorInfo buildColumnEditorInfo(ModelIndex colIndex) const;
     void             buildEditorInfoCache();
+    //Guard для неинициализированной модели
+    bool isReady() const noexcept;
+    bool isMyTable(const std::string& tName) const noexcept;
 };

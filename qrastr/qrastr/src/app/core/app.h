@@ -5,8 +5,11 @@
 class QAstra;
 class QTI;
 class QBarsMDP;
+class QPGDriver;
 class CUIFormsCollection;
 class CUIForm;
+class EngineContext;
+class IFileOperations;
 
 /**
  * @class App
@@ -26,12 +29,14 @@ public:
     bool init(); // Инициализация логирования
     bool start(); // Загрузка плагинов и данных
     // Геттеры для доступа к плагинам
-    std::list<CUIForm>& getForms() const;
+    std::vector<CUIForm>& getForms() const;
     std::shared_ptr<QAstra> getQAstraPtr(){ return m_sp_qastra;}
     std::shared_ptr<QTI> getQTIPtr(){ return m_sp_qti;}
     std::shared_ptr<QBarsMDP> getQBarsMDPPtr(){ return m_sp_qbarsmdp;}
     // Сбросить накопленные за время init() сообщения в логгер
     void flushLogCache(std::shared_ptr<spdlog::sinks::sink> qt_sink);
+
+    EngineContext buildEngineContext();
 signals:
     void sig_progressChanged(int percent, const QString& message);
 private:
@@ -52,6 +57,8 @@ private:
     std::shared_ptr<QAstra> m_sp_qastra;
     std::shared_ptr<QTI> m_sp_qti;
     std::shared_ptr<QBarsMDP> m_sp_qbarsmdp;
+    std::shared_ptr<QPGDriver> m_sp_qpgdriver;
+    std::shared_ptr<IFileOperations> m_fileOps;
     // Коллекция форм для отображения данных
     std::unique_ptr<CUIFormsCollection>
         upCUIFormsCollection_;

@@ -10,7 +10,7 @@ struct FilterRule {
         Eq, Neq, Lt, Le, Gt, Ge,
         // Строковые
         Contains,
-        Like,       // wildcards: * ?
+        Like,
         NotLike,
         StartsWith,
         EndsWith
@@ -39,7 +39,7 @@ struct FilterRule {
             return false;
         }
 
-        if (v.metaType().id() == QMetaType::Bool) {
+        if (v.type() == QVariant::Bool) {
             if (ok) *ok = true;
             return v.toBool();
         }
@@ -76,7 +76,19 @@ struct FilterRule {
 
         if (isBool) {
             bool ok = false;
-            const bool cellBool = variantToBool(cellVal, &ok);
+            bool cellBool = variantToBool(cellVal, &ok);
+
+            // Пустое/невалидное значение в bool-колонке = false по умолчанию
+            if (!ok) {
+                if (!cellVal.isValid() ||
+                    cellVal.isNull() ||
+                    cellVal.toString().trimmed().isEmpty())
+                {
+                    cellBool = false;
+                    ok = true;
+                }
+            }
+
             if (!ok)
                 return false;
 
