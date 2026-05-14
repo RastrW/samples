@@ -38,6 +38,10 @@ protected:
     void showEvent(QShowEvent* event) override;
 
 private:
+    /// Вычисляет реальную ширину области до первой данных-колонки
+    /// (индикаторная колонка + возможные frozen-разделители).
+    int measureIndicatorWidth() const;
+
     Qtitan::GridTableView* m_view = nullptr;
     QScrollArea*           m_scrollArea = nullptr;
     QWidget*               m_content = nullptr;

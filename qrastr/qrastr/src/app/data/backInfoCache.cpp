@@ -54,7 +54,7 @@ void BackInfoCache::rebuild(const RData& rdata,
 
 void BackInfoCache::loadEnum(const RCol& rcol)
 {
-    const size_t idx = static_cast<size_t>(rcol.pluginIndex());
+    const auto idx = rcol.astraIndex();
     const auto& nameRef = rcol.getNameRef();
 
     QStringList list;
@@ -78,7 +78,7 @@ void BackInfoCache::loadSuperenum(const RCol& rcol,
         tables->columnIndex(parts->srcTable, parts->valueCol) < 0)
         return;
 
-    const size_t idx = static_cast<size_t>(rcol.pluginIndex());
+    const auto idx = rcol.astraIndex();
     m_superenum.emplace(idx, buildIdNameMap(tables, parts->srcTable,
                                             parts->keyCol, parts->valueCol));
     m_superenumSources[parts->srcTable].push_back(idx);
@@ -91,7 +91,7 @@ void BackInfoCache::loadNameref(const RCol& rcol,
     const auto parts = parseNamerefStr(rcol.getNameRef());
     if (!parts) return;
 
-    const size_t idx = static_cast<size_t>(rcol.pluginIndex());
+    const auto idx = rcol.astraIndex();
     // Храним shared_ptr, чтобы ColumnEditorInfo не копировал данные
     m_nameref.emplace(idx,
                       buildNamerefData(parts->srcTable, parts->keyCol, tables));
@@ -100,7 +100,7 @@ void BackInfoCache::loadNameref(const RCol& rcol,
 
 void BackInfoCache::loadEnpic(const RCol& rcol)
 {
-    const size_t idx = static_cast<size_t>(rcol.pluginIndex());
+    const auto idx = rcol.astraIndex();
     const auto& nameRef = rcol.getNameRef();
 
     const std::map<int, int> iconMap = parseEnpicNameref(nameRef);
@@ -123,71 +123,70 @@ void BackInfoCache::loadEnpic(const RCol& rcol)
     m_pictureEnums.emplace(idx, std::move(items));
 }
 
-std::vector<size_t> BackInfoCache::rebuildRefsFrom(const std::string& srcTable,
-                                                   const RData& rdata,
-                                                   std::shared_ptr<ITableRepository> tables)
+std::vector<ModelIndex>
+BackInfoCache::rebuildRefsFrom(const std::string& srcTable,
+                               const RData& rdata,
+                               std::shared_ptr<ITableRepository> tables)
 {
-    std::vector<size_t> updatedCols;
+    std::vector<ModelIndex> updatedCols;
     if (!tables || srcTable.empty())
         return updatedCols;
 
     // Быстрый доступ:
-    // pluginIdx -> RCol*
-    // pluginIdx -> позиция в rdata (pos)
-    std::unordered_map<size_t, const RCol*> byPluginIdx;
-    std::unordered_map<size_t, size_t>      posByPluginIdx;
+    // astraIdx -> RCol*
+    std::unordered_map<AstraIndex, const RCol*> byAstraIdx;
+    // astraIdx -> позиция в rdata (pos)
+    std::unordered_map<AstraIndex, ModelIndex> posByAstraIdx;
 
-    byPluginIdx.reserve(rdata.size());
-    posByPluginIdx.reserve(rdata.size());
+    byAstraIdx.reserve(rdata.size());
+    posByAstraIdx.reserve(rdata.size());
 
     size_t pos = 0;
     for (const RCol& rcol : rdata) {
-        const size_t pluginIdx = static_cast<size_t>(rcol.pluginIndex());
-        byPluginIdx.emplace(pluginIdx, &rcol);
-        posByPluginIdx.emplace(pluginIdx, pos++);
+        const auto idx = rcol.astraIndex();
+        byAstraIdx.emplace(idx, &rcol);
+        posByAstraIdx.emplace(idx, pos++);
     }
 
-    const long nameIdx = tables->columnIndex(srcTable, "name");
-
-    auto findRCol = [&](size_t pluginIdx) -> const RCol* {
-        auto it = byPluginIdx.find(pluginIdx);
-        return (it != byPluginIdx.end()) ? it->second : nullptr;
+    auto findRCol = [&](AstraIndex idx) -> const RCol* {
+        auto it = byAstraIdx.find(idx);
+        return (it != byAstraIdx.end()) ? it->second : nullptr;
     };
 
-    auto getPos = [&](size_t pluginIdx) -> std::optional<size_t> {
-        auto it = posByPluginIdx.find(pluginIdx);
-        if (it == posByPluginIdx.end())
+    auto getPos = [&](AstraIndex idx) -> std::optional<ModelIndex> {
+        auto it = posByAstraIdx.find(idx);
+        if (it == posByAstraIdx.end())
             return std::nullopt;
         return it->second;
     };
 
-    auto rebuildNameref = [&](size_t pluginIdx, const RCol& rcol) -> bool {
+    auto rebuildNameref = [&](AstraIndex astraIdx, const RCol& rcol) -> bool {
         const auto parts = BackInfoCache::parseNamerefStr(rcol.getNameRef());
         if (!parts) return false;
-        m_nameref[pluginIdx] =
+        m_nameref[astraIdx] =
             buildNamerefData(parts->srcTable, parts->keyCol, tables);
         return true;
     };
 
-    auto rebuildSuperenum = [&](size_t pluginIdx, const RCol& rcol) -> bool {
+    auto rebuildSuperenum = [&](AstraIndex astraIdx, const RCol& rcol) -> bool {
         const auto parts = BackInfoCache::parseSuperenumStr(rcol.getNameRef());
         if (!parts) return false;
         if (tables->columnIndex(srcTable, parts->keyCol)   < 0 ||
             tables->columnIndex(srcTable, parts->valueCol) < 0)
             return false;
-        m_superenum[pluginIdx] = buildIdNameMap(tables, srcTable,
+        m_superenum[astraIdx] = buildIdNameMap(tables, srcTable,
                                                 parts->keyCol, parts->valueCol);
         return true;
     };
 
-    auto process = [&](const std::vector<size_t>& indices, auto&& rebuildFn) {
-        for (size_t pluginIdx : indices) {
-            const RCol* rcol = findRCol(pluginIdx);
+    auto process = [&](const std::vector<AstraIndex>& indices, auto&& rebuildFn) {
+        for (AstraIndex idx : indices) {
+            const RCol* rcol = findRCol(idx);
             if (!rcol)
                 continue;
 
-            if (rebuildFn(pluginIdx, *rcol)) {
-                if (auto posOpt = getPos(pluginIdx))
+            if (rebuildFn(idx, *rcol)) {
+                if (auto posOpt = getPos(idx))
                     updatedCols.push_back(*posOpt); // позиционный индекс
             }
         }
@@ -305,32 +304,36 @@ BackInfoCache::parseSuperenumStr(const std::string& nameref)
     return SuperenumParts{ parts[0], parts[2], parts[1] };
 }
 
-const QStringList* BackInfoCache::enumItems(size_t colIdx) const
+const QStringList*
+BackInfoCache::enumItems(AstraIndex colIdx) const
 {
     auto it = m_enum.find(colIdx);
     return it != m_enum.end() ? &it->second : nullptr;
 }
 
-const BackInfoCache::RefMap* BackInfoCache::superenumMap(size_t colIdx) const
+const BackInfoCache::RefMap*
+BackInfoCache::superenumMap(AstraIndex colIdx) const
 {
     auto it = m_superenum.find(colIdx);
     return it != m_superenum.end() ? &it->second : nullptr;
 }
 
 const std::shared_ptr<ColumnEditorInfo::NameRefData>
-BackInfoCache::namerefData(size_t colIdx) const
+BackInfoCache::namerefData(AstraIndex colIdx) const
 {
     auto it = m_nameref.find(colIdx);
     return (it != m_nameref.end()) ? it->second : nullptr;
 }
 
-const BackInfoCache::PictureList* BackInfoCache::pictureEnum(size_t pluginIdx) const
+const BackInfoCache::PictureList*
+BackInfoCache::pictureEnum(AstraIndex idx) const
 {
-    auto it = m_pictureEnums.find(pluginIdx);
+    auto it = m_pictureEnums.find(idx);
     return it != m_pictureEnums.end() ? &it->second : nullptr;
 }
 
-std::map<int, int> BackInfoCache::parseEnpicNameref(const std::string& nameref)
+std::map<int, int>
+BackInfoCache::parseEnpicNameref(const std::string& nameref)
 {
     std::map<int, int> result;
     QString s = QString::fromStdString(nameref).trimmed();

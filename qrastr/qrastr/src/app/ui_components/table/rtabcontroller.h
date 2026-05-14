@@ -7,6 +7,7 @@
 #include <memory>
 #include "UIForms.h"
 #include "QtitanGrid.h"
+#include "table/tableIndexTypes.h"
 
 class ITableRepository;
 class ITableEvents;
@@ -22,6 +23,7 @@ class PyHlp;
 class LinkedForm;
 struct FilterRule;
 class TableDockManager;
+class RData;
 
 namespace ads { class CDockManager; }
 namespace Qtitan { class GridTableView; }
@@ -32,36 +34,6 @@ struct TableProperties{
     bool withToolbar {true};
     QString formQName;
 };
-/**
- * ── Карта индексов ────────────────────────────────────────────────────────────
- *
- *  plugin_index  = RCol::m_index
- *                  Порядковый номер колонки в плагине Rastr (0..N-1).
- *                  Стабилен для данной колонки независимо от загруженного файла.
- *                  Используется как ключ в BackInfoCache (ENUM/NAMEREF/…).
- *                  НЕ совпадает с rdataPos в общем случае.
- *
- *  rdataPos      = позиция в vector<RCol> = mCols_[colName]
- *                  Порядковый номер колонки в RData (0..size-1).
- *                  Определяется порядком колонок в схеме конкретного файла(шаблона)  —
- *                  может отличаться между файлами для одной и той же колонки.
- *
- *  local_index   = позиция среди загруженных колонок внутри QDataBlock.
- *                  Хранится в RData::m_blockColIdx[rdataPos].
- *                  Блок содержит только запрошенные (видимые) колонки,
- *                  поэтому local_index != rdataPos в общем случае.
- *                  Получается через QDataBlock::localColumnIndex(colName).
- *                  Используется только внутри RData::getCell() — снаружи не нужен.
- *
- *  visualIndex   = GridColumnBase::visualIndex()
- *                  Порядок отображения на экране (меняет пользователь).
- *                  Не связан ни с rdataPos, ни с plugin_index.
- *
- *  listIndex     = позиция в m_columnslist (внутри QTitan).
- *                  После setModel() == rdataPos.
- *                  После перетаскивания колонок listIndex не меняется —
- *                  меняется только visualIndex.
- */
 
 /// @brief Контроллер таблицы Rastr — управляет данными и
 /// отображает одну таблицу Rastr в QTitan Grid.
@@ -114,10 +86,10 @@ public slots:
     void slot_groupCorrection();
 
     // ── Колонки ─────────────────────────────────────────────────────────────
-    void slot_directCodeToggle(std::size_t column);
-    void slot_condFormatsEdit(std::size_t column);
+    void slot_directCodeToggle(ModelIndex column);
+    void slot_condFormatsEdit(ModelIndex column);
      //  Формы инструментов
-    void slot_openColProp(int col);
+    void slot_openColProp(ModelIndex col);
     // ширина по шаблону
     void slot_widthByTemplate();
     // ширина по контенту
@@ -147,18 +119,28 @@ private:
     */
     void createModel(std::shared_ptr<ITableRepository> tables);
     void applyAllColumnEditors();
-    void applyColumnEditor(int colIndex);
+    /** @note QTitan берёт ownership переданного репозитория:
+     * GridColumn::setEditorRepository удаляет предыдущий объект перед заменой,
+     * GridColumn::~GridColumn удаляет текущий при уничтожении колонки.
+     * Повторный вызов applyColumnEditor безопасен — утечки нет.
+    */
+    void applyColumnEditor(ModelIndex col);
     void setTableView(bool update = true, int multiplier = 10);
     void setupConnections();
     void createCommonTableActions();
+    void restoreColumnOrder(const RData& rdata);
+    void restoreColumnVisibility(const RData& rdata);
 
     void setupColumnOrder();
     void createLinkedFormController(std::shared_ptr<ITableRepository> tables);
     void createCondFormatController();
+    std::string getVisibleColsFromGrid() const;
     /// Возвращает позицию колонки в RData по имени, или -1.
-    int rdataPosOf(const std::string& colName) const;
+    ModelIndex modelIndexOf(const std::string& colName) const;
+    //колонка → binding → ModelIndex
+    ModelIndex modelIndexFromListIndex(int listIdx) const;
 
-    Qtitan::GridTableColumn* getColumnByIndex(int index) const;
+    Qtitan::GridTableColumn* columnByModelIndex(ModelIndex pos)const;
     // ── Компоненты (данные) ─────────────────────────────────────────────────
     std::unique_ptr<RModel>               m_model;
     std::unique_ptr<FilterManager>        m_filterManager;
@@ -174,9 +156,11 @@ private:
     // ── Конфигурация ────────────────────────────────────────────────────────
     CUIForm              m_UIForm;
     ads::CDockManager*   m_DockManager {nullptr};
-
-    std::unordered_map<QString, bool> m_columnsVisible;
-    std::unordered_map<QString, int> m_columnVisualOrder;
+    struct ColumnState {
+        bool      visible  = true;
+        VisualIndex vi     = VisualIndex{-1}; // -1 = не задан
+    };
+    std::unordered_map<QString, ColumnState> m_columnState;
     /// Защита от повторного вызова createShell()
     bool m_shellCreated {false};
     CommonTableActions m_comTabAct;

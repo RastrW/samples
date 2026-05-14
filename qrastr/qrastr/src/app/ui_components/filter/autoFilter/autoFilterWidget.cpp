@@ -6,10 +6,7 @@
 #include <QtitanGrid.h>
 #include "filterCell.h"
 
-// смещение от левого края виджета до первой колонки
-inline constexpr int kBorderX   = 57;
-
-AutoFilterWidget::AutoFilterWidget(GridTableView* view, QWidget* parent)
+AutoFilterWidget::AutoFilterWidget(Qtitan::GridTableView* view, QWidget* parent)
     : QWidget(parent)
     , m_view(view)
 {
@@ -19,12 +16,12 @@ AutoFilterWidget::AutoFilterWidget(GridTableView* view, QWidget* parent)
     outerLayout->setContentsMargins(0, 0, 0, 0);
     outerLayout->setSpacing(0);
 
-    // Фиксированная заглушка под индикаторную колонку грида
+    // Заглушка под индикаторную колонку — ширина будет задана динамически
     m_indicatorSpacer = new QWidget(this);
-    m_indicatorSpacer->setFixedWidth(kBorderX);
+    m_indicatorSpacer->setFixedWidth(1); // временно, уточнится в slot_syncLayout
     outerLayout->addWidget(m_indicatorSpacer);
 
-    // Скроллируемая зона под данные колонки
+    // Скроллируемая зона под колонки данных
     m_scrollArea = new QScrollArea(this);
     m_scrollArea->setFrameShape(QFrame::NoFrame);
     m_scrollArea->setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
@@ -36,32 +33,33 @@ AutoFilterWidget::AutoFilterWidget(GridTableView* view, QWidget* parent)
     m_scrollArea->setWidget(m_content);
     m_scrollArea->setWidgetResizable(false);
 
-    // Дополнительный сигнал: колонна переместилась
-    // (может влиять на layout)
-    connect(m_view, &GridViewBase::columnMoved,
-            this, [this](const GridColumnBase*, int) {
+    // Колонка переместилась
+    connect(m_view, &Qtitan::GridViewBase::columnMoved,
+            this, [this](const Qtitan::GridColumnBase*, int) {
                 slot_syncLayout();
             });
 
-    // Когда видимость колонки меняется — пересоздаём ячейки
-    connect(m_view, &GridViewBase::columnVisibleChanged,
-            this, [this](GridColumnBase*, bool) {
+    // Видимость колонки изменилась
+    connect(m_view, &Qtitan::GridViewBase::columnVisibleChanged,
+            this, [this](Qtitan::GridColumnBase*, bool) {
                 rebuild();
             });
 
     // Горизонтальный скролл
     connect(m_view->horizontalScrollBar(), &QScrollBar::valueChanged,
             this, &AutoFilterWidget::slot_scrollChanged);
-    // подписаться на изменение видимости vscrollbar
-    //connect(m_view->verticalScrollBar(), &QScrollBar::rangeChanged,
-    //        this, [this](int, int) { slot_syncLayout(); });
+
+    // Вертикальный скроллбар появился/исчез — пересчитываем отступ
+    connect(m_view->verticalScrollBar(), &QScrollBar::rangeChanged,
+            this, [this](int, int) {
+                slot_syncLayout();
+            });
+
     rebuild();
 }
 
 void AutoFilterWidget::rebuild()
 {
-    m_indicatorMeasured = false;
-
     qDeleteAll(m_cells);
     m_cells.clear();
 
@@ -70,7 +68,7 @@ void AutoFilterWidget::rebuild()
 
     const int colCount = m_view->model()->columnCount();
     for (int i = 0; i < colCount; ++i) {
-        auto* col = static_cast<GridTableColumn*>(m_view->getColumn(i));
+        auto* col = static_cast<Qtitan::GridTableColumn*>(m_view->getColumn(i));
         if (!col || !col->isVisible())
             continue;
 
@@ -94,7 +92,8 @@ void AutoFilterWidget::rebuild()
     slot_syncLayout();
 }
 
-void AutoFilterWidget::clearAll(){
+void AutoFilterWidget::clearAll()
+{
     for (FilterCell* cell : m_cells) {
         QSignalBlocker blk(cell);
         cell->clear();
@@ -120,7 +119,8 @@ void AutoFilterWidget::slot_syncLayout()
     if (!isVisible() || !m_view)
         return;
 
-    const int iw = kBorderX;
+    // Динамически вычисляем ширину индикаторной зоны
+    const int iw = measureIndicatorWidth();
     if (iw > 0 && m_indicatorSpacer->width() != iw)
         m_indicatorSpacer->setFixedWidth(iw);
 
@@ -136,10 +136,9 @@ void AutoFilterWidget::slot_syncLayout()
     visible.reserve(colCount);
 
     for (int i = 0; i < colCount; ++i) {
-        auto* col = static_cast<GridTableColumn*>(m_view->getColumn(i));
+        auto* col = static_cast<Qtitan::GridTableColumn*>(m_view->getColumn(i));
         if (!col || !col->isVisible())
             continue;
-
         visible.push_back({ i, col->visualIndex(), col->width() });
     }
 
@@ -156,11 +155,52 @@ void AutoFilterWidget::slot_syncLayout()
         FilterCell* cell = m_cells[e.modelIdx];
         cell->move(xOffset, 1);
         cell->setFixedWidth(e.width);
-        // Гарантируем вызов resizeEvent в FilterCell
         cell->resize(e.width, cell->height());
-
         xOffset += e.width;
     }
 
     m_content->setFixedSize(xOffset, kRowHeight);
+}
+
+int AutoFilterWidget::measureIndicatorWidth() const
+{
+    if (!m_view)
+        return 0;
+
+    // Суммарная ширина всех видимых колонок
+    int colsTotal = 0;
+    const int colCount = m_view->getColumnCount();
+    for (int i = 0; i < colCount; ++i) {
+        auto* col = m_view->getColumn(i);
+        if (col && col->isVisible())
+            colsTotal += col->width();
+    }
+
+    // Ширина области прокрутки горизонтального скроллбара:
+    // maximum() - minimum() + pageStep() == полная ширина контента
+    // pageStep() == ширина viewport
+    auto* hsb = m_view->horizontalScrollBar();
+    if (!hsb)
+        return 0;
+
+    // pageStep — это ширина видимой части (viewport без индикатора)
+    const int viewportDataWidth = hsb->pageStep();
+    if (viewportDataWidth <= 0)
+        return 0;
+
+    // Ширина виджета грида целиком
+    QWidget* gridWidget = m_view->grid();
+    if (!gridWidget)
+        return 0;
+
+    const int gridWidth = gridWidget->width();
+
+    // Ширина вертикального скроллбара (если виден)
+    auto* vsb = m_view->verticalScrollBar();
+    const int vsbWidth = (vsb && vsb->isVisible()) ? vsb->width() : 0;
+
+    // indicator = общая ширина грида − ширина данных-viewport − ширина vsb
+    const int indicatorWidth = gridWidth - viewportDataWidth - vsbWidth;
+
+    return qMax(0, indicatorWidth);
 }

@@ -31,7 +31,7 @@ GroupCorrectionDialog::GroupCorrectionDialog(std::shared_ptr<ITableRepository> t
     }
     cbParameters->setCurrentIndex(
         m_prdata.mCols_.count(m_prcol->getColName())
-            ? m_prdata.mCols_.at(m_prcol->getColName())
+            ? m_prdata.mCols_.at(m_prcol->getColName()).value
             : 0);
 
     QHBoxLayout* row1 = new QHBoxLayout();

@@ -48,7 +48,7 @@ public:
     void fillBlock(const std::string& tname,
                    QDataBlock&        block,
                    const std::string& cols = "",
-                   std::optional<FieldDataOptions> opts = std::nullopt) override;
+                   const std::optional<FieldDataOptions>& opts = std::nullopt) override;
     long columnIndex(const std::string& tname,
                      const std::string& colName) override;
     /// Применяет выборку к таблице tname и возвращает вектор строковых индексов.

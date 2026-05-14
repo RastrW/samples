@@ -2,6 +2,7 @@
 
 #include "astra_shared.h"
 #include "table/ITableRepository.h"
+#include "table/tableIndexTypes.h"
 
 /// @brief Метаданные и вспомогательные операции для одной колонки таблицы Rastr.
 class RCol
@@ -28,12 +29,12 @@ public:
 
     void invertDirectCodeStatus() { m_directcode = !m_directcode; }
     void setNameRef(const std::string& v) { m_cached_nameref = v; }
-    void setHidden(bool v)                { m_hidden = v; }
+    void setHiddenByForm(bool v)                { m_hiddenByForm = v; }
 
     // ── Геттеры — только из кеша, возвращают const& ──────────────────────
-    long               pluginIndex()   const { return m_index; }
+    AstraIndex        astraIndex() const noexcept { return AstraIndex{m_index}; }
     bool               isDirectCode()  const { return m_directcode; }
-    bool               isHidden()      const { return m_hidden; }
+    bool               isHiddenByForm()      const { return m_hiddenByForm; }
     enComPropTT        getComPropTT()  const { return m_com_prop_tt; }
     _en_data           getEnData()     const { return m_en_data; }
 
@@ -80,5 +81,5 @@ private:
 
     // ── Состояние UI ──────────────────────────────────────────────────────
     bool m_directcode = false; ///< режим ввода: true = число, false = строка из справочника
-    bool m_hidden     = true; ///<скрыта ли колонка в UI (не входит в форму)
+    bool m_hiddenByForm     = true; ///<скрыта ли колонка в UI (не входит в форму)
 };

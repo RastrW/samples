@@ -277,7 +277,7 @@ void CalculationController::prepareBarsMDP( const QString& sections) {
     bool success = true;
     
     try {
-        m_qbarsmdp->Init(sections.toStdString().c_str());
+        m_qbarsmdp->Init(sections.toStdString());
         m_qbarsmdp->UpdateMDPFields();
         m_qbarsmdp->UpdateAUTOFields();
         

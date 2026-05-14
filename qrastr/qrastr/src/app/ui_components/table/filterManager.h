@@ -1,5 +1,7 @@
 #pragma once
 #include <QObject>
+#include <memory>
+#include "table/tableIndexTypes.h"
 
 class RModel;
 class AutoFilterWidget;
@@ -14,9 +16,10 @@ class FilterManager : public QObject
 public:
     explicit FilterManager(Qtitan::GridTableView* view, RModel* model,
                            QWidget* parentWidget);
+    ~FilterManager();
 
     /// Виджет строки фильтра — добавляется во внешний layout.
-    AutoFilterWidget* widget() const { return m_autoFilter; }
+    AutoFilterWidget* widget() const { return m_autoFilter.get(); }
 
     /// Вызывается из slot_toggleAutoFilter.
     void toggle(bool checked);
@@ -28,11 +31,13 @@ public:
     void resetAfterModelReset();
 
     const std::string& currentSelection() const { return m_selection; }
-
 public slots:
-    void slot_openSelection(int col);
+    void slot_openSelection(ModelIndex col);
 private slots:
     void slot_setFiltrForSelection(std::string selection);
+    // Вызывается когда QTitan записал новое условие в историю.
+    // На этот момент filter()->condition() уже содержит новое встроенное условие.
+    void slot_onBuiltinFilterChanged();
 private:
     /// @brief Пересобирает общий фильтр (AND выборки + AND автофильтра) и
     ///        передаёт его в m_view->filter().
@@ -41,9 +46,14 @@ private:
     Qtitan::GridTableView* m_view;
     RModel*                m_model;
     QWidget*               m_parentWidget;
-    AutoFilterWidget*    m_autoFilter    {nullptr};
-    AutoFilterCondition* m_autoFilterCond{nullptr};
-    Qtitan::GridFilterCondition* m_builtinCondition {nullptr};
+    std::unique_ptr<AutoFilterWidget> m_autoFilter;
+    std::unique_ptr<AutoFilterCondition> m_autoFilterCond;
+    // Клон последнего известного встроенного условия QTitan.
+    // Владеем им сами (delete при замене).
+    Qtitan::GridFilterCondition*      m_builtinCondition {nullptr};
+
+    // Защита от рекурсии: наш setCondition тоже триггерит history::changed
+    bool m_rebuildingFilter {false};
 
     std::string m_selection;        // Текущая выборка
 };

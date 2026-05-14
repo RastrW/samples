@@ -163,7 +163,7 @@ RtabController::~RtabController()
     // Иначе GridModelController::modelDestroyed попытается обратиться
     // к PersistentRow в уже разрушающейся модели.
     if (m_view) {
-        m_view->setModel(nullptr); // или m_grid->setModel(nullptr)
+        m_view->setModel(nullptr);
     }
 
     // unique_ptr-ы уничтожаются в порядке объявления:
@@ -252,7 +252,6 @@ void RtabController::createModel(std::shared_ptr<ITableRepository> tables)
 
     m_model = std::make_unique<RModel>(this, tables);
     m_model->setForm(&m_UIForm);
-    spdlog::info("[PERF] make RModel: {} ms", t.restart());
 
     if (!m_model->populateDataFromRastr()) {
         // Таблица не найдена в плагине (файл не загружен или имя неверно).
@@ -264,40 +263,33 @@ void RtabController::createModel(std::shared_ptr<ITableRepository> tables)
                                  .arg(QString::fromStdString(m_UIForm.DisplayName())));
         return;
     }
-    spdlog::info("[PERF] populateDataFromRastr: {} ms", t.restart());
 
     m_view->beginUpdate();
     m_view->setModel(m_model.get());
     setupColumnOrder();
-    spdlog::info("[PERF] setupColumnOrder: {} ms", t.restart());
-    // Редакторы и видимость — всё внутри одного update-блока
-    applyAllColumnEditors();
-    spdlog::info("[PERF] applyAllColumnEditors: {} ms", t.restart());
-    // ── Применяем ширины из бэка при первом открытии ──
-    // setTableView отключает columnAutoWidth и выставляет ширины из RCol::getWidth()
+
     if (!m_UIForm.Vertical())
         setTableView(false);
+
+    applyAllColumnEditors();
+    restoreColumnVisibility(m_model->getRdata());
+
     m_view->endUpdate();
-    spdlog::info("[PERF] view ready: {} ms", t.restart());
+
     createLinkedFormController(tables);
-    spdlog::info("[PERF] make LinkedFormController: {} ms", t.restart());
     createCondFormatController();
-    spdlog::info("[PERF] controllers: {} ms", t.restart());
+    spdlog::debug("[PERF] createModel: {} ms", t.restart());
 }
 
-void RtabController::setupColumnOrder(){
+void RtabController::setupColumnOrder()
+{
     // Расставляем визуальные индексы по порядку из формы
-    int vi = 0;
+    VisualIndex vi{0};
     for (const auto& field : m_UIForm.Fields()) {
-        int rdataPos = 0;
-        for (const RCol& rcol : m_model->getRdata()) {
-            if (field.Name() == rcol.getColName()) {
-                if (auto* col = getColumnByIndex(rdataPos))
-                    col->setVisualIndex(vi++);
-                break;
-            }
-            ++rdataPos;
-        }
+        const ModelIndex pos = m_model->getRdata().modelIndexOf(field.Name());
+        if (pos.invalid()) continue;
+        if (auto* col = columnByModelIndex(pos))
+            col->setVisualIndex(vi.value++);
     }
 }
 
@@ -368,15 +360,15 @@ void RtabController::setupConnections()
     connect(ev,  &ITableEvents::sig_ReferenceChanged,
             m_model.get(), &RModel::slot_RefTableChanged);
     connect(m_model.get(), &RModel::sig_nameRefUpdated,
-            this, [this](const std::vector<size_t>& cols) {
-                for (size_t i : cols) {
-                    auto* column_qt = getColumnByIndex(static_cast<int>(i));
+            this, [this](const std::vector<ModelIndex>& cols) {
+                for (const auto i : cols) {
+                    auto* column_qt = columnByModelIndex(i);
                     if (!column_qt) continue;
                     auto* repo = static_cast<SearchableComboRepository*>(
                         column_qt->editorRepository());
                     if (!repo) continue;
                     // getColumnEditorInfo теперь возвращает const& — копии нет
-                    const auto& info = m_model->getColumnEditorInfo(static_cast<int>(i));
+                    const auto& info = m_model->getColumnEditorInfo(i);
                     repo->updateItems(info.nameRefData);
                 }
             });
@@ -392,43 +384,36 @@ void RtabController::setupConnections()
 void RtabController::applyAllColumnEditors()
 {
     const int count = m_view->getColumnCount();
-    for (int i = 0; i < count; ++i) {
-        auto* col = qobject_cast<Qtitan::GridTableColumn*>(m_view->getColumn(i));
-        if (!col) continue;
-        auto* binding = m_view->getDataBinding(col);
-        if (!binding || binding->column() < 0) continue;
-        applyColumnEditor(binding->column()); // передаём rdataPos, не listIndex
+    for (int listIdx = 0; listIdx < count; ++listIdx) {
+        applyColumnEditor(modelIndexFromListIndex(listIdx));
     }
 }
 
-void RtabController::applyColumnEditor(int colIndex)
+void RtabController::applyColumnEditor(ModelIndex col)
 {
-    // Ищем по rdataPos через getColumnByModelColumn
-    auto* column_qt = qobject_cast<Qtitan::GridTableColumn*>(
-        m_view->getColumnByModelColumn(colIndex));
+    auto* column_qt = columnByModelIndex(col);
     if (!column_qt) return;
 
-    auto* binding = m_view->getDataBinding(column_qt);
-    if (!binding) return;
+    const RCol* rcol = m_model->getRCol(col);
+    if (!rcol) return;
 
-    const int modelCol = binding->column(); // == colIndex == rdataPos
-    const RCol* col = m_model->getRCol(modelCol);
-    if (!col) return;
-
-    const bool hidden = col->isHidden();      // для видимых всегда false
-    column_qt->setVisible(!hidden);
-
-    // Не настраиваем редакторы для скрытых колонок:
+    // Проверяем целевую видимость из сохранённого состояния,
+    // а не текущую column_qt->isVisible() — она ещё не восстановлена.
+    const QString qname = QString::fromStdString(rcol->getColName());
+    const auto it = m_columnState.find(qname);
+    const bool targetVisible = (it != m_columnState.end())
+                                   ? it->second.visible
+                                   : !rcol->isHiddenByForm();
+    // Редакторы не настраиваем для скрытых колонок:
     // QTitan при setEditorType/setEditorRepository вызывает data() на ячейках,
-    // что триггерит lazy-load для колонок, которых нет в блоке.
-    // Когда колонку сделают видимой — applyColumnEditor будет вызван снова.
-    if (hidden) return;
+    // что провоцирует lazy-load для незагруженных колонок.
+    // При показе колонки applyColumnEditor будет вызван повторно.
+    if (!targetVisible) return;
 
-    // Сбрасываем флаги перед переназначением
     column_qt->setProperty("isNumeric", false);
     column_qt->setProperty("isBool",    false);
 
-    const auto& info = m_model->getColumnEditorInfo(colIndex);
+    const auto& info = m_model->getColumnEditorInfo(col);
 
     switch (info.editorType)
     {
@@ -439,15 +424,12 @@ void RtabController::applyColumnEditor(int colIndex)
             column_qt->editorRepository())
             ->setAppearance(GridCheckBox::StyledAppearance);
         break;
+
     case ColumnEditorInfo::Type::Numeric: {
-        auto* repo = new DoubleEditorRepository(
-            info.decimals, info.minVal, info.maxVal);
         column_qt->setProperty("isNumeric", true);
-        column_qt->setEditorRepository(repo);
-
-
-        GridModelDataBinding* binding = m_view->getDataBinding(column_qt);
-        if (binding)
+        column_qt->setEditorRepository(
+            new DoubleEditorRepository(info.decimals, info.minVal, info.maxVal));
+        if (auto* binding = m_view->getDataBinding(column_qt))
             binding->setSortRole(Qt::UserRole);
         break;
     }
@@ -456,38 +438,33 @@ void RtabController::applyColumnEditor(int colIndex)
         auto* repo = static_cast<Qtitan::GridDateTimeEditorRepository*>(
             column_qt->editorRepository());
         repo->setDisplayFormat("dd.MM.yyyy HH:mm");
-        // Отключаем popup-календарь — без него QDateTimeEdit показывает
-        // спиннер для каждого поля (день, месяц, год, час, минута)
+        // Отключаем popup — без него QDateTimeEdit показывает спиннер по полю.
         repo->setCalendarPopup(false);
         break;
     }
-    case ColumnEditorInfo::Type::Color:{
+    case ColumnEditorInfo::Type::Color:
         column_qt->setEditorType(GridEditor::Color);
         break;
-    }
-    case ColumnEditorInfo::Type::ComboBox: {
-        column_qt->setProperty("isNumeric", true);
-        column_qt->setEditorType(GridEditor::ComboBox);
 
-        column_qt->editorRepository()->setDefaultValue(QString(), Qt::EditRole);
-        column_qt->editorRepository()->setDefaultValue(info.comboItems,
-                                                       (Qt::ItemDataRole)Qtitan::ComboBoxRole);
-        break;
-    }
-    case ColumnEditorInfo::Type::NameRef: {
-        column_qt->setProperty("isNumeric", true);
-        auto* repo = new SearchableComboRepository(info.nameRefData, m_grid);
-        column_qt->setEditorRepository(repo);
-        break;
-    }
-    case ColumnEditorInfo::Type::ComboBoxPicture:
-    {
+    case ColumnEditorInfo::Type::ComboBox:
         column_qt->setProperty("isNumeric", true);
         column_qt->setEditorType(GridEditor::ComboBox);
-        spdlog::info("applyColumnEditor ENPIC col={}, picItems={}", colIndex,
-                     info.picItems.size());
+        column_qt->editorRepository()->setDefaultValue(QString(), Qt::EditRole);
+        column_qt->editorRepository()->setDefaultValue(
+            info.comboItems, static_cast<Qt::ItemDataRole>(Qtitan::ComboBoxRole));
         break;
-    }
+
+    case ColumnEditorInfo::Type::NameRef:
+        column_qt->setProperty("isNumeric", true);
+        column_qt->setEditorRepository(
+            new SearchableComboRepository(info.nameRefData, m_grid));
+        break;
+
+    case ColumnEditorInfo::Type::ComboBoxPicture:
+        column_qt->setProperty("isNumeric", true);
+        column_qt->setEditorType(GridEditor::ComboBox);
+        break;
+
     case ColumnEditorInfo::Type::None:
     default:
         break;
@@ -576,13 +553,14 @@ void RtabController::slot_deleteRow()
 }
 
 void RtabController::slot_groupCorrection(){
-    const int col = m_view->selection()->cell().columnIndex();
-    const auto* prcol = m_model->getRCol(col);
-    if (!prcol){
-        return;
-    }
-    GroupCorrectionDialog* fgc =  new GroupCorrectionDialog(m_tables,
-                                                           m_model->getRdata(),prcol,m_grid);
+
+    const auto* prcol = m_model->getRCol
+        (modelIndexFromListIndex(m_view->selection()->cell().columnIndex()));
+    if (!prcol){return;}
+
+    GroupCorrectionDialog* fgc =
+        new GroupCorrectionDialog(m_tables,
+                                  m_model->getRdata(),prcol,m_grid);
     fgc->setAttribute(Qt::WA_DeleteOnClose);
 
     fgc->show();
@@ -591,77 +569,110 @@ void RtabController::slot_groupCorrection(){
 void RtabController::slot_beginResetModel(const std::string& tname)
 {
     if (m_UIForm.TableName() != tname) return;
+    QElapsedTimer t; t.start();
 
-    m_columnsVisible.clear();
-    m_columnVisualOrder.clear();
+    m_columnState.clear();
 
-    m_view->beginUpdate();
-
+    // getColumnCount() возвращает все добавленные через addColumn(),
+    // в т.ч. скрытые через setVisible(false).
+    const int count = m_view->getColumnCount();
     const RData& rdata = m_model->getRdata();
 
-    // Итерируем по rdataPos (позиция в m_columnslist совпадает с rdataPos
-    // до любого сброса — m_columnslist не менялся с момента setModel)
-    for (int rdataPos = 0; rdataPos < static_cast<int>(rdata.size()); ++rdataPos) {
-        // getColumn(rdataPos) — по позиции в m_columnslist, не зависит от биндинга
-        auto* col = qobject_cast<Qtitan::GridTableColumn*>(
-            m_view->getColumn(rdataPos));
-        if (!col) continue;
+    for (int listIdx = 0; listIdx < count; ++listIdx) {
+        auto* gridCol = m_view->getColumn(listIdx);
+        if (!gridCol) continue;
+        const RCol* rcol = rdata.colAt(modelIndexFromListIndex(listIdx));
+        if (!rcol) continue;
 
-        QString qname = QString::fromStdString(rdata[rdataPos].getColName());
-        m_columnsVisible[qname]    = col->isVisible();
-        m_columnVisualOrder[qname] = col->visualIndex();
+        const QString qname = QString::fromStdString(rcol->getColName());
+        m_columnState[qname] = {gridCol->isVisible(), VisualIndex{gridCol->visualIndex()}};
     }
+
+    spdlog::debug("[PERF] slot_beginResetModel: {} ms", t.restart());
 }
 
 void RtabController::slot_endResetModel(const std::string& tname)
 {
     if (m_UIForm.TableName() != tname) return;
+    QElapsedTimer t; t.start();
     const RData& rdata = m_model->getRdata();
-    // Удаляем все колонки и пересоздаём нужные
-    m_view->removeColumns();
+    //Сбрасываем мендеджер фильтрации, т.к. он будет излишне перестраиваться
+    //при изменении видимости колонок постоянно
+    m_filterManager.reset();
 
-    struct ColEntry {
-        int  rdataPos;
-        int  savedVI;       // сохранённый visualIndex, или INT_MAX для новых
-        bool isNew;         // новая колонка — ставим в конец
-    };
-    std::vector<ColEntry> visible;
+    m_view->beginUpdate();
+    m_view->setModel(m_model.get());
+    restoreColumnOrder(rdata);
 
-    for (int rdataPos = 0; rdataPos < static_cast<int>(rdata.size()); ++rdataPos) {
-        const RCol& rcol   = rdata[rdataPos];
-        const QString name = QString::fromStdString(rcol.getColName());
-        // Определяем видимость
-        auto visIt   = m_columnsVisible.find(name);
-        auto orderIt = m_columnVisualOrder.find(name);
+    if (!m_UIForm.Vertical())
+        setTableView(false);
+    applyAllColumnEditors();
+    restoreColumnVisibility(rdata);
 
-        const bool known     = (visIt != m_columnsVisible.end());
-        const bool isVisible = known ? visIt->second : !rcol.isHidden();
-        if (!isVisible) continue;
+    m_view->endUpdate(); // layout строится один раз, только для видимых колонок
 
-        const bool hasOrder = (orderIt != m_columnVisualOrder.end());
-        visible.push_back({
-            rdataPos,
-            hasOrder ? orderIt->second : 0,
-            !hasOrder
-        });
+    m_filterManager = std::make_unique<FilterManager>(m_view, m_model.get(),
+                                                      m_grid);
+    spdlog::debug("[PERF] slot_endResetModel: {} ms", t.restart());
+}
+
+void RtabController::restoreColumnOrder(const RData& rdata)
+{
+    const int totalCols = static_cast<int>(rdata.size());
+
+    // Шаг 1: собрать все (name → желаемый VisualIndex) из сохранённого состояния,
+    // отфильтровав только те, что реально есть в новом rdata
+    std::vector<std::pair<ModelIndex /*modelIdx*/, int /*savedVI*/>> known;
+    std::vector<ModelIndex> unknown; // modelIdx без сохранённого порядка
+
+    for (int i = 0; i < totalCols; ++i) {
+        const RCol* rcol = rdata.colAt(ModelIndex{i});
+        if (!rcol) continue;
+        const QString qname = QString::fromStdString(rcol->getColName());
+        auto it = m_columnState.find(qname);
+        if (it != m_columnState.end() && it->second.vi.value >= 0)
+            known.push_back({ModelIndex{i}, it->second.vi.value});
+        else
+            unknown.push_back(ModelIndex{i});
     }
 
-    // Сначала колонки с известным порядком (по savedVI),
-    // потом новые (в порядке rdataPos среди них).
-    std::stable_sort(visible.begin(), visible.end(),
-                     [](const ColEntry& a, const ColEntry& b) {
-                         if (a.isNew != b.isNew) return !a.isNew; // известные — раньше
-                         if (!a.isNew)           return a.savedVI < b.savedVI;
-                         return a.rdataPos < b.rdataPos;           // новые — по rdataPos
-                     });
+    // Шаг 2: нормализовать known — отсортировать по сохранённому VI,
+    // переназначить плотные индексы 0, 1, 2, ...
+    std::sort(known.begin(), known.end(),
+              [](const auto& a, const auto& b){ return a.second < b.second; });
 
-    for (const auto& e : visible)
-        m_view->addColumn(e.rdataPos);
+    int vi = 0;
+    for (const auto& [modelIdx, _] : known) {
+        auto* col = columnByModelIndex(modelIdx);
+        if (col) col->setVisualIndex(vi++);
+    }
+    // Шаг 3: новые колонки — в конец
+    for (const auto& modelIdx : unknown) {
+        auto* col = columnByModelIndex(modelIdx);
+        if (col) col->setVisualIndex(vi++);
+    }
+}
 
-    applyAllColumnEditors();
-    if (!m_UIForm.Vertical()) setTableView(false);
-    m_view->endUpdate();
-    m_filterManager->resetAfterModelReset();
+void RtabController::restoreColumnVisibility(const RData& rdata)
+{
+    QElapsedTimer t; t.start();
+    for (int i = 0; i < static_cast<int>(rdata.size()); ++i) {
+        const ModelIndex col{i};
+        auto* gridCol = columnByModelIndex(col);
+        if (!gridCol) continue;
+        const RCol* rcol = rdata.colAt(col);
+        if (!rcol) continue;
+        const QString qname = QString::fromStdString(rcol->getColName());
+        auto it = m_columnState.find(qname);
+        const bool isVisible = (it != m_columnState.end())
+                                   ? it->second.visible
+                                   : !rcol->isHiddenByForm();
+        // Guard от лишних вызовов: после setModel все колонки visible=true.
+        bool gridVis = gridCol->isVisible();
+        if ( gridVis != isVisible){
+            gridCol->setVisible(isVisible);
+        }
+    }
 }
 
 void RtabController::setPyHlp(std::shared_ptr<PyHlp> pPyHlp){
@@ -670,38 +681,46 @@ void RtabController::setPyHlp(std::shared_ptr<PyHlp> pPyHlp){
     }
 }
 
-void RtabController::slot_openColProp(int col)
+void RtabController::slot_openColProp(ModelIndex col)
 {
     // Получаем схему колонки через репозиторий
     const auto schema_full = m_tables->getSchema(m_UIForm.TableName());
-    if (col < 0 || col >= (int)schema_full.columns.size()) return;
+    if (!col.valid_in(schema_full.columns.size())) return;
 
-    const auto& colSchema = schema_full.columns[col];
+    const RCol* rcol = m_model->getRCol(col);
+    if (!rcol) return;
+
+    const auto it = std::find_if(
+        schema_full.columns.begin(), schema_full.columns.end(),
+        [&](const auto& cs){ return cs.name == rcol->getColName(); });
+
+    if (it == schema_full.columns.end()) return;
+    const auto& colSchema = *it;
 
     auto* dlg = new ColPropDialog(m_tables, colSchema, m_view, m_grid);
     dlg->setAttribute(Qt::WA_DeleteOnClose);
     dlg->exec();
 }
 
-void RtabController::slot_directCodeToggle(std::size_t column)
+void RtabController::slot_directCodeToggle(ModelIndex column)
 {
     m_model->invertDirectCode(column);
 
     m_view->beginUpdate();
-    applyColumnEditor(column);
+    applyColumnEditor(ModelIndex{column});
     m_view->endUpdate();
 
     // Принудительно перерисовать всю колонку — DisplayRole изменился
     const int rows = m_model->rowCount();
     if (rows > 0) {
         emit m_model->dataChanged(
-            m_model->index(0,      static_cast<int>(column)),
-            m_model->index(rows-1, static_cast<int>(column)),
+            m_model->index(0,      column.value),
+            m_model->index(rows-1, column.value),
             {Qt::DisplayRole, Qt::EditRole});
     }
 }
 
-void RtabController::slot_condFormatsEdit(std::size_t column){
+void RtabController::slot_condFormatsEdit(ModelIndex column){
     m_condFormatCtrl->editCondFormats(column);
 }
 
@@ -712,20 +731,12 @@ void RtabController::setTableView(bool update, int multiplier)
 
     const int count = m_view->getColumnCount();
     for (int i = 0; i < count; ++i) {
-        auto* col = qobject_cast<Qtitan::GridTableColumn*>(m_view->getColumn(i));
-        if (!col || !col->isVisible()) continue;
-
-        auto* binding = m_view->getDataBinding(col);
-        if (!binding || binding->column() < 0) continue;
-
-        const int rdataPos = binding->column();
-        const RCol* rcol = m_model->getRCol(rdataPos);
-        if (!rcol || rcol->isHidden()) continue;
-
+        const RCol* rcol = m_model->getRCol(modelIndexFromListIndex(i) );
+        if (!rcol || rcol->isHiddenByForm()) continue;
         int width = 10;
         try { width = std::stoi(rcol->getWidth()); }
         catch (...) {}
-
+        auto* col = m_view->getColumn(i);
         col->setWidth(width * multiplier);
         col->setTextAlignment(Qt::AlignLeft);
     }
@@ -757,21 +768,19 @@ void RtabController::slot_setFiltrForSelection(std::string selection){
 
 void RtabController::slot_openExportCSVForm()
 {
-    auto* dlg = new ExportCSVdialog(
-        m_tables,
-        m_UIForm.TableName(),
-        m_model->getRdata().get_cols(), //Только видимые
-        m_grid);
+    std::string visCols = getVisibleColsFromGrid(); //Только видимые
+    auto* dlg = new ExportCSVdialog(m_tables, m_UIForm.TableName(), visCols, m_grid);
     dlg->setAttribute(Qt::WA_DeleteOnClose);
     dlg->show();
 }
 
 void RtabController::slot_openImportCSVForm()
 {
+    std::string visCols = getVisibleColsFromGrid(); //Только видимые
     auto* dlg = new ImportCSV2dialog(
         m_tables,
         m_UIForm.TableName(),
-        m_model->getRdata().get_cols(), //Только видимые
+        visCols,
         m_grid);
     dlg->setAttribute(Qt::WA_DeleteOnClose);
     dlg->show();
@@ -791,7 +800,7 @@ void RtabController::slot_contextMenu(ContextMenuEventArgs* args)
 
     auto* binding = view->getDataBinding(gridColBase);
     if (!binding) return;
-    const int modelCol = binding->column();
+    ModelIndex col {binding->column()};
 
     // Определяем тип области
     const auto type = hit.info();
@@ -799,17 +808,17 @@ void RtabController::slot_contextMenu(ContextMenuEventArgs* args)
 
     // Меню заголовка
     if (isHeader) {
-        const auto* col = m_model->getRCol(modelCol);
-        m_menuBuilder->prepareForHeader(modelCol, col, args->contextMenu());
+        const auto* rcol = m_model->getRCol(col);
+        m_menuBuilder->prepareForHeader(col, rcol, args->contextMenu());
         return;
     }
 
     // Меню ячейки
     const int row_model = hit.row().modelIndex().row();
-    const auto* col = m_model->getRCol(modelCol);
-    if (!col) return;
+    const auto* rcol = m_model->getRCol(col);
+    if (!rcol) return;
 
-    MenuContext ctx { modelCol, row_model, col };
+    MenuContext ctx {col, row_model, rcol };
     m_menuBuilder->prepareForShow(ctx, args->contextMenu());
 }
 
@@ -822,7 +831,7 @@ void RtabController::slot_contextMenuVertical(ContextMenuEventArgs* args)
 }
 
 int RtabController::getLongValue(const std::string& key, long row){
-    int col = m_model->getRdata().mCols_.at(key);
+    auto col = m_model->getRdata().mCols_.at(key);
     return std::visit(ToLong(), m_model->getRdata().getCell(col, row));
 }
 
@@ -842,17 +851,42 @@ void RtabController::notifyParentRowChanged(int modelRow) {
     m_linkedFormCtrl->onParentRowChanged(modelRow);
 }
 
-Qtitan::GridTableColumn* RtabController::getColumnByIndex(int index) const
+Qtitan::GridTableColumn*
+RtabController::columnByModelIndex(ModelIndex pos)const
 {
     ///@note проверка диапазона предусмотрена внутри функции
-    return qobject_cast<Qtitan::GridTableColumn*>
-        (m_view->getColumnByModelColumn(index));
+    return qobject_cast<Qtitan::GridTableColumn*>(
+        m_view->getColumnByModelColumn(pos.value));
 }
 
-int RtabController::rdataPosOf(const std::string& colName) const
+ModelIndex RtabController::modelIndexOf(const std::string& colName) const
 {
-    if (!m_model) return -1;
+    if (!m_model) return {};
     const RData& rd = m_model->getRdata();
     auto it = rd.mCols_.find(colName);
-    return (it != rd.mCols_.end()) ? it->second : -1;
+    return (it != rd.mCols_.end()) ? it->second : ModelIndex{};
+}
+
+ModelIndex RtabController::modelIndexFromListIndex(int listIdx) const {
+    auto* col = m_view->getColumn(listIdx);
+    if (!col) return {};
+    auto* binding = m_view->getDataBinding(col);
+    if (!binding || binding->column() < 0) return {};
+    return ModelIndex{binding->column()};
+}
+
+std::string
+RtabController::getVisibleColsFromGrid() const
+{
+    std::string result;
+    const int count = m_view->getColumnCount();
+    for (int i = 0; i < count; ++i) {
+        auto* gridCol = m_view->getColumn(i);
+        if (!gridCol || !gridCol->isVisible()) continue;
+        const RCol* rcol = m_model->getRCol(modelIndexFromListIndex(i));
+        if (!rcol) continue;
+        if (!result.empty()) result += ',';
+        result += rcol->getColName();
+    }
+    return result;
 }

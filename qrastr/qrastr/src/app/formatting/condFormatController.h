@@ -1,6 +1,6 @@
 #pragma once
 #include <QObject>
-
+#include "table/tableIndexTypes.h"
 
 class RModel;
 namespace Qtitan { class GridTableView; }
@@ -23,7 +23,7 @@ public:
     void loadFromJson();
 
     /// Открывает диалог редактирования форматов для колонки column.
-    void editCondFormats(std::size_t column); 
+    void editCondFormats(ModelIndex column);
 
 private:
     void saveToJson(); ///< Сериализует текущее состояние RModel → JSON

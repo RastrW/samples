@@ -46,7 +46,7 @@ public:
     virtual void fillBlock(const std::string& tname,
                            QDataBlock&        block,
                            const std::string& cols = "",
-                           std::optional<FieldDataOptions> opts = std::nullopt) = 0;
+                           const std::optional<FieldDataOptions>& opts = std::nullopt) = 0;
 
     virtual long columnIndex(const std::string& tname,
                              const std::string& colName) = 0;

@@ -5,6 +5,7 @@
 #include "filterRule.h"
 
 class QLineEdit;
+class QCheckBox;
 inline constexpr int kRowHeight = 25;
 
 /// @brief Небольшая ячейка автофильтра: кнопка оператора + поле значения.
@@ -34,6 +35,7 @@ private slots:
     void slotTextChanged(const QString& text);
     void showOpMenu();
     void slotBoolCycle();
+    void slotTriStateChanged(int state);
 private:
     QString opText(FilterRule::Op op) const;
     void updateUi();
@@ -43,6 +45,7 @@ private:
 private:
     QToolButton* m_opBtn = nullptr;
     QLineEdit*   m_edit  = nullptr;
+    QCheckBox*   m_triCheck = nullptr;
     FilterRule   m_rule;
     bool         m_isNumeric = false;
     bool         m_isBool = false;

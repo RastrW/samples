@@ -57,7 +57,7 @@ void LinkedFormController::openLinkedForm(LinkedForm lf)
 
 void LinkedFormController::openLinkedMacro(LinkedMacro lm, int contextRow)
 {
-    spdlog::info("LinkedFormController: run macro {}", lm.macrofile.c_str());
+    spdlog::info("LinkedFormController: run macro {}", lm.macrofile);
 
     // ── Путь к макросу ────────────────────────────────────────────
     const QString macroPath =
@@ -186,7 +186,8 @@ void LinkedFormController::applyLinkedForm(LinkedForm lf)
     const std::string tname     = m_model->getRdata().t_name_;
     const std::string selection = lf.get_selection_result();
 
-    const std::vector<long> indices = m_tables->rowsBySelection(tname, selection);
+    const std::vector<long>
+        indices = m_tables->rowsBySelection(tname, selection);
 
     //Создаём CustomFilterCondition для QTitan Grid с этими индексами
     auto* groupCondition = new GridFilterGroupCondition(m_view->filter());
@@ -217,7 +218,7 @@ int LinkedFormController::getLongValue(const std::string& col, long row)
 {
     // Читаем значение напрямую из кешированного DataBlock модели.
     // Используется только при построении меню (начальное заполнение vbindvals).
-    const int colIdx = m_model->getRdata().mCols_.at(col);
+    const auto colIdx = m_model->getRdata().mCols_.at(col);
     return std::visit(ToLong(),
                       m_model->getRdata().getCell(colIdx, row));
 }
