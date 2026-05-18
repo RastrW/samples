@@ -30,14 +30,16 @@ SDLHostWidget::~SDLHostWidget()
 #endif
     // Сначала убиваем ElGraph (дочернее окно)
     m_elGraph.shutdown();
-
+#ifdef BUILD_WIT_SDL
     // Потом рендер и SDL-окно (родительское)
     if (m_renderer) { SDL_DestroyRenderer(m_renderer); m_renderer = nullptr; }
     if (m_window)   { SDL_DestroyWindow(m_window);     m_window   = nullptr; }
+#endif
 }
 
 bool SDLHostWidget::SDLInit()
 {
+#ifdef BUILD_WIT_SDL
     // ── 1. Создаём SDL-окно, встроенное в нативный виджет ────────────────────
     SDL_PropertiesID props = SDL_CreateProperties();
     SDL_SetStringProperty (props, SDL_PROP_WINDOW_CREATE_TITLE_STRING,       "Графика");
@@ -123,6 +125,7 @@ void* sdlHwnd = nullptr;
     spdlog::info("SDLHostWidget: renderer = {}", SDL_GetRendererName(m_renderer));
     m_timer->start(1000 / 60);
     spdlog::info("SDLHostWidget::SDLInit: OK, окно {}x{}", width(), height());
+#endif
     return true;
 }
 
@@ -157,6 +160,7 @@ void SDLHostWidget::performRendering()
 ///*
 void SDLHostWidget::performRendering(){
 
+#ifdef BUILD_WIT_SDL
     SDL_PumpEvents();
 
     if (!m_renderer) return;
@@ -164,11 +168,13 @@ void SDLHostWidget::performRendering(){
     SDL_RenderClear(m_renderer);
 
     SDL_RenderPresent(m_renderer);
+#endif
 }
 //*/
 
 void SDLHostWidget::resizeEvent(QResizeEvent* event)
 {
+#ifdef BUILD_WIT_SDL
     QWidget::resizeEvent(event);
     if (m_window) {
         SDL_SetWindowSize(m_window, event->size().width(), event->size().height());
@@ -177,5 +183,6 @@ void SDLHostWidget::resizeEvent(QResizeEvent* event)
     // ТЕСТ: при ресайзе держим SelfDrawingChild по центру виджета
     m_testChild.resize(event->size().width()  / 4, event->size().height() / 4,
                    event->size().width()  / 2, event->size().height() / 2);
+#endif
 #endif
 }

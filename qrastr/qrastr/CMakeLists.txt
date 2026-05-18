@@ -29,6 +29,18 @@ set(CMAKE_AUTOUIC ON)
 set(CMAKE_AUTOMOC ON)
 set(CMAKE_AUTORCC ON)
 
+# ============================================================================
+# Options
+# ============================================================================
+option(QRASTR_BUILD_WITH_MCR "Build qmcr as library for qrastr" ON)
+option(BUILD_WITH_PQ "Build with libpq" OFF)
+option(BUILD_WITH_SDL "Build with SDL" ON)
+
+message(STATUS "Build options:")
+message(STATUS "  QRASTR_BUILD_WITH_MCR: ${QRASTR_BUILD_WITH_MCR}")
+message(STATUS "  BUILD_WITH_PQ: ${BUILD_WITH_PQ}")
+message(STATUS "  BUILD_WITH_SDL: ${BUILD_WITH_SDL}")
+
 # Output directories - все бинарники идут в ../Debug или ../Release
 # При использовании Visual Studio cmake generator используем переменные OUTPUT_DIRECTORY_<CONFIG>
 foreach(CONFIG Debug Release)
@@ -43,7 +55,6 @@ message(STATUS "CMake generator: ${CMAKE_GENERATOR}")
 # ============================================================================
 # Compile Definitions
 # ============================================================================
-add_compile_definitions(SDL_NO) #Воспроизведение окон SDL
 add_compile_definitions(QTN_NAMESPACE)
 
 # FMT_HEADER_ONLY должен быть определён глобально — до любого включения fmt/spdlog.
@@ -73,15 +84,6 @@ add_compile_definitions(
     LIB_PREFIX="${LIB_PREFIX}"
     SHLIB_SUFFIX="${SHLIB_SUFFIX}"
 )
-# ============================================================================
-# Options
-# ============================================================================
-option(QRASTR_BUILD_WITH_MCR "Build qmcr as library for qrastr" ON)
-option(BUILD_WITH_PQ "Build with libpq" OFF)
-
-message(STATUS "Build options:")
-message(STATUS "  QRASTR_BUILD_WITH_MCR: ${QRASTR_BUILD_WITH_MCR}")
-message(STATUS "  BUILD_WITH_PQ: ${BUILD_WITH_PQ}")
 
 # ============================================================================
 # Path Configuration
@@ -151,13 +153,17 @@ target_include_directories(Spdlog::spdlog INTERFACE "${THIRDPARTY_DIR}/spdlog/in
 add_library(fmt::fmt ALIAS Fmt::fmt)
 add_library(spdlog::spdlog ALIAS Spdlog::spdlog)
 # ============================================================================
-# libpqxx - опционально собирается из thirdparty на всех платформах
+# libpqxx, SDL - опционально собирается из thirdparty на всех платформах
 # ============================================================================
 if(BUILD_WITH_PQ)
     add_thirdparty_library(libpqxx "${THIRDPARTY_DIR}/libpqxx")
     add_library(libpqxx::pqxx ALIAS libpqxx)
 endif()
-
+if (BUILD_WITH_SDL)
+    #target_compile_definitions(${PROJECT_NAME} PRIVATE BUILD_WITH_SDL)
+    add_thirdparty_library(SDL3 "${THIRDPARTY_DIR}/SDL")
+    add_thirdparty_library(SDL3_image "${THIRDPARTY_DIR}/SDL_image")
+endif()
 # ============================================================================
 # Qt
 # ============================================================================
@@ -237,9 +243,6 @@ add_thirdparty_library(qtadvanceddocking "${THIRDPARTY_DIR}/Qt-Advanced-Docking-
 target_include_directories(qtadvanceddocking INTERFACE
     ${THIRDPARTY_DIR}/Qt-Advanced-Docking-System/src
 )
-
-add_thirdparty_library(SDL3 "${THIRDPARTY_DIR}/SDL")
-add_thirdparty_library(SDL3_image "${THIRDPARTY_DIR}/SDL_image")
 
 add_thirdparty_library(scintilla "${THIRDPARTY_DIR}/scintilla")
 
@@ -356,6 +359,13 @@ else()
         ${TS_FILES}
     )
 endif()
+# ============================================================================
+# target_compile_definitions - проброс опции cmake в с++ для конструкций #ifdef
+# устанавливается после Executable
+# ============================================================================
+if (BUILD_WITH_SDL)
+    target_compile_definitions(${PROJECT_NAME} PRIVATE BUILD_WITH_SDL)
+endif()
 
 # Явно установить выходную папку для исполняемого файла
 # Иначе Visual Studio компилирует в build/<config>/<CONFIG>/
@@ -386,14 +396,16 @@ endif()
 
 set(THIRD_PARTY_LIBS
     qtadvanceddocking
-    SDL3
-    SDL3_image
     scintilla
     qmcr
 )
 
 if(BUILD_WITH_PQ)
     list(APPEND THIRD_PARTY_LIBS libpqxx::pqxx)
+endif()
+if(BUILD_WITH_SDL)
+    list(APPEND THIRD_PARTY_LIBS SDL3)
+    list(APPEND THIRD_PARTY_LIBS SDL3_image)
 endif()
 
 # Astra
@@ -605,7 +617,6 @@ target_include_directories(${PROJECT_NAME} PRIVATE
     ${QMCR_SOURCE_DIR}
     ${QMCR_SOURCE_DIR}/forms
 )
-
 # ============================================================================
 # Target Properties
 # ============================================================================
