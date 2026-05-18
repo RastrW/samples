@@ -1,8 +1,7 @@
 #pragma once
 #include <QMap>
 #include <QtitanGrid.h>
-
-struct FilterRule;
+#include "filter/autoFilter/filterRule.h"
 
 /// @brief GridFilterCondition, хранящий правила автофильтра по колонкам.
 /// Условия объединяются через AND: строка видима, только если все активные

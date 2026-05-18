@@ -52,6 +52,11 @@ sudo apt install build-essential
 ```bash
 sudo apt install -y python3
 ```
+В ALT Linux p10 есть отдельная ветка пакетов Python 3.11, поэтому для сборки и генерации кода используйте именно `python3.11`, а системный `python3` версии 3.9.2.:
+```
+apt-get install python3.11 python3.11-dev
+```
+ 
 
 ### PostgreSQL (опционально)
 
@@ -64,6 +69,7 @@ sudo apt install -y libpq-dev
 ### SDL зависимости (X11/Wayland)
 
 SDL3 требует системные библиотеки для работы с графикой:
+AstraLinux 1.8:
 
 ```bash
 sudo apt install -y \
@@ -82,6 +88,18 @@ sudo apt install -y \
     libudev-dev \
     libgbm-dev \
     libdrm-dev
+```
+AltLinux 10.4:
+```bash
+apt-get install 
+	libXcursor-devel \
+	install libXi-devel \
+	install bzlib-devel \
+	install libXrandr-devel \
+	install libpcre-devel \
+	install libXScrnSaver-devel \
+	install libbrotli-devell \
+	install libXtst-devel
 ```
 
 ## Шаг 1. Загрузка submodule-зависимостей
@@ -112,7 +130,11 @@ git submodule update --init --recursive
 ...\rastr\qrastr\thirdparty\scintilla\
 ...\rastr\qrastr\thirdparty\lexilla\
 ```
-
+### Scintilla зависимости (GTK):
+AltLinux 10.4:
+```
+apt-get install libgtk+3-devel
+```
 ---
 
 ## Шаг 3. Сборка сторонних библиотек
