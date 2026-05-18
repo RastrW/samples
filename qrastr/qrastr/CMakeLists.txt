@@ -35,6 +35,7 @@ foreach(CONFIG Debug Release)
     set(CMAKE_RUNTIME_OUTPUT_DIRECTORY_${CONFIG} "${CMAKE_SOURCE_DIR}/../${CONFIG}")
     set(CMAKE_LIBRARY_OUTPUT_DIRECTORY_${CONFIG} "${CMAKE_SOURCE_DIR}/../${CONFIG}")
     set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY_${CONFIG} "${CMAKE_SOURCE_DIR}/../${CONFIG}")
+    #SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -pthread")  # compile AltLinux 10.4 with GCC 10.3
 endforeach()
 
 message(STATUS "CMake generator: ${CMAKE_GENERATOR}")
