@@ -120,30 +120,30 @@ AltLinux 10.4 поставляется с GCC 10 и GLIBC 2.32.
 ### Шаг 1: Python
 
 ```
-# ── Python 3.11 Runtime ────
+# ── Python 3.11 Runtime для AltLinux ────
 PYTHON_VERSION=3.11
 
 # Копируем интерпретатор
 mkdir -p ~/AppDir/usr/bin
 cp /usr/bin/python${PYTHON_VERSION} ~/AppDir/usr/bin/python
 
-# Копируем стандартную библиотеку
+# Копируем стандартную библиотеку (на AltLinux путь может быть /usr/lib64)
 mkdir -p ~/AppDir/usr/lib
-PYTHON_LIBDIR=/usr/lib/python${PYTHON_VERSION}
+PYTHON_LIBDIR=/usr/lib64/python${PYTHON_VERSION}
+if [ ! -d "$PYTHON_LIBDIR" ]; then
+    PYTHON_LIBDIR=/usr/lib/python${PYTHON_VERSION}
+fi
 if [ -d "$PYTHON_LIBDIR" ]; then
     cp -r $PYTHON_LIBDIR ~/AppDir/usr/lib/
-    echo "✓ Python standard library copied"
+    echo "✓ Python standard library copied from $PYTHON_LIBDIR"
 else
     echo "✗ Python library directory not found: $PYTHON_LIBDIR"
 fi
 
-# Копируем динамические библиотеки Python
-find /usr/lib -maxdepth 1 -name "libpython${PYTHON_VERSION}*.so*" \
-    -exec cp {} ~/AppDir/usr/lib/ \;
+# Копируем динамические библиотеки Python (ищем и в /usr/lib64)
+find /usr/lib64 /usr/lib -maxdepth 1 -name "libpython${PYTHON_VERSION}*.so*" \
+    -exec cp {} ~/AppDir/usr/lib/ \; 2>/dev/null
 ln -sf libpython${PYTHON_VERSION}.so.1.0 ~/AppDir/usr/lib/libpython${PYTHON_VERSION}.so 2>/dev/null || true
-
-# Копируем site-packages (если нужны дополнительные модули)
-# cp -r /usr/lib/python${PYTHON_VERSION}/site-packages ~/AppDir/usr/lib/python${PYTHON_VERSION}/ 2>/dev/null || true
 
 echo "✓ Python ${PYTHON_VERSION} integrated into AppImage"
 ```
@@ -199,6 +199,7 @@ qrastr
 Установка зависимсотей libpqxx (версия 7.10, т.к. требует стандарт C++17, а версия 8+ уже требует C++20):
 ```
 sudo apt update && sudo apt install libpq-dev postgresql-server-dev-all
+apt-get install unixODBC libunixODBC-devel
 ```
 
 
@@ -257,7 +258,7 @@ ln -sf libScintillaEdit.so.5 ~/AppDir/usr/bin/libScintillaEdit.so
 # Плагины приложения (загружаются через QPluginLoader)
 cp -r $PROJ/Release/plugins ~/AppDir/usr/bin/
 
-# libmk4.so — зависимость libastra.so, должна лежать рядом с плагинами
+# libmk4.so — зависимость libastra.so
 find $ASTRA_ROOT -name "libmk4.so*" -exec cp {} ~/AppDir/usr/bin/plugins/ \; 2>/dev/null || \
 find /usr/lib -name "libmk4.so*" -exec cp {} ~/AppDir/usr/bin/plugins/ \; 2>/dev/null || \
     echo "ВНИМАНИЕ: libmk4.so не найдена!"
@@ -267,26 +268,22 @@ find $LIBPQXX_BUILD -name "libpqxx*.so*" -exec cp {} ~/AppDir/usr/bin/plugins/ \
     echo "ВНИМАНИЕ: libpqxx не найдена — BarsMDP/TI/PGDriver не загрузятся."
 
 # Нестандартные .so в usr/lib/ (подтягиваются через RPATH)
-cp $THIRDPARTY/qtadvanceddocking/linux/gcc/Release/lib/libqtadvanceddocking-qt5.so.4 ~/AppDir/usr/lib/
-cp $THIRDPARTY/SDL3/linux/gcc/Release/lib/libSDL3.so.0 ~/AppDir/usr/lib/
-cp $THIRDPARTY/SDL3_image/linux/gcc/Release/lib/libSDL3_image.so* ~/AppDir/usr/lib/ 2>/dev/null || true
+# Если библиотеки отсутствуют — закомментировать или добавить проверку существования
+if [ -f "$THIRDPARTY/qtadvanceddocking/linux/gcc/Release/lib/libqtadvanceddocking-qt5.so.4" ]; then
+    cp $THIRDPARTY/qtadvanceddocking/linux/gcc/Release/lib/libqtadvanceddocking-qt5.so.4 ~/AppDir/usr/lib/
+fi
+if [ -f "$THIRDPARTY/SDL3/linux/gcc/Release/lib/libSDL3.so.0" ]; then
+    cp $THIRDPARTY/SDL3/linux/gcc/Release/lib/libSDL3.so.0 ~/AppDir/usr/lib/
+fi
+if ls $THIRDPARTY/SDL3_image/linux/gcc/Release/lib/libSDL3_image.so* 1> /dev/null 2>&1; then
+    cp $THIRDPARTY/SDL3_image/linux/gcc/Release/lib/libSDL3_image.so* ~/AppDir/usr/lib/ 2>/dev/null || true
+fi
 
+# Qtitan (эти библиотеки есть)
 cp $PROJ/lib/qtitan8_lin_5_15/lib/libQtitanBase.so.2       ~/AppDir/usr/lib/
 cp $PROJ/lib/qtitan8_lin_5_15/lib/libQtitanGrid.so.8       ~/AppDir/usr/lib/
 cp $PROJ/lib/qtitan8_lin_5_15/lib/libQtitanStyle.so*       ~/AppDir/usr/lib/ 2>/dev/null || true
 cp $PROJ/lib/qtitan8_lin_5_15/lib/libQtitanFastInfoset.so* ~/AppDir/usr/lib/ 2>/dev/null || true
-
-# Qt-плагины
-cp -r $QT_ROOT/plugins/platforms           ~/AppDir/usr/plugins/
-cp -r $QT_ROOT/plugins/xcbglintegrations   ~/AppDir/usr/plugins/
-cp -r $QT_ROOT/plugins/imageformats        ~/AppDir/usr/plugins/
-cp -r $QT_ROOT/plugins/printsupport        ~/AppDir/usr/plugins/
-
-# QtWebEngine
-cp $QT_ROOT/libexec/QtWebEngineProcess ~/AppDir/usr/bin/
-cp -r $QT_ROOT/resources ~/AppDir/usr/
-mkdir -p ~/AppDir/usr/translations
-cp -r $QT_ROOT/translations/qtwebengine_locales ~/AppDir/usr/translations/
 
 # Иконка
 cp $PROJ/qrastr/resources/images/qrastr.png \
@@ -314,17 +311,18 @@ cp ~/AppDir/usr/share/applications/qrastr.desktop ~/AppDir/
 export QT_ROOT=~/Qt/5.15.2/gcc_64
 export QTDIR=$QT_ROOT
 export PATH=$QT_ROOT/bin:$PATH
+export QMAKE=$QT_ROOT/bin/qmake
+
+# Добавляем AppDir/usr/lib и AppDir/usr/bin, чтобы linuxdeploy находил все зависимости
+export LD_LIBRARY_PATH=$QT_ROOT/lib:$HOME/AppDir/usr/lib:$HOME/AppDir/usr/bin:$LD_LIBRARY_PATH
+
 export LINUXDEPLOY_PLUGIN_QT_PATH=./linuxdeploy-plugin-qt-x86_64.AppImage
 
-export LD_LIBRARY_PATH=\
-$QT_ROOT/lib:\
-$HOME/AppDir/usr/lib:\
-$HOME/AppDir/usr/bin:\
-$HOME/AppDir/usr/bin/plugins:\
-$PROJ/lib/qtitan8_lin_5_15/lib:\
-$LD_LIBRARY_PATH
+# Проверка qmake
+which qmake
+qmake --version
 
-cd ~
+# Запуск linuxdeploy
 ./linuxdeploy-x86_64.AppImage \
     --appdir AppDir \
     --executable AppDir/usr/bin/qrastr \
