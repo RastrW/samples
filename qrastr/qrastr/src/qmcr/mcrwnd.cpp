@@ -20,6 +20,7 @@
 #include "pyhlp.h"
 #include "globalProtocolWidget.h"
 #include <spdlog/spdlog.h>
+#include "../app/utilities/pathHelper.h"
 
 McrWnd::McrWnd(QWidget* parent)
     : QWidget(parent)
@@ -176,9 +177,7 @@ void McrWnd::showEvent(QShowEvent* event)
 
         if (btn != QMessageBox::Yes) return;
 
-        const QString examplePath =
-            QCoreApplication::applicationDirPath()
-            + "/../Data/py_example/rastr_events.py";
+        const QString examplePath = PathHelper::getDataFile("py_example/rastr_events.py");
 
         m_editor->setFileInfo(QFileInfo(examplePath));
         if (SciHlpBase::RetVal::Ok != m_editor->loadFromFile()) {

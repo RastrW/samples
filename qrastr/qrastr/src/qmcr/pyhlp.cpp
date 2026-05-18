@@ -12,6 +12,7 @@
 #include <regex>
 #include <QCoreApplication>
 #include <spdlog/spdlog.h>
+#include "../app/utilities/pathHelper.h"
 
 namespace PyUtils {
 
@@ -170,11 +171,8 @@ bool PyHlp::initialize()
         Py_FinalizeEx();
         return false;
     }
-#ifdef _DEBUG
-    const QString pluginPath = QCoreApplication::applicationDirPath() + "/../Data/astr_py/Debug/";
-#else
-    const QString pluginPath = QCoreApplication::applicationDirPath() + "/../Data/astr_py/Release/";
-#endif
+
+    const QString pluginPath = PathHelper::getPythonModulePath("");
 
     PyUtils::PyObjRaii pathItem(PyUnicode_FromString(pluginPath.toStdString().c_str()));
     if (PyList_Append(sysPath, pathItem) != 0) {

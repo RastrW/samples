@@ -19,6 +19,7 @@
 #include <spdlog/spdlog.h>
 #include "table/ITableRepository.h"
 #include "dock/tableDockManager.h"
+#include "pathHelper.h"
 
 LinkedFormController::LinkedFormController(
  std::shared_ptr<ITableRepository> tables,
@@ -60,16 +61,10 @@ void LinkedFormController::openLinkedMacro(LinkedMacro lm, int contextRow)
     spdlog::info("LinkedFormController: run macro {}", lm.macrofile);
 
     // ── Путь к макросу ────────────────────────────────────────────
-    const QString macroPath =
-        QDir::current().filePath(
-            "contextmacro/" +
-            QFileInfo(QString::fromStdString(lm.macrofile)).completeBaseName() +
-            ".py");
-
-    if (!QFileInfo::exists(macroPath)) {
-        spdlog::warn("context macro not found: {}", macroPath.toStdString());
-        return;
-    }
+    const QString macroName =
+        QFileInfo(QString::fromStdString(lm.macrofile)).completeBaseName() + ".py";
+    const QString macroPath = PathHelper::getMacroPath(macroName);
+    PathHelper::logPath("macro", macroPath);
 
     // Чтобы макросы работали в Data должен лежать astra_py. модуль
 #ifdef _WIN32
@@ -77,16 +72,8 @@ void LinkedFormController::openLinkedMacro(LinkedMacro lm, int contextRow)
 #else
     const QString astraPyFile = "astra_py.cpython-311-x86_64-linux-gnu.so";
 #endif
-    // QDir::cleanPath убирает лишние /../ из пути
-    const QString astraPyPath =
-        QDir::cleanPath(
-            QDir::current().filePath("../Data/astr_py/Release/" + astraPyFile));
-
-    if (!QFileInfo::exists(astraPyPath)) {
-        spdlog::warn("astra_py module not found: {}", astraPyPath.toStdString());
-        return;
-    }
-
+    const QString astraPyPath = PathHelper::getPythonModulePath(astraPyFile);
+    PathHelper::logPath("astra_py", astraPyPath);
     // ── Чтение файла макроса ──────────────────────────────────────
     QFile file(macroPath);
     if (!file.open(QIODevice::ReadOnly | QIODevice::Text)) {

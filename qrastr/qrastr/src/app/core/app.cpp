@@ -28,7 +28,7 @@
 #include "ti/tiAdapter.h"
 #include "bars/barsMDPAdapter.h"
 #include "pgdriver/pgdriveradapter.h"
-
+#include "pathHelper.h"
 
 class QtSink : public spdlog::sinks::base_sink<std::mutex>
 {
@@ -119,25 +119,21 @@ bool App::readSettings(){
     try {
         RastrParameters::construct();
 
-        QString baseDir;
-        const QString appImageEnv = qEnvironmentVariable("APPIMAGE");
-        if (!appImageEnv.isEmpty()) {
-            // Запуск из AppImage: директория где лежит .AppImage файл
-            baseDir = QFileInfo(appImageEnv).absolutePath();
-        } else {
-            // Обычный запуск (QtCreator): бинарник в Release/,
-            // Data лежит рядом с Release/ — поднимаемся на уровень выше
-            baseDir = QDir::cleanPath(
-                QCoreApplication::applicationDirPath() + "/..");
-        }
+        // Используем PathHelper для получения базовой директории
+        const QString baseDir = PathHelper::getDataPath();
 
+        // Полный путь к файлу настроек
         const QString confPath = QDir::cleanPath(
             baseDir + "/" +
             RastrParameters::pch_dir_data_ + "/" +
             RastrParameters::pch_fname_appsettings);
+
         auto* const p_params = RastrParameters::get_instance();
         QFileInfo fi(confPath);
         p_params->setDirData(fi.dir());
+
+        // Для обратной совместимости можно залогировать найденный путь
+        PathHelper::logPath("Data directory", p_params->getDirData().path());
 
         const bool bl_res = QDir::setCurrent(p_params->getDirData().path());
         m_v_cache_log.add(bl_res ? spdlog::level::info : spdlog::level::err,

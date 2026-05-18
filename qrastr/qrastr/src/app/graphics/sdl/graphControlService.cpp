@@ -5,6 +5,7 @@
 #include <QApplication>
 #include "astra/IPlainRastr.h"
 #include "IPlainElGraph.h"
+#include "pathHelper.h"
 
 GraphControlService::GraphControlService(IPlainRastr* rastr):
     m_rastr(rastr){
@@ -50,12 +51,8 @@ bool GraphControlService::load()
         return false;
     }
 
-    const QString graphLibsPath =
-        QCoreApplication::applicationDirPath() + "/../Data/graphics/graph2libs.xml";
-    if (!QFile::exists(graphLibsPath)) {
-        spdlog::warn("GraphWorker: graph2libs.xml not found");
-        return false;
-    }
+    const QString graphLibsPath = PathHelper::getGraphicsPath("graph2libs.xml");
+    PathHelper::logPath("graph2libs.xml", graphLibsPath);
 
     m_initPlainDll(m_rastr, graphLibsPath.toStdString().c_str());
     m_loaded = true;
@@ -91,12 +88,8 @@ void GraphControlService::initControl(IPlainElGraph* graph)
         return;
     }
 
-    const QString graphLibsPath =
-        QCoreApplication::applicationDirPath() + "/../Data/graphics/graph2items.xml";
-    if (!QFile::exists(graphLibsPath)) {
-        spdlog::warn("GraphWorker: graph2items.xml not found");
-        return;
-    }
+    const QString graphLibsPath = PathHelper::getGraphicsPath("graph2items.xml");
+    PathHelper::logPath("graph2items.xml", graphLibsPath);
 
     auto* dpcResult = graph->GetDrawShapesCollection();
     if (dpcResult) {

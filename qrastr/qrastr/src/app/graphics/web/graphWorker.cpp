@@ -6,6 +6,7 @@
 #include "astra/IPlainRastr.h"
 #include "graphServer.h"
 #include <spdlog/spdlog.h>
+#include "pathHelper.h"
 
 GraphWorker::GraphWorker(IPlainRastr* rastr, QLibrary* lib)
         : m_rastr(rastr), m_lib(lib) {}
@@ -47,8 +48,7 @@ void GraphWorker::slot_process() {
         return;
     }
 
-    const QString graphLibsPath =
-        QCoreApplication::applicationDirPath() + "/../Data/graphics/graph2libs.xml";
+    const QString graphLibsPath = PathHelper::getGraphicsPath("graph2libs.xml");
     if (!QFile::exists(graphLibsPath)) {
         spdlog::warn("GraphWorker: graph2libs.xml not found");
         emit sig_finished();
