@@ -1,7 +1,9 @@
 #pragma once
 #include <QWidget>
-#include <SDL3/SDL.h>
-#include <SDL3_image/SDL_image.h>
+#ifdef BUILD_WITH_SDL
+    #include <SDL3/SDL.h>
+    #include <SDL3_image/SDL_image.h>
+#endif
 #include "elGraphService.h"
 #include "test/SelfDrawingChild.h"
 
@@ -36,8 +38,10 @@ private slots:
     void performRendering();
 
 private:
+#ifdef BUILD_WIT_SDL
     SDL_Window*   m_window   = nullptr;
     SDL_Renderer* m_renderer = nullptr;
+#endif
     QTimer*       m_timer    = nullptr;
 
     ElGraphService m_elGraph;

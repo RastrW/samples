@@ -92,8 +92,6 @@ QVariant RModel::data(const QModelIndex& index, int role) const
 
     const RCol& rcol = *m_rdata->colAt(col);
     // Ранние ветки — до чтения raw, чтобы не читать блок вхолостую
-    if (role == Qt::ToolTipRole)
-        return QStringLiteral("[%1, %2]").arg(row + 1).arg(col.value + 1);
     if (role == Qtitan::ComboBoxRole) //Выпадающий popup ComboBox
         return dataForComboBox(rcol);
 
@@ -114,7 +112,7 @@ QVariant RModel::data(const QModelIndex& index, int role) const
 
     switch (role) {
     case Qt::ToolTipRole:
-         return QString("[%1, %2] [%3]").arg(row + 1).arg(col.value + 1).arg(raw.toString());
+         return QStringLiteral("[%1, %2] [%3]").arg(row + 1).arg(col.value + 1).arg(raw.toString());
     case Qt::DisplayRole:
     case Qt::EditRole:
         return dataForDisplayEdit(row, col, rcol, raw, fvd, role);

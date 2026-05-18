@@ -20,6 +20,7 @@ GraphSDLManager::GraphSDLManager(ads::CDockManager* dockManager,
 
 GraphSDLManager::~GraphSDLManager()
 {
+#ifdef BUILD_WITH_SDL
     // Если окна остались открытыми — останавливаем SDL.
     if (m_sdlInited && m_windowWithSDL) {
         SDL_Quit();
@@ -29,13 +30,16 @@ GraphSDLManager::~GraphSDLManager()
     }
 
     spdlog::info("GraphSDLManager has been deleted");
+#endif
 }
 
 void GraphSDLManager::closeAll(){
+#ifdef BUILD_WITH_SDL
     if (m_sdlInited && m_windowWithSDL) {
         SDL_Quit();
         m_sdlInited = false;
     }
+#endif
 }
 
 void GraphSDLManager::openWindow()
@@ -160,6 +164,7 @@ void GraphSDLManager::slot_dockClosed()
 
 bool GraphSDLManager::ensureSDLInited()
 {
+#ifdef BUILD_WITH_SDL
     if (m_sdlInited && m_windowWithSDL) return true;
 
     if (!SDL_Init(SDL_INIT_VIDEO)) {
@@ -169,14 +174,16 @@ bool GraphSDLManager::ensureSDLInited()
 
     m_sdlInited = true;
     spdlog::info("GraphSDLManager: SDL инициализирован");
+#endif
     return true;
 }
 
 void GraphSDLManager::shutdownSDLIfIdle()
 {
     if (!m_sdlInited)      return;
-
+#ifdef BUILD_WITH_SDL
     SDL_Quit();
+#endif
     m_sdlInited = false;
     spdlog::info("GraphSDLManager: SDL остановлен (нет открытых окон)");
     emit allWindowsClosed();
