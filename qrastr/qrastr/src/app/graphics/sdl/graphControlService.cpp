@@ -8,7 +8,8 @@
 
 GraphControlService::GraphControlService(IPlainRastr* rastr):
     m_rastr(rastr){
-    const QString libDir = QCoreApplication::applicationDirPath() + "/";
+//    const QString libDir = QCoreApplication::applicationDirPath() + "/";
+    const QString libDir = "D:/rastr/RastrWin/GraphControlClient/build-client/Debug/";
     m_lib.setFileName(libDir + "GraphClient");
 }
 
@@ -110,6 +111,17 @@ void GraphControlService::initControl(IPlainElGraph* graph)
 
     //m_initControl(graph, m_rastr);
     m_initControl(graph, nullptr);
+
+
+    {auto* dpcResult = graph->SetManualSettings(_ManualSettings::borderWidth, 0);dpcResult->Destroy();}
+    {auto* dpcResult = graph->SetManualSettings(_ManualSettings::bRamkaSel, 0);dpcResult->Destroy();}
+    {auto* dpcResult = graph->SetManualSettings(_ManualSettings::bOpenAtFullMode, 1);dpcResult->Destroy();}
+    {auto* dpcResult = graph->SetManualSettings(_ManualSettings::showSubstPixelTolerance, 5);dpcResult->Destroy();}
+    {auto* dpcResult = graph->SetManualSettings(_ManualSettings::bContinuouslyCallbacksWhileMoving, 1);dpcResult->Destroy();}
+    {auto* dpcResult = graph->SetManualSettings(_ManualSettings::bAllowGlobalRotateOnDblclick, 0);dpcResult->Destroy();}
+    {auto* dpcResult = graph->SetManualSettings(_ManualSettings::bAllowAutoSizeOptimization, 0);dpcResult->Destroy();}
+    {auto* dpcResult = graph->SetManualSettings(_ManualSettings::nGlobalObjectsLoadWhileThreadCycle, 30);dpcResult->Destroy();}
+
 }
 
 void GraphControlService::closeControl(IPlainElGraph* graph)
