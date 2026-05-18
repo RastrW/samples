@@ -1,5 +1,6 @@
 #pragma once
 #include <unordered_map>
+#include <QVariant>
 #include "table/tableIndexTypes.h"
 #include "table/tableIndexHash.h"
 

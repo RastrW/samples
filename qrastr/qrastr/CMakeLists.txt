@@ -104,6 +104,7 @@ endif()
 
 # Составляем CMAKE_PREFIX_PATH на базе ASTRA_ROOT
 list(APPEND CMAKE_PREFIX_PATH "${ASTRA_ROOT}/lib/cmake")
+find_package(Threads REQUIRED)
 
 # Ищем конфигурацию ASTRA
 find_package(COMCK CONFIG REQUIRED)
@@ -407,6 +408,8 @@ set(PROJECT_LINK_LIBS)
 list(APPEND PROJECT_LINK_LIBS ${QT_LIBS})
 list(APPEND PROJECT_LINK_LIBS ${THIRD_PARTY_LIBS})
 list(APPEND PROJECT_LINK_LIBS ${ASTRA_LIBS})
+
+list(APPEND PROJECT_LINK_LIBS Threads::Threads)
 
 # 3) Применяем один вызов для link'ов
 target_link_libraries(${PROJECT_NAME} PRIVATE ${PROJECT_LINK_LIBS})

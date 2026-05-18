@@ -2,12 +2,12 @@
 set -e
 
 # ============================================================================
-# Build all thirdparty libraries for Astra Linux (gcc-12)
-# Updated for GCC 12.2.0 and Qt 5.15.2
+# Build all thirdparty libraries for Linux (gcc)
+# Updated for GCC and Qt 5.15.2
 # ============================================================================
 
 echo "============================================================================"
-echo "Building precompiled libraries for Astra Linux (gcc-12)"
+echo "Building precompiled libraries for Linux (gcc)"
 echo "============================================================================"
 echo ""
 
@@ -794,5 +794,5 @@ echo "==========================================================================
 echo "Build completed"
 echo "==========================================================================="
 echo ""
-echo "All libraries built with GCC 12.2.0 successfully."
+echo "All libraries built with GCC successfully."
 echo ""
