@@ -117,40 +117,10 @@ AltLinux 10.4 поставляется с GCC 10 и GLIBC 2.32.
 
 Проект использует `CMAKE_CXX_STANDARD 17`, который поддерживается с GCC 7.
 
-### Шаг 1: Базовые инструменты
-
-```bash
-sudo apt-get update
-sudo apt-get install -y \
-    gcc g++ make git pkg-config \
-    cmake ninja-build \
-    python3 python3-devel
-```
-
-> Если cmake в репозитории старше 3.23 — используйте cmake из Qt:
-> `~/Qt/Tools/CMake/bin/cmake`
-
-### Шаг 2: Зависимости для Qt (X11, OpenGL, XCB)
-
-```bash
-sudo apt-get install -y \
-    libGL-devel libEGL-devel \
-    libX11-devel libxcb-devel \
-    libxcb-util-devel libxcb-icccm-devel libxcb-image-devel \
-    libxcb-keysyms-devel libxcb-randr-devel libxcb-render-devel \
-    libxcb-render-util-devel libxcb-shape-devel libxcb-shm-devel \
-    libxcb-sync-devel libxcb-xfixes-devel libxcb-xinerama-devel \
-    libxcb-xkb-devel \
-    libxkbcommon-devel libxkbcommon-x11-devel \
-    libXi-devel libXrender-devel libXrandr-devel \
-    libXcursor-devel libXcomposite-devel libXdamage-devel \
-    libXfixes-devel libXtst-devel \
-    libfontconfig-devel libfreetype-devel libpng-devel \
-    libdbus-devel libasound-devel zlib-devel
-```
+### Шаг 1: Python
 
 ```
-# ── Python 3.11 Runtime (ОБЯЗАТЕЛЬНО для макросов) ────
+# ── Python 3.11 Runtime ────
 PYTHON_VERSION=3.11
 
 # Копируем интерпретатор
@@ -178,42 +148,13 @@ ln -sf libpython${PYTHON_VERSION}.so.1.0 ~/AppDir/usr/lib/libpython${PYTHON_VERS
 echo "✓ Python ${PYTHON_VERSION} integrated into AppImage"
 ```
 
-### Шаг 3: Зависимости для QtWebEngine
-
-```bash
-sudo apt-get install -y \
-    libnss-devel libnspr-devel \
-    libjpeg-devel libopus-devel libvpx-devel \
-    libwebp-devel snappy-devel liblcms2-devel
-```
-
-### Шаг 4: FUSE (для запуска AppImage)
+### Шаг 2: FUSE (для запуска AppImage)
 
 ```bash
 sudo apt-get install -y fuse libfuse-devel
-sudo modprobe fuse
-sudo usermod -aG fuse $USER
-# Перелогиниться после этой команды
 ```
 
-### Шаг 5: Qt 5.15.2 через Qt Maintenance Tool
-
-```bash
-wget https://d13lb3tujbc8s0.cloudfront.net/onlineinstallers/qt-online-installer-linux-x64-4.8.1.run
-chmod +x qt-online-installer-linux-x64-4.8.1.run
-./qt-online-installer-linux-x64-4.8.1.run
-```
-
-В установщике выбрать:
-- Qt 5.15.2 -> Desktop gcc 64-bit
-- Qt 5.15.2 -> Qt WebEngine
-- Qt -> Tools -> CMake (рекомендуется)
-- Qt -> Tools -> Ninja (рекомендуется)
-
-> Qt 5.15.2 из официального установщика собран примерно на Ubuntu 18.04 (GLIBC ~2.27)
-> и должен работать на AltLinux 10.4 с GLIBC 2.32.
-
-### Шаг 6: Инструменты AppImage
+### Шаг 3: Инструменты AppImage
 
 ```bash
 wget https://github.com/linuxdeploy/linuxdeploy/releases/download/continuous/linuxdeploy-x86_64.AppImage
@@ -233,7 +174,7 @@ qrastr
 │       └── liblexilla.so
 ├── liblexilla.so          <- QLibrary: applicationDirPath()/liblexilla.so
 └── plugins/               <- QPluginLoader: applicationDirPath()/plugins/
-    ├── librastr.so   [КРИТИЧНО]
+    ├── librastr.so
     │   └── libastra.so    <- QLibrary: applicationDirPath()/plugins/astra
     │       └── libmk4.so
     ├── libCOMCK.so
@@ -389,7 +330,7 @@ cd ~
     --executable AppDir/usr/bin/qrastr \
     --desktop-file AppDir/qrastr.desktop \
     --plugin qt \
-    --output appimage
+    --output appimage 2>&1 | tee deploy.log
 ```
 
 > `qt.conf` создаётся автоматически плагином `linuxdeploy-plugin-qt`. Ручное создание не нужно.
