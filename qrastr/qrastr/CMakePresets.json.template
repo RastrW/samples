@@ -1,3 +1,5 @@
+
+Windows:
 {
   "version": 6,
   "configurePresets": [
@@ -27,31 +29,82 @@
 		"GR_CTRL_CLIENT_DIR": "C:/work/gr_ctrl_client"
       }
     },
+  ]
+}
+
+Linux:
+{
+  "version": 6,
+  "configurePresets": [
+    {
+      "name": "base-linux",
+      "hidden": true,
+      "generator": "Ninja",
+      "cacheVariables": {
+        "ASTRA_ROOT":           "/home/alexander/projects/astra",
+        "SVG_DIR":              "/home/alexander/projects/svg_generator",
+        "EL_GRAPH_CTRL_DIR":    "/home/alexander/projects/astra_el_graph",
+        "GR_CTRL_CLIENT_DIR":   "/home/alexander/projects/gr_ctrl_client"
+      }
+    },
+
+    {
+      "name": "base-qt5152",
+      "hidden": true,
+      "inherits": "base-linux",
+      "cacheVariables": {
+        "QT_DIR":                    "/home/alexander/Qt/5.15.2/gcc_64/lib/cmake/Qt5",
+        "Qt5_DIR":                   "/home/alexander/Qt/5.15.2/gcc_64/lib/cmake/Qt5",
+        "Qt5Core_DIR":               "/home/alexander/Qt/5.15.2/gcc_64/lib/cmake/Qt5Core",
+        "Qt5Widgets_DIR":            "/home/alexander/Qt/5.15.2/gcc_64/lib/cmake/Qt5Widgets",
+        "Qt5WebEngineWidgets_DIR":   "/home/alexander/Qt/5.15.2/gcc_64/lib/cmake/Qt5WebEngineWidgets",
+        "CMAKE_PREFIX_PATH":         "/home/alexander/Qt/5.15.2/gcc_64",
+        "CMAKE_FIND_ROOT_PATH":      "/home/alexander/Qt/5.15.2/gcc_64",
+        "CMAKE_FIND_ROOT_PATH_MODE_PACKAGE": "BOTH",
+
+        "CMAKE_INSTALL_RPATH_USE_LINK_PATH": "TRUE"
+      }
+    },
+
+    {
+      "name": "base-qt-system",
+      "hidden": true,
+      "inherits": "base-linux",
+      "cacheVariables": {
+        "QT_DIR":            "/usr/lib/x86_64-linux-gnu/cmake/Qt5",
+        "Qt5_DIR":           "/usr/lib/x86_64-linux-gnu/cmake/Qt5",
+        "CMAKE_PREFIX_PATH": "/usr/lib/x86_64-linux-gnu"
+      }
+    },
+
     {
       "name": "linux-debug",
-      "generator": "Ninja",
-      "binaryDir": "${sourceDir}/build/debug",
-      "cacheVariables": {
-        "CMAKE_BUILD_TYPE": "Debug",
-        "ASTRA_ROOT": "/home/administrator/Документы/astra",
-        "QT_DIR": "/home/administrator/Qt/5.15.2/gcc_64/lib/cmake/Qt5",
-		"SVG_DIR": "/home/administrator/Документы/svg_generator",
-		"EL_GRAPH_CTRL_DIR": "/home/administrator/Документы/astra_el_graph",
-		"GR_CTRL_CLIENT_DIR": "/home/administrator/Документы/gr_ctrl_client"
-      }
+      "displayName": "Linux Debug (Qt 5.15.2 — QtCreator)",
+      "inherits": "base-qt5152",
+      "binaryDir": "${sourceDir}/build/qt5152-debug",
+      "cacheVariables": { "CMAKE_BUILD_TYPE": "Debug" }
     },
     {
       "name": "linux-release",
-      "generator": "Ninja",
-      "binaryDir": "${sourceDir}/build/release",
-      "cacheVariables": {
-        "CMAKE_BUILD_TYPE": "Release",
-        "ASTRA_ROOT": "/home/administrator/Документы/astra",
-        "QT_DIR": "/home/administrator/Qt/5.15.2/gcc_64/lib/cmake/Qt5",
-		"SVG_DIR": "/home/administrator/Документы/svg_generator",
-		"EL_GRAPH_CTRL_DIR": "/home/administrator/Документы/astra_el_graph",
-		"GR_CTRL_CLIENT_DIR": "/home/administrator/Документы/gr_ctrl_client"
-      }
+      "displayName": "Linux Release (Qt 5.15.2 — QtCreator)",
+      "inherits": "base-qt5152",
+      "binaryDir": "${sourceDir}/build/qt5152-release",
+      "cacheVariables": { "CMAKE_BUILD_TYPE": "Release" }
+    },
+
+    {
+      "name": "linux-system-debug",
+      "displayName": "Linux Debug (Qt 5.15.8 — системный)",
+      "inherits": "base-qt-system",
+      "binaryDir": "${sourceDir}/build/sysqt-debug",
+      "cacheVariables": { "CMAKE_BUILD_TYPE": "Debug" }
+    },
+    {
+      "name": "linux-system-release",
+      "displayName": "Linux Release (Qt 5.15.8 — системный)",
+      "inherits": "base-qt-system",
+      "binaryDir": "${sourceDir}/build/sysqt-release",
+      "cacheVariables": { "CMAKE_BUILD_TYPE": "Release" }
     }
   ]
 }

@@ -61,9 +61,16 @@ apt-get install python3.11 python3.11-dev
 ### PostgreSQL (опционально)
 
 Только если планируете использовать `BUILD_WITH_PQ=ON`:
+AstraLinux:
 
 ```bash
 sudo apt install -y libpq-dev
+```
+
+AltLinux10.4:
+```bash
+apt-get update && apt-get install libpq-devel
+
 ```
 
 ### SDL зависимости (X11/Wayland)

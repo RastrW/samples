@@ -17,7 +17,7 @@
 [submodule "qrastr/thirdparty/libpqxx"]
 	path = qrastr/thirdparty/libpqxx
 	url = https://github.com/jtv/libpqxx.git
-	branch = master
+	branch = 7.10
 [submodule "qrastr/thirdparty/spdlog"]
 	path = qrastr/thirdparty/spdlog
 	url = https://github.com/gabime/spdlog.git

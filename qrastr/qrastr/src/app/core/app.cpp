@@ -119,15 +119,24 @@ bool App::readSettings(){
     try {
         RastrParameters::construct();
 
-        const QString confPath =
-            QDir::cleanPath(
-                QDir::currentPath() + "/../" +
-                RastrParameters::pch_dir_data_ + "/" +
-                RastrParameters::pch_fname_appsettings);
+        QString baseDir;
+        const QString appImageEnv = qEnvironmentVariable("APPIMAGE");
+        if (!appImageEnv.isEmpty()) {
+            // Запуск из AppImage: директория где лежит .AppImage файл
+            baseDir = QFileInfo(appImageEnv).absolutePath();
+        } else {
+            // Обычный запуск (QtCreator): бинарник в Release/,
+            // Data лежит рядом с Release/ — поднимаемся на уровень выше
+            baseDir = QDir::cleanPath(
+                QCoreApplication::applicationDirPath() + "/..");
+        }
 
-        QFileInfo fi(confPath);
+        const QString confPath = QDir::cleanPath(
+            baseDir + "/" +
+            RastrParameters::pch_dir_data_ + "/" +
+            RastrParameters::pch_fname_appsettings);
         auto* const p_params = RastrParameters::get_instance();
-
+        QFileInfo fi(confPath);
         p_params->setDirData(fi.dir());
 
         const bool bl_res = QDir::setCurrent(p_params->getDirData().path());
