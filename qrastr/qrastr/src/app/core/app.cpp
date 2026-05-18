@@ -125,7 +125,6 @@ bool App::readSettings(){
         // Полный путь к файлу настроек
         const QString confPath = QDir::cleanPath(
             baseDir + "/" +
-            RastrParameters::pch_dir_data_ + "/" +
             RastrParameters::pch_fname_appsettings);
 
         auto* const p_params = RastrParameters::get_instance();

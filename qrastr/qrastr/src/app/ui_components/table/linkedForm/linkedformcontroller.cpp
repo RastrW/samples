@@ -67,12 +67,7 @@ void LinkedFormController::openLinkedMacro(LinkedMacro lm, int contextRow)
     PathHelper::logPath("macro", macroPath);
 
     // Чтобы макросы работали в Data должен лежать astra_py. модуль
-#ifdef _WIN32
-    const QString astraPyFile = "astra_py.cp312-win_amd64.pyd";
-#else
-    const QString astraPyFile = "astra_py.cpython-311-x86_64-linux-gnu.so";
-#endif
-    const QString astraPyPath = PathHelper::getPythonModulePath(astraPyFile);
+    const QString astraPyPath = PathHelper::getAstraPyModuleName();
     PathHelper::logPath("astra_py", astraPyPath);
     // ── Чтение файла макроса ──────────────────────────────────────
     QFile file(macroPath);

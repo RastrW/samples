@@ -149,6 +149,35 @@ sudo apt-get install -y \
     libdbus-devel libasound-devel zlib-devel
 ```
 
+```
+# ── Python 3.11 Runtime (ОБЯЗАТЕЛЬНО для макросов) ────
+PYTHON_VERSION=3.11
+
+# Копируем интерпретатор
+mkdir -p ~/AppDir/usr/bin
+cp /usr/bin/python${PYTHON_VERSION} ~/AppDir/usr/bin/python
+
+# Копируем стандартную библиотеку
+mkdir -p ~/AppDir/usr/lib
+PYTHON_LIBDIR=/usr/lib/python${PYTHON_VERSION}
+if [ -d "$PYTHON_LIBDIR" ]; then
+    cp -r $PYTHON_LIBDIR ~/AppDir/usr/lib/
+    echo "✓ Python standard library copied"
+else
+    echo "✗ Python library directory not found: $PYTHON_LIBDIR"
+fi
+
+# Копируем динамические библиотеки Python
+find /usr/lib -maxdepth 1 -name "libpython${PYTHON_VERSION}*.so*" \
+    -exec cp {} ~/AppDir/usr/lib/ \;
+ln -sf libpython${PYTHON_VERSION}.so.1.0 ~/AppDir/usr/lib/libpython${PYTHON_VERSION}.so 2>/dev/null || true
+
+# Копируем site-packages (если нужны дополнительные модули)
+# cp -r /usr/lib/python${PYTHON_VERSION}/site-packages ~/AppDir/usr/lib/python${PYTHON_VERSION}/ 2>/dev/null || true
+
+echo "✓ Python ${PYTHON_VERSION} integrated into AppImage"
+```
+
 ### Шаг 3: Зависимости для QtWebEngine
 
 ```bash

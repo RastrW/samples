@@ -73,13 +73,11 @@ static std::string pyObjToStr(PyObject* obj)
     const char* s = PyBytes_AsString(encoded);
     return s ? s : "__bytes_failed__";
 }
-
-/// Возвращает путь к директории Python (где лежит python.exe),
-/// найденной через PYTHONHOME → PATH → пусто.
+/// Возвращает путь к директории Python
 std::wstring detectPythonHome()
 {
 #ifdef _WIN32
-    // 1. PYTHONHOME
+    // Windows: ищем через PYTHONHOME → PATH → пусто
     wchar_t buf[32767];
     if (GetEnvironmentVariableW(L"PYTHONHOME", buf, _countof(buf)) > 0) {
         std::wstring home(buf);
@@ -88,7 +86,6 @@ std::wstring detectPythonHome()
         return home;
     }
 
-    // 2. PATH (через python.exe)
     wchar_t fullPath[MAX_PATH];
     if (SearchPathW(nullptr, L"python.exe", nullptr, MAX_PATH, fullPath, nullptr) > 0) {
         std::wstring ws(fullPath);
@@ -105,6 +102,23 @@ std::wstring detectPythonHome()
     return {};
 
 #else
+    // Linux: три контекста
+    PathHelper::logContext();
+
+    // Контекст 1: AppImage — Python должен быть в AppDir/usr/lib/
+    const QString appImageEnv = QString::fromStdString(
+        std::getenv("APPIMAGE") ? std::getenv("APPIMAGE") : "");
+
+    if (!appImageEnv.isEmpty()) {
+        const QString appDir = QFileInfo(appImageEnv).absolutePath();
+        const QString pythonHome = appDir + "/usr";
+        spdlog::info("Python home (AppImage): {}", pythonHome.toStdString());
+        return pythonHome.toStdWString();
+    }
+
+    // Контекст 2: QtCreator — берём системный Python
+    // Контекст 3: SystemInstall — берём системный Python
+
     const char* h = std::getenv("PYTHONHOME");
     if (h && *h) {
         std::string s(h);
@@ -115,6 +129,18 @@ std::wstring detectPythonHome()
     spdlog::info("Python home not set (using system defaults)");
     return {};
 #endif
+}
+
+/// Логирует значения важных Python переменных окружения
+static void logPythonEnv()
+{
+    const char* vars[] = { "PYTHONHOME", "PYTHONPATH", "PYTHONEXECUTABLE" };
+    for (const char* var : vars) {
+        const char* val = std::getenv(var);
+        if (val && *val) {
+            spdlog::info("Python env {}: {}", var, val);
+        }
+    }
 }
 }
 
@@ -140,10 +166,14 @@ bool PyHlp::initialize()
         spdlog::warn("PyHlp::initialize: Python already initialized externally");
         return false;
     }
-    //явно находим Python в PATH — на случай если переменная `PYTHONHOME` не задана, но `python.exe` есть в `PATH`
+
+    spdlog::info("=== PyHlp::initialize() START ===");
+    PyUtils::logPythonEnv();
+
+    // ── Шаг 1: Конфигурация Python ──────────────────────────────────────
     PyConfig config;
-    PyConfig_InitPythonConfig(&config);   // НЕ Isolated: уважает PYTHONPATH/PYTHONHOME
-    spdlog::error("PyHlp: Поиск python в системе");
+    PyConfig_InitPythonConfig(&config);
+
     const std::wstring home = PyUtils::detectPythonHome();
     if (!home.empty()) {
         PyStatus st = PyConfig_SetString(&config, &config.home, home.c_str());
@@ -151,10 +181,10 @@ bool PyHlp::initialize()
             spdlog::warn("PyHlp: не удалось задать home='{}': {}",
                          std::string(home.begin(), home.end()),
                          st.err_msg ? st.err_msg : "?");
-            // не фатально — продолжаем без явного home
         }
     }
 
+    // ── Шаг 2: Инициализация ────────────────────────────────────────────
     PyStatus status = Py_InitializeFromConfig(&config);
     PyConfig_Clear(&config);
 
@@ -164,49 +194,77 @@ bool PyHlp::initialize()
         return false;
     }
 
-    // Добавляем путь к astra_py в sys.path
+    spdlog::info("Python initialized successfully");
+
+    // ── Шаг 3: Добавляем папку с astra_py в sys.path ──────────────────
     PyObject* sysPath = PySys_GetObject("path"); // borrowed ref
     if (!sysPath) {
+        spdlog::error("PyHlp: Failed to get sys.path");
         captureError();
         Py_FinalizeEx();
         return false;
     }
 
-    const QString pluginPath = PathHelper::getPythonModulePath("");
+    const QString astraPyDir = PathHelper::getAstraPyDir();
+    PathHelper::logPath("astra_py directory", astraPyDir, true);
 
-    PyUtils::PyObjRaii pathItem(PyUnicode_FromString(pluginPath.toStdString().c_str()));
+    if (!QFileInfo::exists(astraPyDir)) {
+        spdlog::error("PyHlp: astra_py directory not found: {}",
+                      astraPyDir.toStdString());
+        Py_FinalizeEx();
+        return false;
+    }
+
+    PyUtils::PyObjRaii pathItem(
+        PyUnicode_FromString(astraPyDir.toStdString().c_str()));
+
     if (PyList_Append(sysPath, pathItem) != 0) {
+        spdlog::error("PyHlp: Failed to append to sys.path");
         captureError();
         Py_FinalizeEx();
         return false;
     }
 
-    // Импортируем модуль astra_py
+    spdlog::info("Added to sys.path: {}", astraPyDir.toStdString());
+
+    // ── Шаг 4: Импортируем модуль astra_py ──────────────────────────────
+    spdlog::info("Attempting to import 'astra_py' module...");
     m_astraModule = PyImport_ImportModule("astra_py");
+
     if (!m_astraModule) {
+        spdlog::error("PyHlp: Failed to import 'astra_py' module");
         captureError();
         Py_FinalizeEx();
         return false;
     }
 
-    // Создаём объект Rastr(ptr), передавая указатель на IPlainRastr
-    PyUtils::PyObjRaii rastrClass(PyObject_GetAttrString(m_astraModule, "Rastr"));
+    spdlog::info("Module 'astra_py' imported successfully");
+
+    // ── Шаг 5: Создаём объект Rastr(ptr) ────────────────────────────────
+    PyUtils::PyObjRaii rastrClass(
+        PyObject_GetAttrString(m_astraModule, "Rastr"));
+
     if (rastrClass.isNull() || !PyCallable_Check(rastrClass)) {
+        spdlog::error("PyHlp: 'Rastr' class not found or not callable in astra_py");
         captureError();
         Py_FinalizeEx();
         return false;
     }
 
-    const uintptr_t ptr    = reinterpret_cast<uintptr_t>(&m_ipr);
+    const uintptr_t ptr = reinterpret_cast<uintptr_t>(&m_ipr);
     PyUtils::PyObjRaii pyPtr(PyLong_FromUnsignedLongLong(ptr));
     PyUtils::PyObjRaii pyArg(PyTuple_Pack(1, static_cast<PyObject*>(pyPtr)));
+
     if (pyArg.isNull()) {
+        spdlog::error("PyHlp: Failed to create tuple for Rastr constructor");
         Py_FinalizeEx();
         return false;
     }
 
     m_rastrObject = PyObject_CallObject(rastrClass, pyArg);
+
     if (!m_rastrObject || PyErr_Occurred()) {
+        spdlog::error("PyHlp: Failed to create Rastr instance");
         captureError();
         Py_XDECREF(m_rastrObject);
         m_rastrObject = nullptr;
@@ -215,6 +273,7 @@ bool PyHlp::initialize()
     }
 
     m_initialized = true;
+    spdlog::info("=== PyHlp::initialize() SUCCESS ===");
     return true;
 }
 
