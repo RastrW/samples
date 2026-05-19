@@ -9,7 +9,7 @@ struct ColumnEditorInfo {
     };
 
     Type        editorType = Type::None;
-    QStringList comboItems;
+    std::shared_ptr<QStringList> comboItems;
     int         decimals   = 0;
     double      minVal     = -1e6;
     double      maxVal     =  1e6;

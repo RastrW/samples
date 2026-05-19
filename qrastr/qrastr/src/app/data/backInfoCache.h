@@ -28,7 +28,7 @@ public:
     void clear();
 
     // Lookup helpers — возвращают nullptr / end() если нет данных для колонки.
-    const QStringList*      enumItems(AstraIndex colIdx)     const;
+    const std::shared_ptr<QStringList>      enumItems(AstraIndex colIdx)     const;
     const RefMap*           superenumMap(AstraIndex colIdx)  const;
     const std::shared_ptr<ColumnEditorInfo::NameRefData>
         namerefData(AstraIndex colIdx) const;
@@ -74,7 +74,7 @@ private:
         (const std::string& nameref);
 
     // astra-индекс → список строк: ex. "БАЗА|Ген|Нагр|Ген+"
-    std::unordered_map<AstraIndex, QStringList>
+    std::unordered_map<AstraIndex, std::shared_ptr<QStringList>>
         m_enum;
     // astra-индекс → { ключ → отображаемое имя }: ex. RefCol → node[na]
     std::unordered_map<AstraIndex,

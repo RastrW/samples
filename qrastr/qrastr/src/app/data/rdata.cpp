@@ -39,6 +39,24 @@ RData::RData(const ITableRepository::TableSchema& schema,
         if (formCols.count(rc.getColName()))
             rc.setHiddenByForm(false);
     spdlog::debug("RData: table={} columns={}", t_name_, schema.columns.size());
+
+// ── ТЕСТ: проверка совпадения ModelIndex и AstraIndex ────────────────
+    {
+        bool mismatch_found = false;
+        for (size_t i = 0; i < size(); ++i) {
+            const RCol& rc   = (*this)[i];
+            const long model = static_cast<long>(i);        // ModelIndex
+            const long astra = rc.astraIndex().value;        // AstraIndex (cs.index из плагина)
+            if (model != astra) {
+                spdlog::warn("[INDEX_CHECK] table='{}' col='{}' "
+                             "ModelIndex={} != AstraIndex={}",
+                             t_name_, rc.getColName(), model, astra);
+                mismatch_found = true;
+            }
+        }
+        if (!mismatch_found)
+            spdlog::info("[INDEX_CHECK] table='{}': все ModelIndex == AstraIndex", t_name_);
+    }
 }
 
 void RData::populateBlock(std::shared_ptr<ITableRepository> tables){

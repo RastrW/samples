@@ -55,7 +55,7 @@ RtabController::RtabController( std::shared_ptr<ITableRepository> tables,
     : QObject(parent)
     , m_tables (tables)
     , m_tableEvents(tableEvents)
-    , m_UIForm(std::move(UIForm))
+    , m_UIform(std::move(UIForm))
     , m_DockManager(pDockManager)
     , m_tableDockManager(tableDockManager)
 {
@@ -63,14 +63,14 @@ RtabController::RtabController( std::shared_ptr<ITableRepository> tables,
     Grid::loadTranslation();
     m_grid = new RGrid(nullptr);
 
-    if (m_UIForm.Vertical())
+    if (m_UIform.Vertical())
         m_grid->setViewType(Qtitan::Grid::TableViewVertical);
     else
         m_grid->setViewType(Qtitan::Grid::TableView);
 
     m_view = m_grid->view<Qtitan::GridTableView>();
 
-    if (m_UIForm.Vertical()){
+    if (m_UIform.Vertical()){
         m_view->tableOptions().setRowSizingEnabled(true);
         //Высота строки подстраивается под контент
         //m_view->options().setRowAutoHeight(true);
@@ -121,19 +121,19 @@ RtabController::RtabController( std::shared_ptr<ITableRepository> tables,
     m_filterManager = std::make_unique<FilterManager>(m_view, m_model.get(),
                                                       m_grid);
 
-    if (!m_UIForm.Vertical()) {
+    if (!m_UIform.Vertical()) {
         createCommonTableActions();
     }
     m_menuBuilder = std::make_unique<ContextMenuBuilder>(
         m_view, m_linkedFormCtrl.get(), m_comTabAct, this);
-    m_menuBuilder->initMenu(m_grid, m_UIForm.Vertical());
+    m_menuBuilder->initMenu(m_grid, m_UIform.Vertical());
 
     setupConnections();
 
     //dumpShortcuts(m_grid, "before clear");
     auto& acts = m_view->actions();
 
-    if (m_UIForm.Vertical()) {
+    if (m_UIform.Vertical()) {
         // Для вертикальных — снимаем вообще все шорткаты QTitan
         for (auto it = acts.begin(); it != acts.end(); ++it)
             it.value()->setShortcut(QKeySequence());
@@ -152,7 +152,7 @@ RtabController::RtabController( std::shared_ptr<ITableRepository> tables,
 
 RtabController::~RtabController()
 {
-    spdlog::info("RtabController::~RtabController [{}]", m_UIForm.DisplayName());
+    spdlog::info("RtabController::~RtabController [{}]", m_UIform.DisplayName());
 
     if (m_tableEvents) {
         disconnect(m_tableEvents.get(), nullptr, m_model.get(), nullptr);
@@ -174,7 +174,7 @@ RtabShell* RtabController::createShell(const TableProperties& tabProp)
 {
     if (m_shellCreated) {
         spdlog::error("RtabController::createShell called twice for table [{}]",
-                      m_UIForm.TableName());
+                      m_UIform.TableName());
         return nullptr;
     }
     m_shellCreated = true;
@@ -251,16 +251,16 @@ void RtabController::createModel(std::shared_ptr<ITableRepository> tables)
     QElapsedTimer t; t.start();
 
     m_model = std::make_unique<RModel>(this, tables);
-    m_model->setForm(&m_UIForm);
+    m_model->setForm(&m_UIform);
 
     if (!m_model->populateDataFromRastr()) {
         // Таблица не найдена в плагине (файл не загружен или имя неверно).
         // Модель пуста — показываем сообщение и прекращаем инициализацию.
         spdlog::error("RtabController: populateDataFromRastr failed [{}]",
-                      m_UIForm.TableName());
+                      m_UIform.TableName());
         QMessageBox::warning(m_grid, tr("Ошибка открытия таблицы"),
                              tr("Таблица \"%1\" недоступна.\nУбедитесь, что файл данных загружен.")
-                                 .arg(QString::fromStdString(m_UIForm.DisplayName())));
+                                 .arg(QString::fromStdString(m_UIform.DisplayName())));
         return;
     }
 
@@ -268,7 +268,7 @@ void RtabController::createModel(std::shared_ptr<ITableRepository> tables)
     m_view->setModel(m_model.get());
     setupColumnOrder();
 
-    if (!m_UIForm.Vertical())
+    if (!m_UIform.Vertical())
         setTableView(false);
 
     applyAllColumnEditors();
@@ -285,7 +285,7 @@ void RtabController::setupColumnOrder()
 {
     // Расставляем визуальные индексы по порядку из формы
     VisualIndex vi{0};
-    for (const auto& field : m_UIForm.Fields()) {
+    for (const auto& field : m_UIform.Fields()) {
         const ModelIndex pos = m_model->getRdata().modelIndexOf(field.Name());
         if (pos.invalid()) continue;
         if (auto* col = columnByModelIndex(pos))
@@ -298,7 +298,7 @@ void RtabController::createLinkedFormController
 
     m_linkedFormCtrl = std::make_unique<LinkedFormController>(
         tables, m_tableEvents, m_tableDockManager,
-        m_view, m_model.get(), m_UIForm, this);
+        m_view, m_model.get(), m_UIform, this);
 }
 
 void RtabController::createCondFormatController(){
@@ -313,36 +313,36 @@ void RtabController::setupConnections()
     auto* ev = m_tableEvents.get();
     // BeginResetModel: СНАЧАЛА контроллер (сохраняет порядок),
     //                  ПОТОМ модель (вызывает beginResetModel, инвалидирует биндинги)
-    connect(ev, &ITableEvents::sig_BeginResetModel, this,
+    connect(ev, &ITableEvents::sig_beginResetModel, this,
             &RtabController::slot_beginResetModel);
-    connect(ev, &ITableEvents::sig_BeginResetModel, m_model.get(),
-            &RModel::slot_BeginResetModel);
+    connect(ev, &ITableEvents::sig_beginResetModel, m_model.get(),
+            &RModel::slot_beginResetModel);
     // EndResetModel:   СНАЧАЛА модель (populateDataFromRastr + endResetModel,
     //                              QTitan синхронизирует биндинги со старыми колонками),
     //                  ПОТОМ контроллер (removeColumns + addColumn с новым порядком)
-    connect(ev, &ITableEvents::sig_EndResetModel, m_model.get(),
-            &RModel::slot_EndResetModel);
-    connect(ev, &ITableEvents::sig_EndResetModel, this,
+    connect(ev, &ITableEvents::sig_endResetModel, m_model.get(),
+            &RModel::slot_endResetModel);
+    connect(ev, &ITableEvents::sig_endResetModel, this,
             &RtabController::slot_endResetModel);
 
     //ITableEvents -> RModel
     connect(ev, &ITableEvents::sig_dataChanged,this->m_model.get(),
             &RModel::slot_DataChanged);
-    connect(ev, &ITableEvents::sig_BeginInsertRow,this->m_model.get(),
-            &RModel::slot_BeginInsertRow);
-    connect(ev, &ITableEvents::sig_EndInsertRow,this->m_model.get(),
-            &RModel::slot_EndInsertRow);
-    connect(ev, &ITableEvents::sig_BeginRemoveRows,this->m_model.get(),
-            &RModel::slot_BeginRemoveRows);
-    connect(ev, &ITableEvents::sig_EndRemoveRows,this->m_model.get(),
-            &RModel::slot_EndRemoveRows);
+    connect(ev, &ITableEvents::sig_beginInsertRow,this->m_model.get(),
+            &RModel::slot_beginInsertRow);
+    connect(ev, &ITableEvents::sig_endInsertRow,this->m_model.get(),
+            &RModel::slot_endInsertRow);
+    connect(ev, &ITableEvents::sig_beginRemoveRows,this->m_model.get(),
+            &RModel::slot_beginRemoveRows);
+    connect(ev, &ITableEvents::sig_endRemoveRows,this->m_model.get(),
+            &RModel::slot_endRemoveRows);
     //ContextMenuBuilder -> RtabController
     connect(m_menuBuilder.get(), &ContextMenuBuilder::sig_exportCsv,
             this, &RtabController::slot_openExportCSVForm);
     connect(m_menuBuilder.get(), &ContextMenuBuilder::sig_importCsv,
             this, &RtabController::slot_openImportCSVForm);
     // Остальные сигналы ContextMenuBuilder — только для горизонтальных
-    if (!m_UIForm.Vertical()) {
+    if (!m_UIform.Vertical()) {
         connect(m_menuBuilder.get(), &ContextMenuBuilder::sig_colProp,
                 this, &RtabController::slot_openColProp);
         connect(m_menuBuilder.get(), &ContextMenuBuilder::sig_widthByTemplate,
@@ -357,8 +357,8 @@ void RtabController::setupConnections()
                 m_filterManager.get(), &FilterManager::slot_openSelection);
     }
     // Обновление ссылочных справочников при изменении строк в других таблицах
-    connect(ev,  &ITableEvents::sig_ReferenceChanged,
-            m_model.get(), &RModel::slot_RefTableChanged);
+    connect(ev,  &ITableEvents::sig_referenceChanged,
+            m_model.get(), &RModel::slot_refTableChanged);
     connect(m_model.get(), &RModel::sig_nameRefUpdated,
             this, [this](const std::vector<ModelIndex>& cols) {
                 for (const auto i : cols) {
@@ -372,7 +372,7 @@ void RtabController::setupConnections()
                     repo->updateItems(info.nameRefData);
                 }
             });
-    if (!m_UIForm.Vertical()){
+    if (!m_UIform.Vertical()){
         connect(m_view, &GridTableView::contextMenu,
                 this, &RtabController::slot_contextMenu);
     }else{
@@ -450,8 +450,13 @@ void RtabController::applyColumnEditor(ModelIndex col)
         column_qt->setProperty("isNumeric", true);
         column_qt->setEditorType(GridEditor::ComboBox);
         column_qt->editorRepository()->setDefaultValue(QString(), Qt::EditRole);
-        column_qt->editorRepository()->setDefaultValue(
-            info.comboItems, static_cast<Qt::ItemDataRole>(Qtitan::ComboBoxRole));
+        if (info.comboItems) {
+            column_qt->editorRepository()->setDefaultValue(
+                *info.comboItems, static_cast<Qt::ItemDataRole>(Qtitan::ComboBoxRole));
+        } else {
+            column_qt->editorRepository()->setDefaultValue(
+                QStringList(), static_cast<Qt::ItemDataRole>(Qtitan::ComboBoxRole));
+        }
         break;
 
     case ColumnEditorInfo::Type::NameRef:
@@ -568,7 +573,7 @@ void RtabController::slot_groupCorrection(){
 
 void RtabController::slot_beginResetModel(const std::string& tname)
 {
-    if (m_UIForm.TableName() != tname) return;
+    if (m_UIform.TableName() != tname) return;
     QElapsedTimer t; t.start();
 
     m_columnState.clear();
@@ -593,7 +598,7 @@ void RtabController::slot_beginResetModel(const std::string& tname)
 
 void RtabController::slot_endResetModel(const std::string& tname)
 {
-    if (m_UIForm.TableName() != tname) return;
+    if (m_UIform.TableName() != tname) return;
     QElapsedTimer t; t.start();
     const RData& rdata = m_model->getRdata();
     //Сбрасываем мендеджер фильтрации, т.к. он будет излишне перестраиваться
@@ -604,7 +609,7 @@ void RtabController::slot_endResetModel(const std::string& tname)
     m_view->setModel(m_model.get());
     restoreColumnOrder(rdata);
 
-    if (!m_UIForm.Vertical())
+    if (!m_UIform.Vertical())
         setTableView(false);
     applyAllColumnEditors();
     restoreColumnVisibility(rdata);
@@ -684,7 +689,7 @@ void RtabController::setPyHlp(std::shared_ptr<PyHlp> pPyHlp){
 void RtabController::slot_openColProp(ModelIndex col)
 {
     // Получаем схему колонки через репозиторий
-    const auto schema_full = m_tables->getSchema(m_UIForm.TableName());
+    const auto schema_full = m_tables->getSchema(m_UIform.TableName());
     if (!col.valid_in(schema_full.columns.size())) return;
 
     const RCol* rcol = m_model->getRCol(col);
@@ -769,7 +774,7 @@ void RtabController::slot_setFiltrForSelection(std::string selection){
 void RtabController::slot_openExportCSVForm()
 {
     std::string visCols = getVisibleColsFromGrid(); //Только видимые
-    auto* dlg = new ExportCSVdialog(m_tables, m_UIForm.TableName(), visCols, m_grid);
+    auto* dlg = new ExportCSVdialog(m_tables, m_UIform.TableName(), visCols, m_grid);
     dlg->setAttribute(Qt::WA_DeleteOnClose);
     dlg->show();
 }
@@ -779,7 +784,7 @@ void RtabController::slot_openImportCSVForm()
     std::string visCols = getVisibleColsFromGrid(); //Только видимые
     auto* dlg = new ImportCSV2dialog(
         m_tables,
-        m_UIForm.TableName(),
+        m_UIform.TableName(),
         visCols,
         m_grid);
     dlg->setAttribute(Qt::WA_DeleteOnClose);

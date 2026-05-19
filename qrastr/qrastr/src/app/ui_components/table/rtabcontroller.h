@@ -154,7 +154,7 @@ private:
     Qtitan::GridTableView* m_view  {nullptr};
 
     // ── Конфигурация ────────────────────────────────────────────────────────
-    CUIForm              m_UIForm;
+    CUIForm              m_UIform;
     ads::CDockManager*   m_DockManager {nullptr};
     struct ColumnState {
         bool      visible  = true;

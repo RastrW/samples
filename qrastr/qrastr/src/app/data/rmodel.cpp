@@ -248,7 +248,7 @@ QVariant RModel::dataForComboBox(const RCol& rcol) const
     }
 
     QStringList list;
-    if (const auto* enums = m_cache.enumItems(idx)){
+    if (const auto& enums = m_cache.enumItems(idx)){
         list = *enums;
     }
     else if (const auto nrd = m_cache.namerefData(idx)){
@@ -276,7 +276,7 @@ QString RModel::resolveDisplayText(const RCol& rcol,
         if (v >= 0 && v < static_cast<int>(pics->size()))  return (*pics)[v].label;
         return {};
     }
-    if (const auto* enums = m_cache.enumItems(idx)) {
+    if (const auto& enums = m_cache.enumItems(idx)) {
         const int v = raw.toInt();
         if (v >= 0 && v < static_cast<int>(enums->size())) return (*enums)[v];
         return {};
@@ -342,7 +342,7 @@ bool RModel::setData(const QModelIndex& index,
             long val = 0;
             const auto idx = iter_col->astraIndex();
             if (!iter_col->isDirectCode()) {
-                if (const auto* enums = m_cache.enumItems(idx)) {
+                if (const auto& enums = m_cache.enumItems(idx)) {
                     for (int i = 0; i < enums->size(); ++i)
                         if ((*enums)[i] == value) { val = i; break; }
                 } else if (const auto* senum = m_cache.superenumMap(idx)) {
@@ -460,13 +460,13 @@ void RModel::slot_DataChanged(const std::string& tName,
     emit dataChanged(index(rowFrom, from.value), index(rowTo, to.value));
 }
 
-void RModel::slot_BeginResetModel(const std::string& tName)
+void RModel::slot_beginResetModel(const std::string& tName)
 {
     if (!isMyTable(tName)){ return;}
     beginResetModel();
 }
 
-void RModel::slot_EndResetModel(const std::string& tName)
+void RModel::slot_endResetModel(const std::string& tName)
 {
     if (!isMyTable(tName)){ return;}
     ///@note при сборсе обязательно целиком пересоздавать data
@@ -474,7 +474,7 @@ void RModel::slot_EndResetModel(const std::string& tName)
     endResetModel();
 }
 
-void RModel::slot_BeginInsertRow(const std::string& tName,
+void RModel::slot_beginInsertRow(const std::string& tName,
                                  int first, int last)
 {
     if (!isMyTable(tName)){ return;}
@@ -483,20 +483,20 @@ void RModel::slot_BeginInsertRow(const std::string& tName,
     beginInsertRows({}, first, last);
 }
 
-void RModel::slot_EndInsertRow(const std::string& tName)
+void RModel::slot_endInsertRow(const std::string& tName)
 {
     if (!isMyTable(tName)){ return;}
     endInsertRows();
 }
 
-void RModel::slot_BeginRemoveRows(const std::string& tName,
+void RModel::slot_beginRemoveRows(const std::string& tName,
                                   int first, int last)
 {
     if (!isMyTable(tName)){ return;}
     beginRemoveRows({}, first, last);
 }
 
-void RModel::slot_EndRemoveRows(const std::string& tName)
+void RModel::slot_endRemoveRows(const std::string& tName)
 {
     if (!isMyTable(tName)){ return;}
     // Определяем диапазон через beginRemoveRows/endRemoveRows не передаёт параметры,
@@ -505,7 +505,7 @@ void RModel::slot_EndRemoveRows(const std::string& tName)
     endRemoveRows();
 }
 
-void RModel::slot_RefTableChanged(const std::string& tName) {
+void RModel::slot_refTableChanged(const std::string& tName) {
     // Если изменилась наша же таблица — RTDA уже послал ChangeTable/ChangeAll,
     // не нужно дублировать.
     if (isMyTable(tName)) return;
@@ -577,9 +577,9 @@ RModel::buildColumnEditorInfo(ModelIndex colIndex) const
 
     case enComPropTT::COM_PR_ENUM:
         if (!col->isDirectCode()) {
-            if (const auto* enums = m_cache.enumItems(idx)) {
+            if (const auto& enums = m_cache.enumItems(idx)) {
                 info.editorType = ColumnEditorInfo::Type::ComboBox;
-                info.comboItems = *enums;
+                info.comboItems = enums;
                 break;
             }
         }
@@ -602,7 +602,7 @@ RModel::buildColumnEditorInfo(ModelIndex colIndex) const
             if (const auto* senum = m_cache.superenumMap(idx)) {
                 info.editorType = ColumnEditorInfo::Type::ComboBox;
                 for (const auto& [k, v] : *senum)
-                    info.comboItems.append(QString::fromStdString(v));
+                    info.comboItems->append(QString::fromStdString(v));
                 break;
             }
         }

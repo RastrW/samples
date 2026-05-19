@@ -37,13 +37,13 @@ public slots:
     void slot_DataChanged(const std::string& tName,
                           int rowFrom, const std::string& colNameFrom,
                           int rowTo,   const std::string& colNameTo);
-    void slot_BeginResetModel(const std::string& tName);
-    void slot_EndResetModel(const std::string& tName);
-    void slot_BeginInsertRow(const std::string& tName, int first, int last);
-    void slot_EndInsertRow(const std::string& tName);
-    void slot_BeginRemoveRows(const std::string& tName, int first, int last);
-    void slot_EndRemoveRows(const std::string& tName);
-    void slot_RefTableChanged(const std::string& tName);
+    void slot_beginResetModel(const std::string& tName);
+    void slot_endResetModel(const std::string& tName);
+    void slot_beginInsertRow(const std::string& tName, int first, int last);
+    void slot_endInsertRow(const std::string& tName);
+    void slot_beginRemoveRows(const std::string& tName, int first, int last);
+    void slot_endRemoveRows(const std::string& tName);
+    void slot_refTableChanged(const std::string& tName);
 
 public:
     /**

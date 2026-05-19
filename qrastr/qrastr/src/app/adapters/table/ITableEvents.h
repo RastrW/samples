@@ -20,19 +20,19 @@ signals:
                          int rowFrom, const std::string& colFrom,
                          int rowTo,   const std::string& colTo);
     ///< перестроение модели
-    void sig_BeginResetModel  (const std::string& tname);
-    void sig_EndResetModel    (const std::string& tname);
+    void sig_beginResetModel  (const std::string& tname);
+    void sig_endResetModel    (const std::string& tname);
     ///< вставка строки
-    void sig_BeginInsertRow   (const std::string& tname, int first, int last);
-    void sig_EndInsertRow     (const std::string& tname);
+    void sig_beginInsertRow   (const std::string& tname, int first, int last);
+    void sig_endInsertRow     (const std::string& tname);
     ///< удаление строк
-    void sig_BeginRemoveRows  (const std::string& tname, int first, int last);
-    void sig_EndRemoveRows    (const std::string& tname);
+    void sig_beginRemoveRows  (const std::string& tname, int first, int last);
+    void sig_endRemoveRows    (const std::string& tname);
     ///< обновление представлений
-    void sig_UpdateModel      (const std::string& tname);
-    void sig_UpdateView       (const std::string& tname);
-    void sig_ResetModel       (const std::string& tname);
+    void sig_updateModel      (const std::string& tname);
+    void sig_updateView       (const std::string& tname);
+    void sig_resetModel       (const std::string& tname);
     /// Строки таблицы tname были добавлены/удалены —
     /// все NAMEREF/SUPERENUM, ссылающиеся на неё, должны обновить кеш.
-    void sig_ReferenceChanged (const std::string& tname);
+    void sig_referenceChanged (const std::string& tname);
 };

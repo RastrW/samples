@@ -61,7 +61,7 @@ void BackInfoCache::loadEnum(const RCol& rcol)
     for (const auto& val : split(nameRef, '|'))
         list.append(QString::fromStdString(val));
 
-    m_enum.emplace(idx, std::move(list));
+    m_enum.emplace(idx, std::make_shared<QStringList>(std::move(list)));
 }
 
 void BackInfoCache::loadSuperenum(const RCol& rcol,
@@ -304,11 +304,11 @@ BackInfoCache::parseSuperenumStr(const std::string& nameref)
     return SuperenumParts{ parts[0], parts[2], parts[1] };
 }
 
-const QStringList*
+const std::shared_ptr<QStringList>
 BackInfoCache::enumItems(AstraIndex colIdx) const
 {
     auto it = m_enum.find(colIdx);
-    return it != m_enum.end() ? &it->second : nullptr;
+    return (it != m_enum.end()) ? it->second : std::shared_ptr<QStringList>();
 }
 
 const BackInfoCache::RefMap*

@@ -402,7 +402,7 @@ void RTablesDataAdapter::handleChangeData(const std::string& tname,
     emit sig_dataChanged(tname,
                          static_cast<int>(row), cname,
                          static_cast<int>(row), cname);
-    emit sig_ReferenceChanged(tname);
+    emit sig_referenceChanged(tname);
 }
 
 void RTablesDataAdapter::handleAddRow(const std::string& tname, long row)
@@ -413,11 +413,11 @@ void RTablesDataAdapter::handleAddRow(const std::string& tname, long row)
     QDataBlock* pqdb = findCachedBlock(tname);
     if (!pqdb) return;
 
-    emit sig_BeginInsertRow(tname, row, row);
+    emit sig_beginInsertRow(tname, row, row);
     pqdb->AddRow();
-    emit sig_EndInsertRow(tname);
+    emit sig_endInsertRow(tname);
     // новая строка изменила справочник
-    emit sig_ReferenceChanged(tname);
+    emit sig_referenceChanged(tname);
 }
 
 void RTablesDataAdapter::handleInsertRow(const std::string& tname, long row)
@@ -428,11 +428,11 @@ void RTablesDataAdapter::handleInsertRow(const std::string& tname, long row)
     QDataBlock* pqdb = findCachedBlock(tname);
     if (!pqdb) return;
 
-    emit sig_BeginInsertRow(tname, row, row);
+    emit sig_beginInsertRow(tname, row, row);
     pqdb->InsertRow(row);
-    emit sig_EndInsertRow(tname);
+    emit sig_endInsertRow(tname);
     // новая строка изменила справочник
-    emit sig_ReferenceChanged(tname);
+    emit sig_referenceChanged(tname);
 }
 
 void RTablesDataAdapter::handleDeleteRow(const std::string& tname, long row)
@@ -441,10 +441,10 @@ void RTablesDataAdapter::handleDeleteRow(const std::string& tname, long row)
     QDataBlock* pqdb = findCachedBlock(tname);
     if (!pqdb) return;
 
-    emit sig_BeginRemoveRows(tname, row, row);
+    emit sig_beginRemoveRows(tname, row, row);
     pqdb->DeleteRow(row);
-    emit sig_EndRemoveRows(tname);
-    emit sig_ReferenceChanged(tname);
+    emit sig_endRemoveRows(tname);
+    emit sig_referenceChanged(tname);
 }
 
 void RTablesDataAdapter::setColumnProperty(const std::string& tname,
@@ -562,12 +562,12 @@ void RTablesDataAdapter::reloadBlock(const std::string& tname,
 {
     // что было загружено
     const std::string loadedCols = block->Columns();
-    emit sig_BeginResetModel(tname);
+    emit sig_beginResetModel(tname);
     block->Clear();
     // Перезагружаем данные И структуру
     if (!loadedCols.empty()){
          // только то же самое
         fillBlock(tname, *block, loadedCols);
     }
-    emit sig_EndResetModel(tname);
+    emit sig_endResetModel(tname);
 }
