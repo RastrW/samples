@@ -43,6 +43,10 @@ echo "  KEEP_BUILD:     ${KEEP_BUILD}"
 echo "  QT_PATH:        ${QT_PATH}"
 echo ""
 
+# Сборка libpqxx опциональна: нужна только при подготовке AppImage на AltLinux.
+# На Windows и AstraLinux (разработка в Qt Creator без деплоя) установить в 0.
+BUILD_LIBPQXX=${BUILD_LIBPQXX:-1}
+
 # ---------------------------------------------------------------------------
 # Basic checks
 # ---------------------------------------------------------------------------
@@ -754,7 +758,7 @@ for BUILD_TYPE in ${BUILD_TYPES}; do
         "-DSDL_TESTS=OFF -DSDL_EXAMPLES=OFF -DSDL_INSTALL=ON -DSDL_SHARED=ON -DSDL_STATIC=OFF"
 
     build_library "SDL3_image" "${THIRDPARTY_DIR}/SDL_image" "${BUILD_TYPE}" \
-        "-DSDL3IMAGE_SAMPLES=OFF -DBUILD_SHARED_LIBS=ON"
+       "-DSDL3IMAGE_SAMPLES=OFF -DBUILD_SHARED_LIBS=ON"
 
     build_lexilla "${THIRDPARTY_DIR}/lexilla/src" "${BUILD_TYPE}"
 
@@ -767,25 +771,66 @@ for BUILD_TYPE in ${BUILD_TYPES}; do
         build_qmake_library "ScintillaEdit" "${THIRDPARTY_DIR}/scintilla/qt/ScintillaEdit" "${BUILD_TYPE}" "1"
     fi
 
-    # Clean temporary bin directory
+    # Optional libpqxx
+	if [ "${BUILD_LIBPQXX}" = "1" ]; then
+		    echo "Building libpqxx (required for COMCK plugin)..."
+
+		    PostgreSQL_INCLUDE_DIR=""
+		    for CANDIDATE in \
+		        "${POSTGRESQL_ROOT}/include/postgresql" \
+		        "${POSTGRESQL_ROOT}/include/pgsql" \
+		        "/usr/include/postgresql" \
+		        "/usr/include/pgsql"
+		    do
+		        if [ -d "${CANDIDATE}" ]; then
+		            PostgreSQL_INCLUDE_DIR="${CANDIDATE}"
+		            break
+		        fi
+		    done
+
+		    PostgreSQL_LIBRARY=""
+		    for CANDIDATE in \
+		        "${POSTGRESQL_ROOT}/lib/libpq.so" \
+		        "${POSTGRESQL_ROOT}/lib64/libpq.so" \
+		        "/usr/lib/x86_64-linux-gnu/libpq.so" \
+		        "/usr/lib64/libpq.so"
+		    do
+		        if [ -f "${CANDIDATE}" ]; then
+		            PostgreSQL_LIBRARY="${CANDIDATE}"
+		            break
+		        fi
+		    done
+
+		    if [ -z "${PostgreSQL_INCLUDE_DIR}" ]; then
+		        echo "ERROR: PostgreSQL headers not found."
+		        echo "AstraLinux: sudo apt install -y libpq-dev"
+		        echo "AltLinux:   apt-get install -y libpq-devel postgresql-devel"
+		        exit 1
+		    fi
+
+		    if [ -z "${PostgreSQL_LIBRARY}" ]; then
+		        echo "ERROR: libpq.so not found."
+		        echo "AstraLinux: sudo apt install -y libpq-dev"
+		        echo "AltLinux:   apt-get install -y libpq-devel"
+		        exit 1
+		    fi
+
+		    echo "[OK] PostgreSQL headers: ${PostgreSQL_INCLUDE_DIR}"
+		    echo "[OK] PostgreSQL library: ${PostgreSQL_LIBRARY}"
+
+		    build_library "libpqxx" "${THIRDPARTY_DIR}/libpqxx" "${BUILD_TYPE}" \
+		        "-DSKIP_BUILD_TEST=ON \
+		         -DBUILD_SHARED_LIBS=ON \
+		         -DPostgreSQL_INCLUDE_DIR=${PostgreSQL_INCLUDE_DIR} \
+		         -DPostgreSQL_LIBRARY=${PostgreSQL_LIBRARY}"
+		else
+		    echo "[SKIP] libpqxx (BUILD_LIBPQXX=0)"
+		fi
+
+	# Clean temporary bin directory
     if [ -d "${THIRDPARTY_DIR}/../bin" ]; then
         echo "Cleaning temporary bin directory: ${THIRDPARTY_DIR}/../bin"
         rm -rf "${THIRDPARTY_DIR}/../bin"
-    fi
-
-    # Optional libpqxx
-    if [ -d "${POSTGRESQL_ROOT}/include/postgresql" ]; then
-        PostgreSQL_INCLUDE_DIR="${POSTGRESQL_ROOT}/include/postgresql"
-        PostgreSQL_LIBRARY="${POSTGRESQL_ROOT}/lib/libpq.so"
-
-        if [ -d "${PostgreSQL_INCLUDE_DIR}" ] && [ -f "${PostgreSQL_LIBRARY}" ]; then
-            build_library "libpqxx" "${THIRDPARTY_DIR}/libpqxx" "${BUILD_TYPE}" \
-                "-DSKIP_BUILD_TEST=ON -DBUILD_SHARED_LIBS=OFF -DPostgreSQL_INCLUDE_DIR=${PostgreSQL_INCLUDE_DIR} -DPostgreSQL_LIBRARY=${PostgreSQL_LIBRARY}"
-        else
-            echo "[SKIP] libpqxx - expected headers/libs not found"
-        fi
-    else
-        echo "[SKIP] libpqxx - PostgreSQL not installed"
     fi
 done
 
