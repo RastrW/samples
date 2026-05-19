@@ -269,7 +269,11 @@ QString FileManager::showSaveDialog() {
     if (dlg.exec() != QDialog::Accepted)
         return {};
 
-    return dlg.selectedFiles().value(0);
+    QString filter = dlg.selectedNameFilter();
+    QString file = dlg.selectedFiles().value(0);
+    QString filewithextension = buildFileWithExtension(file,filter);
+
+    return filewithextension;
 }
 
 QString FileManager::buildFileFilter() const {
@@ -290,6 +294,14 @@ QString FileManager::buildFileFilter() const {
     filters << "графика (*.grf)";
 
     return filters.join(";;");
+}
+
+QString FileManager::buildFileWithExtension(const QString& filePath,const QString& filter) const {
+    if (!findTemplateByExtension(filePath).isEmpty())
+        return filePath;
+
+    QFileInfo filterInfo(filter);
+    return (filePath + '.' + filterInfo.suffix().removeLast());
 }
 
 QString FileManager::findTemplateByExtension(const QString& filePath) const {

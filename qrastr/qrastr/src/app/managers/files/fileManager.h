@@ -100,6 +100,8 @@ private:
      * @return строка фильтра вида "Known types(...);; No template (*);;..."
      */
     QString buildFileFilter() const;
+    /// @brief Вернуть файл с расширением
+    QString buildFileWithExtension(const QString& filePath,const QString& filter) const;
     /// @brief Найти шаблон по расширению файла
     QString findTemplateByExtension(const QString& filePath) const;
     /// @brief Показать диалог выбора шаблонов для нового файла
