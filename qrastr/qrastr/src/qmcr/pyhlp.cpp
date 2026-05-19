@@ -110,15 +110,20 @@ std::wstring detectPythonHome()
         std::getenv("APPIMAGE") ? std::getenv("APPIMAGE") : "");
 
     if (!appImageEnv.isEmpty()) {
-        const QString appDir = QFileInfo(appImageEnv).absolutePath();
-        const QString pythonHome = appDir + "/usr";
-        spdlog::info("Python home (AppImage): {}", pythonHome.toStdString());
-        return pythonHome.toStdWString();
+        // APPDIR — путь к смонтированному squashfs, выставляется AppImage runtime
+        // APPIMAGE — путь к самому .AppImage файлу снаружи (НЕ то что нужно)
+        const char* appDir = std::getenv("APPDIR");
+        if (appDir && *appDir) {
+            const std::wstring home = std::wstring(appDir, appDir + strlen(appDir)) + L"/usr";
+            spdlog::info("Python home (AppImage via APPDIR): {}",
+                         std::string(appDir) + "/usr");
+            return home;
+        }
+        spdlog::warn("APPIMAGE set but APPDIR missing — cannot locate Python stdlib");
+        return {};
     }
-
     // Контекст 2: QtCreator — берём системный Python
     // Контекст 3: SystemInstall — берём системный Python
-
     const char* h = std::getenv("PYTHONHOME");
     if (h && *h) {
         std::string s(h);
@@ -175,15 +180,51 @@ bool PyHlp::initialize()
     PyConfig_InitPythonConfig(&config);
 
     const std::wstring home = PyUtils::detectPythonHome();
+
+#ifndef _WIN32
+    // На Linux внутри AppImage PyConfig.home не успевает повлиять на поиск
+    // codec filesystem encoding — libpython использует hardcoded prefix.
+    // Единственный надёжный способ — выставить PYTHONHOME через environ
+    // ДО Py_InitializeFromConfig.
+    if (!home.empty()) {
+        const std::string homeStr(home.begin(), home.end());
+        const std::string stdlib    = homeStr + "/lib/python3.11";
+        const std::string libdynload = homeStr + "/lib/python3.11/lib-dynload";
+        // PYTHONPATH должен включать оба пути
+        const std::string pythonPath = stdlib + ":" + libdynload;
+
+        setenv("PYTHONHOME", homeStr.c_str(), 1);
+        setenv("PYTHONPATH", pythonPath.c_str(), 1);
+        spdlog::info("PyHlp: setenv PYTHONHOME={}", homeStr);
+        spdlog::info("PyHlp: setenv PYTHONPATH={}", pythonPath);
+        PyConfig_SetString(&config, &config.home, home.c_str());
+    }
+#else
     if (!home.empty()) {
         PyStatus st = PyConfig_SetString(&config, &config.home, home.c_str());
         if (PyStatus_Exception(st)) {
-            spdlog::warn("PyHlp: не удалось задать home='{}': {}",
-                         std::string(home.begin(), home.end()),
+            spdlog::warn("PyHlp: не удалось задать home: {}",
                          st.err_msg ? st.err_msg : "?");
         }
     }
+#endif
+    {
+        // Временная диагностика — удалить после отладки
+        const std::string homeStr(home.begin(), home.end());
+        spdlog::info("PyHlp: checking home contents...");
 
+        QDir homeDir(QString::fromStdString(homeStr));
+        spdlog::info("PyHlp: home exists: {}", homeDir.exists() ? "YES" : "NO");
+
+        const QString libDir = QString::fromStdString(homeStr) + "/lib";
+        spdlog::info("PyHlp: lib dir exists: {}", QDir(libDir).exists() ? "YES" : "NO");
+
+        const QString py311Dir = libDir + "/python3.11";
+        spdlog::info("PyHlp: python3.11 dir exists: {}", QDir(py311Dir).exists() ? "YES" : "NO");
+
+        const QString encodingsDir = py311Dir + "/encodings";
+        spdlog::info("PyHlp: encodings dir exists: {}", QDir(encodingsDir).exists() ? "YES" : "NO");
+    }
     // ── Шаг 2: Инициализация ────────────────────────────────────────────
     PyStatus status = Py_InitializeFromConfig(&config);
     PyConfig_Clear(&config);

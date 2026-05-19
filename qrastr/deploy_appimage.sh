@@ -164,9 +164,6 @@ copy_glob() {
     fi
 }
 
-copy_if_exists "${THIRDPARTY}/qtadvanceddocking/${PLATFORM}/lib/libqtadvanceddocking-qt5.so.4" "libqtadvanceddocking"
-copy_if_exists "${THIRDPARTY}/SDL3/${PLATFORM}/lib/libSDL3.so.0"                               "libSDL3"
-copy_glob      "${THIRDPARTY}/SDL3_image/${PLATFORM}/lib/libSDL3_image.so*"                    "libSDL3_image"
 copy_if_exists "${PROJ}/lib/qtitan8_lin_5_15/lib/libQtitanBase.so.2"                           "libQtitanBase"
 copy_if_exists "${PROJ}/lib/qtitan8_lin_5_15/lib/libQtitanGrid.so.8"                           "libQtitanGrid"
 copy_glob      "${PROJ}/lib/qtitan8_lin_5_15/lib/libQtitanStyle.so*"                           "libQtitanStyle"
